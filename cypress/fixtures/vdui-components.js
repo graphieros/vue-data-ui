@@ -1352,6 +1352,9 @@ export const components = [
     {
         name: 'VueUiQuickChart',
         dataset: [1, 2, -3, 5, 8],
+        config: {
+            title: 'Title'
+        },
         wrapperClass: '.vue-ui-quick-chart'
     },
     {

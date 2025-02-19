@@ -1101,6 +1101,7 @@ defineExpose({
                 <g class="donut-label-connectors" v-if="FINAL_CONFIG.showDataLabels">
                     <template v-for="(arc, i) in donut.chart">
                         <path
+                            data-cy="datapoint-donut-markers"
                             v-if="donut.isArcBigEnough(arc)"
                             :d="calcNutArrowPath(arc, {x: defaultSizes.width / 2, y: defaultSizes.height / 2}, 16, 16, false, false, (defaultSizes.height * optimalDonutThickness))"
                             :stroke="arc.color"
@@ -1123,6 +1124,7 @@ defineExpose({
 
                 <g class="donut">
                     <path
+                        data-cy="datapoint-donut-arc"
                         v-for="(arc, i) in donut.chart"
                         :d="arc.arcSlice"
                         :fill="arc.color"
@@ -1131,6 +1133,7 @@ defineExpose({
                         :filter="getBlurFilter(arc.id)"
                     />
                     <path
+                        data-cy="tooltip-trap-donut"
                         v-for="(arc, i) in donut.chart"
                         :d="arc.arcSlice"
                         fill="transparent"
@@ -1142,6 +1145,7 @@ defineExpose({
                 <g class="donut-labels quick-animation" v-if="FINAL_CONFIG.showDataLabels">
                     <template v-for="(arc, i) in donut.chart">
                         <circle
+                            data-cy="datapoint-donut-marker-circle"
                             v-if="donut.isArcBigEnough(arc)"
                             :cx="calcMarkerOffsetX(arc).x"
                             :cy="calcMarkerOffsetY(arc) - 3.7"
@@ -1152,6 +1156,7 @@ defineExpose({
                             :filter="getBlurFilter(arc.id)"
                         />
                         <text
+                            data-cy="datapoint-donut-label-value"
                             v-if="donut.isArcBigEnough(arc)"
                             :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
                             :x="calcMarkerOffsetX(arc, true).x"
@@ -1175,6 +1180,7 @@ defineExpose({
                             }})
                         </text>
                         <text
+                            data-cy="datapoint-donut-label-name"
                             v-if="donut.isArcBigEnough(arc, true, 20)"
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
                             :x="calcMarkerOffsetX(arc, true).x"
@@ -1189,6 +1195,7 @@ defineExpose({
                 </g>
                 <g class="donut-hollow quick-animation" v-if="FINAL_CONFIG.donutShowTotal">
                     <text
+                        data-cy="donut-hollow-total-label"
                         text-anchor="middle"
                         :x="donut.drawingArea.centerX"
                         :y="donut.drawingArea.centerY - FINAL_CONFIG.donutTotalLabelFontSize / 2"
@@ -1198,6 +1205,7 @@ defineExpose({
                         {{ FINAL_CONFIG.donutTotalLabelText }}
                     </text>
                     <text
+                        data-cy="donut-hollow-total-value"
                         text-anchor="middle"
                         :x="donut.drawingArea.centerX"
                         :y="donut.drawingArea.centerY + FINAL_CONFIG.donutTotalLabelFontSize"
@@ -1218,6 +1226,7 @@ defineExpose({
                 <g class="line-grid" v-if="FINAL_CONFIG.xyShowGrid">
                     <template v-for="yGridLine in line.yLabels">
                         <line
+                            data-cy="grid-horizontal-line-line"
                             v-if="yGridLine.y <= line.drawingArea.bottom"
                             :x1="line.drawingArea.left"
                             :x2="line.drawingArea.right"
@@ -1229,18 +1238,20 @@ defineExpose({
                         />
                     </template>
                     <line
+                        data-cy="grid-vertical-line-line"
                         v-for="(_, i) in line.extremes.maxSeries + 1"
-                            :x1="line.drawingArea.left + (line.slotSize * (i))"
-                            :x2="line.drawingArea.left + (line.slotSize * (i))"
-                            :y1="line.drawingArea.top"
-                            :y2="line.drawingArea.bottom"
-                            :stroke="FINAL_CONFIG.xyGridStroke"
-                            :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
-                            stroke-linecap="round"
+                        :x1="line.drawingArea.left + (line.slotSize * (i))"
+                        :x2="line.drawingArea.left + (line.slotSize * (i))"
+                        :y1="line.drawingArea.top"
+                        :y2="line.drawingArea.bottom"
+                        :stroke="FINAL_CONFIG.xyGridStroke"
+                        :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
+                        stroke-linecap="round"
                     />
                 </g>
                 <g class="line-axis" v-if="FINAL_CONFIG.xyShowAxis">
                     <line
+                        data-cy="line-y-axis"
                         :x1="line.drawingArea.left"
                         :x2="line.drawingArea.left"
                         :y1="line.drawingArea.top"
@@ -1250,6 +1261,7 @@ defineExpose({
                         stroke-linecap="round"
                     />
                     <line
+                        data-cy="line-zero-axis"
                         :x1="line.drawingArea.left"
                         :x2="line.drawingArea.right"
                         :y1="isNaN(line.absoluteZero) ? line.drawingArea.bottom : line.absoluteZero"
@@ -1262,6 +1274,7 @@ defineExpose({
                 <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
                     <template v-for="(label, i) in line.yLabels">   
                         <line
+                            data-cy="scale-line-tick"
                             v-if="label.y <= line.drawingArea.bottom"
                             :x1="label.x + 4"
                             :x2="line.drawingArea.left"
@@ -1272,6 +1285,7 @@ defineExpose({
                             stroke-linecap="round"
                         />
                         <text
+                            data-cy="scale-line-label"
                             v-if="label.y <= line.drawingArea.bottom"
                             :x="label.x"
                             :y="label.y + FINAL_CONFIG.xyLabelsYFontSize / 3"
@@ -1296,6 +1310,7 @@ defineExpose({
                 </g>
                 <g class="periodLabels" v-if="FINAL_CONFIG.xyShowScale && FINAL_CONFIG.xyPeriods.length">
                     <line
+                        data-cy="period-tick"
                         v-for="(_, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
                         :x1="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
                         :x2="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
@@ -1306,6 +1321,7 @@ defineExpose({
                         stroke-linecap="round"
                     />
                     <text
+                        data-cy="period-label"
                         v-for="(period, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
                         :font-size="FINAL_CONFIG.xyLabelsXFontSize"
                         :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
@@ -1320,6 +1336,7 @@ defineExpose({
                         <g class="line-plot-series">
                             <template v-if="FINAL_CONFIG.lineSmooth">
                                 <path
+                                    data-cy="datapoint-line-wrapper"
                                     :d="`M ${createSmoothPath(ds.coordinates)}`"
                                     :stroke="FINAL_CONFIG.backgroundColor"
                                     :stroke-width="FINAL_CONFIG.lineStrokeWidth + 1"
@@ -1329,6 +1346,7 @@ defineExpose({
                                     style="transition: all 0.3s ease-in-out"
                                 />
                                 <path
+                                    data-cy="datapoint-line"
                                     :d="`M ${createSmoothPath(ds.coordinates)}`"
                                     :stroke="ds.color"
                                     :stroke-width="FINAL_CONFIG.lineStrokeWidth"
@@ -1341,6 +1359,7 @@ defineExpose({
                             </template>
                             <template v-else>
                                 <path
+                                    data-cy="datapoint-line-wrapper"
                                     :d="`M ${ds.linePath}`"
                                     :stroke="FINAL_CONFIG.backgroundColor"
                                     :stroke-width="FINAL_CONFIG.lineStrokeWidth + 1"
@@ -1350,6 +1369,7 @@ defineExpose({
                                     style="transition: all 0.3s ease-in-out"
                                 />
                                 <path
+                                    data-cy="datapoint-line"
                                     :d="`M ${ds.linePath}`"
                                     :stroke="ds.color"
                                     :stroke-width="FINAL_CONFIG.lineStrokeWidth"
@@ -1361,6 +1381,7 @@ defineExpose({
                             </template>
                             <template v-for="(plot, j) in ds.coordinates">
                                 <circle
+                                    data-cy="datapoint-plot"
                                     :cx="plot.x"
                                     :cy="checkNaN(plot.y)"
                                     :r="3"
@@ -1377,6 +1398,7 @@ defineExpose({
                 <g class="dataLabels" v-if="FINAL_CONFIG.showDataLabels">
                     <template v-for="(ds, i) in line.dataset">
                         <text 
+                            data-cy="datapoint-label"
                             v-for="(plot, j) in ds.coordinates"
                             text-anchor="middle"
                             :font-size="FINAL_CONFIG.dataLabelFontSize"
@@ -1402,7 +1424,8 @@ defineExpose({
                     </template>
                 </g>
                 <g class="tooltip-traps">
-                    <rect 
+                    <rect
+                        data-cy="tooltip-trap-line"
                         v-for="(_, i) in line.extremes.maxSeries"
                         :x="line.drawingArea.left + (i * line.slotSize)"
                         :y="line.drawingArea.top"
@@ -1426,6 +1449,7 @@ defineExpose({
                 <g class="line-grid" v-if="FINAL_CONFIG.xyShowGrid">
                     <template v-for="yGridLine in bar.yLabels">
                         <line
+                            data-cy="grid-horizontal-line-bar"
                             v-if="yGridLine.y <= bar.drawingArea.bottom"
                             :x1="bar.drawingArea.left"
                             :x2="bar.drawingArea.right"
@@ -1437,18 +1461,20 @@ defineExpose({
                         />
                     </template>
                         <line
-                        v-for="(_, i) in bar.extremes.maxSeries + 1"
-                        :x1="bar.drawingArea.left + (bar.slotSize * (i))"
-                        :x2="bar.drawingArea.left + (bar.slotSize * (i))"
-                        :y1="bar.drawingArea.top"
-                        :y2="bar.drawingArea.bottom"
-                        :stroke="FINAL_CONFIG.xyGridStroke"
-                        :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
-                        stroke-linecap="round"
-                    />
+                            data-cy="grid-vertical-line-bar"
+                            v-for="(_, i) in bar.extremes.maxSeries + 1"
+                            :x1="bar.drawingArea.left + (bar.slotSize * (i))"
+                            :x2="bar.drawingArea.left + (bar.slotSize * (i))"
+                            :y1="bar.drawingArea.top"
+                            :y2="bar.drawingArea.bottom"
+                            :stroke="FINAL_CONFIG.xyGridStroke"
+                            :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
+                            stroke-linecap="round"
+                        />
                 </g>
                 <g class="line-axis" v-if="FINAL_CONFIG.xyShowAxis">
                     <line
+                        data-cy="bar-y-axis"
                         :x1="bar.drawingArea.left"
                         :x2="bar.drawingArea.left"
                         :y1="bar.drawingArea.top"
@@ -1458,6 +1484,7 @@ defineExpose({
                         stroke-linecap="round"
                     />
                     <line
+                        data-cy="bar-zero-axis"
                         :x1="bar.drawingArea.left"
                         :x2="bar.drawingArea.right"
                         :y1="isNaN(bar.absoluteZero) ? bar.drawingArea.bottom : bar.absoluteZero"
@@ -1470,6 +1497,7 @@ defineExpose({
                 <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
                     <template v-for="(label, i) in bar.yLabels">   
                         <line
+                            data-cy="scale-bar-tick"
                             v-if="label.y <= bar.drawingArea.bottom"
                             :x1="label.x + 4"
                             :x2="bar.drawingArea.left"
@@ -1480,6 +1508,7 @@ defineExpose({
                             stroke-linecap="round"
                         />
                         <text
+                            data-cy="scale-bar-label"
                             v-if="label.y <= bar.drawingArea.bottom"
                             :x="label.x"
                             :y="label.y + FINAL_CONFIG.xyLabelsYFontSize / 3"
@@ -1504,6 +1533,7 @@ defineExpose({
                 </g>
                 <g class="periodLabels" v-if="FINAL_CONFIG.xyShowScale && FINAL_CONFIG.xyPeriods.length">
                     <line
+                        data-cy="period-tick"
                         v-for="(_, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
                         :x1="bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)"
                         :x2="bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)"
@@ -1514,6 +1544,7 @@ defineExpose({
                         stroke-linecap="round"
                     />
                     <text
+                        data-cy="period-label"
                         v-for="(period, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
                         :font-size="FINAL_CONFIG.xyLabelsXFontSize"
                         :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
@@ -1526,6 +1557,7 @@ defineExpose({
                 <g class="plots">
                     <template v-for="(ds, i) in bar.dataset">
                         <rect 
+                            data-cy="datapoint-bar"
                             v-for="(plot, j) in ds.coordinates"
                             :x="plot.x"
                             :width="plot.width <= 0 ? 0.00001 : plot.width"
@@ -1557,6 +1589,7 @@ defineExpose({
                 <g class="dataLabels" v-if="FINAL_CONFIG.showDataLabels">
                     <template v-for="(ds, i) in bar.dataset">
                         <text 
+                            data-cy="datapoint-label"
                             v-for="(plot, j) in ds.coordinates"
                             :x="plot.x + plot.width / 2"
                             :y="checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2"
@@ -1582,6 +1615,7 @@ defineExpose({
                 </g>
                 <g class="tooltip-traps">
                     <rect 
+                        data-cy="tooltip-trap-bar"
                         v-for="(_, i) in bar.extremes.maxSeries"
                         :x="bar.drawingArea.left + (i * bar.slotSize)"
                         :y="bar.drawingArea.top"
