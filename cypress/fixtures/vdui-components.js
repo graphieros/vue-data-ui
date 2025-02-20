@@ -1484,6 +1484,16 @@ export const components = [
     {
         name: 'VueUiWordCloud',
         dataset: 'Lorem ipsum dolor sit amet Lorem Lorem Lorem sit sit ipsum',
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-word-cloud'
     },
     {

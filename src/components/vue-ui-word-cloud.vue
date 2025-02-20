@@ -530,7 +530,8 @@ function useTooltip(word) {
             <g
                 :transform="`translate(${(svg.width <= 0 ? 10 : svg.width) / 2}, ${(svg.height <= 0 ? 10 : svg.height) / 2})`">
                 <g v-for="(word, index) in positionedWords">
-                    <text 
+                    <text
+                        data-cy="datapoint-word"
                         :fill="word.color" 
                         :font-weight="FINAL_CONFIG.style.chart.words.bold ? 'bold' : 'normal'" :key="index"
                         :x="word.x" :y="word.y" :font-size="word.fontSize"
