@@ -1,6 +1,278 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Thu Feb 20 10:35:03 2025 +0100 - graphieros
+### Commit: 5a7a44c
+- v2.6.4
+
+## Thu Feb 20 09:29:50 2025 +0100 - graphieros
+### Commit: 618e289
+- Tests - Add VueUiXyCanvas component test
+
+## Thu Feb 20 09:13:33 2025 +0100 - graphieros
+### Commit: 8d5e186
+- Tests - Add VueUiWordCloud component test
+
+## Thu Feb 20 09:02:09 2025 +0100 - graphieros
+### Commit: f99d7c0
+- Tests - Add VueUiWheel component test
+
+## Thu Feb 20 08:48:52 2025 +0100 - graphieros
+### Commit: 2385f10
+- Tests - Add VueUiTreemap component test
+
+## Thu Feb 20 08:31:53 2025 +0100 - graphieros
+### Commit: 222a3f5
+- Tests - Add VueUiTiremarks component test
+
+## Thu Feb 20 08:05:10 2025 +0100 - graphieros
+### Commit: 5f1cd2f
+- Tests - Add VueUiTableSparkline component test
+
+## Thu Feb 20 07:40:41 2025 +0100 - graphieros
+### Commit: 1f1a749
+- Tests - Add VueUiTableHeatmap component test
+
+## Thu Feb 20 06:43:34 2025 +0100 - graphieros
+### Commit: face91b
+- Tests - Add VueUiStripPlot component test
+
+## Wed Feb 19 19:28:03 2025 +0100 - graphieros
+### Commit: 64b2c0f
+- Other - Remove commented code
+
+## Wed Feb 19 19:20:19 2025 +0100 - graphieros
+### Commit: d745161
+- Tests - Add VueUiQuickChart component test
+
+## Wed Feb 19 18:14:15 2025 +0100 - graphieros
+### Commit: bf09e7b
+- v2.6.4-beta.5
+
+## Wed Feb 19 18:09:18 2025 +0100 - graphieros
+### Commit: 6c1535b
+- Improvement - VueUiXyCanvas - Make time label x marker optional
+
+## Wed Feb 19 18:08:34 2025 +0100 - graphieros
+### Commit: aa1249e
+- Improvement - VueUiXyCanvas - Update config
+
+## Wed Feb 19 16:04:59 2025 +0100 - graphieros
+### Commit: 654e3b1
+- v2.6.4-beta.4
+
+## Wed Feb 19 16:00:29 2025 +0100 - graphieros
+### Commit: a159489
+- v2.6.4-beta.3
+
+## Wed Feb 19 15:59:29 2025 +0100 - graphieros
+### Commit: b1ecb7e
+- Improvement - VueUiXyCanvas - Add optional Y maker when tooltip is active
+
+## Wed Feb 19 15:56:05 2025 +0100 - graphieros
+### Commit: 9ca068b
+- Improvement - Update VueUiXyCanvas config
+
+## Wed Feb 19 08:23:21 2025 +0100 - graphieros
+### Commit: e6dd921
+- Tests - Add VueUiParallelCoordinatePlot component test
+
+## Wed Feb 19 07:56:05 2025 +0100 - graphieros
+### Commit: e1d0802
+- Tests - Add VueUiOnion component test
+
+## Wed Feb 19 06:47:11 2025 +0100 - graphieros
+### Commit: 08fa448
+- v2.6.4-beta.2
+
+## Wed Feb 19 06:43:56 2025 +0100 - graphieros
+### Commit: 4f8a3d1
+- Improvement - VueUiXyCanvas - Improve selector precision
+
+## Wed Feb 19 06:07:58 2025 +0100 - graphieros
+### Commit: a79b583
+- v2.6.4-beta.1
+
+## Wed Feb 19 06:07:37 2025 +0100 - graphieros
+### Commit: 3466f38
+- Improvement - VueUiXyCanvas - Add horizontal selector
+
+## Tue Feb 18 12:45:27 2025 +0100 - graphieros
+### Commit: 923a432
+- v2.6.4-beta.0
+
+## Tue Feb 18 12:45:05 2025 +0100 - graphieros
+### Commit: 337116d
+- Fix - VueUiCanvas - Fix wrong scale in stack mode with individual scale
+
+## Tue Feb 18 11:29:22 2025 +0100 - graphieros
+### Commit: 73d45bc
+- Tests - Add VueUiNestedDonuts component test
+
+## Tue Feb 18 10:38:43 2025 +0100 - graphieros
+### Commit: 4d7af5d
+- Tests - Add VueUiMoodRadar component test
+
+## Mon Feb 17 17:02:08 2025 +0100 - graphieros
+### Commit: 7387494
+- Tests - Add VueUiMolecule component test
+
+## Mon Feb 17 16:36:31 2025 +0100 - graphieros
+### Commit: 6796bc0
+- Tests - Add VueUiMiniLoader component test
+
+## Mon Feb 17 16:23:39 2025 +0100 - graphieros
+### Commit: eccbb7c
+- Tests - Improve VueUiKpi component test
+
+## Mon Feb 17 14:35:00 2025 +0100 - graphieros
+### Commit: 3690dd1
+- Tests - Add VueUiHistoryPlot component test
+
+## Mon Feb 17 14:34:42 2025 +0100 - graphieros
+### Commit: c17c7ec
+- Bump dompurify version
+
+## Mon Feb 17 13:51:41 2025 +0100 - graphieros
+### Commit: 7d0175e
+- Tests - Add VueUiGizmo component test
+
+## Mon Feb 17 12:42:25 2025 +0100 - graphieros
+### Commit: 9422e5f
+- Tests - Add VueUiGalaxy component test
+
+## Mon Feb 17 12:04:48 2025 +0100 - graphieros
+### Commit: dd02a74
+- Tests - Add VueUiFunnel component test
+
+## Mon Feb 17 11:43:57 2025 +0100 - graphieros
+### Commit: 69a0d04
+- Tests - Add VueUiFlow component test
+
+## Mon Feb 17 11:36:08 2025 +0100 - graphieros
+### Commit: b674df3
+- Tests - Fix dataTable wrong key in testCommonFeatures calls
+
+## Mon Feb 17 11:25:20 2025 +0100 - graphieros
+### Commit: f6887f9
+- Tests - Add VueUiDumbbell component test
+
+## Mon Feb 17 11:24:48 2025 +0100 - graphieros
+### Commit: 7b93304
+- Fix - VueUiDumbbell - Move data labels to their own loop
+
+## Mon Feb 17 09:50:02 2025 +0100 - graphieros
+### Commit: 12fc26b
+- Tests - Add VueUiDigits component test
+
+## Mon Feb 17 09:49:39 2025 +0100 - graphieros
+### Commit: 626fe32
+- Fix - VueUiDashboard - Use createUid instead of Math.random
+
+## Mon Feb 17 09:13:25 2025 +0100 - graphieros
+### Commit: 4169294
+- Tests - Add VueUiCursor component test
+
+## Mon Feb 17 08:31:04 2025 +0100 - graphieros
+### Commit: e722d8a
+- Tests - Add VueUiCirclePack component test
+
+## Sun Feb 16 19:49:13 2025 +0100 - graphieros
+### Commit: 8cc1587
+- Tests - Add VueUiStackbar component test
+
+## Sun Feb 16 17:50:43 2025 +0100 - graphieros
+### Commit: 25a416b
+- Add comment on old testing arena
+
+## Sun Feb 16 17:35:57 2025 +0100 - graphieros
+### Commit: f70aa56
+- Tests - Add VueUiCarouselTable component test
+
+## Sun Feb 16 14:33:19 2025 +0100 - graphieros
+### Commit: a893d53
+- Tests - Rewrite VueUiCandlestick component test
+
+## Sun Feb 16 13:22:51 2025 +0100 - graphieros
+### Commit: 5108719
+- Tests - Add VueUiBullet component test
+
+## Sun Feb 16 10:17:53 2025 +0100 - graphieros
+### Commit: 7b46a14
+- Tests - Add VueUiAgePyramid component test
+
+## Sun Feb 16 09:22:42 2025 +0100 - graphieros
+### Commit: a169a09
+- Tests - Add VueUi3dBar component test
+
+## Sat Feb 15 23:58:43 2025 +0100 - graphieros
+### Commit: 01bc55c
+- Tests - Add VueDataUi universal component test
+
+## Sat Feb 15 17:47:40 2025 +0100 - graphieros
+### Commit: 89de305
+- Tests - Add BaseDirectionPad component test
+
+## Sat Feb 15 17:18:35 2025 +0100 - graphieros
+### Commit: 11047a3
+- Tests - Add DataTable component test
+
+## Sat Feb 15 16:52:18 2025 +0100 - graphieros
+### Commit: 81a42bc
+- Tests - Add Legend component test
+
+## Sat Feb 15 13:35:02 2025 +0100 - graphieros
+### Commit: 8bde7cc
+- Tests - Add PenAndPaper component test
+
+## Sat Feb 15 13:34:30 2025 +0100 - graphieros
+### Commit: bc5f37c
+- Improvement - ColorPicker (PenAndPaper) use buttons for accessibility
+
+## Sat Feb 15 10:46:55 2025 +0100 - graphieros
+### Commit: 85a6d08
+- Tests - Add test for Slicer component
+
+## Sat Feb 15 10:46:30 2025 +0100 - graphieros
+### Commit: 7223e9f
+- Add dedicated vite config for cy
+
+## Sat Feb 15 08:09:39 2025 +0100 - graphieros
+### Commit: 4da6725
+- Tests - Improve UserOptions component tests
+
+## Sat Feb 15 08:08:58 2025 +0100 - graphieros
+### Commit: 28cf926
+- Update CONTRIBUTING.md
+
+## Sat Feb 15 08:08:46 2025 +0100 - graphieros
+### Commit: eaca14f
+- Update cypress version
+
+## Sat Feb 15 06:15:53 2025 +0100 - graphieros
+### Commit: 80a4c16
+- Dev environment - App.vue fix
+
+## Sat Feb 15 06:15:33 2025 +0100 - graphieros
+### Commit: 406684d
+- Update CONTRIBUTING.md
+
+## Sat Feb 15 06:15:22 2025 +0100 - graphieros
+### Commit: e0fd536
+- Update jspdf dep
+
+## Sat Feb 15 05:54:08 2025 +0100 - graphieros
+### Commit: 3d53be2
+- Update CONTRIBUTING.md
+
+## Fri Feb 14 17:25:19 2025 +0100 - graphieros
+### Commit: fc83dfa
+- Documentation - Improve contributing doc
+
+## Fri Feb 14 17:24:58 2025 +0100 - graphieros
+### Commit: 4c07f3e
+- Dev environment - Add documentation
+
 ## Wed Feb 12 05:58:31 2025 +0100 - graphieros
 ### Commit: 59e8fc6
 - v2.6.3
