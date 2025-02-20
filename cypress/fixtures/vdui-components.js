@@ -1511,6 +1511,16 @@ export const components = [
                 type: 'line'
             }
         ],
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-xy-canvas'
     },
     {

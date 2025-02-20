@@ -1613,7 +1613,8 @@ defineExpose({
 
         <div class="vue-ui-xy-canvas" :style="`position: relative; aspect-ratio: ${aspectRatio}`"
         ref="container">
-            <canvas 
+            <canvas
+                data-cy="canvas"
                 v-if="isDataset" 
                 ref="canvas" 
                 style="width:100%; height:100%;" 
