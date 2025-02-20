@@ -1160,6 +1160,16 @@ export const components = [
     {
         name: 'VueUiTiremarks',
         dataset: { percentage: 10 },
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-tiremarks'
     },
     {

@@ -190,7 +190,7 @@ const tickSize = computed(() => {
             space: ((svg.value.width - totalPadding.value) / 100) * 0.5
         }
     }
-})
+});
 
 const ticks = computed(() => {
     const arr = [];
@@ -212,7 +212,7 @@ const ticks = computed(() => {
                 y2: v_y2,
                 curve: `M ${v_x1} ${v_y1} C ${v_x1 + v_space_x} ${v_y1 - v_space_y}, ${v_x2 - v_space_x} ${v_y2 - v_space_y}, ${v_x2} ${v_y2}`,
                 color
-            })
+            });
         } else {
             const horizontalCrescendo = FINAL_CONFIG.value.style.chart.layout.crescendo ? ((marks - i) * (svg.value.height - padding.value.top - padding.value.bottom) / marks / 3)  : 0;
             const h_x1 = padding.value.left + (i * tickSize.value.mark) + (i * tickSize.value.space) - tickSize.value.mark;
@@ -228,7 +228,7 @@ const ticks = computed(() => {
                 y2: h_y2,
                 curve: `M ${h_x1} ${h_y1} C ${h_x1 + h_space_x} ${h_y1 + h_space_y}, ${h_x2 + h_space_x} ${h_y2 - h_space_y}, ${h_x2} ${h_y2}`,
                 color
-            })
+            });
         }
     }
     return arr;
@@ -394,6 +394,7 @@ defineExpose({
             </g>
             <g v-else>
                 <line
+                    data-cy="tick"
                     v-for="(tick, i) in ticks"
                     :x1="tick.x1"
                     :y1="tick.y1"
@@ -405,6 +406,7 @@ defineExpose({
                 />
             </g>
             <text
+                data-cy="data-label"
                 v-if="FINAL_CONFIG.style.chart.percentage.show"
                 :x="tireLabel.x"
                 :y="tireLabel.y"
