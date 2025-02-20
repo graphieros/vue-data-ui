@@ -668,7 +668,8 @@ defineExpose({
             </g>
 
             <g v-for="(rect, i) in squarified">
-                <rect 
+                <rect
+                    data-cy="datapoint-rect"
                     :x="rect.x0" 
                     :y="rect.y0" 
                     :height="getHeight(rect)" 
