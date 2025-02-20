@@ -1359,6 +1359,16 @@ export const components = [
     {
         name: 'VueUiWheel',
         dataset: { percentage: 50 },
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-wheel'
     },
     {

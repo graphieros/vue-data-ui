@@ -325,7 +325,8 @@ defineExpose({
             </foreignObject>
 
             
-            <line 
+            <line
+                data-cy="wheel-tick"
                 v-for="(tick, i) in ticks"
                 :x1="tick.x1"
                 :x2="tick.x2"
@@ -336,7 +337,8 @@ defineExpose({
                 :stroke-linecap="FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
                 :class="{ 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && i <= activeValue }"
             />
-            <circle 
+            <circle
+                data-cy="inner-circle"
                 v-if="FINAL_CONFIG.style.chart.layout.innerCircle.show"
                 :cx="wheel.centerX"
                 :cy="wheel.centerY"
@@ -346,6 +348,7 @@ defineExpose({
                 fill="none"
             />
             <text
+                data-cy="data-label"
                 v-if="FINAL_CONFIG.style.chart.layout.percentage.show"
                 :x="wheel.centerX"
                 :y="wheel.centerY + baseLabelFontSize / 3"

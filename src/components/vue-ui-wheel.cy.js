@@ -1,14 +1,16 @@
-import VueUiTiremarks from "./vue-ui-tiremarks.vue";
+import VueUiWheel from "./vue-ui-wheel.vue";
 import { components } from "../../cypress/fixtures/vdui-components";
 import { testCommonFeatures } from "../../cypress/fixtures";
 
-const { dataset, config } = components.find(c => c.name === 'VueUiTiremarks');
+const { dataset, config } = components.find(c => c.name === 'VueUiWheel');
 
-describe('<VueUiTiremarks />', () => {
-    
+describe('<VueUiWheel />', () => {
+
     it('renders', () => {
+        cy.viewport(500, 560);
         cy.spy(window, 'requestAnimationFrame').as('rafSpy');
-        cy.mount(VueUiTiremarks, {
+
+        cy.mount(VueUiWheel, {
             props: {
                 dataset,
                 config
@@ -25,7 +27,10 @@ describe('<VueUiTiremarks />', () => {
             });
 
             cy.log('ticks');
-            cy.get('[data-cy="tick"]').should('exist').and('have.css', 'opacity', '1').and('have.length', 100);
+            cy.get('[data-cy="wheel-tick"]').should('exist').and('be.visible').and('have.length', 100);
+
+            cy.log('inner circle');
+            cy.get('[data-cy="inner-circle"]').should('exist').and('be.visible');
 
             cy.log('data label');
             cy.get('[data-cy="data-label"]').should('exist').and('be.visible').and('contain', dataset.percentage).and('contain', '%');
