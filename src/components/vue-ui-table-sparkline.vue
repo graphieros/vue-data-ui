@@ -472,7 +472,7 @@ defineExpose({
             class="vue-ui-table-sparkline-caption" 
             :style="{ backgroundColor: FINAL_CONFIG.title.backgroundColor }"
         >
-            <div :style="{
+            <div class="atom-title" :style="{
                 fontSize: `${FINAL_CONFIG.title.fontSize}px`,
                 fontWeight: FINAL_CONFIG.title.bold ? 'bold' : 'normal',
                 color: FINAL_CONFIG.title.color,
@@ -480,7 +480,7 @@ defineExpose({
             }">
                 {{ FINAL_CONFIG.title.text }}
             </div>
-            <div v-if="FINAL_CONFIG.title.subtitle.text" :style="{
+            <div class="atom-subtitle" v-if="FINAL_CONFIG.title.subtitle.text" :style="{
                 fontSize: `${FINAL_CONFIG.title.subtitle.fontSize}px`,
                 fontWeight: FINAL_CONFIG.title.subtitle.bold ? 'bold' : 'normal',
                 color: FINAL_CONFIG.title.subtitle.color,
@@ -557,7 +557,9 @@ defineExpose({
                                 </div>
                             </div>
                         </th>
-                        <th role="cell" v-for="(th, i) in colNames" :style="{
+                        <th 
+                            data-cy="th"
+                            role="cell" v-for="(th, i) in colNames" :style="{
                             background: FINAL_CONFIG.thead.backgroundColor,
                             border: FINAL_CONFIG.thead.outline,
                             textAlign: FINAL_CONFIG.thead.textAlign,
@@ -655,7 +657,9 @@ defineExpose({
                     </tr>
                 </thead>
                 <tbody>
-                    <tr role="row" v-for="(tr, i) in mutableDataset" :style="{
+                    <tr 
+                        data-cy="tr"
+                        role="row" v-for="(tr, i) in mutableDataset" :style="{
                         backgroundColor: FINAL_CONFIG.tbody.backgroundColor,
                         color: FINAL_CONFIG.tbody.color,
                     }" :class="{'vue-ui-data-table__tbody__row' : true, 'vue-ui-data-table__tbody__row-even': i % 2 === 0, 'vue-ui-data-table__tbody__row-odd': i % 2 !== 0}">

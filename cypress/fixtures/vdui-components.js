@@ -1129,7 +1129,13 @@ export const components = [
             },
         ],
         wrapperClass: '.vue-ui-table-sparkline',
-        config: { responsiveBreakpoint: 200 }
+        config: { 
+            responsiveBreakpoint: 200,
+            title: {
+                text: 'Title',
+                subtitle: { text: 'Subtitle' }
+            }
+        }
     },
     {
         name: 'VueUiThermometer',
