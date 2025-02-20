@@ -206,7 +206,6 @@ onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
-
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `strip-plot_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-strip-plot'
@@ -218,7 +217,7 @@ const hasOptionsNoTitle = computed(() => {
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
-})
+});
 
 const animationActive = ref(FINAL_CONFIG.value.useCssAnimation);
 
@@ -235,7 +234,7 @@ const padding = ref({
     bottom: FINAL_CONFIG.value.style.chart.padding.bottom,
     left: FINAL_CONFIG.value.style.chart.padding.left,
     right: FINAL_CONFIG.value.style.chart.padding.right
-})
+});
 
 const stripWidth = ref(FINAL_CONFIG.value.style.chart.stripWidth);
 const absoluteHeight = ref(FINAL_CONFIG.value.style.chart.height);
@@ -244,12 +243,10 @@ const plotRadius = ref(FINAL_CONFIG.value.style.chart.plots.radius);
 const svg = ref({
     width: stripWidth.value * props.dataset.length + padding.value.left + padding.value.right,
     height:FINAL_CONFIG.value.style.chart.height
-})
-
+});
 
 const drawingArea = computed(() => {
     const absoluteWidth = stripWidth.value * props.dataset.length + padding.value.left + padding.value.right;
-
     return {
         left: padding.value.left,
         right: absoluteWidth - padding.value.right,
@@ -282,7 +279,7 @@ const immutableDataset = computed(() => {
                 }
             }).sort((a, b) => a.value - b.value)
         }
-    })
+    });
 });
 
 const mutableDataset = computed(() => {
@@ -296,7 +293,7 @@ const mutableDataset = computed(() => {
                 }
             })
         }
-    })
+    });
 });
 
 const maxSeries = computed(() => Math.max(...mutableDataset.value.map(ds => ds.plots.length)));
@@ -307,11 +304,11 @@ const extremes = computed(() => {
         max: Math.max(...flattened),
         min: Math.min(...flattened),
     }
-})
+});
 
 const scale = computed(() => {
     return calculateNiceScale(extremes.value.min < 0 ? extremes.value.min : 0, extremes.value.max, FINAL_CONFIG.value.style.chart.grid.scaleSteps);
-})
+});
 
 const drawableDataset = computed(() => {
     return (mutableDataset.value || []).map((ds, i) => {
@@ -324,7 +321,7 @@ const drawableDataset = computed(() => {
                 }
             })
         }
-    })
+    });
 });
 
 const yLines = computed(() => {
@@ -335,7 +332,7 @@ const yLines = computed(() => {
             x2: drawingArea.value.right,
             value: t
         }
-    })
+    });
 });
 
 const dataTooltipSlot = ref(null);
@@ -376,7 +373,7 @@ function useTooltip({ datapoint, seriesIndex }) {
             { datapoint, seriesIndex }
         )}</div>`
 
-        tooltipContent.value = `<div>${html}</div>`
+        tooltipContent.value = `<div>${html}</div>`;
     }
 }
 
@@ -408,7 +405,6 @@ function generateCsv() {
         downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-strip-plot" })
     });
 }
-
 
 const dataTable = computed(() => {
     const head = [
@@ -448,7 +444,7 @@ const dataTable = computed(() => {
     const colNames = [
         FINAL_CONFIG.value.table.columnNames.series,
         FINAL_CONFIG.value.table.columnNames.value,
-    ]
+    ];
 
     return {
         colNames,
@@ -465,7 +461,7 @@ function toggleFullscreen(state) {
 }
 
 function getData() {
-    return mutableDataset.value
+    return mutableDataset.value;
 }
 
 function toggleTable() {
@@ -614,7 +610,8 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.chart.grid.show">
                 <!-- H GRID -->
                 <g v-if="FINAL_CONFIG.style.chart.grid.horizontalGrid.show">
-                    <line 
+                    <line
+                        data-cy="grid-horizontal"
                         v-for="l in yLines"
                         :x1="l.x1"
                         :x2="l.x2"
@@ -629,6 +626,7 @@ defineExpose({
                 <!-- V GRID -->
                 <g v-if="FINAL_CONFIG.style.chart.grid.verticalGrid.show">
                     <line
+                        data-cy="grid-vertical"
                         v-for="(l, i) in mutableDataset"
                         :x1="drawingArea.left + ((i+1) * drawingArea.stripWidth)"
                         :x2="drawingArea.left + ((i+1) * drawingArea.stripWidth)"
@@ -642,6 +640,7 @@ defineExpose({
                 </g>
                 <!-- Y AXIS -->
                 <line
+                    data-cy="axis-y"
                     :x1="drawingArea.left"
                     :x2="drawingArea.left"
                     :y1="drawingArea.top"
@@ -652,6 +651,7 @@ defineExpose({
                 />
                 <!-- X AXIS -->
                 <line 
+                    data-cy="axis-x"
                     :x1="drawingArea.left"
                     :x2="drawingArea.right"
                     :y1="drawingArea.bottom"
@@ -664,6 +664,7 @@ defineExpose({
             <!-- Y AXIS VALUE LABELS -->
             <template v-if="FINAL_CONFIG.style.chart.labels.yAxisLabels.show">
                 <text
+                    data-cy="axis-y-label"
                     v-for="(label, i) in yLines"
                     :x="label.x1 - FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 2 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX"
                     :y="label.y + FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3"
@@ -689,6 +690,7 @@ defineExpose({
             <!-- X AXIS LABELS -->
             <template v-if="FINAL_CONFIG.style.chart.labels.xAxisLabels.show">
                 <text
+                    data-cy="axis-x-label"
                     v-for="(label, i) in mutableDataset"
                     :x="drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2"
                     :y="drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY"
@@ -701,7 +703,8 @@ defineExpose({
             </template>
 
             <!-- Y AXIS NAME-->
-            <text 
+            <text
+                data-cy="axis-y-name"
                 v-if="FINAL_CONFIG.style.chart.labels.axis.yLabel"
                 :fill="FINAL_CONFIG.style.chart.labels.axis.color"
                 :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
@@ -712,6 +715,7 @@ defineExpose({
             </text>
             <!-- X AXIS NAME -->
             <text 
+                data-cy="axis-x-name"
                 v-if="FINAL_CONFIG.style.chart.labels.axis.xLabel"
                 :fill="FINAL_CONFIG.style.chart.labels.axis.color"
                 :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
@@ -724,6 +728,7 @@ defineExpose({
 
             <template v-if="selectedDatapoint">
                 <line
+                    data-cy="selection-line"
                     :x1="drawingArea.left"
                     :x2="drawingArea.right"
                     :y1="selectedDatapoint.y"
@@ -733,6 +738,7 @@ defineExpose({
                     :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
                 />
                 <circle
+                    data-cy="selection-marker-circle-left"
                     :cx="drawingArea.left"
                     :cy="selectedDatapoint.y"
                     :r="3"
@@ -740,6 +746,7 @@ defineExpose({
                     :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
                 />
                 <circle
+                    data-cy="selection-marker-circle-right"
                     :cx="drawingArea.right"
                     :cy="selectedDatapoint.y"
                     :r="3"
@@ -777,7 +784,8 @@ defineExpose({
                 <!-- BEST PLOT LABELS -->
                 <g v-if="mutableConfig.dataLabels.show">
                     <template v-for="(plot, i) in ds.plots">
-                        <text 
+                        <text
+                            data-cy="best-plot-label"
                             v-if="i === ds.plots.length - 1 || (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip)"
                             :x="plot.x"
                             :y="plot.y + FINAL_CONFIG.style.chart.labels.bestPlotLabel.offsetY - plotRadius * (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip ? 2 : 1.5)"

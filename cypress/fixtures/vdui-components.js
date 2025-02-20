@@ -1,5 +1,8 @@
 /**
  * Fixtures for VueDataUi cy test
+ * 
+ * NOTE: changing datasets and configs will result in breaking tests.
+ * 
  */
 export const components = [
     {
@@ -1400,7 +1403,24 @@ export const components = [
                     { name: "Dar es Salaam", value: 4.7 },
                     { name: "Nairobi", value: 4.4 },
                 ]
-            }],
+            }
+        ],
+        config: {
+            style: {
+                chart: {
+                    labels: {
+                        axis: {
+                            xLabel: 'x',
+                            yLabel: 'y'
+                        }
+                    },
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: '.vue-ui-strip-plot'
     },
     {
