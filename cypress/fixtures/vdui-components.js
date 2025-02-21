@@ -196,6 +196,25 @@ export const components = [
                 values: [5, null, 5, 5, 5, 5],
             },
         ],
+        config: {
+            style: {
+                chart: {
+                    layout: {
+                        grid: {
+                            xAxis: {
+                                dataLabels: {
+                                    values: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
+                                }
+                            }
+                        }
+                    },
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-donut-evolution",
     },
     {

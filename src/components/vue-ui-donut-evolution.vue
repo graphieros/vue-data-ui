@@ -1,3 +1,4 @@
+
 <script setup>
 import { ref, computed, nextTick, onMounted, watch } from "vue";
 import {
@@ -108,10 +109,9 @@ function validSlicerEnd(v) {
     return v;
 }
 
-
 onMounted(() => {
     prepareChart();
-})
+});
 
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
@@ -270,7 +270,7 @@ const convertedDataset = computed(() => {
                 type: 'datasetSerieAttribute',
                 property: 'name',
                 index: i
-            })
+            });
         }
         if([null, undefined].includes(ds.values)){
             error({
@@ -278,7 +278,7 @@ const convertedDataset = computed(() => {
                 type: 'datasetSerieAttribute',
                 property: 'values',
                 index: i
-            })
+            });
         }
     });
     
@@ -299,7 +299,7 @@ const mutableDataset = computed(() => {
             ...ds,
             values: ds.values.filter((_v, k) => k >= slicer.value.start && k <= slicer.value.end)
         }
-    })
+    });
 });
 
 const maxLength = computed(() => {
@@ -325,7 +325,7 @@ const drawableDataset = computed(() => {
             subtotal : allValuesAreNull || subtotal < 0 ? null : subtotal,
             values,
             x,
-        })
+        });
     }
     
     const minSubtotal = 0;
@@ -705,11 +705,40 @@ defineExpose({
 
             <!-- GRID -->
             <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
-                <line :x1="padding.left" :x2="padding.left" :y1="padding.top" :y2="padding.top + svg.height" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" stroke-linecap="round"/>
-                <line :x1="padding.left" :x2="svg.absoluteWidth - padding.right" :y1="svg.absoluteHeight - padding.bottom" :y2="svg.absoluteHeight - padding.bottom" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" stroke-linecap="round" />
+                <line
+                    data-cy="axis-y"
+                    :x1="padding.left" 
+                    :x2="padding.left" 
+                    :y1="padding.top" 
+                    :y2="padding.top + svg.height" 
+                    :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
+                    stroke-linecap="round"
+                />
+
+                <line 
+                    data-cy="axis-x"
+                    :x1="padding.left" 
+                    :x2="svg.absoluteWidth - padding.right" 
+                    :y1="svg.absoluteHeight - padding.bottom" 
+                    :y2="svg.absoluteHeight - padding.bottom" 
+                    :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
+                    stroke-linecap="round" 
+                />
 
                 <g v-if="FINAL_CONFIG.style.chart.layout.grid.showVerticalLines">
-                    <line v-for="(l, i) in (slicer.end - slicer.start)" :x1="padding.left + ((i +1 ) * slit)" :x2="padding.left + ((i +1) * slit)" :y1="padding.top" :y2="svg.absoluteHeight - padding.bottom" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" stroke-linecap="round"/>
+                    <line
+                        data-cy="vertical-separator"
+                        v-for="(l, i) in (slicer.end - slicer.start)" 
+                        :x1="padding.left + ((i +1 ) * slit)" 
+                        :x2="padding.left + ((i +1) * slit)" 
+                        :y1="padding.top" 
+                        :y2="svg.absoluteHeight - padding.bottom" 
+                        :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
+                        stroke-linecap="round"
+                    />
                 </g>
             </g>
 
@@ -717,6 +746,7 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null || isFixed}">
                 <g v-for="(yLabel, i) in yLabels">
                     <line 
+                        data-cy="axis-y-tick"
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
                         :x1="padding.left" 
                         :x2="padding.left - 5" 
@@ -725,7 +755,8 @@ defineExpose({
                         :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
                         :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
                     />
-                    <text 
+                    <text
+                        data-cy="axis-y-label"
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
                         :x="padding.left - 8 + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.offsetX" 
                         :y="yLabel.y + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize / 3" 
@@ -754,6 +785,7 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': isFixed}">
                 <g v-for="(_, i) in (slicer.end - slicer.start)">
                     <text
+                        data-cy="axis-x-label"
                         v-if="(FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast"
                         :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
                         :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
