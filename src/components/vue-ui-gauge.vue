@@ -595,16 +595,30 @@ defineExpose({
             </g>
 
             <!-- ARC STEPS -->
-            <path v-for="(arc, i) in arcs" :data-cy="`gauge-arc-${i}`" :key="`arc_${i}`" :d="arc.arcSlice"
-                :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor" stroke-linecap="round" />
+            <path 
+                v-for="(arc, i) in arcs" 
+                data-cy="gauge-arc"
+                :key="`arc_${i}`" 
+                :d="arc.arcSlice"
+                :fill="arc.color" 
+                :stroke="FINAL_CONFIG.style.chart.backgroundColor" 
+                stroke-linecap="round" 
+            />
+
             <template v-if="$slots.pattern">
-                <path v-for="(arc, i) in arcs" :data-cy="`gauge-arc-${i}`" :key="`arc_${i}`" :d="arc.arcSlice"
-                    :fill="`url(#pattern_${uid}_${i})`" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    stroke-linecap="round" />
+                <path 
+                    v-for="(arc, i) in arcs" 
+                    :key="`arc_${i}`" 
+                    :d="arc.arcSlice"
+                    :fill="`url(#pattern_${uid}_${i})`" 
+                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    stroke-linecap="round" 
+                />
             </template>
 
-            <!-- GAUGE ARC -->
+            <!-- GAUGE ARC INDICATOR-->
             <path 
+                data-cy="arc-indicator"
                 v-if="FINAL_CONFIG.style.chart.layout.indicatorArc.show" 
                 :d="gaugeArc"
                 :fill="FINAL_CONFIG.style.chart.layout.indicatorArc.fill" 
@@ -618,7 +632,8 @@ defineExpose({
                     fill="transparent" />
 
                 <!-- CURVED LABELS -->
-                <text v-for="(arc, i) in arcs"
+                <text v-for="(arc, i) in arcs" 
+                    data-cy="arc-label"
                     :fill="FINAL_CONFIG.style.chart.layout.segmentNames.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.segmentNames.color"
                     :font-size="svg.segmentFontSize"
                     :font-weight="FINAL_CONFIG.style.chart.layout.segmentNames.bold ? 'bold' : 'normal'"
@@ -647,17 +662,17 @@ defineExpose({
             </template>
 
             <template v-if="FINAL_CONFIG.style.chart.layout.segmentSeparators.show">
-                <line v-bind="firstSeparator" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                <line data-cy="segment-separator-first-wrapper" v-bind="firstSeparator" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth + 2"
                     stroke-linecap="round" />
-                <line v-bind="firstSeparator" :stroke="FINAL_CONFIG.style.chart.layout.segmentSeparators.stroke"
+                <line data-cy="segment-separator-first" v-bind="firstSeparator" :stroke="FINAL_CONFIG.style.chart.layout.segmentSeparators.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth"
                     stroke-linecap="round" />
-                <line v-for="segmentSeparator in segmentSeparators" v-bind="segmentSeparator"
+                <line data-cy="segment-separator-wrapper" v-for="segmentSeparator in segmentSeparators" v-bind="segmentSeparator"
                     :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth + 2"
                     stroke-linecap="round" />
-                <line v-for="segmentSeparator in segmentSeparators" v-bind="segmentSeparator"
+                <line data-cy="segment-separator" v-for="segmentSeparator in segmentSeparators" v-bind="segmentSeparator"
                     :stroke="FINAL_CONFIG.style.chart.layout.segmentSeparators.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.segmentSeparators.strokeWidth"
                     stroke-linecap="round" />
@@ -665,64 +680,74 @@ defineExpose({
 
             <!-- STEP MARKERS -->
             <g v-if="FINAL_CONFIG.style.chart.layout.markers.show">
-                <text v-for="(arc, i) in arcs" :data-cy="`gauge-step-marker-label-${i}`" :x="offsetFromCenterPoint({
-        centerX: pointer.x1,
-        centerY: arcSizeSource.base,
-        initX: arc.center.startX,
-        initY: arc.center.startY,
-        offset: svg.markerOffset
-    }).x" :y="offsetFromCenterPoint({
-        centerX: pointer.x1,
-        centerY: arcSizeSource.base,
-        initX: arc.center.startX,
-        initY: arc.center.startY,
-        offset: svg.markerOffset
-    }).y" :text-anchor="arc.center.startX < (pointer.x1 - 5) ? 'end' : arc.center.startX > (pointer.x1 + 5) ? 'start' : 'middle'"
+                <text v-for="(arc, i) in arcs"
+                    data-cy="arc-label-value"
+                    :x="offsetFromCenterPoint({
+                        centerX: pointer.x1,
+                        centerY: arcSizeSource.base,
+                        initX: arc.center.startX,
+                        initY: arc.center.startY,
+                        offset: svg.markerOffset
+                    }).x" 
+                    :y="offsetFromCenterPoint({
+                        centerX: pointer.x1,
+                        centerY: arcSizeSource.base,
+                        initX: arc.center.startX,
+                        initY: arc.center.startY,
+                        offset: svg.markerOffset
+                    }).y" 
+                    :text-anchor="arc.center.startX < (pointer.x1 - 5) ? 'end' : arc.center.startX > (pointer.x1 + 5) ? 'start' : 'middle'"
                     :font-size="svg.labelFontSize * FINAL_CONFIG.style.chart.layout.markers.fontSizeRatio"
                     :font-weight="`${FINAL_CONFIG.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
                     :fill="FINAL_CONFIG.style.chart.layout.markers.color">
                     {{
-        applyDataLabel(
-            FINAL_CONFIG.style.chart.layout.markers.formatter,
-            arc.from,
-            dataLabel({
-                p: FINAL_CONFIG.style.chart.layout.markers.prefix,
-                v: arc.from,
-                s: FINAL_CONFIG.style.chart.layout.markers.suffix,
-                r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
-            })
-        )
-    }}
+                        applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.markers.formatter,
+                            arc.from,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.markers.prefix,
+                                v: arc.from,
+                                s: FINAL_CONFIG.style.chart.layout.markers.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
+                            })
+                        )
+                    }}
                 </text>
             </g>
 
-            <text v-if="FINAL_CONFIG.style.chart.layout.markers.show" data-cy="gauge-step-marker-label-last" :x="offsetFromCenterPoint({
-        centerX: svg.width / 2,
-        centerY: arcSizeSource.base,
-        initX: arcs.at(-1).endX,
-        initY: arcs.at(-1).endY,
-        offset: svg.markerOffset
-    }).x" :y="offsetFromCenterPoint({
-        centerX: svg.width / 2,
-        centerY: arcSizeSource.base,
-        initX: arcs.at(-1).endX,
-        initY: arcs.at(-1).endY,
-        offset: svg.markerOffset
-    }).y" text-anchor="start" :font-size="svg.labelFontSize * FINAL_CONFIG.style.chart.layout.markers.fontSizeRatio"
+            <text 
+                v-if="FINAL_CONFIG.style.chart.layout.markers.show" 
+                data-cy="arc-label-value-last" 
+                :x="offsetFromCenterPoint({
+                    centerX: svg.width / 2,
+                    centerY: arcSizeSource.base,
+                    initX: arcs.at(-1).endX,
+                    initY: arcs.at(-1).endY,
+                    offset: svg.markerOffset
+                }).x" 
+                :y="offsetFromCenterPoint({
+                    centerX: svg.width / 2,
+                    centerY: arcSizeSource.base,
+                    initX: arcs.at(-1).endX,
+                    initY: arcs.at(-1).endY,
+                    offset: svg.markerOffset
+                }).y" 
+                text-anchor="start" 
+                :font-size="svg.labelFontSize * FINAL_CONFIG.style.chart.layout.markers.fontSizeRatio"
                 :font-weight="`${FINAL_CONFIG.style.chart.layout.markers.bold ? 'bold' : 'normal'}`"
                 :fill="FINAL_CONFIG.style.chart.layout.markers.color">
                 {{
-        applyDataLabel(
-            FINAL_CONFIG.style.chart.layout.markers.formatter,
-            max,
-            dataLabel({
-                p: FINAL_CONFIG.style.chart.layout.markers.prefix,
-                v: max,
-                s: FINAL_CONFIG.style.chart.layout.markers.suffix,
-                r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
-            })
-        )
-    }}
+                    applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.markers.formatter,
+                        max,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.markers.prefix,
+                            v: max,
+                            s: FINAL_CONFIG.style.chart.layout.markers.suffix,
+                            r: FINAL_CONFIG.style.chart.layout.markers.roundingValue
+                        })
+                    )
+                }}
             </text>
 
             <!-- GAUGE POINTER -->
@@ -741,34 +766,50 @@ defineExpose({
                         :stroke-width="svg.pointerStrokeWidth * 0.3" :filter="`url(#blur_${uid})`" />
                 </g>
                 <g v-else>
-                    <path v-if="pointyPointerPath" :d="pointyPointerPath"
+                    <path 
+                        data-cy="gauge-pointer"
+                        v-if="pointyPointerPath" 
+                        :d="pointyPointerPath"
                         :fill="FINAL_CONFIG.style.chart.layout.pointer.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.layout.pointer.color"
                         :stroke="FINAL_CONFIG.style.chart.layout.pointer.stroke"
                         :stroke-width="FINAL_CONFIG.style.chart.layout.pointer.circle.strokeWidth"
-                        stroke-linejoin="round" />
+                        stroke-linejoin="round" 
+                    />
                 </g>
-                <circle data-cy="gauge-pointer-circle" :cx="svg.width / 2" :cy="arcSizeSource.base"
+                <circle 
+                    data-cy="gauge-pointer-circle" 
+                    :cx="svg.width / 2" 
+                    :cy="arcSizeSource.base"
                     :fill="FINAL_CONFIG.style.chart.layout.pointer.circle.color"
                     :r="svg.pointerRadius <= 0 ? 0.0001 : svg.pointerRadius"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.pointer.circle.strokeWidth"
-                    :stroke="FINAL_CONFIG.style.chart.layout.pointer.circle.stroke" />
+                    :stroke="FINAL_CONFIG.style.chart.layout.pointer.circle.stroke" 
+                />
             </template>
 
             <!-- GAUGE RATING -->
-            <text v-if="FINAL_CONFIG.style.chart.legend.show" data-cy="gauge-score" :x="svg.width / 2"
-                :y="arcSizeSource.ratingBase" text-anchor="middle" :font-size="svg.legendFontSize" font-weight="bold"
-                :fill="FINAL_CONFIG.style.chart.legend.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.legend.color">
-                {{ applyDataLabel(
-        FINAL_CONFIG.style.chart.legend.formatter,
-        activeRating,
-        dataLabel({
-            p: FINAL_CONFIG.style.chart.legend.prefix + (FINAL_CONFIG.style.chart.legend.showPlusSymbol &&
-                activeRating > 0
-                ? '+' : ''),
-            v: activeRating,
-            s: FINAL_CONFIG.style.chart.legend.suffix,
-            r: FINAL_CONFIG.style.chart.legend.roundingValue
-        }))
+            <text 
+                data-cy="gauge-score" 
+                v-if="FINAL_CONFIG.style.chart.legend.show" 
+                :x="svg.width / 2"
+                :y="arcSizeSource.ratingBase" 
+                text-anchor="middle" 
+                :font-size="svg.legendFontSize" 
+                font-weight="bold"
+                :fill="FINAL_CONFIG.style.chart.legend.useRatingColor ? ratingColor : FINAL_CONFIG.style.chart.legend.color"
+            >
+                {{ 
+                applyDataLabel(
+                    FINAL_CONFIG.style.chart.legend.formatter,
+                    activeRating,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.chart.legend.prefix + (FINAL_CONFIG.style.chart.legend.showPlusSymbol &&
+                            activeRating > 0
+                            ? '+' : ''),
+                        v: activeRating,
+                        s: FINAL_CONFIG.style.chart.legend.suffix,
+                        r: FINAL_CONFIG.style.chart.legend.roundingValue
+                    }))
                 }}
             </text>
             <slot name="svg" :svg="svg" />

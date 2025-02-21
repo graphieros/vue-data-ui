@@ -264,12 +264,29 @@ export const components = [
             base: 100,
             value: 0,
             series: [
-                { from: -100, to: -70, name: "series 1", nameOffsetRatio: 1 },
-                { from: -70, to: -35, name: "series 2", nameOffsetRatio: 1 },
-                { from: -35, to: 0, name: "series 3", nameOffsetRatio: 1 },
-                { from: 0, to: 50, name: "series 4", nameOffsetRatio: 1 },
-                { from: 50, to: 100, name: "series 5" },
+                { from: -100, to: -50, name: "A"},
+                { from: -50, to: 0, name: "B" },
+                { from: 0, to: 50, name: "C" },
+                { from: 50, to: 100, name: "D" },
             ],
+        },
+        config: {
+            style: {
+                chart: {
+                    layout: {
+                        indicatorArc: {
+                            show: true
+                        },
+                        segmentSeparators: {
+                            show: true
+                        }
+                    },
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
         },
         wrapperClass: ".vue-ui-gauge",
     },

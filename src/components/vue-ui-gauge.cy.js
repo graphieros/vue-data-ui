@@ -1,59 +1,54 @@
-import VueUiGauge from './vue-ui-gauge.vue'
+import VueUiGauge from './vue-ui-gauge.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
 
+const { dataset, config } = components.find(c => c.name === 'VueUiGauge');
 
 describe('<VueUiGauge />', () => {
-  beforeEach(function () {
-    cy.fixture('gauge.json').as('fixture');
-    cy.viewport(400, 420);
-  });
 
-  function updateConfigInFixture(modifiedConfig) {
-    cy.get('@fixture').then((fixture) => {
-      const updatedFixture = { ...fixture, config: modifiedConfig };
-      cy.wrap(updatedFixture).as('fixture');
-    });
-  }
+	it('renders', () => {
+		cy.mount(VueUiGauge, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(() => {
+			testCommonFeatures({
+				userOptions: true,
+				title: true,
+				subtitle: true
+			});
 
-  it('renders with different config attributes', function () {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiGauge, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        }
-      });
+			cy.log('gauge arcs');
+			cy.get('[data-cy="gauge-arc"]').should('exist').and('be.visible').and('have.length', dataset.series.length);
+			
+			cy.log('indicator');
+			cy.get('[data-cy="arc-indicator"]').should('exist').and('be.visible');
 
-      for (let i = 0; i < fixture.dataset.series.length; i += 1) {
-        cy.get(`[data-cy="gauge-step-marker-label-${i}"]`)
-          .should('exist')
-          .contains(`${fixture.dataset.series[i].from.toFixed(fixture.config.style.chart.layout.markers.roundingValue)}`)
-      }
+			cy.log('arc labels');
+			cy.get('[data-cy="arc-label"]').as('arcLabels').should('exist').and('be.visible').and('have.length', dataset.series.length);
+			cy.get('@arcLabels').each((label, i) => {
+				cy.wrap(label).contains(dataset.series[i].name);
+			});
 
-      cy.get(`[data-cy="gauge-step-marker-label-last"]`)
-        .should('exist')
-        .contains(`${fixture.dataset.series.at(-1).to.toFixed(fixture.config.style.chart.layout.markers.roundingValue)}`);
+			cy.log('segment separators');
+			cy.get('[data-cy="segment-separator-first-wrapper"]').should('exist').and('be.visible');
+			cy.get('[data-cy="segment-separator-first"]').should('exist').and('be.visible');
+			cy.get('[data-cy="segment-separator-wrapper"]').should('exist').and('be.visible').and('have.length', dataset.series.length);
+			cy.get('[data-cy="segment-separator"]').should('exist').and('be.visible').and('have.length', dataset.series.length);
 
+			cy.log('arc value labels');
+			cy.get('[data-cy="arc-label-value"]').as('valueLabels').should('exist').and('be.visible').and('have.length', dataset.series.length);
+			cy.get('@valueLabels').first().contains(dataset.series[0].from);
+			cy.get('@valueLabels').last().contains(dataset.series.at(-1).from);
+			cy.get('[data-cy="arc-label-value-last"]').should('exist').and('be.visible').and('contain', dataset.series.at(-1).to);
 
-      cy.get(`[data-cy="gauge-pointer-circle"]`).then(($circle) => {
-        cy.wrap($circle)
-          .should('exist')
-          .invoke('attr', 'fill')
-          .should('eq', fixture.config.style.chart.layout.pointer.circle.color);
+			cy.log('pointer');
+			cy.get('[data-cy="gauge-pointer"]').should('exist').and('be.visible');
+			cy.get('[data-cy="gauge-pointer-circle"]').should('exist').and('be.visible');
 
-        cy.wrap($circle)
-          .invoke('attr',  'r')
-          .should('eq', String(fixture.config.style.chart.layout.pointer.circle.radius));
-
-        cy.wrap($circle)
-          .invoke('attr',  'stroke-width')
-          .should('eq', String(fixture.config.style.chart.layout.pointer.circle.strokeWidth));
-
-        cy.wrap($circle)
-          .invoke('attr',  'stroke')
-          .should('eq', fixture.config.style.chart.layout.pointer.circle.stroke);
-      })
-
-      cy.get(`[data-cy="user-options-summary"]`).click();
-    });
-  });
-})
+			cy.log('score');
+			cy.get('[data-cy="gauge-score"]').should('exist').and('be.visible').and('contain', dataset.value);
+		});
+	});
+});
