@@ -825,6 +825,16 @@ export const components = [
                 values: [25, 1],
             },
         ],
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-rings",
     },
     {

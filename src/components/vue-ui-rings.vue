@@ -657,6 +657,7 @@ defineExpose({
       <!-- RINGS -->
       <g v-for="(ring, i) in convertedDataset">
         <circle
+          data-cy="ring-underlayer"
           :class="{
             'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
             'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation,
@@ -671,7 +672,7 @@ defineExpose({
         />
 
         <circle
-        :data-cy="`ring-${i}`"
+          data-cy="ring"
           :class="{
             'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
             'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation,
@@ -710,8 +711,7 @@ defineExpose({
         />
         
         <circle
-          :data-cy="`mouse-trap-${i}`"
-          data-cy-trap
+          data-cy="tooltip-trap"
           stroke="none"
           :cx="svg.width / 2"
           :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"

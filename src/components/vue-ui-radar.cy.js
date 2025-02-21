@@ -41,7 +41,7 @@ describe('<VueUiRadar />', () => {
 			cy.log('datapoints');
 			cy.get('[data-cy="polygon-datapoint-wrapper"]').should('exist').and('be.visible').and('have.length', dataset.categories.length);
 			cy.get('[data-cy="polygon-datapoint"]').should('exist').and('be.visible').and('have.length', dataset.categories.length);
-			cy.get('[data-cy="datapoint-circle"]').should('exist').and('be.visible').and('have.length', dataset.categories.length * dataset.series.length)
+			cy.get('[data-cy="datapoint-circle"]').should('exist').and('be.visible').and('have.length', dataset.categories.length * dataset.series.length);
 		});
 	});
 });

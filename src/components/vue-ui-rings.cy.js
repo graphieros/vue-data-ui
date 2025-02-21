@@ -1,70 +1,32 @@
-import VueUiRings from './vue-ui-rings.vue'
+import VueUiRings from './vue-ui-rings.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
+
+const { config, dataset } = components.find(c => c.name === 'VueUiRings');
 
 describe('<VueUiRings />', () => {
+	it('renders', () => {
+		cy.viewport(500, 600);
+		cy.mount(VueUiRings, {
+			props: {
+				config,
+				dataset
+			}
+		}).then(() => {
+			testCommonFeatures({
+				userOptions: true,
+				title: true,
+				subtitle: true,
+				legend: true,
+				dataTable: true,
+				tooltipCallback: () => {
+					cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseenter', { force: true });
+				}
+			});
 
-  beforeEach(function() {
-    const stub = cy.stub()
-    Cypress.on('uncaught:exception', (err, runnable) => {
-      if (err.message.includes('ResizeObserver')) {
-          stub()
-          return false
-      }
-    })
-    cy.fixture('rings.json').as('fixture');
-    cy.viewport(600, 800);
-  });
-
-  it('segregates series when selecting legend items', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiRings, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        }
-      });
-
-      cy.get('[data-cy-legend-item]').eq(0).click()
-      cy.get('[data-cy-trap]').should('have.length', 3)
-      cy.get('[data-cy-legend-item]').eq(0).click()
-      cy.get('[data-cy-trap]').should('have.length', 4)
-    });
-  })
-
-  it('renders', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiRings, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        }
-      });
-
-      cy.get(`[data-cy="rings-svg"]`).should('exist')
-
-      for(let i = 0; i < fixture.dataset.length; i += 1) {
-        cy.get(`[data-cy="ring-${i}"]`).should('exist')
-        cy.wait(200)
-        cy.get(`[data-cy="mouse-trap-${i}"]`).trigger('mouseenter', { force: true })
-      }
-
-      cy.get(`[data-cy="tooltip"]`).then(($tooltip) => {
-        cy.wrap($tooltip).should('exist')
-        cy.wrap($tooltip).contains('serie 3')
-        cy.wrap($tooltip).contains('30')
-        cy.wrap($tooltip).contains('(7%)')
-      })
-
-      cy.get(`[data-cy="mouse-trap-3"]`).trigger('mouseleave', { force: true})
-
-      cy.get(`[data-cy="user-options-summary"]`).should('exist').click()
-
-      // cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-      // cy.get(`[data-cy="user-options-xls"]`).click({ force: true});
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.csv`);
-      // cy.get(`[data-cy="user-options-img"]`).click({ force: true});
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
-      // cy.clearDownloads();
-    })
-  })
-})
+			cy.log('datapoints');
+			cy.get('[data-cy="ring-underlayer"]').should('exist').and('be.visible').and('have.length', dataset.length);
+			cy.get('[data-cy="ring"]').should('exist').and('be.visible').and('have.length', dataset.length);
+		});
+	});
+});
