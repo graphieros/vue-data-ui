@@ -1,80 +1,72 @@
-import VueUiHeatmap from './vue-ui-heatmap.vue'
+import VueUiHeatmap from './vue-ui-heatmap.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
 
+const { dataset, config } = components.find(c => c.name === 'VueUiHeatmap');
 
 describe('<VueUiHeatmap />', () => {
-  beforeEach(function () {
-    cy.fixture('heatmap.json').as('fixture');
-    cy.viewport(1200, 350);
-  });
 
-  function updateConfigInFixture(modifiedConfig) {
-    cy.get('@fixture').then((fixture) => {
-      const updatedFixture = { ...fixture, config: modifiedConfig };
-      cy.wrap(updatedFixture).as('fixture');
-    });
-  }
+	function commonTest() {
+		testCommonFeatures({
+			userOptions: true,
+			title: true,
+			subtitle: true,
+			dataTable: true,
+			tooltipCallback: () => {
+				cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseover', { force: true });
+				cy.get('[data-cy="cell-selected"]').should('exist').and('be.visible');
+			}
+		});
 
-  it('renders with different config attributes', function () {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiHeatmap, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        }
-      });
+		cy.log('cells');
+		cy.get('[data-cy="cell-underlayer"]').should('exist').and('be.visible').and('have.length', 91);
+		cy.get('[data-cy="cell"]').should('exist').and('be.visible').and('have.length', 91);
+		cy.get('[data-cy="cell-label"]').should('exist').and('be.visible').and('have.length', 91);
+		cy.get('[data-cy="tooltip-trap"]').should('exist').and('be.visible').and('have.length', 91);
+		
+		cy.log('y axis labels');
+		cy.get('[data-cy="axis-y-label"]').as('yLabels').should('exist').and('be.visible').and('have.length', dataset.length);
+		cy.get('@yLabels').each((label, i) => {
+			cy.wrap(label).contains(dataset[i].name);
+		});
 
-      const values = fixture.dataset.flatMap((d) => d.values);
-      const minRoundedValue = Math.round(Math.min(...values));
-      const maxRoundedValue = Math.round(Math.max(...values));
-      const yLabels = fixture.dataset.map((d) => d.name);
+		cy.log('x axis labels');
+		cy.get('[data-cy="axis-x-label"]').as('xLabels').should('exist').and('be.visible').and('have.length', 13);
+		cy.get('@xLabels').each((label, i) => {
+			cy.wrap(label).contains(config.style.layout.dataLabels.xAxis.values[i]);
+		});
 
-      cy.get(`[data-cy="heatmap-div-title"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.text);
+		cy.log('legend');
+		cy.get('[data-cy="legend-label-max"]').should('exist').and('be.visible').and('contain', 30);
+		cy.get('[data-cy="legend-label-min"]').should('exist').and('be.visible').and('contain', 0);
+		cy.get('[data-cy="legend-pill"]').should('exist').and('be.visible');
+		cy.get('[data-cy="legend-indicator-line"]').should('exist').and('have.css', 'opacity', '1');
+		cy.get('[data-cy="legend-indicator-triangle"]').should('exist').and('be.visible');
+	}
 
-      cy.get(`[data-cy="heatmap-div-subtitle"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.subtitle.text);
+	it('renders with right legend', () => {
+		cy.mount(VueUiHeatmap, {
+			props: {
+				config,
+				dataset
+			}
+		}).then(commonTest);
+	});
 
-      cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.get(`[data-cy="user-options-table"]`).click();
-      cy.get(`[data-cy="user-options-summary"]`).click();
-
-      cy.viewport(1200, 750);
-
-      cy.get(`[data-cy="heatmap-trap-0-0"]`).then(($trap) => {
-        cy.wrap($trap)
-          .trigger('mouseover');
-
-        cy.get(`[data-cy="tooltip"]`)
-          .should('exist');
-
-        cy.get(`[data-cy="heatmap-tootlip-name"]`)
-          .should('exist')
-          .contains(`${yLabels[0]} 0`);
-
-        cy.get(`[data-cy="heatmap-tooltip-value"]`)
-          .should('exist')
-          .contains(`${Number(fixture.dataset[0].values[0].toFixed(fixture.config.style.tooltip.roundingValue)).toLocaleString()}`);
-
-        cy.wrap($trap)
-          .trigger('mouseout');
-      });
-
-      cy.get(`[data-cy="user-options-summary"]`).click();
-
-      // cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
-      // cy.wait(10000);
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.pdf`);
-      // cy.get(`[data-cy="user-options-xls"]`).click({ force: true});
-      // cy.wait(3000);
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.csv`);
-      // cy.get(`[data-cy="user-options-img"]`).click({ force: true});
-      // cy.wait(10000);
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.title.text}.png`);
-      // cy.clearDownloads();
-
-      cy.get(`[data-cy="user-options-summary"]`).click();
-    });
-  });
-})
+	it('renders with bottom legend', () => {
+		cy.mount(VueUiHeatmap, {
+			props: {
+				config: {
+					...config,
+					style: {
+						...config.style,
+						legend: {
+							position: 'bottom'
+						}
+					}
+				},
+				dataset
+			}
+		}).then(commonTest);
+	});
+});

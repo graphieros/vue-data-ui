@@ -508,6 +508,7 @@ defineExpose({
             <g v-for="(serie, i) in mutableDataset">
                 <g v-for="(cell, j) in serie.temperatures">
                     <rect
+                        data-cy="cell-underlayer"
                         :x="drawingArea.left + cellSize.width * j + (FINAL_CONFIG.style.layout.cells.spacing / 2)"
                         :y="drawingArea.top + cellSize.height * i + (FINAL_CONFIG.style.layout.cells.spacing / 2)"
                         :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing"
@@ -517,6 +518,7 @@ defineExpose({
                         :stroke-width="FINAL_CONFIG.style.layout.cells.spacing"
                     />
                     <rect
+                        data-cy="cell"
                         :x="drawingArea.left + cellSize.width * j + (FINAL_CONFIG.style.layout.cells.spacing / 2)"
                         :y="drawingArea.top + cellSize.height * i + (FINAL_CONFIG.style.layout.cells.spacing / 2)"
                         :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing"
@@ -526,6 +528,7 @@ defineExpose({
                         :stroke-width="FINAL_CONFIG.style.layout.cells.spacing"
                     />
                     <text 
+                        data-cy="cell-label"
                         v-if="FINAL_CONFIG.style.layout.cells.value.show"
                         text-anchor="middle"
                         :font-size="FINAL_CONFIG.style.layout.cells.value.fontSize"
@@ -551,7 +554,7 @@ defineExpose({
                 <g v-for="(cell, j) in serie.temperatures">
                     <!-- TOOLTIP TRAPS -->
                     <rect
-                        :data-cy="`heatmap-trap-${i}-${j}`"
+                        data-cy="tooltip-trap"
                         :x="drawingArea.left + cellSize.width * j"
                         :y="drawingArea.top + cellSize.height * i"
                         :width="cellSize.width"
@@ -564,6 +567,7 @@ defineExpose({
                 </g>
                 <g v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show">
                     <text
+                        data-cy="axis-y-label"
                         :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
                         :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
                         :x="drawingArea.left + FINAL_CONFIG.style.layout.dataLabels.yAxis.offsetX - 6"
@@ -578,6 +582,7 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.layout.dataLabels.xAxis.show">
                 <template v-for="(label, i) in dataLabels.xLabels">
                     <text
+                        data-cy="axis-x-label"
                         v-if="!FINAL_CONFIG.style.layout.dataLabels.xAxis.showOnlyAtModulo || (FINAL_CONFIG.style.layout.dataLabels.xAxis.showOnlyAtModulo && i % FINAL_CONFIG.style.layout.dataLabels.xAxis.showOnlyAtModulo === 0)"
                         :text-anchor="FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation === 0 ? 'middle' : FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation < 0 ? 'start' : 'end'"
                         :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
@@ -593,6 +598,7 @@ defineExpose({
             <!-- BORDER FOR SELECTED RECT, PAINTED LAST -->
             <g v-if="selectedClone">
                 <rect
+                    data-cy="cell-selected"
                     style="pointer-events: none;"
                     :x="selectedClone.x - ((FINAL_CONFIG.style.layout.cells.selected.border) / 2) + FINAL_CONFIG.style.layout.cells.spacing"
                     :y="selectedClone.y - (FINAL_CONFIG.style.layout.cells.selected.border / 2) + FINAL_CONFIG.style.layout.cells.spacing"
@@ -614,6 +620,7 @@ defineExpose({
                     </linearGradient>
                 </defs>
                 <text
+                    data-cy="legend-label-max"
                     :x="drawingArea.right + 36 + 18"
                     :y="drawingArea.top - FINAL_CONFIG.style.legend.fontSize * 1.5"
                     text-anchor="middle"
@@ -632,6 +639,7 @@ defineExpose({
                     }}
                 </text>
                 <rect
+                    data-cy="legend-pill"
                     :x="drawingArea.right + 36"
                     :y="drawingArea.top"
                     :width="36"
@@ -640,6 +648,7 @@ defineExpose({
                     :fill="`url(#colorScaleVertical_${uid})`"
                 />
                 <text
+                    data-cy="legend-label-min"
                     :x="drawingArea.right + 36 + 18"
                     :y="drawingArea.top + sideLegendHeight + FINAL_CONFIG.style.legend.fontSize * 2.5"
                     text-anchor="middle"
@@ -657,8 +666,23 @@ defineExpose({
                         })) 
                     }}
                 </text>
-                <line v-if="hoveredValue !== null" :stroke="adaptColorToBackground(dataTooltipSlot.datapoint.color)" stroke-width="2" :x1="drawingArea.right + 36" :x2="drawingArea.right + 72" :y1="sideLegendIndicatorY" :y2="sideLegendIndicatorY" />
-                <path v-if="hoveredValue !== null" :fill="FINAL_CONFIG.style.color" stroke="none" :d="`M ${drawingArea.right + 36},${sideLegendIndicatorY} ${drawingArea.right + 26},${sideLegendIndicatorY - 8} ${drawingArea.right + 26},${sideLegendIndicatorY + 8}z`" />
+                <line
+                    data-cy="legend-indicator-line"
+                    v-if="hoveredValue !== null" 
+                    :stroke="adaptColorToBackground(dataTooltipSlot.datapoint.color)" 
+                    stroke-width="2" 
+                    :x1="drawingArea.right + 36" 
+                    :x2="drawingArea.right + 72" 
+                    :y1="sideLegendIndicatorY" 
+                    :y2="sideLegendIndicatorY" 
+                />
+                <path
+                    data-cy="legend-indicator-triangle"
+                    v-if="hoveredValue !== null" 
+                    :fill="FINAL_CONFIG.style.color" 
+                    stroke="none" 
+                    :d="`M ${drawingArea.right + 36},${sideLegendIndicatorY} ${drawingArea.right + 26},${sideLegendIndicatorY - 8} ${drawingArea.right + 26},${sideLegendIndicatorY + 8}z`" 
+                />
             </g>
 
             <!-- LEGEND BOTTOM -->
@@ -670,6 +694,7 @@ defineExpose({
                     </linearGradient>
                 </defs>
                 <rect
+                    data-cy="legend-pill"
                     :x="drawingArea.left"
                     :y="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height"
                     :width="svg.width - drawingArea.left - FINAL_CONFIG.style.layout.padding.right"
@@ -678,6 +703,7 @@ defineExpose({
                     fill="url(#colorScaleHorizontal)"
                 />
                 <text
+                    data-cy="legend-label-min"
                     :x="drawingArea.left"
                     :y="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height * 2 + FINAL_CONFIG.style.legend.fontSize * 2"
                     text-anchor="start"
@@ -696,6 +722,7 @@ defineExpose({
                     }}
                 </text>
                 <text
+                    data-cy="legend-label-max"
                     :x="drawingArea.right"
                     :y="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height * 2 + FINAL_CONFIG.style.legend.fontSize * 2"
                     text-anchor="end"
@@ -713,8 +740,23 @@ defineExpose({
                         })) 
                     }}
                 </text>
-                <line v-if="hoveredValue !== null" :stroke="adaptColorToBackground(dataTooltipSlot.datapoint.color)" stroke-width="2" :x1="bottomLegendIndicatorX" :x2="bottomLegendIndicatorX" :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height" :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height * 2" />
-                <path v-if="hoveredValue !== null" :fill="FINAL_CONFIG.style.color" stroke="none" :d="`M ${bottomLegendIndicatorX},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height} ${bottomLegendIndicatorX - 12},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height - 20} ${bottomLegendIndicatorX + 12},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height - 20}z`" />
+                <line
+                    data-cy="legend-indicator-line"
+                    v-if="hoveredValue !== null" 
+                    :stroke="adaptColorToBackground(dataTooltipSlot.datapoint.color)" 
+                    stroke-width="2" 
+                    :x1="bottomLegendIndicatorX" 
+                    :x2="bottomLegendIndicatorX" 
+                    :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height" 
+                    :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height * 2" 
+                />
+                <path
+                    data-cy="legend-indicator-triangle"
+                    v-if="hoveredValue !== null" 
+                    :fill="FINAL_CONFIG.style.color" 
+                    stroke="none" 
+                    :d="`M ${bottomLegendIndicatorX},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height} ${bottomLegendIndicatorX - 12},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height - 20} ${bottomLegendIndicatorX + 12},${drawingArea.bottom + FINAL_CONFIG.style.layout.cells.height - 20}z`" 
+                />
             </g>
 
             <slot name="svg" :svg="svg"/>
@@ -780,9 +822,9 @@ defineExpose({
             }
         }">
             <template #content>
-                <div ref="tableContainer" class="vue-ui-heatmap-table">
+                <div ref="tableContainer" class="vue-ui-heatmap-table atom-data-table">
                     <div :style="`width:100%;overflow-x:auto;padding-top:36px;position:relative`" :class="{'vue-ui-responsive' : isResponsive}">
-                        <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                        <div data-cy="data-table-close" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div> 
                         <table class="vue-ui-data-table">

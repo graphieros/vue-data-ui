@@ -295,7 +295,7 @@ export const components = [
         dataset: (function makeDs() {
             const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
             const arr = [];
-            const dsLen = 26;
+            const dsLen = 13;
             const serieLen = days.length;
             for (let i = 0; i < serieLen; i += 1) {
                 const values = [];
@@ -309,6 +309,33 @@ export const components = [
             }
             return arr;
         })(),
+        config: {
+            style: {
+                layout: {
+                    cells: {
+                        value: {
+                            show: true
+                        }
+                    },
+                    dataLabels: {
+                        xAxis: {
+                            show: true,
+                            values: (function IIFE(){
+                                const arr = [];
+                                for(let i = 0; i < 13; i += 1) {
+                                    arr.push(i)
+                                }
+                                return arr
+                            })()
+                        }
+                    }
+                },
+                title: {
+                    text: 'Title',
+                    subtitle: { text: 'Subtitle' }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-heatmap",
     },
     { name: "VueUiKpi", dataset: 100, wrapperClass: ".vue-ui-kpi" },
