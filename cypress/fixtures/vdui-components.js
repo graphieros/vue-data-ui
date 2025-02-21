@@ -173,7 +173,29 @@ export const components = [
     }, wrapperClass: ".vue-ui-digits" },
     {
         name: "VueUiDonut",
-        dataset: [{ name: "S", values: [1] }],
+        dataset: [
+            { name: "A", values: [1], comment: 'C-A' },
+            { name: "B", values: [2], comment: 'C-B' },
+            { name: "C", values: [3], comment: 'C-C' }
+        ],
+        config: {
+            style: {
+                chart: {
+                    comments: {
+                        show: true
+                    },
+                    layout: {
+                        donut: {
+                            useShadow: true
+                        }
+                    },
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-donut",
     },
     {

@@ -819,6 +819,7 @@ defineExpose({
             <template v-if="FINAL_CONFIG.type === 'classic'">
                 <g v-for="(arc, i) in currentDonut">
                     <path
+                        data-cy="donut-arc"
                         v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                         :d="calcNutArrowPath(arc, {x: svg.width / 2, y: svg.height / 2}, 16, 16, false, false, donutThickness)"
                         :stroke="arc.color"
@@ -833,6 +834,7 @@ defineExpose({
             <template v-if="FINAL_CONFIG.type === 'polar'">
                 <g v-for="(arc, i) in currentDonut">
                     <line
+                        data-cy="polar-datapoint"
                         v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                         :x1="offsetFromCenterPoint({initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2}).x"
                         :y1="offsetFromCenterPoint({initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2}).y"
@@ -849,6 +851,7 @@ defineExpose({
             </template>
             
             <circle
+                data-cy="donut-shadow"
                 v-if="FINAL_CONFIG.type === 'classic' && FINAL_CONFIG.style.chart.layout.donut.useShadow"
                 :cx="svg.width / 2"
                 :cy="svg.height / 2"
@@ -903,7 +906,8 @@ defineExpose({
                         fill="#FFFFFF"
                     />
                     <g v-if="FINAL_CONFIG.style.chart.layout.donut.useShadow">
-                        <path 
+                        <path
+                            data-cy="polar-shadow"
                             v-for="(_arc, i) in currentDonut"
                             class="vue-ui-donut-arc-path"
                             :d="polarAreas[i].path"
@@ -981,10 +985,9 @@ defineExpose({
             <!-- TOOLTIP TRAPS -->
             <template v-if="total">
                 <g v-if="currentDonut.length > 1 || FINAL_CONFIG.type === 'classic'">
-                    <path 
+                    <path
+                        data-cy="tooltip-trap"
                         v-for="(arc, i) in currentDonut"
-                        :data-cy="`donut-trap-${i}`"
-                        data-cy-donut-trap
                         :d="FINAL_CONFIG.type === 'classic' ? arc.arcSlice : polarAreas[i].path" 
                         :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
                         @mouseenter="useTooltip({
@@ -1018,7 +1021,8 @@ defineExpose({
 
             <!-- HOLLOW LABELS (Classic donut only )-->
             <template v-if="FINAL_CONFIG.type === 'classic'">
-                <text 
+                <text
+                    data-cy="hollow-total-name"
                     v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
                     text-anchor="middle"
                     :x="svg.width / 2"
@@ -1029,7 +1033,8 @@ defineExpose({
                 >
                     {{ FINAL_CONFIG.style.chart.layout.labels.hollow.total.text }}
                 </text>
-                <text 
+                <text
+                    data-cy="hollow-total-value"
                     v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
                     text-anchor="middle"
                     :x="svg.width / 2"
@@ -1049,7 +1054,8 @@ defineExpose({
                     }}
                 </text>
     
-                <text 
+                <text
+                    data-cy="hollow-average-name"
                     v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
                     text-anchor="middle"
                     :x="svg.width / 2"
@@ -1060,7 +1066,8 @@ defineExpose({
                 >
                     {{ FINAL_CONFIG.style.chart.layout.labels.hollow.average.text }}
                 </text>
-                <text 
+                <text
+                    data-cy="hollow-average-value"
                     v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
                     text-anchor="middle"
                     :x="svg.width / 2"
@@ -1109,6 +1116,7 @@ defineExpose({
                 <g v-else>
                     <template v-if="FINAL_CONFIG.type === 'classic'">
                         <circle
+                            data-cy="donut-label-marker"
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                             :cx="calcMarkerOffsetX(arc).x"
                             :cy="calcMarkerOffsetY(arc) - 3.5"
@@ -1122,6 +1130,7 @@ defineExpose({
                     </template>
                     <template v-if="FINAL_CONFIG.type === 'polar'">
                         <circle
+                            data-cy="polar-label-marker"
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                             :cx="offsetFromCenterPoint({initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2}).x"
                             :cy="offsetFromCenterPoint({initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2}).y"
@@ -1135,7 +1144,7 @@ defineExpose({
                     </template>
                     <template v-if="FINAL_CONFIG.type === 'classic'">
                         <text
-                            :data-cy="`donut-datalabel-value-${i}`"
+                            data-cy="donut-label-value"
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                             :text-anchor="calcMarkerOffsetX(arc, true, 12).anchor"
                             :x="calcMarkerOffsetX(arc, true, 12).x"
@@ -1157,7 +1166,7 @@ defineExpose({
                                 )})` : '' }}
                         </text>
                         <text
-                            :data-cy="`donut-datalabel-name-${i}`"
+                            data-cy="donut-label-name"
                             v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
                             :text-anchor="calcMarkerOffsetX(arc).anchor"
                             :x="calcMarkerOffsetX(arc, true, 12).x"
@@ -1172,7 +1181,7 @@ defineExpose({
                     </template>
                     <template v-if="FINAL_CONFIG.type === 'polar'">
                         <text
-                            :data-cy="`donut-datalabel-value-${i}`"
+                            data-cy="polar-label-value"
                             v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                             :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
                             :x="offsetFromCenterPoint({initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2}).x"
@@ -1194,7 +1203,7 @@ defineExpose({
                                 )})` : '' }}
                         </text>
                         <text
-                            :data-cy="`donut-datalabel-name-${i}`"
+                            data-cy="polar-label-name"
                             v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
                             :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
                             :x="offsetFromCenterPoint({initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2}).x"
@@ -1206,7 +1215,6 @@ defineExpose({
                         >
                             {{ arc.name }}
                         </text>
-                            
                     </template>
                 </g>
 
