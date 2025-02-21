@@ -714,7 +714,9 @@ defineExpose({
             <!-- GRID -->
             <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
                 <!-- RADIAL LINES -->
-                <line v-for="line in radar"
+                <line
+                    data-cy="radial-line"
+                    v-for="line in radar"
                     :x1="svg.width / 2"
                     :y1="svg.height / 2"
                     :x2="line.x"
@@ -724,7 +726,8 @@ defineExpose({
                 />
                 <!-- INNER POLYGONS -->
                 <g v-if="FINAL_CONFIG.style.chart.layout.grid.graduations > 0">
-                    <path 
+                    <path
+                        data-cy="polygon-inner"
                         v-for="radius in innerPolygons"
                         :d="createPolygonPath({
                             plot: { x: svg.width / 2, y: svg.height / 2 },
@@ -740,12 +743,20 @@ defineExpose({
             </g>
 
             <!-- OUTER POLYGON -->
-            <path :d="outerPolygon.path" fill="none" :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke" :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" stroke-linejoin="round" stroke-linecap="round"/>
+            <path
+                data-cy="polygon-outer"
+                :d="outerPolygon.path" 
+                fill="none" 
+                :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke" 
+                :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" 
+                stroke-linejoin="round" 
+                stroke-linecap="round"
+            />
 
             <!-- APEX LABELS -->
             <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
             <text v-for="(label, i) in radar"
-                :data-cy="`radar-apex-label-${i}`"
+                data-cy="label-apex"
                 :x="offset(label).x"
                 :y="offset(label).y"
                 :text-anchor="offset(label).anchor"
@@ -762,7 +773,7 @@ defineExpose({
             <g v-for="(d, i) in datasetCopy">
                 <g>
                     <polygon
-                        data-cy-radar-path
+                        data-cy="polygon-datapoint-wrapper"
                         :points="makePath(radar.map(r => r.plots[i]), false, true)"
                         :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth + 1"
@@ -771,7 +782,7 @@ defineExpose({
                         :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
                     />
                     <polygon
-                        data-cy-radar-path
+                        data-cy="polygon-datapoint"
                         :points="makePath(radar.map(r => r.plots[i]), false, true)"
                         :stroke="d.color"
                         :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth"
@@ -784,7 +795,8 @@ defineExpose({
             
             <g v-if="FINAL_CONFIG.style.chart.layout.plots.show">
                 <g v-for="(category, i) in radar">
-                    <circle 
+                    <circle
+                        data-cy="datapoint-circle"
                         v-for="(p, j) in category.plots"
                         :cx="p.x"
                         :cy="p.y"

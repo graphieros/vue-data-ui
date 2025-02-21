@@ -1,87 +1,47 @@
-import VueUiRadar from './vue-ui-radar.vue'
+import VueUiRadar from './vue-ui-radar.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
+
+const { config, dataset } = components.find(c => c.name === 'VueUiRadar');
 
 describe('<VueUiRadar />', () => {
 
-  beforeEach(function () {
-    cy.fixture('radar.json').as('fixture');
-    cy.viewport(500, 500);
-  });
+	it('renders', () => {
+		cy.mount(VueUiRadar, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(() => {
+			
+			testCommonFeatures({
+				userOptions: true,
+				title: true,
+				subtitle: true,
+				legend: true,
+				dataTable: true,
+				tooltipCallback: () => {
+					cy.get('[data-cy="label-apex"]').first().trigger('mouseenter', { force: true });
+				}
+			});
 
-  it('renders', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiRadar, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        },
-      }).then((COMPONENT) => {
-        [
-          {
-            selector: `[data-cy="radar-div-title"]`,
-            expected: fixture.config.style.chart.title.text
-          },
-          {
-            selector: `[data-cy="radar-div-subtitle"]`,
-            expected: fixture.config.style.chart.title.subtitle.text
-          },
-        ].forEach(el => {
-          cy.get(el.selector)
-            .should('exist')
-            .contains(el.expected)
-        });
+			cy.log('radial lines');
+			cy.get('[data-cy="radial-line"]').should('exist').and('have.css', 'opacity', '1').and('have.length', dataset.series.length);
+			
+			cy.log('grid');
+			cy.get('[data-cy="polygon-inner"]').should('exist').and('have.css', 'opacity', '1').and('have.length', config.style.chart.layout.grid.graduations);
+			cy.get('[data-cy="polygon-outer"]').should('exist').and('have.css', 'opacity', '1');
 
-        cy.get(`[data-cy="user-options-summary"]`).click();
-        cy.get(`[data-cy="user-options-table"]`).click();
-        cy.viewport(500, 670);
-        cy.get(`[data-cy="user-options-summary"]`).click();
+			cy.log('apex labels');
+			cy.get('[data-cy="label-apex"]').as('apexLabels').should('exist').and('be.visible').and('have.length', dataset.series.length);
+			cy.get('@apexLabels').each((label, i) => {
+				cy.wrap(label).contains(dataset.series[i].name);
+			});
 
-        for (let i = 0; i < fixture.dataset.series.length; i += 1) {
-          cy.get(`[data-cy="radar-apex-label-${i}"]`).then(($label) => {
-            cy.wrap($label)
-              .should('exist')
-              .contains(fixture.dataset.series[i].name);
-
-            cy.wrap($label)
-              .trigger('mouseenter')
-              .wait(100);
-
-            cy.get(`[data-cy="tooltip"]`).then(($tooltip) => {
-              cy.wrap($tooltip)
-                .should('exist')
-                .contains(fixture.dataset.series[i].name)
-
-              fixture.dataset.categories.map(c => c.name).forEach(name => {
-                cy.wrap($tooltip)
-                  .contains(name)
-              });
-            });
-            if (i === fixture.dataset.series.length - 1) {
-              cy.wrap($label)
-                .trigger('mouseleave')
-            }
-          });
-        }
-
-        // cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
-        // cy.get(`[data-cy="user-options-pdf"]`).click({ force: true });
-        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-        // cy.get(`[data-cy="user-options-xls"]`).click({ force: true });
-        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.csv`);
-        // cy.get(`[data-cy="user-options-img"]`).click({ force: true });
-        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
-
-        // cy.get(`[data-cy="user-options-summary"]`).click({ force: true });
-        
-        // const { component, wrapper } = COMPONENT;
-        // wrapper.componentVM.generatePdf();
-        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-        // wrapper.componentVM.generateCsv();
-        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.csv`);
-        // wrapper.componentVM.generateImage();
-        // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
-        // cy.clearDownloads();
-
-      })
-    });
-  })
-})
+			cy.log('datapoints');
+			cy.get('[data-cy="polygon-datapoint-wrapper"]').should('exist').and('be.visible').and('have.length', dataset.categories.length);
+			cy.get('[data-cy="polygon-datapoint"]').should('exist').and('be.visible').and('have.length', dataset.categories.length);
+			cy.get('[data-cy="datapoint-circle"]').should('exist').and('be.visible').and('have.length', dataset.categories.length * dataset.series.length)
+		});
+	});
+});

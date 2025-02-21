@@ -689,6 +689,21 @@ export const components = [
                 },
             ],
         },
+        config: {
+            style: {
+                chart: {
+                    layout: {
+                        grid: {
+                            graduations: 3
+                        }
+                    },
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-radar",
     },
     {
