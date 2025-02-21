@@ -108,21 +108,56 @@ export const components = [
                         breakdown: [
                             {
                                 name: "break 1.1.1",
-                                value: 50,
+                                value: 100,
                             },
                             {
                                 name: "break 1.1.2",
-                                value: 25,
+                                value: 50,
                             },
                             {
                                 name: "break 1.1.3",
+                                value: 50,
+                            },
+                        ],
+                    },
+                ],
+            },
+            {
+                name: "Root2",
+                branches: [
+                    {
+                        name: "branch 2.1",
+                        value: 100,
+                        breakdown: [
+                            {
+                                name: "break 2.1.1",
                                 value: 25,
+                            },
+                            {
+                                name: "break 2.1.2",
+                                value: 25,
+                            },
+                            {
+                                name: "break 2.1.3",
+                                value: 50,
                             },
                         ],
                     },
                 ],
             },
         ],
+        config: {
+            style: {
+                chart: {
+                    layout: {
+                        title: {
+                            text: 'Title',
+                            subtitle: { text: 'Subtitle' }
+                        }
+                    }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-chestnut",
     },
     {
