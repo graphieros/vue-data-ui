@@ -630,6 +630,31 @@ export const components = [
                 })(10, 10),
             },
         ],
+        config: {
+            style: {
+                chart: {
+                    layout: {
+                        grid: {
+                            graduations: { steps: 5 },
+                            xAxis: { name: 'x' },
+                            yAxis: { name: 'y' },
+                        },
+                        labels: {
+                            quadrantLabels: {
+                                tl: { text: 'TL' },
+                                tr: { text: 'TR' },
+                                br: { text: 'BR' },
+                                bl: { text: 'BL' }
+                            }
+                        }
+                    },
+                    title: {
+                        text: 'Title',
+                        subtitle: { text: 'Subtitle' }
+                    }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-quadrant",
     },
     {

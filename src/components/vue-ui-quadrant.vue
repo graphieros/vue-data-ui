@@ -637,7 +637,7 @@ const dataTable = computed(() => {
     }
 
     return { head, body, config, colNames: head }
-})
+});
 
 function segregate(id) {
     if(segregated.value.includes(id)) {
@@ -648,7 +648,6 @@ function segregate(id) {
     const currentData = getData();
     emit('selectLegend', currentData);
 }
-
 
 const legendSet = computed(() => {
     return datasetReference.value.map(category => {
@@ -1063,7 +1062,7 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`" :style="`max-width:100%;overflow:${isZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  :id="`svg_${uid}`">
+        <svg data-cy="quadrant-svg" :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`" :style="`max-width:100%;overflow:${isZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  :id="`svg_${uid}`">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
@@ -1096,6 +1095,7 @@ defineExpose({
             <!-- GRADUATIONS-->
             <g v-if="FINAL_CONFIG.style.chart.layout.grid.graduations.show">
                 <rect v-for="graduation in graduations"
+                    data-cy="grid-rect"
                     :fill="FINAL_CONFIG.style.chart.layout.grid.graduations.fill ? setOpacity(FINAL_CONFIG.style.chart.layout.grid.graduations.color, graduation.opacity) : 'none'"
                     :x="graduation.x"
                     :y="graduation.y"
@@ -1109,6 +1109,7 @@ defineExpose({
 
             <!-- AXIS -->
             <line
+                data-cy="axis-x"
                 :x1="svg.left"
                 :y1="svg.centerY"
                 :x2="svg.right"
@@ -1117,6 +1118,7 @@ defineExpose({
                 :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
             />
             <line
+                data-cy="axis-y"
                 :x1="svg.centerX"
                 :y1="svg.top"
                 :x2="svg.centerX"
@@ -1126,10 +1128,10 @@ defineExpose({
             />
             <!-- ARROWS -->
             <g v-if="FINAL_CONFIG.style.chart.layout.grid.showArrows">
-                <polygon :points="`${svg.right - 8},${svg.centerY - 6} ${svg.right},${svg.centerY} ${svg.right - 8},${svg.centerY + 6}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none" />
-                <polygon :points="`${svg.left + 8},${svg.centerY - 6} ${svg.left},${svg.centerY} ${svg.left + 8},${svg.centerY + 6}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none" />
-                <polygon :points="`${svg.centerX - 6},${svg.top + 8} ${svg.centerX},${svg.top} ${svg.centerX + 6},${svg.top + 8}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none"/>
-                <polygon :points="`${svg.centerX - 6},${svg.bottom - 8} ${svg.centerX},${svg.bottom} ${svg.centerX + 6},${svg.bottom - 8}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none"/>
+                <polygon data-cy="axis-arrow" :points="`${svg.right - 8},${svg.centerY - 6} ${svg.right},${svg.centerY} ${svg.right - 8},${svg.centerY + 6}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none" />
+                <polygon data-cy="axis-arrow" :points="`${svg.left + 8},${svg.centerY - 6} ${svg.left},${svg.centerY} ${svg.left + 8},${svg.centerY + 6}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none" />
+                <polygon data-cy="axis-arrow" :points="`${svg.centerX - 6},${svg.top + 8} ${svg.centerX},${svg.top} ${svg.centerX + 6},${svg.top + 8}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none"/>
+                <polygon data-cy="axis-arrow" :points="`${svg.centerX - 6},${svg.bottom - 8} ${svg.centerX},${svg.bottom} ${svg.centerX + 6},${svg.bottom - 8}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none"/>
             </g>
 
             <!-- QUADRANT LABELS -->
@@ -1199,6 +1201,7 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.chart.layout.labels.axisLabels.show">
                 <!-- Y MAX -->
                 <text
+                    data-cy="label-y-max"
                     :x="svg.centerX"
                     :y="svg.top - svg.padding / 6"
                     text-anchor="middle"
@@ -1215,6 +1218,7 @@ defineExpose({
                     }}
                 </text>
                 <text
+                    data-cy="axis-y-name"
                     :x="svg.centerX"
                     :y="svg.top - svg.padding / 2"
                     text-anchor="middle"
@@ -1226,6 +1230,7 @@ defineExpose({
 
                 <!-- Y MIN -->
                 <text
+                    data-cy="label-y-min"
                     :x="svg.centerX"
                     :y="svg.bottom + svg.padding * 0.35"
                     text-anchor="middle"
@@ -1244,6 +1249,7 @@ defineExpose({
 
                 <!-- X MIN -->
                 <text
+                    data-cy="label-x-min"
                     :id="`xLabelMin_${uid}`"
                     text-anchor="middle"
                     :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
@@ -1262,6 +1268,7 @@ defineExpose({
 
                 <!-- X MAX -->
                 <text
+                    data-cy="label-x-max"
                     :id="`xLabelMax_${uid}`"
                     text-anchor="middle"
                     :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
@@ -1278,6 +1285,7 @@ defineExpose({
                     }}
                 </text>       
                 <text
+                    data-cy="axis-x-name"
                     :id="`xLabelMaxName_${uid}`"
                     text-anchor="middle"
                     :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
@@ -1292,6 +1300,7 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.chart.layout.areas.show">
                 <g v-for="(category, i) in drawableDataset">
                     <polygon
+                        data-cy="gift-wrap"
                         v-if="category.series.length > 2"
                         data-cy-quadrant-area
                         :fill="FINAL_CONFIG.style.chart.layout.areas.useGradient ? `url(#quadrant_gradient_${uid}_${i})` : setOpacity(category.color, FINAL_CONFIG.style.chart.layout.areas.opacity)"
@@ -1303,6 +1312,7 @@ defineExpose({
             <!-- SIDE TRAPS -->
             <g>
                 <rect
+                    data-cy="side-trap-tl"
                     @click="selectQuadrantSide('TL')"
                     :x="svg.left"
                     :y="svg.top"
@@ -1312,6 +1322,7 @@ defineExpose({
                     :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
                 />
                 <rect
+                    data-cy="side-trap-tr"
                     @click="selectQuadrantSide('TR')"
                     :x="svg.centerX"
                     :y="svg.top"
@@ -1321,6 +1332,7 @@ defineExpose({
                     :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
                 />
                 <rect
+                    data-cy="side-trap-br"
                     @click="selectQuadrantSide('BR')"
                     :x="svg.centerX"
                     :y="svg.centerY"
@@ -1330,6 +1342,7 @@ defineExpose({
                     :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
                 />
                 <rect
+                    data-cy="side-trap-bl"
                     @click="selectQuadrantSide('BL')"
                     :x="svg.left"
                     :y="svg.centerY"
@@ -1352,7 +1365,7 @@ defineExpose({
                         :shape="category.shape"
                         :stroke="FINAL_CONFIG.style.chart.layout.plots.outline ? FINAL_CONFIG.style.chart.layout.plots.outlineColor : 'none'"
                         :strokeWidth="FINAL_CONFIG.style.chart.layout.plots.outlineWidth"
-                        @mouseover="useTooltip(category, plot, i)"
+                        @mouseenter="useTooltip(category, plot, i)"
                         @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
                         @click="selectPlot(category, plot)"
                     />
@@ -1360,7 +1373,8 @@ defineExpose({
 
                 <g v-if="mutableConfig.plotLabels.show" style="pointer-events: none;">
                     <g v-for="category in drawableDataset">
-                        <text 
+                        <text
+                            data-cy="plot-label"
                             v-for="plot in category.series" 
                             :x="plot.x" 
                             :y="plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius" 
@@ -1432,6 +1446,7 @@ defineExpose({
             <!-- MINI MAP -->
             <g v-if="isZoom && selectedSide">
                 <rect
+                    data-cy="minimap-tl"
                     :x="miniMap[selectedSide].tl.x"
                     :y="miniMap[selectedSide].tl.y"
                     height="20"
@@ -1442,6 +1457,7 @@ defineExpose({
                     :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TL'}"
                 />
                 <rect
+                    data-cy="minimap-tr"
                     :x="miniMap[selectedSide].tr.x"
                     :y="miniMap[selectedSide].tr.y"
                     height="20"
@@ -1452,6 +1468,7 @@ defineExpose({
                     :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TR'}"
                 />
                 <rect
+                    data-cy="minimap-br"
                     :x="miniMap[selectedSide].br.x"
                     :y="miniMap[selectedSide].br.y"
                     height="20"
@@ -1462,6 +1479,7 @@ defineExpose({
                     :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'BR'}"
                 />
                 <rect
+                    data-cy="minimap-bl"
                     :x="miniMap[selectedSide].bl.x"
                     :y="miniMap[selectedSide].bl.y"
                     height="20"

@@ -1,90 +1,98 @@
-import VueUiQuadrant from './vue-ui-quadrant.vue'
+import VueUiQuadrant from './vue-ui-quadrant.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
+
+const { config, dataset } = components.find(c => c.name === 'VueUiQuadrant');
 
 describe('<VueUiQuadrant />', () => {
 
-  beforeEach(function () {
-    cy.fixture('quadrant.json').as('fixture');
-    cy.viewport(500, 650);
-  });
+	it('renders', () => {
+		cy.viewport(500, 600);
+		cy.mount(VueUiQuadrant, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(() => {
 
-  it('segregates series when selecting legend items', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiQuadrant, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        },
-      });
+			testCommonFeatures({
+				userOptions: true,
+				title: true,
+				subtitle: true,
+				dataTable: true,
+				legend: true,
+				tooltipCallback: () => {
+					cy.get('[data-cy="atom-shape"]').first().trigger('mouseenter', { force: true })
+				}
+			});
 
-      cy.get('[data-cy-legend-item]').eq(0).click()
-      cy.get('[data-cy-quadrant-area]').should('have.length', 1)
-      cy.get('[data-cy-legend-item]').eq(0).click()
-      cy.get('[data-cy-quadrant-area]').should('have.length', 2)
-    });
-  })
+			cy.log('quadrant labels');
+			[
+				{
+					selector: `[data-cy="quadrant-label-tl"]`,
+					expected: config.style.chart.layout.labels.quadrantLabels.tl.text
+				},
+				{
+					selector: `[data-cy="quadrant-label-tr"]`,
+					expected: config.style.chart.layout.labels.quadrantLabels.tr.text
+				},
+				{
+					selector: `[data-cy="quadrant-label-br"]`,
+					expected: config.style.chart.layout.labels.quadrantLabels.br.text
+				},
+				{
+					selector: `[data-cy="quadrant-label-bl"]`,
+					expected: config.style.chart.layout.labels.quadrantLabels.bl.text
+				},
+			].forEach(label => {
+				cy.get(label.selector)
+					.should('exist')
+					.contains(label.expected)
+			});
 
-  it('renders', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiQuadrant, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        },
-      });
+			cy.log('side zooms');
+			cy.get('[data-cy="side-trap-tl"]').click({ force: true });
+			cy.get('[data-cy="quadrant-svg"]').invoke('attr', 'viewBox').should('eq', '0 0 304.00000000000045 304.00000000000045');
+		
+			cy.get('[data-cy="side-trap-tr"]').click({ force: true });
+			cy.get('[data-cy="quadrant-svg"]').invoke('attr', 'viewBox').should('eq', '208.00000000000006 0 304.00000000000045 304.00000000000045');
+			
+			cy.get('[data-cy="side-trap-br"]').click({ force: true });
+			cy.get('[data-cy="quadrant-svg"]').invoke('attr', 'viewBox').should('eq', '208.00000000000006 208.00000000000006 304.00000000000045 304.00000000000045');
+			
+			cy.get('[data-cy="side-trap-bl"]').click({ force: true });
+			cy.get('[data-cy="quadrant-svg"]').invoke('attr', 'viewBox').should('eq', '-4.263256414560601e-14 208.00000000000006 304.00000000000045 304.00000000000045');
 
-      [
-        {
-          selector: '[data-cy="quadrant-title"]',
-          expected: fixture.config.style.chart.title.text
-        },
-        {
-          selector: '[data-cy="quadrant-subtitle"]',
-          expected: fixture.config.style.chart.title.subtitle.text
-        },
-      ].forEach(el => {
-        cy.get(el.selector)
-          .should('exist')
-          .contains(el.expected)
-      });
+			cy.log('minimap');
+			cy.get('[data-cy="minimap-tl"]').click();
+			cy.get('[data-cy="quadrant-svg"]').invoke('attr', 'viewBox').should('eq', '-1.4988357199199224e-29 -4.263256414560601e-14 304.00000000000045 304.00000000000045');
+			cy.get('[data-cy="minimap-tr"]').click();
+			cy.get('[data-cy="quadrant-svg"]').invoke('attr', 'viewBox').should('eq', '208.00000000000006 -1.4988357199199224e-29 304.00000000000045 304.00000000000045');
+			cy.get('[data-cy="minimap-br"]').click();
+			cy.get('[data-cy="quadrant-svg"]').invoke('attr', 'viewBox').should('eq', '208.00000000000006 208.00000000000006 304.00000000000045 304.00000000000045');
+			cy.get('[data-cy="minimap-bl"]').click();
+			cy.get('[data-cy="quadrant-svg"]').invoke('attr', 'viewBox').should('eq', '-4.263256414560601e-14 208.00000000000006 304.00000000000045 304.00000000000045');
+			cy.get('[data-cy="minimap-bl"]').click();
+			cy.get('[data-cy="quadrant-svg"]').invoke('attr', 'viewBox').should('eq', '-1.4988357199199224e-29 -4.263256414560601e-14 512 512');
 
-      cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.get(`[data-cy="user-options-table"]`).click();
-      cy.get(`[data-cy="user-options-summary"]`).click();
-      cy.viewport(500, 850);
+			cy.log('grid rect');
+			cy.get('[data-cy="grid-rect"]').should('exist').and('be.visible').and('have.length', config.style.chart.layout.grid.graduations.steps);
 
-      [
-        {
-          selector: `[data-cy="quadrant-label-tl"]`,
-          expected: fixture.config.style.chart.layout.labels.quadrantLabels.tl.text
-        },
-        {
-          selector: `[data-cy="quadrant-label-tr"]`,
-          expected: fixture.config.style.chart.layout.labels.quadrantLabels.tr.text
-        },
-        {
-          selector: `[data-cy="quadrant-label-br"]`,
-          expected: fixture.config.style.chart.layout.labels.quadrantLabels.br.text
-        },
-        {
-          selector: `[data-cy="quadrant-label-bl"]`,
-          expected: fixture.config.style.chart.layout.labels.quadrantLabels.bl.text
-        },
-      ].forEach(label => {
-        cy.get(label.selector)
-          .should('exist')
-          .contains(label.expected)
-      });
+			cy.log('axes');
+			cy.get('[data-cy="axis-y"]').should('exist').and('have.css', 'opacity', '1');
+			cy.get('[data-cy="axis-x"]').should('exist').and('have.css', 'opacity', '1');
+			cy.get('[data-cy="axis-arrow"]').should('exist').and('be.visible').and('have.length', 4);
+			cy.get('[data-cy="axis-x-name"]').should('exist').and('be.visible').and('contain', config.style.chart.layout.grid.xAxis.name);
+			cy.get('[data-cy="axis-y-name"]').should('exist').and('be.visible').and('contain', config.style.chart.layout.grid.yAxis.name);
+			cy.get('[data-cy="label-y-min"]').should('exist').and('be.visible').and('contain', '-8');
+			cy.get('[data-cy="label-y-max"]').should('exist').and('be.visible').and('contain', '9');
+			cy.get('[data-cy="label-x-min"]').should('exist').and('be.visible').and('contain', '-9');
+			cy.get('[data-cy="label-x-max"]').should('exist').and('be.visible').and('contain', '8');
 
-      // cy.get(`[data-cy="user-options-summary"]`).click();        
-      // cy.get(`[data-cy="user-options-pdf"]`).click({ force: true});
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.pdf`);
-      // cy.get(`[data-cy="user-options-xls"]`).click({ force: true});
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.csv`);
-      // cy.get(`[data-cy="user-options-img"]`).click({ force: true});
-      // cy.readFile(`cypress\\Downloads\\${fixture.config.style.chart.title.text}.png`);
-      // cy.clearDownloads();
+			cy.log('datapoints');
+			cy.get('[data-cy="gift-wrap"]').should('exist').and('be.visible');
+			cy.get('[data-cy="plot-label"]').should('exist').and('be.visible').and('have.length', dataset[0].series.length);
+		});	
+	});
+});
 
-      cy.get(`[data-cy="user-options-summary"]`).click();
-    });
-  })
-})
