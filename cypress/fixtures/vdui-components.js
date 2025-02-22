@@ -1177,6 +1177,13 @@ export const components = [
                 value: 16,
             },
         ],
+        config: {
+            style: {
+                title: {
+                    text: 'Title'
+                }
+            }
+        },
         wrapperClass: ".vue-ui-sparkline",
     },
     {

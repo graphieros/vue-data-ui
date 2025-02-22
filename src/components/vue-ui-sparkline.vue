@@ -391,7 +391,7 @@ function selectDatapoint(datapoint, index) {
         />
 
         <!-- TITLE -->
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.show && showInfo" class="vue-ui-sparkline-title" :style="`display:flex;align-items:center;width:100%;color:${FINAL_CONFIG.style.title.color};background:${FINAL_CONFIG.style.backgroundColor};justify-content:${FINAL_CONFIG.style.title.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${FINAL_CONFIG.style.title.fontSize * 2}px;font-size:${FINAL_CONFIG.style.title.fontSize}px;font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};`">
+        <div data-cy="title" ref="chartTitle" v-if="FINAL_CONFIG.style.title.show && showInfo" class="vue-ui-sparkline-title" :style="`display:flex;align-items:center;width:100%;color:${FINAL_CONFIG.style.title.color};background:${FINAL_CONFIG.style.backgroundColor};justify-content:${FINAL_CONFIG.style.title.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.title.textAlign === 'right' ? 'flex-end' : 'center'};height:${FINAL_CONFIG.style.title.fontSize * 2}px;font-size:${FINAL_CONFIG.style.title.fontSize}px;font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'};`">
             <span data-cy="sparkline-period-label" :style="`padding:${FINAL_CONFIG.style.title.textAlign === 'left' ? '0 0 0 12px' : FINAL_CONFIG.style.title.textAlign === 'right' ? '0 12px 0 0' : '0'}`">
                 {{ selectedPlot ? selectedPlot.period : FINAL_CONFIG.style.title.text }}
             </span>
@@ -455,7 +455,7 @@ function selectDatapoint(datapoint, index) {
             <g v-for="(plot, i) in mutableDataset">
                 <line 
                     v-if="i < mutableDataset.length - 1 && !FINAL_CONFIG.style.line.smooth && !isBar"
-                    :data-cy="`sparkline-segment-${i}`"
+                    data-cy="segment-line"
                     :x1="plot.x"
                     :x2="mutableDataset[i + 1].x"
                     :y1="plot.y || 0"
@@ -466,18 +466,19 @@ function selectDatapoint(datapoint, index) {
                     stroke-linejoin="round"
                     shape-rendering="geometricPrecision"
                 />
-                <rect 
+                <rect
+                    data-cy="datapoint-bar"
                     v-if="isBar"
                     :x="plot.x - plot.width / 2"
-                    :y="plot.absoluteValue > 0 ? plot.y : absoluteZero"
+                    :y="isNaN(plot.absoluteValue > 0 ? plot.y : absoluteZero) ? 0 : plot.absoluteValue > 0 ? plot.y : absoluteZero"
                     :width="plot.width"
-                    :height="Math.abs(plot.y - absoluteZero)"
+                    :height="isNaN(Math.abs(plot.y - absoluteZero)) ? 0 : Math.abs(plot.y - absoluteZero)"
                     :fill="plot.absoluteValue > 0 ? `url(#sparkline_bar_gradient_pos_${uid})` : `url(#sparkline_bar_gradient_neg_${uid})`"
                     :rx="FINAL_CONFIG.style.bar.borderRadius"
                 />
                 <!-- VERTICAL INDICATORS -->
                 <line
-                    :data-cy="`sparkline-vertical-indicator-${i}`"
+                    data-cy="selection-indicator"
                     v-if="FINAL_CONFIG.style.verticalIndicator.show && ((selectedPlot && plot.id === selectedPlot.id) || selectedIndex === i)"
                     :x1="plot.x"
                     :x2="plot.x"
@@ -507,7 +508,7 @@ function selectDatapoint(datapoint, index) {
             <!-- PLOTS -->
             <g v-if="FINAL_CONFIG.style.plot.show" v-for="(plot, i) in mutableDataset">
                 <circle
-                    :data-cy="`sparkline-plot-${i}`"
+                    data-cy="selection-plot"
                     v-if="(selectedPlot && plot.id === selectedPlot.id) || selectedIndex === i" 
                     :cx="plot.x" 
                     :cy="plot.y" 
@@ -543,7 +544,7 @@ function selectDatapoint(datapoint, index) {
             <!-- MOUSE TRAP -->
             <rect
                 v-for="(plot, i) in mutableDataset"
-                :data-cy="`sparkline-mouse-trap-${i}`"
+                data-cy="tooltip-trap"
                 :x="plot.x - ((drawingArea.width / (len + 1) > svg.padding ? svg.padding : drawingArea.width / (len + 1)) / 2)"
                 :y="drawingArea.top - 6"
                 :height="drawingArea.height + 6"

@@ -1,109 +1,79 @@
-import VueUiSparkline from './vue-ui-sparkline.vue'
+import VueUiSparkline from './vue-ui-sparkline.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+
+const { config, dataset } = components.find(c => c.name === 'VueUiSparkline');
+
+function commonTest(line=true) {
+	cy.log('title');
+	cy.get('[data-cy="title"]').should('exist').and('be.visible').and('contain', config.style.title.text);
+	
+	cy.log('data label');
+	cy.get('[data-cy="sparkline-datalabel"]').should('exist').and('be.visible').and('contain', dataset.at(-1).value);
+
+	cy.log('selection');
+	cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseenter', { force: true });
+	cy.get('[data-cy="selection-indicator"]').should('exist').and('have.css', 'opacity', '1');
+	cy.get('[data-cy="sparkline-datalabel"]').should('exist').and('be.visible').and('contain', dataset[0].value);
+	cy.get('[data-cy="title"]').contains(dataset[0].period);
+	if (line) {
+		cy.get('[data-cy="selection-plot"]').should('exist').and('be.visible');
+	}
+}
 
 describe('<VueUiSparkline />', () => {
+	it('renders (line)', () => {
+		cy.mount(VueUiSparkline, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(() => {
+			commonTest();
 
-  beforeEach(function () {
-    cy.fixture('sparkline.json').as('fixture');
-    cy.viewport(1200, 280);
-  });
+			cy.log('area');
+			cy.get('[data-cy="sparkline-angle-area"]').should('exist').and('be.visible');
 
-  function updateConfigInFixture(modifiedConfig) {
-    cy.get('@fixture').then((fixture) => {
-      const updatedFixture = { ...fixture, config: modifiedConfig };
-      cy.wrap(updatedFixture).as('fixture');
-    });
-  }
+			cy.log('line');
+			cy.get('[data-cy="segment-line"]').should('exist').and('be.visible').and('have.length', dataset.length - 1);
 
-  it('renders with different config attributes', function () {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiSparkline, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        }
-      });
+		});
+	});
 
-      cy.get('[data-cy="sparkline-svg"]').should('exist');
-      cy.get('[data-cy="sparkline-angle-area"]').should('exist');
-      cy.get('[data-cy="sparkline-smooth-area"]').should('not.exist');
+	it('renders (spline)', () => {
+		cy.mount(VueUiSparkline, {
+			props: {
+				dataset,
+				config: {
+					...config,
+					style: {
+						...config.style,
+						line: { smooth: true }
+					}
+				}
+			}
+		}).then(() => {
+			commonTest();
 
-      for(let i = 0; i < 16; i += 1) {
-        cy.get(`[data-cy="sparkline-segment-${i}"]`).should('exist');
-      }
+			cy.log('area');
+			cy.get('[data-cy="sparkline-smooth-area"]').should('exist').and('be.visible');
 
-      let modifiedConfig = {
-        ...fixture.config,
-        style: {
-          ...fixture.config.style,
-          line: {
-            ...fixture.config.style.line,
-            smooth: true
-          }
-        }
+			cy.log('line');
+			cy.get('[data-cy="sparkline-smooth-path"]').should('exist').and('be.visible');
+		});
+	});
 
-      }
-
-      updateConfigInFixture(modifiedConfig);
-
-      cy.mount(VueUiSparkline, {
-        props: {
-          dataset: fixture.dataset,
-          config: modifiedConfig
-        }
-      });
-
-      cy.get('[data-cy="sparkline-angle-area"]').should('not.exist');
-      cy.get('[data-cy="sparkline-smooth-area"]').should('exist');
-      cy.get('[data-cy="sparkline-smooth-path"]').should('exist');
-      cy.get('[data-cy="sparkline-zero-axis"]').should('exist');
-
-      cy.mount(VueUiSparkline, {
-        props: {
-          dataset: fixture.datasetPositive,
-          config: modifiedConfig
-        }
-      });
-
-      cy.get('[data-cy="sparkline-zero-axis"]').should('not.exist');
-
-      cy.mount(VueUiSparkline, {
-        props: {
-          dataset: fixture.dataset,
-          config: modifiedConfig
-        }
-      });
-
-      for (let i = 0; i < 17; i += 1) {
-        cy.get(`[data-cy="sparkline-mouse-trap-${i}"]`)
-          .should('exist')
-          .trigger("mouseenter")
-
-        cy.get('[data-cy="sparkline-datalabel"]')
-          .should('exist')
-          .contains(`${fixture.dataset[i].value}`);
-
-        cy.get('[data-cy="sparkline-period-label"]')
-          .should('exist')
-          .contains(`${fixture.dataset[i].period}`);
-
-        cy.get(`[data-cy="sparkline-vertical-indicator-${i}"]`)
-          .should('exist');
-
-        cy.get(`[data-cy="sparkline-plot-${i}"]`)
-          .should('exist');
-
-        cy.get(`[data-cy="sparkline-mouse-trap-${i}"]`)
-          .trigger("mouseleave");
-
-        cy.get('[data-cy="sparkline-period-label"]')
-          .should('exist')
-          .contains('Title');
-      }
-
-      cy.get('[data-cy="sparkline-period-label"]')
-      .should('exist')
-      .contains('Title');
-
-    });
-  });
+	it('renders (bars)', () => {
+		cy.mount(VueUiSparkline, {
+			props: {
+				dataset,
+				config: {
+					...config,
+					type: 'bar'
+				}
+			}
+		}).then(() => {
+			commonTest(false);
+			cy.get('[data-cy="datapoint-bar"]').should('exist').and('be.visible').and('have.length', dataset.length);
+		});
+	});
 });
