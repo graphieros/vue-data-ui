@@ -1190,18 +1190,26 @@ export const components = [
         name: "VueUiSparkStackbar",
         dataset: [
             {
-                name: "Vue",
-                value: 258,
+                name: "A",
+                value: 100,
             },
             {
-                name: "Javascript",
-                value: 36,
+                name: "B",
+                value: 50,
             },
             {
-                name: "Other",
-                value: 16,
+                name: "C",
+                value: 25,
             },
         ],
+        config: {
+            style: {
+                title: {
+                    text: 'Title',
+                    subtitle: { text: 'Subtitle' }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-spark-stackbar",
     },
     {

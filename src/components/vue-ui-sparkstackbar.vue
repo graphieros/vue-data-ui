@@ -301,11 +301,11 @@ function useTooltip({ datapoint, seriesIndex }) {
 <template>
     <div class="vue-ui-spark-stackbar" ref="sparkstackbarChart" :style="`width:100%; background:${FINAL_CONFIG.style.backgroundColor}`">
         <!-- TITLE -->
-        <div data-cy="sparkstackbar-title-wrapper" v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
-            <div data-cy="sparkstackbar-title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
+        <div  v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
+            <div class="atom-title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
                 {{ FINAL_CONFIG.style.title.text }}
             </div>
-            <div data-cy="sparkstackbar-subtitle" v-if="FINAL_CONFIG.style.title.subtitle.text" :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`">
+            <div class="atom-subtitle" v-if="FINAL_CONFIG.style.title.subtitle.text" :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`">
                 {{ FINAL_CONFIG.style.title.subtitle.text }}
             </div>
             
@@ -333,8 +333,10 @@ function useTooltip({ datapoint, seriesIndex }) {
                 </clipPath>
             </defs>
             <g clip-path="url(#stackPill)" v-if="total > 0">
-                <rect 
-                    v-for="(rect, i) in drawableDataset" :key="`stack_underlayer_${i}`"
+                <rect
+                    data-cy="datapoint-underlayer"
+                    v-for="(rect, i) in drawableDataset" 
+                    :key="`stack_underlayer_${i}`"
                     :x="rect.start"
                     :y="0"
                     :width="rect.width"
@@ -346,7 +348,9 @@ function useTooltip({ datapoint, seriesIndex }) {
                     }"
                 />
                 <rect 
-                    v-for="(rect, i) in drawableDataset" :key="`stack_${i}`"
+                    data-cy="datapoint"
+                    v-for="(rect, i) in drawableDataset" 
+                    :key="`stack_${i}`"
                     :x="rect.start"
                     :y="0"
                     :width="rect.width"
@@ -360,8 +364,10 @@ function useTooltip({ datapoint, seriesIndex }) {
                     }"
                 />
                 <!-- TOOLTIP TRAPS -->
-                <rect 
-                    v-for="(rect, i) in drawableDataset" :key="`stack_trap_${i}`"
+                <rect
+                    data-cy="tooltip-trap"
+                    v-for="(rect, i) in drawableDataset" 
+                    :key="`stack_trap_${i}`"
                     @click="() => selectDatapoint(rect, i)"
                     :x="rect.start"
                     :y="0"
@@ -404,7 +410,8 @@ function useTooltip({ datapoint, seriesIndex }) {
             :style="`background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.legend.margin};justify-content:${FINAL_CONFIG.style.legend.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" 
             class="vue-ui-sparkstackbar-legend"
         >
-            <div 
+            <div
+                data-cy="legend-item"
                 v-for=" (rect, i) in absoluteDataset" 
                 :style="`font-size:${FINAL_CONFIG.style.legend.fontSize}px;`" 
                 :class="{'vue-ui-sparkstackbar-legend-item': true, 'vue-ui-sparkstackbar-legend-item-unselected': segregated.includes(i)}" 
