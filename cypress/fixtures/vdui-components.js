@@ -1693,7 +1693,7 @@ export const components = [
         name: "VueUiXy",
         dataset: [
             {
-                name: "S",
+                name: "A",
                 series: (function IIFE(n, m) {
                     const arr = [];
                     for (let i = 0; i < n; i += 1) {
@@ -1702,8 +1702,76 @@ export const components = [
                     return arr;
                 })(20, 100),
                 type: "line",
+                useArea: true,
+                dataLabels: true
+            },
+            {
+                name: "B",
+                series: (function IIFE(n, m) {
+                    const arr = [];
+                    for (let i = 0; i < n; i += 1) {
+                        arr.push(i % 2 === 0 ? -i : i);
+                    }
+                    return arr;
+                })(20, 100),
+                type: "bar",
+                dataLabels: true
+            },
+            {
+                name: "C",
+                series: (function IIFE(n, m) {
+                    const arr = [];
+                    for (let i = 0; i < n; i += 1) {
+                        arr.push(i % 2 === 0 ? -i : i);
+                    }
+                    return arr;
+                })(20, 100),
+                type: "plot",
+                dataLabels: true
             },
         ],
+        config: {
+            line: { labels: { show: true }},
+            bar: { labels: { show: true }},
+            plot: { labels: { show: true }},
+            chart: {
+                grid: {
+                    frame: {
+                        show: true
+                    },
+                    labels: {
+                        xAxis: {
+                            showBaseline: true
+                        },
+                        yAxis: {
+                            showBaseline: true
+                        }
+                    },
+                    showHorizontalLines: true,
+                    showVerticalLines: true
+                },
+                highlightArea: {
+                    show: true,
+                    from: 2,
+                    to: 4,
+                    color: '#1F77B4',
+                    opacity: 20,
+                    caption: {
+                        text: 'Caption',
+                        fontSize: 20,
+                        color: '#1A1A1A',
+                        offsetY: 0,
+                        width: 'auto',
+                        padding: 3,
+                        textAlign: 'center'
+                    }
+                },
+                title: {
+                    text: 'Title',
+                    subtitle: { text: 'Subtitle' }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-xy",
     },
     {

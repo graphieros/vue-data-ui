@@ -1,154 +1,61 @@
-import VueUiXy from './vue-ui-xy.vue'
+import VueUiXy from './vue-ui-xy.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
+
+const { config, dataset } = components.find(c => c.name === 'VueUiXy');
 
 describe('<VueUiXy />', () => {
+	it('renders default', () => {
+		cy.mount(VueUiXy, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(() => {
+			testCommonFeatures({
+				userOptions: true,
+				title: true,
+				subtitle: true,
+				slicer: true,
+				tooltipCallback: () => {
+					cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseenter', { force: true });
+					cy.get('[data-cy="highlighter"]').should('exist').and('be.visible');
+				}
+			});
 
-  beforeEach(function() {
-    cy.fixture('xy.json').as('fixture');
-    cy.viewport(600, 600);
-  });
+			cy.log('grid');
+			cy.get('[data-cy="xy-grid-line-x"]').should('exist').and('have.css', 'opacity', '1');
+			cy.get('[data-cy="xy-grid-line-y"]').should('exist').and('have.css', 'opacity', '1');
+			cy.get('[data-cy="xy-grid-horizontal-line"]').should('exist').and('have.css', 'opacity', '1').and('have.length', 7);
+			cy.get('[data-cy="xy-grid-vertical-line"]').should('exist').and('have.css', 'opacity', '1').and('have.length', 21);
 
-  function updateConfigInFixture(modifiedConfig) {
-    cy.get('@fixture').then((fixture) => {
-      const updatedFixture = { ...fixture, config: modifiedConfig };
-      cy.wrap(updatedFixture).as('fixture');
-    });
-  }
+			cy.log('frame');
+			cy.get('[data-cy="frame"]').should('exist').and('be.visible');
 
-  function data(data) {
-    return cy.get(`[data-cy="${data}"]`)
-  }
+			cy.log('y labels');
+			cy.get('[data-cy="axis-y-tick"]').should('exist').and('have.css', 'opacity', '1').and('have.length', 7);
+			cy.get('[data-cy="axis-y-label"]').as('yLabels').should('exist').and('be.visible');
+			cy.get('@yLabels').first().contains(-19);
+			cy.get('@yLabels').last().contains(19);
 
-  function testUserOptions() {
-    data('user-options').should('exist').and('be.visible');
-  }
-  function testSlicer() {
-    data('slicer').should('exist').and('be.visible');
-  }
-  function testLegend(content='') {
-    data('xy-div-legend').as('legend').should('exist').and('be.visible');
-    if (content) {
-      cy.get('@legend').contains(content);
-    }
-  }
-  function testAxes() {
-    data('xy-grid-line-y').should('exist').and('be.visible');
-    data('xy-grid-line-x').should('exist').and('be.visible');
-  }
-  function testTooltipTraps(n) {
-    for (let i = 0; i < n; i += 1) {
-      data(`xy-tooltip-trap-${i}`).should('exist').and('be.visible');
-    }
-  }
+			cy.log('highlight areas');
+			cy.get('[data-cy="highlight-area"]').should('exist').and('be.visible');
+			cy.get('[data-cy="highlight-area-caption"]').should('exist').and('be.visible').and('contain', config.chart.highlightArea.caption.text);
 
-  it('renders a line chart with default config', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiXy, {
-        props: {
-          dataset: fixture.dataset_single_line
-        }
-      });
+			cy.log('bars');
+			cy.get('[data-cy="datapoint-bar"]').should('exist').and('be.visible').and('have.length', dataset[1].series.length);
+			cy.get('[data-cy="datapoint-bar-label"]').should('exist').and('be.visible').and('have.length', dataset[1].series.length);
+			
+			cy.log('plots');
+			cy.get('[data-cy="datapoint-plot"]').should('exist').and('be.visible').and('have.length', dataset[2].series.length);
+			cy.get('[data-cy="datapoint-plot-label"]').should('exist').and('be.visible').and('have.length', dataset[2].series.length);
 
-      testUserOptions();
-      testSlicer();
-      testLegend(fixture.dataset_single_line[0].name);
-      testAxes();
-      testTooltipTraps(fixture.dataset_single_line[0].series.length)
-
-      cy.log('--- Y AXIS TICKS ---');
-      const yLabels = [0, 10, 20, 30, 40, 55];
-      for (let i = 0; i < yLabels.length; i += 1) {
-        data(`xy-label-y-${i}`).should('exist').and('be.visible').contains(yLabels[i]);
-        data(`xy-label-y-tick-${i}`).should('exist').and('be.visible');
-        data(`xy-plot-0-${i}`).should('exist').and('be.visible');
-      }
-
-      cy.log('--- LINE ---');
-      data(`xy-line-path-0`).should('exist')
-
-      cy.log('--- SMOOTH LINE ---');
-      const modifiedDataset = [
-        {
-          ...fixture.dataset_single_line[0],
-          smooth: true
-        }
-      ];
-      cy.mount(VueUiXy, {
-        props: {
-          dataset: modifiedDataset
-        }
-      });
-      data('xy-line-area-path-0').should('exist').and('be.visible');
-
-      cy.log('--- TOOLTIP ---')
-      data('xy-tooltip-trap-0').trigger("mouseenter");
-      data('tooltip').should('exist');
-      data('highlighter-0').should('exist').and('have.attr', 'fill', '#2D353C0D');
-    });
-  });
-
-  it('renders a bar chart with default config', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiXy, {
-        props: {
-          dataset: fixture.dataset_single_bar
-        }
-      });
-
-      testUserOptions();
-      testSlicer();
-      testLegend(fixture.dataset_single_bar[0].name);
-      testAxes();
-      testTooltipTraps(fixture.dataset_single_bar[0].series.length)
-
-      cy.log('--- Y AXIS TICKS ---');
-      const yLabels = [0, 10, 20, 30, 40, 55];
-      for (let i = 0; i < yLabels.length; i += 1) {
-        data(`xy-label-y-${i}`).should('exist').and('be.visible').contains(yLabels[i]);
-        data(`xy-label-y-tick-${i}`).should('exist').and('be.visible');
-      }
-
-      cy.log('--- BARS ---');
-      for(let i = 0; i < fixture.dataset_single_line[0].series.length - 1; i += 1) {
-        data(`xy-bar-0-${i}`).should('exist');
-      }
-
-      cy.log('--- TOOLTIP ---')
-      data('xy-tooltip-trap-0').trigger("mouseenter");
-      data('tooltip').should('exist');
-      data('highlighter-0').should('exist').and('have.attr', 'fill', '#2D353C0D');
-    });
-  });
-
-  it('renders a plot chart with default config', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiXy, {
-        props: {
-          dataset: fixture.dataset_single_plot
-        }
-      });
-
-      testUserOptions();
-      testSlicer();
-      testLegend(fixture.dataset_single_plot[0].name);
-      testAxes();
-      testTooltipTraps(fixture.dataset_single_plot[0].series.length)
-
-      cy.log('--- Y AXIS TICKS ---');
-      const yLabels = [0, 10, 20, 30, 40, 55];
-      for (let i = 0; i < yLabels.length; i += 1) {
-        data(`xy-label-y-${i}`).should('exist').and('be.visible').contains(yLabels[i]);
-        data(`xy-label-y-tick-${i}`).should('exist').and('be.visible');
-      }
-
-      cy.log('--- PLOTS ---');
-      for(let i = 0; i < fixture.dataset_single_line[0].series.length - 1; i += 1) {
-        data(`xy-plot-0-${i}`).should('exist');
-      }
-
-      cy.log('--- TOOLTIP ---')
-      data('xy-tooltip-trap-0').trigger("mouseenter");
-      data('tooltip').should('exist');
-      data('highlighter-0').should('exist').and('have.attr', 'fill', '#2D353C0D');
-    });
-  });
+			cy.log('lines');
+			cy.get('[data-cy="datapoint-line-coating-straight"]').should('exist').and('be.visible').and('have.length', 1);
+			cy.get('[data-cy="datapoint-line-area-straight"]').should('exist').and('be.visible').and('have.length', 1);
+			cy.get('[data-cy="datapoint-line-straight"]').should('exist').and('be.visible').and('have.length', 1);
+			cy.get('[data-cy="datapoint-line-plot"]').should('exist').and('be.visible').and('have.length', dataset[0].series.length);
+			cy.get('[data-cy="datapoint-line-label"]').should('exist').and('be.visible').and('have.length', dataset[0].series.length);
+		});
+	});
 });
