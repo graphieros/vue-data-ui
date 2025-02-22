@@ -1,51 +1,34 @@
-import VueUiThermometer from './vue-ui-thermometer.vue'
+import VueUiThermometer from './vue-ui-thermometer.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { testCommonFeatures } from '../../cypress/fixtures';
+
+const { config, dataset } = components.find(c => c.name === 'VueUiThermometer');
 
 describe('<VueUiThermometer />', () => {
+	it('renders', () => {
+		cy.mount(VueUiThermometer, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(() => {
+			testCommonFeatures({
+				userOptions: true,
+				title: true,
+				subtitle: true
+			});
 
-  beforeEach(function () {
-    cy.fixture('thermometer.json').as('fixture');
-    cy.viewport(360, 800);
-  });
+			cy.log('pill');
+			cy.get('[data-cy="pill-underlayer"]').should('exist').and('be.visible');
+			cy.get('[data-cy="pill-graduation-rect"]').should('exist').and('be.visible').and('have.length', dataset.steps);
+			cy.get('[data-cy="graduation-left"]').should('exist').and('have.css', 'opacity', '1').and('have.length', dataset.steps);
+			cy.get('[data-cy="graduation-right"]').should('exist').and('have.css', 'opacity', '1').and('have.length', dataset.steps);
+			cy.get('[data-cy="graduation-left-intermediary"]').should('exist').and('have.css', 'opacity', '1').and('have.length', dataset.steps * 3);
+			cy.get('[data-cy="graduation-right-intermediary"]').should('exist').and('have.css', 'opacity', '1').and('have.length', dataset.steps * 3);
 
-  it('renders', () => {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiThermometer, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        }
-      });
-
-      cy.get(`[data-cy="thermometer-div-title"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.text);
-
-      cy.get(`[data-cy="thermometer-div-subtitle"]`)
-        .should('exist')
-        .contains(fixture.config.style.title.subtitle.text);
-
-      cy.get(`[data-cy="user-options-summary"]`).click();
-  
-
-      cy.get(`[data-cy="thermometer-datalabel"]`).then(($label) => {
-        cy.wrap($label)
-          .should('exist')
-
-        cy.wrap($label)
-          .invoke('attr', 'fill')
-          .should('eq', fixture.config.style.chart.label.color);
-
-        cy.wrap($label)
-          .invoke('attr', 'font-size')
-          .should('eq', String(fixture.config.style.chart.label.fontSize));
-
-        cy.wrap($label)
-          .invoke('attr', 'font-weight')
-          .should('eq', fixture.config.style.chart.label.bold ? 'bold' : 'normal');
-      });
-
-      cy.get(`[data-cy="user-options-summary"]`).click();
-
-    });
-  });
+			cy.log('temperature');
+			cy.get('[data-cy="temperature-rect"]').should('exist').and('be.visible');
+			cy.get('[data-cy="temperature-label"]').should('exist').and('be.visible').and('contain', dataset.value);
+		});
+	});
 });

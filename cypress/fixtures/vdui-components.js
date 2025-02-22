@@ -1454,6 +1454,10 @@ export const components = [
             from: -100,
             to: 100,
             steps: 20,
+            colors: {
+                from: '#dc3912',
+                to: '#3366cc'
+            }
         },
         wrapperClass: ".vue-ui-thermometer",
         config: {
@@ -1464,6 +1468,10 @@ export const components = [
                         right: 200,
                     },
                 },
+                title: {
+                    text: 'Title',
+                    subtitle: { text: 'Subtitle' }
+                }
             },
         },
     },

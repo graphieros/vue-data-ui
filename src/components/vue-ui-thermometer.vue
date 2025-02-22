@@ -390,6 +390,7 @@ defineExpose({
 
             <g clip-path="url(#vueUiPill)">
                 <rect
+                    data-cy="pill-underlayer"
                     :x="drawingArea.left"
                     :y="drawingArea.top"
                     :height="drawingArea.height - usablePadding.top - usablePadding.bottom"
@@ -398,6 +399,7 @@ defineExpose({
                 />
                 <g v-for="(graduation, i) in graduations" :key="`graduation_${i}`">
                     <rect
+                        data-cy="pill-graduation-rect"
                         :x="graduation.x"
                         :y="graduation.y"
                         :height="graduation.height"
@@ -407,7 +409,8 @@ defineExpose({
                     />
 
                     <!-- GRADUATIONS LEFT -->                    
-                    <line 
+                    <line
+                        data-cy="graduation-left"
                         v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'left'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
                         :x1="graduation.x"
                         :x2="graduation.x + 10"
@@ -418,7 +421,8 @@ defineExpose({
                         stroke-linecap="round"
                     />
                     <template v-if="FINAL_CONFIG.style.chart.graduations.showIntermediate">
-                        <line 
+                        <line
+                            data-cy="graduation-left-intermediary"
                             v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'left'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
                             :x1="graduation.x"
                             :x2="graduation.x + 5"
@@ -429,6 +433,7 @@ defineExpose({
                             stroke-linecap="round"
                         />                    
                         <line 
+                            data-cy="graduation-left-intermediary"
                             v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'left'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
                             :x1="graduation.x"
                             :x2="graduation.x + 2.5"
@@ -438,7 +443,8 @@ defineExpose({
                             :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
                             stroke-linecap="round"
                         />
-                        <line 
+                        <line
+                            data-cy="graduation-left-intermediary"
                             v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'left'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
                             :x1="graduation.x"
                             :x2="graduation.x + 2.5"
@@ -452,6 +458,7 @@ defineExpose({
 
                     <!-- GRADUATIONS RIGHT -->                    
                     <line 
+                        data-cy="graduation-right"
                         v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'right'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
                         :x1="drawingArea.right"
                         :x2="drawingArea.right - 10"
@@ -462,7 +469,8 @@ defineExpose({
                         stroke-linecap="round"
                     />          
                     <template v-if="FINAL_CONFIG.style.chart.graduations.showIntermediate">
-                        <line 
+                        <line
+                            data-cy="graduation-right-intermediary"
                             v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'right'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
                             :x1="drawingArea.right"
                             :x2="drawingArea.right - 5"
@@ -472,7 +480,8 @@ defineExpose({
                             :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
                             stroke-linecap="round"
                         />                    
-                        <line 
+                        <line
+                            data-cy="graduation-right-intermediary"
                             v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'right'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
                             :x1="drawingArea.right"
                             :x2="drawingArea.right - 2.5"
@@ -482,7 +491,8 @@ defineExpose({
                             :stroke="FINAL_CONFIG.style.chart.graduations.stroke"
                             stroke-linecap="round"
                         />                    
-                        <line 
+                        <line
+                            data-cy="graduation-right-intermediary"
                             v-if="FINAL_CONFIG.style.chart.graduations.show && ['both', 'right'].includes(FINAL_CONFIG.style.chart.graduations.sides)"
                             :x1="drawingArea.right"
                             :x2="drawingArea.right - 2.5"
@@ -495,6 +505,7 @@ defineExpose({
                     </template>           
                 </g>
                 <rect
+                    data-cy="temperature-rect"
                     :class="{'vue-ui-thermometer-temperature': FINAL_CONFIG.style.chart.animation.use }"
                     :x="drawingArea.left"
                     :y="drawingArea.top"
@@ -504,7 +515,7 @@ defineExpose({
                 />
             </g>
             <text
-                data-cy="thermometer-datalabel"
+                data-cy="temperature-label"
                 :class="{'vue-ui-thermometer-temperature-value': FINAL_CONFIG.style.chart.animation.use }"
                 :y="temperature + drawingArea.top + (FINAL_CONFIG.style.chart.label.fontSize / 3)"
                 :x="drawingArea.left - 10"
