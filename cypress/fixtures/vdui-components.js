@@ -1,8 +1,8 @@
 /**
  * Fixtures for VueDataUi cy test
- * 
+ *
  * NOTE: changing datasets and configs will result in breaking tests.
- * 
+ *
  */
 export const components = [
     {
@@ -11,44 +11,44 @@ export const components = [
         dataset2: {
             series: [
                 {
-                    name:  'Serie 1 with a long name that should be shorter but we do not have the choice',
+                    name: "Serie 1 with a long name that should be shorter but we do not have the choice",
                     value: 256,
                     breakdown: [
                         {
-                            name: 'Sub serie 1',
-                            value: 100
+                            name: "Sub serie 1",
+                            value: 100,
                         },
                         {
-                            name: 'Sub serie 2',
-                            value: 90
+                            name: "Sub serie 2",
+                            value: 90,
                         },
                         {
-                            name: 'Sub serie 3',
-                            value: 66
-                        }
-                    ]
+                            name: "Sub serie 3",
+                            value: 66,
+                        },
+                    ],
                 },
                 {
-                    name: 'Serie 2',
-                    value: 128
+                    name: "Serie 2",
+                    value: 128,
                 },
                 {
-                    name: 'Serie 3',
-                    value: 64
+                    name: "Serie 3",
+                    value: 64,
                 },
                 {
-                    name: 'Serie 4',
-                    value: 32
+                    name: "Serie 4",
+                    value: 32,
                 },
                 {
-                    name: 'Serie 5',
-                    value: 16
+                    name: "Serie 5",
+                    value: 16,
                 },
                 {
-                    name: 'Serie 6',
-                    value: 8
-                }
-            ]
+                    name: "Serie 6",
+                    value: 8,
+                },
+            ],
         },
         wrapperClass: ".vue-ui-3d-bar",
     },
@@ -65,10 +65,10 @@ export const components = [
         config: {
             style: {
                 title: {
-                    text: 'Title',
-                    subtitle: { text: 'Subtitle' }
-                }
-            }
+                    text: "Title",
+                    subtitle: { text: "Subtitle" },
+                },
+            },
         },
         wrapperClass: ".vue-ui-age-pyramid",
     },
@@ -89,10 +89,10 @@ export const components = [
         config: {
             style: {
                 title: {
-                    text: 'Title',
-                    subtitle: { text: 'Subtitle' }
-                }
-            }
+                    text: "Title",
+                    subtitle: { text: "Subtitle" },
+                },
+            },
         },
         wrapperClass: ".vue-ui-candlestick",
     },
@@ -151,12 +151,12 @@ export const components = [
                 chart: {
                     layout: {
                         title: {
-                            text: 'Title',
-                            subtitle: { text: 'Subtitle' }
-                        }
-                    }
-                }
-            }
+                            text: "Title",
+                            subtitle: { text: "Subtitle" },
+                        },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-chestnut",
     },
@@ -165,36 +165,41 @@ export const components = [
         dataset: [],
         wrapperClass: ".vue-ui-dashboard-container",
     },
-    { name: "VueUiDigits", dataset: 99, config: {
-        digits: {
-            color: '#000000',
-            skeletonColor: '#CCCCCC'
-        }
-    }, wrapperClass: ".vue-ui-digits" },
+    {
+        name: "VueUiDigits",
+        dataset: 99,
+        config: {
+            digits: {
+                color: "#000000",
+                skeletonColor: "#CCCCCC",
+            },
+        },
+        wrapperClass: ".vue-ui-digits",
+    },
     {
         name: "VueUiDonut",
         dataset: [
-            { name: "A", values: [1], comment: 'C-A' },
-            { name: "B", values: [2], comment: 'C-B' },
-            { name: "C", values: [3], comment: 'C-C' }
+            { name: "A", values: [1], comment: "C-A" },
+            { name: "B", values: [2], comment: "C-B" },
+            { name: "C", values: [3], comment: "C-C" },
         ],
         config: {
             style: {
                 chart: {
                     comments: {
-                        show: true
+                        show: true,
                     },
                     layout: {
                         donut: {
-                            useShadow: true
-                        }
+                            useShadow: true,
+                        },
                     },
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-donut",
     },
@@ -225,17 +230,29 @@ export const components = [
                         grid: {
                             xAxis: {
                                 dataLabels: {
-                                    values: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
-                                }
-                            }
-                        }
+                                    values: [
+                                        "A",
+                                        "B",
+                                        "C",
+                                        "D",
+                                        "E",
+                                        "F",
+                                        "G",
+                                        "H",
+                                        "I",
+                                        "J",
+                                        "K",
+                                    ],
+                                },
+                            },
+                        },
                     },
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-donut-evolution",
     },
@@ -250,11 +267,11 @@ export const components = [
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-galaxy",
     },
@@ -264,7 +281,7 @@ export const components = [
             base: 100,
             value: 0,
             series: [
-                { from: -100, to: -50, name: "A"},
+                { from: -100, to: -50, name: "A" },
                 { from: -50, to: 0, name: "B" },
                 { from: 0, to: 50, name: "C" },
                 { from: 50, to: 100, name: "D" },
@@ -275,18 +292,18 @@ export const components = [
                 chart: {
                     layout: {
                         indicatorArc: {
-                            show: true
+                            show: true,
                         },
                         segmentSeparators: {
-                            show: true
-                        }
+                            show: true,
+                        },
                     },
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-gauge",
     },
@@ -314,27 +331,27 @@ export const components = [
                 layout: {
                     cells: {
                         value: {
-                            show: true
-                        }
+                            show: true,
+                        },
                     },
                     dataLabels: {
                         xAxis: {
                             show: true,
-                            values: (function IIFE(){
+                            values: (function IIFE() {
                                 const arr = [];
-                                for(let i = 0; i < 13; i += 1) {
-                                    arr.push(i)
+                                for (let i = 0; i < 13; i += 1) {
+                                    arr.push(i);
                                 }
-                                return arr
-                            })()
-                        }
-                    }
+                                return arr;
+                            })(),
+                        },
+                    },
                 },
                 title: {
-                    text: 'Title',
-                    subtitle: { text: 'Subtitle' }
-                }
-            }
+                    text: "Title",
+                    subtitle: { text: "Subtitle" },
+                },
+            },
         },
         wrapperClass: ".vue-ui-heatmap",
     },
@@ -496,11 +513,11 @@ export const components = [
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-molecule",
     },
@@ -517,11 +534,11 @@ export const components = [
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-mood-radar",
     },
@@ -567,11 +584,11 @@ export const components = [
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-nested-donuts",
     },
@@ -603,11 +620,11 @@ export const components = [
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-onion",
     },
@@ -636,24 +653,24 @@ export const components = [
                     layout: {
                         grid: {
                             graduations: { steps: 5 },
-                            xAxis: { name: 'x' },
-                            yAxis: { name: 'y' },
+                            xAxis: { name: "x" },
+                            yAxis: { name: "y" },
                         },
                         labels: {
                             quadrantLabels: {
-                                tl: { text: 'TL' },
-                                tr: { text: 'TR' },
-                                br: { text: 'BR' },
-                                bl: { text: 'BL' }
-                            }
-                        }
+                                tl: { text: "TL" },
+                                tr: { text: "TR" },
+                                br: { text: "BR" },
+                                bl: { text: "BL" },
+                            },
+                        },
                     },
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-quadrant",
     },
@@ -694,15 +711,15 @@ export const components = [
                 chart: {
                     layout: {
                         grid: {
-                            graduations: 3
-                        }
+                            graduations: 3,
+                        },
                     },
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-radar",
     },
@@ -829,11 +846,11 @@ export const components = [
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
         wrapperClass: ".vue-ui-rings",
     },
@@ -873,19 +890,19 @@ export const components = [
             style: {
                 layout: {
                     dataLabels: {
-                        xAxis: { name: 'x' },
-                        yAxis: { name: 'y' },
+                        xAxis: { name: "x" },
+                        yAxis: { name: "y" },
                     },
                     marginalBars: {
                         show: true,
-                        showLines: true
-                    }
+                        showLines: true,
+                    },
                 },
                 title: {
-                    text: 'Title',
-                    subtitle: { text: 'Subtitle' }
-                }
-            }
+                    text: "Title",
+                    subtitle: { text: "Subtitle" },
+                },
+            },
         },
         wrapperClass: ".vue-ui-scatter",
     },
@@ -903,22 +920,88 @@ export const components = [
         name: "VueUiSparkbar",
         dataset: [
             {
-                name: "quality",
-                value: 200,
-                rounding: 2,
+                name: "A",
+                value: 88.88,
                 suffix: "%",
-                prefix: "P",
-                target: 1000,
+                prefix: "v.",
+                rounding: 1,
             },
             {
-                name: "popularity",
-                value: 2.0412,
-                rounding: 2,
+                name: "B",
+                value: 77.77,
                 suffix: "%",
-                prefix: "P",
-                target: 2.3,
+                prefix: "v.",
+                rounding: 2,
+            },
+            {
+                name: "C",
+                value: 66.66,
+                suffix: "%",
+                prefix: "v.",
+                rounding: 0,
+            },
+            {
+                name: "D",
+                value: 55.55,
+                suffix: "%",
+                prefix: "v.",
+                rounding: 0,
+            },
+            {
+                name: "E",
+                value: 44.44,
+                suffix: "%",
+                prefix: "v.",
+                rounding: 0,
+            },
+            {
+                name: "F",
+                value: 33.33,
+                suffix: "%",
+                prefix: "v.",
+                rounding: 0,
+            },
+            {
+                name: "G",
+                value: 22.22,
+                suffix: "%",
+                prefix: "v.",
+                rounding: 0,
+            },
+            {
+                name: "G",
+                value: 11.11,
+                suffix: "%",
+                prefix: "v.",
+                rounding: 0,
+            },
+            {
+                name: "I",
+                value: 0,
+                suffix: "%",
+                prefix: "v.",
+                rounding: 0,
+            },
+            {
+                name: "J",
+                value: 10,
+                target: 1000,
+                suffix: "%",
+                prefix: "v.",
+                rounding: 0,
             },
         ],
+        config: {
+            style: {
+                layout: {
+                    targetValueText: 'to'
+                },
+                title: {
+                    text: 'Title',
+                    subtitle: { text: 'Subtitle' }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-sparkbar",
     },
     {
@@ -1012,81 +1095,81 @@ export const components = [
         wrapperClass: ".vue-ui-spark-histogram",
     },
     {
-        name: 'VueUiSparkline',
+        name: "VueUiSparkline",
         dataset: [
             {
                 period: "period 1",
-                value: 0
+                value: 0,
             },
             {
                 period: "period 2",
-                value: -1
+                value: -1,
             },
             {
                 period: "period 3",
-                value: 2
+                value: 2,
             },
             {
                 period: "period 4",
-                value: -3
+                value: -3,
             },
             {
                 period: "period 5",
-                value: 4
+                value: 4,
             },
             {
                 period: "period 6",
-                value: -5
+                value: -5,
             },
             {
                 period: "period 7",
-                value: 6
+                value: 6,
             },
             {
                 period: "period 8",
-                value: -7
+                value: -7,
             },
             {
                 period: "period 9",
-                value: 8
+                value: 8,
             },
             {
                 period: "period 10",
-                value: -9
+                value: -9,
             },
             {
                 period: "period 11",
-                value: 10
+                value: 10,
             },
             {
                 period: "period 12",
-                value: -11
+                value: -11,
             },
             {
                 period: "period 13",
-                value: 12
+                value: 12,
             },
             {
                 period: "period 14",
-                value: -13
+                value: -13,
             },
             {
                 period: "period 15",
-                value: 14
+                value: 14,
             },
             {
                 period: "period 16",
-                value: -15
+                value: -15,
             },
             {
                 period: "period 17",
-                value: 16
+                value: 16,
             },
         ],
-        wrapperClass: '.vue-ui-sparkline'
+        wrapperClass: ".vue-ui-sparkline",
     },
     {
-        name: 'VueUiSparkStackbar',
+        name: "VueUiSparkStackbar",
         dataset: [
             {
                 name: "Vue",
@@ -1101,10 +1184,10 @@ export const components = [
                 value: 16,
             },
         ],
-        wrapperClass: '.vue-ui-spark-stackbar'
+        wrapperClass: ".vue-ui-spark-stackbar",
     },
     {
-        name: 'VueUiTable',
+        name: "VueUiTable",
         dataset: {
             header: [
                 {
@@ -1301,12 +1384,12 @@ export const components = [
                     return formattedDate;
                 }
                 return generateRandomData();
-            })()
+            })(),
         },
-        wrapperClass: '.vue-ui-table-main'
+        wrapperClass: ".vue-ui-table-main",
     },
     {
-        name: 'VueUiTableSparkline',
+        name: "VueUiTableSparkline",
         dataset: [
             {
                 name: "Serie 1",
@@ -1329,168 +1412,168 @@ export const components = [
                 values: [12, 14, 18, 25, 32, 64, 77, 64, 32, 25, 18, 14, 12],
             },
         ],
-        wrapperClass: '.vue-ui-table-sparkline',
-        config: { 
+        wrapperClass: ".vue-ui-table-sparkline",
+        config: {
             responsiveBreakpoint: 200,
             title: {
-                text: 'Title',
-                subtitle: { text: 'Subtitle' }
-            }
-        }
+                text: "Title",
+                subtitle: { text: "Subtitle" },
+            },
+        },
     },
     {
-        name: 'VueUiThermometer',
+        name: "VueUiThermometer",
         dataset: {
             value: 37,
             from: -100,
             to: 100,
             steps: 20,
         },
-        wrapperClass: '.vue-ui-thermometer',
+        wrapperClass: ".vue-ui-thermometer",
         config: {
             style: {
                 chart: {
                     padding: {
                         left: 200,
-                        right: 200
-                    }
-                }
-            }
-        }
+                        right: 200,
+                    },
+                },
+            },
+        },
     },
     {
-        name: 'VueUiTiremarks',
+        name: "VueUiTiremarks",
         dataset: { percentage: 10 },
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-tiremarks'
+        wrapperClass: ".vue-ui-tiremarks",
     },
     {
-        name: 'VueUiTreemap',
+        name: "VueUiTreemap",
         dataset: [
             {
-                name: 'S1',
+                name: "S1",
                 value: 100,
                 children: [
                     {
-                        name: 'S1 - C1',
-                        value: 50
+                        name: "S1 - C1",
+                        value: 50,
                     },
                     {
-                        name: 'S1 -C2',
-                        value: 25
+                        name: "S1 -C2",
+                        value: 25,
                     },
                     {
-                        name: 'S1 - C3',
+                        name: "S1 - C3",
                         value: 12.5,
                         children: [
                             {
-                                name: 'S1 - C3 - CC1',
-                                value: 6
+                                name: "S1 - C3 - CC1",
+                                value: 6,
                             },
                             {
-                                name: 'S1 - C3 - CC2',
-                                value: 6.5
+                                name: "S1 - C3 - CC2",
+                                value: 6.5,
                             },
-                        ]
-                    }
-                ]
+                        ],
+                    },
+                ],
             },
             {
-                name: 'S2',
+                name: "S2",
                 value: 200,
                 children: [
                     {
-                        name: 'S2 - C1',
-                        value: 100
+                        name: "S2 - C1",
+                        value: 100,
                     },
                     {
-                        name: 'S2 - C2',
-                        value: 50
+                        name: "S2 - C2",
+                        value: 50,
                     },
                     {
-                        name: 'S2 - C3',
-                        value: 25
-                    }
-                ]
+                        name: "S2 - C3",
+                        value: 25,
+                    },
+                ],
             },
             {
-                name: 'S3',
+                name: "S3",
                 value: 100,
                 children: [
                     {
-                        name: 'S3 - C1',
-                        value: 50
+                        name: "S3 - C1",
+                        value: 50,
                     },
                     {
-                        name: 'S3 - C2',
-                        value: 25
+                        name: "S3 - C2",
+                        value: 25,
                     },
                     {
-                        name: 'S3 - C3',
-                        value: 12.5
-                    }
-                ]
+                        name: "S3 - C3",
+                        value: 12.5,
+                    },
+                ],
             },
             {
-                name: 'S4',
+                name: "S4",
                 value: 20,
                 children: [
                     {
-                        name: 'S3 - C1',
-                        value: 10
+                        name: "S3 - C1",
+                        value: 10,
                     },
                     {
-                        name: 'S3 - C2',
-                        value: 5
+                        name: "S3 - C2",
+                        value: 5,
                     },
                     {
-                        name: 'S3 - C3',
-                        value: 2.5
-                    }
-                ]
+                        name: "S3 - C3",
+                        value: 2.5,
+                    },
+                ],
             },
             {
-                name: 'S5',
+                name: "S5",
                 value: 10,
                 children: [
                     {
-                        name: 'S3 - C1',
-                        value: 5
+                        name: "S3 - C1",
+                        value: 5,
                     },
                     {
-                        name: 'S3 - C2',
-                        value: 2.5
+                        name: "S3 - C2",
+                        value: 2.5,
                     },
                     {
-                        name: 'S3 - C3',
-                        value: 1.125
-                    }
-                ]
+                        name: "S3 - C3",
+                        value: 1.125,
+                    },
+                ],
             },
         ],
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-treemap',
+        wrapperClass: ".vue-ui-treemap",
     },
     {
-        name: 'VueUiVerticalBar',
+        name: "VueUiVerticalBar",
         dataset: [
             {
                 name: "Serie 1",
@@ -1498,13 +1581,13 @@ export const components = [
                 children: [
                     {
                         name: "serie 1 child 1",
-                        value: 80
+                        value: 80,
                     },
                     {
                         name: "serie 1 child 2",
-                        value: 20
+                        value: 20,
                     },
-                ]
+                ],
             },
             {
                 name: "Serie 2",
@@ -1534,82 +1617,82 @@ export const components = [
                         name: "Serie 5 child 3",
                         value: 40,
                     },
-                ]
-            }
+                ],
+            },
         ],
-        wrapperClass: '.vue-ui-vertical-bar'
+        wrapperClass: ".vue-ui-vertical-bar",
     },
     {
-        name: 'VueUiWaffle',
+        name: "VueUiWaffle",
         dataset: [
             {
-                name: 'Lorem Ipsum',
+                name: "Lorem Ipsum",
                 values: [100.27],
             },
             {
-                name: 'Dolor Amet',
-                values: [66.3367]
+                name: "Dolor Amet",
+                values: [66.3367],
             },
             {
-                name: 'Dignissimos Ducimus',
-                values: [44.25]
-            }
+                name: "Dignissimos Ducimus",
+                values: [44.25],
+            },
         ],
-        wrapperClass: '.vue-ui-waffle'
+        wrapperClass: ".vue-ui-waffle",
     },
     {
-        name: 'VueUiWheel',
+        name: "VueUiWheel",
         dataset: { percentage: 50 },
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-wheel'
+        wrapperClass: ".vue-ui-wheel",
     },
     {
-        name: 'VueUiXy',
+        name: "VueUiXy",
         dataset: [
             {
-                name: 'S',
+                name: "S",
                 series: (function IIFE(n, m) {
                     const arr = [];
                     for (let i = 0; i < n; i += 1) {
-                        arr.push(i % 2 === 0 ? i : -i)
+                        arr.push(i % 2 === 0 ? i : -i);
                     }
-                    return arr
+                    return arr;
                 })(20, 100),
-                type: 'line'
-            }
+                type: "line",
+            },
         ],
-        wrapperClass: '.vue-ui-xy'
+        wrapperClass: ".vue-ui-xy",
     },
     {
-        name: 'VueUiQuickChart',
+        name: "VueUiQuickChart",
         dataset: [1, 2, -3, 5, 8],
         config: {
-            title: 'Title'
+            title: "Title",
         },
-        wrapperClass: '.vue-ui-quick-chart'
+        wrapperClass: ".vue-ui-quick-chart",
     },
     {
-        name: 'VueUiSparkTrend',
+        name: "VueUiSparkTrend",
         dataset: (function IIFE(n, m) {
             const arr = [];
             for (let i = 0; i < n; i += 1) {
-                arr.push(i % 2 === 0 ? i : - i)
+                arr.push(i % 2 === 0 ? i : -i);
             }
-            return arr
+            return arr;
         })(10, 100),
-        wrapperClass: '.vue-ui-spark-trend'
+        wrapperClass: ".vue-ui-spark-trend",
     },
     {
-        name: 'VueUiStripPlot',
+        name: "VueUiStripPlot",
         dataset: [
             {
                 name: "Asia",
@@ -1624,7 +1707,7 @@ export const components = [
                     { name: "Karachi", value: 14.9 },
                     { name: "Shenzen", value: 14.7 },
                     { name: "Tokyo", value: 14 },
-                ]
+                ],
             },
             {
                 name: "Africa",
@@ -1639,217 +1722,207 @@ export const components = [
                     { name: "Alexandria", value: 4.9 },
                     { name: "Dar es Salaam", value: 4.7 },
                     { name: "Nairobi", value: 4.4 },
-                ]
-            }
+                ],
+            },
         ],
         config: {
             style: {
                 chart: {
                     labels: {
                         axis: {
-                            xLabel: 'x',
-                            yLabel: 'y'
-                        }
+                            xLabel: "x",
+                            yLabel: "y",
+                        },
                     },
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-strip-plot'
+        wrapperClass: ".vue-ui-strip-plot",
     },
     {
-        name: 'VueUiDumbbell',
+        name: "VueUiDumbbell",
         dataset: [
-            { name: 'Sweden', start: 5000, end: 7100 },
-            { name: 'Korea, Rep.', start: 4900, end: 7050 },
-            { name: 'Iceland', start: 6500, end: 8000 },
-            { name: 'Finland', start: 6400, end: 7600 },
-            { name: 'Norway', start: 5400, end: 6050 },
-            { name: 'Ireland', start: 3000, end: 2000 }
+            { name: "Sweden", start: 5000, end: 7100 },
+            { name: "Korea, Rep.", start: 4900, end: 7050 },
+            { name: "Iceland", start: 6500, end: 8000 },
+            { name: "Finland", start: 6400, end: 7600 },
+            { name: "Norway", start: 5400, end: 6050 },
+            { name: "Ireland", start: 3000, end: 2000 },
         ],
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-dumbbell'
+        wrapperClass: ".vue-ui-dumbbell",
     },
     {
-        name: 'VueUiWordCloud',
-        dataset: 'Lorem ipsum dolor sit amet Lorem Lorem Lorem sit sit ipsum',
+        name: "VueUiWordCloud",
+        dataset: "Lorem ipsum dolor sit amet Lorem Lorem Lorem sit sit ipsum",
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-word-cloud'
+        wrapperClass: ".vue-ui-word-cloud",
     },
     {
-        name: 'VueUiXyCanvas',
+        name: "VueUiXyCanvas",
         dataset: [
             {
-                name: 'S',
+                name: "S",
                 series: (function IIFE(n, m) {
                     const arr = [];
                     for (let i = 0; i < n; i += 1) {
-                        arr.push(i % 2 === 0 ? i : -i)
+                        arr.push(i % 2 === 0 ? i : -i);
                     }
-                    return arr
+                    return arr;
                 })(20, 100),
-                type: 'line'
-            }
+                type: "line",
+            },
         ],
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-xy-canvas'
+        wrapperClass: ".vue-ui-xy-canvas",
     },
     {
-        name: 'VueUiFlow',
+        name: "VueUiFlow",
         dataset: [
-            ['A1', 'B1', 10],
-            ['A1', 'B2', 10],
-            ['B1', 'C1', 5],
-            ['B1', 'C2', 5],
-            ['B1', 'C3', 5],
-            ['B1', 'C4', 5],
-            ['A2', 'B1', 10],
-            ['B2', 'C5', 10],
-            ['C3', 'D1', 2],
-            ['C4', 'D1', 2],
-            ['C5', 'D1', 2],
-            ['C2', 'D2', 2],
-            ['C3', 'D2', 1],
+            ["A1", "B1", 10],
+            ["A1", "B2", 10],
+            ["B1", "C1", 5],
+            ["B1", "C2", 5],
+            ["B1", "C3", 5],
+            ["B1", "C4", 5],
+            ["A2", "B1", 10],
+            ["B2", "C5", 10],
+            ["C3", "D1", 2],
+            ["C4", "D1", 2],
+            ["C5", "D1", 2],
+            ["C2", "D2", 2],
+            ["C3", "D2", 1],
         ],
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-flow'
+        wrapperClass: ".vue-ui-flow",
     },
     {
-        name: 'VueUiParallelCoordinatePlot',
+        name: "VueUiParallelCoordinatePlot",
         dataset: [
             {
                 name: "Series 1",
                 shape: "triangle",
                 series: [
                     {
-                        name: 'Item 1.1',
+                        name: "Item 1.1",
                         values: [1200, 300, 12, 1.2],
-                        comments: ['', '', 'This is some sort of comment', '']
+                        comments: ["", "", "This is some sort of comment", ""],
                     },
                     {
-                        name: 'Item 1.2',
-                        values: [1000, 100, 10, 1]
+                        name: "Item 1.2",
+                        values: [1000, 100, 10, 1],
                     },
                     {
-                        name: 'Item 1.3',
-                        values: [-800, 85, 8.5, 0.85]
+                        name: "Item 1.3",
+                        values: [-800, 85, 8.5, 0.85],
                     },
-                ]
+                ],
             },
             {
                 name: "Series 2",
                 series: [
                     {
-                        name: 'Item 2.1',
-                        values: [2300, 230, 23, 2.3]
+                        name: "Item 2.1",
+                        values: [2300, 230, 23, 2.3],
                     },
                     {
-                        name: 'Item 2.2',
-                        values: [2500, 250, 25, 2.5]
+                        name: "Item 2.2",
+                        values: [2500, 250, 25, 2.5],
                     },
                     {
-                        name: 'Item 2.3',
-                        values: [2800, 280, 28, 2.8]
+                        name: "Item 2.3",
+                        values: [2800, 280, 28, 2.8],
                     },
-                ]
+                ],
             },
         ],
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-pcp'
+        wrapperClass: ".vue-ui-pcp",
     },
     {
-        name: 'VueUiTimer',
+        name: "VueUiTimer",
         dataset: undefined,
-        wrapperClass: '.vue-ui-timer'
+        wrapperClass: ".vue-ui-timer",
     },
     {
-        name: 'VueUiCarouselTable',
+        name: "VueUiCarouselTable",
         dataset: {
-            head: ['Col1', 'col2', 'col3', 'col4', 'col 5', 'col 6', 'col 7'],
+            head: ["Col1", "col2", "col3", "col4", "col 5", "col 6", "col 7"],
             body: (function IIFE(n) {
                 let arr = [];
                 for (let i = 0; i < n; i += 1) {
-                    arr.push([
-                        i + 1,
-                        i + 2,
-                        i + 3,
-                        i + 4,
-                        i + 5,
-                        i + 6,
-                        i + 7,
-                    ])
+                    arr.push([i + 1, i + 2, i + 3, i + 4, i + 5, i + 6, i + 7]);
                 }
-                return arr
-            })(10)
+                return arr;
+            })(10),
         },
         config: {
             caption: {
-                text: 'Caption'
-            }
+                text: "Caption",
+            },
         },
-        wrapperClass: '.vue-ui-carousel-table'
+        wrapperClass: ".vue-ui-carousel-table",
     },
     {
-        name: 'VueUiGizmo',
+        name: "VueUiGizmo",
         dataset: 66,
-        wrapperClass: '.vue-ui-gizmo'
+        wrapperClass: ".vue-ui-gizmo",
     },
     {
-        name: 'VueUiStackbar',
+        name: "VueUiStackbar",
         dataset: [
             {
                 name: "Series 1",
-                series: [
-                    10, 20, 30, 10, 20, 4, 5
-                ],
+                series: [10, 20, 30, 10, 20, 4, 5],
             },
             {
                 name: "Series 2",
@@ -1865,111 +1938,111 @@ export const components = [
                 chart: {
                     grid: {
                         x: {
-                            axisName: { text: 'x'}
+                            axisName: { text: "x" },
                         },
                         y: {
-                            axisName: { text: 'y' }
-                        }
-                    }
-,                    title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                            axisName: { text: "y" },
+                        },
+                    },
+                    title: {
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-stackbar'
+        wrapperClass: ".vue-ui-stackbar",
     },
     {
-        name: 'VueUiBullet',
-        dataset:{
+        name: "VueUiBullet",
+        dataset: {
             value: -20,
             target: -10,
             segments: [
                 {
-                    name: 'Low',
+                    name: "Low",
                     from: -100,
                     to: -30,
                 },
                 {
-                    name: 'Medium',
+                    name: "Medium",
                     from: -30,
                     to: 0,
                 },
                 {
-                    name: 'High',
+                    name: "High",
                     from: 0,
                     to: 100,
-                }
-            ]
+                },
+            ],
         },
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-bullet'
+        wrapperClass: ".vue-ui-bullet",
     },
     {
-        name: 'VueUiFunnel',
+        name: "VueUiFunnel",
         dataset: [
             {
-                name: 'Lead',
-                value: 7745.8234576
+                name: "Lead",
+                value: 7745.8234576,
             },
             {
-                name: 'Opportunity',
-                value: 5468
+                name: "Opportunity",
+                value: 5468,
             },
             {
-                name: 'Qualified',
-                value: 4238
+                name: "Qualified",
+                value: 4238,
             },
             {
-                name: 'Sold',
-                value: 2025
+                name: "Sold",
+                value: 2025,
             },
             {
-                name: 'Retained',
-                value: 1520
+                name: "Retained",
+                value: 1520,
             },
         ],
         config: {
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-funnel'
+        wrapperClass: ".vue-ui-funnel",
     },
     {
-        name: 'VueUiHistoryPlot',
-        dataset:[
+        name: "VueUiHistoryPlot",
+        dataset: [
             {
-                name: 'Series 1',
+                name: "Series 1",
                 values: [
-                    { x: 2, y: 0, label: 'T1'},
-                    { x: 18, y: 0.2, label: 'T2'},
-                    { x: 21, y: 0.8, label: 'T3'},
-                    { x: 19, y: 1.2, label: 'T4'},
-                ]
+                    { x: 2, y: 0, label: "T1" },
+                    { x: 18, y: 0.2, label: "T2" },
+                    { x: 21, y: 0.8, label: "T3" },
+                    { x: 19, y: 1.2, label: "T4" },
+                ],
             },
             {
-                name: 'Series 2',
+                name: "Series 2",
                 values: [
-                    { x: 22, y: 2, label: 'T1'},
-                    { x: 44, y: 4, label: 'T2'},
-                    { x: 65, y: 3, label: 'T3'},
-                    { x: 12, y: 2.5, label: 'T4'},
+                    { x: 22, y: 2, label: "T1" },
+                    { x: 44, y: 4, label: "T2" },
+                    { x: 65, y: 3, label: "T3" },
+                    { x: 12, y: 2.5, label: "T4" },
                 ],
             },
         ],
@@ -1978,30 +2051,30 @@ export const components = [
                 chart: {
                     axes: {
                         x: {
-                            name: { text: 'x' },
+                            name: { text: "x" },
                         },
                         y: {
-                            name: { text: 'y' },
-                        }
+                            name: { text: "y" },
+                        },
                     },
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' } 
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-history-plot'
+        wrapperClass: ".vue-ui-history-plot",
     },
     {
-        name: 'VueUiCirclePack',
-        dataset: (function IIFE(){
+        name: "VueUiCirclePack",
+        dataset: (function IIFE() {
             const arr = [];
-            for(let i = 0; i < 12; i += 1) {
+            for (let i = 0; i < 12; i += 1) {
                 arr.push({
                     name: `d_${i}`,
-                    value: i
-                })
+                    value: i,
+                });
             }
             return arr;
         })(),
@@ -2009,12 +2082,12 @@ export const components = [
             style: {
                 chart: {
                     title: {
-                        text: 'Title',
-                        subtitle: { text: 'Subtitle' }
-                    }
-                }
-            }
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
         },
-        wrapperClass: '.vue-ui-circle-pack'
-    }
+        wrapperClass: ".vue-ui-circle-pack",
+    },
 ];
