@@ -785,7 +785,7 @@ defineExpose({
                 <g v-if="!ds.shape || ds.shape === 'circle'">
                     <circle 
                         v-for="(plot, j) in ds.plots"
-                        :data-cy="`scatter-plot-${i}-${j}`"
+                        data-cy="atom-shape"
                         :cx="plot.x"
                         :cy="plot.y"
                         :r="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
@@ -800,7 +800,6 @@ defineExpose({
                 <g v-else>
                     <Shape
                         v-for="(plot, j) in ds.plots"
-                        :data-cy="`scatter-plot-${i}-${j}`"
                         :plot="{x: plot.x, y: plot.y }"
                         :radius="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
                         :shape="ds.shape"
@@ -828,6 +827,7 @@ defineExpose({
                 </defs>
                 <g v-for="(x, i) in marginalBars.x">
                     <rect
+                        data-cy="marginal-bar-x"
                         v-if="x && marginalBars.avgX[i]"
                         :x="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
                         :y="drawingArea.top - FINAL_CONFIG.style.layout.marginalBars.offset - x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size"
@@ -842,6 +842,7 @@ defineExpose({
                 </g>
                 <g v-for="(y, i) in marginalBars.y">
                     <rect
+                        data-cy="marginal-bar-y"
                         v-if="y && marginalBars.avgY[i]"
                         :x="drawingArea.right + FINAL_CONFIG.style.layout.marginalBars.offset"
                         :y="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
@@ -857,6 +858,7 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.layout.marginalBars.showLines">
                     <template v-for="line in marginalLines">                   
                         <path
+                            data-cy="marginal-line-x-wrapper"
                             v-if="!segregated.includes(line.id)"
                             :d="`M ${line.dX}`"
                             :stroke="FINAL_CONFIG.style.backgroundColor"
@@ -866,6 +868,7 @@ defineExpose({
                             fill="none"
                         />
                         <path
+                            data-cy="marginal-line-x"
                             v-if="!segregated.includes(line.id)"
                             :d="`M ${line.dX}`"
                             :stroke="line.color"
@@ -875,6 +878,7 @@ defineExpose({
                             fill="none"
                         />
                         <path
+                            data-cy="marginal-line-y-wrapper"
                             v-if="!segregated.includes(line.id)"
                             :d="`M ${line.dY}`"
                             :stroke="FINAL_CONFIG.style.backgroundColor"
@@ -884,6 +888,7 @@ defineExpose({
                             fill="none"
                         />
                         <path
+                            data-cy="marginal-line-y"
                             v-if="!segregated.includes(line.id)"
                             :d="`M ${line.dY}`"
                             :stroke="line.color"
@@ -899,6 +904,7 @@ defineExpose({
             <!-- SELECTORS -->
             <g v-if="selectedPlot && FINAL_CONFIG.style.layout.plots.selectors.show" style="pointer-events: none !important;">
                 <line
+                    data-cy="selector-line-x"
                     :x1="zero.x"
                     :x2="selectedPlot.x"
                     :y1="selectedPlot.y"
@@ -910,6 +916,7 @@ defineExpose({
                     class="line-pointer"
                 />
                 <line
+                    data-cy="selector-line-y"
                     :x1="selectedPlot.x"
                     :x2="selectedPlot.x"
                     :y1="zero.y"
@@ -921,6 +928,7 @@ defineExpose({
                     class="line-pointer"
                 />
                 <text
+                    data-cy="selector-label-x"
                     :x="zero.x + (selectedPlot.x > zero.x ? -6 : 6)"
                     :y="selectedPlot.y + FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize / 3"
                     :font-size="FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize"
@@ -941,6 +949,7 @@ defineExpose({
                     ) }}
                 </text>
                 <text
+                    data-cy="selector-label-y"
                     :x="selectedPlot.x"
                     :y="zero.y + (selectedPlot.y > zero.y ? - 6 : FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize +6)"
                     :font-size="FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize"
@@ -961,6 +970,7 @@ defineExpose({
                     ) }}
                 </text>
                 <circle
+                    data-cy="selector-circle-marker"
                     :cx="zero.x"
                     :cy="selectedPlot.y"
                     :r="FINAL_CONFIG.style.layout.plots.selectors.markers.radius"
@@ -970,6 +980,7 @@ defineExpose({
                     class="line-pointer"
                 />
                 <circle
+                    data-cy="selector-circle-marker"
                     :cx="selectedPlot.x"
                     :cy="zero.y"
                     :r="FINAL_CONFIG.style.layout.plots.selectors.markers.radius"
@@ -979,6 +990,7 @@ defineExpose({
                     class="line-pointer"
                 />
                 <text
+                    data-cy="selector-datapoint-name"
                     v-if="FINAL_CONFIG.style.layout.plots.selectors.labels.showName"
                     :x="selectedPlot.x"
                     :y="selectedPlot.y + (selectedPlot.y < zero.y ? - FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize /2 : FINAL_CONFIG.style.layout.plots.selectors.labels.fontSize)"
@@ -1109,7 +1121,7 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.layout.correlation.show">
                 <line 
                     v-for="(ds, i) in drawableDataset"
-                    :data-cy="`scatter-correlation-line-${i}`"
+                    data-cy="correlation-line"
                     :x1="ds.correlation.x1"
                     :x2="ds.correlation.x2"
                     :y1="ds.correlation.y1"
@@ -1121,7 +1133,7 @@ defineExpose({
                 />
                 <g v-for="(ds, i) in drawableDataset">
                     <text
-                        :data-cy="`scatter-correlation-label-${i}`"
+                        data-cy="correlation-label"
                         v-if="FINAL_CONFIG.style.layout.correlation.label.show"
                         :x="ds.label.x"
                         :y="ds.label.y"

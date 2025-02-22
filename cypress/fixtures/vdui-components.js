@@ -841,21 +841,52 @@ export const components = [
         name: "VueUiScatter",
         dataset: [
             {
-                name: "S",
+                name: "S1",
                 values: (function IIFE() {
                     const arr = [];
                     for (let i = -10; i < 10; i += 1) {
                         arr.push({
-                            x: Math.random() * (Math.random() > 0.3 ? i / 3 : -i / 5),
-                            y: (Math.random() * i) / 20,
-                            name: `plot_${i}_cluster_1`,
+                            x: i % 2 === 0 ? i : -i,
+                            y: i % 2 === 0 ? i : -i,
+                            name: `S_${i}`,
                         });
                     }
                     return arr;
                 })(),
-                shape: "star",
+            },
+            {
+                name: "S2",
+                values: (function IIFE() {
+                    const arr = [];
+                    for (let i = -10; i < 10; i += 1) {
+                        arr.push({
+                            x: i % 2 === 0 ? -i : i,
+                            y: i % 2 === 0 ? i : -i,
+                            name: `S_${i}`,
+                        });
+                    }
+                    return arr;
+                })(),
             },
         ],
+        config: {
+            style: {
+                layout: {
+                    dataLabels: {
+                        xAxis: { name: 'x' },
+                        yAxis: { name: 'y' },
+                    },
+                    marginalBars: {
+                        show: true,
+                        showLines: true
+                    }
+                },
+                title: {
+                    text: 'Title',
+                    subtitle: { text: 'Subtitle' }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-scatter",
     },
     {
