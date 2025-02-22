@@ -1092,6 +1092,17 @@ export const components = [
                 intensity: 0.2,
             },
         ],
+        config: {
+            style: {
+                labels: {
+                    value: { rounding: 1 }
+                },
+                title: {
+                    text: 'Title',
+                    subtitle: { text: 'Subtitle' }
+                }
+            }
+        },
         wrapperClass: ".vue-ui-spark-histogram",
     },
     {

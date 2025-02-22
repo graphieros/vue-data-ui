@@ -1,37 +1,44 @@
-import VueUiSparkhistogram from './vue-ui-sparkhistogram.vue'
+import VueUiSparkhistogram from './vue-ui-sparkhistogram.vue';
+import { components } from '../../cypress/fixtures/vdui-components';
+import { dataLabel } from '../lib';
 
-describe('<VueUiSparkhistogram />', () => {
-  beforeEach(function () {
-    cy.fixture('sparkhistogram.json').as('fixture');
-    cy.viewport(1200, 220);
-  });
+const { config, dataset } = components.find(c => c.name === 'VueUiSparkHistogram');
 
-  it('renders with different config attributes', function () {
-    cy.get('@fixture').then((fixture) => {
-      cy.mount(VueUiSparkhistogram, {
-        props: {
-          dataset: fixture.dataset,
-          config: fixture.config
-        }
-      });
+describe('<VueUiSparkHistogram />', () => {
+	it('renders', () => {
+		cy.mount(VueUiSparkhistogram, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(() => {
+			cy.log('title');
+			cy.get('[data-cy="title"]').should('exist').and('be.visible').and('contain', config.style.title.text);
+			cy.get('[data-cy="subtitle"]').should('exist').and('be.visible').and('contain', config.style.title.subtitle.text);
 
-      cy.get('[data-cy="sparkhistogram-svg"]').should('exist');
+			cy.log('selection');
+			cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseover', { force: true });
+			cy.get('[data-cy="title-selection"]')
+				.should('exist')
+				.and('be.visible')
+				.and('contain', dataset[0].timeLabel)
+				.and('contain', dataLabel({ v: dataset[0].value }));
+			cy.get('[data-cy="title-selection-value-label"]').should('exist').and('be.visible').and('contain', dataset[0].valueLabel);
 
-      for (let i = 0; i < 12; i += 1) {
-        cy.get(`[data-cy="sparkhistogram-rect-${i}"]`).should('exist');
-
-        cy.get(`[data-cy="sparkhistogram-value-label-${i}"]`)
-          .should('exist')
-          .contains(`${fixture.config.style.labels.value.prefix}${Number(fixture.dataset[i].value.toFixed(fixture.config.style.labels.value.rounding)).toLocaleString()}${fixture.config.style.labels.value.suffix}`);
-
-        cy.get(`[data-cy="sparkhistogram-label-${i}"]`)
-          .should('exist')
-          .contains(fixture.dataset[i].valueLabel);
-
-        cy.get(`[data-cy="sparkhistogram-time-label-${i}"]`)
-          .should('exist')
-          .contains(fixture.dataset[i].timeLabel)
-      }
-    });
-  });
-})
+			cy.log('datapoints');
+			cy.get('[data-cy="datapoint-rect"]').should('exist').and('be.visible').and('have.length', dataset.length);
+			cy.get('[data-cy="datapoint-label-value"]').as('valueLabels').should('exist').and('be.visible').and('have.length', dataset.length);
+			cy.get('@valueLabels').each((label, i) => {
+				cy.wrap(label).contains(dataLabel({ v: dataset[i].value, r: config.style.labels.value.rounding }));
+			});
+			cy.get('[data-cy="datapoint-label-valueLabel"]').as('valueLabels2').should('exist').and('be.visible').and('have.length', dataset.length);
+			cy.get('@valueLabels2').each((label, i) => {
+				cy.wrap(label).contains(dataset[i].valueLabel);
+			});
+			cy.get('[data-cy="datapoint-label-time"]').as('timeLabels').should('exist').and('be.visible').and('have.length', dataset.length);
+			cy.get('@timeLabels').each((label, i) => {
+				cy.wrap(label).contains(dataset[i].timeLabel);
+			});
+		});
+	});
+});

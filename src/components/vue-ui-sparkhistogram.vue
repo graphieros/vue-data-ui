@@ -181,9 +181,9 @@ const animation = computed(() => {
     <div class="vue-ui-spark-histogram" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily}`" @mouseleave="selectedIndex = null">
         <!-- TITLE -->
         <div v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
-            <div :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
+            <div data-cy="title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
                 {{ FINAL_CONFIG.style.title.text }} 
-                <span v-if="selectedIndex !== null">- 
+                <span data-cy="title-selection" v-if="selectedIndex !== null">- 
                     {{ computedDataset[selectedIndex].timeLabel || '' }} 
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.labels.value.formatter,
@@ -198,9 +198,9 @@ const animation = computed(() => {
                         ) 
                     }}
                 </span>
-                <span v-if="![undefined, null].includes(selectedIndex) && ![null, undefined].includes(computedDataset[selectedIndex].valueLabel)">({{ computedDataset[selectedIndex].valueLabel || 0 }})</span>
+                <span data-cy="title-selection-value-label" v-if="![undefined, null].includes(selectedIndex) && ![null, undefined].includes(computedDataset[selectedIndex].valueLabel)">({{ computedDataset[selectedIndex].valueLabel || 0 }})</span>
             </div>
-            <div v-if="FINAL_CONFIG.style.title.subtitle.text" :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`">
+            <div data-cy="subtitle" v-if="FINAL_CONFIG.style.title.subtitle.text" :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`">
                 {{ FINAL_CONFIG.style.title.subtitle.text }}
             </div>    
         </div>
@@ -241,7 +241,7 @@ const animation = computed(() => {
             
             <g v-if="!FINAL_CONFIG.style.bars.shape || FINAL_CONFIG.style.bars.shape === 'square'">
                 <rect v-for="(rect, i) in computedDataset"
-                    :data-cy="`sparkhistogram-rect-${i}`"
+                    data-cy="datapoint-rect"
                     :x="rect.x"
                     :y="rect.y"
                     :height="rect.height"
@@ -265,7 +265,7 @@ const animation = computed(() => {
             </g>
 
             <text v-for="(val, i) in computedDataset"
-                :data-cy="`sparkhistogram-value-label-${i}`"
+                data-cy="datapoint-label-value"
                 text-anchor="middle"
                 :x="val.textAnchor"
                 :y="val.y - (FINAL_CONFIG.style.labels.value.fontSize / 3) + FINAL_CONFIG.style.labels.value.offsetY"
@@ -290,7 +290,7 @@ const animation = computed(() => {
 
             <g v-for="(label, i) in computedDataset">
                 <text 
-                    :data-cy="`sparkhistogram-label-${i}`"
+                    data-cy="datapoint-label-valueLabel"
                     v-if="label.valueLabel"
                     :x="label.textAnchor"
                     :y="label.y + label.height + FINAL_CONFIG.style.labels.valueLabel.fontSize"
@@ -304,7 +304,7 @@ const animation = computed(() => {
 
             <g v-for="(time, i) in computedDataset">
                 <text
-                    :data-cy="`sparkhistogram-time-label-${i}`"
+                    data-cy="datapoint-label-time"
                     v-if="time.timeLabel"
                     :x="time.textAnchor"
                     :y="drawingArea.height - FINAL_CONFIG.style.labels.timeLabel.fontSize / 2"
@@ -318,12 +318,14 @@ const animation = computed(() => {
 
             <!-- TOOLTIP TRAPS -->
             <g v-for="(rect, i) in computedDataset">
-                <rect 
+                <rect
+                    data-cy="tooltip-trap"
                     :height="drawingArea.height" 
                     :width="rect.unitWidth" 
                     fill="transparent" 
                     :x="rect.trapX" 
-                    :y="0" @mouseover="selectedIndex = i" 
+                    :y="0" 
+                    @mouseover="selectedIndex = i" 
                     @mouseleave="selectedIndex = null" 
                     :stroke="selectedIndex !== null && selectedIndex === i ? FINAL_CONFIG.style.selector.stroke : ''"
                     :stroke-width="selectedIndex !== null && selectedIndex === i ? FINAL_CONFIG.style.selector.strokeWidth : 0"
