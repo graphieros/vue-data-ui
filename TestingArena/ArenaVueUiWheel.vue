@@ -58,6 +58,9 @@ const model = ref([
     { key: 'style.chart.layout.wheel.ticks.sizeRatio', def: 0.9, type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'style.chart.layout.wheel.ticks.gradient.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.wheel.ticks.gradient.shiftHueIntensity', def: 100, type:'range', min: 0, max: 100},
+    { key: 'style.chart.layout.wheel.ticks.quantity', def: 100, type: 'range', min: 100, max: 1000},
+    { key: 'style.chart.layout.wheel.ticks.strokeWidth', def: 5, type: 'range', min: 0.1, max: 12, step: 0.1},
+
     { key: 'style.chart.layout.innerCircle.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.innerCircle.stroke', def: '#e1e5e8', type: 'color'},
     { key: 'style.chart.layout.innerCircle.strokeWidth', def: 1, type: 'range', min: 0, max: 48},
