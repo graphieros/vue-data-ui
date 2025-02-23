@@ -876,8 +876,8 @@ defineExpose({
                 </g>
 
                 <rect
+                    data-cy="datapoint-underlayer"
                     v-for="(position, i) in positions"
-                    :data-cy="`waffle-rect-underlayer-${i}`"
                     :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
                     :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                     :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
@@ -889,6 +889,7 @@ defineExpose({
                     :filter="getBlurFilter(rects[i].serieIndex)"
                 />
                 <rect
+                    data-cy="datapoint-rect"
                     v-for="(position, i) in positions"
                     :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
                     :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
@@ -926,7 +927,7 @@ defineExpose({
                     :width="absoluteRectDimension * FINAL_CONFIG.style.chart.layout.grid.size <= 0 ? 0.0001 : absoluteRectDimension * FINAL_CONFIG.style.chart.layout.grid.size"
                     :filter="getBlurFilter(rects[i].serieIndex)"
                 >
-                    <div class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${FINAL_CONFIG.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
+                    <div data-cy="datapoint-caption" class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${FINAL_CONFIG.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
                         <span v-if="FINAL_CONFIG.style.chart.layout.labels.captions.showSerieName">
                             {{ FINAL_CONFIG.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects[i].name, length: FINAL_CONFIG.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects[i].name }}:
                         </span>
@@ -963,8 +964,8 @@ defineExpose({
             </template>
     
             <rect
+                data-cy="tooltip-trap"
                 v-for="(position, i) in positions"
-                :data-cy="`waffle-rect-${i}`"
                 @mouseover="useTooltip(i)"
                 @mouseleave="isTooltip = false; selectedSerie = null"
                 :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
