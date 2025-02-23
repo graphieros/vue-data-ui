@@ -835,7 +835,7 @@ defineExpose({
             <g v-for="(serie, i) in bars">
                 <!-- UNDERLAYER -->
                 <rect
-                    :data-cy="`vertical-bar-rect-underlayer-${i}`"
+                    data-cy="datapoint-underlayer"
                     :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
                     :y="drawableArea.top + ((barGap + barHeight) * i)"
                     :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
@@ -848,6 +848,7 @@ defineExpose({
             <g v-for="(serie, i) in bars"> 
                 <!-- BARS -->
                 <rect 
+                    data-cy="datapoint-bar"
                     :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
                     :y="drawableArea.top + ((barGap + barHeight) * i)"
                     :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
@@ -872,6 +873,7 @@ defineExpose({
 
                 <!-- SEPARATORS -->
                 <line
+                    data-cy="datapoint-separator"
                     v-if="(!serie.isChild || serie.isLastChild) && FINAL_CONFIG.style.chart.layout.separators.show && i !== bars.length -1"
                     :x1="0"
                     :x2="drawableArea.left"
@@ -895,7 +897,7 @@ defineExpose({
 
                 <!-- DATALABELS -->
                 <text
-                    :data-cy="`vertical-bar-datalabel-${i}`"
+                    data-cy="datapoint-label"
                     :x="!hasNegative ? calcDataLabelX(serie.value) + 3 + FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX : (drawableArea.left + (drawableArea.width / 2) + (serie.sign === 1 ? -12: 12) + (serie.sign === 1 ? -FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX : FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX))"
                     :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize / 2"
                     :text-anchor="!hasNegative || serie.sign === - 1 ? 'start' : 'end'"
@@ -908,6 +910,7 @@ defineExpose({
 
                 <!-- CHILDREN | LONELY PARENTS NAMES -->
                 <text
+                    data-cy="datapoint-name"
                     v-if="(serie.isChild || !serie.hasChildren) && FINAL_CONFIG.style.chart.layout.bars.nameLabels.show"
                     text-anchor="end"
                     :x="drawableArea.left - 3 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX"
@@ -921,6 +924,7 @@ defineExpose({
 
                 <!-- PARENT NAMES -->
                 <text
+                    data-cy="datapoint-parent-name"
                     v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"
                     :x="3 + FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX"
                     :y="getParentData(serie, i).y"
@@ -932,6 +936,7 @@ defineExpose({
                     {{ getParentData(serie, i).name }}
                 </text>
                 <text 
+                    data-cy="datapoint-parent-value"
                     v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"
                     :x="3 + FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX"
                     :y="getParentData(serie, i).y + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize + 6"
@@ -945,8 +950,7 @@ defineExpose({
 
                 <!-- TOOLTIP TRAPS -->
                 <rect 
-                    :data-cy="`vertical-bar-trap-${i}`"
-                    data-cy-trap
+                    data-cy="tooltip-trap"
                     :x="0"
                     :y="drawableArea.top + ((barGap + barHeight) * i) - (barGap/2)"
                     :width="svg.width <= 0 ? 0.0001 : svg.width"
@@ -1061,9 +1065,9 @@ defineExpose({
             }
         }">
             <template #content>
-                <div ref="tableContainer" class="vue-ui-vertical-bar-table">        
+                <div ref="tableContainer" class="vue-ui-vertical-bar-table atom-data-table">        
                     <div :style="`width:100%;padding-top: 36px;position:relative`">
-                        <div role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                        <div data-cy="data-table-close" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div> 
                         <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">
