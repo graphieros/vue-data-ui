@@ -5,7 +5,7 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref({ percentage: 99 })
+const dataset = ref({ percentage: 50 })
 
 
 // onMounted(() => {
@@ -47,7 +47,7 @@ const model = ref([
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
 
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF40', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.animation.use', def: true, type: 'checkbox'},
     { key: 'style.chart.animation.speed', def: 0.5, type: 'number', min: 0, max: 2, step: 0.01},
@@ -58,8 +58,9 @@ const model = ref([
     { key: 'style.chart.layout.wheel.ticks.sizeRatio', def: 0.9, type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'style.chart.layout.wheel.ticks.gradient.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.wheel.ticks.gradient.shiftHueIntensity', def: 100, type:'range', min: 0, max: 100},
-    { key: 'style.chart.layout.wheel.ticks.quantity', def: 100, type: 'range', min: 100, max: 1000},
+    { key: 'style.chart.layout.wheel.ticks.quantity', def: 100, type: 'range', min: 1, max: 1000},
     { key: 'style.chart.layout.wheel.ticks.strokeWidth', def: 5, type: 'range', min: 0.1, max: 12, step: 0.1},
+    { key: 'style.chart.layout.wheel.ticks.type', def: 'arc', type: 'select', options: ['classic', 'arc']},
 
     { key: 'style.chart.layout.innerCircle.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.innerCircle.stroke', def: '#e1e5e8', type: 'color'},
@@ -89,7 +90,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -103,9 +104,9 @@ const config = computed(() => {
                     ...c.style.chart.layout,
                     percentage: {
                         ...c.style.chart.layout.percentage,
-                        formatter: ({value}) => {
-                            return `f - ${value}`
-                        }
+                        // formatter: ({value}) => {
+                        //     return `f - ${value}`
+                        // }
                     }
                 }
             }
