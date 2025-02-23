@@ -1224,6 +1224,7 @@ export function useConfig() {
                 layout: {
                     wheel: {
                         ticks: {
+                            type: 'classic', // or 'arc'
                             rounded: true,
                             inactiveColor: COLOR_GREY_LIGHT,
                             activeColor: COLOR_BLUE,
