@@ -1317,6 +1317,8 @@ declare module "vue-data-ui" {
                             inactiveColor?: string;
                             activeColor?: string;
                             sizeRatio?: number;
+                            quantity?: number;
+                            strokeWidth?: number;
                             gradient?: {
                                 show?: boolean;
                                 shiftHueIntensity?: number;
