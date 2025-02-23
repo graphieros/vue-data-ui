@@ -5,6 +5,7 @@ import {
     calcLinearProgression,
     calcMedian,
     createSmoothPath,
+    createStraightPath,
     createUid,
     dataLabel as dl,
     error,
@@ -59,7 +60,7 @@ const props = defineProps({
 });
 
 const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
+    return Array.isArray(props.dataset) && props.dataset.length > 0;
 });
 
 const uid = ref(createUid());
@@ -143,7 +144,7 @@ const safeDatasetCopy = ref(prepareDsCopy());
 function prepareDsCopy() {
     return largestTriangleThreeBucketsArrayObjects({
         data: props.dataset.map(d => {
-            if (FINAL_CONFIG.value.style.animation.show) {
+            if (FINAL_CONFIG.value.style.animation.show && props.dataset.length > 1) {
                 return {
                     ...d,
                     value: null
@@ -278,7 +279,7 @@ const absoluteZero = computed(() => {
 })
 
 function ratioToMax(v) {
-    return v / absoluteMax.value;
+    return isNaN(v / absoluteMax.value) ? 0 : v / absoluteMax.value;
 }
 
 const len = computed(() => downsampled.value.length - 1);
@@ -286,16 +287,17 @@ const len = computed(() => downsampled.value.length - 1);
 const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((s, i) => {
         const absoluteValue = isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : (s.value || 0);
+        const width = (drawingArea.value.width / (len.value + 1)) > svg.padding ? svg.padding : (drawingArea.value.width / (len.value + 1));
         return {
             absoluteValue,
             period: s.period,
             plotValue: absoluteValue + absoluteMin.value,
             toMax: ratioToMax(absoluteValue + absoluteMin.value),
-            x: drawingArea.value.start + (i * ((drawingArea.value.width / (len.value + 1)) > svg.padding ? svg.padding : (drawingArea.value.width / (len.value + 1)))),
+            x: drawingArea.value.start + (i * (width > drawingArea.value.width / 12 ? drawingArea.value.width / 12 : width)),
             y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteValue + absoluteMin.value)),
             id: `plot_${uid.value}_${i}`,
             color: isBar.value ? FINAL_CONFIG.value.style.bar.color : FINAL_CONFIG.value.style.area.useGradient ? shiftHue(FINAL_CONFIG.value.style.line.color, 0.05 * ( 1 - (i / len.value))) : FINAL_CONFIG.value.style.line.color,
-            width: (drawingArea.value.width / (len.value + 1)) > svg.padding ? svg.padding : (drawingArea.value.width / (len.value + 1))
+            width: width > drawingArea.value.width / 12 ? drawingArea.value.width / 12 : width
         }
     })
 });
@@ -451,21 +453,10 @@ function selectDatapoint(datapoint, index) {
             </g>
 
             <path data-cy="sparkline-smooth-path" v-if="FINAL_CONFIG.style.line.smooth && !isBar" :d="`M ${createSmoothPath(mutableDataset)}`" :stroke="FINAL_CONFIG.style.line.color" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" stroke-linecap="round"/>
+
+            <path data-cy="sparkline-straight-line" v-if="!FINAL_CONFIG.style.line.smooth && !isBar" :d="`M ${createStraightPath(mutableDataset)}`" :stroke="FINAL_CONFIG.style.line.color" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" stroke-linecap="round"/>
             
             <g v-for="(plot, i) in mutableDataset">
-                <line 
-                    v-if="i < mutableDataset.length - 1 && !FINAL_CONFIG.style.line.smooth && !isBar"
-                    data-cy="segment-line"
-                    :x1="plot.x"
-                    :x2="mutableDataset[i + 1].x"
-                    :y1="plot.y || 0"
-                    :y2="mutableDataset[i + 1].y || 0"
-                    :stroke="plot.color"
-                    :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    shape-rendering="geometricPrecision"
-                />
                 <rect
                     data-cy="datapoint-bar"
                     v-if="isBar"
@@ -509,7 +500,7 @@ function selectDatapoint(datapoint, index) {
             <g v-if="FINAL_CONFIG.style.plot.show" v-for="(plot, i) in mutableDataset">
                 <circle
                     data-cy="selection-plot"
-                    v-if="(selectedPlot && plot.id === selectedPlot.id) || selectedIndex === i" 
+                    v-if="(selectedPlot && plot.id === selectedPlot.id) || selectedIndex === i || dataset.length === 1" 
                     :cx="plot.x" 
                     :cy="plot.y" 
                     :r="FINAL_CONFIG.style.plot.radius"

@@ -34,7 +34,7 @@ describe('<VueUiSparkline />', () => {
 			cy.get('[data-cy="sparkline-angle-area"]').should('exist').and('be.visible');
 
 			cy.log('line');
-			cy.get('[data-cy="segment-line"]').should('exist').and('be.visible').and('have.length', dataset.length - 1);
+			cy.get('[data-cy="sparkline-straight-line"]').should('exist').and('be.visible');
 
 		});
 	});
