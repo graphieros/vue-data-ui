@@ -1015,7 +1015,7 @@ defineExpose({
                 </template>
 
                 <template #item="{ legend }">
-                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                    <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
                         {{ legend.name }}: {{ applyDataLabel(
                             FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
                             legend.value,

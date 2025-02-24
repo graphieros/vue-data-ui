@@ -5,8 +5,10 @@ import { testCommonFeatures } from '../../cypress/fixtures';
 const { config, dataset } = components.find(c => c.name === 'VueUiWaffle');
 
 describe('<VueUiWaffle />', () => {
-	it('renders', () => {
+	beforeEach(() => {
 		cy.viewport(500,600);
+	})
+	it('renders', () => {
 		cy.mount(VueUiWaffle, {
 			props: {
 				dataset,
@@ -33,6 +35,23 @@ describe('<VueUiWaffle />', () => {
 				cy.wrap(caption)
 					.should('contain', dataset[i].name)
 					.and('contain', dataset[i].values.reduce((a, b) => a + b, 0))
+			});
+		});
+	});
+
+	it('emits', () => {
+		cy.mount(VueUiWaffle, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(({ wrapper }) => {
+			cy.spy(window, 'requestAnimationFrame').as('rafSpy');
+
+			cy.log('@selectLegend');
+			cy.get('[data-cy="legend-item"]').first().click({ force: true }).then(() => {
+				expect(wrapper.emitted('selectLegend')).to.exist;
+				cy.get('@rafSpy').should('have.been.called');
 			});
 		});
 	});
