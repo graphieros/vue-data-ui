@@ -34,4 +34,17 @@ describe('<VueUiVerticalBar />', () => {
 			cy.get('[data-cy="datapoint-parent-value"]').should('exist').and('be.visible').and('have.length', dataset.filter(d => !!d.children).length);
 		});
 	});
+	
+	it('emits', () => {
+		cy.mount(VueUiVerticalBar, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(({ wrapper }) => {
+			cy.get('[data-cy="legend-item"]').first().click({ force: true }).then(() => {
+				expect(wrapper.emitted('selectLegend')).to.exist;
+			});
+		});
+	});
 });
