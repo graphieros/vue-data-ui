@@ -1009,7 +1009,7 @@
                     <template v-else>
                         <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                             <text
-                                :data-cy="`xy-time-label-${i}`"
+                                data-cy="time-label"
                                 v-if="
                                     (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
                                     (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
