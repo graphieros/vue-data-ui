@@ -94,5 +94,41 @@ describe('<VueUiQuadrant />', () => {
 			cy.get('[data-cy="plot-label"]').should('exist').and('be.visible').and('have.length', dataset[0].series.length);
 		});	
 	});
+
+	it('emits', () => {
+		cy.spy(window, 'requestAnimationFrame').as('rafSpy');
+		cy.mount(VueUiQuadrant, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(({ wrapper }) => {
+			cy.log('@selectPlot');
+			cy.get('[data-cy="atom-shape"]').first().click().then(() => {
+				expect(wrapper.emitted('selectPlot')[0][0]).to.have.keys(
+					'category',
+					'shape',
+					'itemName',
+					'x',
+					'y',
+					'quadrantSide',
+					'sideName'
+				);
+			});
+
+			cy.log('@selectSide');
+			cy.get('[data-cy="side-trap-tl"]').click({ force: true }).then(() => {
+				expect(wrapper.emitted('selectSide')[0][0]).to.have.keys('items', 'quadrantSide', 'sideName');
+				expect(wrapper.emitted('selectSide')[0][0].quadrantSide).to.equal('tl');
+				expect(wrapper.emitted('selectSide')[0][0].sideName).to.equal('TL');
+				cy.get('@rafSpy').should('have.been.called');
+			});
+
+			cy.log('@selectLegend');
+			cy.get('[data-cy="legend-item"]').first().click().then(() => {
+				expect(wrapper.emitted('selectLegend')).to.exist;
+			});
+		});
+	});
 });
 

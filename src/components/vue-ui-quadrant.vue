@@ -1537,7 +1537,7 @@ defineExpose({
                 @clickMarker="({legend}) => segregate(legend.id)"
             >
                 <template #item="{ legend }">
-                    <div data-cy-legend-item @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    <div data-cy="legend-item" @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                         {{ legend.name }} 
                     </div>
                 </template>
