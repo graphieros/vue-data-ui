@@ -44,4 +44,18 @@ describe('<VueUiRadar />', () => {
 			cy.get('[data-cy="datapoint-circle"]').should('exist').and('be.visible').and('have.length', dataset.categories.length * dataset.series.length);
 		});
 	});
+
+	it('emits', () => {
+		cy.mount(VueUiRadar, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(({ wrapper }) => {
+			cy.log('@selectLegend');
+			cy.get('[data-cy="legend-item"]').first().click().then(() => {
+				expect(wrapper.emitted('selectLegend')).to.exist;
+			});
+		});
+	});
 });

@@ -843,7 +843,7 @@ defineExpose({
                 @clickMarker="({i}) => segregate(i)"
             >
                 <template #item="{ legend, index }">
-                    <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                    <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                         {{ legend.name }}: {{ 
                             dataLabel({
                                 v: legend.totalProportion * 100,
