@@ -41,4 +41,37 @@ describe('<VueUiSparkHistogram />', () => {
 			});
 		});
 	});
+
+	it('emits', () => {
+		cy.mount(VueUiSparkhistogram, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(({ wrapper }) => {
+			cy.log('@selectDatapoint');
+			cy.get('[data-cy="tooltip-trap"]').first().click().then(() => {
+				expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys('index', 'datapoint');
+				expect(wrapper.emitted('selectDatapoint')[0][0].index).to.equal(0);
+				expect(wrapper.emitted('selectDatapoint')[0][0].datapoint).to.have.keys(
+					'color',
+					'gradient',
+					'height',
+					'intensity',
+					'proportion',
+					'stroke',
+					'textAnchor',
+					'timeLabel',
+					'trapX',
+					'unitWidth',
+					'value',
+					'valueLabel',
+					'width',
+					'x',
+					'y'
+				)
+				
+			})
+		})
+	})
 });
