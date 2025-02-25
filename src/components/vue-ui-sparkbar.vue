@@ -280,7 +280,7 @@ function selectDatapoint(datapoint, index) {
             </div>
         </div>
         <template v-for="(bar, i) in drawableDataset">
-            <div v-if="isDataset" :style="`display:flex !important;${['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? `flex-direction: ${FINAL_CONFIG.style.labels.name.position === 'right' ? 'row-reverse' : 'row'} !important` : 'flex-direction:column !important'};gap:${FINAL_CONFIG.style.gap}px !important;align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`" @click="() => selectDatapoint(bar, i)">
+            <div data-cy="datapoint-wrapper" v-if="isDataset" :style="`display:flex !important;${['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? `flex-direction: ${FINAL_CONFIG.style.labels.name.position === 'right' ? 'row-reverse' : 'row'} !important` : 'flex-direction:column !important'};gap:${FINAL_CONFIG.style.gap}px !important;align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`" @click="() => selectDatapoint(bar, i)">
                 <!-- CUSTOM DATALABEL -->
                 <slot name="data-label" v-bind="{ bar: {
                     ...bar,

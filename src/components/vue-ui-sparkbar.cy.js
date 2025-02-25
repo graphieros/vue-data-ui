@@ -86,4 +86,28 @@ describe('<VueUiSparkbar />', () => {
 			cy.get('[data-cy="sparkbar-subtitle"]').should('exist').contains(config.style.title.subtitle.text);
 		});
 	});
+
+	it('emits', () => {
+		cy.mount(VueUiSparkbar, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(({ wrapper }) => {
+			cy.log('@selectDatapoint');
+			cy.get('[data-cy="datapoint-wrapper"]').first().click({ force: true }).then(() => {
+				expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys('datapoint', 'index');
+				expect(wrapper.emitted('selectDatapoint')[0][0].index).to.equal(0);
+				expect(wrapper.emitted('selectDatapoint')[0][0].datapoint).to.have.keys(
+					'color',
+					'formatter',
+					'name',
+					'prefix',
+					'rounding',
+					'suffix',
+					'value'
+				);
+			});
+		});
+	});
 });
