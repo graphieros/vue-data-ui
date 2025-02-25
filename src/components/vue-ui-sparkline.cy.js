@@ -76,4 +76,41 @@ describe('<VueUiSparkline />', () => {
 			cy.get('[data-cy="datapoint-bar"]').should('exist').and('be.visible').and('have.length', dataset.length);
 		});
 	});
+
+	it('emits', () => {
+		cy.mount(VueUiSparkline, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(({ wrapper }) => {
+			cy.log('@hoverIndex');
+			cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseenter', { force: true }).then(() => {
+				expect(wrapper.emitted('hoverIndex')[0][0]).to.have.keys('index');
+				expect(wrapper.emitted('hoverIndex')[0][0].index).to.equal(0);
+			}).then(() => {
+				cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseleave', { force: true}).then(() => {
+					expect(wrapper.emitted('hoverIndex')[1][0]).to.have.keys('index');
+					expect(wrapper.emitted('hoverIndex')[1][0].index).to.equal(undefined)
+				});
+			});
+
+			cy.log('@selectDatapoint');
+			cy.get('[data-cy="tooltip-trap"]').first().click({ force: true }).then(() => {
+				expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys('datapoint', 'index')
+				expect(wrapper.emitted('selectDatapoint')[0][0].index).to.equal(0);
+				expect(wrapper.emitted('selectDatapoint')[0][0].datapoint).to.have.keys(
+					'absoluteValue',
+					'color',
+					'id',
+					'period',
+					'plotValue',
+					'toMax',
+					'width',
+					'x',
+					'y'
+				);
+			});
+		});
+	});
 });
