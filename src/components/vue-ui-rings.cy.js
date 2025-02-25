@@ -29,4 +29,18 @@ describe('<VueUiRings />', () => {
 			cy.get('[data-cy="ring"]').should('exist').and('be.visible').and('have.length', dataset.length);
 		});
 	});
+
+	it('emits', () => {
+		cy.mount(VueUiRings, {
+			props: {
+				dataset,
+				config
+			}
+		}).then(({ wrapper }) => {
+			cy.log('@selectLegend');
+			cy.get('[data-cy="legend-item"]').first().click().then(() => {
+				expect(wrapper.emitted('selectLegend')).to.exist
+			});
+		});
+	});
 });
