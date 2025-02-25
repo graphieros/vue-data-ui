@@ -1002,11 +1002,11 @@ defineExpose({
                 </g>
                 <g v-else>
                     <circle
+                        data-cy="tooltip-trap"
                         :cx="svg.width / 2"
                         :cy="svg.height / 2"
                         :r="minSize"
                         :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" 
-                        data-cy-donut-trap
                         @mouseenter="useTooltip({
                             datapoint: currentDonut[0],
                             relativeIndex: 0,
@@ -1288,7 +1288,7 @@ defineExpose({
 
                 <template #item="{ legend, index }">
                     <div 
-                        :data-cy="`legend-item-${index}`"
+                        data-cy="legend-item"
                         :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`"
                         @click="legend.segregate()" 
                     >

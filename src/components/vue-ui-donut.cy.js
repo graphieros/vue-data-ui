@@ -44,6 +44,41 @@ describe('<VueUiDonut />', () => {
 		})
 	}
 
+	function testEmits(wrapper) {
+		cy.log('@selectLegend');
+		cy.get('[data-cy="legend-item"]').first().click({ force: true }).then(() => {
+			expect(wrapper.emitted('selectLegend')).to.exist;
+		});
+
+		cy.log('selectDatapoint');
+		cy.get('[data-cy="tooltip-trap"]').first().click({ force: true }).then(() => {
+			expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys('datapoint', 'index');
+			expect(wrapper.emitted('selectDatapoint')[0][0].index).to.equal(0);
+			expect(wrapper.emitted('selectDatapoint')[0][0].datapoint).to.have.keys(
+				'absoluteValues',
+				'arcSlice',
+				'center',
+				'color',
+				'comment',
+				'cx',
+				'cy',
+				'endX',
+				'endY',
+				'firstSeparator',
+				'name',
+				'path',
+				'patternIndex',
+				'proportion',
+				'ratio',
+				'separator',
+				'seriesIndex',
+				'startX',
+				'startY',
+				'value'
+			);
+		});
+	}
+
 	it('renders donut default variation', () => {
 		cy.mount(VueUiDonut, {
 			props: {
@@ -55,7 +90,7 @@ describe('<VueUiDonut />', () => {
 					'data-cy': 'slot-plot-comment'
 				}, plot.comment)
 			}
-		}).then(() => {
+		}).then(({ wrapper }) => {
 			commonTest();
 			
 			cy.get('[data-cy="donut-arc"]').should('exist').and('be.visible').and('have.length', dataset.length);
@@ -68,6 +103,7 @@ describe('<VueUiDonut />', () => {
 			cy.get('[data-cy="hollow-average-value"]').should('exist').and('be.visible').contains(average.toFixed(0));
 
 			testDataLabels('donut');
+			testEmits(wrapper);
 		});
 	});
 
@@ -85,13 +121,14 @@ describe('<VueUiDonut />', () => {
 					'data-cy': 'slot-plot-comment'
 				}, plot.comment)
 			}
-		}).then(() => {
+		}).then(({ wrapper }) => {
 			commonTest();
 
 			cy.get('[data-cy="polar-datapoint"]').should('exist').and('be.visible').and('have.length', dataset.length);
 			cy.get('[data-cy="polar-shadow"]').should('exist').and('be.visible').and('have.length', dataset.length);
 
 			testDataLabels('polar');
+			testEmits(wrapper);
 		});
 	});
 });
