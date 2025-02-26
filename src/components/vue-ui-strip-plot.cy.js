@@ -63,4 +63,27 @@ describe('<VueUiStripPlot />', () => {
             });
         });
     });
+
+    it('emits', () => {
+        cy.mount(VueUiStripPlot, {
+            props: {
+                dataset,
+                config
+            }
+        }).then(({ wrapper }) => {
+            cy.log('@selectDatapoint');
+            cy.get('circle').eq(8).click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectDatapoint')).to.exist
+                expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys(
+                    'color',
+                    'id',
+                    'name',
+                    'parentId',
+                    'value',
+                    'x',
+                    'y'
+                );
+            });
+        });
+    });
 });
