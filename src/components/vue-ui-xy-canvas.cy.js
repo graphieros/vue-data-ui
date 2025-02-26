@@ -35,4 +35,18 @@ describe('<VueUiXyCanvas />', () => {
             });
         });
     });
+
+    it('emits', () => {
+        cy.mount(VueUiXyCanvas, {
+            props: {
+                dataset,
+                config
+            }
+        }).then(({ wrapper }) => {
+            cy.log('@selectLegend');
+            cy.get('[data-cy="legend-item"]').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectLegend')).to.exist;
+            });
+        });
+    });
 });

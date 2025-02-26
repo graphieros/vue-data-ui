@@ -1701,7 +1701,7 @@ defineExpose({
             <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig" :key="`legend_${legendStep}`"
                 @clickMarker="({ i }) => segregate(i)">
                 <template #item="{ legend, index }">
-                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                    <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                         {{ legend.name }}
                     </div>
                 </template>
