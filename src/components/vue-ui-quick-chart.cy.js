@@ -58,6 +58,47 @@ describe('VueUiQuickChart', () => {
         });
     });
 
+    it('emits from a bar chart from an array of numbers', () => {
+        const periods = ['A', 'B', 'C', 'D', 'E'];
+
+        cy.mount(VueUiQuickChart, {
+            props: {
+                dataset,
+                config: {
+                    ...config,
+                    xyPeriods: periods
+                }
+            }
+        }).then(({ wrapper }) => {
+            cy.log('@selectDatapoint');
+            cy.get('[data-cy="tooltip-trap-bar"]').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectDatapoint')).to.exist;
+                expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
+                    'absoluteIndices',
+                    'color',
+                    'coordinates',
+                    'id',
+                    'name',
+                    'value',
+                    'values'
+                )
+            });
+
+            cy.log('@selectLegend');
+            cy.get('.vue-ui-quick-chart-legend-item').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectLegend')).to.exist;
+                expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
+                    'absoluteIndices',
+                    'color',
+                    'coordinates',
+                    'id',
+                    'name',
+                    'values'
+                );
+            });
+        });
+    });
+
     it('renders a line chart from an array of numbers', () => {
         const ds = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
         const periods = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
@@ -107,6 +148,52 @@ describe('VueUiQuickChart', () => {
 
             cy.log('datapoint labels');
             cy.get('[data-cy="datapoint-label"]').should('exist').and('be.visible').and('have.length', ds.length);
+        });
+    });
+
+    it('emits from a line chart from an array of numbers', () => {
+        const ds = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
+        const periods = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+
+        cy.mount(VueUiQuickChart,
+            {
+                props: {
+                    dataset: ds,
+                    config: {
+                        ...config,
+                        xyPeriods: periods
+                    }
+                }
+            }
+        ).then(({ wrapper }) => {
+            cy.log('@selectDatapoint');
+            cy.get('[data-cy="tooltip-trap-line"]').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectDatapoint')).to.exist;
+                expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
+                    'absoluteIndices',
+                    'color',
+                    'coordinates',
+                    'id',
+                    'linePath',
+                    'name',
+                    'value',
+                    'values'
+                )
+            });
+
+            cy.log('@selectLegend');
+            cy.get('.vue-ui-quick-chart-legend-item').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectLegend')).to.exist;
+                expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
+                    'absoluteIndices',
+                    'color',
+                    'coordinates',
+                    'id',
+                    'linePath',
+                    'name',
+                    'values'
+                );
+            });
         });
     });
 
@@ -164,6 +251,61 @@ describe('VueUiQuickChart', () => {
 
             cy.log('datapoint labels');
             cy.get('[data-cy="datapoint-label"]').should('exist').and('be.visible').and('have.length', ds[0].values.length * ds.length);
+        });
+    });
+
+    it('emits from a bar chart from an array of objects', () => {
+        const periods = ['A', 'B', 'C'];
+        const ds = [
+            {
+                name: 'S1',
+                values: [1, 2, 3]
+            },
+            {
+                name: 'S2',
+                values: [2, 3, 4]
+            }
+        ];
+
+        cy.mount(VueUiQuickChart, {
+            props: {
+                dataset: ds,
+                config: {
+                    ...config,
+                    xyPeriods: periods
+                }
+            }
+        }).then(({ wrapper }) => {
+            cy.log('@selectDatapoint');
+            cy.get('[data-cy="tooltip-trap-bar"]').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectDatapoint')).to.exist;
+                expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
+                    'NAME',
+                    'VALUES',
+                    'absoluteIndices',
+                    'color',
+                    'coordinates',
+                    'id',
+                    'name',
+                    'value',
+                    'values'
+                )
+            });
+
+            cy.log('@selectLegend');
+            cy.get('.vue-ui-quick-chart-legend-item').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectLegend')).to.exist;
+                expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
+                    'NAME',
+                    'VALUES',
+                    'absoluteIndices',
+                    'color',
+                    'coordinates',
+                    'id',
+                    'name',
+                    'values'
+                );
+            });
         });
     });
 
@@ -226,6 +368,63 @@ describe('VueUiQuickChart', () => {
         });
     });
 
+    it('emits from a line chart from an array of objects', () => {
+        const periods = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        const ds = [
+            {
+                name: 'S1',
+                values: [1, 2, 3, 5, 8, 13, 21, 34, 55, 88]
+            },
+            {
+                name: 'S2',
+                values: [2, 3, 5, 8, 13, 21, 34, 55, 88, 133]
+            }
+        ];
+
+        cy.mount(VueUiQuickChart, {
+            props: {
+                dataset: ds,
+                config: {
+                    ...config,
+                    xyPeriods: periods
+                }
+            }
+        }).then(({ wrapper }) => {
+            cy.log('@selectDatapoint');
+            cy.get('[data-cy="tooltip-trap-line"]').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectDatapoint')).to.exist;
+                expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
+                    'NAME',
+                    'VALUES',
+                    'absoluteIndices',
+                    'color',
+                    'coordinates',
+                    'id',
+                    'linePath',
+                    'name',
+                    'value',
+                    'values'
+                )
+            });
+
+            cy.log('@selectLegend');
+            cy.get('.vue-ui-quick-chart-legend-item').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectLegend')).to.exist;
+                expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
+                    'NAME',
+                    'VALUES',
+                    'absoluteIndices',
+                    'color',
+                    'coordinates',
+                    'id',
+                    'linePath',
+                    'name',
+                    'values'
+                );
+            });
+        });
+    });
+
     it('renders a donut from an array of objects', () => {
         const ds = [
             {
@@ -275,6 +474,73 @@ describe('VueUiQuickChart', () => {
             cy.log('donut hollow');
             cy.get('[data-cy="donut-hollow-total-label"]').should('exist').and('be.visible').contains('Total');
             cy.get('[data-cy="donut-hollow-total-value"]').should('exist').and('be.visible').contains(ds.map(d => d.value).reduce((a, b) => a + b, 0));
+        });
+    });
+
+    it('emits from a donut chart from an array of objects', () => {
+        const ds = [
+            {
+                name: 'S1',
+                value: 1
+            },
+            {
+                name: 'S2',
+                value: 2,
+            },
+            {
+                name: 'S3',
+                value: 3
+            }
+        ];
+
+        cy.mount(VueUiQuickChart, {
+            props: {
+                dataset: ds,
+                config
+            }
+        }).then(({ wrapper }) => {
+            cy.log('@selectDatapoint');
+            cy.get('[data-cy="tooltip-trap-donut"]').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectDatapoint')).to.exist;
+                expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys(
+                    'NAME',
+                    'VALUE',
+                    'arcSlice',
+                    'center',
+                    'color',
+                    'cx',
+                    'cy',
+                    'endX',
+                    'endY',
+                    'firstSeparator',
+                    'id',
+                    'immutableValue',
+                    'name',
+                    'path',
+                    'proportion',
+                    'ratio',
+                    'separator',
+                    'startX',
+                    'startY',
+                    'value'
+                )
+            });
+
+            cy.log('@selectLegend');
+            cy.get('.vue-ui-quick-chart-legend-item').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectLegend')).to.exist;
+                expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
+                    'NAME',
+                    'VALUE',
+                    'absoluteValue',
+                    'color',
+                    'id',
+                    'immutableValue',
+                    'name',
+                    'proportion',
+                    'value'
+                );
+            });
         });
     });
 });
