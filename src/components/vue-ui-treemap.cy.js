@@ -38,4 +38,38 @@ describe('<VueUiTreemap />', () => {
             cy.get('[data-cy="datapoint-rect"]').should('exist').and('be.visible').and('have.length', 16);
         });
     });
+
+    it('emits', () => {
+        cy.mount(VueUiTreemap, {
+            props: {
+                dataset,
+                config
+            }
+        }).then(({ wrapper }) => {
+            cy.log('@selectLegend');
+            cy.get('[data-cy="legend-item-0"]').click().then(() => {
+                expect(wrapper.emitted('selectLegend')).to.exist
+            });
+
+            cy.log('@selectDatapoint');
+            cy.get('[data-cy="datapoint-rect"]').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectDatapoint')).to.exist
+                expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys(
+                    'children',
+                    'color',
+                    'id',
+                    'name',
+                    'normalizedValue',
+                    'parentId',
+                    'parentName',
+                    'proportion',
+                    'value',
+                    'x0',
+                    'x1',
+                    'y0',
+                    'y1'
+                );
+            });
+        });
+    });
 });
