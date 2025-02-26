@@ -739,6 +739,7 @@ declare module "vue-data-ui" {
 
     export type VueUiMoleculeConfig = {
         theme?: Theme;
+        customPalette?: string[];
         style?: {
             fontFamily?: string;
             chart?: {
@@ -962,6 +963,8 @@ declare module "vue-data-ui" {
                         roundingValue?: number;
                         bold?: boolean;
                         formatter?: Formatter;
+                        prefix?: string;
+                        suffix?: string;
                     };
                 };
                 title?: ChartTitle;
@@ -1247,6 +1250,7 @@ declare module "vue-data-ui" {
 
     export type VueUiTiremarksConfig = {
         theme?: Theme;
+        userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1597,6 +1601,8 @@ declare module "vue-data-ui" {
                 fontSize?: number;
                 bold?: boolean;
                 margin?: string;
+                paddingLeft?: number;
+                paddingRight?: number;
                 subtitle?: {
                     color?: string;
                     text?: string;
@@ -1669,6 +1675,7 @@ declare module "vue-data-ui" {
                     prefix?: string;
                     suffix?: string;
                     formatter?: Formatter;
+                    color?: string;
                 };
             };
             title?: ChartTitle;
@@ -2214,7 +2221,7 @@ declare module "vue-data-ui" {
     export type VueUiScatterDatasetItem = {
         name: string;
         values: VueUiScatterDatasetValueItem[];
-        color: string;
+        color?: string;
         shape?: Shape;
     };
 
@@ -3448,6 +3455,7 @@ declare module "vue-data-ui" {
         theme?: Theme;
         useCssAnimation?: boolean;
         zoomAnimationFrames?: number;
+        customPalette?: string[];
         downsample?: {
             threshold?: number;
         };
@@ -3844,6 +3852,8 @@ declare module "vue-data-ui" {
                         bold?: boolean;
                         offsetY?: number;
                         textAlign?: TextAlign;
+                        paddingLeft?: number;
+                        paddingRight?: number;
                         subtitle?: {
                             text?: string;
                             color?: string;
@@ -3907,6 +3917,7 @@ declare module "vue-data-ui" {
         customPalette?: string[];
         useCssAnimation?: boolean;
         useStartAnimation?: boolean;
+        useBlurOnHover?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {
@@ -4024,7 +4035,7 @@ declare module "vue-data-ui" {
 
     export type VueUiVerticalBarDatasetChild = {
         name: string;
-        value: string;
+        value: number;
     };
 
     export type VueUiVerticalBarDatasetItem = {
@@ -4497,7 +4508,7 @@ declare module "vue-data-ui" {
             };
             image?: {
                 src?: string;
-                inactiveOpacity?: string;
+                inactiveOpacity?: number;
                 alt?: string;
             };
             title?: {
@@ -4530,6 +4541,7 @@ declare module "vue-data-ui" {
                 bold?: boolean;
                 roundingValue?: number;
                 formatter?: Formatter;
+                boxShadow?: string;
             };
         };
     };
@@ -4561,6 +4573,8 @@ declare module "vue-data-ui" {
                 bold?: boolean;
                 text?: string;
                 offsetY?: number;
+                paddingLeft?: number;
+                paddingRight?: number;
                 subtitle?: {
                     fontSize?: number;
                     color?: string;
@@ -4584,6 +4598,7 @@ declare module "vue-data-ui" {
                 bold?: boolean;
                 roundingValue?: number;
                 formatter?: Formatter;
+                boxShadow?: string;
             };
         };
     };
@@ -4695,6 +4710,7 @@ declare module "vue-data-ui" {
             backgroundColor?: string;
             color?: string;
             animated?: boolean;
+            maxHeight?: number;
             circlePack?: {
                 color?: string;
             };
@@ -4724,6 +4740,10 @@ declare module "vue-data-ui" {
             };
             bar3d?: {
                 color?: string;
+            };
+            sparkline?: {
+                color?: string;
+                strokeWidth?: number;
             };
             sparkHistogram?: {
                 color?: string;
@@ -5030,6 +5050,7 @@ declare module "vue-data-ui" {
             pdf?: boolean;
             img?: boolean;
             fullscreen?: boolean;
+            annotator?: boolean;
         };
         userOptionsButtonTitles?: {
             open?: string;
@@ -5038,6 +5059,7 @@ declare module "vue-data-ui" {
             pdf?: string;
             img?: string;
             fullscreen?: string;
+            annotator?: string;
         };
         showUserOptionsOnChartHover?: boolean;
         keepUserOptionsStateOnChartLeave?: boolean;
@@ -5295,7 +5317,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiDumbbellConfig = {
-        reponsive?: boolean;
+        responsive?: boolean;
         theme?: Theme;
         useAnimation?: boolean;
         animationSpeed?: number;
@@ -5520,11 +5542,7 @@ declare module "vue-data-ui" {
                     dashed?: boolean;
                     showHorizontalSelector?: boolean;
                 };
-                tooltip?: {
-                    show?: boolean;
-                    color?: string;
-                    backgroundColor?: string;
-                    fontSize?: number;
+                tooltip?: ChartTooltip & {
                     customFormat?:
                     | null
                     | ((
@@ -5534,9 +5552,6 @@ declare module "vue-data-ui" {
                             VueUiXyConfig
                         >
                     ) => string);
-                    borderRadius?: number;
-                    borderColor?: string;
-                    borderWidth?: number;
                 };
                 legend?: {
                     backgroundColor?: string;
@@ -5968,7 +5983,11 @@ declare module "vue-data-ui" {
             hide?: boolean;
         };
         thead?: {
+            style?: {
+                verticalAlign?: string;
+            };
             tr?: {
+                height?: number; 
                 style?: {
                     backgroundColor?: string;
                     color?: string;
@@ -6221,62 +6240,65 @@ declare module "vue-data-ui" {
     export type VueUiBulletConfig = {
         theme?: Theme;
         userOptions?: ChartUserOptions;
-        chart?: {
-            backgroundColor?: string;
-            color?: string;
-            height?: number;
-            width?: number;
-            padding?: ChartPadding;
-            animation?: {
-                show?: boolean;
-                animationFrames?: number;
-            };
-            segments?: {
-                baseColor?: string;
-                dataLabels?: {
-                    show?: boolean;
-                    color?: string;
-                    fontSize?: number;
-                    formatter?: Formatter;
-                    bold?: boolean;
-                    prefix?: string;
-                    suffix?: string;
-                    rounding?: number;
-                    offsetY?: number;
-                };
-                ticks?: {
-                    show?: boolean;
-                    divisions?: number;
-                    stroke?: string;
-                };
-            };
-            target?: {
-                onTop?: boolean;
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
                 color?: string;
-                rounded?: boolean;
-                heightRatio?: number;
-                stroke?: string;
-                strokeWidth?: number;
+                height?: number;
                 width?: number;
-            };
-            valueBar?: {
-                color?: string;
-                heightRatio?: number;
-                stroke?: string;
-                strokeWidth?: number;
-                label?: {
+                padding?: ChartPadding;
+                animation?: {
                     show?: boolean;
+                    animationFrames?: number;
+                };
+                segments?: {
+                    baseColor?: string;
+                    dataLabels?: {
+                        show?: boolean;
+                        color?: string;
+                        fontSize?: number;
+                        formatter?: Formatter;
+                        bold?: boolean;
+                        prefix?: string;
+                        suffix?: string;
+                        rounding?: number;
+                        offsetY?: number;
+                    };
+                    ticks?: {
+                        show?: boolean;
+                        divisions?: number;
+                        stroke?: string;
+                    };
+                };
+                target?: {
+                    onTop?: boolean;
                     color?: string;
-                    fontSize?: number;
-                    bold?: boolean;
-                    offsetY?: number;
+                    rounded?: boolean;
+                    heightRatio?: number;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    width?: number;
+                };
+                valueBar?: {
+                    color?: string;
+                    heightRatio?: number;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    label?: {
+                        show?: boolean;
+                        color?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                        offsetY?: number;
+                    };
+                };
+                title?: ChartTitle;
+                legend?: ChartBaseLegend & {
+                    roundingValue?: number;
                 };
             };
-            title?: ChartTitle;
-            legend?: ChartBaseLegend & {
-                roundingValue?: number;
-            };
-        };
+        }
     };
 
     export const VueUiBullet: DefineComponent<{
@@ -6392,7 +6414,9 @@ declare module "vue-data-ui" {
             show?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
-            td?: ChartTableCell;
+            td?: ChartTableCell & {
+                roundingValue?: number;
+            };
             columnNames?: {
                 series?: string;
                 datapoint?: string;
