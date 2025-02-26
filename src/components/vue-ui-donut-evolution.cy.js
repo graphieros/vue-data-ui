@@ -13,7 +13,7 @@ describe('<VueUiDonutEvolution />', () => {
         dataset,
         config
       }
-    }).then(() => {
+    }).then(({ wrapper }) => {
 
       testCommonFeatures({
         userOptions: true,
@@ -47,10 +47,12 @@ describe('<VueUiDonutEvolution />', () => {
       cy.get('[data-cy-zoom]').should('not.exist');
   
       cy.log('segregates series when selecting legend items');
-      cy.get('[data-cy-legend-item]').eq(0).click();
-      cy.get(`[data-cy="arc_0"]`).should('have.length', 3);
-      cy.get('[data-cy-legend-item]').eq(0).click();
-      cy.get(`[data-cy="arc_0"]`).should('have.length', 4);
+      cy.get('[data-cy="legend-item"]').eq(0).click().then(() => {
+        cy.get(`[data-cy="arc_0"]`).should('have.length', 3);
+        expect(wrapper.emitted('selectLegend')).to.exist;
+        cy.get('[data-cy="legend-item"]').eq(0).click();
+        cy.get(`[data-cy="arc_0"]`).should('have.length', 4);
+      })
     
       cy.log('shows donut hovered state');
       cy.get('[data-cy-trap]').eq(0).trigger('mouseenter');
