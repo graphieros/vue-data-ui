@@ -814,6 +814,7 @@ defineExpose({
 
             <!-- BRANCHES -->
             <rect 
+                data-cy="chestnut-branch"
                 v-for="branch in branches"
                 :x="branch.x1"
                 :y="branch.y1"
