@@ -744,7 +744,7 @@ defineExpose({
                 <g v-for="(serieSet, i) in serie.series">
                     <!-- PLOTS -->
                     <g v-if="FINAL_CONFIG.style.chart.plots.show">
-                        <Shape 
+                        <Shape
                             v-for="dp in serieSet.datapoints"
                             :plot="{ x: dp.x, y: dp.y }"
                             :color="serie.color"
@@ -880,7 +880,7 @@ defineExpose({
                 @clickMarker="({ legend }) => { segregate(legend.id); selectLegend(legend) }"
             >
                 <template #item="{ legend, index }">
-                    <div :data-cy="`legend-item-${index}`" @click="legend.segregate(); selectLegend(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    <div data-cy="legend-item" @click="legend.segregate(); selectLegend(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                         {{ legend.name }}
                     </div>
                 </template>

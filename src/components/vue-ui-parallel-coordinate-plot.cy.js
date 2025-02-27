@@ -46,4 +46,36 @@ describe('<VueUiParallelCoordinatePlot />', () => {
             cy.get('[data-cy="datapoint-line"]').should('exist').and('be.visible').and('have.length', dataset.flatMap(d => d.series).length);
         });
     });
+
+    it('emits', () => {
+        cy.mount(VueUiParallelCoordinatePlot, {
+            props: {
+                dataset,
+                config
+            }
+        }).then(({ wrapper }) => {
+            cy.log('@selectLegend');
+            cy.get('[data-cy="legend-item"]').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectLegend')).to.exist;
+            });
+
+            cy.log('@selectDatapoint');
+            cy.get('.legend-shape-circle').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectDatapoint')).to.exist;
+                expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys(
+                    'axisIndex',
+                    'comment',
+                    'datapointIndex',
+                    'name',
+                    'seriesIndex',
+                    'seriesName',
+                    'value',
+                    'x',
+                    'y'
+                );
+                expect(wrapper.emitted('selectDatapoint')[0][0].axisIndex).to.equal(0);
+                expect(wrapper.emitted('selectDatapoint')[0][0].seriesIndex).to.equal(0);
+            });
+        });
+    });
 });
