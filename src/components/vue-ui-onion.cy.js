@@ -46,4 +46,19 @@ describe('<VueUiOnion />', () => {
             });
         });
     });
+
+    it('emits', () => {
+        cy.viewport(500, 580);
+        cy.mount(VueUiOnion, {
+            props: {
+                dataset,
+                config
+            }
+        }).then(({ wrapper }) => {
+            cy.log('@selectLegend');
+            cy.get('[data-cy-legend-item]').first().click({ force: true }).then(() => {
+                expect(wrapper.emitted('selectLegend')).to.exist;
+            });
+        });
+    });
 });
