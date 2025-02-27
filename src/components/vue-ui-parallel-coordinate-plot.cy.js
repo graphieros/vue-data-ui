@@ -60,7 +60,7 @@ describe('<VueUiParallelCoordinatePlot />', () => {
             });
 
             cy.log('@selectDatapoint');
-            cy.get('.legend-shape-circle').first().click({ force: true }).then(() => {
+            cy.get('.vdui-shape-circle').first().click({ force: true }).then(() => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys(
                     'axisIndex',

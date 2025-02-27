@@ -84,7 +84,7 @@ const d = computed(() => {
 <template>
     <g data-cy="atom-shape"> 
         <circle
-            class="legend-shape-circle"
+            class="vdui-shape-circle"
             v-if="config && config.points === 1"
             :cx="plot.x"
             :cy="plot.y"
@@ -97,7 +97,7 @@ const d = computed(() => {
             @click="emit('click')"
         />
         <path
-            class="legend-shape-polygon"
+            class="vdui-shape-polygon"
             v-if="config && config.points >= limit"
             :d="d"
             :fill="color"
@@ -108,7 +108,7 @@ const d = computed(() => {
             @click="emit('click')"
         />
         <polygon 
-            class="legend-shape-star"
+            class="vdui-shape-star"
             v-if="starPoints"
             :points="starPoints"
             :fill="color"
