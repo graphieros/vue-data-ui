@@ -30,6 +30,7 @@ import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_dumbbell: DEFAULT_CONFIG } = useConfig();
 
@@ -80,6 +81,7 @@ const FINAL_CONFIG = computed({
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -519,7 +521,13 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.absoluteWidth <= 0 ? 10 : drawingArea.absoluteWidth} ${drawingArea.absoluteHeight <= 0 ? 10 : drawingArea.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+        <svg
+            ref="svgRef"
+            :xmlns="XMLNS" 
+            v-if="isDataset" 
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
+            :viewBox="`0 0 ${drawingArea.absoluteWidth <= 0 ? 10 : drawingArea.absoluteWidth} ${drawingArea.absoluteHeight <= 0 ? 10 : drawingArea.absoluteHeight}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+        >
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->

@@ -22,6 +22,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import Tooltip from "../atoms/Tooltip.vue";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_sparkstackbar: DEFAULT_CONFIG } = useConfig()
 
@@ -65,6 +66,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -311,7 +314,13 @@ function useTooltip({ datapoint, seriesIndex }) {
             
         </div>
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" width="100%" :viewBox="`0 0 ${svg.width} ${svg.height}`">
+        <svg 
+            ref="svgRef"
+            :xmlns="XMLNS" 
+            v-if="isDataset" 
+            width="100%" 
+            :viewBox="`0 0 ${svg.width} ${svg.height}`"
+        >
             <PackageVersion />
             
             <defs>

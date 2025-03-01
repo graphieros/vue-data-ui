@@ -38,6 +38,7 @@ import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import Shape from "../atoms/Shape.vue";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_rings: DEFAULT_CONFIG } = useConfig();
 const slots = useSlots();
@@ -88,6 +89,7 @@ const FINAL_CONFIG = computed({
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 function prepareConfig() {
   const mergedConfig = useNestedProp({
@@ -606,6 +608,7 @@ defineExpose({
 
     <!-- CHART -->
     <svg
+      ref="svgRef"
       :xmlns="XMLNS"
       v-if="isDataset"
       :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"

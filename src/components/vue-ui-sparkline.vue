@@ -25,6 +25,7 @@ import { useConfig } from "../useConfig";
 import { useResponsive } from "../useResponsive";
 import { throttle } from "../canvas-lib";
 import PackageVersion from "../atoms/PackageVersion.vue";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_sparkline: DEFAULT_CONFIG } = useConfig();
 
@@ -76,6 +77,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -400,7 +403,13 @@ function selectDatapoint(datapoint, index) {
         </div>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset" data-cy="sparkline-svg" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`">
+        <svg
+            ref="svgRef"
+            :xmlns="XMLNS"
+            v-if="isDataset"
+            data-cy="sparkline-svg"
+            :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`"
+        >
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->

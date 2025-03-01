@@ -37,6 +37,7 @@ import { useConfig } from '../useConfig';
 import PackageVersion from '../atoms/PackageVersion.vue';
 import PenAndPaper from '../atoms/PenAndPaper.vue';
 import { useUserOptionState } from '../useUserOptionState';
+import { useChartAccessibility } from '../useChartAccessibility';
 
 const { vue_ui_treemap: DEFAULT_CONFIG } = useConfig()
 
@@ -97,6 +98,7 @@ const FINAL_CONFIG = computed({
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -651,9 +653,13 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg :xmlns="XMLNS" v-if="isDataset"
+        <svg 
+            ref="svgRef"
+            :xmlns="XMLNS" 
+            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
-            data-cy="treemap-svg" :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
+            data-cy="treemap-svg" 
+            :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
             :style="`max-width:100%; overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <PackageVersion />

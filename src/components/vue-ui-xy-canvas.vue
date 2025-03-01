@@ -55,6 +55,7 @@ import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_xy_canvas: DEFAULT_CONFIG } = useConfig();
 
@@ -75,7 +76,6 @@ const props = defineProps({
 
 const uid = ref(createUid())
 const xy = ref(null);
-const canvas = ref(null);
 const container = ref(null);
 const ctx = ref(null);
 const w = ref(1);
@@ -124,6 +124,7 @@ const FINAL_CONFIG = computed({
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef:canvas } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({

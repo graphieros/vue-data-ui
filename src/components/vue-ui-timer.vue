@@ -9,6 +9,7 @@ import BaseIcon from "../atoms/BaseIcon.vue";
 import Title from "../atoms/Title.vue";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_timer: DEFAULT_CONFIG } = useConfig();
 
@@ -90,6 +91,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
 
 function prepareConfig() {
     return useNestedProp({
@@ -263,7 +266,8 @@ defineExpose({
             />
         </div>
 
-        <svg 
+        <svg
+            ref="svgRef"
             :xmlns="XMLNS" 
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             :style="{

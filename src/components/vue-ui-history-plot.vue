@@ -38,6 +38,7 @@ import Skeleton from "./vue-ui-skeleton.vue";
 import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_history_plot: DEFAULT_CONFIG } = useConfig();
 
@@ -249,6 +250,7 @@ const FINAL_CONFIG = computed({
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
@@ -773,7 +775,8 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg 
+        <svg
+            ref="svgRef"
             v-if="isDataset"
             :xmlns="XMLNS"
             :viewBox="`0 0 ${svg.width < 0 ? 0.1 : svg.width} ${svg.height < 0 ? 0.1 : svg.height}`"

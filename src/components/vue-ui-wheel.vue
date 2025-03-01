@@ -23,6 +23,7 @@ import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_wheel: DEFAULT_CONFIG } = useConfig()
 
@@ -64,6 +65,7 @@ const FINAL_CONFIG = computed({
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -323,7 +325,15 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="wheel-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+        <svg
+            ref="svgRef"
+            :xmlns="XMLNS"
+            v-if="isDataset"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            data-cy="wheel-svg"
+            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+        >
             <PackageVersion/>
 
             <!-- BACKGROUND SLOT -->

@@ -101,7 +101,19 @@
             </template>
         </UserOptions>
         
-        <svg xmlns="http://www.w3.org/2000/svg" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="xy-svg" width="100%" :viewBox="viewBox" class="vue-ui-xy-svg" :style="`background: transparent; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`">
+        <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            v-if="isDataset" 
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
+            data-cy="xy-svg" 
+            width="100%" 
+            :viewBox="viewBox" 
+            class="vue-ui-xy-svg" 
+            :style="`background: transparent; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`"
+            :aria-label="chartAriaLabel"
+            role="img"
+            aria-live="polite"
+        >
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
@@ -1463,6 +1475,11 @@ export default {
         }
     },
     computed: {
+        chartAriaLabel() {
+            const titleText = this.FINAL_CONFIG.chart.title.text || 'Chart visualization';
+            const subtitleText = this.FINAL_CONFIG.chart.title.subtitle.text || '';
+            return `${titleText}. ${subtitleText}`;
+        },
         optimize() {
             return {
                 linePlot: this.maxSeries > this.FINAL_CONFIG.line.dot.hideAboveMaxSerieLength

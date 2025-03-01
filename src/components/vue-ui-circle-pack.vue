@@ -31,6 +31,7 @@ import PackageVersion from '../atoms/PackageVersion.vue';
 import Accordion from "./vue-ui-accordion.vue";
 import DataTable from '../atoms/DataTable.vue';
 import Skeleton from "./vue-ui-skeleton.vue";
+import { useChartAccessibility } from '../useChartAccessibility';
 
 const props = defineProps({
     config: {
@@ -72,6 +73,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 const { 
     userOptionsVisible, 
@@ -622,7 +625,8 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg 
+        <svg
+            ref="svgRef"
             v-if="isDataset"
             :xmlns="XMLNS"
             :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`" 

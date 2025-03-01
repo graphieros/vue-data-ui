@@ -16,6 +16,7 @@ import {
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig()
 
@@ -72,6 +73,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { svgRef } = useChartAccessibility({ config: { text: props.dataset.title } });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -193,7 +196,13 @@ const trackColor = computed(() => {
     <div v-if="FINAL_CONFIG.style.title.show && nameLabel && FINAL_CONFIG.style.title.position === 'top'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold': 'normal'};color:${FINAL_CONFIG.style.title.color}`">
         {{ nameLabel }}
     </div>
-    <svg :xmlns="XMLNS" v-if="isDataset" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`overflow: visible; background:transparent; width:100%;`">
+    <svg
+        ref="svgRef"
+        :xmlns="XMLNS" 
+        v-if="isDataset" 
+        :viewBox="`0 0 ${svg.width} ${svg.height}`" 
+        :style="`overflow: visible; background:transparent; width:100%;`"
+    >
         <PackageVersion />
 
         <!-- BACKGROUND SLOT -->

@@ -42,6 +42,7 @@ import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import Shape from "../atoms/Shape.vue";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig();
 const slots = useSlots();
@@ -106,6 +107,7 @@ const FINAL_CONFIG = computed({
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -929,6 +931,7 @@ defineExpose({
         </UserOptions>
 
         <svg
+            ref="svgRef"
             v-if="isDataset"
             :xmlns="XMLNS"
             :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`"

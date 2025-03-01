@@ -92,6 +92,9 @@ const convertedBackground = computed(() => {
     <teleport :to="isFullscreen ? parent : 'body'">
         <div
             ref="tooltip"
+            role="tooltip"
+            :aria-hidden="!show"
+            aria-live="polite"
             data-cy="tooltip"
             :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
             v-if="show"

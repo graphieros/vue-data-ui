@@ -38,6 +38,7 @@ import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_quadrant: DEFAULT_CONFIG } = useConfig()
 
@@ -86,6 +87,7 @@ const FINAL_CONFIG = computed({
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -1062,7 +1064,15 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg data-cy="quadrant-svg" :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`" :style="`max-width:100%;overflow:${isZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  :id="`svg_${uid}`">
+        <svg 
+            ref="svgRef"
+            data-cy="quadrant-svg"
+            :xmlns="XMLNS"
+            v-if="isDataset"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`"
+            :style="`max-width:100%;overflow:${isZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  :id="`svg_${uid}`"
+        >
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->

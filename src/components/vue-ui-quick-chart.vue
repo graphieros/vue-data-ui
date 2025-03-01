@@ -38,6 +38,7 @@ import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
+import { useChartAccessibility } from "../useChartAccessibility";
 
 const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig()
 
@@ -79,6 +80,8 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const { svgRef } = useChartAccessibility({ config: { text: FINAL_CONFIG.value.title }});
 
 const showUserOptionsOnChartHover = computed(() => FINAL_CONFIG.value.showUserOptionsOnChartHover);
 const keepUserOptionState = computed(() => FINAL_CONFIG.value.keepUserOptionsStateOnChartLeave);
@@ -1040,6 +1043,7 @@ defineExpose({
             {{ FINAL_CONFIG.title }}
         </div>
         <svg
+            ref="svgRef"
             v-if="chartType"
             :xmlns="XMLNS"
             :viewBox="viewBox" 
