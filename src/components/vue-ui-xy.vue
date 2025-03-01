@@ -960,13 +960,26 @@
 
                 <!-- Y LABELS MOUSE TRAPS -->
                 <template v-if="mutableConfig.useIndividualScale && !mutableConfig.isStacked">
+                    <defs>
+                        <linearGradient
+                            v-for="(trap, i) in allScales"
+                            :id="`individual_scale_gradient_${uniqueId}_${i}`"
+                            x1="0%"
+                            x2="100%"
+                            y1="0%"
+                            y2="0%"
+                        >
+                            <stop offset="0%" :stop-color="FINAL_CONFIG.chart.backgroundColor" stop-opacity="0"/>
+                            <stop offset="100%" :stop-color="trap.color" stop-opacity="0.2"/>
+                        </linearGradient>
+                    </defs>
                     <rect 
-                        v-for="trap in allScales"
+                        v-for="(trap, i) in allScales"
                         :x="trap.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + xPadding"
                         :y="drawingArea.top"
                         :width="FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :fill="selectedScale === trap.id ? setOpacity(trap.color, 20) : 'transparent'"
+                        :fill="selectedScale === trap.id ? `url(#individual_scale_gradient_${uniqueId}_${i})` : 'transparent'"
                         @mouseenter="selectedScale = trap.id"
                         @mouseleave="selectedScale = null"
                     />
