@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const crazyDs = [];
 const crazyDs2 = [];
 const crazyDs3 = []
-for (let i = 0; i < 800; i += 1) {
+for (let i = 0; i < 20; i += 1) {
     crazyDs.push(Math.random() + (Math.random() > 0.5 ? Math.random() * 100 : 0))
     crazyDs2.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -10 : -10))
     crazyDs3.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -5 : Math.random() * 5))
@@ -29,7 +29,7 @@ const dataset = ref([
         {
             name: "S0",
             series: crazyDs3,
-            type: "line",
+            type: "bar",
             useArea: false,
             dataLabels: true,
             scaleSteps: 2,
@@ -38,33 +38,15 @@ const dataset = ref([
             rounding: 1,
         },
         {
-            name: "S1",
-            series: crazyDs,
-            type: "bar",
-            useArea: false,
-            dataLabels: true,
-            rounding: 1,
-        },
-        {
-            name: "S2",
-            series: crazyDs2,
+            name: "S3",
+            series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
             type: "line",
-            useArea: false,
-            dataLabels: true,
             smooth: false,
-            rounding: 1,
-            scaleSteps: 2,
+            useArea: true,
+            scaleSteps: 5,
+            autoScaling: false,
+            stackRatio: 0.5
         },
-        // {
-        //     name: "S3",
-        //     series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
-        //     type: "line",
-        //     smooth: false,
-        //     useArea: true,
-        //     scaleSteps: 5,
-        //     autoScaling: false,
-        //     stackRatio: 0.5
-        // },
     ])
 
     async function getData() {
@@ -120,16 +102,16 @@ const model = ref([
     { key: 'style.chart.stacked', def: false, type: 'checkbox' },
     { key: 'style.chart.stackGap', def: 20, type: 'number', min: 0.1, max: 1, step: 0.1 },
     { key: 'style.chart.scale.ticks', def: 10, type: 'number', min: 2, max: 20 },
-    { key: 'style.chart.scale.min', def: -100, type: 'number', min: -1000, max: 1000 },
-    { key: 'style.chart.scale.max', def: 100, type: 'number', min: -1000, max: 1000 },
+    { key: 'style.chart.scale.min', def: null, type: 'number', min: -1000, max: 1000 },
+    { key: 'style.chart.scale.max', def: null, type: 'number', min: -1000, max: 1000 },
 
     { key: 'style.chart.zoom.show', def: true, type: 'checkbox' },
     { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color' },
     { key: 'style.chart.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
     { key: 'style.chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42 },
     { key: 'style.chart.zoom.useResetSlot', def: false, type: 'checkbox' },
-    { key: 'style.chart.zoom.startIndex', def: 100, type: 'number', min: 0, max: 1000},
-    { key: 'style.chart.zoom.endIndex', def: 400, type: 'number', min: 0, max: 1000},
+    { key: 'style.chart.zoom.startIndex', def: 0, type: 'number', min: 0, max: 1000},
+    { key: 'style.chart.zoom.endIndex', def: 20, type: 'number', min: 0, max: 1000},
     { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
 
@@ -192,6 +174,9 @@ const model = ref([
     { key: 'style.chart.grid.zeroLine.dashed', def: true, type: 'checkbox' },
     { key: 'style.chart.line.plots.show', def: false, type: 'checkbox' },
     { key: 'style.chart.line.plots.radiusRatio', def: 1, type: 'number', min: 0.1, max: 3, step: 0.1 },
+
+    { key: 'style.chart.bar.gradient.show', def: false, type: 'checkbox'},
+
     { key: 'style.chart.area.opacity', def: 60, type: 'number', min: 10, max: 100 },
     { key: 'style.chart.dataLabels.show', def: false, type: 'checkbox' },
     { key: 'style.chart.dataLabels.fontSizeRatio', def: 1, type: 'number', min: 0.1, max: 2, step: 0.1 },
