@@ -1055,7 +1055,7 @@ function drawBars() {
                         },
                         stops: [
                             { offset: 0, color: ds.color },
-                            { offset: 1, color: lightenHexColor(ds.color, 0.5) },
+                            { offset: 1, color: FINAL_CONFIG.value.style.chart.bar.gradient.show ? lightenHexColor(ds.color, 0.5) : ds.color },
                         ]
                     }
                 }
