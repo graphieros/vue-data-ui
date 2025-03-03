@@ -5618,6 +5618,11 @@ declare module "vue-data-ui" {
                         radiusRatio?: number;
                     };
                 };
+                bar?: {
+                    gradient?: {
+                        show?: boolean;
+                    };
+                };
                 area?: {
                     opacity?: number;
                 };
