@@ -3720,6 +3720,11 @@ export function useConfig() {
                         radiusRatio: 1
                     }
                 },
+                bar: {
+                    gradient: {
+                        show: true
+                    }
+                },
                 area: {
                     opacity: 60
                 },
