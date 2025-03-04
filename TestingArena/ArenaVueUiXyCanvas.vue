@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const crazyDs = [];
 const crazyDs2 = [];
 const crazyDs3 = []
-for (let i = 0; i < 20; i += 1) {
+for (let i = 0; i < 200; i += 1) {
     crazyDs.push(Math.random() + (Math.random() > 0.5 ? Math.random() * 100 : 0))
     crazyDs2.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -10 : -10))
     crazyDs3.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -5 : Math.random() * 5))
@@ -29,23 +29,13 @@ const dataset = ref([
         {
             name: "S0",
             series: crazyDs3,
-            type: "bar",
+            type: "line",
             useArea: false,
             dataLabels: true,
             scaleSteps: 2,
             prefix: '$',
             suffix: '£',
             rounding: 1,
-        },
-        {
-            name: "S3",
-            series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
-            type: "line",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 5,
-            autoScaling: false,
-            stackRatio: 0.5
         },
     ])
 
@@ -82,6 +72,7 @@ async function longpolling ()
 
 
 const model = ref([
+    { key: 'downsample.threshold', def: 120000, type: 'number', min: 0,max: 10000000},
     { key: 'responsive', def: false, type: "checkbox" },
     { key: 'userOptions.show', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -110,8 +101,8 @@ const model = ref([
     { key: 'style.chart.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
     { key: 'style.chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42 },
     { key: 'style.chart.zoom.useResetSlot', def: false, type: 'checkbox' },
-    { key: 'style.chart.zoom.startIndex', def: 0, type: 'number', min: 0, max: 1000},
-    { key: 'style.chart.zoom.endIndex', def: 20, type: 'number', min: 0, max: 1000},
+    { key: 'style.chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 1000},
+    { key: 'style.chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 1000},
     { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
 
@@ -147,6 +138,7 @@ const model = ref([
     { key: 'style.chart.grid.y.axisName', def: 'Y AXIS', type: 'text' },
     { key: 'style.chart.grid.y.axisThickness', def: 2, type: 'number', min: 1, max: 6 },
     { key: 'style.chart.grid.y.axisLabels.show', def: true, type: 'checkbox' },
+    { key: 'style.chart.grid.y.axisLabels.bold', def: true, type: 'checkbox' },
     { key: 'style.chart.grid.y.axisLabels.fontSizeRatio', def: 0.7, type: 'number', min: 0.1, max: 2, step: 0.1 },
     { key: 'style.chart.grid.y.axisLabels.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.grid.y.axisLabels.offsetX', def: 0, type: 'number', min: -100, max: 100 },
@@ -161,6 +153,7 @@ const model = ref([
     { key: 'style.chart.grid.y.timeLabels.offsetY', def: 30, type: 'number', min: -100, max: 100 },
     { key: 'style.chart.grid.y.timeLabels.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.grid.y.timeLabels.modulo', def: 8, type: 'number', min: 1, max: 100},
+    { key: 'style.chart.grid.y.timeLabels.bold', def: true, type: 'checkbox'},
     { key: 'style.chart.grid.x.showAxis', def: true, type: 'checkbox' },
     { key: 'style.chart.grid.x.axisName', def: 'X AXIS', type: 'text' },
     { key: 'style.chart.grid.x.axisColor', def: '#1A1A1A', type: 'color' },
@@ -179,6 +172,7 @@ const model = ref([
 
     { key: 'style.chart.area.opacity', def: 60, type: 'number', min: 10, max: 100 },
     { key: 'style.chart.dataLabels.show', def: false, type: 'checkbox' },
+    { key: 'style.chart.dataLabels.bold', def: true, type: 'checkbox' },
     { key: 'style.chart.dataLabels.fontSizeRatio', def: 1, type: 'number', min: 0.1, max: 2, step: 0.1 },
     { key: 'style.chart.dataLabels.useSerieColor', def: true, type: 'checkbox' },
     { key: 'style.chart.dataLabels.color', def: '#1A1A1A', type: 'color' },
