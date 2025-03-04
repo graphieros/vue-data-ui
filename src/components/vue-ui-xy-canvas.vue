@@ -850,7 +850,7 @@ function drawYAxisSelectedDatapoints() {
                 getYandValueAtIndex(ds).y,
                 {
                     align: 'right',
-                    font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                    font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                     color: ds.color
                 }
             )
@@ -937,8 +937,6 @@ function drawDataLabels(ds) {
                 align: 'center',
                 font: `${FINAL_CONFIG.value.style.chart.dataLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                 color: FINAL_CONFIG.value.style.chart.dataLabels.useSerieColor ? ds.color : FINAL_CONFIG.value.style.chart.dataLabels.color,
-                strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
-                lineWidth: 0.8
             }
         );
     }
