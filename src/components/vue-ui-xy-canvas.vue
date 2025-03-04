@@ -788,7 +788,7 @@ function setupChart() {
             w.value - w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio * 1.2,
             drawingArea.value.bottom - drawingArea.value.height / 2,
             {
-                font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                 color: FINAL_CONFIG.value.style.chart.color,
                 align: 'center',
                 rotation: 90
@@ -803,7 +803,7 @@ function setupChart() {
             w.value / 2,
             h.value,
             {
-                font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                 color: FINAL_CONFIG.value.style.chart.color,
                 align: 'center'
             }
@@ -879,7 +879,7 @@ function drawYAxisScaleLabels() {
                     label.y,
                     {
                         align: 'right',
-                        font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                        font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                         color: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.color,
                         globalAlpha: formattedDataset.value.some(ds => ds.showYMarker) && ![null, undefined].includes(tooltipIndex.value) ? 0.2 : 1
                     }
@@ -905,7 +905,7 @@ function drawYAxisScaleLabels() {
                         entry.y,
                         {
                             align: 'right',
-                            font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                            font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                             color: ds.color,
                             globalAlpha: ds.showYMarker && ![null, undefined].includes(tooltipIndex.value) ? 0.2 : 1
                         }
@@ -935,7 +935,7 @@ function drawDataLabels(ds) {
             ds.coordinatesLine[i].y + FINAL_CONFIG.value.style.chart.dataLabels.offsetY,
             {
                 align: 'center',
-                font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                font: `${FINAL_CONFIG.value.style.chart.dataLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                 color: FINAL_CONFIG.value.style.chart.dataLabels.useSerieColor ? ds.color : FINAL_CONFIG.value.style.chart.dataLabels.color,
                 strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
                 lineWidth: 0.8
@@ -958,7 +958,7 @@ function drawTimeLabels() {
                 drawingArea.value.bottom + (w.value / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.offsetY),
                 {
                     align: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation === 0 ? 'center' : FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation > 0 ? 'left' : 'right',
-                    font: `${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.timeLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                    font: `${FINAL_CONFIG.value.style.chart.grid.y.timeLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.timeLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                     color: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.showMarker ? setOpacity(FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color, tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100) : FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color,
                     rotation: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation,
                 }
