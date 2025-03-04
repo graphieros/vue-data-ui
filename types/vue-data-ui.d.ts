@@ -5575,6 +5575,7 @@ declare module "vue-data-ui" {
                             rounding?: number;
                             prefix?: string;
                             suffix?: string;
+                            bold?: boolean;
                         };
                         verticalLines?: {
                             show?: boolean;
@@ -5592,6 +5593,7 @@ declare module "vue-data-ui" {
                             showOnlyAtModulo?: boolean;
                             modulo?: number;
                             showMarker?: boolean;
+                            bold?: boolean;
                         };
                     };
                     x?: {
@@ -5633,6 +5635,7 @@ declare module "vue-data-ui" {
                     color?: string;
                     offsetY?: number;
                     formatter?: Formatter;
+                    bold?: boolean;
                 };
                 paddingProportions?: {
                     top?: number;
