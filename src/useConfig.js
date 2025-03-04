@@ -3677,7 +3677,8 @@ export function useConfig() {
                             offsetX: 0,
                             rounding: 1,
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
+                            bold: false,
                         },
                         verticalLines: {
                             show: true,
@@ -3693,7 +3694,8 @@ export function useConfig() {
                             rotation: 0,
                             offsetY: 30,
                             color: COLOR_BLACK,
-                            modulo: 12
+                            modulo: 12,
+                            bold: false,
                         }
                     },
                     x: {
@@ -3734,7 +3736,8 @@ export function useConfig() {
                     useSerieColor: true,
                     color: COLOR_BLACK,
                     offsetY: -12,
-                    formatter: null
+                    formatter: null,
+                    bold: true
                 },
                 paddingProportions: {
                     top: 0.1,
