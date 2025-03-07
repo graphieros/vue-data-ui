@@ -6220,6 +6220,7 @@ declare module "vue-data-ui" {
                             color?: string;
                             fontSize?: number;
                             bold?: boolean;
+                            rounding?: number;
                         };
                     };
                 };
