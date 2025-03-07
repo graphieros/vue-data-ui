@@ -357,6 +357,7 @@ export function useConfig() {
                             color: COLOR_BLACK,
                             fontSize: FONT._14,
                             bold: false,
+                            rounding: 0
                         }
                     },
                 }
