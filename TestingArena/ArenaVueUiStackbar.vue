@@ -21,18 +21,15 @@ const dataset = computed(() => {
   return [
     {
       name: "Series 1",
-      series: [
-        10, 20, 30, 10, 20, 4, 4, 5, 99, 34, 8, 43, 2, 8, 0, 52, 5, 3, 6, 23, 9,
-        18, 3, 5, 87, 5, 3, 5, 25, 12,
-      ],
+      series: [1],
     },
     {
       name: "Series 2",
-      series: [20, 40, -60, 20, 10],
+      series: [0],
     },
     {
       name: "Series 3",
-      series: [20, 40, 60, 20, 10],
+      series: [0],
     },
   ];
 });
@@ -194,6 +191,7 @@ const model = ref([
     { key: 'style.chart.grid.y.axisLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.grid.y.axisLabels.fontSize', def: 14, type: 'number', min: -100, max: 100},
     { key: 'style.chart.grid.y.axisLabels.bold', def: false, type: 'checkbox'},
+    { key: 'style.chart.grid.y.axisLabels.rounding', def: 2, type: 'number', min: 0, max: 6},
 
     { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 6},
 
