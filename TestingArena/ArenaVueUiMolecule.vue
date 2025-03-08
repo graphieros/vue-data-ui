@@ -5,6 +5,7 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
+import BaseIcon from "../src/atoms/BaseIcon.vue";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
@@ -236,6 +237,10 @@ const config = computed(() => {
 
 const step = ref(0);
 
+function selectNode(node) {
+    console.log(node)
+}
+
 </script>
 
 <template>
@@ -255,7 +260,12 @@ const step = ref(0);
         <template #title>VueUiMolecule</template>
 
         <template #local>
-            <LocalVueUiMolecule :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+            <LocalVueUiMolecule @selectNode="selectNode" :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+                <!-- <template #node="{ node }">
+                    <div style="width: 100%; height: 100%; background: white; position:relative">
+                        <BaseIcon name="copyLeft" size="100%" style="position:absolute"/>
+                    </div>
+                </template> -->
                 <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
                 </template>
@@ -286,7 +296,7 @@ const step = ref(0);
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiMolecule" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" ref="vduiLocal">
+            <LocalVueDataUi @selectNode="selectNode" component="VueUiMolecule" :dataset="dataset" :config="config" :key="`vdui_local_${step}`" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
