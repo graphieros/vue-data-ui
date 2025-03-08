@@ -1147,7 +1147,7 @@ declare module "vue-data-ui" {
         name: VueUiIconName;
         stroke?: string;
         strokeWidth?: number;
-        size?: number;
+        size?: number | string;
         isSpin?: boolean;
     }>;
 

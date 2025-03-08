@@ -23,7 +23,6 @@ import Tooltip from "../atoms/Tooltip.vue";
 import RecursiveCircles from "../atoms/RecursiveCircles.vue";
 import RecursiveLinks from "../atoms/RecursiveLinks.vue";
 import RecursiveLabels from "../atoms/RecursiveLabels.vue";
-import BaseDirectionPad from "../atoms/BaseDirectionPad.vue";
 import Skeleton from "./vue-ui-skeleton.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
@@ -33,6 +32,7 @@ import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import usePanZoom from "../usePanZoom";
 
 const { vue_ui_molecule: DEFAULT_CONFIG } = useConfig();
 
@@ -50,6 +50,8 @@ const props = defineProps({
         }
     },
 });
+
+const emit = defineEmits(['selectNode']);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -73,10 +75,6 @@ const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const moleculeChart = ref(null);
-const zoomedId = ref(null);
-const isZoom = ref(false);
-const zoomReference = ref(null);
-const selectedNode = ref(null);
 const step = ref(0);
 const titleStep = ref(0);
 const tableStep = ref(0);
@@ -254,90 +252,6 @@ const convertedDataset = computed(() => {
     return processNodes(props.dataset);
 })
 
-function restoreViewBox() {
-    isZoom.value = false;
-    zoomedId.value = null;
-    selectedNode.value = null;
-    zoomReference.value = null;
-    zoomOnNode({
-        polygonPath: {
-            coordinates: [{x: svg.value.width / 2, y: svg.value.height / 2}]
-        },
-        circleRadius: 24,
-    })
-}
-
-const currentAnimationFrame = ref(null);
-
-
-function zoomOnNode(node) {
-    moleculeChart.value.focus();
-
-    nextTick(() => {
-        if (currentAnimationFrame.value) {
-            cancelAnimationFrame(currentAnimationFrame.value);
-        }
-        const vb = dynamicViewBox.value.split(' ');
-        const startX = parseFloat(vb[0]);
-        const startY = parseFloat(vb[1]);
-        const startWidth = parseFloat(vb[2]);
-        const startHeight = parseFloat(vb[3]);
-        const { x, y } = node.polygonPath.coordinates[0];
-        const { circleRadius } = node;
-        const sizer = 8.34;
-        const targetX = x - circleRadius * sizer;
-        const targetY = y - circleRadius * sizer;
-        const targetWidth = circleRadius * sizer * 2;
-        const targetHeight = circleRadius * sizer * 2;
-    
-        const distance = Math.sqrt((targetX - startX) ** 2 + (targetY - startY) ** 2);
-        const numSteps = Math.min(1200, Math.max(20, Math.floor(distance / 10)));
-        const stepX = (targetX - startX) / numSteps;
-        const stepY = (targetY - startY) / numSteps;
-        const stepWidth = (targetWidth - startWidth) / numSteps;
-        const stepHeight = (targetHeight - startHeight) / numSteps;
-        let currentStep = 0;
-    
-        function animateZoom() {
-            dynamicViewBox.value = `${startX + stepX * currentStep} ${startY + stepY * currentStep} ${startWidth + stepWidth * currentStep} ${startHeight + stepHeight * currentStep}`;
-            currentStep += FINAL_CONFIG.value.style.chart.zoom.speed;
-    
-            if (currentStep <= numSteps) {
-                currentAnimationFrame.value = requestAnimationFrame(animateZoom);
-            }
-            
-        }
-        animateZoom();
-    })
-}
-
-function zoom(node) {
-    if(zoomedId.value === node.uid) {
-        restoreViewBox();
-
-    } else {
-        zoomedId.value = node.uid;
-        selectedNode.value = node;
-        zoomReference.value = {
-            circleRadius: node.circleRadius,
-            polygonPath: {
-                coordinates: [{ x: node.polygonPath.coordinates[0].x, y: node.polygonPath.coordinates[0].y }]
-            }
-        }
-        zoomOnNode(node)
-        isZoom.value = node.uid !== convertedDataset.value[0].uid
-    }
-}
-
-function unzoom(event) {
-    if(event.target.nodeName !== 'circle') {
-        restoreViewBox();
-        isZoom.value = false;
-    } else {
-        return;
-    }
-}
-
 const dataTooltipSlot = ref(null);
 
 function createTooltipContent(node) {
@@ -389,22 +303,6 @@ function hover(node) {
         tooltipContent.value = "";
         hoveredUid.value = null;
     }
-}
-
-function move(direction) {
-    if(direction === "right") {
-        zoomReference.value.polygonPath.coordinates[0].x += zoomReference.value.circleRadius;
-    }
-    if(direction === "left") {
-        zoomReference.value.polygonPath.coordinates[0].x -= zoomReference.value.circleRadius;
-    }
-    if(direction === "top") {
-        zoomReference.value.polygonPath.coordinates[0].y -= zoomReference.value.circleRadius;
-    }
-    if(direction === "bottom") {
-        zoomReference.value.polygonPath.coordinates[0].y += zoomReference.value.circleRadius;
-    }
-    zoomOnNode(zoomReference.value);
 }
 
 function convertDatasetToCSVFormat(dataset) {
@@ -519,6 +417,17 @@ function toggleTooltip() {
 const isAnnotator = ref(false);
 function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
+}
+
+const { viewBox } = usePanZoom(svgRef, {
+    x: 0,
+    y: 0,
+    width: svg.value.width <= 0 ? 10 : svg.value.width,
+    height: svg.value.height <= 0 ? 10 : svg.value.height,
+}, FINAL_CONFIG.value.style.chart.zoom.speed)
+
+function selectNode(node) {
+    emit('selectNode', node)
 }
 
 defineExpose({
@@ -641,10 +550,9 @@ defineExpose({
             :xmlns="XMLNS" 
             v-if="isDataset" 
             data-cy="cluster-svg" 
-            :viewBox="dynamicViewBox"
+            :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`" 
-            @click.stop="unzoom($event)"
         >
             <PackageVersion />
 
@@ -681,9 +589,13 @@ defineExpose({
                 :hoveredUid="hoveredUid"
                 :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
                 :strokeHovered="FINAL_CONFIG.style.chart.nodes.strokeHovered"
-                @zoom="zoom" 
+                @click="selectNode"
                 @hover="hover" 
-            />
+            >
+                <template #node="{ node }">
+                    <slot name="node" v-bind="{ node }"/>
+                </template>
+            </RecursiveCircles>
             <RecursiveLabels
                 v-if="mutableConfig.showDataLabels"
                 :dataset="convertedDataset"
@@ -692,18 +604,6 @@ defineExpose({
             />
             <slot name="svg" :svg="svg"/>
         </svg>
-
-        <BaseDirectionPad 
-            v-if="isZoom"
-            :key="`direction_pad_${step}`"
-            :color="FINAL_CONFIG.style.chart.color"
-            :isFullscreen="isFullscreen"
-            @moveLeft="move('left')"
-            @moveRight="move('right')"
-            @moveTop="move('top')"
-            @moveBottom="move('bottom')"
-            @reset="restoreViewBox(); isZoom = false"
-        />
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>

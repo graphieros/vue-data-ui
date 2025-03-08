@@ -201,6 +201,7 @@ const toggleAnimation = ref(() => null);
 const pauseAnimation = ref(() => null);
 const resumeAnimation = ref(() => null);
 const toggleAnnotator = ref(() => null);
+const selectNode = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -283,6 +284,9 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.toggleAnnotator) {
             toggleAnnotator.value = newRef.toggleAnnotator;
         }
+        if (newRef.selectNode) {
+            selectNode.value = newRef.selectNode;
+        }
     }
 })
 
@@ -312,7 +316,8 @@ const getEventHandlers = () => {
         'toggleAnimation',
         'pauseAnimation',
         'resumeAnimation',
-        'toggleAnnotator'
+        'toggleAnnotator',
+        'selectNode'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -358,7 +363,8 @@ defineExpose({
     pauseAnimation,
     resumeAnimation,
     toggleAnimation,
-    toggleAnnotator
+    toggleAnnotator,
+    selectNode
 });
 
 const notSupported = computed(() => {

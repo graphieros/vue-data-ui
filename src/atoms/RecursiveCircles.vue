@@ -11,10 +11,23 @@
                     :stroke="hoveredUid && hoveredUid === node.uid ? strokeHovered : stroke" 
                     :stroke-width="hoveredUid && hoveredUid === node.uid ? node.circleRadius / 6 : node.circleRadius / 12" 
                     style="cursor:pointer"
-                    @click.stop="zoom(node)" 
+                    @click="click(node)"
                     @mouseover="hover(node)" 
                     @mouseleave="hover(null)" 
                 />
+                <foreignObject 
+                    v-if="$slots.node"
+                    :x="coordinate.x - node.circleRadius"
+                    :y="coordinate.y - node.circleRadius"
+                    :height="node.circleRadius * 2"
+                    :width="node.circleRadius * 2"
+                    style="overflow: visible"
+                    @click.stop="click(node)"
+                    @mouseover="hover(node)" 
+                    @mouseleave="hover(null)" 
+                >
+                    <slot name="node" v-bind="{ node }"/>
+                </foreignObject>
             </template>
             <template v-if="node.nodes && node.nodes.length > 0">
                 <RecursiveCircles 
@@ -23,9 +36,13 @@
                     :stroke="stroke" 
                     :strokeHovered="strokeHovered" 
                     :hoveredUid="hoveredUid" 
-                    @zoom="zoom" 
+                    @click="click" 
                     @hover="hover" 
-                />
+                >
+                    <template #node="{ node }">
+                        <slot name="node" v-bind="{ node }"/>
+                    </template>
+                </RecursiveCircles>
             </template>
         </template>
     </template>
@@ -61,10 +78,10 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(["zoom", 'hover']);
+const emit = defineEmits(["click", 'hover']);
 
-function zoom(node) {
-    emit('zoom', node)
+function click(node) {
+    emit('click', node)
 }
 
 function hover(node) {

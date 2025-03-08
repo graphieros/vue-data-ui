@@ -5,7 +5,7 @@ import { XMLNS } from "../lib";
 const props = defineProps({
     name: String,
     size: {
-        type: Number,
+        type: [Number, String],
         default: 24
     },
     stroke: {
