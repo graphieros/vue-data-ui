@@ -56,13 +56,6 @@ const isDataset = computed({
     }
 });
 
-const drawableDataset = ref(typeof props.dataset === 'string' ? createWordCloudDatasetFromPlainText(props.dataset) : props.dataset.map((dp, i) => {
-    return {
-        ...dp,
-        value: checkNaN(dp.value)
-    }
-}));
-
 const uid = ref(createUid());
 const step = ref(0);
 const wordCloudChart = ref(null);
@@ -80,6 +73,22 @@ const FINAL_CONFIG = computed({
         return newCfg
     }
 });
+
+const drawableDataset = ref(setupWordCloud());
+
+function setupWordCloud() {
+    return typeof props.dataset === 'string' ? createWordCloudDatasetFromPlainText(props.dataset) : props.dataset.map((dp, i) => {
+        return {
+            ...dp,
+            value: checkNaN(dp.value)
+        }
+    })
+}
+
+watch(() => props.dataset, () => {
+    drawableDataset.value = setupWordCloud();
+    generateWordCloud();
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -436,7 +445,7 @@ function useTooltip(word) {
         :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
-            :parent="wordCloudChart"
+            :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
