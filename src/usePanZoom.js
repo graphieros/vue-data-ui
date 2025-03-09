@@ -1,7 +1,8 @@
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch, nextTick, watchEffect } from 'vue';
 
-export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width: 100, height: 100 }, speed = 1) {
+export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width: 100, height: 100 }, speed = 1, activeRef) {
     const viewBox = ref({ ...initialViewBox });
+
     const scale = ref(1);
     const isPanning = ref(false);
     const startPoint = ref({ x: 0, y: 0 });
@@ -66,7 +67,6 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
     };
 
     function doubleClickZoom(event) {
-        console.log(speed)
         event.preventDefault();
         const cursorPoint = toSvgPoint(event);
         const zoomFactor = 1.02 * (1 + (speed / 100)); // Always zoom in
@@ -119,7 +119,10 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
         scale.value = newScale;
     };
 
-    onMounted(() => {
+    onMounted(addEventListeners);
+    onUnmounted(removeEventListeners);
+
+    function addEventListeners() {
         const svg = svgRef.value;
         if (!svg) return;
     
@@ -138,10 +141,9 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
             doPan(event);
         }, { passive: false });
         svg.addEventListener('touchend', endPan);
-    });
-    
+    }
 
-    onUnmounted(() => {
+    function removeEventListeners() {
         const svg = svgRef.value;
         if (!svg) return;
         svg.removeEventListener('mousedown', startPan);
@@ -153,6 +155,18 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
         svg.removeEventListener('touchstart', startPan);
         svg.removeEventListener('touchmove', doPan);
         svg.removeEventListener('touchend', endPan);
+    }
+
+    watchEffect(() => {
+        if (activeRef.value) {
+            addEventListeners();
+        } else {
+            removeEventListeners();
+        }
+
+        return () => {
+            removeEventListeners();
+        };
     });
 
     return { viewBox };

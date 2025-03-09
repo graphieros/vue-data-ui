@@ -56,6 +56,7 @@ import { useConfig } from "../useConfig";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import NonSvgPenAndPaper from "../atoms/NonSvgPenAndPaper.vue";
 
 const { vue_ui_xy_canvas: DEFAULT_CONFIG } = useConfig();
 
@@ -1749,7 +1750,7 @@ defineExpose({
             </template>
         </Accordion>
 
-        <PenAndPaper
+        <NonSvgPenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator && formattedDataset.length"
             :parent="xy"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"

@@ -564,7 +564,7 @@ defineExpose({
 
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
-            :parent="treemapChart"
+            :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"

@@ -3,7 +3,7 @@
     <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper 
             v-if="FINAL_CONFIG.chart.userOptions.buttons.annotator"
-            :parent="$refs.chart"
+            :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.chart.backgroundColor"
             :color="FINAL_CONFIG.chart.color"
             :active="isAnnotator"
@@ -102,6 +102,7 @@
         </UserOptions>
         
         <svg 
+            ref="svgRef"
             xmlns="http://www.w3.org/2000/svg" 
             v-if="isDataset" 
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
@@ -1448,6 +1449,7 @@ export default {
             showUserOptionsOnChartHover: false,
             keepUserOptionState: true,
             userOptionsVisible: true,
+            svgRef: null
         }
     },
     watch: {
@@ -2378,7 +2380,7 @@ export default {
         },
     },
     mounted() {
-        // FIXME: all contents must be placed in a func and also called when ds or cfg are updated
+        this.svgRef = this.$refs.svgRef;
         this.prepareChart();
         this.setupSlicer();
 

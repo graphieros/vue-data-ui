@@ -419,12 +419,14 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+const active = computed(() => !isAnnotator.value)
+
 const { viewBox } = usePanZoom(svgRef, {
     x: 0,
     y: 0,
     width: svg.value.width <= 0 ? 10 : svg.value.width,
     height: svg.value.height <= 0 ? 10 : svg.value.height,
-}, FINAL_CONFIG.value.style.chart.zoom.speed)
+}, FINAL_CONFIG.value.style.chart.zoom.speed, active)
 
 function selectNode(node) {
     emit('selectNode', node)
@@ -455,7 +457,7 @@ defineExpose({
 
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
-            :parent="moleculeChart"
+            :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"

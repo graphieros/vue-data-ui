@@ -348,6 +348,7 @@ const zoomRadiusStart = computed(() => {
 })
 
 const zoomRadiusEnd = computed(() => {
+    if (isAnnotator.value) return zoomRadiusStart.value;
     return zoom.value ? (zoom.value.radius > (viewBox.value.width / 6 * FINAL_CONFIG.value.style.chart.circles.zoom.zoomRatio) ? zoom.value.radius : (viewBox.value.width / 6 * FINAL_CONFIG.value.style.chart.circles.zoom.zoomRatio)) : 0;
 })
 
@@ -541,7 +542,7 @@ defineExpose({
 
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
-            :parent="circlePackChart"
+            :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
@@ -706,7 +707,7 @@ defineExpose({
                             pointerEvents: 'none',
                             transition: 'opacity 0.2s ease-in-out'
                         }"
-                        :opacity="zoom ? 0.2 : 1"
+                        :opacity="(zoom && !isAnnotator) ? 0.2 : 1"
                         :x="circle.x"
                         :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.name.offsetY) - circle.radius / 6"
                         :font-size="(circle.radius / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio"
@@ -725,7 +726,7 @@ defineExpose({
                             pointerEvents: 'none',
                             transition: 'opacity 0.2s ease-in-out'
                         }"
-                        :opacity="zoom ? 0.2 : 1"
+                        :opacity="(zoom && !isAnnotator) ? 0.2 : 1"
                         :x="circle.x"
                         :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.value.offsetY) + circle.radius / 3"
                         :font-size="getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio"
@@ -749,7 +750,7 @@ defineExpose({
                 </template>
             </template>
 
-            <template v-if="zoom && FINAL_CONFIG.style.chart.circles.zoom.show">
+            <template v-if="zoom && FINAL_CONFIG.style.chart.circles.zoom.show && !isAnnotator">
                 <circle
                     data-cy="datapoint-zoom"
                     :style="zoomStyle"

@@ -673,11 +673,11 @@ defineExpose({
 <template>
     <div ref="donutChart" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height:100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`donut__${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper 
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
-            :parent="donutChart"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef"
             :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :active="isAnnotator"
+            :svgRef="svgRef"
             @close="toggleAnnotator"
         />
         <slot name="userConfig"></slot>

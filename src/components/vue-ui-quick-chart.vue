@@ -978,7 +978,7 @@ defineExpose({
     >
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptionsButtons.annotator"
-            :parent="quickChart"
+            :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.backgroundColor"
             :color="FINAL_CONFIG.color"
             :active="isAnnotator"

@@ -1,21 +1,21 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, computed, nextTick } from "vue";
-import { XMLNS } from "../lib";
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from "vue";
 import BaseIcon from "./BaseIcon.vue";
-import { lightenHexColor } from "../lib";
 import ColorPicker from "./ColorPicker.vue";
+import { lightenHexColor } from "../lib";
 
 const props = defineProps({
-    parent: {
-        type: HTMLElement
-    },
-    backgroundColor: {
-        type: String,
-        default: '#FFFFFF'
+    svgRef: {
+        type: [Object, null],
+        required: true
     },
     color: {
         type: String,
         default: '#2D353C'
+    },
+    backgroundColor: {
+        type: String,
+        default: '#FFFFFF'
     },
     active: {
         type: Boolean,
@@ -27,68 +27,45 @@ const emit = defineEmits(['close']);
 
 const stack = ref([]);
 const redoStack = ref([]);
-
-const viewBox = ref("0 0 0 0");
-
-const currentColor = ref(props.color)
-const strokeWidth = ref(1);
-
-const buttonBorderColor = computed(() => {
-    return lightenHexColor(props.color, 0.6);
-});
-
-function setViewBox({ width, height }) {
-    viewBox.value = `0 0 ${width} ${height}`;
-}
-
-const resizeObserver = ref(null);
-
-onMounted(() => {
-    nextTick(() => {
-        if (props.parent) {
-            resizeObserver.value = new ResizeObserver((entries) => {
-                for (const entry of entries) {
-                    const { width, height } = entry.contentRect;
-                    setViewBox({ width, height });
-                }
-            });
-            resizeObserver.value.observe(props.parent);
-
-            const { width, height } = props.parent.getBoundingClientRect();
-            setViewBox({ width, height });
-        }
-    })
-});
-
-onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
-});
-
-watch(
-    () => props.parent,
-    (v) => {
-        if (!v) return;
-        const { width, height } = props.parent.getBoundingClientRect();
-        setViewBox({ width, height });
-    },
-    { immediate: true }
-);
-
+const currentColor = ref(props.color);
+const strokeWidth = ref(2);
 const isDrawing = ref(false);
 const currentPath = ref("");
-const svgElement = ref(null);
+const G = ref(null);
+const currentDrawingPath = ref(null);
+const startPoint = ref(null);
 
-function startDrawing(event) {
-    if (!svgElement.value) return;
-    isDrawing.value = true;
-    const { x, y } = getRelativePosition(event);
-    currentPath.value = `M ${x} ${y}`;
+const buttonBorderColor = computed(() => lightenHexColor(props.color, 0.6));
+
+function addInteractionMask() {
+    if (!G.value) return;
+
+    const existingMask = G.value.querySelector(".vue-data-ui-mask");
+    if (existingMask) {
+        G.value.removeChild(existingMask);
+    }
+
+    if (props.active) {
+        const mask = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        mask.setAttribute("class", "vue-data-ui-mask");
+        mask.setAttribute("width", "100%");
+        mask.setAttribute("height", "100%");
+        mask.setAttribute("fill", "transparent");
+        mask.setAttribute("pointer-events", "all");
+        G.value.insertBefore(mask, G.value.firstChild);
+    }
 }
 
-function draw(event) {
-    if (!isDrawing.value || !svgElement.value) return;
-    const { x, y } = getRelativePosition(event);
-    currentPath.value += ` ${x} ${y}`;
+function toSvgPoint(event) {
+    const svg = props.svgRef;
+    if (!svg) return { x: 0, y: 0 };
+
+    const point = svg.createSVGPoint();
+    point.x = event.clientX;
+    point.y = event.clientY;
+
+    const matrix = svg.getScreenCTM()?.inverse();
+    return matrix ? point.matrixTransform(matrix) : { x: 0, y: 0 };
 }
 
 function smoothPath(path) {
@@ -198,207 +175,201 @@ function optimizeSvgPath(path) {
     return optimizedPath;
 }
 
-function stopDrawing() {
-    if (isDrawing.value) {
-        stack.value.push({
-            strokeWidth: strokeWidth.value,
-            path: optimizeSvgPath(smoothPath(currentPath.value)),
-            color: currentColor.value
-        });
+function startDrawing(event) {
+    if (!props.active || !G.value) return;
+    isDrawing.value = true;
+    const { x, y } = toSvgPoint(event);
+    startPoint.value = { x, y };
+    currentPath.value = `M ${x} ${y}`;
+    currentDrawingPath.value = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    currentDrawingPath.value.setAttribute("stroke", currentColor.value);
+    currentDrawingPath.value.setAttribute("stroke-width", strokeWidth.value);
+    currentDrawingPath.value.setAttribute("fill", "none");
+    currentDrawingPath.value.setAttribute("stroke-linecap", "round");
+    currentDrawingPath.value.setAttribute("stroke-linejoin", "round");
+    currentDrawingPath.value.setAttribute("class", "vue-data-ui-doodle");
+    G.value.appendChild(currentDrawingPath.value);
+}
+
+function draw(event) {
+    if (!isDrawing.value || !G.value || !currentDrawingPath.value) return;
+    const { x, y } = toSvgPoint(event);
+    currentPath.value += ` ${x} ${y}`;
+    currentDrawingPath.value.setAttribute("d", currentPath.value);
+}
+
+function stopDrawing(event) {
+    if (isDrawing.value && G.value && currentDrawingPath.value) {
+        const { x, y } = toSvgPoint(event);
+
+        if (startPoint.value && startPoint.value.x === x && startPoint.value.y === y) {
+            // Single click : circle
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", x);
+            circle.setAttribute("cy", y);
+            circle.setAttribute("r", strokeWidth.value / 2);
+            circle.setAttribute("fill", currentColor.value);
+            circle.setAttribute("class", "vue-data-ui-doodle");
+            G.value.appendChild(circle);
+            stack.value.push(circle);
+        } else {
+            const newPath = currentDrawingPath.value;
+            newPath.setAttribute("d", optimizeSvgPath(smoothPath(currentPath.value)));
+            stack.value.push(newPath);
+        }
         redoStack.value = [];
-        currentPath.value = "";
+        currentDrawingPath.value = '';
     }
     isDrawing.value = false;
 }
-
-function getRelativePosition(event) {
-    if (!svgElement.value) return { x: 0, y: 0 };
-
-    const svgRect = svgElement.value.getBoundingClientRect();
-    let clientX, clientY;
-
-    if (event.touches && event.touches.length) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
-    } else {
-        clientX = event.clientX;
-        clientY = event.clientY;
-    }
-
-    return {
-        x: clientX - svgRect.left,
-        y: clientY - svgRect.top,
-    };
-}
-
-const showRedoButton = ref(false);
 
 function deleteLastDraw() {
     if (stack.value.length > 0) {
         const lastPath = stack.value.pop();
         redoStack.value.push(lastPath);
+        if (G.value) {
+            G.value.removeChild(lastPath);
+        }
     }
 }
 
 function redoLastDraw() {
     if (redoStack.value.length > 0) {
         const lastUndonePath = redoStack.value.pop();
-        stack.value.push(lastUndonePath); 
+        stack.value.push(lastUndonePath);
+        if (G.value) {
+            G.value.appendChild(lastUndonePath);
+        }
     }
 }
 
 function reset() {
+    if (G.value) {
+        G.value.innerHTML = "";
+    }
     stack.value = [];
     redoStack.value = [];
 }
 
-const range = ref(null);
+function enableDrawing() {
+    if (!props.svgRef || !props.active) return;
 
+    props.svgRef.addEventListener("mousedown", startDrawing);
+    props.svgRef.addEventListener("mousemove", draw);
+    props.svgRef.addEventListener("mouseup", stopDrawing);
+    props.svgRef.addEventListener("mouseleave", stopDrawing);
+    props.svgRef.addEventListener("touchstart", startDrawing, { passive: false });
+    props.svgRef.addEventListener("touchmove", draw, { passive: false });
+    props.svgRef.addEventListener("touchend", stopDrawing);
+
+    if (G.value) {
+        G.value.style.pointerEvents = "auto";
+    }
+}
+
+function disableDrawing() {
+    if (!props.svgRef) return;
+
+    props.svgRef.removeEventListener("mousedown", startDrawing);
+    props.svgRef.removeEventListener("mousemove", draw);
+    props.svgRef.removeEventListener("mouseup", stopDrawing);
+    props.svgRef.removeEventListener("mouseleave", stopDrawing);
+    props.svgRef.removeEventListener("touchstart", startDrawing);
+    props.svgRef.removeEventListener("touchmove", draw);
+    props.svgRef.removeEventListener("touchend", stopDrawing);
+
+    if (G.value) {
+        G.value.style.pointerEvents = "none";
+    }
+}
+
+watch(() => props.active, (newVal) => {
+    if (newVal) {
+        enableDrawing();
+    } else {
+        disableDrawing();
+    }
+});
+
+watch(() => props.active, () => {
+    nextTick(() => {
+        addInteractionMask();
+    });
+});
+
+onMounted(() => {
+    nextTick(() => {
+        if (props.svgRef) {
+            G.value = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            G.value.setAttribute("class", "vue-data-ui-doodles");
+            G.value.style.cursor = `url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==') 5 5, auto`;
+            props.svgRef.appendChild(G.value);
+            disableDrawing();
+        }
+    });
+});
+
+onBeforeUnmount(() => {
+    if (G.value && props.svgRef) {
+        props.svgRef.removeChild(G.value);
+        disableDrawing();
+    }
+});
 </script>
 
 <template>
-    <div
-        v-if="active"
-        data-html2canvas-ignore
-        :class="{
-            'vue-ui-pen-and-paper-actions': true,
-            'visible': active
-        }"
-    >
-        <button
-            class="vue-ui-pen-and-paper-action"
-            :style="{
+    <div v-if="active" data-html2canvas-ignore class="vue-ui-pen-and-paper-actions">
+        <button class="vue-ui-pen-and-paper-action" @click="emit('close')" :style="{
+            backgroundColor: backgroundColor,
+            border: `1px solid ${buttonBorderColor}`
+        }">
+            <BaseIcon name="close" :stroke="color" />
+        </button>
+        <button class="vue-ui-pen-and-paper-action" style="padding: 0 !important">
+            <ColorPicker v-model:value="currentColor" :backgroundColor="backgroundColor"
+                :buttonBorderColor="buttonBorderColor" />
+        </button>
+        <button class="vue-ui-pen-and-paper-action" :class="{ 'vue-ui-pen-and-paper-action-disabled': !stack.length }"
+            :disabled="!stack.length" @click="deleteLastDraw" :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`
-            }"
-            @click="emit('close')"
-        >
-            <BaseIcon name="close" :stroke="color"/>
+            }">
+            <BaseIcon name="restart" :stroke="color" />
         </button>
-        <button
-            data-cy="pen-and-paper-color-picker"
-            :class="{
-                'vue-ui-pen-and-paper-action': true, 
-            }"
-            style="padding: 0 !important"
-            >
-            <ColorPicker 
-                v-model:value="currentColor" 
-                :backgroundColor="backgroundColor"
-                :buttonBorderColor="buttonBorderColor"
-            />
-        </button>
-        <button
-            data-cy="pen-and-paper-undo"
-            :class="{
-                'vue-ui-pen-and-paper-action': true, 
-                'vue-ui-pen-and-paper-action-disabled': !stack.length
-            }"
-            :disabled="!stack.length"
-            :style="{
+        <button class="vue-ui-pen-and-paper-action"
+            :class="{ 'vue-ui-pen-and-paper-action-disabled': !redoStack.length }" @click="redoLastDraw" :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`
-            }"
-            @click="deleteLastDraw"
-        >
-            <BaseIcon name="restart" :stroke="color"/>
+            }">
+            <BaseIcon name="restart" :stroke="color" style="transform: scaleX(-1)" />
         </button>
-        <button
-            data-cy="pen-and-paper-redo"
-            :class="{
-                'vue-ui-pen-and-paper-action': true, 
-                'vue-ui-pen-and-paper-action-disabled': !redoStack.length
-            }"
-            :style="{
+        <button class="vue-ui-pen-and-paper-action" :class="{ 'vue-ui-pen-and-paper-action-disabled': !stack.length }"
+            @click="reset" :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`
-            }"
-            @click="redoLastDraw"
-        >
-            <BaseIcon name="restart" :stroke="color" style="transform: scaleX(-1)"/>
+            }">
+            <BaseIcon name="trash" :stroke="color" />
         </button>
-        <button
-            data-cy="pen-and-paper-reset"
-            :class="{
-                'vue-ui-pen-and-paper-action': true, 
-                'vue-ui-pen-and-paper-action-disabled': !stack.length
-            }"
-            class="vue-ui-pen-and-paper-action"
-            :style="{
-                backgroundColor: backgroundColor,
-                border: `1px solid ${buttonBorderColor}`
-            }"
-            @click="reset"
-        >
-            <BaseIcon name="trash" :stroke="color"/>
-        </button>
-        <input 
-            data-cy="pen-and-paper-thickness"
-            ref="range" 
-            type="range" 
-            class="vertical-range" 
-            :min="0.5" 
-            :max="12" 
-            :step="0.1" 
-            v-model="strokeWidth"
-            :style="{
-                accentColor: color
-            }"
-        />
+        <input ref="range" type="range" class="vertical-range" :min="0.5" :max="12" :step="0.1" v-model="strokeWidth"
+            :style="{ accentColor: color }" />
     </div>
-    <svg
-        data-cy="pen-and-paper"
-        ref="svgElement"
-        :xmlns="XMLNS"
-        :viewBox="viewBox"
-        :class="{
-            'vue-ui-pen-and-paper': true,
-            inactive: !active,
-        }"
-        @mousedown="startDrawing"
-        @mousemove="draw"
-        @mouseup="stopDrawing"
-        @mouseleave="stopDrawing"
-        @touchstart.prevent="startDrawing"
-        @touchmove.prevent="draw"
-        @touchend="stopDrawing"
-    >
-        <template v-for="path in stack" :key="path">
-            <circle v-if="path.path.replace('M', '').split(' ').length === 2" :cx="path.path.replace('M', '').split(' ')[0]" :cy="path.path.replace('M', '').split(' ')[1]" :r="path.strokeWidth / 2" :fill="path.color"/>
-            <path v-else class="vue-ui-pen-and-paper-path"  :d="path.path" :stroke="path.color" :stroke-width="path.strokeWidth" fill="none" />
-        </template>
-        <path class="vue-ui-pen-and-paper-path vue-ui-pen-and-paper-path-drawing" v-if="isDrawing" :d="smoothPath(currentPath)" :stroke="currentColor" :stroke-width="strokeWidth * 1.1" fill="none" />
-    </svg>
 </template>
 
 <style scoped>
-.vue-ui-pen-and-paper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    cursor: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==') 5 5, auto;
-    z-index: 0;
-}
-.inactive {
-    pointer-events: none;
-}
 .vue-ui-pen-and-paper-actions {
     position: absolute;
     top: 50%;
     left: 0;
     transform: translateY(-50%);
-    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
+
 .vue-ui-pen-and-paper-action {
     display: flex;
-    align-items:center;
-    justify-content:center;
+    align-items: center;
+    justify-content: center;
     height: 32px;
     width: 32px;
     padding: 2px;
@@ -406,16 +377,14 @@ const range = ref(null);
     cursor: pointer;
     position: relative;
 }
+
 .vue-ui-pen-and-paper-action:hover {
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
 }
+
 .vue-ui-pen-and-paper-action-disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-.vue-ui-pen-and-paper-path {
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 input[type="range"].vertical-range {
@@ -425,5 +394,4 @@ input[type="range"].vertical-range {
     transform: translateY(-50%) rotate(180deg);
     left: 36px;
 }
-
 </style>

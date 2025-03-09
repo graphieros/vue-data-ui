@@ -1,4 +1,4 @@
-import PenAndPaper from "./PenAndPaper.vue";
+import PenAndPaper from "./NonSvgPenAndPaper.vue";
 
 describe('<PenAndPaper />', () => {
     beforeEach(() => {
