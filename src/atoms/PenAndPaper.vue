@@ -249,6 +249,7 @@ function reset() {
     }
     stack.value = [];
     redoStack.value = [];
+    addInteractionMask();
 }
 
 function enableDrawing() {
