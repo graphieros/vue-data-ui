@@ -15,10 +15,6 @@ Maecenas convallis libero at nisl lacinia facilisis. Nulla facilisi. Sed bibendu
 const dataset = ref(createWordCloudDatasetFromPlainText(plainTextDataset.value))
 
 
-setTimeout(() => {
-    dataset.value = 'Lorem Lorem Cock Cock Cock Cock Dude Dude'
-}, 2000)
-
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox' },
