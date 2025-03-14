@@ -2171,6 +2171,24 @@ export function createHalfCircleArc({ radius, centerX, centerY, percentage }) {
     return path.trim();
 }
 
+export function placeHTMLElementAtSVGCoordinates({ svgElement, x, y, offsetX = 0, offsetY = 0, element, negativeOffsetX = 0 }) {
+    if (!svgElement || !element) return { top: 0, left: 0 };
+
+    const point = svgElement.createSVGPoint();
+    point.x = x;
+    point.y = y;
+    const transformedPoint = point.matrixTransform(svgElement.getScreenCTM());
+    const svgRect = svgElement.getBoundingClientRect();
+    const tooltipRect = element.getBoundingClientRect();
+    if (transformedPoint.x + tooltipRect.width > svgRect.right) {
+        offsetX -= (tooltipRect.width + negativeOffsetX);
+    }
+    return {
+        top: transformedPoint.y + offsetY + "px",
+        left: transformedPoint.x + offsetX + "px"
+    };
+}
+
 
 const lib = {
     XMLNS,
@@ -2237,6 +2255,7 @@ const lib = {
     objectIsEmpty,
     opacity,
     palette,
+    placeHTMLElementAtSVGCoordinates,
     rotateMatrix,
     sanitizeArray,
     setOpacity,
