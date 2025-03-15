@@ -2094,6 +2094,17 @@ export function useConfig() {
                 bold: true,
                 text: ''
             },
+            tooltip: {
+                show: false,
+                fontSize: FONT._14,
+                color: COLOR_BLACK,
+                backgroundColor: COLOR_WHITE,
+                offsetY: 0,
+                borderWidth: 0,
+                borderColor: COLOR_GREY_LIGHT,
+                borderRadius: 2,
+                backgroundOpacity: 100
+            },
             area: {
                 show: true,
                 useGradient: true,
