@@ -62,6 +62,7 @@ import {
     matrixTimes,
     niceNum,
     objectIsEmpty,
+    placeHTMLElementAtSVGCoordinates,
     rotateMatrix,
     sanitizeArray,
     setOpacity,
@@ -2492,5 +2493,83 @@ describe("createHalfCircleArc", () => {
         const expectedEndY = 100 - 50 * Math.sin(0.01 * Math.PI);
 
         expect(result).toBe(`M 100,100 L 50,100 A 50,50 0 0 1 ${expectedEndX},${expectedEndY} Z`);
+    });
+});
+
+describe("placeHTMLElementAtSVGCoordinates", () => {
+    const createMockSVGElement = () => ({
+        createSVGPoint: () => {
+            const point = { x: 0, y: 0 };
+            point.matrixTransform = vi.fn(() => {
+                return { x: point.x, y: point.y };
+            });
+            return point;
+        },
+        getScreenCTM: vi.fn(() => ({
+            a: 1, b: 0, c: 0, d: 1, e: 0, f: 0
+        })),
+        getBoundingClientRect: vi.fn(() => ({
+            left: 50,
+            top: 50,
+            right: 550,
+            bottom: 550,
+            width: 500,
+            height: 500
+        }))
+    });
+
+    const createMockHTMLElement = (width = 50, height = 20) => ({
+        getBoundingClientRect: vi.fn(() => {
+            return {
+                width,
+                height,
+                left: 0,
+                top: 0,
+                right: width || 50,
+                bottom: height || 20
+            };
+        })
+    });
+
+    test("returns default position when no elements are provided", () => {
+        const result = placeHTMLElementAtSVGCoordinates({ svgElement: null, x: 100, y: 100, element: null });
+        expect(result).toEqual({ top: 0, left: 0 });
+    });
+
+    test("centers the element within the SVG correctly", () => {
+        const svgMock = createMockSVGElement();
+        const elementMock = createMockHTMLElement();
+        const result = placeHTMLElementAtSVGCoordinates({ svgElement: svgMock, x: 250, y: 250, element: elementMock });
+
+        console.log("✅ Centered Tooltip Debug Result:", result);
+        expect(result).toEqual({ top: 230, left: 225 });
+    });
+
+    test("shifts right if element overflows left boundary", () => {
+        const svgMock = createMockSVGElement();
+        const elementMock = createMockHTMLElement(100, 40);
+        const result = placeHTMLElementAtSVGCoordinates({ svgElement: svgMock, x: 0, y: 250, element: elementMock });
+        expect(result.left).toBe(100);
+    });
+
+    test("shifts left if element overflows right boundary", () => {
+        const svgMock = createMockSVGElement();
+        const elementMock = createMockHTMLElement(100, 40);
+        const result = placeHTMLElementAtSVGCoordinates({ svgElement: svgMock, x: 490, y: 250, element: elementMock });
+        expect(result.left).toBe(390);
+    });
+
+    test("shifts down if element overflows top boundary", () => {
+        const svgMock = createMockSVGElement();
+        const elementMock = createMockHTMLElement(50, 50);
+        const result = placeHTMLElementAtSVGCoordinates({ svgElement: svgMock, x: 250, y: 0, element: elementMock, offsetY: 5 });
+        expect(result.top).toBe(5);
+    });
+
+    test("adjusts for bottom overflow correctly", () => {
+        const svgMock = createMockSVGElement();
+        const elementMock = createMockHTMLElement(50, 60);
+        const result = placeHTMLElementAtSVGCoordinates({ svgElement: svgMock, x: 250, y: 490, element: elementMock, offsetY: 10 });
+        expect(result.top).toBe(420);
     });
 });

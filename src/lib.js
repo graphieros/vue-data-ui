@@ -2171,21 +2171,36 @@ export function createHalfCircleArc({ radius, centerX, centerY, percentage }) {
     return path.trim();
 }
 
-export function placeHTMLElementAtSVGCoordinates({ svgElement, x, y, offsetX = 0, offsetY = 0, element, negativeOffsetX = 0 }) {
+export function placeHTMLElementAtSVGCoordinates({ svgElement, x, y, offsetY = 0, element }) {
     if (!svgElement || !element) return { top: 0, left: 0 };
 
     const point = svgElement.createSVGPoint();
     point.x = x;
     point.y = y;
-    const transformedPoint = point.matrixTransform(svgElement.getScreenCTM());
+    const t_point = point.matrixTransform(svgElement.getScreenCTM());
     const svgRect = svgElement.getBoundingClientRect();
-    const tooltipRect = element.getBoundingClientRect();
-    if (transformedPoint.x + tooltipRect.width > svgRect.right) {
-        offsetX -= (tooltipRect.width + negativeOffsetX);
+    const rect = element.getBoundingClientRect();
+
+    let _offsetX = 0;
+    let _offsetY = 0;
+
+    if (t_point.x - rect.width / 2 < svgRect.left) {
+        _offsetX = rect.width
+    } else if (t_point.x + rect.width > svgRect.right) {
+        _offsetX = -rect.width
+    } else {
+        _offsetX = -rect.width / 2
     }
+
+    if (t_point.y - offsetY - rect.height < svgRect.top) {
+        _offsetY = offsetY
+    } else {
+        _offsetY = -rect.height - offsetY
+    }
+
     return {
-        top: transformedPoint.y + offsetY + "px",
-        left: transformedPoint.x + offsetX + "px"
+        top: t_point.y + _offsetY,
+        left: t_point.x + _offsetX
     };
 }
 
