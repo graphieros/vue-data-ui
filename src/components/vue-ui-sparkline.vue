@@ -26,6 +26,7 @@ import { useResponsive } from "../useResponsive";
 import { throttle } from "../canvas-lib";
 import PackageVersion from "../atoms/PackageVersion.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
+import SparkTooltip from "../atoms/SparkTooltip.vue"
 
 const { vue_ui_sparkline: DEFAULT_CONFIG } = useConfig();
 
@@ -317,14 +318,19 @@ const area = computed(() => {
 
 
 const selectedPlot = ref(undefined);
+const previousSelectedPlot = ref(undefined);
 
 function selectPlot(plot, index) {
     selectedPlot.value = plot;
+    if (!previousSelectedPlot.value) {
+        previousSelectedPlot.value = plot;
+    }
     emits('hoverIndex', {index})
 }
 
 function unselectPlot() {
-    selectedPlot.value = undefined
+    previousSelectedPlot.value = selectedPlot.value;
+    selectedPlot.value = undefined;
     emits('hoverIndex', {index:undefined})
 }
 
@@ -409,6 +415,7 @@ function selectDatapoint(datapoint, index) {
             v-if="isDataset"
             data-cy="sparkline-svg"
             :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`"
+            @mouseleave="previousSelectedPlot = undefined"
         >
             <PackageVersion />
 
@@ -556,6 +563,39 @@ function selectDatapoint(datapoint, index) {
             />
             <slot name="svg" :svg="svg"/>
         </svg>
+
+        <SparkTooltip
+            v-if="selectedPlot && FINAL_CONFIG.style.tooltip.show"
+            :x="selectedPlot.x"
+            :y="selectedPlot.y"
+            :prevX="previousSelectedPlot.x"
+            :prevY="previousSelectedPlot.y"
+            :offsetY="FINAL_CONFIG.style.plot.radius * 3 + FINAL_CONFIG.style.tooltip.offsetY"
+            :svgRef="svgRef"
+            :background="FINAL_CONFIG.style.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.tooltip.color"
+            :fontSize="FINAL_CONFIG.style.tooltip.fontSize"
+            :borderWidth="FINAL_CONFIG.style.tooltip.borderWidth"
+            :borderColor="FINAL_CONFIG.style.tooltip.borderColor"
+            :borderRadius="FINAL_CONFIG.style.tooltip.borderRadius"
+            :backgroundOpacity="FINAL_CONFIG.style.tooltip.backgroundOpacity"
+        >
+            <slot name="tootlip" v-bind="{ ...selectedPlot }">
+                {{ selectedPlot.period }}: {{ 
+                    applyDataLabel(
+                        FINAL_CONFIG.style.dataLabel.formatter,
+                        selectedPlot.absoluteValue,
+                        dl({
+                            p: FINAL_CONFIG.style.dataLabel.prefix, 
+                            v: selectedPlot.absoluteValue, 
+                            s: FINAL_CONFIG.style.dataLabel.suffix, 
+                            r: FINAL_CONFIG.style.dataLabel.roundingValue 
+                        }), 
+                        { datapoint: selectedPlot }
+                ) 
+            }}
+            </slot>
+        </SparkTooltip>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
