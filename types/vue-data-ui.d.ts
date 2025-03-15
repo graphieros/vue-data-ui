@@ -4246,6 +4246,17 @@ declare module "vue-data-ui" {
                 stroke?: string;
                 strokeWidth?: number;
             };
+            tooltip?: {
+                show?: boolean;
+                fontSize?: number;
+                color?: string;
+                backgroundColor?: string;
+                offsetY?: number;
+                borderWidth?: number;
+                borderColor?: string;
+                borderRadius?: number;
+                backgroundOpacity?: number;
+            };
             verticalIndicator?: {
                 show?: boolean;
                 strokeWidth?: number;
