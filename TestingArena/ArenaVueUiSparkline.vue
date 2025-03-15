@@ -72,7 +72,7 @@ const dataset = ref([
     },
     {
         period: "period 17",
-        value: 16
+        value: 1
     },
 ])
 
@@ -183,7 +183,16 @@ const model = ref([
     { key: 'style.area.show', def: true, type: 'checkbox'},
     { key: 'style.area.useGradient', def: true, type: 'checkbox'},
     { key: 'style.area.opacity', def: 30, type: 'range', min: 0, max: 100},
-    { key: 'style.area.color', def: '#CC7033', type: 'color'}
+    { key: 'style.area.color', def: '#CC7033', type: 'color'},
+
+    { key: 'style.tooltip.show', def: true, type: 'checkbox' },
+    { key: 'style.tooltip.fontSize', def: 12, type: 'number', min: 8, max: 42 },
+    { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'style.tooltip.offsetY', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.tooltip.borderWidth', def: 1, type: 'number', min: 0, max: 12 },
+    { key: 'style.tooltip.borderColor', def: '#FF0000', type: 'color'},
+    { key: 'style.tooltip.backgroundOpacity', def: 50, type: 'number', min: 0, max: 100}
 ])
 
 const themeOptions = ref([
