@@ -2185,7 +2185,7 @@ export function placeHTMLElementAtSVGCoordinates({ svgElement, x, y, offsetY = 0
     let _offsetY = 0;
 
     if (t_point.x - rect.width / 2 < svgRect.left) {
-        _offsetX = rect.width
+        _offsetX = 0
     } else if (t_point.x + rect.width > svgRect.right) {
         _offsetX = -rect.width
     } else {
@@ -2203,7 +2203,6 @@ export function placeHTMLElementAtSVGCoordinates({ svgElement, x, y, offsetY = 0
         left: t_point.x + _offsetX
     };
 }
-
 
 const lib = {
     XMLNS,

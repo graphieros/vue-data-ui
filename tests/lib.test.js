@@ -2540,8 +2540,6 @@ describe("placeHTMLElementAtSVGCoordinates", () => {
         const svgMock = createMockSVGElement();
         const elementMock = createMockHTMLElement();
         const result = placeHTMLElementAtSVGCoordinates({ svgElement: svgMock, x: 250, y: 250, element: elementMock });
-
-        console.log("✅ Centered Tooltip Debug Result:", result);
         expect(result).toEqual({ top: 230, left: 225 });
     });
 
@@ -2549,7 +2547,7 @@ describe("placeHTMLElementAtSVGCoordinates", () => {
         const svgMock = createMockSVGElement();
         const elementMock = createMockHTMLElement(100, 40);
         const result = placeHTMLElementAtSVGCoordinates({ svgElement: svgMock, x: 0, y: 250, element: elementMock });
-        expect(result.left).toBe(100);
+        expect(result.left).toBe(0);
     });
 
     test("shifts left if element overflows right boundary", () => {
