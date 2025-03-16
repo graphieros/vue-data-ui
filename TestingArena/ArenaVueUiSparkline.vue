@@ -163,7 +163,7 @@ const model = ref([
     { key: 'style.verticalIndicator.strokeWidth', def: 1.5, type: 'number', min: 0, max: 6, step: 0.5},
     { key: 'style.verticalIndicator.color', def: '#3366CC', type: 'color'},
     { key: 'style.verticalIndicator.strokeDasharray', def: 3, type:'number', min: 0, max: 48},
-    { key: 'style.dataLabel.show', def: true, type: 'checkbox'},
+    { key: 'style.dataLabel.show', def: false, type: 'checkbox'},
     { key: 'style.dataLabel.position', def: 'left', type: 'select', options:['left', 'right']},
     { key: 'style.dataLabel.offsetX', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.dataLabel.offsetY', def: 0, type: 'number', min: -100, max: 100},
@@ -174,7 +174,7 @@ const model = ref([
     { key: 'style.dataLabel.valueType', def: 'latest', type: 'select', options: ['latest', 'sum', 'average']},
     { key: 'style.dataLabel.prefix', def: 'P', type: 'text'},
     { key: 'style.dataLabel.suffix', def: 'S', type: 'text'},
-    { key: 'style.title.show', def: true, type: 'checkbox'},
+    { key: 'style.title.show', def: false, type: 'checkbox'},
     { key: 'style.title.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
     { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.title.fontSize', def: 16, type: 'number', min: 8, max: 48},
@@ -262,6 +262,11 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiSparkline :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
+
+                <template #tooltip="{ absoluteValue }">
+                    {{ absoluteValue }}
+                </template>
+
                 <template #before="{ selected, latest, sum, average, median, trend }">
                     <div style="color: white;height: 180px;font-size:11px">
                         #BEFORE
