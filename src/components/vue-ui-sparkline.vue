@@ -580,7 +580,7 @@ function selectDatapoint(datapoint, index) {
             :borderRadius="FINAL_CONFIG.style.tooltip.borderRadius"
             :backgroundOpacity="FINAL_CONFIG.style.tooltip.backgroundOpacity"
         >
-            <slot name="tootlip" v-bind="{ ...selectedPlot }">
+            <slot name="tooltip" v-bind="{ ...selectedPlot }">
                 {{ selectedPlot.period }}: {{ 
                     applyDataLabel(
                         FINAL_CONFIG.style.dataLabel.formatter,
