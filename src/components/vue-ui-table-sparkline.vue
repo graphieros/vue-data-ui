@@ -640,6 +640,9 @@ defineExpose({
                                     visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
                                 }"
                             >
+                                <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
+                                    <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                                </template>
                                 <template #optionPdf v-if="$slots.optionPdf">
                                     <slot name="optionPdf" />
                                 </template>
