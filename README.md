@@ -613,6 +613,14 @@ User options actions available per chart:
 | VueUiXy                     | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
 | VueUiXyCanvas               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
 
+User options menu icon can be customized using the #menuIcon slot:
+
+```html
+<template #menuIcon="{ isOpen, color }">
+  <div>{{ isOpen ? 'close' : 'open' }}</div>
+</template>
+```
+
 # Custom palette
 
 It is possible to provide a custom palette in the config prop through config.customPalette (string[]) for the following components:
