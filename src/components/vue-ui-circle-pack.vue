@@ -15,7 +15,6 @@ import {
     downloadCsv, 
     error, 
     lightenHexColor, 
-    makeDonut, 
     objectIsEmpty, 
     palette,
     themePalettes
@@ -32,6 +31,9 @@ import Accordion from "./vue-ui-accordion.vue";
 import DataTable from '../atoms/DataTable.vue';
 import Skeleton from "./vue-ui-skeleton.vue";
 import { useChartAccessibility } from '../useChartAccessibility';
+import { pack, bounds } from "../packCircles";
+import { throttle } from '../canvas-lib';
+import { useResponsive } from '../useResponsive';
 
 const props = defineProps({
     config: {
@@ -125,6 +127,11 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
 });
 
+const resizeObserver = ref(null)
+const SIZE = ref({h:10,w:10})
+const titleSize = ref(0)
+const boundValues = ref([0, 0, 100, 100])
+
 async function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
@@ -132,7 +139,36 @@ async function prepareChart() {
             type: 'dataset'
         })
     }
-    await packSingleSet();
+
+    circles.value = await pack(formattedDataset.value)
+    viewBox.value = bounds(circles.value, 1).join(' ')
+
+    const handleResize = throttle(() => {
+        const { width, height, heightTitle, heightNoTitle } = useResponsive({
+            chart: circlePackChart.value,
+            title: chartTitle.value,
+            noTitle: noTitle.value
+        })
+
+        const computedWidth = width || 10;
+        const computedHeight = height && height > 10 ? height : 10;
+        
+        titleSize.value = FINAL_CONFIG.value.style.chart.title.text ? heightTitle : heightNoTitle
+
+        requestAnimationFrame(() => {
+            SIZE.value.w = computedWidth
+            SIZE.value.h = computedHeight - titleSize.value
+            nextTick(async () => {
+                const freshDataset = formattedDataset.value.map(c => ({ ...c }));
+                circles.value = await pack(freshDataset, SIZE.value.h, SIZE.value.w);
+                boundValues.value = bounds(circles.value, 1)
+                viewBox.value = boundValues.value.join(' ');
+            })
+        })
+    })
+
+    resizeObserver.value = new ResizeObserver(handleResize);
+    resizeObserver.value.observe(circlePackChart.value.parentNode);
 }
 
 onMounted(prepareChart);
@@ -145,118 +181,14 @@ const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
-function distance(a, b) {
-    return Math.hypot(b.x - a.x, b.y - a.y)
-}
 
-function isOverlapping(circle, others) {
-    return others.some((other) => distance(circle, other) < circle.radius + other.radius)
-}
-
-function findInitialPosition(placedCircles, radius, width, height) {
-    const spacing = radius * 2;
-
-    for (let circle of placedCircles) {
-        for (let angle = 0; angle < 360; angle += 1) {
-            let rad = (angle * Math.PI) / 180;
-            let x = circle.x + spacing * Math.cos(rad);
-            let y = circle.y - spacing * Math.sin(rad);
-
-            let candidate = { x, y, radius };
-
-            if (
-                x - radius >= 0 &&
-                x + radius <= width &&
-                y - radius >= 0 &&
-                y + radius <= height &&
-                !isOverlapping(candidate, placedCircles)
-            ) {
-                return { x, y };
-            }
-        }
-    }
-    return null;
-}
-
-function packCircles({
-    datapoints, 
-    width, 
-    height, 
-    maxRadius, 
-    offsetX = 0, 
-    offsetY = 0
-}) {
-    const maxDataPoint = Math.max(...datapoints.map(dp => dp.value));
-
-    const radii = datapoints.map((dp, index) => ({
-        ...dp,
-        radius: (dp.value / maxDataPoint) * maxRadius,
-        index
-    }));
-
-    const sortedCircles = radii
-        .map((r, index) => ({ ...r, index }))
-        .toSorted((a, b) => b.radius - a.radius);
-
-    let placedCircles = [];
-
-    placedCircles.push({ 
-        ...sortedCircles[0],
-        x: width / 2 + offsetX, 
-        y: height / 2 + offsetY, 
-    });
-
-    for (let circleData of sortedCircles.slice(1)) {
-        let { radius, ...dp } = circleData;
-        let position = findInitialPosition(placedCircles, radius, width, height);
-        
-        if (position) {
-            placedCircles.push({ ...dp, x: position.x, y: position.y, radius });
-        } else {
-            let bestFit = null;
-            let minOverlap = Infinity;
-
-            for (let circle of placedCircles) {
-                for (let angle = 0; angle < 360; angle += 15) {
-                    let rad = (angle * Math.PI) / 180;
-                    let x = circle.x + (radius + circle.radius) * Math.cos(rad);
-                    let y = circle.y + (radius + circle.radius) * Math.sin(rad);
-
-                    let candidate = { ...dp, x, y, radius };
-
-                    if (
-                        x - radius >= 0 &&
-                        x + radius <= width &&
-                        y - radius >= 0 &&
-                        y + radius <= height &&
-                        !isOverlapping(candidate, placedCircles)
-                    ) {
-                        let overlap = placedCircles.reduce(
-                            (sum, other) => sum + (distance(candidate, other) < candidate.radius + other.radius ? 1 : 0),
-                            0
-                        );
-                        if (overlap < minOverlap) {
-                            minOverlap = overlap;
-                            bestFit = candidate;
-                        }
-                    }
-                }
-            }
-
-            if (bestFit) {
-                placedCircles.push(bestFit);
-            }
-        }
-    }
-
-    return placedCircles;
-}
 
 const formattedDataset = computed(() => {
     return props.dataset.map((ds, i) => {
         const color = convertColorToHex(ds.color) || customPalette.value[i] || themePalettes[FINAL_CONFIG.value.theme || 'default'][i % themePalettes[FINAL_CONFIG.value.theme || 'default'].length] || palette[i] || palette[i % palette.length];
         return {
             ...ds,
+            r: ds.value,
             id: createUid(),
             color,
         }
@@ -264,78 +196,15 @@ const formattedDataset = computed(() => {
 });
 
 const circles = ref([]);
+const viewBox = ref('0 0 100 100')
 
 const maxRadius = computed(() => {
-    return Math.max(...circles.value.map(c => c.radius))
+    return Math.max(...circles.value.map(c => c.r))
 })
 
 function calcOffsetY(radius, offset) {
     return offset / maxRadius.value * radius;
 }
-
-async function packSingleSet() {
-    circles.value = 
-    packCircles({
-        datapoints: formattedDataset.value,
-        width: 10000,
-        height: 10000,
-        maxRadius: 32
-    });
-}
-
-const svg = computed(() => {
-    return {
-        width: 100,
-        height: 100,
-    }
-});
-
-const viewBox = computed(() => {
-    const min_c_x = circles.value.reduce((o, _o) => (_o.x - _o.radius < o.x - o.radius ? _o : o), circles.value[0]);
-    const min_c_y = circles.value.reduce((o, _o) => (_o.y - _o.radius < o.y - o.radius ? _o : o), circles.value[0]);
-    const max_c_x = circles.value.reduce((o, _o) => (_o.x + _o.radius > o.x + o.radius ? _o : o), circles.value[0]);
-    const max_c_y = circles.value.reduce((o, _o) => (_o.y + _o.radius > o.y + o.radius ? _o : o), circles.value[0]);
-
-    const minX = min_c_x?.x || 0;
-    const maxX = max_c_x?.x || svg.value.width;
-    const minY = min_c_y?.y || 0;
-    const maxY = max_c_y?.y || svg.value.height;
-
-    return {
-        maxX,
-        minX,
-        width: Math.abs(maxX - minX) + (min_c_x ? min_c_x.radius : 0) + (max_c_x ? max_c_x.radius : 0) + (FINAL_CONFIG.value.style.chart.circles.strokeWidth * 4),
-        height: Math.abs(maxY - minY) + (min_c_y ? min_c_y.radius : 0) + (max_c_y ? max_c_y.radius : 0) + (FINAL_CONFIG.value.style.chart.circles.strokeWidth * 4),
-        x: min_c_x ? (min_c_x?.x - min_c_x?.radius) - (FINAL_CONFIG.value.style.chart.circles.strokeWidth * 2) : 0,
-        y: min_c_y ? (min_c_y?.y - min_c_y?.radius) - (FINAL_CONFIG.value.style.chart.circles.strokeWidth * 2) : 0
-    };
-})
-
-const donuts = computed(() => {
-    return circles.value.map(c => {
-
-        if (!c.breakdown) return;
-
-        return makeDonut(
-            { series: c.breakdown.map((b, i) => {
-                return {
-                    ...b,
-                    color: convertColorToHex(b.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
-                }
-            }) },
-            c.x,
-            c.y,
-            c.radius,
-            c.radius,
-            1.99999,
-            2,
-            1,
-            360,
-            105.25,
-            c.radius / 2
-        )
-    })
-})
 
 const zoom = ref(null);
 function zoomTo(circle) {
@@ -344,12 +213,12 @@ function zoomTo(circle) {
 }
 
 const zoomRadiusStart = computed(() => {
-    return zoom.value ? zoom.value.radius : 0;
+    return zoom.value ? zoom.value.r : 0;
 })
 
 const zoomRadiusEnd = computed(() => {
     if (isAnnotator.value) return zoomRadiusStart.value;
-    return zoom.value ? (zoom.value.radius > (viewBox.value.width / 6 * FINAL_CONFIG.value.style.chart.circles.zoom.zoomRatio) ? zoom.value.radius : (viewBox.value.width / 6 * FINAL_CONFIG.value.style.chart.circles.zoom.zoomRatio)) : 0;
+    return zoom.value ? (zoom.value.r > (boundValues.value[3] / 6 * FINAL_CONFIG.value.style.chart.circles.zoom.zoomRatio) ? zoom.value.r : (boundValues.value[3] / 6 * FINAL_CONFIG.value.style.chart.circles.zoom.zoomRatio)) : 0;
 })
 
 const zoomOpacity = ref(0);
@@ -385,8 +254,8 @@ watchEffect(() => {
 
 const zoomLabelFontSizes = computed(() => {
     return {
-        name: FINAL_CONFIG.value.style.chart.circles.zoom.label.name.fontSize * viewBox.value.width / 300,
-        value: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.fontSize * viewBox.value.width / 300
+        name: FINAL_CONFIG.value.style.chart.circles.zoom.label.name.fontSize * boundValues.value[3] / 300,
+        value: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.fontSize * boundValues.value[3] / 300
     }
 });
 
@@ -421,8 +290,8 @@ function getValueFontSize(circle) {
         return 0
     }
 
-    const max = circle.radius / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2);
-    return Math.min(circle.radius / 2.5, max);
+    const max = circle.r / (getCircleLabel(circle).length) * (getCircleLabel(circle).length === 1 ? 1 : 2);
+    return Math.min(circle.r / 2.5, max);
 }
 
 const isFullscreen = ref(false)
@@ -536,16 +405,16 @@ defineExpose({
         :id="`vue-ui-circle-pack_${uid}`"
         :class="`vue-ui-circle-pack ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
         ref="circlePackChart" 
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
     >
-
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :scale="maxRadius / 100"
             @close="toggleAnnotator"
         />
 
@@ -633,10 +502,11 @@ defineExpose({
             ref="svgRef"
             v-if="isDataset"
             :xmlns="XMLNS"
-            :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`" 
-            width="100%"
+            :viewBox="viewBox"
+            :height="SIZE.h"
+            :width="SIZE.w"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
+            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};background:${FINAL_CONFIG.style.chart.backgroundColor};`"
         >
             <PackageVersion />
 
@@ -672,34 +542,34 @@ defineExpose({
                 <!-- 'CIRCLE' (using rect as circle does not css transition properly) -->
                 <rect
                     data-cy="datapoint-circle"
-                    :x="circle.x - circle.radius"
-                    :y="circle.y - circle.radius"
-                    :width="circle.radius * 2"
-                    :height="circle.radius * 2"
+                    :x="circle.x - circle.r"
+                    :y="circle.y - circle.r"
+                    :width="circle.r * 2"
+                    :height="circle.r * 2"
                     :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
-                    :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth"
+                    :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * maxRadius / 100"
                     :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${circle.id})`: circle.color" 
-                    :rx="circle.radius"
+                    :rx="circle.r"
                     @mouseenter="() => zoomTo(circle)"
                     @mouseout="zoom = null"
                     @click="emit('selectDatapoint', circle)"
                 />
                 <rect
                     v-if="$slots.pattern"
-                    :x="circle.x - circle.radius"
-                    :y="circle.y - circle.radius"
-                    :width="circle.radius * 2"
-                    :height="circle.radius * 2"
+                    :x="circle.x - circle.r"
+                    :y="circle.y - circle.r"
+                    :width="circle.r * 2"
+                    :height="circle.r * 2"
                     :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
-                    :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth"
+                    :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * maxRadius / 100"
                     :fill="`url(#pattern_${uid}_${circle.id})`" 
-                    :rx="circle.radius"
+                    :rx="circle.r"
                     :style="{
                         pointerEvents: 'none'
                     }"
                 />
 
-                <slot name="data-label" v-if="$slots['data-label']" v-bind="{ ...circle, createTSpans, fontSize: { name: (circle.radius / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio, value: getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio}, color: !FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color }"/>
+                <slot name="data-label" v-if="$slots['data-label']" v-bind="{ ...circle, createTSpans, fontSize: { name: (circle.r / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio, value: getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio}, color: !FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color }"/>
 
                 <template v-else>
                     <!-- LABEL NAME -->
@@ -712,8 +582,8 @@ defineExpose({
                         }"
                         :opacity="(zoom && !isAnnotator) ? 0.2 : 1"
                         :x="circle.x"
-                        :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.name.offsetY) - circle.radius / 6"
-                        :font-size="(circle.radius / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio"
+                        :y="circle.y + calcOffsetY(circle.r, FINAL_CONFIG.style.chart.circles.labels.name.offsetY) - circle.r / 10"
+                        :font-size="(circle.r / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio"
                         :fill="!FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
                         :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
                         text-anchor="middle"
@@ -731,7 +601,7 @@ defineExpose({
                         }"
                         :opacity="(zoom && !isAnnotator) ? 0.2 : 1"
                         :x="circle.x"
-                        :y="circle.y + calcOffsetY(circle.radius, FINAL_CONFIG.style.chart.circles.labels.value.offsetY) + circle.radius / 3"
+                        :y="circle.y + calcOffsetY(circle.r, FINAL_CONFIG.style.chart.circles.labels.value.offsetY) + circle.r / 2.5"
                         :font-size="getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio"
                         :fill="!FINAL_CONFIG.style.chart.circles.labels.value.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
                         :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
@@ -739,17 +609,6 @@ defineExpose({
                     >
                         {{ getCircleLabel(circle) }}
                     </text>
-                </template>
-
-                <!-- DONUTS -->
-                <template v-for="donut in donuts">
-                    <template v-for="arc in donut">
-                        <path
-                            :d="arc.arcSlice"
-                            :fill="arc.color"
-                            stroke="black"
-                        />
-                    </template>
                 </template>
             </template>
 
@@ -762,6 +621,7 @@ defineExpose({
                     :r="currentRadius" 
                     :opacity="zoomOpacity"
                     :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
+                    :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * maxRadius / 100"
                     :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})`: zoom.color"
                 />
 
@@ -874,6 +734,11 @@ defineExpose({
 .vue-ui-circle-pack {
     position: relative;
     user-select: none;
+    width: 100%;
+    height:100%;
+    min-height: 300px;
+    aspect-ratio: 1;
+    overflow: visible;
 }
 
 @keyframes zoomCircle {
@@ -887,7 +752,7 @@ defineExpose({
     }
 }
 
-rect {
+rect, text {
     transition: all 0.2s ease-in-out !important;
 }
 </style>

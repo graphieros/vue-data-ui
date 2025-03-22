@@ -26,7 +26,7 @@ function makeDs({ name, qty, maxVal }) {
   return datapoints;
 }
 
-const dataset = ref(makeDs({ name: "Pack 1", qty: 34, maxVal: 12000 }));
+const dataset = ref(makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 }));
 
 // const dataset = ref([
 //   { name: 'D', value: 10 },
@@ -64,7 +64,7 @@ const model = ref([
   { key: "style.chart.color", def: "#1A1A1A", type: "color" },
   { key: "style.chart.title.text", def: "Title", type: "text" },
   { key: "style.chart.title.subtitle.text", def: "Subtitle", type: "text" },
-  { key: "style.chart.circles.stroke", def: "#FFFFFF", type: "color" },
+  { key: "style.chart.circles.stroke", def: "#000000", type: "color" },
   {
     key: "style.chart.circles.strokeWidth",
     def: 1,
@@ -225,7 +225,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
   const c = convertArrayToObject(model.value);
@@ -249,6 +249,10 @@ function selectDatapoint(dp) {
         <select v-model="currentTheme" @change="step += 1">
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
+    </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+      <LocalVueUiCirclePack :dataset="dataset" :config="config" ref="local" :key="`local_${step}`" @selectDatapoint="selectDatapoint"></LocalVueUiCirclePack>
     </div>
   <Box>
     <template #title>VueUiCirclePack</template>

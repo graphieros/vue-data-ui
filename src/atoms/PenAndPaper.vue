@@ -20,6 +20,10 @@ const props = defineProps({
     active: {
         type: Boolean,
         default: false,
+    },
+    scale: {
+        type: Number,
+        default: 1
     }
 });
 
@@ -183,7 +187,7 @@ function startDrawing(event) {
     currentPath.value = `M ${x} ${y}`;
     currentDrawingPath.value = document.createElementNS("http://www.w3.org/2000/svg", "path");
     currentDrawingPath.value.setAttribute("stroke", currentColor.value);
-    currentDrawingPath.value.setAttribute("stroke-width", strokeWidth.value);
+    currentDrawingPath.value.setAttribute("stroke-width", strokeWidth.value * props.scale);
     currentDrawingPath.value.setAttribute("fill", "none");
     currentDrawingPath.value.setAttribute("stroke-linecap", "round");
     currentDrawingPath.value.setAttribute("stroke-linejoin", "round");
@@ -207,7 +211,7 @@ function stopDrawing(event) {
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             circle.setAttribute("cx", x);
             circle.setAttribute("cy", y);
-            circle.setAttribute("r", strokeWidth.value / 2);
+            circle.setAttribute("r", (strokeWidth.value * props.scale) / 2);
             circle.setAttribute("fill", currentColor.value);
             circle.setAttribute("class", "vue-data-ui-doodle");
             G.value.appendChild(circle);

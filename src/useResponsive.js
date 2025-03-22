@@ -8,16 +8,15 @@ export function useResponsive({
 }) {
     let height = 0;
     let width = 0;
+    let heightTitle = 0;
+    let heightSlicer = 0;
+    let heightLegend = 0;
+    let heightSource = 0;
+    let heightNoTitle = 0;
 
     if (!!chart) {
         const parent = chart.parentNode;
         const { height:parentHeight, width: parentWidth } = parent.getBoundingClientRect();
-    
-        let heightTitle = 0;
-        let heightSlicer = 0;
-        let heightLegend = 0;
-        let heightSource = 0;
-        let heightNoTitle = 0;
     
         if (title) {
             heightTitle = title.getBoundingClientRect().height;
@@ -47,6 +46,8 @@ export function useResponsive({
 
     return {
         width,
-        height
+        height,
+        heightTitle,
+        heightNoTitle
     }
 }

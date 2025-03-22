@@ -2203,7 +2203,7 @@ export const components = [
             for (let i = 0; i < 12; i += 1) {
                 arr.push({
                     name: `d_${i}`,
-                    value: i,
+                    value: i + 1,
                 });
             }
             return arr;
