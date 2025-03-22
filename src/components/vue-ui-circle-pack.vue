@@ -1,21 +1,21 @@
 <script setup>
 import { ref, computed, onMounted, watch, watchEffect, nextTick } from 'vue'
 import { useConfig } from '../useConfig';
-import { 
-    XMLNS, 
-    adaptColorToBackground, 
-    applyDataLabel, 
-    convertColorToHex, 
-    convertCustomPalette, 
-    createCsvContent, 
-    createTSpans, 
-    createUid, 
-    darkenHexColor, 
-    dataLabel, 
-    downloadCsv, 
-    error, 
-    lightenHexColor, 
-    objectIsEmpty, 
+import {
+    XMLNS,
+    adaptColorToBackground,
+    applyDataLabel,
+    convertColorToHex,
+    convertCustomPalette,
+    createCsvContent,
+    createTSpans,
+    createUid,
+    darkenHexColor,
+    dataLabel,
+    downloadCsv,
+    error,
+    lightenHexColor,
+    objectIsEmpty,
     palette,
     themePalettes
 } from '../lib';
@@ -78,10 +78,10 @@ const FINAL_CONFIG = computed({
 
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
-const { 
-    userOptionsVisible, 
-    setUserOptionsVisibility, 
-    keepUserOptionState 
+const {
+    userOptionsVisible,
+    setUserOptionsVisibility,
+    keepUserOptionState
 } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
@@ -128,7 +128,7 @@ const mutableConfig = ref({
 });
 
 const resizeObserver = ref(null)
-const SIZE = ref({h:10,w:10})
+const SIZE = ref({ h: 10, w: 10 })
 const titleSize = ref(0)
 const boundValues = ref([0, 0, 100, 100])
 
@@ -152,7 +152,7 @@ async function prepareChart() {
 
         const computedWidth = width || 10;
         const computedHeight = height && height > 10 ? height : 10;
-        
+
         titleSize.value = FINAL_CONFIG.value.style.chart.title.text ? heightTitle : heightNoTitle
 
         requestAnimationFrame(() => {
@@ -170,6 +170,23 @@ async function prepareChart() {
     resizeObserver.value = new ResizeObserver(handleResize);
     resizeObserver.value.observe(circlePackChart.value.parentNode);
 }
+
+function gcd(a, b) {
+    return b === 0 ? a : gcd(b, a % b);
+}
+
+function getCssAspectRatio(width, height) {
+    const divisor = gcd(width, height);
+    const aspectWidth = width / divisor;
+    const aspectHeight = height / divisor;
+
+    return `${aspectWidth}/${aspectHeight}`;
+}
+
+const aspectRatio = computed(() => {
+
+    return getCssAspectRatio(SIZE.value.w, (SIZE.value.h - titleSize.value));
+})
 
 onMounted(prepareChart);
 
@@ -233,7 +250,7 @@ const currentRadius = ref(zoomRadiusStart.value);
 
 watchEffect(() => {
     currentRadius.value = zoomRadiusStart.value;
-    zoomOpacity.value = 0; 
+    zoomOpacity.value = 0;
     let start = null;
     function animate(timestamp) {
         if (!start) {
@@ -401,82 +418,49 @@ defineExpose({
 </script>
 
 <template>
-    <div 
-        :id="`vue-ui-circle-pack_${uid}`"
-        :class="`vue-ui-circle-pack ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
-        ref="circlePackChart" 
+    <div :id="`vue-ui-circle-pack_${uid}`"
+        :class="`vue-ui-circle-pack ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="circlePackChart"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
-        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
-    >
-        <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
-            :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
-            :active="isAnnotator"
-            :scale="maxRadius / 100"
-            @close="toggleAnnotator"
-        />
+        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+        <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator" :svgRef="svgRef"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator" :scale="maxRadius / 100" @close="toggleAnnotator" />
 
-        <slot name="userConfig"/>
+        <slot name="userConfig" />
 
-        <div
-            ref="noTitle"
-            v-if="hasOptionsNoTitle" 
-            class="vue-data-ui-no-title-space" 
-            :style="`height:36px; width: 100%;background:transparent`"
-        />
+        <div ref="noTitle" v-if="hasOptionsNoTitle" class="vue-data-ui-no-title-space"
+            :style="`height:36px; width: 100%;background:transparent`" />
 
-        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
-            <Title
-                :key="`title_${titleStep}`"
-                :config="{
-                    title: {
-                        cy: 'donut-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
-                    },
-                    subtitle: {
-                        cy: 'donut-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle
-                    }
-                }"
-            />
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:transparent;padding-bottom:12px`">
+            <Title :key="`title_${titleStep}`" :config="{
+                title: {
+                    cy: 'donut-div-title',
+                    ...FINAL_CONFIG.style.chart.title,
+                },
+                subtitle: {
+                    cy: 'donut-div-subtitle',
+                    ...FINAL_CONFIG.style.chart.title.subtitle
+                }
+            }" />
         </div>
 
-        <UserOptions
-            ref="details"
-            :key="`user_option_${step}`"
+        <UserOptions ref="details" :key="`user_option_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
-            :isPrinting="isPrinting"
-            :isImaging="isImaging"
-            :uid="uid"
-            :hasTooltip="false"
-            :hasLabel="false"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :isFullscreen="isFullscreen"
-            :chartElement="circlePackChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
-            :isAnnotation="isAnnotator"
-            @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf"
-            @generateCsv="generateCsv"
-            @generateImage="generateImage"
-            @toggleTable="toggleTable"
-            @toggleAnnotator="toggleAnnotator"
-            :style="{
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
+            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasTooltip="false" :hasLabel="false"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
+            :chartElement="circlePackChart" :position="FINAL_CONFIG.userOptions.position"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
+            @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"
+            @generateImage="generateImage" @toggleTable="toggleTable" @toggleAnnotator="toggleAnnotator" :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
-            }"
-        >
+            }">
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -491,225 +475,158 @@ defineExpose({
                 <slot name="optionTable" />
             </template>
             <template v-if="$slots.optionFullscreen" #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }" />
             </template>
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            v-if="isDataset"
-            :xmlns="XMLNS"
-            :viewBox="viewBox"
-            :height="SIZE.h"
-            :width="SIZE.w"
+        <svg ref="svgRef" v-if="isDataset" :xmlns="XMLNS" :viewBox="viewBox" :height="SIZE.h" :width="SIZE.w"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};background:${FINAL_CONFIG.style.chart.backgroundColor};`"
-        >
+            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="viewBox.x"
-                :y="viewBox.y"
-                :width="viewBox.width"
-                :height="viewBox.height"
-                :style="{
+            <foreignObject v-if="$slots['chart-background']" :x="viewBox.x" :y="viewBox.y" :width="viewBox.width"
+                :height="viewBox.height" :style="{
                     pointerEvents: 'none'
-                }"
-            >
-                <slot name="chart-background"/>
+                }">
+                <slot name="chart-background" />
             </foreignObject>
 
             <template v-for="circle in circles">
                 <defs>
                     <radialGradient :id="circle.id" fy="30%">
-                        <stop offset="10%" :stop-color="lightenHexColor(circle.color, FINAL_CONFIG.style.chart.circles.gradient.intensity / 100)"/>
-                        <stop offset="90%" :stop-color="darkenHexColor(circle.color, 0.1)"/>
-                        <stop offset="100%" :stop-color="circle.color"/>
+                        <stop offset="10%"
+                            :stop-color="lightenHexColor(circle.color, FINAL_CONFIG.style.chart.circles.gradient.intensity / 100)" />
+                        <stop offset="90%" :stop-color="darkenHexColor(circle.color, 0.1)" />
+                        <stop offset="100%" :stop-color="circle.color" />
                     </radialGradient>
                 </defs>
 
                 <g v-if="$slots.pattern">
                     <defs>
-                        <slot name="pattern" v-bind="{...circle, patternId: `pattern_${uid}_${circle.id}`}"/>
+                        <slot name="pattern" v-bind="{ ...circle, patternId: `pattern_${uid}_${circle.id}` }" />
                     </defs>
                 </g>
 
                 <!-- 'CIRCLE' (using rect as circle does not css transition properly) -->
-                <rect
-                    data-cy="datapoint-circle"
-                    :x="circle.x - circle.r"
-                    :y="circle.y - circle.r"
-                    :width="circle.r * 2"
-                    :height="circle.r * 2"
-                    :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
+                <rect data-cy="datapoint-circle" :x="circle.x - circle.r" :y="circle.y - circle.r" :width="circle.r * 2"
+                    :height="circle.r * 2" :stroke="FINAL_CONFIG.style.chart.circles.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * maxRadius / 100"
-                    :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${circle.id})`: circle.color" 
-                    :rx="circle.r"
-                    @mouseenter="() => zoomTo(circle)"
-                    @mouseout="zoom = null"
-                    @click="emit('selectDatapoint', circle)"
-                />
-                <rect
-                    v-if="$slots.pattern"
-                    :x="circle.x - circle.r"
-                    :y="circle.y - circle.r"
-                    :width="circle.r * 2"
-                    :height="circle.r * 2"
-                    :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
+                    :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${circle.id})` : circle.color"
+                    :rx="circle.r" @mouseenter="() => zoomTo(circle)" @mouseout="zoom = null"
+                    @click="emit('selectDatapoint', circle)" />
+                <rect v-if="$slots.pattern" :x="circle.x - circle.r" :y="circle.y - circle.r" :width="circle.r * 2"
+                    :height="circle.r * 2" :stroke="FINAL_CONFIG.style.chart.circles.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * maxRadius / 100"
-                    :fill="`url(#pattern_${uid}_${circle.id})`" 
-                    :rx="circle.r"
-                    :style="{
+                    :fill="`url(#pattern_${uid}_${circle.id})`" :rx="circle.r" :style="{
                         pointerEvents: 'none'
-                    }"
-                />
+                    }" />
 
-                <slot name="data-label" v-if="$slots['data-label']" v-bind="{ ...circle, createTSpans, fontSize: { name: (circle.r / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio, value: getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio}, color: !FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color }"/>
+                <slot name="data-label" v-if="$slots['data-label']"
+                    v-bind="{ ...circle, createTSpans, fontSize: { name: (circle.r / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio, value: getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio }, color: !FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color }" />
 
                 <template v-else>
                     <!-- LABEL NAME -->
-                    <text
-                        data-cy="label-name"
-                        v-if="FINAL_CONFIG.style.chart.circles.labels.name.show && circle.name"
+                    <text data-cy="label-name" v-if="FINAL_CONFIG.style.chart.circles.labels.name.show && circle.name"
                         :style="{
                             pointerEvents: 'none',
                             transition: 'opacity 0.2s ease-in-out'
-                        }"
-                        :opacity="(zoom && !isAnnotator) ? 0.2 : 1"
-                        :x="circle.x"
+                        }" :opacity="(zoom && !isAnnotator) ? 0.2 : 1" :x="circle.x"
                         :y="circle.y + calcOffsetY(circle.r, FINAL_CONFIG.style.chart.circles.labels.name.offsetY) - circle.r / 10"
                         :font-size="(circle.r / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio"
                         :fill="!FINAL_CONFIG.style.chart.circles.labels.name.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.name.color"
                         :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
-                        text-anchor="middle"
-                    >
+                        text-anchor="middle">
                         {{ circle.name }}
                     </text>
-    
+
                     <!-- LABEL VALUE -->
-                    <text
-                        data-cy="label-value"
-                        v-if="FINAL_CONFIG.style.chart.circles.labels.value.show"
-                        :style="{
-                            pointerEvents: 'none',
-                            transition: 'opacity 0.2s ease-in-out'
-                        }"
-                        :opacity="(zoom && !isAnnotator) ? 0.2 : 1"
-                        :x="circle.x"
+                    <text data-cy="label-value" v-if="FINAL_CONFIG.style.chart.circles.labels.value.show" :style="{
+                        pointerEvents: 'none',
+                        transition: 'opacity 0.2s ease-in-out'
+                    }" :opacity="(zoom && !isAnnotator) ? 0.2 : 1" :x="circle.x"
                         :y="circle.y + calcOffsetY(circle.r, FINAL_CONFIG.style.chart.circles.labels.value.offsetY) + circle.r / 2.5"
                         :font-size="getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio"
                         :fill="!FINAL_CONFIG.style.chart.circles.labels.value.color ? adaptColorToBackground(circle.color) : FINAL_CONFIG.style.chart.circles.labels.value.color"
                         :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
-                        text-anchor="middle"
-                    >
+                        text-anchor="middle">
                         {{ getCircleLabel(circle) }}
                     </text>
                 </template>
             </template>
 
             <template v-if="zoom && FINAL_CONFIG.style.chart.circles.zoom.show && !isAnnotator">
-                <circle
-                    data-cy="datapoint-zoom"
-                    :style="zoomStyle"
-                    :cx="zoom.x" 
-                    :cy="zoom.y" 
-                    :r="currentRadius" 
-                    :opacity="zoomOpacity"
-                    :stroke="FINAL_CONFIG.style.chart.circles.stroke" 
+                <circle data-cy="datapoint-zoom" :style="zoomStyle" :cx="zoom.x" :cy="zoom.y" :r="currentRadius"
+                    :opacity="zoomOpacity" :stroke="FINAL_CONFIG.style.chart.circles.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * maxRadius / 100"
-                    :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})`: zoom.color"
-                />
+                    :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})` : zoom.color" />
 
                 <g v-if="$slots['zoom-label']" :style="{ pointerEvents: 'none' }">
-                    <slot name="zoom-label" v-bind="{ ...zoom, zoomOpacity, currentRadius, fontSize: zoomLabelFontSizes }" />
+                    <slot name="zoom-label"
+                        v-bind="{ ...zoom, zoomOpacity, currentRadius, fontSize: zoomLabelFontSizes }" />
                 </g>
 
                 <g v-else>
                     <!-- ZOOM LABEL NAME -->
-                    <text
-                        data-cy="datapoint-zoom-label-name"
-                        :style="{
-                            pointerEvents: 'none'
-                        }"
-                        :opacity="zoomOpacity"
-                        :x="zoom.x"
+                    <text data-cy="datapoint-zoom-label-name" :style="{
+                        pointerEvents: 'none'
+                    }" :opacity="zoomOpacity" :x="zoom.x"
                         :y="zoom.y + FINAL_CONFIG.style.chart.circles.zoom.label.name.offsetY - (zoomLabelFontSizes.name / 4)"
-                        text-anchor="middle"
-                        :font-size="zoomLabelFontSizes.name"
+                        text-anchor="middle" :font-size="zoomLabelFontSizes.name"
                         :fill="!FINAL_CONFIG.style.chart.circles.zoom.label.name.color ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.name.color"
-                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.name.bold ? 'bold' : 'normal'"
-                    >
+                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.name.bold ? 'bold' : 'normal'">
                         {{ zoom.name }}
                     </text>
 
                     <!-- ZOOM LABEL VALUE -->
-                    <text
-                        data-cy="datapoint-zoom-label-value"
-                        :style="{
-                            pointerEvents: 'none',
-                        }"
-                        :opacity="zoomOpacity"
-                        :x="zoom.x"
+                    <text data-cy="datapoint-zoom-label-value" :style="{
+                        pointerEvents: 'none',
+                    }" :opacity="zoomOpacity" :x="zoom.x"
                         :y="zoom.y + zoomLabelFontSizes.value + FINAL_CONFIG.style.chart.circles.zoom.label.value.offsetY"
-                        text-anchor="middle"
-                        :font-size="zoomLabelFontSizes.value"
+                        text-anchor="middle" :font-size="zoomLabelFontSizes.value"
                         :fill="!FINAL_CONFIG.style.chart.circles.zoom.label.value.color ? adaptColorToBackground(zoom.color) : FINAL_CONFIG.style.chart.circles.zoom.label.value.color"
-                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.value.bold ? 'bold' : 'normal'"
-                    >
+                        :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.value.bold ? 'bold' : 'normal'">
                         {{ getZoomLabel() }}
                     </text>
                 </g>
             </template>
 
-            <slot name="svg" :svg="{ ...viewBox }"/>
+            <slot name="svg" :svg="{ ...viewBox }" />
         </svg>
 
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'circlePack',
-                style: {
-                    color: '#CCCCCC',
-                }
-            }"
-        />
+        <Skeleton v-if="!isDataset" :config="{
+            type: 'circlePack',
+            style: {
+                color: '#CCCCCC',
+            }
+        }" />
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>
 
-        <Accordion
-            hideDetails
-            v-if="isDataset"
-            :config="{
-                open: mutableConfig.showTable,
-                maxHeight: 10000,
-                body: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.style.chart.color
-                },
-                head: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    color: FINAL_CONFIG.style.chart.color
-                }
-            }"
-        >
+        <Accordion hideDetails v-if="isDataset" :config="{
+            open: mutableConfig.showTable,
+            maxHeight: 10000,
+            body: {
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
+            },
+            head: {
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                color: FINAL_CONFIG.style.chart.color
+            }
+        }">
             <template #content>
-                <DataTable
-                    :key="`table_${tableStep}`"
-                    :colNames="dataTable.colNames" 
-                    :head="dataTable.head" 
-                    :body="dataTable.body"
-                    :config="dataTable.config"
+                <DataTable :key="`table_${tableStep}`" :colNames="dataTable.colNames" :head="dataTable.head"
+                    :body="dataTable.body" :config="dataTable.config"
                     :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
                     @close="mutableConfig.showTable = false">
                     <template #th="{ th }">
@@ -735,9 +652,10 @@ defineExpose({
     position: relative;
     user-select: none;
     width: 100%;
-    height:100%;
+    height: 100%;
     min-height: 300px;
     overflow: visible;
+    aspect-ratio: v-bind(aspectRatio);
 }
 
 @keyframes zoomCircle {
@@ -745,13 +663,15 @@ defineExpose({
         r: v-bind(zoomRadiusStart);
         opacity: 0;
     }
+
     to {
         r: v-bind(zoomRadiusEnd);
         opacity: 1;
     }
 }
 
-rect, text {
+rect,
+text {
     transition: all 0.2s ease-in-out !important;
 }
 </style>
