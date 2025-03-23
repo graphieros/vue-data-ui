@@ -131,6 +131,7 @@ const resizeObserver = ref(null)
 const SIZE = ref({ h: 10, w: 10 })
 const titleSize = ref(0)
 const boundValues = ref([0, 0, 100, 100])
+const PARENT_SIZE = ref({ h: 0, w: 0})
 
 async function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -142,6 +143,8 @@ async function prepareChart() {
 
     circles.value = await pack(formattedDataset.value)
     viewBox.value = bounds(circles.value, 1).join(' ')
+
+    PARENT_SIZE.value = getParentDimensions(circlePackChart.value)
 
     const handleResize = throttle(() => {
         const { width, height, heightTitle, heightNoTitle } = useResponsive({
@@ -163,6 +166,7 @@ async function prepareChart() {
                 circles.value = await pack(freshDataset, SIZE.value.h, SIZE.value.w);
                 boundValues.value = bounds(circles.value, 1)
                 viewBox.value = boundValues.value.join(' ');
+                PARENT_SIZE.value = getParentDimensions(circlePackChart.value)
             })
         })
     })
@@ -171,24 +175,32 @@ async function prepareChart() {
     resizeObserver.value.observe(circlePackChart.value.parentNode);
 }
 
-function gcd(a, b) {
-    return b === 0 ? a : gcd(b, a % b);
-}
-
-function getCssAspectRatio(width, height) {
-    const divisor = gcd(width, height);
-    const aspectWidth = width / divisor;
-    const aspectHeight = height / divisor;
-
-    return `${aspectWidth}/${aspectHeight}`;
-}
-
-const aspectRatio = computed(() => {
-
-    return getCssAspectRatio(SIZE.value.w, (SIZE.value.h - titleSize.value));
-})
-
 onMounted(prepareChart);
+
+function getParentDimensions(component) {
+    if (!component || !component.parentElement) {
+        console.warn("Component or parent element is missing.");
+        return { w: 0, h: 0 };
+    }
+
+    const parent = component.parentElement;
+
+    if (parent.offsetWidth > 0 && parent.offsetHeight > 0) {
+        return { w: parent.offsetWidth, h: parent.offsetHeight };
+    }
+
+    const computedStyle = window.getComputedStyle(parent);
+    const width = computedStyle.width;
+    const height = computedStyle.height;
+
+    if (width !== 'auto' && height !== 'auto' &&
+        parseFloat(width) > 0 && parseFloat(height) > 0) {
+        return { w: parseFloat(width), h: parseFloat(height) };
+    }
+
+    return { w: 0, h: 0 };
+}
+
 
 watch(() => props.dataset, async (_ds) => {
     await prepareChart();
@@ -420,7 +432,7 @@ defineExpose({
 <template>
     <div :id="`vue-ui-circle-pack_${uid}`"
         :class="`vue-ui-circle-pack ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="circlePackChart"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}; height: ${PARENT_SIZE.h}px; width:${PARENT_SIZE.w}px`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator" :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
@@ -655,7 +667,6 @@ defineExpose({
     height: 100%;
     min-height: 300px;
     overflow: visible;
-    aspect-ratio: v-bind(aspectRatio);
 }
 
 @keyframes zoomCircle {
