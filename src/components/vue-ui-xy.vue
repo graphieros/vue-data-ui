@@ -1592,8 +1592,8 @@ export default {
                     id: el.id,
                     groupId: el.groupId,
                     scaleLabel: el.scaleLabel,
-                    name: el.unique ? el.name : el.groupName,
-                    color: el.unique ? el.color : el.groupColor,
+                    name: (this.mutableConfig.useIndividualScale && !this.mutableConfig.isStacked) ? el.unique ? el.name : el.groupName : el.name,
+                    color: (this.mutableConfig.useIndividualScale && !this.mutableConfig.isStacked) ? el.unique ? el.color : el.groupColor : el.color,
                     scale: el.scale,
                     yOffset: el.yOffset,
                     individualHeight: el.individualHeight,
@@ -2023,7 +2023,7 @@ export default {
                 this.scaleGroups[datapoint.scaleLabel].yOffset = yOffset;
                 this.scaleGroups[datapoint.scaleLabel].individualHeight = individualHeight;
                 this.scaleGroups[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
-                this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
+                this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1 
 
                 return {
                     ...datapoint,
