@@ -311,7 +311,7 @@
 
                 <!-- BARS -->
                 <template v-if="barSet.length">
-                    <g v-for="(serie, i) in barSet" :key="`serie_bar_${i}`" :class="`serie_bar_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                    <g v-for="(serie, i) in barSet" :key="`serie_bar_${i}`" :class="`serie_bar_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <g 
                             v-for="(plot, j) in serie.plots" 
                             :key="`bar_plot_${i}_${j}`"
@@ -454,7 +454,8 @@
                                 text-anchor="middle"
                                 :transform="`translate(${el.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + 5 + xPadding}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                             >
-                                {{ el.name }} {{ el.scaleLabel ? `- ${el.scaleLabel}` : '' }}
+                                {{ el.name }} {{ el.scaleLabel && el.unique ? `- ${el.scaleLabel}` : '' }}
+
                             </text>
                             <line
                                 v-for="(yLabel, j) in el.yLabels"
@@ -528,7 +529,7 @@
                 </g>
 
                 <!-- PLOTS -->
-                <g v-for="(serie, i) in plotSet" :key="`serie_plot_${i}`" :class="`serie_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                <g v-for="(serie, i) in plotSet" :key="`serie_plot_${i}`" :class="`serie_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                     <g 
                         data-cy="datapoint-plot"
                         v-for="(plot, j) in serie.plots" 
@@ -593,7 +594,7 @@
                 </g>
 
                 <!-- LINE COATINGS -->
-                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                     <path 
                         data-cy="datapoint-line-coating-smooth"
                         v-if="serie.smooth && serie.plots.length > 1" 
@@ -622,7 +623,7 @@
                 </defs>
 
                 <!-- LINES -->
-                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">    
+                <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">    
 
                     <g v-if="serie.useArea && serie.plots.length > 1">
                         <template v-if="serie.smooth">
@@ -726,8 +727,8 @@
 
                 <!-- X LABELS BAR -->
                 <g v-if="(FINAL_CONFIG.bar.labels.show || FINAL_CONFIG.bar.serieName.show) && mutableConfig.dataLabels.show">
-                    <template v-for="(serie, i) in barSet" :key="`xLabel_bar_${i}`" :class="`xLabel_bar_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
-                        <template v-for="(plot, j) in serie.plots" :key="`xLabel_bar_${i}_${j}`">
+                    <template v-for="(serie, i) in barSet" :key="`xLabel_bar_${i}`" :class="`xLabel_bar_${i}`" >
+                        <template v-for="(plot, j) in serie.plots" :key="`xLabel_bar_${i}_${j}`" >
                             <text
                                 data-cy="datapoint-bar-label"
                                 v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || ((serie.dataLabels === true || (selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)))) && FINAL_CONFIG.bar.labels.show"
@@ -736,6 +737,7 @@
                                 text-anchor="middle"
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.bar.labels.color"
+                                :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                             >
                                 {{ canShowValue(plot.value) ? applyDataLabel(
                                     FINAL_CONFIG.bar.labels.formatter,
@@ -761,6 +763,7 @@
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.bar.serieName.useSerieColor ? serie.color : FINAL_CONFIG.bar.serieName.color"
                                 :font-weight="FINAL_CONFIG.bar.serieName.bold ? 'bold' : 'normal'"
+                                :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                             >
                                 {{ FINAL_CONFIG.bar.serieName.useAbbreviation ? abbreviate({ source: serie.name, length: FINAL_CONFIG.bar.serieName.abbreviationSize}) : serie.name }}
                             </text>
@@ -770,7 +773,7 @@
 
                 <!-- X LABELS PLOT -->
                 <g v-if="FINAL_CONFIG.plot.labels.show && mutableConfig.dataLabels.show">
-                    <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                    <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`">
                         <template v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                             <text
                                 data-cy="datapoint-plot-label"
@@ -780,6 +783,7 @@
                                 text-anchor="middle"
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.plot.labels.color"
+                                :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                             >
                                 {{ canShowValue(plot.value) ? applyDataLabel(
                                     FINAL_CONFIG.plot.labels.formatter,
@@ -804,7 +808,7 @@
                                 :y="plot.y - 20"
                                 :height="24"
                                 width="150"
-                                style="overflow: visible"
+                                :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                             >
                                 <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
@@ -817,7 +821,7 @@
                                 :y="plot.y - 20"
                                 :height="24"
                                 width="150"
-                                style="overflow: visible"
+                                :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                             >
                                 <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
@@ -829,7 +833,7 @@
 
                 <!-- X LABELS LINE -->
                 <g v-if="FINAL_CONFIG.line.labels.show && mutableConfig.dataLabels.show">
-                    <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                    <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`">
                         <template v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                             <text
                                 data-cy="datapoint-line-label"
@@ -839,6 +843,7 @@
                                 text-anchor="middle"
                                 :font-size="fontSizes.plotLabels"
                                 :fill="FINAL_CONFIG.line.labels.color"
+                                :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                             >
                                 {{ canShowValue(plot.value) ? applyDataLabel(
                                     FINAL_CONFIG.line.labels.formatter,
@@ -863,7 +868,7 @@
                                 :y="plot.y - 20"
                                 :height="24"
                                 width="150"
-                                style="overflow: visible"
+                                :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                             >
                                 <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
@@ -876,7 +881,7 @@
                                 :y="plot.y - 20"
                                 :height="24"
                                 width="150"
-                                style="overflow: visible"
+                                :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                             >
                                 <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
                                     {{ serie.name }}
@@ -887,7 +892,7 @@
                 </g>
 
                 <!-- SERIE NAME TAGS : LINES -->
-                <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`">
                     <template v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                         <text 
                             v-if="plot && j === 0 && serie.showSerieName && serie.showSerieName === 'start'"
@@ -904,6 +909,7 @@
                                 y: plot.y,
                                 maxWords: 2
                             })"
+                            :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                         />
                         <text 
                             v-if="plot && j === serie.plots.length - 1 && serie.showSerieName && serie.showSerieName === 'end'"
@@ -920,12 +926,13 @@
                                 y: plot.y,
                                 maxWords: 2
                             })"
+                            :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                         />
                     </template>
                 </template>
 
                 <!-- SERIE NAME TAGS : PLOTS -->
-                <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.id ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
+                <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`">
                     <template v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                         <text 
                             v-if="plot && j === 0 && serie.showSerieName && serie.showSerieName === 'start'"
@@ -942,6 +949,7 @@
                                 y: plot.y,
                                 maxWords: 2
                             })"
+                            :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                         />
                         <text
                             v-if="plot && j === serie.plots.length - 1 && serie.showSerieName && serie.showSerieName === 'end'"
@@ -958,6 +966,7 @@
                                 y: plot.y,
                                 maxWords: 2
                             })"
+                            :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
                         />
                     </template>
                 </template>
@@ -983,8 +992,8 @@
                         :y="drawingArea.top"
                         :width="FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                        :fill="selectedScale === trap.id ? `url(#individual_scale_gradient_${uniqueId}_${i})` : 'transparent'"
-                        @mouseenter="selectedScale = trap.id"
+                        :fill="selectedScale === trap.groupId ? `url(#individual_scale_gradient_${uniqueId}_${i})` : 'transparent'"
+                        @mouseenter="selectedScale = trap.groupId"
                         @mouseleave="selectedScale = null"
                     />
                 </template>
@@ -1571,13 +1580,20 @@ export default {
                     individualHeight: p.individualHeight || this.drawingArea.height
                 }
             });
-            const len = [...lines, ...bars, ...plots].flatMap(el => el).length;
-            return [...lines, ...bars, ...plots].flatMap((el,i) => {
+
+            const source = (this.mutableConfig.useIndividualScale && !this.mutableConfig.isStacked) ? Object.values(this.scaleGroups) : [...lines, ...bars, ...plots];
+
+            console.log(source)
+
+            const len = source.flatMap(el => el).length;
+            return source.flatMap((el,i) => {
                 return {
+                    unique: el.unique,
                     id: el.id,
+                    groupId: el.groupId,
                     scaleLabel: el.scaleLabel,
-                    name: el.name,
-                    color: el.color,
+                    name: el.unique ? el.name : el.groupName,
+                    color: el.unique ? el.color : el.groupColor,
                     scale: el.scale,
                     yOffset: el.yOffset,
                     individualHeight: el.individualHeight,
@@ -1659,6 +1675,7 @@ export default {
                     data: datapoint.series,
                     threshold: this.FINAL_CONFIG.downsample.threshold
                 })
+                const id = `uniqueId_${i}`;
                 return {
                     ...datapoint,
                     slotAbsoluteIndex: i,
@@ -1666,7 +1683,9 @@ export default {
                         return this.isSafeValue(d) ? d : null
                     }).slice(this.slicer.start, this.slicer.end),
                     color: this.convertColorToHex(datapoint.color ? datapoint.color : this.customPalette[i] ? this.customPalette[i] : this.palette[i]),
-                    id: `uniqueId_${i}`
+                    id,
+                    scaleLabel: datapoint.scaleLabel || id
+
                 }
             });
         },
@@ -1728,11 +1747,30 @@ export default {
                 }
             })
         },
+        activeSeriesLength() {
+            return this.absoluteDataset.length
+        },
+        activeSeriesWithStackRatios() {
+            return this.assignStackRatios(this.absoluteDataset.filter(ds => !this.segregatedSeries.includes(ds.id)))
+        },
+        scaleGroups() {
+            const grouped = Object.groupBy(this.activeSeriesWithStackRatios, item => item.scaleLabel);
+            const result = {};
+            for (const [group, items] of Object.entries(grouped)) {
+                const allValues = items.flatMap(item => item.absoluteValues);
+                result[group] = {
+                    min: Math.min(...allValues) || 0,
+                    max: Math.max(...allValues) || 1,
+                    groupId: `scale_group_${this.createUid()}`
+                };
+            }
+            return result;
+        },
         barSet() {
             return this.activeSeriesWithStackRatios.filter(s => s.type === 'bar').map((datapoint, i) => {
                 this.checkAutoScaleError(datapoint);
-                const min = Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)));
-                const max = Math.max(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)));
+                const min = this.scaleGroups[datapoint.scaleLabel].min;
+                const max = this.scaleGroups[datapoint.scaleLabel].max;
                 const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
                     return (v - min) / (max - min)
                 });
@@ -1838,6 +1876,20 @@ export default {
                     }
                 });
 
+                this.scaleGroups[datapoint.scaleLabel].name = datapoint.name;
+                this.scaleGroups[datapoint.scaleLabel].groupName = datapoint.scaleLabel;
+                this.scaleGroups[datapoint.scaleLabel].groupColor = this.FINAL_CONFIG.chart.grid.labels.yAxis.groupColor || datapoint.color;
+                this.scaleGroups[datapoint.scaleLabel].color = datapoint.color;
+                this.scaleGroups[datapoint.scaleLabel].scaleYLabels = datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
+                this.scaleGroups[datapoint.scaleLabel].zeroPosition = datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
+                this.scaleGroups[datapoint.scaleLabel].individualMax = datapoint.autoScaling ? autoScaleMax : individualMax;
+                this.scaleGroups[datapoint.scaleLabel].scaleLabel = datapoint.scaleLabel;
+                this.scaleGroups[datapoint.scaleLabel].id = datapoint.id;
+                this.scaleGroups[datapoint.scaleLabel].yOffset = yOffset;
+                this.scaleGroups[datapoint.scaleLabel].individualHeight = individualHeight;
+                this.scaleGroups[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
+                this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
+
                 return {
                     ...datapoint,
                     yOffset,
@@ -1847,22 +1899,17 @@ export default {
                     individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
                     individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
                     zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
-                    plots: datapoint.autoScaling ? autoScalePlots: plots
+                    plots: datapoint.autoScaling ? autoScalePlots: plots,
+                    groupId: this.scaleGroups[datapoint.scaleLabel].groupId
                 }
             })
-        },
-        activeSeriesLength() {
-            return this.absoluteDataset.length
-        },
-        activeSeriesWithStackRatios() {
-            return this.assignStackRatios(this.absoluteDataset.filter(ds => !this.segregatedSeries.includes(ds.id)))
         },
         lineSet() {
             return this.activeSeriesWithStackRatios.filter(s => s.type === 'line').map((datapoint) => {
                 this.checkAutoScaleError(datapoint);
 
-                const min = Math.min(...datapoint.absoluteValues.filter(v => ![undefined, null].includes(v)));
-                const max = Math.max(...datapoint.absoluteValues.filter(v => ![undefined, null].includes(v))) || 1;
+                const min = this.scaleGroups[datapoint.scaleLabel].min;
+                const max = this.scaleGroups[datapoint.scaleLabel].max;
                 const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
                     return (v - min) / (max - min)
                 });
@@ -1964,6 +2011,20 @@ export default {
                     }
                 });
 
+                this.scaleGroups[datapoint.scaleLabel].name = datapoint.name;
+                this.scaleGroups[datapoint.scaleLabel].groupName = datapoint.scaleLabel;
+                this.scaleGroups[datapoint.scaleLabel].groupColor = this.FINAL_CONFIG.chart.grid.labels.yAxis.groupColor || datapoint.color;
+                this.scaleGroups[datapoint.scaleLabel].color = datapoint.color;
+                this.scaleGroups[datapoint.scaleLabel].scaleYLabels = datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
+                this.scaleGroups[datapoint.scaleLabel].zeroPosition = datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
+                this.scaleGroups[datapoint.scaleLabel].individualMax = datapoint.autoScaling ? autoScaleMax : individualMax;
+                this.scaleGroups[datapoint.scaleLabel].scaleLabel = datapoint.scaleLabel;
+                this.scaleGroups[datapoint.scaleLabel].id = datapoint.id;
+                this.scaleGroups[datapoint.scaleLabel].yOffset = yOffset;
+                this.scaleGroups[datapoint.scaleLabel].individualHeight = individualHeight;
+                this.scaleGroups[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
+                this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
+
                 return {
                     ...datapoint,
                     yOffset,
@@ -1976,15 +2037,16 @@ export default {
                     curve: datapoint.autoScaling ? autoScaleCurve : curve,
                     plots: datapoint.autoScaling ? autoScalePlots : plots,
                     area: !datapoint.useArea ? '' : this.mutableConfig.useIndividualScale ? this.createIndividualArea(datapoint.autoScaling ? autoScalePlots: plots, datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition) :  this.createArea(plots),
-                    straight: datapoint.autoScaling ? autoScaleStraight : straight
+                    straight: datapoint.autoScaling ? autoScaleStraight : straight,
+                    groupId: this.scaleGroups[datapoint.scaleLabel].groupId
                 }
             })
         },
         plotSet() {
             return this.activeSeriesWithStackRatios.filter(s => s.type === 'plot').map((datapoint) => {
                 this.checkAutoScaleError(datapoint);
-                const min = Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)));
-                const max = Math.max(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v))) || 1;
+                const min = this.scaleGroups[datapoint.scaleLabel].min;
+                const max = this.scaleGroups[datapoint.scaleLabel].max;
                 const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
                     return (v - min) / (max - min)
                 });
@@ -2069,6 +2131,20 @@ export default {
                     }
                 });
 
+                this.scaleGroups[datapoint.scaleLabel].name = datapoint.name;
+                this.scaleGroups[datapoint.scaleLabel].groupName = datapoint.scaleLabel;
+                this.scaleGroups[datapoint.scaleLabel].groupColor = this.FINAL_CONFIG.chart.grid.labels.yAxis.groupColor || datapoint.color;
+                this.scaleGroups[datapoint.scaleLabel].color = datapoint.color;
+                this.scaleGroups[datapoint.scaleLabel].scaleYLabels = datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
+                this.scaleGroups[datapoint.scaleLabel].zeroPosition = datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
+                this.scaleGroups[datapoint.scaleLabel].individualMax = datapoint.autoScaling ? autoScaleMax : individualMax;
+                this.scaleGroups[datapoint.scaleLabel].scaleLabel = datapoint.scaleLabel;
+                this.scaleGroups[datapoint.scaleLabel].id = datapoint.id;
+                this.scaleGroups[datapoint.scaleLabel].yOffset = yOffset;
+                this.scaleGroups[datapoint.scaleLabel].individualHeight = individualHeight;
+                this.scaleGroups[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
+                this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
+
                 return {
                     ...datapoint,
                     yOffset,
@@ -2078,7 +2154,8 @@ export default {
                     individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
                     individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
                     zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
-                    plots: datapoint.autoScaling ? autoScalePlots : plots
+                    plots: datapoint.autoScaling ? autoScalePlots : plots,
+                    groupId: this.scaleGroups[datapoint.scaleLabel].groupId
                 }
             })
         },
@@ -2426,6 +2503,7 @@ export default {
         treeShake,
         useMouse,
         useNestedProp,
+        createUid,
         setUserOptionsVisibility(state = false) {
             if (!this.showUserOptionsOnChartHover) return;
             this.userOptionsVisible = state
@@ -2507,6 +2585,12 @@ export default {
                     mergedConfig.chart.zoom.endIndex = this.config.chart.zoom.endIndex;
                 } else {
                     mergedConfig.chart.zoom.endIndex = null;
+                }
+
+                if (this.config && this.hasDeepProperty(this.config,  'chart.grid.labels.yAxis.groupColor')) {
+                    mergedConfig.chart.grid.labels.yAxis.groupColor = this.config.chart.grid.labels.yAxis.groupColor;
+                } else {
+                    mergedConfig.chart.grid.labels.yAxis.groupColor = null;
                 }
 
                 // ----------------------------------------------------------------------------

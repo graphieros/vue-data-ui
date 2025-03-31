@@ -53,60 +53,98 @@ function createDs(n,m=100) {
 //     },
 // ])
 
-
 const dataset = ref([
-        {
-            name: "Long name serie",
-            series: [-80, -60, -30, 0, null, 60, 80, 60, 30, 0, -30, -60, -80],
-            comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
-            type: "line",
-            smooth: true,
-            useArea: true,
-            dataLabels: true,
-            scaleSteps: 2,
-            suffix: '$'
-        },
-        {
-            name: "Long name serie",
-            series: [10, 20, 12, 13, 10, -20, null, 20, 12, 16, 32, 64, 12],
-            comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
-            type: "bar",
-            smooth: false,
-            useArea: true,
-            dataLabels: true,
-            scaleSteps: 2,
-            prefix: '£'
-        },
-        {
-            name: "S1",
-            series: [-20, 20, 8, 16, null, 13, -16, 55, 12, 3, 7, 12, 6],
-            comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
-            type: "bar",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2,
-            color: "#FF000050"
-        },
-        {
-            name: "S2",
-            series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
-            comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
-            type: "plot",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 2
-        },
-        {
-            name: "S3",
-            series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
-            type: "line",
-            smooth: false,
-            useArea: true,
-            scaleSteps: 5,
-            autoScaling: false,
-            stackRatio: 0.5
-        },
-    ])
+{
+  name: 'Donut Devourers - Happiness (%)',
+  type: 'line',
+  dataLabels: true,
+  scaleLabel: 'percentage', // Share scale with other percentage-based series
+  series: [92.34, 88.37, 95.00] // Example percentages across different days
+},
+{
+  name: 'Donut Devourers - Donuts Eaten',
+  type: 'bar',
+  dataLabels: true,
+  scaleLabel: 'total', // Share scale with other total-based series
+  series: [12, 15, 13] // Example counts per day
+},
+{
+  name: 'Pizza Party - Cheesy Delight (%)',
+  type: 'line',
+  dataLabels: true,
+  scaleLabel: 'percentage',
+  series: [75.12, 80.50, 78.34]
+},
+{
+  name: 'Pizza Party - Slices Consumed',
+  type: 'bar',
+  dataLabels: true,
+  scaleLabel: 'total',
+  series: [8, 9, 10]
+},
+{
+  name: 'Lone series ',
+  type: 'bar',
+  scaleLabel: 'alone',
+  dataLabels: true,
+  series: [8, 9, 100]
+}
+])
+
+
+// const dataset = ref([
+//         {
+//             name: "Long name serie",
+//             series: [-80, -60, -30, 0, null, 60, 80, 60, 30, 0, -30, -60, -80],
+//             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+//             type: "line",
+//             smooth: true,
+//             useArea: true,
+//             dataLabels: true,
+//             scaleSteps: 2,
+//             suffix: '$'
+//         },
+//         {
+//             name: "Long name serie",
+//             series: [10, 20, 12, 13, 10, -20, null, 20, 12, 16, 32, 64, 12],
+//             comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+//             type: "bar",
+//             smooth: false,
+//             useArea: true,
+//             dataLabels: true,
+//             scaleSteps: 2,
+//             prefix: '£'
+//         },
+//         {
+//             name: "S1",
+//             series: [-20, 20, 8, 16, null, 13, -16, 55, 12, 3, 7, 12, 6],
+//             comments: ["Some sort of negative comment", "Some sort of positive comment", "", "","", "", "", "Some sort of positive comment", "",  ""],
+//             type: "bar",
+//             smooth: false,
+//             useArea: true,
+//             scaleSteps: 2,
+//             color: "#FF000050"
+//         },
+//         {
+//             name: "S2",
+//             series: [10,12,10,12, 25, 12, 4, 4, 3, 7, 8, 9, 12],
+//             comments: ["", "", "", "","", "", "", "", "", "This is another comment"],
+//             type: "plot",
+//             smooth: false,
+//             useArea: true,
+//             scaleSteps: 2
+//         },
+//         {
+//             name: "S3",
+//             series: [23.12, 23.12, 23.05, 23.07, null, 23.69, 23.72, 23.25, 23.36, 23.41, 23.65],
+//             type: "line",
+//             smooth: false,
+//             useArea: true,
+//             scaleSteps: 5,
+//             autoScaling: false,
+//             stackRatio: 0.5
+//         },
+//     ])
 
     const alternateDataset = ref([
     {
@@ -291,13 +329,14 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number'},
 
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 10, min: 0, max: 100, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
+    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 40, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.showBaseline', def: true,  type: 'checkbox'},
     { key: 'chart.grid.labels.yAxis.scaleMin', def: -90, type: 'number', min: -1000, max: 1000 },
     { key: 'chart.grid.labels.yAxis.scaleMax', def: 90, type: 'number', min: -1000, max: 1000 },
+    { key: 'chart.grid.labels.yAxis.groupColor', def: '#1A1A1A', type: 'color'},
 
     { key: 'chart.grid.labels.xAxis.showBaseline', def: true,  type: 'checkbox'},
     { key: 'chart.grid.labels.zeroLine.show', def: true, type: 'checkbox'},
@@ -482,6 +521,14 @@ const config = computed(() => {
             },
             chart: {
                 ...c.chart,
+                // Attempt a scale groups
+                scaleGroups: {
+                    enabled: true,
+                    groups: [
+                        { name: 'percentage', scaleMin: 0, scaleMax: 100 },
+                        { name: 'total', scaleMin: null, scaleMax: null }
+                    ]
+                },
                 highlightArea: [{
                         show: true,
                         from: 2,

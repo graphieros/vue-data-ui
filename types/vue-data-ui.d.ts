@@ -2625,6 +2625,7 @@ declare module "vue-data-ui" {
                         formatter?: Formatter;
                         scaleMin?: number | null;
                         scaleMax?: number | null;
+                        groupColor?: string | null;
                     };
                     xAxis?: {
                         showBaseline?: boolean;
