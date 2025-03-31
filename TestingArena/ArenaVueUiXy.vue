@@ -85,7 +85,6 @@ const dataset = ref([
 {
   name: 'Lone series ',
   type: 'bar',
-  scaleLabel: 'alone',
   dataLabels: true,
   series: [8, 9, 100]
 }
