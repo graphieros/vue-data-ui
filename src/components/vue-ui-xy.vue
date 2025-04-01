@@ -1583,8 +1583,6 @@ export default {
 
             const source = (this.mutableConfig.useIndividualScale && !this.mutableConfig.isStacked) ? Object.values(this.scaleGroups) : [...lines, ...bars, ...plots];
 
-            console.log(source)
-
             const len = source.flatMap(el => el).length;
             return source.flatMap((el,i) => {
                 return {
