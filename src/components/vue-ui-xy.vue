@@ -444,10 +444,10 @@
                                 :stroke="el.color"
                                 :stroke-width="FINAL_CONFIG.chart.grid.stroke"
                                 stroke-linecap="round"
-                                :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
+                                :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
                             />
                         </g>
-                        <g v-for="el in allScales" :style="`opacity:${selectedScale ? selectedScale === el.id ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
+                        <g v-for="el in allScales" :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
                             <text
                                 :fill="el.color"
                                 :font-size="fontSizes.dataLabels"
