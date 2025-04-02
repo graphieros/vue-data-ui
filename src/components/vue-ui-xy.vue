@@ -452,7 +452,7 @@
                                 :fill="el.color"
                                 :font-size="fontSizes.dataLabels"
                                 text-anchor="middle"
-                                :transform="`translate(${el.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + 5 + xPadding}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                                :transform="`translate(${el.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + 5 + xPadding + FINAL_CONFIG.chart.grid.labels.yAxis.scaleLabelOffsetX}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                             >
                                 {{ el.name }} {{ el.scaleLabel && el.unique && el.scaleLabel !== el.id ? `- ${el.scaleLabel}` : '' }}
 

@@ -2626,6 +2626,7 @@ declare module "vue-data-ui" {
                         scaleMin?: number | null;
                         scaleMax?: number | null;
                         groupColor?: string | null;
+                        scaleLabelOffsetX?: number;
                     };
                     xAxis?: {
                         showBaseline?: boolean;

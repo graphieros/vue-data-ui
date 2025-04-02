@@ -331,11 +331,12 @@ const model = ref([
     { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.labelWidth', def: 40, min: 0, max: 100, type: 'number' },
+    { key: 'chart.grid.labels.yAxis.labelWidth', def: 20, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.showBaseline', def: true,  type: 'checkbox'},
     { key: 'chart.grid.labels.yAxis.scaleMin', def: -90, type: 'number', min: -1000, max: 1000 },
     { key: 'chart.grid.labels.yAxis.scaleMax', def: 90, type: 'number', min: -1000, max: 1000 },
     { key: 'chart.grid.labels.yAxis.groupColor', def: '#1A1A1A', type: 'color'},
+    { key: 'chart.grid.labels.yAxis.scaleLabelOffsetX', def: -16, type: 'number', min: -100, max: 100},
 
     { key: 'chart.grid.labels.xAxis.showBaseline', def: true,  type: 'checkbox'},
     { key: 'chart.grid.labels.zeroLine.show', def: true, type: 'checkbox'},
