@@ -2158,7 +2158,18 @@ export default {
             })
         },
         drawingArea() {
-            const individualScalesPadding = this.mutableConfig.useIndividualScale && this.FINAL_CONFIG.chart.grid.labels.show ? this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)).length * (this.mutableConfig.isStacked ? 0 : this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth) : 0;
+            function getUniqueScaleLabelsCount(dataset) {
+            const uniqueLabels = new Set();
+                dataset.forEach(item => {
+                    const label = item.scaleLabel || '__noScaleLabel__';
+                    uniqueLabels.add(label);
+                });
+                return uniqueLabels.size;
+                }
+
+            const len = getUniqueScaleLabelsCount(this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)));
+
+            const individualScalesPadding = this.mutableConfig.useIndividualScale && this.FINAL_CONFIG.chart.grid.labels.show ? len * (this.mutableConfig.isStacked ? 0 : this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth) : 0;
             return {
                 top: this.FINAL_CONFIG.chart.padding.top,
                 right: this.width - this.FINAL_CONFIG.chart.padding.right,
