@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import { resolve } from "path";
 import vue from "@vitejs/plugin-vue";
 import removeAttr from 'remove-attr';
+import fs from "fs";
 
 const prod = process.env.NODE_ENV === 'production';
 
@@ -10,9 +11,18 @@ export default defineConfig({
   plugins: [
     vue(),
     removeAttr({
-      extensions: [ 'vue' ],
-      attributes: prod ?  [ 'data-cy' ] : [],
-  })
+        extensions: [ 'vue' ],
+        attributes: prod ?  [ 'data-cy' ] : [],
+    }),
+    {
+      name: "copy-llms-file",
+      closeBundle() {
+        const src = resolve(__dirname, "llms.txt");
+        const dest = resolve(__dirname, "dist", "llms.txt");
+        fs.copyFileSync(src, dest);
+        console.log("llms.txt copied to dist folder.");
+      },
+    },
   ],
   build: {
     lib: {
