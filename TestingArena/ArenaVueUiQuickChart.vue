@@ -5,9 +5,25 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+function makeDs(m, n = 100) {
+    const arr = [];
+    for (let i = 0; i < m; i += 1) {
+        arr.push(Math.random() * n)
+    }
+    return arr
+}
+
+function makeTime(m, n) {
+    const arr = [];
+    for (let i = 0; i < m; i += 1) {
+        arr.push(`period ${i}`)
+    }
+    return arr
+}
+
 const datasets = ref({
     shortArray: [1, 2, -3, 5, 8],
-    longArray: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89],
+    longArray: makeDs(100),
     longArrayNegative: [-1, -2, -3, -5, -8, -13, -21, -34, -55, -89],
     shortObject: [
         {
@@ -104,7 +120,7 @@ function alterDataset() {
 }
 
 
-const selectedSerie = ref('shortArray');
+const selectedSerie = ref('longArray');
 
 const model = ref([
     { key: 'backgroundColor', def: '#FFFFFF20', type: 'color'},
@@ -176,7 +192,10 @@ const model = ref([
     { key: 'xyPaddingLeft', def: 48, type: 'number', min: 0, max: 100},
     { key: 'xyPaddingRight', def: 12, type: 'number', min: 0, max: 100},
     { key: 'xyPaddingTop', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'xyPeriodLabelsRotation', def: 0, type: 'number', min: -360, max: 360},
+    { key: 'xyPeriodLabelsRotation', def: -33, type: 'number', min: -360, max: 360},
+    { key: 'xyPeriodsShowOnlyAtModulo', def: true, type: 'checkbox' },
+    { key: 'xyPeriodsModulo', def: 12, type: 'number', min: 0, max: 12 },
+
     { key: 'xyScaleSegments', def: 15, type: 'number', min: 2, max: 20},
     { key: 'xyShowAxis', def: true, type: 'checkbox'},
     { key: 'xyShowGrid', def: true, type: 'checkbox'},
@@ -198,8 +217,8 @@ const model = ref([
     { key: 'zoomMinimap.indicatorColor', def: '#1A1A1A', type: 'color'},
     { key: 'zoomMinimap.verticalHandles', def: true, type: 'checkbox'},
 
-    { key: 'zoomStartIndex', def: 1, type: 'number', min: 0, max: 100},
-    { key: 'zoomEndIndex', def: 3, type: 'number', min: 0, max: 100},
+    { key: 'zoomStartIndex', def: null, type: 'number', min: 0, max: 100},
+    { key: 'zoomEndIndex', def: null, type: 'number', min: 0, max: 100},
     { key: 'zoomEnableRangeHandles', def: true, type: 'chexkbox'},
     { key: 'zoomEnableSelectionDrag', def: true, type: 'chexkbox'},
 ]);
@@ -226,7 +245,7 @@ const config = computed(() => {
         },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
-        xyPeriods: ['01-2025', '02-2025', '03-2025', '04-2025', '05-2025', '06-2025', '07-2025', '08-2025', '09-2025', '10-2025', '11-2025', '12-2025']
+        xyPeriods: makeTime(100)
     }
 })
 
