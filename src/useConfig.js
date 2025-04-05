@@ -2492,6 +2492,8 @@ export function useConfig() {
         xyPaddingTop: 24,
         xyPeriodLabelsRotation: 0,
         xyPeriods: [],
+        xyPeriodsShowOnlyAtModulo: false,
+        xyPeriodsModulo: 12,
         xyScaleSegments: 15,
         xyShowAxis: true,
         xyShowGrid: true,
