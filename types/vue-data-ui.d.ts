@@ -5043,6 +5043,8 @@ declare module "vue-data-ui" {
         xyPaddingTop?: number;
         xyPeriods?: Array<number | string>;
         xyPeriodLabelsRotation?: number;
+        xyPeriodsShowOnlyAtModulo?: boolean;
+        xyPeriodsModulo?: number;
         xyScaleSegments?: number;
         xyShowAxis?: boolean;
         xyShowGrid?: boolean;
