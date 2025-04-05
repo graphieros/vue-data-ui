@@ -1316,27 +1316,29 @@ defineExpose({
                     </template>
                 </g>
                 <g class="periodLabels" v-if="FINAL_CONFIG.xyShowScale && FINAL_CONFIG.xyPeriods.length">
-                    <line
-                        data-cy="period-tick"
-                        v-for="(_, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
-                        :x1="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
-                        :x2="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
-                        :y1="line.drawingArea.bottom"
-                        :y2="line.drawingArea.bottom + 4"
-                        :stroke="FINAL_CONFIG.xyAxisStroke"
-                        :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
-                        stroke-linecap="round"
-                    />
-                    <text
-                        data-cy="period-label"
-                        v-for="(period, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
-                        :font-size="FINAL_CONFIG.xyLabelsXFontSize"
-                        :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
-                        :fill="FINAL_CONFIG.color"
-                        :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
-                    >
-                        {{ period }}
-                    </text>
+                    <template v-for="(period, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)">
+                        <line
+                            v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))"
+                            data-cy="period-tick"
+                            :x1="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
+                            :x2="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
+                            :y1="line.drawingArea.bottom"
+                            :y2="line.drawingArea.bottom + 4"
+                            :stroke="FINAL_CONFIG.xyAxisStroke"
+                            :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
+                            stroke-linecap="round"
+                        />
+                        <text
+                            v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))"
+                            data-cy="period-label"
+                            :font-size="FINAL_CONFIG.xyLabelsXFontSize"
+                            :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
+                            :fill="FINAL_CONFIG.color"
+                            :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
+                        >
+                            {{ period }}
+                        </text>
+                    </template>
                 </g>
                 <g class="plots">
                     <template v-for="(ds, i) in line.dataset">
