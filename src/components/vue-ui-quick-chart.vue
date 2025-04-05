@@ -741,6 +741,7 @@ const line = computed(() => {
 
     function killTooltip() {
         selectedDatapoint.value = null;
+        commonSelectedIndex.value = null;
         isTooltip.value = false;
     }
 
