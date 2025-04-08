@@ -616,6 +616,13 @@ function useTooltip(seriesIndex) {
         }
     });
 
+    dataTooltipSlot.value = {
+        datapoint,
+        seriesIndex,
+        config: FINAL_CONFIG.value,
+        series: formattedDataset.value
+    }
+
     const sum = datapoint.map(d => Math.abs(d.value)).reduce((a, b) => a + b, 0);
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
