@@ -2787,6 +2787,14 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 zoom: ZOOM,
+                donuts: {
+                    hover: {
+                        hideLabelsUnderValue: 5,
+                    },
+                    zoom: {
+                        hideLabelsUnderValue: 3,
+                    }
+                },
                 layout: {
                     height: 316,
                     width: 512,

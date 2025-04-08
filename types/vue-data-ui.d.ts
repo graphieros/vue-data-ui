@@ -1160,6 +1160,14 @@ declare module "vue-data-ui" {
                 backgroundColor?: string;
                 color?: string;
                 zoom?: ChartZoom;
+                donuts?: {
+                    hover?: {
+                        hideLabelsUnderValue?: number;
+                    };
+                    zoom?: {
+                        hideLabelsUnderValue?: number;
+                    }
+                };
                 layout?: {
                     height?: number;
                     width?: number;

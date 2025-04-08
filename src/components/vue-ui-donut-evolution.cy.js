@@ -56,7 +56,7 @@ describe('<VueUiDonutEvolution />', () => {
     
       cy.log('shows donut hovered state');
       cy.get('[data-cy-trap]').eq(0).trigger('mouseenter');
-      cy.get('[data-cy="donut_hover_0"]').should('have.length', 4);
+      cy.get('[data-cy="donut_hover_0"]').should('have.length', 3);
       cy.get('[data-cy-trap]').eq(0).trigger('mouseleave');
       cy.get('[data-cy="donut_hover_0"]').should('not.exist');
     });

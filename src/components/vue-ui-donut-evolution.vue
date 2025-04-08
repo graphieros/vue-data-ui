@@ -578,6 +578,13 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+function isArcBigEnoughHover(arc) {
+    return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.donuts.hover.hideLabelsUnderValue;
+}
+function isArcBigEnoughZoom(arc) {
+    return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.donuts.zoom.hideLabelsUnderValue;
+}
+
 defineExpose({
     getData,
     generatePdf,
@@ -841,8 +848,9 @@ defineExpose({
                     <g v-if="hoveredIndex !== null && hoveredIndex === i">
                         <g v-for="arc in datapoint.donutHover">
                             <path
+                                v-if="isArcBigEnoughHover(arc)"
                                 :data-cy="`donut_hover_${i}`"
-                                :d="calcNutArrowPath(arc, {x: arc.center.endX, y: arc.center.endY}, 12, 12, { x: datapoint.x, y: datapoint.y}, true, 20)"
+                                :d="calcNutArrowPath(arc, {x: arc.center.endX, y: arc.center.endY}, 12, 12, { x: datapoint.x, y: datapoint.y}, false, 20)"
                                 :stroke="arc.color"
                                 stroke-width="1"
                                 stroke-linecap="round"
@@ -853,11 +861,12 @@ defineExpose({
                         <!-- DATALABELS (hovered datapoint) -->
                         <g v-for="(arc, i) in datapoint.donutHover">
                             <text
+                                v-if="isArcBigEnoughHover(arc)"
                                 :data-cy="`donut-datalabel-value-${i}`"
                                 data-cy-hover-label
                                 :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
-                                :x="calcMarkerOffsetX(arc, true, 3).x"
-                                :y="calcMarkerOffsetY(arc)"
+                                :x="calcMarkerOffsetX(arc, true, 9).x"
+                                :y="calcMarkerOffsetY(arc, 14, 10)"
                                 :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
                                 :font-size="8"
                                 :font-weight="'bold'"
@@ -993,6 +1002,7 @@ defineExpose({
 
                 <g v-for="arc in fixedDatapoint.donutFocus">
                     <path
+                        v-if="isArcBigEnoughZoom(arc)"
                         data-cy-zoom-donut
                         :d="calcNutArrowPath(arc, {x: svg.centerX, y: svg.centerY}, 12, 12, false, false, 15)"
                         :stroke="arc.color"
@@ -1019,6 +1029,7 @@ defineExpose({
                 />
                 <g v-for="(arc, i) in fixedDatapoint.donutFocus" class="vue-ui-donut-evolution-focus">
                     <text
+                        v-if="isArcBigEnoughZoom(arc)"
                         :data-cy="`donut-datalabel-value-${i}`"
                         :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
                         :x="calcMarkerOffsetX(arc, true, 10).x"
