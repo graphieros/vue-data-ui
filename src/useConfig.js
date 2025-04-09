@@ -638,6 +638,7 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 layout: {
+                    curvedMarkers: false,
                     labels: {
                         dataLabels: {
                             show: true,

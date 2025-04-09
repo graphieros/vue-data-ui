@@ -223,33 +223,33 @@ export function getPalette(palette = 'default') {
 export const themePalettes = {
     default: palette,
     celebration: [
-        "#D32F2F", 
-        "#E64A19", 
-        "#F57C00", 
-        "#FF9800", 
-        "#FF5722", 
-        "#FFC107", 
-        "#FFEB3B", 
-        "#FFD54F", 
-        "#FF6F00", 
-        "#D84315", 
+        "#D32F2F",
+        "#E64A19",
+        "#F57C00",
+        "#FF9800",
+        "#FF5722",
+        "#FFC107",
+        "#FFEB3B",
+        "#FFD54F",
+        "#FF6F00",
+        "#D84315",
         "#BF360C",
-        "#C62828", 
+        "#C62828",
         "#B71C1C",
-        "#FF7043", 
-        "#FF8A65", 
-        "#FFB74D", 
-        "#FFA726", 
-        "#FFCC80", 
-        "#FFE082", 
+        "#FF7043",
+        "#FF8A65",
+        "#FFB74D",
+        "#FFA726",
+        "#FFCC80",
+        "#FFE082",
         "#FFECB3"
     ],
     celebrationNight: [
-        "#D32F2F", 
-        "#E64A19", 
-        "#F57C00", 
-        "#FF9800", 
-        "#FF5722", 
+        "#D32F2F",
+        "#E64A19",
+        "#F57C00",
+        "#FF9800",
+        "#FF5722",
         "#FFC947",
         "#FFEB3B",
         "#FFD95B",
@@ -977,7 +977,7 @@ export function getScaleFactorUsingArcSize(centerX, centerY, x, y, arcSize) {
     return scaleFactor;
 }
 
-export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false, arcSize = 0, flatLen = 12) {
+export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBottom = 16, toCenter = false, hideStart = false, arcSize = 0, flatLen = 12, curved = false) {
     const { x } = findArcMidpoint(arc.path)
 
     const start = `${calcMarkerOffsetX(arc).x},${calcMarkerOffsetY(arc, yOffsetTop, yOffsetBottom) - 4} `;
@@ -997,8 +997,15 @@ export function calcNutArrowPath(arc, center = false, yOffsetTop = 16, yOffsetBo
         mid = `${midX},${midY}`;
     }
 
-    const endpoint = getCloserPoint(center.x, center.y, midX, midY, arcSize)
-    const end = ` ${endpoint.x},${endpoint.y}`;
+    const end = ` ${arc.center.endX},${arc.center.endY}`;
+
+    if (curved) {
+        if (hideStart) {
+            return `M${mid} Q${mid} ${end}`;
+        } else {
+            return `M${start} Q${mid} ${end}`;
+        }
+    }
 
     return `M${hideStart ? '' : start}${mid}${end}`;
 }
@@ -2119,7 +2126,7 @@ export function largestTriangleThreeBucketsArray({ data, threshold }) {
  * @param {number} threshold 
  * @returns {Array<{ name: string, value: number }>}
  */
-export function largestTriangleThreeBucketsArrayObjects({ data, threshold, key='value' }) {
+export function largestTriangleThreeBucketsArrayObjects({ data, threshold, key = 'value' }) {
     if (threshold >= data.length || threshold < 3) {
         return data;
     }

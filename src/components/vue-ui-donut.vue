@@ -212,9 +212,9 @@ const svg = ref({
 
 const donutThickness = computed(() => {
     const baseRatio = FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth / 512;
-    const resultSize = svg.value.width * baseRatio
+    const resultSize = Math.min(svg.value.width, svg.value.height) * baseRatio;
     const adjusted = resultSize > minSize.value ?  minSize.value : resultSize;
-    return adjusted < 24 ? 24 : adjusted;
+    return Math.max(adjusted, 3);
 });
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
@@ -826,7 +826,7 @@ defineExpose({
                     <path
                         data-cy="donut-arc"
                         v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                        :d="calcNutArrowPath(arc, {x: svg.width / 2, y: svg.height / 2}, 16, 16, false, false, donutThickness)"
+                        :d="calcNutArrowPath(arc, {x: svg.width / 2, y: svg.height / 2}, 16, 16, false, false, donutThickness, 12, FINAL_CONFIG.style.chart.layout.curvedMarkers)"
                         :stroke="arc.color"
                         stroke-width="1"
                         stroke-linecap="round"

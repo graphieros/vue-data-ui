@@ -2877,6 +2877,7 @@ declare module "vue-data-ui" {
                 backgroundColor?: string;
                 color?: string;
                 layout?: {
+                    curvedMarkers?: boolean;
                     labels?: {
                         dataLabels?: {
                             show?: boolean;
