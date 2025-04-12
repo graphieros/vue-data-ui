@@ -562,6 +562,11 @@ export function useConfig() {
             area: {
                 useGradient: true,
                 opacity: 30
+            },
+            tag: {
+                followValue: true,
+                formatter: null,
+                fontSize: FONT._14
             }
         },
         plot: {
@@ -578,6 +583,11 @@ export function useConfig() {
                 rounding: 0,
                 color: COLOR_BLACK,
                 formatter: null
+            },
+            tag: {
+                followValue: true,
+                formatter: null,
+                fontSize: FONT._14
             }
         },
         table: {
