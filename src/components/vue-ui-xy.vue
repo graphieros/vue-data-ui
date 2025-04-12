@@ -1223,7 +1223,7 @@
                         opacity: 1
                     }"
                 >
-                    <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                    <svg class="vue-ui-xy-tag-arrow" height="20" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
                         <path d="M 0,10 10,0 10,20 Z" :fill="serie.color" stroke="none" />
                     </svg>
                     <div class="vue-ui-xy-tag-content" v-html="
@@ -1317,7 +1317,7 @@
                         opacity: 1
                     }"
                 >
-                    <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                    <svg class="vue-ui-xy-tag-arrow" height="20" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
                         <path d="M 0,10 10,0 10,20 Z" :fill="serie.color" stroke="none" />
                     </svg>
                     <div class="vue-ui-xy-tag-content" v-html="
