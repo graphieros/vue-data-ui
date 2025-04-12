@@ -2211,6 +2211,24 @@ export function placeHTMLElementAtSVGCoordinates({ svgElement, x, y, offsetY = 0
     };
 }
 
+export function placeXYTag({ svgElement, x, y, element, position}) {
+    if (!svgElement || ! element) return { top: 0, left: 0 };
+
+    const point = svgElement.createSVGPoint();
+    point.x = x;
+    point.y = y;
+    const t_point = point.matrixTransform(svgElement.getScreenCTM());
+    const { height, width } = element.getBoundingClientRect()
+
+    let _offsetX = position === 'right' ? 0 : -width;
+    let _offsetY = -(height / 2);
+
+    return {
+        top: t_point.y + _offsetY,
+        left: t_point.x + _offsetX
+    };
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -2277,6 +2295,7 @@ const lib = {
     opacity,
     palette,
     placeHTMLElementAtSVGCoordinates,
+    placeXYTag,
     rotateMatrix,
     sanitizeArray,
     setOpacity,
