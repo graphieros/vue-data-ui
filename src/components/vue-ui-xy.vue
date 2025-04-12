@@ -800,7 +800,12 @@
                                     ) : '' 
                                 }}
                             </text>
-
+                        </template>
+                    </template>
+                </g>
+                <g v-else>
+                    <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`">
+                        <template v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                             <!-- PLOT TAGS (fixed) -->
                             <template v-if="!FINAL_CONFIG.plot.tag.followValue">
                                 <foreignObject
@@ -892,7 +897,13 @@
                                     ) : '' 
                                 }}
                             </text>
+                        </template>
+                    </template>
+                </g>
 
+                <g v-else>
+                    <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`">
+                        <template v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                             <!-- LINE TAGS (fixed) -->
                             <template v-if="!FINAL_CONFIG.line.tag.followValue">
                                 <foreignObject
@@ -1179,193 +1190,191 @@
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <template v-if="FINAL_CONFIG.line.labels.show && mutableConfig.dataLabels.show">
-            <!-- LINE: TAGS FOLLOWING VALUE -->
-            <template v-for="(serie, i) in lineSet" :key="`tag_line_${i}`">
-                <template v-for="(plot, j) in serie.plots" :key="`tag_line_${i}_${j}`">
-                    <div
-                        :ref="el => setTagRef(i, j, el, 'right', 'line')"
-                        class="vue-ui-xy-tag"
-                        data-tag="right"
-                        v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'end' && FINAL_CONFIG.line.tag.followValue"
-                        :style="{
-                            position: 'fixed',
-                            top: placeXYTag({
-                                svgElement: svgRef,
-                                x: drawingArea.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_right_line`],
-                                position: 'right'
-                            }).top + 'px',
-                            left: placeXYTag({
-                                svgElement: svgRef,
-                                x: drawingArea.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_right_line`],
-                                position: 'right'
-                            }).left + 'px',
-                            height: 'fit-content',
-                            width: 'fit-content',
-                            background: serie.color,
-                            color: adaptColorToBackground(serie.color),
-                            padding: '0 6px',
-                            fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
-                            opacity: 1
-                        }"
-                    >
-                        <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
-                            <path d="M 0,10 10,0 10,20 Z" :fill="serie.color" stroke="none" />
-                        </svg>
-                        <div class="vue-ui-xy-tag-content" v-html="
-                                applyDataLabel(
-                                    FINAL_CONFIG.line.tag.formatter,
-                                    plot.value,
-                                    serie.name,
-                                    {
-                                        datapoint: plot, seriesIndex: j, serieName: serie.name
-                                    }
-                                )">
-                        </div>
+        <!-- LINE: TAGS FOLLOWING VALUE -->
+        <template v-for="(serie, i) in lineSet" :key="`tag_line_${i}`">
+            <template v-for="(plot, j) in serie.plots" :key="`tag_line_${i}_${j}`">
+                <div
+                    :ref="el => setTagRef(i, j, el, 'right', 'line')"
+                    class="vue-ui-xy-tag"
+                    data-tag="right"
+                    v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'end' && FINAL_CONFIG.line.tag.followValue"
+                    :style="{
+                        position: 'fixed',
+                        top: placeXYTag({
+                            svgElement: svgRef,
+                            x: drawingArea.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
+                            y: plot.y,
+                            element: tagRefs[`${i}_${j}_right_line`],
+                            position: 'right'
+                        }).top + 'px',
+                        left: placeXYTag({
+                            svgElement: svgRef,
+                            x: drawingArea.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
+                            y: plot.y,
+                            element: tagRefs[`${i}_${j}_right_line`],
+                            position: 'right'
+                        }).left + 'px',
+                        height: 'fit-content',
+                        width: 'fit-content',
+                        background: serie.color,
+                        color: adaptColorToBackground(serie.color),
+                        padding: '0 6px',
+                        fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
+                        opacity: 1
+                    }"
+                >
+                    <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                        <path d="M 0,10 10,0 10,20 Z" :fill="serie.color" stroke="none" />
+                    </svg>
+                    <div class="vue-ui-xy-tag-content" v-html="
+                            applyDataLabel(
+                                FINAL_CONFIG.line.tag.formatter,
+                                plot.value,
+                                serie.name,
+                                {
+                                    datapoint: plot, seriesIndex: j, serieName: serie.name
+                                }
+                            )">
                     </div>
-                    <div
-                        :ref="el => setTagRef(i, j, el, 'left', 'line')"
-                        class="vue-ui-xy-tag"
-                        data-tag="left"
-                        v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'start' && FINAL_CONFIG.line.tag.followValue"
-                        :style="{
-                            position: 'fixed',
-                            top: placeXYTag({
-                                svgElement: svgRef,
-                                x: drawingArea.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_left_line`],
-                                position: 'left'
-                            }).top + 'px',
-                            left: placeXYTag({
-                                svgElement: svgRef,
-                                x: drawingArea.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_left_line`],
-                                position: 'left'
-                            }).left + 'px',
-                            height: 'fit-content',
-                            width: 'fit-content',
-                            background: serie.color,
-                            color: adaptColorToBackground(serie.color),
-                            padding: '0 6px',
-                            fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
-                            opacity: 1
-                        }"
-                    >
-                        <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)'}">
-                            <path d="M 0,0 10,10 0,20 Z" :fill="serie.color" stroke="none" />
-                        </svg>
-                        <div class="vue-ui-xy-tag-content" v-html="
-                                applyDataLabel(
-                                    FINAL_CONFIG.line.tag.formatter,
-                                    plot.value,
-                                    serie.name,
-                                    {
-                                        datapoint: plot, seriesIndex: j, serieName: serie.name
-                                    }
-                                )">
-                        </div>
+                </div>
+                <div
+                    :ref="el => setTagRef(i, j, el, 'left', 'line')"
+                    class="vue-ui-xy-tag"
+                    data-tag="left"
+                    v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'start' && FINAL_CONFIG.line.tag.followValue"
+                    :style="{
+                        position: 'fixed',
+                        top: placeXYTag({
+                            svgElement: svgRef,
+                            x: drawingArea.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
+                            y: plot.y,
+                            element: tagRefs[`${i}_${j}_left_line`],
+                            position: 'left'
+                        }).top + 'px',
+                        left: placeXYTag({
+                            svgElement: svgRef,
+                            x: drawingArea.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
+                            y: plot.y,
+                            element: tagRefs[`${i}_${j}_left_line`],
+                            position: 'left'
+                        }).left + 'px',
+                        height: 'fit-content',
+                        width: 'fit-content',
+                        background: serie.color,
+                        color: adaptColorToBackground(serie.color),
+                        padding: '0 6px',
+                        fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
+                        opacity: 1
+                    }"
+                >
+                    <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                        <path d="M 0,0 10,10 0,20 Z" :fill="serie.color" stroke="none" />
+                    </svg>
+                    <div class="vue-ui-xy-tag-content" v-html="
+                            applyDataLabel(
+                                FINAL_CONFIG.line.tag.formatter,
+                                plot.value,
+                                serie.name,
+                                {
+                                    datapoint: plot, seriesIndex: j, serieName: serie.name
+                                }
+                            )">
                     </div>
-                </template>
+                </div>
             </template>
+        </template>
 
-            <!-- PLOT: TAGS FOLLOWING VALUE -->
-            <template v-for="(serie, i) in plotSet" :key="`tag_plot_${i}`">
-                <template v-for="(plot, j) in serie.plots" :key="`tag_plot_${i}_${j}`">
-                    <div
-                        :ref="el => setTagRef(i, j, el, 'right', 'plot')"
-                        class="vue-ui-xy-tag"
-                        data-tag="right"
-                        v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'end' && FINAL_CONFIG.plot.tag.followValue"
-                        :style="{
-                            position: 'fixed',
-                            top: placeXYTag({
-                                svgElement: svgRef,
-                                x: drawingArea.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_right_plot`],
-                                position: 'right'
-                            }).top + 'px',
-                            left: placeXYTag({
-                                svgElement: svgRef,
-                                x: drawingArea.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_right_plot`],
-                                position: 'right'
-                            }).left + 'px',
-                            height: 'fit-content',
-                            width: 'fit-content',
-                            background: serie.color,
-                            color: adaptColorToBackground(serie.color),
-                            padding: '0 6px',
-                            fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
-                            opacity: 1
-                        }"
-                    >
-                        <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
-                            <path d="M 0,10 10,0 10,20 Z" :fill="serie.color" stroke="none" />
-                        </svg>
-                        <div class="vue-ui-xy-tag-content" v-html="
-                                applyDataLabel(
-                                    FINAL_CONFIG.plot.tag.formatter,
-                                    plot.value,
-                                    serie.name,
-                                    {
-                                        datapoint: plot, seriesIndex: j, serieName: serie.name
-                                    }
-                                )">
-                        </div>
+        <!-- PLOT: TAGS FOLLOWING VALUE -->
+        <template v-for="(serie, i) in plotSet" :key="`tag_plot_${i}`">
+            <template v-for="(plot, j) in serie.plots" :key="`tag_plot_${i}_${j}`">
+                <div
+                    :ref="el => setTagRef(i, j, el, 'right', 'plot')"
+                    class="vue-ui-xy-tag"
+                    data-tag="right"
+                    v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'end' && FINAL_CONFIG.plot.tag.followValue"
+                    :style="{
+                        position: 'fixed',
+                        top: placeXYTag({
+                            svgElement: svgRef,
+                            x: drawingArea.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                            y: plot.y,
+                            element: tagRefs[`${i}_${j}_right_plot`],
+                            position: 'right'
+                        }).top + 'px',
+                        left: placeXYTag({
+                            svgElement: svgRef,
+                            x: drawingArea.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                            y: plot.y,
+                            element: tagRefs[`${i}_${j}_right_plot`],
+                            position: 'right'
+                        }).left + 'px',
+                        height: 'fit-content',
+                        width: 'fit-content',
+                        background: serie.color,
+                        color: adaptColorToBackground(serie.color),
+                        padding: '0 6px',
+                        fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
+                        opacity: 1
+                    }"
+                >
+                    <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                        <path d="M 0,10 10,0 10,20 Z" :fill="serie.color" stroke="none" />
+                    </svg>
+                    <div class="vue-ui-xy-tag-content" v-html="
+                            applyDataLabel(
+                                FINAL_CONFIG.plot.tag.formatter,
+                                plot.value,
+                                serie.name,
+                                {
+                                    datapoint: plot, seriesIndex: j, serieName: serie.name
+                                }
+                            )">
                     </div>
-                    <div
-                        :ref="el => setTagRef(i, j, el, 'left', 'plot')"
-                        class="vue-ui-xy-tag"
-                        data-tag="left"
-                        v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'start' && FINAL_CONFIG.plot.tag.followValue"
-                        :style="{
-                            position: 'fixed',
-                            top: placeXYTag({
-                                svgElement: svgRef,
-                                x: drawingArea.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_left_plot`],
-                                position: 'left'
-                            }).top + 'px',
-                            left: placeXYTag({
-                                svgElement: svgRef,
-                                x: drawingArea.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
-                                y: plot.y,
-                                element: tagRefs[`${i}_${j}_left_plot`],
-                                position: 'left'
-                            }).left + 'px',
-                            height: 'fit-content',
-                            width: 'fit-content',
-                            background: serie.color,
-                            color: adaptColorToBackground(serie.color),
-                            padding: '0 6px',
-                            fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
-                            opacity: 1
-                        }"
-                    >
-                        <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)'}">
-                            <path d="M 0,0 10,10 0,20 Z" :fill="serie.color" stroke="none" />
-                        </svg>
-                        <div class="vue-ui-xy-tag-content" v-html="
-                                applyDataLabel(
-                                    FINAL_CONFIG.plot.tag.formatter,
-                                    plot.value,
-                                    serie.name,
-                                    {
-                                        datapoint: plot, seriesIndex: j, serieName: serie.name
-                                    }
-                                )">
-                        </div>
+                </div>
+                <div
+                    :ref="el => setTagRef(i, j, el, 'left', 'plot')"
+                    class="vue-ui-xy-tag"
+                    data-tag="left"
+                    v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'start' && FINAL_CONFIG.plot.tag.followValue"
+                    :style="{
+                        position: 'fixed',
+                        top: placeXYTag({
+                            svgElement: svgRef,
+                            x: drawingArea.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                            y: plot.y,
+                            element: tagRefs[`${i}_${j}_left_plot`],
+                            position: 'left'
+                        }).top + 'px',
+                        left: placeXYTag({
+                            svgElement: svgRef,
+                            x: drawingArea.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                            y: plot.y,
+                            element: tagRefs[`${i}_${j}_left_plot`],
+                            position: 'left'
+                        }).left + 'px',
+                        height: 'fit-content',
+                        width: 'fit-content',
+                        background: serie.color,
+                        color: adaptColorToBackground(serie.color),
+                        padding: '0 6px',
+                        fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
+                        opacity: 1
+                    }"
+                >
+                    <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                        <path d="M 0,0 10,10 0,20 Z" :fill="serie.color" stroke="none" />
+                    </svg>
+                    <div class="vue-ui-xy-tag-content" v-html="
+                            applyDataLabel(
+                                FINAL_CONFIG.plot.tag.formatter,
+                                plot.value,
+                                serie.name,
+                                {
+                                    datapoint: plot, seriesIndex: j, serieName: serie.name
+                                }
+                            )">
                     </div>
-                </template>
+                </div>
             </template>
         </template>
 
