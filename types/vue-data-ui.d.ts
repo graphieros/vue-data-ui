@@ -2748,6 +2748,11 @@ declare module "vue-data-ui" {
                 useGradient?: boolean;
                 opacity?: number;
             };
+            tag?: {
+                followValue?: boolean;
+                formatter?: Formatter;
+                fontSize?: number;
+            };
         };
         plot?: {
             radius?: number;
@@ -2763,6 +2768,11 @@ declare module "vue-data-ui" {
                 rounding?: number;
                 color?: string;
                 formatter?: Formatter;
+            };
+            tag?: {
+                followValue?: boolean;
+                formatter?: Formatter;
+                fontSize?: number;
             };
         };
         table?: {
