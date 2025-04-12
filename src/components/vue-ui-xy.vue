@@ -800,32 +800,64 @@
                                     ) : '' 
                                 }}
                             </text>
-                            <foreignObject
-                                :data-cy="`xy-plot-tag-start-${i}`"
-                                v-if="plot && j === 0 && serie.useTag && serie.useTag === 'start'"
-                                :x="plot.x"
-                                :y="plot.y - 20"
-                                :height="24"
-                                width="150"
-                                :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
-                            >
-                                <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
-                                    {{ serie.name }}
-                                </div>
-                            </foreignObject>
-                            <foreignObject
-                                :data-cy="`xy-plot-tag-end-${i}`"
-                                v-if="plot && j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
-                                :x="plot.x - serie.name.length * (fontSizes.plotLabels / 2)"
-                                :y="plot.y - 20"
-                                :height="24"
-                                width="150"
-                                :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
-                            >
-                                <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
-                                    {{ serie.name }}
-                                </div>
-                            </foreignObject>
+
+                            <!-- PLOT TAGS (fixed) -->
+                            <template v-if="!FINAL_CONFIG.plot.tag.followValue">
+                                <foreignObject
+                                    :data-cy="`xy-plot-tag-start-${i}`"
+                                    v-if="plot && j === 0 && serie.useTag && serie.useTag === 'start'"
+                                    :x="plot.x"
+                                    :y="plot.y - 20"
+                                    :height="24"
+                                    width="150"
+                                    :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
+                                >
+                                    <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`" 
+                                    v-html="applyDataLabel(
+                                        FINAL_CONFIG.plot.tag.formatter,
+                                        plot.value,
+                                        serie.name,
+                                        {
+                                            datapoint: plot, seriesIndex: j, serieName: serie.name
+                                        }
+                                    )"/>
+                                </foreignObject>
+                                <foreignObject
+                                    :data-cy="`xy-plot-tag-end-${i}`"
+                                    v-if="plot && j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
+                                    :x="plot.x - serie.name.length * (fontSizes.plotLabels / 2)"
+                                    :y="plot.y - 20"
+                                    :height="24"
+                                    width="150"
+                                    :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
+                                >
+                                    <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`" 
+                                    v-html="applyDataLabel(
+                                        FINAL_CONFIG.plot.tag.formatter,
+                                        plot.value,
+                                        serie.name,
+                                        {
+                                            datapoint: plot, seriesIndex: j, serieName: serie.name
+                                        }
+                                    )"/>
+                                </foreignObject>
+                            </template>
+                            
+                            <!-- TAG LINE (follower) -->
+                            <template v-else>
+                                <line
+                                    class="vue-ui-xy-tag-plot"
+                                    v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag"
+                                    :x1="drawingArea.left"
+                                    :x2="drawingArea.right"
+                                    :y1="plot.y"
+                                    :y2="plot.y"
+                                    :stroke-width="1"
+                                    stroke-linecap="round"
+                                    stroke-dasharray="2"
+                                    :stroke="serie.color"
+                                />
+                            </template>
                         </template>
                     </template>
                 </g>
@@ -860,32 +892,65 @@
                                     ) : '' 
                                 }}
                             </text>
-                            <foreignObject
-                                :data-cy="`xy-line-tag-start-${i}`"
-                                v-if="plot && j === 0 && serie.useTag && serie.useTag === 'start'"
-                                :x="plot.x"
-                                :y="plot.y - 20"
-                                :height="24"
-                                width="150"
-                                :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
-                            >
-                                <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
-                                    {{ serie.name }}
-                                </div>
-                            </foreignObject>
-                            <foreignObject
-                                :data-cy="`xy-line-tag-end-${i}`"
-                                v-if="plot && j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
-                                :x="plot.x - serie.name.length * (fontSizes.plotLabels / 2)"
-                                :y="plot.y - 20"
-                                :height="24"
-                                width="150"
-                                :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
-                            >
-                                <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`">
-                                    {{ serie.name }}
-                                </div>
-                            </foreignObject>
+
+                            <!-- LINE TAGS (fixed) -->
+                            <template v-if="!FINAL_CONFIG.line.tag.followValue">
+                                <foreignObject
+                                    :data-cy="`xy-line-tag-start-${i}`"
+                                    v-if="plot && j === 0 && serie.useTag && serie.useTag === 'start'"
+                                    :x="plot.x"
+                                    :y="plot.y - 20"
+                                    :height="24"
+                                    width="150"
+                                    :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
+                                >
+                                    <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`" 
+                                    v-html="applyDataLabel(
+                                        FINAL_CONFIG.line.tag.formatter,
+                                        plot.value,
+                                        serie.name,
+                                        {
+                                            datapoint: plot, seriesIndex: j, serieName: serie.name
+                                        }
+                                    )">
+                                    </div>
+                                </foreignObject>
+                                <foreignObject
+                                    :data-cy="`xy-line-tag-end-${i}`"
+                                    v-if="plot && j === serie.plots.length - 1 && serie.useTag && serie.useTag === 'end'"
+                                    :x="plot.x"
+                                    :y="plot.y - 20"
+                                    :height="24"
+                                    width="150"
+                                    :style="`overflow: visible; opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`"
+                                >
+                                    <div :style="`padding: 3px; background:${setOpacity(serie.color, 80)};color:${adaptColorToBackground(serie.color)};width:fit-content;font-size:${fontSizes.plotLabels}px;border-radius: 2px;`" 
+                                    v-html="applyDataLabel(
+                                            FINAL_CONFIG.line.tag.formatter,
+                                            plot.value,
+                                            serie.name,
+                                            {
+                                                datapoint: plot, seriesIndex: j, serieName: serie.name
+                                            }
+                                        )"/>
+                                </foreignObject>
+                            </template>
+
+                            <!-- TAG LINE (follower) -->
+                            <template v-else>
+                                <line
+                                    class="vue-ui-xy-tag-line"
+                                    v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag"
+                                    :x1="drawingArea.left"
+                                    :x2="drawingArea.right"
+                                    :y1="plot.y"
+                                    :y2="plot.y"
+                                    :stroke-width="1"
+                                    stroke-linecap="round"
+                                    stroke-dasharray="2"
+                                    :stroke="serie.color"
+                                />
+                            </template>
                         </template>
                     </template>
                 </g>
@@ -1114,6 +1179,196 @@
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
+        <template v-if="FINAL_CONFIG.line.labels.show && mutableConfig.dataLabels.show">
+            <!-- LINE: TAGS FOLLOWING VALUE -->
+            <template v-for="(serie, i) in lineSet" :key="`tag_line_${i}`">
+                <template v-for="(plot, j) in serie.plots" :key="`tag_line_${i}_${j}`">
+                    <div
+                        :ref="el => setTagRef(i, j, el, 'right', 'line')"
+                        class="vue-ui-xy-tag"
+                        data-tag="right"
+                        v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'end' && FINAL_CONFIG.line.tag.followValue"
+                        :style="{
+                            position: 'fixed',
+                            top: placeXYTag({
+                                svgElement: svgRef,
+                                x: drawingArea.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
+                                y: plot.y,
+                                element: tagRefs[`${i}_${j}_right_line`],
+                                position: 'right'
+                            }).top + 'px',
+                            left: placeXYTag({
+                                svgElement: svgRef,
+                                x: drawingArea.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
+                                y: plot.y,
+                                element: tagRefs[`${i}_${j}_right_line`],
+                                position: 'right'
+                            }).left + 'px',
+                            height: 'fit-content',
+                            width: 'fit-content',
+                            background: serie.color,
+                            color: adaptColorToBackground(serie.color),
+                            padding: '0 6px',
+                            fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
+                            opacity: 1
+                        }"
+                    >
+                        <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                            <path d="M 0,10 10,0 10,20 Z" :fill="serie.color" stroke="none" />
+                        </svg>
+                        <div class="vue-ui-xy-tag-content" v-html="
+                                applyDataLabel(
+                                    FINAL_CONFIG.line.tag.formatter,
+                                    plot.value,
+                                    serie.name,
+                                    {
+                                        datapoint: plot, seriesIndex: j, serieName: serie.name
+                                    }
+                                )">
+                        </div>
+                    </div>
+                    <div
+                        :ref="el => setTagRef(i, j, el, 'left', 'line')"
+                        class="vue-ui-xy-tag"
+                        data-tag="left"
+                        v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'start' && FINAL_CONFIG.line.tag.followValue"
+                        :style="{
+                            position: 'fixed',
+                            top: placeXYTag({
+                                svgElement: svgRef,
+                                x: drawingArea.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
+                                y: plot.y,
+                                element: tagRefs[`${i}_${j}_left_line`],
+                                position: 'left'
+                            }).top + 'px',
+                            left: placeXYTag({
+                                svgElement: svgRef,
+                                x: drawingArea.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
+                                y: plot.y,
+                                element: tagRefs[`${i}_${j}_left_line`],
+                                position: 'left'
+                            }).left + 'px',
+                            height: 'fit-content',
+                            width: 'fit-content',
+                            background: serie.color,
+                            color: adaptColorToBackground(serie.color),
+                            padding: '0 6px',
+                            fontSize: FINAL_CONFIG.line.tag.fontSize + 'px',
+                            opacity: 1
+                        }"
+                    >
+                        <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                            <path d="M 0,0 10,10 0,20 Z" :fill="serie.color" stroke="none" />
+                        </svg>
+                        <div class="vue-ui-xy-tag-content" v-html="
+                                applyDataLabel(
+                                    FINAL_CONFIG.line.tag.formatter,
+                                    plot.value,
+                                    serie.name,
+                                    {
+                                        datapoint: plot, seriesIndex: j, serieName: serie.name
+                                    }
+                                )">
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <!-- PLOT: TAGS FOLLOWING VALUE -->
+            <template v-for="(serie, i) in plotSet" :key="`tag_plot_${i}`">
+                <template v-for="(plot, j) in serie.plots" :key="`tag_plot_${i}_${j}`">
+                    <div
+                        :ref="el => setTagRef(i, j, el, 'right', 'plot')"
+                        class="vue-ui-xy-tag"
+                        data-tag="right"
+                        v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'end' && FINAL_CONFIG.plot.tag.followValue"
+                        :style="{
+                            position: 'fixed',
+                            top: placeXYTag({
+                                svgElement: svgRef,
+                                x: drawingArea.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                                y: plot.y,
+                                element: tagRefs[`${i}_${j}_right_plot`],
+                                position: 'right'
+                            }).top + 'px',
+                            left: placeXYTag({
+                                svgElement: svgRef,
+                                x: drawingArea.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                                y: plot.y,
+                                element: tagRefs[`${i}_${j}_right_plot`],
+                                position: 'right'
+                            }).left + 'px',
+                            height: 'fit-content',
+                            width: 'fit-content',
+                            background: serie.color,
+                            color: adaptColorToBackground(serie.color),
+                            padding: '0 6px',
+                            fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
+                            opacity: 1
+                        }"
+                    >
+                        <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', right: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                            <path d="M 0,10 10,0 10,20 Z" :fill="serie.color" stroke="none" />
+                        </svg>
+                        <div class="vue-ui-xy-tag-content" v-html="
+                                applyDataLabel(
+                                    FINAL_CONFIG.plot.tag.formatter,
+                                    plot.value,
+                                    serie.name,
+                                    {
+                                        datapoint: plot, seriesIndex: j, serieName: serie.name
+                                    }
+                                )">
+                        </div>
+                    </div>
+                    <div
+                        :ref="el => setTagRef(i, j, el, 'left', 'plot')"
+                        class="vue-ui-xy-tag"
+                        data-tag="left"
+                        v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'start' && FINAL_CONFIG.plot.tag.followValue"
+                        :style="{
+                            position: 'fixed',
+                            top: placeXYTag({
+                                svgElement: svgRef,
+                                x: drawingArea.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                                y: plot.y,
+                                element: tagRefs[`${i}_${j}_left_plot`],
+                                position: 'left'
+                            }).top + 'px',
+                            left: placeXYTag({
+                                svgElement: svgRef,
+                                x: drawingArea.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                                y: plot.y,
+                                element: tagRefs[`${i}_${j}_left_plot`],
+                                position: 'left'
+                            }).left + 'px',
+                            height: 'fit-content',
+                            width: 'fit-content',
+                            background: serie.color,
+                            color: adaptColorToBackground(serie.color),
+                            padding: '0 6px',
+                            fontSize: FINAL_CONFIG.plot.tag.fontSize + 'px',
+                            opacity: 1
+                        }"
+                    >
+                        <svg class="vue-ui-xy-tag-arrow" height="100%" viewBox="0 0 10 20" :style="{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)'}">
+                            <path d="M 0,0 10,10 0,20 Z" :fill="serie.color" stroke="none" />
+                        </svg>
+                        <div class="vue-ui-xy-tag-content" v-html="
+                                applyDataLabel(
+                                    FINAL_CONFIG.plot.tag.formatter,
+                                    plot.value,
+                                    serie.name,
+                                    {
+                                        datapoint: plot, seriesIndex: j, serieName: serie.name
+                                    }
+                                )">
+                        </div>
+                    </div>
+                </template>
+            </template>
+        </template>
+
         <Skeleton 
             v-if="!isDataset"
             :config="{
@@ -1316,13 +1571,14 @@ import {
     largestTriangleThreeBucketsArray,
     opacity, 
     palette,
+    placeXYTag,
     setOpacity,
     shiftHue, 
     treeShake,
     error,
     objectIsEmpty,
     themePalettes,
-    translateSize
+    translateSize,
 } from '../lib';
 import themes from "../themes.json";
 import DataTable from "../atoms/DataTable.vue";
@@ -1460,7 +1716,8 @@ export default {
             showUserOptionsOnChartHover: false,
             keepUserOptionState: true,
             userOptionsVisible: true,
-            svgRef: null
+            svgRef: null,
+            tagRefs: {}
         }
     },
     watch: {
@@ -2478,6 +2735,11 @@ export default {
                 y: e.clientY
             }
         });
+        
+        document.addEventListener('scroll', this.hideTags);
+    },
+    beforeUnmount() {
+        document.removeEventListener('scroll', this.hideTags);
     },
     methods: {
         abbreviate,
@@ -2512,6 +2774,16 @@ export default {
         useMouse,
         useNestedProp,
         createUid,
+        placeXYTag,
+        hideTags() {
+            const tags = document.querySelectorAll('.vue-ui-xy-tag')
+            if (tags.length) {
+                Array.from(tags).forEach(tag => tag.style.opacity = '0')
+            }
+        },
+        setTagRef(i, j, el, position, type) {
+            if (el) this.tagRefs[`${i}_${j}_${position}_${type}`] = el;
+        },
         setUserOptionsVisibility(state = false) {
             if (!this.showUserOptionsOnChartHover) return;
             this.userOptionsVisible = state
@@ -3110,5 +3382,23 @@ path, line, rect {
 canvas {
     width: 100%;
     object-fit: contain;
+}
+
+svg.vue-ui-xy-tag-arrow *,
+line.vue-ui-xy-tag-line,
+line.vue-ui-xy-tag-plot {
+    animation: none !important;
+}
+
+.vue-ui-xy-tag {
+    z-index: 2147483647;
+    pointer-events: none;
+}
+
+.vue-ui-xy-tag[data-tag="right"] {
+    border-radius: 0 3px 3px 0;
+}
+.vue-ui-xy-tag[data-tag="left"] {
+    border-radius: 3px 0 0 3px;
 }
 </style>
