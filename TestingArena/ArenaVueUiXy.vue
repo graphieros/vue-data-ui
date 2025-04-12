@@ -42,53 +42,63 @@ function createDs(n,m=100) {
 //     ]
 // })
 
-// const dataset = ref([
-//     {
-//         name: "Curved",
-//         series: createDs(12),
-//         type: "bar",
-//         smooth: true,
-//         useArea: true,
-//         dataLabels: false,
-//     },
-// ])
-
 const dataset = ref([
-{
-  name: 'Donut Devourers - Happiness (%)',
-  type: 'line',
-  dataLabels: true,
-  scaleLabel: 'percentage', // Share scale with other percentage-based series
-  series: [92.34, 88.37, 95.00] // Example percentages across different days
-},
-{
-  name: 'Donut Devourers - Donuts Eaten',
-  type: 'bar',
-  dataLabels: true,
-  scaleLabel: 'total', // Share scale with other total-based series
-  series: [12, 15, 13] // Example counts per day
-},
-{
-  name: 'Pizza Party - Cheesy Delight (%)',
-  type: 'line',
-  dataLabels: true,
-  scaleLabel: 'percentage',
-  series: [75.12, 80.50, 78.34]
-},
-{
-  name: 'Pizza Party - Slices Consumed',
-  type: 'bar',
-  dataLabels: true,
-  scaleLabel: 'total',
-  series: [8, 9, 10]
-},
-{
-  name: 'Lone series ',
-  type: 'bar',
-  dataLabels: true,
-  series: [8, 9, 100]
-}
+    {
+        name: "Curved",
+        series: createDs(120),
+        type: "plot",
+        smooth: false,
+        useArea: true,
+        useTag: 'start',
+        dataLabels: false,
+    },
+    {
+        name: "Curved",
+        series: createDs(120),
+        type: "line",
+        smooth: false,
+        useArea: true,
+        useTag: 'end',
+        dataLabels: false,
+    },
 ])
+
+// const dataset = ref([
+// {
+//   name: 'Donut Devourers - Happiness (%)',
+//   type: 'line',
+//   dataLabels: true,
+//   scaleLabel: 'percentage', // Share scale with other percentage-based series
+//   series: [92.34, 88.37, 95.00] // Example percentages across different days
+// },
+// {
+//   name: 'Donut Devourers - Donuts Eaten',
+//   type: 'bar',
+//   dataLabels: true,
+//   scaleLabel: 'total', // Share scale with other total-based series
+//   series: [12, 15, 13] // Example counts per day
+// },
+// {
+//   name: 'Pizza Party - Cheesy Delight (%)',
+//   type: 'line',
+//   dataLabels: true,
+//   scaleLabel: 'percentage',
+//   series: [75.12, 80.50, 78.34]
+// },
+// {
+//   name: 'Pizza Party - Slices Consumed',
+//   type: 'bar',
+//   dataLabels: true,
+//   scaleLabel: 'total',
+//   series: [8, 9, 10]
+// },
+// {
+//   name: 'Lone series ',
+//   type: 'bar',
+//   dataLabels: true,
+//   series: [8, 9, 100]
+// }
+// ])
 
 
 // const dataset = ref([
@@ -408,6 +418,9 @@ const model = ref([
     { key: 'line.dot.fill', def: '#FFFFFF', type: 'color'},
     { key: 'line.dot.strokeWidth', def: 2, type: 'number', min: 0, max:12, step: 0.1},
 
+    { key: 'line.tag.followValue', def: true, type: 'checkbox'},
+    { key: 'line.tag.fontSize', def: 14, type: 'number' },
+
     { key: 'plot.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'plot' },
     { key: 'plot.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'plot' },
     { key: 'plot.strokeWidth', def: 2, type: 'number', min: 1, max: 20, label: 'thickness', category: 'plot' },
@@ -419,6 +432,9 @@ const model = ref([
     { key: 'plot.dot.useSerieColor', def: false, type: 'checkbox'},
     { key: 'plot.dot.fill', def: '#FFFFFF', type: 'color'},
     { key: 'plot.dot.strokeWidth', def: 0.5, type: 'number', min: 0, max:12, step: 0.1},
+
+    { key: 'plot.tag.followValue', def: true, type: 'checkbox'},
+    { key: 'plot.tag.fontSize', def: 14, type: 'number' },
 
     { key: 'showTable', def: false, type: 'checkbox', label: 'show', category: 'table' },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 350, max: 800, label: 'responsiveBreakpoint', category: 'table' },
@@ -500,6 +516,13 @@ const config = computed(() => {
                     // formatter: ({value, config}) => {
                     //     return `f - ${value}`
                     // }
+                },
+                tag:  {
+                    formatter: ({ value, config }) => {
+                        const { datapoint, seriesIndex, serieName } = config;
+                        console.log(datapoint, seriesIndex, serieName)
+                        return `<div>${serieName}: <b>${value.toFixed(2)}</b></div>`
+                    }
                 }
             },
             plot: {
