@@ -85,7 +85,7 @@ const model = ref([
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
     
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.padding.top', def: 36, type: 'number', min: 0, max: 100},
     { key: 'style.layout.padding.right', def: 12, type: 'number', min: 0, max: 100},
@@ -103,6 +103,16 @@ const model = ref([
     { key: 'style.layout.cells.spacing', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.layout.cells.selected.border', def: 4, type: 'number', min: 0, max: 12}, //
     { key: 'style.layout.cells.selected.color', def: '#1A1A1A', type: 'color'},
+
+    { key: 'style.layout.cells.rowTotal.value.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.cells.rowTotal.color.show', def: true, type: 'checkbox'},
+
+    { key: 'style.layout.cells.columnTotal.value.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.cells.columnTotal.value.rotation', def: 0, type: 'range', min: -90, max: 90 },
+    { key: 'style.layout.cells.columnTotal.value.offsetX', def: 0, type: 'number', min: -30, max: 30},
+    { key: 'style.layout.cells.columnTotal.value.offsetY', def: 0, type: 'number', min: -30, max: 30},
+    { key: 'style.layout.cells.columnTotal.color.show', def: true, type: 'checkbox'},
+
     { key: 'style.layout.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.layout.dataLabels.suffix', def: 'S', type: 'text'},
     { key: 'style.layout.dataLabels.xAXis.show', def: true, type: 'checkbox'},
@@ -170,7 +180,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -201,9 +211,9 @@ const config = computed(() => {
                         ...c.style.layout.cells,
                         value: {
                             ...c.style.layout.cells.value,
-                            formatter: ({value, config}) => {
-                                return `f - ${value}`
-                            }
+                            // formatter: ({value, config}) => {
+                            //     return `f - ${value}`
+                            // }
                         }
                     },
                     dataLabels: {
@@ -244,9 +254,9 @@ const step = ref(0)
         
         <template #local>
             <LocalVueUiHeatmap :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
-                <template #chart-background>
+                <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-                </template>
+                </template> -->
 
                 <template #optionPdf>
                     PRINT PDF
