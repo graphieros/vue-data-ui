@@ -1704,6 +1704,25 @@ export function useConfig() {
                 padding: PADDING([36, 12, 12, 48]),
                 cells: {
                     height: 36,
+                    rowTotal: {
+                        value: {
+                            show: false,
+                        },
+                        color: {
+                            show: false
+                        }
+                    },
+                    columnTotal: {
+                        value: {
+                            show: false,
+                            rotation: 0,
+                            offsetX: 0,
+                            offsetY: 0
+                        },
+                        color: {
+                            show: false
+                        },
+                    },
                     value: {
                         show: false,
                         fontSize: FONT._18,
