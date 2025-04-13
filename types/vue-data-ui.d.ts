@@ -2440,6 +2440,25 @@ declare module "vue-data-ui" {
                 padding?: ChartPadding;
                 cells?: {
                     height?: number;
+                    columnTotal?: {
+                        value?: {
+                            show?: boolean;
+                            rotation?: number;
+                            offsetX?: number;
+                            offsetY?: number;
+                        };
+                        color?: {
+                            show?: boolean;
+                        };
+                    };
+                    rowTotal?: {
+                        value?: {
+                            show?: boolean;
+                        };
+                        color?: {
+                            show?: boolean;
+                        };
+                    };
                     value?: {
                         show?: boolean;
                         fontSize?: number;
