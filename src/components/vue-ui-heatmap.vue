@@ -224,8 +224,37 @@ const cellSize = computed(() => {
 
 const dataLabels = computed(() => {
     const yLabels = FINAL_CONFIG.value.style.layout.dataLabels.yAxis.values.length ? FINAL_CONFIG.value.style.layout.dataLabels.yAxis.values : props.dataset.map(ds => ds.name);
-    const xLabels = FINAL_CONFIG.value.style.layout.dataLabels.xAxis.values
+    const xLabels = FINAL_CONFIG.value.style.layout.dataLabels.xAxis.values;
+    const _yTotals = props.dataset.map(ds => ds.values.reduce((a, b) => a + b, 0))
+    const maxYTotal = Math.max(..._yTotals);
+    const minYTotal = Math.min(..._yTotals);
+
+    const _xTotals = []
+
+    for (let i = 0; i < maxX.value; i += 1) {
+        _xTotals.push(props.dataset.map(ds => ds.values[i] || 0).reduce((a, b) => a + b, 0))
+    }
+
+    const maxXTotal = Math.max(..._xTotals);
+    const minXTotal = Math.min(..._xTotals);
+
     return {
+        yTotals: _yTotals.map(rowTotal => {
+            const proportion = isNaN(rowTotal / maxYTotal) ? 0 : rowTotal / maxYTotal;
+            return {
+                total: rowTotal,
+                proportion,
+                color: interpolateColorHex(FINAL_CONFIG.value.style.layout.cells.colors.cold, FINAL_CONFIG.value.style.layout.cells.colors.hot, minYTotal, maxYTotal, rowTotal)
+            }
+        }),
+        xTotals: _xTotals.map(columnTotal => {
+            const proportion = isNaN(columnTotal / maxXTotal) ? 0 : columnTotal / maxXTotal;
+            return {
+                total: columnTotal,
+                proportion,
+                color: interpolateColorHex(FINAL_CONFIG.value.style.layout.cells.colors.cold, FINAL_CONFIG.value.style.layout.cells.colors.hot, minXTotal, maxXTotal, columnTotal)
+            }
+        }),
         yLabels,
         xLabels: xLabels.slice(0, maxX.value)
     }
@@ -334,6 +363,34 @@ const bottomLegendIndicatorX = computed(() => {
     return drawingArea.value.left + ((svg.value.width - drawingArea.value.left - FINAL_CONFIG.value.style.layout.padding.right) * (hoveredValue.value / maxValue.value))
 });
 
+function getRowTotal(index) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.layout.cells.value.formatter,
+        dataLabels.value.yTotals[index].total,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.layout.dataLabels.prefix,
+            v: dataLabels.value.yTotals[index].total,
+            s: FINAL_CONFIG.value.style.layout.dataLabels.suffix,
+            r: FINAL_CONFIG.value.style.layout.cells.value.roundingValue
+        }),
+        { datapoint: dataLabels.value.yTotals[index], rowIndex: index }
+    )
+}
+
+function getcolumnTotal(index) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.layout.cells.value.formatter,
+        dataLabels.value.xTotals[index].total,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.layout.dataLabels.prefix,
+            v: dataLabels.value.xTotals[index].total,
+            s: FINAL_CONFIG.value.style.layout.dataLabels.suffix,
+            r: FINAL_CONFIG.value.style.layout.cells.value.roundingValue
+        }),
+        { datapoint: dataLabels.value.xTotals[index], colIndex: index }
+    )
+}
+
 const table = computed(() => {
     const head = props.dataset.map(ds => {
         return {
@@ -386,6 +443,7 @@ const isAnnotator = ref(false);
 function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
+
 
 defineExpose({
     generatePdf,
@@ -516,11 +574,34 @@ defineExpose({
                 <slot name="chart-background"/>
             </foreignObject>
 
+            <template v-if="FINAL_CONFIG.style.layout.cells.columnTotal.color.show">
+                <rect 
+                    v-for="(col, i) in dataLabels.xTotals"
+                    :x="drawingArea.left + cellSize.width * i + (FINAL_CONFIG.style.layout.cells.spacing / 2) + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)"
+                    :y="drawingArea.top - cellSize.height / 3 - FINAL_CONFIG.style.layout.cells.spacing"
+                    :height="cellSize.height / 3"
+                    :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing"
+                    :fill="FINAL_CONFIG.style.layout.cells.colors.underlayer"
+                    :stroke="FINAL_CONFIG.style.backgroundColor"
+                    :stroke-width="FINAL_CONFIG.style.layout.cells.spacing"
+                />
+                <rect 
+                    v-for="(col, i) in dataLabels.xTotals"
+                    :x="drawingArea.left + cellSize.width * i + (FINAL_CONFIG.style.layout.cells.spacing / 2) + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)"
+                    :y="drawingArea.top - cellSize.height / 3 - FINAL_CONFIG.style.layout.cells.spacing"
+                    :height="cellSize.height / 3"
+                    :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing"
+                    :fill="col.color"
+                    :stroke="FINAL_CONFIG.style.backgroundColor"
+                    :stroke-width="FINAL_CONFIG.style.layout.cells.spacing"
+                />
+            </template>
+
             <g v-for="(serie, i) in mutableDataset">
                 <g v-for="(cell, j) in serie.temperatures">
                     <rect
                         data-cy="cell-underlayer"
-                        :x="drawingArea.left + cellSize.width * j + (FINAL_CONFIG.style.layout.cells.spacing / 2)"
+                        :x="drawingArea.left + cellSize.width * j + (FINAL_CONFIG.style.layout.cells.spacing / 2) + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)"
                         :y="drawingArea.top + cellSize.height * i + (FINAL_CONFIG.style.layout.cells.spacing / 2)"
                         :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing"
                         :height="cellSize.height - FINAL_CONFIG.style.layout.cells.spacing"
@@ -530,7 +611,7 @@ defineExpose({
                     />
                     <rect
                         data-cy="cell"
-                        :x="drawingArea.left + cellSize.width * j + (FINAL_CONFIG.style.layout.cells.spacing / 2)"
+                        :x="drawingArea.left + cellSize.width * j + (FINAL_CONFIG.style.layout.cells.spacing / 2) + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)"
                         :y="drawingArea.top + cellSize.height * i + (FINAL_CONFIG.style.layout.cells.spacing / 2)"
                         :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing"
                         :height="cellSize.height - FINAL_CONFIG.style.layout.cells.spacing"
@@ -545,7 +626,7 @@ defineExpose({
                         :font-size="FINAL_CONFIG.style.layout.cells.value.fontSize"
                         :font-weight="FINAL_CONFIG.style.layout.cells.value.bold ? 'bold': 'normal'"
                         :fill="adaptColorToBackground(cell.color)"
-                        :x="(drawingArea.left + cellSize.width * j) + (cellSize.width / 2)"
+                        :x="(drawingArea.left + cellSize.width * j) + (cellSize.width / 2) + + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)"
                         :y="(drawingArea.top + cellSize.height * i) + (cellSize.height / 2) + FINAL_CONFIG.style.layout.cells.value.fontSize / 3"
                     >
                         {{ applyDataLabel(
@@ -566,7 +647,7 @@ defineExpose({
                     <!-- TOOLTIP TRAPS -->
                     <rect
                         data-cy="tooltip-trap"
-                        :x="drawingArea.left + cellSize.width * j"
+                        :x="drawingArea.left + cellSize.width * j + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)"
                         :y="drawingArea.top + cellSize.height * i"
                         :width="cellSize.width"
                         :height="cellSize.height"
@@ -579,39 +660,90 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show">
                     <text
                         data-cy="axis-y-label"
+                        class="vue-ui-heatmap-row-name"
                         :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
                         :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
                         :x="drawingArea.left + FINAL_CONFIG.style.layout.dataLabels.yAxis.offsetX - 6"
-                        :y="drawingArea.top + (cellSize.height * i) + cellSize.height / 2 + FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize / 3 + FINAL_CONFIG.style.layout.dataLabels.yAxis.offsetY"
+                        :y="drawingArea.top + (cellSize.height * i) + cellSize.height / 2 + FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize / 3 + FINAL_CONFIG.style.layout.dataLabels.yAxis.offsetY - (FINAL_CONFIG.style.layout.cells.rowTotal.value.show ? FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize / 1.5 : 0)"
                         text-anchor="end"
                         :font-weight="FINAL_CONFIG.style.layout.dataLabels.yAxis.bold ? 'bold' : 'normal'"
                     >
                         {{ dataLabels.yLabels[i] }}
                     </text>
+                    <text
+                        class="vue-ui-heatmap-row-total"
+                        v-if="FINAL_CONFIG.style.layout.cells.rowTotal.value.show"
+                        data-cy="axis-y-label"
+                        :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
+                        :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
+                        :x="drawingArea.left + FINAL_CONFIG.style.layout.dataLabels.yAxis.offsetX - 6"
+                        :y="drawingArea.top + (cellSize.height * i) + cellSize.height / 2 + FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize + FINAL_CONFIG.style.layout.dataLabels.yAxis.offsetY"
+                        text-anchor="end"
+                        :font-weight="FINAL_CONFIG.style.layout.dataLabels.yAxis.bold ? 'bold' : 'normal'"
+                    >
+                        {{ getRowTotal(i) }}
+                    </text>
                 </g>
+
+                <g v-if="FINAL_CONFIG.style.layout.cells.rowTotal.color.show">
+                    <rect 
+                        :x="drawingArea.left"
+                        :y="drawingArea.top + (cellSize.height * i)"
+                        :width="cellSize.height / 3"
+                        :height="cellSize.height - FINAL_CONFIG.style.layout.cells.spacing"
+                        :fill="FINAL_CONFIG.style.layout.cells.colors.underlayer"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.layout.cells.spacing"
+                    />
+                    <rect 
+                        :x="drawingArea.left"
+                        :y="drawingArea.top + (cellSize.height * i) + FINAL_CONFIG.style.layout.cells.spacing / 2"
+                        :width="cellSize.height / 3"
+                        :height="cellSize.height - FINAL_CONFIG.style.layout.cells.spacing"
+                        :fill="dataLabels.yTotals[i].color"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.layout.cells.spacing"
+                    />
+                </g>
+
             </g>
             <g v-if="FINAL_CONFIG.style.layout.dataLabels.xAxis.show">
                 <template v-for="(label, i) in dataLabels.xLabels">
                     <text
+                        class="vue-ui-heatmap-col-name"
                         data-cy="axis-x-label"
                         v-if="!FINAL_CONFIG.style.layout.dataLabels.xAxis.showOnlyAtModulo || (FINAL_CONFIG.style.layout.dataLabels.xAxis.showOnlyAtModulo && i % FINAL_CONFIG.style.layout.dataLabels.xAxis.showOnlyAtModulo === 0)"
                         :text-anchor="FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation === 0 ? 'middle' : FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation < 0 ? 'start' : 'end'"
                         :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
                         :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
                         :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
-                        :transform="`translate(${drawingArea.left + cellSize.width / 2 + (drawingArea.width / dataLabels.xLabels.length * i) + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetX}, ${drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetY - 6}), rotate(${FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation})`"
+                        :transform="`translate(${drawingArea.left + cellSize.width / 2 + (drawingArea.width / dataLabels.xLabels.length * i) + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetX + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)}, ${drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetY - 6 - (FINAL_CONFIG.style.layout.cells.columnTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)}), rotate(${FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation})`"
                     >
                         {{ label }}
                     </text>
                 </template>
             </g>
 
+            <template v-if="FINAL_CONFIG.style.layout.cells.columnTotal.value.show">
+                <text
+                    class="vue-ui-heatmap-col-total"
+                    v-for="(_, i) in dataLabels.xLabels"
+                    :text-anchor="FINAL_CONFIG.style.layout.cells.columnTotal.value.rotation === 0 ? 'middle' : FINAL_CONFIG.style.layout.cells.columnTotal.value.rotation < 0 ? 'end' : 'start'"
+                    :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                    :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
+                    :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
+                    :transform="`translate(${drawingArea.left + cellSize.width / 2 + (drawingArea.width / dataLabels.xLabels.length * i) + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetX + FINAL_CONFIG.style.layout.cells.columnTotal.value.offsetX + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)}, ${drawingArea.bottom - FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize + FINAL_CONFIG.style.layout.cells.columnTotal.value.offsetY}), rotate(${FINAL_CONFIG.style.layout.cells.columnTotal.value.rotation})`"
+                >
+                    {{ getcolumnTotal(i) }}
+                </text>
+                </template>
+
             <!-- BORDER FOR SELECTED RECT, PAINTED LAST -->
             <g v-if="selectedClone">
                 <rect
                     data-cy="cell-selected"
                     style="pointer-events: none;"
-                    :x="selectedClone.x - ((FINAL_CONFIG.style.layout.cells.selected.border) / 2) + FINAL_CONFIG.style.layout.cells.spacing"
+                    :x="selectedClone.x - ((FINAL_CONFIG.style.layout.cells.selected.border) / 2) + FINAL_CONFIG.style.layout.cells.spacing + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)"
                     :y="selectedClone.y - (FINAL_CONFIG.style.layout.cells.selected.border / 2) + FINAL_CONFIG.style.layout.cells.spacing"
                     :width="cellSize.width - FINAL_CONFIG.style.layout.cells.spacing + FINAL_CONFIG.style.layout.cells.selected.border - (FINAL_CONFIG.style.layout.cells.spacing)"
                     :height="cellSize.height - FINAL_CONFIG.style.layout.cells.spacing + FINAL_CONFIG.style.layout.cells.selected.border - (FINAL_CONFIG.style.layout.cells.spacing)"
