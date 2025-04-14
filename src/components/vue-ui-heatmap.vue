@@ -732,7 +732,7 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
                     :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
                     :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
-                    :transform="`translate(${drawingArea.left + cellSize.width / 2 + (drawingArea.width / dataLabels.xLabels.length * i) + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetX + FINAL_CONFIG.style.layout.cells.columnTotal.value.offsetX + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)}, ${drawingArea.bottom - FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize + FINAL_CONFIG.style.layout.cells.columnTotal.value.offsetY}), rotate(${FINAL_CONFIG.style.layout.cells.columnTotal.value.rotation})`"
+                    :transform="`translate(${drawingArea.left + cellSize.width / 2 + (drawingArea.width / dataLabels.xLabels.length * i) + FINAL_CONFIG.style.layout.dataLabels.xAxis.offsetX + FINAL_CONFIG.style.layout.cells.columnTotal.value.offsetX + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? (cellSize.height / 3 + FINAL_CONFIG.style.layout.cells.spacing) : 0)}, ${((cellSize.height + FINAL_CONFIG.style.layout.cells.spacing ) * (dataset.length + 1)) + FINAL_CONFIG.style.layout.cells.columnTotal.value.offsetY}), rotate(${FINAL_CONFIG.style.layout.cells.columnTotal.value.rotation})`"
                 >
                     {{ getcolumnTotal(i) }}
                 </text>
