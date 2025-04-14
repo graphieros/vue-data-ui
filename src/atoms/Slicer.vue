@@ -421,6 +421,12 @@ function setTooltipRight() {
     }
 }
 
+const leftLabelZIndex = ref(0);
+
+function setLeftLabelZIndex(handle) {
+    leftLabelZIndex.value = handle === 'start' ? 1 : 0
+}
+
 onUpdated(() => {
     setTooltipLeft();
     setTooltipRight();
@@ -629,6 +635,7 @@ defineExpose({
                 :max="max" 
                 v-model="startValue" 
                 @input="onStartInput"
+                @mouseenter="setLeftLabelZIndex('start')"
             />
 
             <input 
@@ -641,6 +648,7 @@ defineExpose({
                 :max="max" 
                 v-model="endValue" 
                 @input="onEndInput" 
+                @mouseenter="setLeftLabelZIndex('end')"
             />
 
             <div
@@ -657,7 +665,8 @@ defineExpose({
                     left: highlightStyle.tooltipLeft,
                     color: adaptColorToBackground(selectColor),
                     backgroundColor: selectColor,
-                    border: `1px solid ${borderColor}`
+                    border: `1px solid ${borderColor}`,
+                    zIndex: `${leftLabelZIndex + 4}`
                 }"
             >
                 {{ labelLeft }}
@@ -677,7 +686,8 @@ defineExpose({
                     left: highlightStyle.tooltipRight,
                     color: adaptColorToBackground(selectColor),
                     backgroundColor: selectColor,
-                    border: `1px solid ${borderColor}`
+                    border: `1px solid ${borderColor}`,
+                    zIndex: '4'
                 }"
             >
                 {{ labelRight }}
@@ -869,7 +879,6 @@ input[type="range"]::-ms-thumb {
 }
 
 .range-tooltip {
-    z-index: 4;
     padding: 2px 4px;
     font-size: 10px;
     border-radius: 3px;
