@@ -13,13 +13,15 @@ const dataset = ref([
     {
         name: "Root",
         details: "This is the root node",
+        color: 'red',
         nodes: [
             {
                 name: 'node1',
                 details: 'Lorem ipsum',
+                color: 'blue',
                 nodes: [
                     {
-                        name: 'node1.1', details: 'Lorem ipsum', nodes: [
+                        name: 'node1.1', details: 'Lorem ipsum', color: 'green', nodes: [
                             { name: 'node1.1' },
                             { name: 'node1.2' },
                             { name: 'node1.3' },
@@ -205,7 +207,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

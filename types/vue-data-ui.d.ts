@@ -735,6 +735,7 @@ declare module "vue-data-ui" {
         name: string;
         details?: string;
         nodes?: VueUiMoleculeDatasetNode[];
+        color?: string;
     };
 
     export type VueUiMoleculeConfig = {

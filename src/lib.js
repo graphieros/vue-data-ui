@@ -2211,8 +2211,8 @@ export function placeHTMLElementAtSVGCoordinates({ svgElement, x, y, offsetY = 0
     };
 }
 
-export function placeXYTag({ svgElement, x, y, element, position}) {
-    if (!svgElement || ! element) return { top: 0, left: 0 };
+export function placeXYTag({ svgElement, x, y, element, position }) {
+    if (!svgElement || !element) return { top: 0, left: 0 };
 
     const point = svgElement.createSVGPoint();
     point.x = x;
@@ -2227,6 +2227,48 @@ export function placeXYTag({ svgElement, x, y, element, position}) {
         top: t_point.y + _offsetY,
         left: t_point.x + _offsetX
     };
+}
+
+export function deepClone(value) {
+    if (value === null || typeof value !== 'object') {
+        return value;
+    }
+
+    if (value instanceof Date) {
+        return new Date(value.getTime());
+    }
+
+    if (value instanceof RegExp) {
+        return new RegExp(value.source, value.flags);
+    }
+
+    if (value instanceof Map) {
+        const result = new Map();
+        for (const [key, val] of value.entries()) {
+            result.set(key, deepClone(val));
+        }
+        return result;
+    }
+
+    if (value instanceof Set) {
+        const result = new Set();
+        for (const val of value.values()) {
+            result.add(deepClone(val));
+        }
+        return result;
+    }
+
+    if (Array.isArray(value)) {
+        return value.map(item => deepClone(item));
+    }
+
+    const result = {};
+    for (const key in value) {
+        if (Object.prototype.hasOwnProperty.call(value, key)) {
+            result[key] = deepClone(value[key]);
+        }
+    }
+    return result;
 }
 
 const lib = {
@@ -2268,6 +2310,7 @@ const lib = {
     createWordCloudDatasetFromPlainText,
     darkenHexColor,
     dataLabel,
+    deepClone,
     degreesToRadians,
     downloadCsv,
     error,

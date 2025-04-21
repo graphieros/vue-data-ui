@@ -1,10 +1,12 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, watch } from "vue";
 import { 
+    convertColorToHex,
     convertCustomPalette,
     createCsvContent, 
     createPolygonPath, 
-    createUid, 
+    createUid,
+    deepClone,
     downloadCsv,
     error,
     functionReturnsString,
@@ -173,72 +175,92 @@ function processNodes(
     circleRadius = 24,
     rotation = 0,
     paletteIndex = 0,
-    rootColor = "#BBBBBB"
+    rootColor = "#BBBBBB",
+    depth = 0
 ) {
+    if (!Array.isArray(data) || data.length === 0) return data;
 
-    if (data && data.length > 0) {
-        const polygonPath = createPolygonPath({
-            plot: center,
-            radius,
-            sides: data.length,
-            rotation,
-        });
+    const polygonPath = createPolygonPath({
+        plot:   center,
+        radius,
+        sides:  data.length,
+        rotation
+    });
 
-        data.forEach((node, index) => {
-            const childCenter = polygonPath.coordinates[index];
-            let color;
+    data.forEach((node, idx) => {
+        const childCenter = polygonPath.coordinates[idx];
 
-            if (!node.ancestor) {
-                color = rootColor;
-            } else if (!node.ancestor.ancestor) {
-                color = customPalette.value[paletteIndex] || palette[paletteIndex] || rootColor;
-                paletteIndex += 1;
-            } else {
-                color = node.ancestor.color || rootColor;
-            }
+        const converted = node.color
+        ? (() => {
+            let h = convertColorToHex(node.color);
+            return h.startsWith("#") ? h : `#${h}`;
+            })()
+        : null;
 
-            node.polygonPath = {
-                coordinates: [childCenter],
-            };
+        let finalColor;
+        if (converted) {
+            finalColor = converted;
+        } else if (depth === 0) {
+            finalColor = rootColor;
+        } else if (depth === 1) {
+            finalColor = (
+                customPalette.value[paletteIndex] ||
+                palette[paletteIndex]      ||
+                rootColor
+            );
+            paletteIndex += 1;
+        } else {
+            finalColor = rootColor;
+        }
 
-            node.circleRadius = circleRadius;
-            node.color = color;
-            node.uid = createUid();
+        node.polygonPath = { coordinates: [childCenter] };
+        node.circleRadius = circleRadius;
+        node.color = finalColor;
+        node.uid = createUid();
 
-            if (node.nodes && node.nodes.length > 0) {
-                const nestedPaletteIndex = !node.ancestor || !node.ancestor.ancestor ? paletteIndex : 0;
-                node.nodes = processNodes(
-                    node.nodes,
-                    childCenter,
-                    radius / 2.9,
-                    circleRadius / 2.2,
-                    rotation + (Math.PI * index) / node.nodes.length,
-                    nestedPaletteIndex,
-                    color
-                );
-            }
-        });
-    }
+        if (Array.isArray(node.nodes) && node.nodes.length) {
+            node.nodes = processNodes(
+                node.nodes,
+                childCenter,
+                radius      / 2.9,
+                circleRadius/ 2.2,
+                rotation    + (Math.PI * idx) / node.nodes.length,
+                paletteIndex,
+                finalColor,
+                depth + 1
+            );
+        }
+    });
+
     return data;
 }
 
 function generateGradientIDs(data) {
-    const uniqueColors = new Set();
-    function extractUniqueColors(nodes) {
-        nodes.forEach((node) => {
-            if (node.color && !uniqueColors.has(node.color)) {
-                uniqueColors.add(node.color);
-            }
-            if (node.nodes && node.nodes.length > 0) {
-                extractUniqueColors(node.nodes);
-            }
+    const colors = new Set();
+
+    function recurse(nodes) {
+        nodes.forEach(node => {
+        if (!node.color) return;
+
+        let hex = node.color;
+        if (!/^#?[0-9A-F]{6}$/i.test(hex)) {
+            hex = convertColorToHex(hex);
+        }
+        if (!hex.startsWith("#")) hex = `#${hex}`;
+
+        colors.add(hex);
+
+        if (Array.isArray(node.nodes) && node.nodes.length) {
+            recurse(node.nodes);
+        }
         });
     }
-    extractUniqueColors(data);
+    recurse(data);
 
     const gradientIDs = {};
-    Array.from(uniqueColors).forEach((color, index) => {
-        gradientIDs[color] = `gradient_${index}`;
+    Array.from(colors).forEach(col => {
+        const safe = col.slice(1);       
+        gradientIDs[col] = `gradient_${safe}`;
     });
 
     return gradientIDs;
@@ -249,7 +271,8 @@ const gradientIds = computed(() => {
 })
 
 const convertedDataset = computed(() => {
-    return processNodes(props.dataset);
+    const dataCopy = deepClone(props.dataset);
+    return processNodes(dataCopy);
 })
 
 const dataTooltipSlot = ref(null);
