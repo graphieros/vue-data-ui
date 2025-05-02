@@ -161,7 +161,8 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-radar_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-radar'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-radar',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

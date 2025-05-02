@@ -202,7 +202,8 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `wordCloud_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-word-cloud'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-word-cloud',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const mutableConfig = ref({

@@ -332,7 +332,8 @@ const legendConfig = computed(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `bullet_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-bullet'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-bullet',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

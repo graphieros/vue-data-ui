@@ -97,7 +97,8 @@ watch(() => props.dataset, (_) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `table_${uid.value}`,
-    fileName: FINAL_CONFIG.value.title.text || 'vue-ui-table-sparkline'
+    fileName: FINAL_CONFIG.value.title.text || 'vue-ui-table-sparkline',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const customPalette = computed(() => {

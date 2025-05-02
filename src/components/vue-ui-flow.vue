@@ -117,7 +117,8 @@ watch(() => props.config, (_newCfg) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `flow_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-flow'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-flow',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

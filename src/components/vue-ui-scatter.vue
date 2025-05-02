@@ -161,6 +161,7 @@ onBeforeUnmount(() => {
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-scatter_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-scatter',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

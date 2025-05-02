@@ -186,7 +186,8 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `rings_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-rings'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-rings',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

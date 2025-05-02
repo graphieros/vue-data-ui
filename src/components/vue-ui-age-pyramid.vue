@@ -143,7 +143,8 @@ function prepareChart() {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-age-pyramid_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-age-pyramid'
+    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-age-pyramid',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

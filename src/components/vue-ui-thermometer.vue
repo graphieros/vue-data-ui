@@ -116,7 +116,8 @@ watch(() => props.config, (_newCfg) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `thermometer__${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-thermometer'
+    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-thermometer',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

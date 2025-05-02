@@ -84,7 +84,8 @@ watch(() => props.config, (_newCfg) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `table_heatmap_${uid.value}`,
-    fileName: 'vue-ui-table-heatmap'
+    fileName: 'vue-ui-table-heatmap',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const breakpoint = computed(() => {

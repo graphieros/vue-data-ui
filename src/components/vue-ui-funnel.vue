@@ -178,7 +178,8 @@ watch(() => props.config, (_newCfg) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `funnel_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-funnel'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-funnel',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

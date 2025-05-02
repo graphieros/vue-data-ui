@@ -103,7 +103,8 @@ function prepareConfig() {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-gauge_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-gauge'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-gauge',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

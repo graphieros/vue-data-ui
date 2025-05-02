@@ -140,7 +140,8 @@ watch(() => props.config, (_newCfg) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `galaxy_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-galaxy'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-galaxy',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

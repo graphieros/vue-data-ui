@@ -126,7 +126,8 @@ watch(() => props.dataset, recalculateHeight, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-vertical-bar_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-vertical-bar'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-vertical-bar',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

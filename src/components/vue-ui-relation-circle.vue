@@ -96,7 +96,8 @@ watch(() => props.config, (_newCfg) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `relation_circle_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-relation-circle'
+    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-relation-circle',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

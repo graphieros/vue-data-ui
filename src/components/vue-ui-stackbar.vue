@@ -186,7 +186,8 @@ const mutableConfig = ref({
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `stackbar_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-stackbar'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-stackbar',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const defaultSizes = ref({

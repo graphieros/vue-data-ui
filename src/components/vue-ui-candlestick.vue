@@ -205,7 +205,8 @@ onBeforeUnmount(() => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-candlestick_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-candlestick'
+    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-candlestick',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

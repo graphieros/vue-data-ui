@@ -53,7 +53,6 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import NonSvgPenAndPaper from "../atoms/NonSvgPenAndPaper.vue";
@@ -204,7 +203,8 @@ const aspectRatio = ref(FINAL_CONFIG.value.style.chart.aspectRatio);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `xy_canvas_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-xy-canvas'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-xy-canvas',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const mutableConfig = ref({

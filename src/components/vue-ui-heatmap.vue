@@ -134,7 +134,8 @@ watch(() => props.dataset, () => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `heatmap__${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-heatmap'
+    fileName: FINAL_CONFIG.value.style.title.text || 'vue-ui-heatmap',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

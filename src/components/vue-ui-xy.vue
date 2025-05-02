@@ -3287,6 +3287,7 @@ export default {
                 await pdf({
                     domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
                     fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy',
+                    options: this.FINAL_CONFIG.chart.userOptions.print
                 });
                 } catch (error) {
                     console.error('Error generating PDF:', error);
@@ -3314,9 +3315,10 @@ export default {
             try {
                     const { default: img } = await import('../img.js');
                     await img({
-                    domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
-                    fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy',
-                    format: 'png',
+                        domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
+                        fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy',
+                        format: 'png',
+                        options: this.FINAL_CONFIG.chart.userOptions.print
                     });
                 } catch (error) {
                     console.error('Error generating image:', error);

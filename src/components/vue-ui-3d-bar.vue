@@ -109,7 +109,8 @@ watch(() => props.config, (_newCfg) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `3d_bar_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-3d-bar'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-3d-bar',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const customPalette = computed(() => {

@@ -103,7 +103,8 @@ watch(() => props.dataset, (_) => {
 
 const { isPrinting, isImaging, generatePdf: makePdf, generateImage } = usePrinter({
     elementId: `carousel-table_${uid.value}`,
-    fileName: FINAL_CONFIG.value.caption.text || 'vue-ui-carousel-table'
+    fileName: FINAL_CONFIG.value.caption.text || 'vue-ui-carousel-table',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const mutableConfig = ref({

@@ -103,7 +103,8 @@ watch(() => props.config, (_newCfg) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-chestnut_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.layout.title.text || 'vue-ui-chestnut'
+    fileName: FINAL_CONFIG.value.style.chart.layout.title.text || 'vue-ui-chestnut',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

@@ -87,7 +87,8 @@ watch(() => props.config, (_newCfg) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-tiremarks'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-tiremarks',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

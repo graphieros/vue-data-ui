@@ -225,7 +225,8 @@ watch(() => props.dataset, (_) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: uid.value,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-donut-evolution'
+    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-donut-evolution',
+    options: FINAL_CONFIG.value.userOptions.print
 });
 
 const hasOptionsNoTitle = computed(() => {

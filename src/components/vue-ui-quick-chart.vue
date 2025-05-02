@@ -189,7 +189,8 @@ watch(() => chartType.value, (v) => {
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `${chartType.value}_${uid.value}`,
-    fileName: FINAL_CONFIG.value.title || chartType.value
+    fileName: FINAL_CONFIG.value.title || chartType.value,
+    options: FINAL_CONFIG.value.userOptionsPrint
 });
 
 const hasOptionsNoTitle = computed(() => {
