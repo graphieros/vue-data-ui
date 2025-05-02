@@ -1,7 +1,7 @@
 import html2canvas from 'html2canvas';
 import JsPDF from "jspdf";
 
-export default function pdf({domElement, fileName}) {
+export default function pdf({domElement, fileName, options = {} }) {
     if(domElement) {
             const a4 = {
             height: 851.89,
@@ -9,7 +9,7 @@ export default function pdf({domElement, fileName}) {
         };
         const pdf = new JsPDF("", "pt", "a4");
         let contentWidth, contentHeight, imgWidth, imgHeight, pageData;
-        return html2canvas(domElement)
+        return html2canvas(domElement, { ...options })
             .then((canvasChart) => {
                 contentWidth = canvasChart.width;
                 contentHeight = canvasChart.height;

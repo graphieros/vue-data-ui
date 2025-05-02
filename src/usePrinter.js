@@ -3,7 +3,8 @@ import { ref } from "vue";
 export function usePrinter({
     elementId,
     fileName,
-    canPrint = true
+    canPrint = true,
+    options
 }) {
     const isPrinting = ref(false);
     const isImaging = ref(false);
@@ -20,6 +21,7 @@ export function usePrinter({
                     await pdf({
                         domElement: document.getElementById(elementId),
                         fileName,
+                        options
                     });
                 } catch (error) {
                     console.error("Error generating PDF:", error);
@@ -42,6 +44,7 @@ export function usePrinter({
                         domElement: document.getElementById(elementId),
                         fileName,
                         format: "png",
+                        options
                     });
                 } catch (error) {
                     console.error("Error generating image:", error);

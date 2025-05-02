@@ -171,7 +171,15 @@ export function useConfig() {
                 animation,
                 annotator
             },
-            buttonTitles
+            buttonTitles,
+            // html2canvas options
+            print: {
+                allowTaint: false,
+                backgroundColor: '#FFFFFF',
+                useCORS: false,
+                onclone: null,
+                scale: 2
+            }
         }
     }
 
@@ -2490,6 +2498,13 @@ export function useConfig() {
             img: 'Download PNG',
             fullscreen: 'Toggle fullscreen',
             annotator: 'Toggle annotator'
+        },
+        userOptionsPrint: {
+            allowTaint: false,
+            backgroundColor: '#FFFFFF',
+            useCORS: false,
+            onclone: null,
+            scale: 2
         },
         title: '',
         titleBold: true,
