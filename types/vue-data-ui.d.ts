@@ -218,6 +218,7 @@ declare module "vue-data-ui" {
             useCORS?: boolean;
             onclone?: null | ((doc: Document) => void);
             scale?: number;
+            logging?: boolean;
         };
     };
 
@@ -5130,6 +5131,7 @@ declare module "vue-data-ui" {
             useCORS?: boolean;
             onclone?: null | ((doc: Document) => void),
             scale?: number;
+            logging?: boolean;
         };
         showUserOptionsOnChartHover?: boolean;
         keepUserOptionsStateOnChartLeave?: boolean;

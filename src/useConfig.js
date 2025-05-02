@@ -178,7 +178,8 @@ export function useConfig() {
                 backgroundColor: '#FFFFFF',
                 useCORS: false,
                 onclone: null,
-                scale: 2
+                scale: 2,
+                logging: false
             }
         }
     }
@@ -2504,7 +2505,8 @@ export function useConfig() {
             backgroundColor: '#FFFFFF',
             useCORS: false,
             onclone: null,
-            scale: 2
+            scale: 2,
+            logging: false,
         },
         title: '',
         titleBold: true,
