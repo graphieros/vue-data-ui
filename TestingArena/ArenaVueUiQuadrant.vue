@@ -236,7 +236,12 @@ const model = ref([
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100 },
     { key: 'style.chart.tooltip.position', def: 'center', type:'select', options: ['left', 'center', 'right']},
-    { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48}
+    { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
+
+    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
+    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' }
 ])
 
 const testCustomTooltip = ref(false);

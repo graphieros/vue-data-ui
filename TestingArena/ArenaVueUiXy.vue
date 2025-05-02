@@ -259,8 +259,8 @@ const model = ref([
     { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
-    { key: 'chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
-    { key: 'chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
+    { key: 'chart.backgroundColor', def: 'transparent', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'chart.color', def: '#FFFFFF', type: 'color', label: 'textColor', category: 'general' },
     { key: 'chart.height', def: 600, type: 'range', min: 300, max: 1000, label: 'height', category: 'general' },
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
     { key: 'chart.zoom.show', def: true, type: 'checkbox', label: 'zoom', category: 'general' },
@@ -454,6 +454,11 @@ const model = ref([
     { key: 'chart.comments.showInTooltip', def: true, type: 'checkbox'},
     { key: 'chart.comments.width', def: 200, type: 'number', min: 50, max: 400},
     { key: 'chart.comments.offsetY', def: 0, type: 'number', min: -100, max: 100},
+
+    { key: 'chart.userOptions.print.allowTaint', def: true, type: 'checkbox' },
+    { key: 'chart.userOptions.print.backgroundColor', def: '#FFFFFF', type: 'color'},
+    { key: 'chart.userOptions.print.useCORS', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5 }
 ]);
 
 const testCustomTooltip = ref(false);
@@ -552,6 +557,15 @@ const config = computed(() => {
                         { name: 'percentage', scaleMin: 0, scaleMax: 100 },
                         { name: 'total', scaleMin: null, scaleMax: null }
                     ]
+                },
+                userOptions: {
+                    ...c.chart.userOptions,
+                    print: {
+                        ...c.chart.userOptions.print,
+                        // onclone: (doc) => {
+                        //     doc.body.style.backgroundColor = '#FF0000'
+                        // }
+                    }
                 },
                 highlightArea: [{
                         show: true,

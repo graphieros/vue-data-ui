@@ -213,6 +213,11 @@ const model = ref([
     def: "auto",
     type: "text",
   },
+
+  { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
+    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
 ]);
 
 const themeOptions = ref([

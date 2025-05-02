@@ -193,6 +193,11 @@ const model = ref([
     { key: 'userOptions.buttonTitles.open', def: 'OPEN OPTIONS', type: 'text'},
     { key: 'userOptions.buttonTitles.close', def: 'CLOSE OPTIONS', type: 'text'},
     { key: 'userOptions.buttonTitles.annotator', def: 'TOGGLE ANNOTATOR', type: 'text'},
+
+    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
+    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' }
 ])
 
 const testCustomTooltip = ref(false);

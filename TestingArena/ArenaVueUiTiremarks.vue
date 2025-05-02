@@ -77,6 +77,11 @@ const model = ref([
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
 
+    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
+    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' }
+
 ])
 
 const themeOptions = ref([

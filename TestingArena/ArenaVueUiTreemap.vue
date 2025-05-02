@@ -208,6 +208,11 @@ const model = ref([
     { key: 'table.td.color', def: '#1A1A1A', type: 'color'},
     { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 12},
     { key: 'table.td.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
+
+    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
+    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' }
 ]);
 
 const testCustomTooltip = ref(false);

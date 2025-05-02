@@ -54,6 +54,11 @@ const model = ref([
     { key: 'style.chart.comments.offsetX', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.comments.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'responsive', def: false, type: 'checkbox'},
+
+    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
+    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},

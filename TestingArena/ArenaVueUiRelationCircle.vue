@@ -89,6 +89,11 @@ const model = ref([
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+
+    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
+    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
+    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},

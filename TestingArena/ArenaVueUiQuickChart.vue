@@ -132,6 +132,11 @@ const model = ref([
     { key: 'showUserOptionsOnChartHover', def: true, type: 'checkbox'},
     { key: 'keepUserOptionsStateOnChartLeave', def: true, type: 'checkbox'},
 
+    { key: 'userOptionsPrint.scale', def: 2, type: 'number', min: 1, max: 5},
+    { key: 'userOptionsPrint.allowTaint', def: true, type: 'checkbox'},
+    { key: 'userOptionsPrint.useCORS', def: true, type: 'checkbox'},
+    { key: 'userOptionsPrint.backgroundColor', def: '#FFFFFF' },
+
     { key: 'axisLabelsFontSize', def: 12, type: 'number', min: 8, max: 24},
     { key: 'barGap', def: 12, type: 'range', min: 0, max: 48},
     { key: 'barAnimated', def: true, type: 'checkbox' },
