@@ -321,9 +321,7 @@ const viewBox = computed(() => {
         width: svg.value.vbWidth,
         height: svg.value.vbHeight,
     }
-})
-
-const isZoom = ref(false);
+});
 
 function findNodeById(id, nodes = immutableDataset.value) {
     for (const node of nodes) {
@@ -340,19 +338,71 @@ function findNodeById(id, nodes = immutableDataset.value) {
     return null;
 };
 
+const drillStack = ref([]);  
+
+const isZoom = computed(() => drillStack.value.length > 0);
+
 function zoom(rect) {
-    if(isZoom.value) {
-        emit('selectDatapoint', undefined);
-        currentSet.value = immutableDataset.value;
-    } else {
-        emit('selectDatapoint', rect);
-        if(!findNodeById(rect.parentId)) {
-            return
-        }
-        currentSet.value = [findNodeById(rect.parentId)];
+    if (!rect) {
+        currentSet.value = immutableDataset.value.slice()
+        emit('selectDatapoint', undefined)
+        drillStack.value = []
+        return
     }
-    isZoom.value = !isZoom.value;
+
+    const node = findNodeById(rect.id)
+
+    if (node && node.children?.length) {
+        drillStack.value.push(node.id)
+        currentSet.value = node.children.slice()
+        emit('selectDatapoint', rect)
+
+    } else if (rect.parentId) {
+        drillStack.value.push(rect.parentId)
+        const parent = findNodeById(rect.parentId)
+        currentSet.value = parent.children.slice()
+        emit('selectDatapoint', rect)
+
+    } else if (drillStack.value.length > 0) {
+            drillStack.value.pop()
+            const topId = drillStack.value[drillStack.value.length - 1]
+        if (topId) {
+            const upNode = findNodeById(topId)
+            currentSet.value = upNode.children.slice()
+        } else {
+            currentSet.value = immutableDataset.value.slice()
+            drillStack.value = []
+            emit('selectDatapoint', undefined)
+        }
+    }
 }
+
+const breadcrumbs = computed(() => {
+    const crumbs = [
+        { id: null,  label: 'All' }
+    ];
+
+    if (drillStack.value.length > 0) {
+        let node = findNodeById(drillStack.value[drillStack.value.length - 1]);
+        const path = [];
+
+        while (node) {
+            path.unshift(node);
+            node = node.parentId
+                ? findNodeById(node.parentId)
+                : null;
+        }
+
+        for (const n of path) {
+            crumbs.push({
+                id:    n.id,
+                label: n.name,
+                node: n
+            });
+        }
+    }
+    return crumbs;
+});
 
 const selectedRect = ref(null);
 
@@ -365,7 +415,7 @@ const legendSet = computed(() => {
         }
     })
         .sort((a,b) => b.value - a.value)
-        .map((el, i) => {
+        .map((el, _i) => {
             return {
                 ...el,
                 proportion: el.value / immutableDataset.value.map(m => m.value).reduce((a, b) => a + b, 0),
@@ -656,6 +706,35 @@ defineExpose({
             </template>
         </UserOptions>
 
+        <nav class="vue-ui-treemap-breadcrumbs" v-if="breadcrumbs.length > 1" data-html2canvas-ignore>
+            <span 
+                v-for="(crumb, i) in breadcrumbs" 
+                :key="crumb.id || 'root'" 
+                @click="i === breadcrumbs.length - 1 ? () => {} : zoom(crumb.node)"
+                class="vue-ui-treemap-crumb"
+                :data-last-crumb="i === breadcrumbs.length - 1"
+                :style="{
+                    color: FINAL_CONFIG.style.chart.color
+                }"
+            >
+                <span 
+                    class="vue-ui-treemap-crumb-unit"
+                >
+                    <span class="vue-ui-treemap-crumb-unit-label">
+                        <slot name="breadcrumb-label" v-bind="{crumb}">
+                            {{ crumb.label }}
+                        </slot>
+                    </span>
+
+                    <span v-if="i < breadcrumbs.length - 1" class="vue-ui-treemap-crumb-unit-arrow">
+                        <slot name="breadcrumb-arrow">
+                            ›
+                        </slot>
+                    </span>
+                </span>
+            </span>
+        </nav>
+
         <!-- CHART -->
         <svg 
             ref="svgRef"
@@ -688,7 +767,7 @@ defineExpose({
                     :rx="FINAL_CONFIG.style.chart.layout.rects.borderRadius"
                     :stroke="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.stroke : FINAL_CONFIG.style.chart.layout.rects.stroke"
                     :stroke-width="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.strokeWidth : FINAL_CONFIG.style.chart.layout.rects.strokeWidth"
-                    @click="zoom(rect)"
+                    @click.stop="zoom(rect)"
                     @mouseenter="() => useTooltip({
                         datapoint: rect,
                         seriesIndex: i,
@@ -915,5 +994,53 @@ defineExpose({
         transform: scale(1, 1);
         opacity: 1;
     }
+}
+
+.vue-ui-treemap-breadcrumbs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0.5rem 1rem;
+    gap: 0.5rem;
+    scrollbar-width: none;
+}
+.vue-ui-treemap-breadcrumbs::-webkit-scrollbar {
+    display: none;
+}
+
+.vue-ui-treemap-crumb {
+    flex-shrink: 1;
+    min-width: 40px; 
+    cursor: pointer;
+}
+
+.vue-ui-treemap-crumb-unit-label {
+    flex-shrink: 1;
+    min-width: 0; 
+    white-space: nowrap; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.vue-ui-treemap-crumb-unit-arrow {
+    min-width: 12px;
+}
+
+.vue-ui-treemap-crumb[data-last-crumb="true"] {
+    pointer-events: none;
+    cursor: default;
+    font-weight: bold;
+}
+
+.vue-ui-treemap-crumb:hover .vue-ui-treemap-crumb-unit-label {
+    text-decoration: underline;
+}
+
+.vue-ui-treemap-crumb-unit {
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+    gap: 3px;
 }
 </style>

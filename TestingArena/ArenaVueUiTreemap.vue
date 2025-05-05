@@ -10,28 +10,38 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
     {
-        name: 'S1',
+        name: 'Some datapoint',
         value: 100,
         children: [
             {
-                name: 'S1 - C1',
+                name: 'Some kind of child',
                 value: 50
             },
             {
-                name: 'S1 -C2',
+                name: 'Some other child',
                 value: 25
             },
             {
-                name: 'S1 - C3',
+                name: 'Yet another child with a long name',
                 value: 12.5,
                 children: [
                     {
-                        name: 'S1 - C3 - CC1',
+                        name: 'Some nested child',
                         value: 6
                     },
                     {
-                        name: 'S1 - C3 - CC2',
-                        value: 6.5
+                        name: 'Some other nested child with a very long name',
+                        value: 6.5,
+                        children: [
+                            {
+                                name: 'kiddo1',
+                                value: 6
+                            },
+                            {
+                                name: 'kiddo2',
+                                value: 6.5
+                            },
+                        ]
                     },
                 ]
             }
@@ -355,6 +365,12 @@ function selectDatapoint(datapoint) {
         
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiTreemap" :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="vduiLocal">
+                <template #breadcrumb-label="{ crumb }">
+                    {{ crumb.label }}
+                </template>
+                <!-- <template #breadcrumb-arrow>
+                    ⇾
+                </template> -->
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
