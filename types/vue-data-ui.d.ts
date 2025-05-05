@@ -1151,7 +1151,8 @@ declare module "vue-data-ui" {
         | "unstack"
         | "vueDataUi"
         | "zoomMinus"
-        | "zoomPlus";
+        | "zoomPlus"
+        | "home";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;

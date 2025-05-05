@@ -38,6 +38,7 @@ import PackageVersion from '../atoms/PackageVersion.vue';
 import PenAndPaper from '../atoms/PenAndPaper.vue';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
+import BaseIcon from '../atoms/BaseIcon.vue';
 
 const { vue_ui_treemap: DEFAULT_CONFIG } = useConfig()
 
@@ -721,8 +722,15 @@ defineExpose({
                     class="vue-ui-treemap-crumb-unit"
                 >
                     <span class="vue-ui-treemap-crumb-unit-label">
-                        <slot name="breadcrumb-label" v-bind="{crumb}">
-                            {{ crumb.label }}
+                        <slot name="breadcrumb-label" v-bind="{ crumb, isRoot: i === 0 }">
+                            <template v-if="i === 0">
+                                <div style="width: 24px; display:flex; align-items:center">
+                                    <BaseIcon name="home" :stroke="FINAL_CONFIG.style.chart.color"/>
+                                </div>
+                            </template>
+                            <template v-else>
+                                {{ crumb.label }}
+                            </template>
                         </slot>
                     </span>
 
