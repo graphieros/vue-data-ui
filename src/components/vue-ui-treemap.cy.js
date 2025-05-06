@@ -39,6 +39,21 @@ describe('<VueUiTreemap />', () => {
         });
     });
 
+    it('renders breadcrumbs', () => {
+        cy.mount(VueUiTreemap, {
+            props: {
+                dataset,
+                config
+            }
+        }).then(() => {
+            cy.get('.vue-ui-treemap-breadcrumbs').should('not.exist')
+            cy.get('.vue-ui-treemap-rect').first().click()
+            cy.get('.vue-ui-treemap-breadcrumbs').should('exist').and('be.visible')
+            cy.get('.vue-ui-treemap-crumb').first().click()
+            cy.get('.vue-ui-treemap-breadcrumbs').should('not.exist')
+        })
+    })
+
     it('emits', () => {
         cy.mount(VueUiTreemap, {
             props: {
