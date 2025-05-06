@@ -378,6 +378,13 @@ function zoom(rect) {
     }
 }
 
+function canDrill(rect) {
+    const node = findNodeById(rect.id)
+    if (node?.children?.length) return true
+    if (rect.parentId) return true
+    return false
+}
+
 const breadcrumbs = computed(() => {
     const crumbs = [
         { id: null,  label: 'All' }
@@ -782,7 +789,12 @@ defineExpose({
                     })"
                     @mouseleave="selectedRect = null; isTooltip = false"
                     :style="`opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
-                    class="vue-ui-treemap-rect"
+                    :class="[
+                        'vue-ui-treemap-rect',
+                        canDrill(rect)
+                        ? 'vue-data-ui-zoom-plus'
+                        : (isZoom ? 'vue-data-ui-zoom-minus' : '')
+                    ]"
                 />
 
                 <foreignObject
