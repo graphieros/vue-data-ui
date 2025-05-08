@@ -5,6 +5,7 @@ export function useResponsive({
     legend = null,
     source = null,
     noTitle = null,
+    padding = null
 }) {
     let height = 0;
     let width = 0;
@@ -13,6 +14,8 @@ export function useResponsive({
     let heightLegend = 0;
     let heightSource = 0;
     let heightNoTitle = 0;
+    let heightPadding = 0;
+    let widthPadding = 0;
 
     if (!!chart) {
         const parent = chart.parentNode;
@@ -31,7 +34,11 @@ export function useResponsive({
             heightSource = source.getBoundingClientRect().height;
         }
         if (noTitle) {
-            heightNoTitle = noTitle.getBoundingClientRect().height
+            heightNoTitle = noTitle.getBoundingClientRect().height;
+        }
+        if (padding) {
+            heightPadding = padding.top + padding.bottom;
+            widthPadding = padding.right + padding.left;
         }
     
         height = parentHeight 
@@ -39,9 +46,11 @@ export function useResponsive({
             - heightSlicer
             - heightLegend 
             - heightSource
-            - heightNoTitle;
+            - heightNoTitle
+            - heightPadding;
             
-        width = parentWidth;
+        width = parentWidth
+            - widthPadding;
     }
 
     return {

@@ -77,6 +77,12 @@ const model = ref([
     { key: 'style.chart.gradientIntensity', def: 40, type: 'range', min: 0, max: 100},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
+
+    { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.right', def: 48, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.left', def: 48, type: 'number', min: 0, max: 100},
+
     { key: 'style.chart.layout.labels.dataLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.layout.labels.dataLabels.suffix', def: 'S', type: 'text'},

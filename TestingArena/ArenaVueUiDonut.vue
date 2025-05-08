@@ -88,6 +88,11 @@ const model = ref([
     { key: 'style.chart.backgroundColor', def: 'transparent', type: 'color', label: 'backgroundColor', category: 'general' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
 
+    { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.left', def: 24, type: 'number', min: 0, max: 100},
+
     { key: 'style.chart.layout.curvedMarkers', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.dataLabels.show', def: true, type: 'checkbox', label: 'show', category: 'labels' },
     { key: 'style.chart.layout.labels.dataLabels.hideUnderValue', def: 3, type: 'number', min: 0, max: 100, label: 'hideUnderValue', category: 'labels' },

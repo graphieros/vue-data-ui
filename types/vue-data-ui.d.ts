@@ -1153,7 +1153,9 @@ declare module "vue-data-ui" {
         | "zoomMinus"
         | "zoomPlus"
         | "home"
-        | "homeFilled";
+        | "homeFilled"
+        | "icons"
+        | "robot";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -2917,6 +2919,7 @@ declare module "vue-data-ui" {
                 gradientIntensity?: number;
                 backgroundColor?: string;
                 color?: string;
+                padding?: ChartPadding;
                 layout?: {
                     curvedMarkers?: boolean;
                     labels?: {
@@ -3095,6 +3098,7 @@ declare module "vue-data-ui" {
                 gradientIntensity?: number;
                 backgroundColor?: string;
                 color?: string;
+                padding?: ChartPadding;
                 layout?: {
                     labels?: {
                         dataLabels?: {

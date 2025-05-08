@@ -118,7 +118,8 @@ function prepareChart() {
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
                 source: source.value,
-                noTitle: noTitle.value
+                noTitle: noTitle.value,
+                padding: padding.value
             });
 
             requestAnimationFrame(() => {
@@ -183,6 +184,17 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
+
+const padding = computed(() => {
+    const { top, right, bottom, left } = FINAL_CONFIG.value.style.chart.padding;
+    return {
+        css: `padding:${top}px ${right}px ${bottom}px ${left}px`,
+        top,
+        right,
+        bottom,
+        left
+    }
+})
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `donut__${uid.value}`,
@@ -772,7 +784,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg ref="svgRef" :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+        <svg ref="svgRef" :xmlns="XMLNS" v-if="isDataset" :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" data-cy="donut-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};${padding.css}`">
             <PackageVersion/>
 
             <!-- BACKGROUND SLOT -->
