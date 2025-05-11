@@ -1155,7 +1155,12 @@ declare module "vue-data-ui" {
         | "home"
         | "homeFilled"
         | "icons"
-        | "robot";
+        | "robot"
+        | "hourglass"
+        | "computer"
+        | "htmlTag"
+        | "curlyBrackets"
+        | "curlySpread";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -6877,6 +6882,38 @@ declare module "vue-data-ui" {
     export type VueDataUiWordCloudTransformCallback =
         | ((word: string) => string)
         | null;
+
+
+    export type Point = {
+        [key: string]: any
+        x: number
+        y: number
+    }
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Generate a straight line path to include in the d attribute of a svg path element 
+     * ___
+     * @example
+     * const path = createStraightPath([{x: 1, y: 1}, { x: 2, y: 1.2}])
+     *
+     * @param points - An array of point objects
+     */
+    export const createStraightPath: (points: Point[]) => string
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Generate a spline path to include in the d attribute of a svg path element 
+     * ___
+     * @example
+     * const path = createSmoothPath([{x: 1, y: 1}, { x: 2, y: 1.2}, { x: 3, y: 0.2 }])
+     *
+     * @param points - An array of point objects
+     */
+    export const createSmoothPath: (points: Point[]) => string
+
 
     /**
      * Vue Data UI utility

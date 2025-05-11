@@ -1,7 +1,7 @@
 import { defineAsyncComponent } from "vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
 import getThemeConfig from "./getThemeConfig";
-import { getPalette, createWordCloudDatasetFromPlainText, abbreviate, createTSpans } from "./lib";
+import { getPalette, createWordCloudDatasetFromPlainText, abbreviate, createTSpans, createStraightPath, createSmoothPath } from "./lib";
 import { lightenColor, darkenColor, shiftColorHue } from "./exposedLib";
 
 export const Arrow = defineAsyncComponent(() => import("./atoms/Arrow.vue"))
@@ -77,5 +77,7 @@ export {
     getVueDataUiConfig,
     lightenColor,
     shiftColorHue,
-    createTSpans
+    createTSpans,
+    createStraightPath,
+    createSmoothPath
 }
