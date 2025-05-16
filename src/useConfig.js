@@ -3660,10 +3660,10 @@ export function useConfig() {
                 height: 512,
                 width: 512,
                 zoom: {
-                    show: false,
-                    color: COLOR_GREY_MID,
-                    highlightColor: COLOR_GREY_DARK,
-                    useResetSlot: false
+                    show: true,
+                    color: COLOR_GREY_MID, // deprecated
+                    highlightColor: COLOR_GREY_DARK, // deprecated
+                    useResetSlot: false // deprecated
                 },
                 words: {
                     maxFontSize: 100,

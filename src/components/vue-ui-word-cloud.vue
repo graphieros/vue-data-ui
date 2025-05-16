@@ -19,7 +19,6 @@ import {
 import { throttle } from '../canvas-lib';
 import Accordion from "./vue-ui-accordion.vue";
 import DataTable from '../atoms/DataTable.vue';
-import MonoSlicer from '../atoms/MonoSlicer.vue';
 import { useNestedProp } from '../useNestedProp';
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
@@ -29,6 +28,7 @@ import Tooltip from '../atoms/Tooltip.vue';
 import PenAndPaper from '../atoms/PenAndPaper.vue';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
+import usePanZoom from '../usePanZoom';
 
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 
@@ -124,9 +124,6 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
-const chartSlicer = ref(null);
-const slicer = ref(0);
-
 const svg = ref({
     width: FINAL_CONFIG.value.style.chart.width,
     height: FINAL_CONFIG.value.style.chart.height,
@@ -134,39 +131,27 @@ const svg = ref({
     minFontSize: FINAL_CONFIG.value.style.chart.words.minFontSize
 });
 
+const debounceUpdateCloud = debounce(() => {
+    generateWordCloud()
+}, 10);
+
 const handleResize = throttle(() => {
     const { width, height } = useResponsive({
         chart: wordCloudChart.value,
         title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-        slicer: FINAL_CONFIG.value.style.chart.zoom.show && chartSlicer.value,
         source: source.value
     });
 
     requestAnimationFrame(() => {
         svg.value.width = width;
         svg.value.height = height;
-        nextTick(generateWordCloud);
+        nextTick(debounceUpdateCloud)
     });
 });
 
-watch(() => slicer.value, () => {
-    debounceUpdateCloud()
-});
-
-const debounceUpdateCloud = debounce(() => {
-    generateWordCloud()
-}, 10);
-
-function refreshSlicer() {
-    slicer.value = wordMin.value;
-}
-
 const resizeObserver = ref(null);
 
-onMounted(() => {
-    prepareChart();
-    refreshSlicer();
-});
+onMounted(prepareChart);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -223,47 +208,144 @@ function measureTextSize(text, fontSize, fontFamily = "Arial") {
     };
 }
 
-function isOverlapping(a, b) {
-    return (
-        a.x < b.x + b.width &&
-        a.x + a.width > b.x &&
-        a.y < b.y + b.height &&
-        a.y + a.height > b.y
-    );
-}
-
 function positionWords(words, width, height) {
+    const maskW = Math.round(width);
+    const maskH = Math.round(height);
+    const minFontSize = 1;
+    const configMinFontSize = svg.value.minFontSize;
+    const maxFontSize = svg.value.maxFontSize;
+    const proximity = FINAL_CONFIG.value.style.chart.words.proximity || 0;
+    const values = words.map(w => w.value);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+
+    const mask = new Uint8Array(maskW * maskH);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    canvas.width = maskW;
+    canvas.height = maskH;
+
+    function getWordBitmap(word, fontSize, pad) {
+        ctx.save();
+        ctx.font = `${svg.value.style && svg.value.style.bold ? 'bold ' : ''}${fontSize}px Arial`;
+        const metrics = ctx.measureText(word.name);
+        const textW = Math.ceil(metrics.width) + 2 + (pad ? pad * 2 : 0);
+        const textH = Math.ceil(fontSize) + 2 + (pad ? pad * 2 : 0);
+
+        canvas.width = textW;
+        canvas.height = textH;
+        ctx.clearRect(0, 0, textW, textH);
+        ctx.font = `${svg.value.style && svg.value.style.bold ? 'bold ' : ''}${fontSize}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "black";
+        ctx.fillText(word.name, textW / 2, textH / 2);
+        const image = ctx.getImageData(0, 0, textW, textH);
+        const data = image.data;
+        const wordMask = [];
+        for (let y = 0; y < textH; y += 1) {
+            for (let x = 0; x < textW; x += 1) {
+                if (data[(y * textW + x) * 4 + 3] > 1) wordMask.push([x, y]);
+            }
+        }
+        ctx.restore();
+        return { w: textW, h: textH, wordMask };
+    }
+
+    function canPlaceAt(mask, maskW, maskH, wx, wy, wordMask) {
+        for (let i = 0; i < wordMask.length; i += 1) {
+            const x = wx + wordMask[i][0];
+            const y = wy + wordMask[i][1];
+            if (x < 0 || y < 0 || x >= maskW || y >= maskH) return false;
+            if (mask[y * maskW + x]) return false;
+        }
+        return true;
+    }
+    function markMask(mask, maskW, maskH, wx, wy, wordMask) {
+        for (let i = 0; i < wordMask.length; i += 1) {
+            const x = wx + wordMask[i][0];
+            const y = wy + wordMask[i][1];
+            if (x >= 0 && y >= 0 && x < maskW && y < maskH) mask[y * maskW + x] = 1;
+        }
+    }
+
+    const spiralStep = 6, spiralRadiusStep = 2;
+    const fallbackSpiralStep = 2, fallbackSpiralRadiusStep = 1;
+    const cx = Math.floor(maskW / 2), cy = Math.floor(maskH / 2);
+
+    const sorted = [...words].sort((a, b) => b.value - a.value);
     const positionedWords = [];
-    const bounds = { x: -width / 2, y: -height / 2, width, height };
-    const centerX = 0;
-    const centerY = 0;
 
-    words.forEach(word => {
-        let isPlaced = false;
-        for (let i = 0; i < Math.max(width, height) / 2 && !isPlaced; i += FINAL_CONFIG.value.style.chart.words.packingWeight) {
-            for (let theta = 0; theta < 360 && !isPlaced; theta += FINAL_CONFIG.value.style.chart.words.packingWeight) {
-                const rad = (theta * Math.PI) / 180;
-                const x = centerX + i * Math.cos(rad) - word.width / 2;
-                const y = centerY + i * Math.sin(rad) - word.height / 2;
-
-                const testPosition = { ...word, x, y };
-
-                const isInsideBounds =
-                    testPosition.x >= bounds.x &&
-                    testPosition.y >= bounds.y &&
-                    testPosition.x + testPosition.width <= bounds.x + bounds.width &&
-                    testPosition.y + testPosition.height <= bounds.y + bounds.height;
-
-                const isOverlap = positionedWords.some(w => isOverlapping(testPosition, w));
-
-                if (isInsideBounds && !isOverlap) {
-                    positionedWords.push(testPosition);
-                    isPlaced = true;
+    function dilateWordMask(wordMask, w, h, dilation = 1) {
+    const set = new Set(wordMask.map(([x, y]) => `${x},${y}`));
+    const result = new Set(set);
+    for (let [x, y] of wordMask) {
+        for (let dx = -dilation; dx <= dilation; dx += 1) {
+            for (let dy = -dilation; dy <= dilation; dy += 1) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = x + dx, ny = y + dy;
+                if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+                    result.add(`${nx},${ny}`);
                 }
             }
         }
-    });
+    }
+    return Array.from(result).map(s => s.split(',').map(Number));
+}
 
+    for (const wordRaw of sorted) {
+        let targetFontSize = configMinFontSize;
+        if (maxValue !== minValue) {
+            targetFontSize = (wordRaw.value - minValue) / (maxValue - minValue) * (maxFontSize - configMinFontSize) + configMinFontSize;
+        }
+        targetFontSize = Math.max(configMinFontSize, Math.min(maxFontSize, targetFontSize));
+
+        let placed = false;
+        let fontSize = targetFontSize;
+
+        while (!placed && fontSize >= minFontSize) {
+            let { w, h, wordMask } = getWordBitmap(wordRaw, fontSize, proximity);
+            wordMask = dilateWordMask(wordMask, w, h, 2);
+            let r = 0, attempts = 0;
+            while (r < Math.max(maskW, maskH) && !placed && attempts < 10000) {
+                for (let theta = 0; theta < 360; theta += spiralStep) {
+                    attempts += 1;
+                    const px = Math.round(cx + r * Math.cos(theta * Math.PI / 180) - w / 2);
+                    const py = Math.round(cy + r * Math.sin(theta * Math.PI / 180) - h / 2);
+                    if (px < 0 || py < 0 || px + w > maskW || py + h > maskH) continue;
+                    if (canPlaceAt(mask, maskW, maskH, px, py, wordMask)) {
+                        positionedWords.push({ ...wordRaw, x: px - maskW / 2, y: py - maskH / 2, fontSize, width: w, height: h, angle: 0 });
+                        markMask(mask, maskW, maskH, px, py, wordMask);
+                        placed = true;
+                        break;
+                    }
+                }
+                r += spiralRadiusStep;
+            }
+            if (!placed) fontSize -= 1;
+        }
+
+        if (!placed && fontSize < minFontSize) {
+            fontSize = minFontSize;
+            const { w, h, wordMask } = getWordBitmap(wordRaw, fontSize, proximity);
+            let r = 0, attempts = 0, bestPlacement = null;
+            while (r < Math.max(maskW, maskH) && !placed && attempts < 25000) {
+                for (let theta = 0; theta < 360; theta += fallbackSpiralStep) {
+                    attempts += 1;
+                    const px = Math.round(cx + r * Math.cos(theta * Math.PI / 180) - w / 2);
+                    const py = Math.round(cy + r * Math.sin(theta * Math.PI / 180) - h / 2);
+                    if (px < 0 || py < 0 || px + w > maskW || py + h > maskH) continue;
+                    if (canPlaceAt(mask, maskW, maskH, px, py, wordMask)) {
+                        positionedWords.push({ ...wordRaw, x: px - maskW / 2, y: py - maskH / 2, fontSize, width: w, height: h, angle: 0 });
+                        markMask(mask, maskW, maskH, px, py, wordMask);
+                        placed = true;
+                        break;
+                    }
+                }
+                r += fallbackSpiralRadiusStep;
+            }
+        }
+    }
     return positionedWords;
 }
 
@@ -279,11 +361,11 @@ const wordMax = computed(() => {
 })
 
 function generateWordCloud() {
-    const values = [...drawableDataset.value].filter(w => w.value >= slicer.value).map(d => d.value);
+    const values = [...drawableDataset.value].map(d => d.value);
     const maxValue = Math.max(...values);
     const minValue = Math.min(...values);
 
-    const scaledWords = [...drawableDataset.value].filter(w => w.value >= slicer.value).map((word, i) => {
+    const scaledWords = [...drawableDataset.value].map((word, i) => {
         let fontSize = ((word.value - minValue) / (maxValue - minValue)) * (svg.value.maxFontSize - svg.value.minFontSize) + svg.value.minFontSize;
         fontSize = isNaN(fontSize) ? svg.value.minFontSize : fontSize;
         const size = measureTextSize(word.name, fontSize);
@@ -391,6 +473,15 @@ const isAnnotator = ref(false);
 function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
+
+const active = computed(() => !isAnnotator.value && FINAL_CONFIG.value.style.chart.zoom.show)
+
+const { viewBox } = usePanZoom(svgRef, {
+    x: 0,
+    y: 0,
+    width: svg.value.width <= 0 ? 10 : svg.value.width,
+    height: svg.value.height <= 0 ? 10 : svg.value.height,
+}, 1, active)
 
 defineExpose({
     getData,
@@ -526,8 +617,9 @@ function useTooltip(word) {
             ref="svgRef"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" 
             v-if="isDataset"
-            :xmlns="XMLNS" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-            :style="`overflow:visible;background:transparent;`"
+            :xmlns="XMLNS"
+            :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`"
+            :style="`overflow:hidden;background:transparent;`"
         >
             <PackageVersion />
 
@@ -594,27 +686,6 @@ function useTooltip(word) {
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
-
-        <div ref="chartSlicer" :style="`width:100%;background:transparent`" data-html2canvas-ignore>
-            <MonoSlicer
-                v-if="FINAL_CONFIG.style.chart.zoom.show && wordMin < wordMax"
-                v-model:value="slicer"
-                :min="wordMin"
-                :max="wordMax"
-                :textColor="FINAL_CONFIG.style.chart.color"
-                :inputColor="FINAL_CONFIG.style.chart.zoom.color"
-                :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
-                :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-                :background="FINAL_CONFIG.style.chart.zoom.color"
-                :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
-                :source="FINAL_CONFIG.style.chart.width"
-                @reset="refreshSlicer"
-            >
-                <template #reset-action="{ reset }">
-                    <slot name="reset-action" v-bind="{ reset }"/>
-                </template>
-            </MonoSlicer>
-        </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
