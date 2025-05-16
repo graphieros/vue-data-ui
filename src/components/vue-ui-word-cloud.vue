@@ -29,6 +29,7 @@ import PenAndPaper from '../atoms/PenAndPaper.vue';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import usePanZoom from '../usePanZoom';
+import { positionWords } from '../wordcloud';
 
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 
@@ -128,7 +129,8 @@ const svg = ref({
     width: FINAL_CONFIG.value.style.chart.width,
     height: FINAL_CONFIG.value.style.chart.height,
     maxFontSize: FINAL_CONFIG.value.style.chart.words.maxFontSize,
-    minFontSize: FINAL_CONFIG.value.style.chart.words.minFontSize
+    minFontSize: FINAL_CONFIG.value.style.chart.words.minFontSize,
+    bold: FINAL_CONFIG.value.style.chart.words.bold
 });
 
 const debounceUpdateCloud = debounce(() => {
@@ -208,157 +210,9 @@ function measureTextSize(text, fontSize, fontFamily = "Arial") {
     };
 }
 
-function positionWords(words, width, height) {
-    const maskW = Math.round(width);
-    const maskH = Math.round(height);
-    const minFontSize = 1;
-    const configMinFontSize = svg.value.minFontSize;
-    const maxFontSize = svg.value.maxFontSize;
-    const proximity = FINAL_CONFIG.value.style.chart.words.proximity || 0;
-    const values = words.map(w => w.value);
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
-
-    const mask = new Uint8Array(maskW * maskH);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    canvas.width = maskW;
-    canvas.height = maskH;
-
-    function getWordBitmap(word, fontSize, pad) {
-        ctx.save();
-        ctx.font = `${svg.value.style && svg.value.style.bold ? 'bold ' : ''}${fontSize}px Arial`;
-        const metrics = ctx.measureText(word.name);
-        const textW = Math.ceil(metrics.width) + 2 + (pad ? pad * 2 : 0);
-        const textH = Math.ceil(fontSize) + 2 + (pad ? pad * 2 : 0);
-
-        canvas.width = textW;
-        canvas.height = textH;
-        ctx.clearRect(0, 0, textW, textH);
-        ctx.font = `${svg.value.style && svg.value.style.bold ? 'bold ' : ''}${fontSize}px Arial`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "black";
-        ctx.fillText(word.name, textW / 2, textH / 2);
-        const image = ctx.getImageData(0, 0, textW, textH);
-        const data = image.data;
-        const wordMask = [];
-        for (let y = 0; y < textH; y += 1) {
-            for (let x = 0; x < textW; x += 1) {
-                if (data[(y * textW + x) * 4 + 3] > 1) wordMask.push([x, y]);
-            }
-        }
-        ctx.restore();
-        return { w: textW, h: textH, wordMask };
-    }
-
-    function canPlaceAt(mask, maskW, maskH, wx, wy, wordMask) {
-        for (let i = 0; i < wordMask.length; i += 1) {
-            const x = wx + wordMask[i][0];
-            const y = wy + wordMask[i][1];
-            if (x < 0 || y < 0 || x >= maskW || y >= maskH) return false;
-            if (mask[y * maskW + x]) return false;
-        }
-        return true;
-    }
-    function markMask(mask, maskW, maskH, wx, wy, wordMask) {
-        for (let i = 0; i < wordMask.length; i += 1) {
-            const x = wx + wordMask[i][0];
-            const y = wy + wordMask[i][1];
-            if (x >= 0 && y >= 0 && x < maskW && y < maskH) mask[y * maskW + x] = 1;
-        }
-    }
-
-    const spiralStep = 6, spiralRadiusStep = 2;
-    const fallbackSpiralStep = 2, fallbackSpiralRadiusStep = 1;
-    const cx = Math.floor(maskW / 2), cy = Math.floor(maskH / 2);
-
-    const sorted = [...words].sort((a, b) => b.value - a.value);
-    const positionedWords = [];
-
-    function dilateWordMask(wordMask, w, h, dilation = 1) {
-    const set = new Set(wordMask.map(([x, y]) => `${x},${y}`));
-    const result = new Set(set);
-    for (let [x, y] of wordMask) {
-        for (let dx = -dilation; dx <= dilation; dx += 1) {
-            for (let dy = -dilation; dy <= dilation; dy += 1) {
-                if (dx === 0 && dy === 0) continue;
-                const nx = x + dx, ny = y + dy;
-                if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-                    result.add(`${nx},${ny}`);
-                }
-            }
-        }
-    }
-    return Array.from(result).map(s => s.split(',').map(Number));
-}
-
-    for (const wordRaw of sorted) {
-        let targetFontSize = configMinFontSize;
-        if (maxValue !== minValue) {
-            targetFontSize = (wordRaw.value - minValue) / (maxValue - minValue) * (maxFontSize - configMinFontSize) + configMinFontSize;
-        }
-        targetFontSize = Math.max(configMinFontSize, Math.min(maxFontSize, targetFontSize));
-
-        let placed = false;
-        let fontSize = targetFontSize;
-
-        while (!placed && fontSize >= minFontSize) {
-            let { w, h, wordMask } = getWordBitmap(wordRaw, fontSize, proximity);
-            wordMask = dilateWordMask(wordMask, w, h, 2);
-            let r = 0, attempts = 0;
-            while (r < Math.max(maskW, maskH) && !placed && attempts < 10000) {
-                for (let theta = 0; theta < 360; theta += spiralStep) {
-                    attempts += 1;
-                    const px = Math.round(cx + r * Math.cos(theta * Math.PI / 180) - w / 2);
-                    const py = Math.round(cy + r * Math.sin(theta * Math.PI / 180) - h / 2);
-                    if (px < 0 || py < 0 || px + w > maskW || py + h > maskH) continue;
-                    if (canPlaceAt(mask, maskW, maskH, px, py, wordMask)) {
-                        positionedWords.push({ ...wordRaw, x: px - maskW / 2, y: py - maskH / 2, fontSize, width: w, height: h, angle: 0 });
-                        markMask(mask, maskW, maskH, px, py, wordMask);
-                        placed = true;
-                        break;
-                    }
-                }
-                r += spiralRadiusStep;
-            }
-            if (!placed) fontSize -= 1;
-        }
-
-        if (!placed && fontSize < minFontSize) {
-            fontSize = minFontSize;
-            const { w, h, wordMask } = getWordBitmap(wordRaw, fontSize, proximity);
-            let r = 0, attempts = 0, bestPlacement = null;
-            while (r < Math.max(maskW, maskH) && !placed && attempts < 25000) {
-                for (let theta = 0; theta < 360; theta += fallbackSpiralStep) {
-                    attempts += 1;
-                    const px = Math.round(cx + r * Math.cos(theta * Math.PI / 180) - w / 2);
-                    const py = Math.round(cy + r * Math.sin(theta * Math.PI / 180) - h / 2);
-                    if (px < 0 || py < 0 || px + w > maskW || py + h > maskH) continue;
-                    if (canPlaceAt(mask, maskW, maskH, px, py, wordMask)) {
-                        positionedWords.push({ ...wordRaw, x: px - maskW / 2, y: py - maskH / 2, fontSize, width: w, height: h, angle: 0 });
-                        markMask(mask, maskW, maskH, px, py, wordMask);
-                        placed = true;
-                        break;
-                    }
-                }
-                r += fallbackSpiralRadiusStep;
-            }
-        }
-    }
-    return positionedWords;
-}
-
 const positionedWords = ref([]);
 
 watch(() => props.dataset, generateWordCloud, { immediate: true });
-
-const wordMin = computed(() => {
-    return Math.round(Math.min(...drawableDataset.value.map(w => w.value)));
-})
-const wordMax = computed(() => {
-    return Math.round(Math.max(...drawableDataset.value.map(w => w.value)));
-})
 
 function generateWordCloud() {
     const values = [...drawableDataset.value].map(d => d.value);
@@ -379,7 +233,11 @@ function generateWordCloud() {
         };
     });
 
-    positionedWords.value = positionWords(scaledWords, svg.value.width, svg.value.height).sort((a, b) => b.fontSize - a.fontSize);
+    positionedWords.value = positionWords({
+        words: scaledWords,
+        svg: svg.value,
+        proximity: FINAL_CONFIG.value.style.chart.words.proximity,
+    });
 }
 
 const table = computed(() => {
