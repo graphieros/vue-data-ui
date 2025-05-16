@@ -6,10 +6,20 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
     const scale = ref(1);
     const isPanning = ref(false);
     const startPoint = ref({ x: 0, y: 0 });
+    const pinchStartDist = ref(0);
+    const pinchStartViewBox = ref(null);
+    const isPinching = ref(false);
 
     let velocity = { x: 0, y: 0 };
     let animationFrame = null;
     let zoomAnimationFrame = null;
+
+    function getTouchDistance(touches) {
+        if (touches.length < 2) return 0;
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
 
     function toSvgPoint(event) {
         const svg = svgRef.value;
@@ -119,6 +129,44 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
         scale.value = newScale;
     };
 
+    function handleTouchStart(event) {
+        if (event.touches.length === 2) {
+            isPinching.value = true;
+            pinchStartDist.value = getTouchDistance(event.touches);
+            pinchStartViewBox.value = { ...viewBox.value };
+        } else {
+            event.preventDefault();
+            startPan(event);
+        }
+    }
+
+    function handleTouchMove(event) {
+        if (isPinching.value && event.touches.length === 2) {
+            event.preventDefault();
+            const dist = getTouchDistance(event.touches);
+            if (pinchStartDist.value) {
+                const zoomFactor = dist / pinchStartDist.value;
+                const svg = svgRef.value;
+                const rect = svg.getBoundingClientRect();
+                const midX = (event.touches[0].clientX + event.touches[1].clientX) / 2 - rect.left;
+                const midY = (event.touches[0].clientY + event.touches[1].clientY) / 2 - rect.top;
+                const midPoint = toSvgPoint({ clientX: midX + rect.left, clientY: midY + rect.top });
+                viewBox.value = { ...pinchStartViewBox.value };
+                applyZoom(zoomFactor, midPoint);
+            }
+        } else {
+            event.preventDefault();
+            doPan(event);
+        }
+    }
+
+    function handleTouchEnd(event) {
+        if (event.touches.length < 2) {
+            isPinching.value = false;
+        }
+        endPan();
+    }
+
     onMounted(addEventListeners);
     onUnmounted(removeEventListeners);
 
@@ -132,15 +180,10 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
         svg.addEventListener('mouseleave', endPan);
         svg.addEventListener('wheel', zoom, { passive: false });
         svg.addEventListener('dblclick', doubleClickZoom);
-        svg.addEventListener('touchstart', (event) => {
-            event.preventDefault();
-            startPan(event);
-        }, { passive: false });
-        svg.addEventListener('touchmove', (event) => {
-            event.preventDefault();
-            doPan(event);
-        }, { passive: false });
-        svg.addEventListener('touchend', endPan);
+        svg.addEventListener('touchstart', handleTouchStart, { passive: false });
+        svg.addEventListener('touchmove', handleTouchMove, { passive: false });
+        svg.addEventListener('touchend', handleTouchEnd);
+        svg.addEventListener('touchcancel', handleTouchEnd);
     }
 
     function removeEventListeners() {
@@ -152,9 +195,10 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
         svg.removeEventListener('mouseleave', endPan);
         svg.removeEventListener('wheel', zoom);
         svg.removeEventListener('dblclick', doubleClickZoom);
-        svg.removeEventListener('touchstart', startPan);
-        svg.removeEventListener('touchmove', doPan);
-        svg.removeEventListener('touchend', endPan);
+        svg.removeEventListener('touchstart', handleTouchStart);
+        svg.removeEventListener('touchmove', handleTouchMove);
+        svg.removeEventListener('touchend', handleTouchEnd);
+        svg.removeEventListener('touchcancel', handleTouchEnd);
     }
 
     watchEffect(() => {
