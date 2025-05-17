@@ -35,6 +35,7 @@ import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import usePanZoom from "../usePanZoom";
+import BaseIcon from "../atoms/BaseIcon.vue";
 
 const { vue_ui_molecule: DEFAULT_CONFIG } = useConfig();
 
@@ -445,7 +446,7 @@ function toggleAnnotator() {
 
 const active = computed(() => !isAnnotator.value)
 
-const { viewBox } = usePanZoom(svgRef, {
+const { viewBox, resetZoom, isZoom } = usePanZoom(svgRef, {
     x: 0,
     y: 0,
     width: svg.value.width <= 0 ? 10 : svg.value.width,
@@ -638,6 +639,22 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
+        <div v-if="isZoom" data-html2canvas-ignore class="reset-wrapper">
+            <slot name="reset-action" :reset="resetZoom">
+                <button 
+                    data-cy-reset 
+                    tabindex="0" 
+                    role="button" 
+                    class="vue-data-ui-refresh-button"
+                    :style="{
+                        background: FINAL_CONFIG.style.chart.backgroundColor
+                    }"
+                    @click="resetZoom(true)">
+                    <BaseIcon name="refresh" :stroke="FINAL_CONFIG.style.chart.color" />
+                </button>
+            </slot>
+        </div>
+
         <Skeleton
             v-if="!isDataset"
             :config="{
@@ -722,5 +739,38 @@ defineExpose({
 .vue-ui-molecule {
     user-select: none;
     position: relative;
+}
+
+.reset-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    height: 40px;
+    position: absolute;
+    bottom: 12px;
+    right: 0;
+}
+
+.vue-data-ui-refresh-button {
+    outline: none;
+    border: none;
+    background: transparent;
+    height: 36px;
+    width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+    transform-origin: center;
+    &:focus {
+        outline: 1px solid v-bind(slicerColor);
+    }
+    &:hover {
+        transform: rotate(-90deg)
+    }
 }
 </style>

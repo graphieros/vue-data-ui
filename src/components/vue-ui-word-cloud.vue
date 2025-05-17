@@ -30,6 +30,7 @@ import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import usePanZoom from '../usePanZoom';
 import { positionWords } from '../wordcloud';
+import BaseIcon from '../atoms/BaseIcon.vue';
 
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 
@@ -118,7 +119,6 @@ watch(() => props.config, (_newCfg) => {
     prepareChart();
     titleStep.value += 1;
     tableStep.value += 1;
-    refreshSlicer();
     
     // Reset mutable config
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
@@ -334,7 +334,7 @@ function toggleAnnotator() {
 
 const active = computed(() => !isAnnotator.value && FINAL_CONFIG.value.style.chart.zoom.show)
 
-const { viewBox } = usePanZoom(svgRef, {
+const { viewBox, resetZoom, isZoom } = usePanZoom(svgRef, {
     x: 0,
     y: 0,
     width: svg.value.width <= 0 ? 10 : svg.value.width,
@@ -393,6 +393,7 @@ function useTooltip(word) {
 <template>
     <div class="vue-ui-word-cloud" ref="wordCloudChart" :id="`wordCloud_${uid}`"
         :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -522,6 +523,22 @@ function useTooltip(word) {
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
+        <div v-if="isZoom" data-html2canvas-ignore class="reset-wrapper">
+            <slot name="reset-action" :reset="resetZoom">
+                <button 
+                    data-cy-reset 
+                    tabindex="0" 
+                    role="button" 
+                    class="vue-data-ui-refresh-button"
+                    :style="{
+                        background: FINAL_CONFIG.style.chart.backgroundColor
+                    }"
+                    @click="resetZoom(true)">
+                    <BaseIcon name="refresh" :stroke="FINAL_CONFIG.style.chart.color" />
+                </button>
+            </slot>
+        </div>
+
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
@@ -582,7 +599,7 @@ function useTooltip(word) {
     </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 @import "../vue-data-ui.css";
 
 .vue-ui-word-cloud * {
@@ -616,5 +633,36 @@ text.animated {
     opacity: 0.5 !important;
 }
 
+.reset-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    height: 40px;
+    position: absolute;
+    bottom: 12px;
+    right: 0;
+}
 
+.vue-data-ui-refresh-button {
+    outline: none;
+    border: none;
+    background: transparent;
+    height: 36px;
+    width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+    transform-origin: center;
+    &:focus {
+        outline: 1px solid v-bind(slicerColor);
+    }
+    &:hover {
+        transform: rotate(-90deg)
+    }
+}
 </style>

@@ -156,9 +156,9 @@ const step = ref(0)
                         WATERMARK
                     </div>
                 </template>
-                <template #reset-action="{ reset }">
+                <!-- <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
-                </template>
+                </template> -->
             </LocalVueUiWordCloud>
         </template>
 

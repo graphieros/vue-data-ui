@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, watch, nextTick, watchEffect } from 'vue';
+import { ref, onMounted, onUnmounted, watch, nextTick, watchEffect, computed } from 'vue';
 
 export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width: 100, height: 100 }, speed = 1, activeRef) {
     const viewBox = ref({ ...initialViewBox });
@@ -9,6 +9,13 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
     const pinchStartDist = ref(0);
     const pinchStartViewBox = ref(null);
     const isPinching = ref(false);
+
+    const isZoom = computed(() => {
+        return viewBox.value.x !== initialViewBox.x ||
+        viewBox.value.y !== initialViewBox.y ||
+        viewBox.value.width !== initialViewBox.width ||
+        viewBox.value.height !== initialViewBox.height
+    })
 
     let velocity = { x: 0, y: 0 };
     let animationFrame = null;
@@ -69,6 +76,40 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
     function endPan() {
         isPanning.value = false;
     };
+
+    function resetZoom(animated = false) {
+        if (!animated) {
+            viewBox.value = { ...initialViewBox };
+            scale.value = 1;
+            return;
+        }
+
+        const startViewBox = { ...viewBox.value };
+        const startScale = scale.value;
+        const duration = 300;
+        let start = null;
+    
+        function animate(ts) {
+            if (!start) start = ts;
+            const progress = Math.min((ts - start) / duration, 1);
+
+            viewBox.value = {
+                x: startViewBox.x + (initialViewBox.x - startViewBox.x) * progress,
+                y: startViewBox.y + (initialViewBox.y - startViewBox.y) * progress,
+                width: startViewBox.width + (initialViewBox.width - startViewBox.width) * progress,
+                height: startViewBox.height + (initialViewBox.height - startViewBox.height) * progress,
+            };
+            scale.value = startScale + (1 - startScale) * progress;
+    
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                viewBox.value = { ...initialViewBox };
+                scale.value = 1;
+            }
+        }
+        requestAnimationFrame(animate);
+    }
 
     function zoom(event) {
         event.preventDefault();
@@ -213,5 +254,5 @@ export default function usePanZoom(svgRef, initialViewBox = { x: 0, y: 0, width:
         };
     });
 
-    return { viewBox };
+    return { viewBox, resetZoom, isZoom };
 }
