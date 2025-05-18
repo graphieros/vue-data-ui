@@ -62,6 +62,7 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
 
     let styleMap = {};
 
+    // Get all already-inline styles
     let inlineStyle = clone.getAttribute('style');
     if (typeof inlineStyle !== 'string') inlineStyle = '';
     inlineStyle.split(';').forEach(s => {
@@ -71,11 +72,21 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
         }
     });
 
+    // Copy *every* computed property
     for (let i = 0; i < computedStyle.length; i += 1) {
         const property = computedStyle[i];
         const value = computedStyle.getPropertyValue(property);
         styleMap[property] = value;
     }
+
+    // ---- Strongest part: force resolved color and background-color ----
+    // getPropertyValue always resolves to an actual color, not 'inherit'
+    styleMap['color'] = computedStyle.color;
+    styleMap['background-color'] = computedStyle.backgroundColor;
+    // Add font props for safety (if they matter to your charts)
+    styleMap['font-family'] = computedStyle.fontFamily || inheritedFontFamily || '';
+    styleMap['font-size'] = computedStyle.fontSize;
+    styleMap['font-weight'] = computedStyle.fontWeight;
 
     if (
         isFlex ||
@@ -94,9 +105,7 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
         styleMap[prop] = computedStyle.getPropertyValue(prop);
     });
 
-    if (inheritedFontFamily) {
-        styleMap['font-family'] = inheritedFontFamily;
-    }
+    // No more inheritedFontFamily here; use resolved computedStyle above
 
     styleMap['overflow'] = 'visible';
     styleMap['overflow-x'] = 'visible';
@@ -108,6 +117,7 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
     }
     clone.setAttribute('style', styleString);
 
+    // Recursively walk
     const cloneChildren = clone.children || [];
     const originalChildren = original.children || [];
     for (let i = 0; i < cloneChildren.length; i++) {
@@ -116,6 +126,7 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
         }
     }
 }
+
 
 /**
  * Ensures all <text> elements in the given SVG element tree have the given font family
@@ -204,9 +215,11 @@ function extractFontFaceRules() {
         try {
             const rules = sheet.cssRules;
             if (!rules) continue;
-
             for (const rule of rules) {
-                if (rule.constructor.name === "CSSFontFaceRule" || rule.cssText.startsWith("@font-face")) {
+                if (
+                    (typeof CSSFontFaceRule !== "undefined" && rule instanceof CSSFontFaceRule) ||
+                    rule.cssText.trim().startsWith("@font-face")
+                ) {
                     fontCssRules.push(rule.cssText);
                 }
             }
@@ -218,20 +231,154 @@ function extractFontFaceRules() {
     return fontCssRules;
 }
 
+
+/**
+ * Injects all @font-face CSS rules into an SVG element as an embedded <style> tag within <defs>.
+ * This ensures custom fonts are preserved when the SVG is exported or rasterized.
+ *
+ * @param {SVGSVGElement} svgEl - The SVG element to inject font-face styles into.
+ */
 function injectFontFaceStyles(svgEl) {
     const fontRules = extractFontFaceRules();
     if (!fontRules.length) return;
-
     const style = document.createElement('style');
     style.setAttribute('type', 'text/css');
     style.textContent = fontRules.join('\n');
-
     const defs = svgEl.querySelector('defs') || document.createElementNS(XMLNS, 'defs');
     defs.appendChild(style);
     if (!svgEl.querySelector('defs')) {
         svgEl.insertBefore(defs, svgEl.firstChild);
     }
 }
+
+/**
+ * Recursively inlines all computed styles from the live DOM into the corresponding elements
+ * within each <foreignObject> in a cloned SVG tree.
+ * This is used to preserve appearance for HTML content inside SVG exports.
+ *
+ * @param {SVGSVGElement} cloneSvg - The cloned SVG element containing <foreignObject> nodes to style.
+ * @param {SVGSVGElement} liveSvg - The original live SVG element to read computed styles from.
+ */
+function inlineForeignObjectStylesInClone(cloneSvg, liveSvg) {
+    const cloneFOs = cloneSvg.querySelectorAll('foreignObject');
+    const liveFOs = liveSvg.querySelectorAll('foreignObject');
+
+    cloneFOs.forEach((cloneFO, foIdx) => {
+        const liveFO = liveFOs[foIdx];
+        if (!liveFO) return;
+
+        function applyStylesRecursively(cloneNode, liveNode) {
+            if (!cloneNode || !liveNode) return;
+            if (cloneNode.nodeType === 1 && liveNode.nodeType === 1) {
+                const computedStyle = window.getComputedStyle(liveNode);
+                let styleString = '';
+                for (let j = 0; j < computedStyle.length; j++) {
+                    const property = computedStyle[j];
+                    styleString += `${property}:${computedStyle.getPropertyValue(property)};`;
+                }
+                cloneNode.setAttribute('style', styleString);
+            }
+            const cloneChildren = cloneNode.children || [];
+            const liveChildren = liveNode.children || [];
+            for (let i = 0; i < cloneChildren.length; i++) {
+                applyStylesRecursively(cloneChildren[i], liveChildren[i]);
+            }
+        }
+
+        applyStylesRecursively(cloneFO, liveFO);
+    });
+}
+
+/**
+ * Injects critical CSS style rules used by HTML nodes inside each <foreignObject> of the cloned SVG.
+ * This collects all matching CSS rules from same-origin stylesheets and inserts them
+ * as <style> tags inside the relevant <foreignObject> nodes.
+ *
+ * @param {SVGSVGElement} cloneSvg - The cloned SVG element containing <foreignObject> nodes.
+ */
+function injectCriticalStylesIntoForeignObjects(cloneSvg) {
+    const foreignObjects = cloneSvg.querySelectorAll('foreignObject');
+    foreignObjects.forEach(fo => {
+        let css = '';
+        const elements = Array.from(fo.querySelectorAll('*'));
+        if (elements.length === 0) return;
+
+        for (const sheet of document.styleSheets) {
+            let rules;
+            try { rules = sheet.cssRules; } catch { continue; }
+            if (!rules) continue;
+            for (const rule of rules) {
+                if (typeof CSSStyleRule !== "undefined" && !(rule instanceof CSSStyleRule)) continue;
+                try {
+                    // Only include if any element matches this selector
+                    if (elements.some(el => el.matches(rule.selectorText))) {
+                        css += rule.cssText + "\n";
+                    }
+                } catch { continue; }
+            }
+        }
+        if (css) {
+            const styleTag = document.createElement('style');
+            styleTag.textContent = css;
+            fo.insertBefore(styleTag, fo.firstChild);
+        }
+    });
+}
+
+/**
+ * Ensures the correct HTML namespace is set on the root element of each <foreignObject> within an SVG.
+ * Adds xmlns="http://www.w3.org/1999/xhtml" to the root HTML node if not present.
+ *
+ * @param {SVGSVGElement} cloneSvg - The cloned SVG element containing <foreignObject> nodes.
+ */
+function ensureForeignObjectRootNamespace(cloneSvg) {
+    const foreignObjects = cloneSvg.querySelectorAll('foreignObject');
+    foreignObjects.forEach(fo => {
+        const root = fo.firstElementChild;
+        if (root && root.tagName.toLowerCase() !== 'svg') {
+            root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        }
+    });
+}
+
+/**
+ * Recursively applies all computed styles from the live DOM into the corresponding HTML elements
+ * inside <foreignObject> nodes in the cloned SVG, ensuring visual fidelity.
+ *
+ * @param {SVGSVGElement} cloneSvg - The cloned SVG element containing <foreignObject> nodes.
+ * @param {SVGSVGElement} liveSvg - The original SVG element to read computed styles from.
+ */
+function inlineForeignObjectHTMLComputedStyles(cloneSvg, liveSvg) {
+    const cloneFOs = cloneSvg.querySelectorAll('foreignObject');
+    const liveFOs = liveSvg.querySelectorAll('foreignObject');
+    cloneFOs.forEach((cloneFO, idx) => {
+        const liveFO = liveFOs[idx];
+        if (!cloneFO || !liveFO) return;
+        const cloneRoot = cloneFO.firstElementChild;
+        const liveRoot = liveFO.firstElementChild;
+        if (cloneRoot && liveRoot) {
+            walkAllAndApply(cloneRoot, liveRoot);
+        }
+    });
+}
+
+/**
+ * Recursively walks two parallel DOM trees, applying all computed styles from the live node
+ * to the cloned node and all of their descendants.
+ *
+ * @param {Element} cloneNode - The cloned DOM node to apply styles to.
+ * @param {Element} liveNode - The live DOM node to read computed styles from.
+ */
+function walkAllAndApply(cloneNode, liveNode) {
+    if (cloneNode.nodeType !== 1 || !liveNode) return;
+    applyAllComputedStylesDeep(cloneNode, liveNode);
+    const cloneChildren = cloneNode.children || [];
+    const liveChildren = liveNode.children || [];
+    for (let i = 0; i < cloneChildren.length; i++) {
+        walkAllAndApply(cloneChildren[i], liveChildren[i]);
+    }
+}
+
 
 /**
  * Converts a DOM element (including HTML, SVG, and canvas) into a high-resolution PNG data URL.
@@ -289,14 +436,16 @@ async function domToPng({ container, scale = 2 }) {
     const liveSvg = container.querySelector('svg[aria-label]');
     const cloneSvg = clone.querySelector('svg[aria-label]');
     if (liveSvg && cloneSvg) {
-        const bbox = liveSvg.getBoundingClientRect();
-        const svgWidth = bbox.width;
-        const svgHeight = bbox.height;
-
-        // Only modify the clone
+        ensureForeignObjectRootNamespace(cloneSvg);
+        injectCriticalStylesIntoForeignObjects(cloneSvg);
+        inlineForeignObjectStylesInClone(cloneSvg, liveSvg);
+        inlineForeignObjectHTMLComputedStyles(cloneSvg, liveSvg);
         applyAllSvgComputedStylesInline(cloneSvg);
         setFontFamilyOnAllSvgTextElements(cloneSvg, containerFontFamily);
 
+        const bbox = liveSvg.getBoundingClientRect();
+        const svgWidth = bbox.width;
+        const svgHeight = bbox.height;
         const scaledWidth = Math.round(svgWidth * scale);
         const scaledHeight = Math.round(svgHeight * scale);
         const pngDataUrl = await svgElementToPngDataUrl(cloneSvg, scaledWidth, scaledHeight);
