@@ -9,33 +9,45 @@ import { XMLNS } from "./lib";
  */
 async function inlineAllImages(clone) {
     const imgEls = clone.querySelectorAll('img');
-    const promises = [];
-    imgEls.forEach(imgEl => {
-        if (imgEl.src && !imgEl.src.startsWith('data:')) {
-            promises.push(
-                new Promise(resolve => {
-                    const image = new window.Image();
-                    image.crossOrigin = 'anonymous'; // Try CORS
-                    image.onload = function () {
-                        try {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = image.naturalWidth;
-                            canvas.height = image.naturalHeight;
-                            canvas.getContext('2d').drawImage(image, 0, 0);
-                            imgEl.src = canvas.toDataURL();
-                        } catch (e) {
-                            // it's tainted
-                        }
-                        resolve();
-                    };
-                    image.onerror = function () { resolve(); };
-                    image.src = imgEl.src;
-                })
-            );
-        }
+    const promises = Array.from(imgEls).map(imgEl => {
+        return new Promise(resolve => {
+            if (!imgEl.src || imgEl.src.startsWith('data:')) return resolve();
+
+            if (imgEl.complete && imgEl.naturalWidth !== 0) {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = imgEl.naturalWidth;
+                    canvas.height = imgEl.naturalHeight;
+                    canvas.getContext('2d').drawImage(imgEl, 0, 0);
+                    imgEl.src = canvas.toDataURL();
+                } catch (e) {
+                    // tainted
+                }
+                return resolve();
+            }
+
+            const image = new window.Image();
+            image.crossOrigin = 'anonymous';
+            image.onload = function () {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = image.naturalWidth;
+                    canvas.height = image.naturalHeight;
+                    canvas.getContext('2d').drawImage(image, 0, 0);
+                    imgEl.src = canvas.toDataURL();
+                } catch (e) {
+                    // tainted
+                }
+                resolve();
+            };
+            image.onerror = function () { resolve(); };
+            image.src = imgEl.src;
+        });
     });
+
     await Promise.all(promises);
 }
+
 
 /**
  * Removes all elements in the given DOM subtree that have the data-dom-to-png-ignore attribute.
@@ -384,6 +396,23 @@ function walkAllAndApply(cloneNode, liveNode) {
     }
 }
 
+function forceInlineImageStyles(clone, original) {
+    const originalImgs = Array.from(original.querySelectorAll('img'));
+    clone.querySelectorAll('img').forEach(img => {
+        const src = img.getAttribute('src');
+        const match = originalImgs.find(oimg => oimg.getAttribute('src') === src);
+        if (match) {
+            const computedStyle = window.getComputedStyle(match);
+            let styleString = '';
+            for (let j = 0; j < computedStyle.length; j++) {
+                const property = computedStyle[j];
+                styleString += `${property}:${computedStyle.getPropertyValue(property)};`;
+            }
+            img.setAttribute('style', styleString);
+        }
+    });
+}
+
 /**
  * Converts a DOM element (including HTML, SVG, and canvas) into a high-resolution PNG data URL.
  *
@@ -446,6 +475,9 @@ async function domToPng({ container, scale = 2 }) {
         inlineForeignObjectHTMLComputedStyles(cloneSvg, liveSvg);
         applyAllSvgComputedStylesInline(cloneSvg);
         setFontFamilyOnAllSvgTextElements(cloneSvg, containerFontFamily);
+        forceInlineImageStyles(cloneSvg, liveSvg);
+
+        await inlineAllImages(cloneSvg);
 
         const bbox = liveSvg.getBoundingClientRect();
         const svgWidth = bbox.width;
@@ -464,6 +496,7 @@ async function domToPng({ container, scale = 2 }) {
     }
 
     applyAllComputedStylesDeep(clone, container, containerFontFamily);
+    forceInlineImageStyles(clone, container);
     removeIgnoredElements(clone);
     await inlineAllImages(clone);
 

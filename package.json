@@ -96,7 +96,6 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
-    "canvg": "^4.0.3",
     "cypress": "^14.0.3",
     "jspdf": "^3.0.1",
     "remove-attr": "^0.0.13",
