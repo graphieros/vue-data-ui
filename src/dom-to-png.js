@@ -80,31 +80,28 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
         styleMap[property] = value;
     }
 
-    const rect = original.getBoundingClientRect();
-    if (rect.width > 0) {
-        styleMap['width'] = rect.width + 'px';
-    }
-    const realScrollHeight = Math.max(original.scrollHeight, rect.height);
-    if (realScrollHeight > 0) {
-        styleMap['height'] = realScrollHeight + 'px';
-    }
-
-    if (styleMap['display'] && styleMap['display'].includes('flex')) {
-        styleMap['flex-wrap'] = computedStyle.getPropertyValue('flex-wrap') || 'wrap';
-        styleMap['align-items'] = computedStyle.getPropertyValue('align-items');
-        styleMap['justify-content'] = computedStyle.getPropertyValue('justify-content');
-        styleMap['gap'] = computedStyle.getPropertyValue('gap');
-        styleMap['row-gap'] = computedStyle.getPropertyValue('row-gap');
-        styleMap['column-gap'] = computedStyle.getPropertyValue('column-gap');
-    }
-
     styleMap['overflow'] = 'visible';
     styleMap['overflow-x'] = 'visible';
     styleMap['overflow-y'] = 'visible';
 
+    const rect = original.getBoundingClientRect();
+    const isFlexContext = computedStyle.display.includes('flex') || (original.parentElement && window.getComputedStyle(original.parentElement).display.includes('flex'));
+
+    if (isFlexContext || computedStyle.position === 'absolute' || computedStyle.position === 'fixed') {
+        if (rect.width > 0) styleMap['width'] = rect.width + 'px';
+        if (rect.height > 0) styleMap['height'] = rect.height + 'px';
+    }
+
     if (inheritedFontFamily) {
         styleMap['font-family'] = inheritedFontFamily;
     }
+
+    ['min-width', 'max-width', 'min-height', 'max-height'].forEach(prop => {
+        const val = computedStyle.getPropertyValue(prop);
+        if (val && val !== 'none' && val !== 'auto') {
+            styleMap[prop] = val;
+        }
+    });
 
     let styleString = '';
     for (const prop in styleMap) {
@@ -120,6 +117,7 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
         }
     }
 }
+
 
 /**
  * Ensures all <text> elements in the given SVG element tree have the given font family
