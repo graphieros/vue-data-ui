@@ -14,7 +14,7 @@ const emit = defineEmits(['moveLeft', 'moveTop', 'moveRight', 'moveBottom', 'res
 </script>
 
 <template>
-    <div :style="`position: ${isFullscreen ? 'fixed' : 'absolute'};bottom:0;right:${isFullscreen ? '12px' : '0'};width:80px;height:80px`" data-html2canvas-ignore>
+    <div :style="`position: ${isFullscreen ? 'fixed' : 'absolute'};bottom:0;right:${isFullscreen ? '12px' : '0'};width:80px;height:80px`" data-dom-to-png-ignore>
         <div style="position: relative;height:100%;width:100%">           
             <button data-cy="direction-pad-left" @click.stop="emit('moveLeft')" style="position: absolute;left:0;top:50%;transform:translateY(-50%);height:24px;width:24px;padding:0;background:transparent;border:none;display:flex;align-items:center;justify-content:center;">
                 <BaseIcon :stroke="color" name="arrowLeft" style="cursor: pointer"/>

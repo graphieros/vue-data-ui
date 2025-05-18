@@ -172,7 +172,6 @@ export function useConfig() {
                 annotator
             },
             buttonTitles,
-            // html2canvas options
             print: {
                 allowTaint: false,
                 backgroundColor: '#FFFFFF',
@@ -4560,63 +4559,6 @@ export function useConfig() {
         }
     }
 
-    const vue_ui_screenshot = {
-        mode: 'download',
-        quality: 1,
-        style: {
-            info: {
-                background: COLOR_WHITE,
-                bold: true,
-                border: 'none',
-                borderRadius: 4,
-                boxShadow: '0 6px 12px -6px rgba(0,0,0,0.2)',
-                color: COLOR_BLACK,
-                fontFamily: 'inherit',
-                fontSize: FONT._14,
-                minWidth: 300,
-                padding: 12,
-                top: -100
-            },
-            captureButton: {
-                background: COLOR_GREY_LIGHT,
-                bold: true,
-                border: 'none',
-                borderRadius: 4,
-                boxShadow: '0 6px 12px -6px rgba(0,0,0,0.2)',
-                color: COLOR_BLACK,
-                fontFamily: 'inherit',
-                fontSize: FONT._14,
-                minHeight: 40,
-                padding: '8px 12px'
-            },
-            cancelButton: {
-                background: '#F17171',
-                border: 'none',
-                borderRadius: 10,
-                color: COLOR_WHITE,
-                right: -14,
-                size: 28,
-                top: -14
-            },
-            captureArea: {
-                background: 'radial-gradient(transparent, rgba(0,0,0,0.15))',
-                border: `dashed 4px ${COLOR_BLACK}`,
-                initialHeight: 200,
-                initialWidth: 200
-            },
-            handles: {
-                background: COLOR_WHITE,
-                border: `4px solid ${COLOR_BLACK}`,
-                borderRadius: 4,
-                size: 40
-            }
-        },
-        translations: {
-            captureButton: 'capture',
-            info: 'Resize or move and click to capture'
-        }
-    }
-
     const vue_ui_table = {
         fontFamily: "inherit",
         maxHeight: 500,
@@ -5377,7 +5319,6 @@ export function useConfig() {
         vue_ui_annotator,
         vue_ui_dashboard,
         vue_ui_skeleton,
-        vue_ui_screenshot,
         vue_ui_table,
         vue_ui_digits,
         vue_ui_circle_pack

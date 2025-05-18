@@ -37,7 +37,6 @@ export const VueUiRating = defineAsyncComponent(() => import("./components/vue-u
 export const VueUiRelationCircle = defineAsyncComponent(() => import("./components/vue-ui-relation-circle.vue"))
 export const VueUiRings = defineAsyncComponent(() => import("./components/vue-ui-rings.vue"))
 export const VueUiScatter = defineAsyncComponent(() => import("./components/vue-ui-scatter.vue"))
-export const VueUiScreenshot = defineAsyncComponent(() => import("./components/vue-ui-screenshot.vue"))
 export const VueUiSkeleton = defineAsyncComponent(() => import("./components/vue-ui-skeleton.vue"))
 export const VueUiSmiley = defineAsyncComponent(() => import("./components/vue-ui-smiley.vue"))
 export const VueUiSparkHistogram = defineAsyncComponent(() => import("./components/vue-ui-sparkhistogram.vue"))

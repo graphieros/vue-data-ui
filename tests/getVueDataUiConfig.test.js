@@ -33,7 +33,6 @@ describe('getVueDataUiConfig', () => {
         'relation_circle',
         'rings',
         'scatter',
-        'screenshot',
         'skeleton',
         'smiley',
         'spark_trend',

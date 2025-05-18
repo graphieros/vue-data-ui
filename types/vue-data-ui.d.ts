@@ -80,7 +80,6 @@ declare module "vue-data-ui" {
         | VueUiRelationCircleConfig
         | VueUiRingsConfig
         | VueUiScatterConfig
-        | VueUiScreenshotConfig
         | VueUiSkeletonConfig
         | VueUiSmileyConfig
         | VueUiSparkbarConfig
@@ -4681,67 +4680,6 @@ declare module "vue-data-ui" {
         dataset: VueUiRatingDataset;
     }>;
 
-    export type VueUiScreenshotConfig = {
-        mode?: "download" | "post";
-        quality?: number;
-        style?: {
-            info?: {
-                background?: string;
-                bold?: boolean;
-                border?: string;
-                borderRadius?: number;
-                boxShadow?: string;
-                color?: string;
-                fontFamily?: string;
-                fontSize?: number;
-                minWidth?: number;
-                padding?: number;
-                top?: number;
-            };
-            captureButton?: {
-                background?: string;
-                bold?: boolean;
-                border?: string;
-                borderRadius?: number;
-                boxShadow?: string;
-                color?: string;
-                fontFamily?: string;
-                fontSize?: number;
-                minHeight?: number;
-                padding?: string;
-            };
-            cancelButton?: {
-                background?: string;
-                border?: string;
-                borderRadius?: number;
-                color?: string;
-                right?: number;
-                size?: number;
-                top?: number;
-            };
-            captureArea?: {
-                background?: string;
-                border?: string;
-                initialHeight?: number;
-                initialWidth?: number;
-            };
-            handles?: {
-                background?: string;
-                border?: string;
-                borderRadius?: number;
-                size?: number;
-            };
-        };
-        translations?: {
-            captureButton?: string;
-            info?: string;
-        };
-    };
-
-    export const VueUiScreenshot: DefineComponent<{
-        config?: VueUiScreenshotConfig;
-    }>;
-
     export type VueUiSkeletonConfig = {
         type?:
         | "bar"
@@ -6779,7 +6717,6 @@ declare module "vue-data-ui" {
         | VueUiRelationCircleConfig
         | VueUiRingsConfig
         | VueUiScatterConfig
-        | VueUiScreenshotConfig
         | VueUiSkeletonConfig
         | VueUiSmileyConfig
         | VueUiSparkHistogramConfig
@@ -6840,7 +6777,6 @@ declare module "vue-data-ui" {
         | "vue_ui_relation_circle"
         | "vue_ui_rings"
         | "vue_ui_scatter"
-        | "vue_ui_screenshot"
         | "vue_ui_skeleton"
         | "vue_ui_smiley"
         | "vue_ui_sparkhistogram"

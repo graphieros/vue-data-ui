@@ -1668,7 +1668,7 @@ defineExpose({
             </Tooltip>
         </div>
     
-        <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-html2canvas-ignore>    
+        <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-dom-to-png-ignore>    
             <Slicer 
                 ref="slicerComponent"
                 v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 1"

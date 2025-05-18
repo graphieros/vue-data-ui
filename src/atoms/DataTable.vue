@@ -43,7 +43,7 @@ const emit = defineEmits(['close'])
 
 <template>
     <div ref="tableContainer" style="width: 100%; container-type: inline-size; position:relative;padding-top: 36px;overflow:auto" :class="{'atom-data-table': true, 'vue-ui-responsive': isResponsive}">
-        <div data-cy="data-table-close" data-html2canvas-ignore role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${thbg};`" @click="emit('close')" @keypress.enter="emit('close')">
+        <div data-cy="data-table-close" data-dom-to-png-ignore role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${thbg};`" @click="emit('close')" @keypress.enter="emit('close')">
             <BaseIcon name="close" :stroke="thc" :stroke-width="2" />
         </div>
         <table data-cy="vue-data-ui-table-data" class="vue-ui-data-table">

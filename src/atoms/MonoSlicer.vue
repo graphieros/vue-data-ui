@@ -70,7 +70,7 @@ const highlightStyle = computed(() => {
 </script>
 
 <template>
-    <div data-html2canvas-ignore>
+    <div data-dom-to-png-ignore>
         <div v-if="value !== source" class="reset-wrapper">
             <button v-if="!useResetSlot" data-cy-reset tabindex="0" role="button" class="vue-data-ui-refresh-button"
                 @click="reset">

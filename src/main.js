@@ -28,7 +28,6 @@ import {
     VueUiRelationCircle,
     VueUiRings,
     VueUiScatter,
-    VueUiScreenshot,
     VueUiSkeleton,
     VueUiSmiley,
     VueUiSparkHistogram,
@@ -95,7 +94,6 @@ app.component("VueUiRating", VueUiRating);
 app.component("VueUiRelationCircle", VueUiRelationCircle);
 app.component("VueUiRings", VueUiRings);
 app.component("VueUiScatter", VueUiScatter);
-app.component("VueUiScreenshot", VueUiScreenshot);
 app.component("VueUiSkeleton", VueUiSkeleton);
 app.component("VueUiSmiley", VueUiSmiley);
 app.component("VueUiSparkHistogram", VueUiSparkHistogram);

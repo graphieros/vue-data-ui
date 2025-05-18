@@ -1,6 +1,6 @@
 <template>
   <div class="vue-ui-annotator">
-    <div data-html2canvas-ignore>
+    <div data-dom-to-png-ignore>
       <details
         class="vue-ui-annotator-summary"
         @toggle="toggleSummary"
@@ -1169,10 +1169,10 @@
 </template>
 
 <script>
-import html2canvas from "html2canvas";
-import JsPDF from "jspdf";
 import { opacity, treeShake, convertConfigColors } from "../lib";
 import { useConfig } from "../useConfig";
+import { domToPng } from "../dom-to-png";
+import JsPDF from "jspdf";
 
 // TODO: add tooltips for all buttons
 
@@ -2841,64 +2841,69 @@ export default {
       this.isSelectMode = false;
       this.activeShape = undefined;
       this.showCaret = false;
-      this.$nextTick(() => {
+
+      this.$nextTick(async () => {
         const wrapper = this.$refs.drawSvgContainer;
-        const a4 = {
-          height: 851.89,
-          width: 595.28,
-        };
         this.walkTheDOM(wrapper, (node) => {
           if (node && node.nodeType === 1) {
             node.setAttribute("font-family", "Helvetica");
             node.style.fontFamily = "Helvetica";
-            node.replaceWith(node);
           }
         });
 
-        html2canvas(wrapper)
-          .then((canvas) => {
-            const contentWidth = canvas.width;
-            const contentHeight = canvas.height;
+        try {
+          const pngDataUrl = await domToPng({
+            container: wrapper,
+            scale: 2,
+          });
+
+          const image = new Image();
+          image.src = pngDataUrl;
+
+          image.onload = () => {
+            const a4 = {
+              width: 595.28,
+              height: 841.89,
+            };
+
+            const contentWidth = image.width;
+            const contentHeight = image.height;
             const pageHeight = (contentWidth / a4.width) * a4.height;
-            let leftHeight = contentHeight;
-            let position = 0;
+
             const imgWidth = a4.width;
-            const imgHeight = (582.28 / contentWidth) * contentHeight;
-            const pageData = canvas.toDataURL("image/png", 1.0);
+            const imgHeight = (imgWidth / contentWidth) * contentHeight;
+
             const pdf = new JsPDF("", "pt", "a4");
+            let position = 0;
+            let leftHeight = contentHeight;
+
             if (leftHeight < pageHeight) {
-              pdf.addImage(pageData, "PNG", 0, 0, imgWidth, imgHeight, "", "FAST");
+              pdf.addImage(pngDataUrl, "PNG", 0, 0, imgWidth, imgHeight, "", "FAST");
             } else {
               while (leftHeight > 0) {
-                pdf.addImage(
-                  pageData,
-                  "PNG",
-                  0,
-                  position,
-                  imgWidth,
-                  imgHeight,
-                  "",
-                  "FAST"
-                );
+                pdf.addImage(pngDataUrl, "PNG", 0, position, imgWidth, imgHeight, "", "FAST");
                 leftHeight -= pageHeight;
-                position -= a4.height - 24;
+                position -= a4.height;
                 if (leftHeight > 0) {
                   pdf.addPage();
                 }
               }
             }
+
             pdf.save(`${new Date().toLocaleDateString()}_annotations.pdf`);
-          })
-          .finally(() => {
-            this.isPrinting = false;
-            this.walkTheDOM(wrapper, (node) => {
-              if (node && node.nodeType === 1) {
-                node.setAttribute("font-family", this.FINAL_CONFIG.style.fontFamily);
-                node.style.fontFamily = this.FINAL_CONFIG.style.fontFamily;
-                node.replaceWith(node);
-              }
-            });
+          };
+        } catch (err) {
+          console.error("Error generating image:", err);
+        } finally {
+          this.isPrinting = false;
+
+          this.walkTheDOM(wrapper, (node) => {
+            if (node && node.nodeType === 1) {
+              node.setAttribute("font-family", this.FINAL_CONFIG.style.fontFamily);
+              node.style.fontFamily = this.FINAL_CONFIG.style.fontFamily;
+            }
           });
+        }
       });
     },
     resetDraw() {
