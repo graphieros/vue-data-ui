@@ -52,8 +52,11 @@ function removeIgnoredElements(root) {
 
 /**
  * Recursively applies all computed styles and existing inline styles as inline style attributes
- * on every element in the cloned DOM tree, including setting explicit width and height in pixels,
- * forcing overflow to visible, and enforcing a given font family.
+ * on every element in the cloned DOM tree. This includes:
+ * - width/height from layout box
+ * - overflow visible
+ * - computed flex-wrap and font-family
+ *
  * @param {HTMLElement} clone - The cloned DOM element.
  * @param {HTMLElement} original - The original DOM element.
  * @param {string} [inheritedFontFamily] - Font family to apply (optional).
@@ -77,10 +80,6 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
         styleMap[property] = value;
     }
 
-    styleMap['overflow'] = 'visible';
-    styleMap['overflow-x'] = 'visible';
-    styleMap['overflow-y'] = 'visible';
-
     const rect = original.getBoundingClientRect();
     if (rect.width > 0) {
         styleMap['width'] = rect.width + 'px';
@@ -89,6 +88,19 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
     if (realScrollHeight > 0) {
         styleMap['height'] = realScrollHeight + 'px';
     }
+
+    if (styleMap['display'] && styleMap['display'].includes('flex')) {
+        styleMap['flex-wrap'] = computedStyle.getPropertyValue('flex-wrap') || 'wrap';
+        styleMap['align-items'] = computedStyle.getPropertyValue('align-items');
+        styleMap['justify-content'] = computedStyle.getPropertyValue('justify-content');
+        styleMap['gap'] = computedStyle.getPropertyValue('gap');
+        styleMap['row-gap'] = computedStyle.getPropertyValue('row-gap');
+        styleMap['column-gap'] = computedStyle.getPropertyValue('column-gap');
+    }
+
+    styleMap['overflow'] = 'visible';
+    styleMap['overflow-x'] = 'visible';
+    styleMap['overflow-y'] = 'visible';
 
     if (inheritedFontFamily) {
         styleMap['font-family'] = inheritedFontFamily;
