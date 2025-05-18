@@ -226,21 +226,39 @@ function applyAllSvgComputedStylesInline(svgEl) {
 async function domToPng({ container, scale = 2 }) {
     if (!container) throw new Error("No container provided");
 
+    await document.fonts.ready;
+    const containerFontFamily = window.getComputedStyle(container).fontFamily;
     const clone = container.cloneNode(true);
-    const liveSvg = container.querySelector('svg[aria-label]');
+    const cloneCanvasList = clone.querySelectorAll('canvas');
+    const originalCanvasList = container.querySelectorAll('canvas');
 
+    for (let i = 0; i < originalCanvasList.length; i += 1) {
+        const originalCanvas = originalCanvasList[i];
+        const cloneCanvas = cloneCanvasList[i];
+        if (originalCanvas && cloneCanvas) {
+            const img = document.createElement('img');
+            img.src = originalCanvas.toDataURL('image/png');
+            img.width = originalCanvas.width;
+            img.height = originalCanvas.height;
+            img.style.width = originalCanvas.style.width || originalCanvas.width + 'px';
+            img.style.height = originalCanvas.style.height || originalCanvas.height + 'px';
+            cloneCanvas.replaceWith(img);
+        }
+    }
+
+    const liveSvg = container.querySelector('svg[aria-label]');
     if (liveSvg) {
         const bbox = liveSvg.getBoundingClientRect();
         const svgWidth = bbox.width;
         const svgHeight = bbox.height;
-    
+
         applyAllSvgComputedStylesInline(liveSvg);
-        setFontFamilyOnAllSvgTextElements(liveSvg, window.getComputedStyle(container).fontFamily);
-    
+        setFontFamilyOnAllSvgTextElements(liveSvg, containerFontFamily);
+
         const scaledWidth = Math.round(svgWidth * scale);
         const scaledHeight = Math.round(svgHeight * scale);
         const pngDataUrl = await svgElementToPngDataUrl(liveSvg, scaledWidth, scaledHeight);
-    
+
         const cloneSvg = clone.querySelector('svg[aria-label]');
         if (cloneSvg) {
             const img = document.createElement('img');
@@ -253,7 +271,7 @@ async function domToPng({ container, scale = 2 }) {
         }
     }
 
-    applyAllComputedStylesDeep(clone, container, window.getComputedStyle(container).fontFamily);
+    applyAllComputedStylesDeep(clone, container, containerFontFamily);
     removeIgnoredElements(clone);
     await inlineAllImages(clone);
 
@@ -265,18 +283,20 @@ async function domToPng({ container, scale = 2 }) {
     temp_svg.setAttribute('viewBox', `0 0 ${exportWidth} ${exportHeight}`);
     temp_svg.setAttribute('width', exportWidth);
     temp_svg.setAttribute('height', exportHeight);
+    temp_svg.setAttribute('style', `font-family:${containerFontFamily};`);
 
     const fo = document.createElementNS(XMLNS, 'foreignObject');
     fo.setAttribute('x', 0);
     fo.setAttribute('y', 0);
     fo.setAttribute('width', exportWidth);
     fo.setAttribute('height', exportHeight);
-    fo.setAttribute('style', `font-family:${window.getComputedStyle(container).fontFamily};`);
+    fo.setAttribute('style', `font-family:${containerFontFamily};`);
 
     clone.style.transform = `scale(${scale})`;
     clone.style.transformOrigin = "top left";
     clone.style.width = width + "px";
     clone.style.height = height + "px";
+    clone.style.background = window.getComputedStyle(container).backgroundColor;
 
     fo.appendChild(clone);
     temp_svg.appendChild(fo);
@@ -301,10 +321,12 @@ async function domToPng({ container, scale = 2 }) {
                 reject("Failed to draw SVG on canvas: " + err);
             }
         };
-        img.onerror = function (err) {
+        img.onerror = function () {
             reject("Failed to load SVG image for conversion");
         };
     });
 }
+
+
 
 export { domToPng, applyAllComputedStylesDeep };
