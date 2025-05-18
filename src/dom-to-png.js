@@ -62,7 +62,6 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
 
     let styleMap = {};
 
-    // Get all already-inline styles
     let inlineStyle = clone.getAttribute('style');
     if (typeof inlineStyle !== 'string') inlineStyle = '';
     inlineStyle.split(';').forEach(s => {
@@ -72,19 +71,29 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
         }
     });
 
-    // Copy *every* computed property
     for (let i = 0; i < computedStyle.length; i += 1) {
         const property = computedStyle[i];
         const value = computedStyle.getPropertyValue(property);
         styleMap[property] = value;
     }
 
-    // ---- Strongest part: force resolved color and background-color ----
-    // getPropertyValue always resolves to an actual color, not 'inherit'
     styleMap['color'] = computedStyle.color;
     styleMap['background-color'] = computedStyle.backgroundColor;
-    // Add font props for safety (if they matter to your charts)
-    styleMap['font-family'] = computedStyle.fontFamily || inheritedFontFamily || '';
+
+    let fontFamily = computedStyle.fontFamily || inheritedFontFamily || '';
+    if (!fontFamily ||
+        fontFamily.trim() === '' ||
+        fontFamily === 'inherit' ||
+        fontFamily === 'initial' ||
+        fontFamily.toLowerCase().startsWith('system-ui') ||
+        fontFamily.toLowerCase() === 'sans-serif' ||
+        fontFamily.toLowerCase() === 'serif' ||
+        fontFamily.toLowerCase() === 'monospace'
+    ) {
+        fontFamily = 'Helvetica, Arial, sans-serif';
+    }
+    styleMap['font-family'] = fontFamily;
+
     styleMap['font-size'] = computedStyle.fontSize;
     styleMap['font-weight'] = computedStyle.fontWeight;
 
@@ -105,8 +114,6 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
         styleMap[prop] = computedStyle.getPropertyValue(prop);
     });
 
-    // No more inheritedFontFamily here; use resolved computedStyle above
-
     styleMap['overflow'] = 'visible';
     styleMap['overflow-x'] = 'visible';
     styleMap['overflow-y'] = 'visible';
@@ -117,16 +124,14 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
     }
     clone.setAttribute('style', styleString);
 
-    // Recursively walk
     const cloneChildren = clone.children || [];
     const originalChildren = original.children || [];
     for (let i = 0; i < cloneChildren.length; i++) {
         if (cloneChildren[i].nodeType === 1 && originalChildren[i]) {
-            applyAllComputedStylesDeep(cloneChildren[i], originalChildren[i], inheritedFontFamily);
+            applyAllComputedStylesDeep(cloneChildren[i], originalChildren[i], fontFamily);
         }
     }
 }
-
 
 /**
  * Ensures all <text> elements in the given SVG element tree have the given font family
@@ -378,7 +383,6 @@ function walkAllAndApply(cloneNode, liveNode) {
         walkAllAndApply(cloneChildren[i], liveChildren[i]);
     }
 }
-
 
 /**
  * Converts a DOM element (including HTML, SVG, and canvas) into a high-resolution PNG data URL.
