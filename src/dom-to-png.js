@@ -44,19 +44,13 @@ async function inlineAllImages(clone) {
 function removeIgnoredElements(root) {
     const ignored = root.querySelectorAll('[data-dom-to-png-ignore]');
     ignored.forEach(el => {
-        if (el.parentNode) {
-            el.parentNode.removeChild(el);
-        }
+        el.remove()
     });
 }
 
 /**
  * Recursively applies all computed styles and existing inline styles as inline style attributes
- * on every element in the cloned DOM tree. This includes:
- * - width/height from layout box
- * - overflow visible
- * - computed flex-wrap and font-family
- *
+ * on every element in the cloned DOM tree.
  * @param {HTMLElement} clone - The cloned DOM element.
  * @param {HTMLElement} original - The original DOM element.
  * @param {string} [inheritedFontFamily] - Font family to apply (optional).
@@ -123,8 +117,6 @@ function applyAllComputedStylesDeep(clone, original, inheritedFontFamily) {
     }
 }
 
-
-
 /**
  * Ensures all <text> elements in the given SVG element tree have the given font family
  * as both an attribute and a style property.
@@ -154,25 +146,10 @@ function toBase64Unicode(str) {
 
 /**
  * Rasterizes an SVG element to a PNG data URL at a given size.
- * 
- * - Serializes the provided SVG element to an XML string,
- * - Ensures the SVG has an explicit xmlns attribute,
- * - Renders the SVG as an <img> on a hidden canvas at the specified width/height,
- * - Returns a PNG data URL representing the rendered SVG.
- * 
  * @param {SVGElement} svgEl - The SVG element to convert.
  * @param {number} width - The desired output width in pixels.
  * @param {number} height - The desired output height in pixels.
  * @returns {Promise<string>} Resolves to a PNG data URL of the SVG at the requested size.
- * 
- * @example
- * const svg = document.querySelector('svg[aria-label]');
- * svgElementToPngDataUrl(svg, 800, 500).then(pngUrl => {
- *   // Use the PNG data URL, e.g. as an <img> src
- *   console.log(pngUrl);
- * });
- * 
- * @throws {Error} If image loading or canvas drawing fails.
  */
 function svgElementToPngDataUrl(svgEl, width, height) {
     const serializer = new XMLSerializer();
@@ -219,12 +196,10 @@ function applyAllSvgComputedStylesInline(svgEl) {
 /**
  * Extracts all @font-face rules from same-origin stylesheets in the current document.
  * Handles cross-origin stylesheets gracefully.
- *
  * @returns {string[]} An array of CSS strings representing @font-face rules.
  */
 function extractFontFaceRules() {
     const fontCssRules = [];
-
     for (const sheet of document.styleSheets) {
         try {
             const rules = sheet.cssRules;
@@ -240,7 +215,6 @@ function extractFontFaceRules() {
             continue;
         }
     }
-
     return fontCssRules;
 }
 
@@ -295,9 +269,9 @@ async function domToPng({ container, scale = 2 }) {
     }
 
     const clone = container.cloneNode(true);
+
     const cloneCanvasList = clone.querySelectorAll('canvas');
     const originalCanvasList = container.querySelectorAll('canvas');
-
     for (let i = 0; i < originalCanvasList.length; i += 1) {
         const originalCanvas = originalCanvasList[i];
         const cloneCanvas = cloneCanvasList[i];
@@ -313,28 +287,27 @@ async function domToPng({ container, scale = 2 }) {
     }
 
     const liveSvg = container.querySelector('svg[aria-label]');
-    if (liveSvg) {
+    const cloneSvg = clone.querySelector('svg[aria-label]');
+    if (liveSvg && cloneSvg) {
         const bbox = liveSvg.getBoundingClientRect();
         const svgWidth = bbox.width;
         const svgHeight = bbox.height;
 
-        applyAllSvgComputedStylesInline(liveSvg);
-        setFontFamilyOnAllSvgTextElements(liveSvg, containerFontFamily);
+        // Only modify the clone
+        applyAllSvgComputedStylesInline(cloneSvg);
+        setFontFamilyOnAllSvgTextElements(cloneSvg, containerFontFamily);
 
         const scaledWidth = Math.round(svgWidth * scale);
         const scaledHeight = Math.round(svgHeight * scale);
-        const pngDataUrl = await svgElementToPngDataUrl(liveSvg, scaledWidth, scaledHeight);
+        const pngDataUrl = await svgElementToPngDataUrl(cloneSvg, scaledWidth, scaledHeight);
 
-        const cloneSvg = clone.querySelector('svg[aria-label]');
-        if (cloneSvg) {
-            const img = document.createElement('img');
-            img.src = pngDataUrl;
-            img.width = svgWidth;
-            img.height = svgHeight;
-            img.style.width = svgWidth + "px";
-            img.style.height = svgHeight + "px";
-            cloneSvg.parentNode.replaceChild(img, cloneSvg);
-        }
+        const img = document.createElement('img');
+        img.src = pngDataUrl;
+        img.width = svgWidth;
+        img.height = svgHeight;
+        img.style.width = svgWidth + "px";
+        img.style.height = svgHeight + "px";
+        cloneSvg.parentNode.replaceChild(img, cloneSvg);
     }
 
     applyAllComputedStylesDeep(clone, container, containerFontFamily);
@@ -368,8 +341,9 @@ async function domToPng({ container, scale = 2 }) {
     injectFontFaceStyles(temp_svg);
     temp_svg.appendChild(fo);
 
-    const serializer = new XMLSerializer().serializeToString(temp_svg);
-    const encodedData = toBase64Unicode(serializer);
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(temp_svg);
+    const encodedData = toBase64Unicode(svgString);
 
     const img = new window.Image();
     img.crossOrigin = "anonymous";
@@ -393,6 +367,5 @@ async function domToPng({ container, scale = 2 }) {
         };
     });
 }
-
 
 export { domToPng, applyAllComputedStylesDeep };
