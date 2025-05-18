@@ -259,7 +259,7 @@ const range = ref(null);
 <template>
     <div
         v-if="active"
-        data-html2canvas-ignore
+        data-dom-to-png-ignore
         :class="{
             'vue-ui-pen-and-paper-actions': true,
             'visible': active

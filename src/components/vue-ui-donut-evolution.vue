@@ -970,7 +970,7 @@ defineExpose({
                     style="filter:drop-shadow(0 12px 12px rgba(0,0,0,0.3))"
                 />
                 <line
-                    data-html2canvas-ignore
+                    data-dom-to-png-ignore
                     :x1="svg.absoluteWidth - padding.right - 15"
                     :y1="padding.top + 5"
                     :x2="svg.absoluteWidth - padding.right - 4"
@@ -980,7 +980,7 @@ defineExpose({
                     stroke-width="1.5"
                 />
                 <line
-                    data-html2canvas-ignore
+                    data-dom-to-png-ignore
                     :x1="svg.absoluteWidth - padding.right - 15"
                     :y2="padding.top + 5"
                     :x2="svg.absoluteWidth - padding.right - 4"

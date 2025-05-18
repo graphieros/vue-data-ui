@@ -1515,7 +1515,7 @@
         }">
             <template #content>
                 <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`">
-                    <div style="display: flex; flex-direction:row; gap: 6px; align-items:center; padding-left: 6px" data-html2canvas-ignore>
+                    <div style="display: flex; flex-direction:row; gap: 6px; align-items:center; padding-left: 6px" data-dom-to-png-ignore>
                         <input type="checkbox" v-model="showSparklineTable">
                         <div @click="showSparklineTable = !showSparklineTable" style="cursor: pointer">
                             <BaseIcon name="chartLine" :size="20" :stroke="FINAL_CONFIG.chart.color"/>

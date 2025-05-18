@@ -84,7 +84,7 @@ const waveScale = computed(() => {
 </script>
 
 <template>
-    <svg data-cy="vue-ui-cursor" data-html2canvas-ignore :xmlns="XMLNS" v-if="isVisible" :style="`z-index: 2147483647; overflow: visible; pointer-events: none;background: transparent; position:fixed; top:${position.y}px; left:${position.x}px;`" viewBox="0 0 100 100" :height="FINAL_CONFIG.centerCircleRadius * 2" :width="FINAL_CONFIG.centerCircleRadius * 2">
+    <svg data-cy="vue-ui-cursor" data-dom-to-png-ignore :xmlns="XMLNS" v-if="isVisible" :style="`z-index: 2147483647; overflow: visible; pointer-events: none;background: transparent; position:fixed; top:${position.y}px; left:${position.x}px;`" viewBox="0 0 100 100" :height="FINAL_CONFIG.centerCircleRadius * 2" :width="FINAL_CONFIG.centerCircleRadius * 2">
         <defs>
             <radialGradient id="follower" fy="30%" fx="30%">
                 <stop offset="10%" :stop-color="FINAL_CONFIG.bubbleEffectColor" :stop-opacity="FINAL_CONFIG.bubbleEffectOpacity"/>

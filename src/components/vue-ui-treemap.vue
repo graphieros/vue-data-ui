@@ -723,7 +723,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <nav class="vue-ui-treemap-breadcrumbs" v-if="breadcrumbs.length > 1" data-html2canvas-ignore>
+        <nav class="vue-ui-treemap-breadcrumbs" v-if="breadcrumbs.length > 1" data-dom-to-png-ignore>
             <span 
                 v-for="(crumb, i) in breadcrumbs"
                 role="button"

@@ -523,7 +523,7 @@ function useTooltip(word) {
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <div v-if="isZoom" data-html2canvas-ignore class="reset-wrapper">
+        <div v-if="isZoom" data-dom-to-png-ignore class="reset-wrapper">
             <slot name="reset-action" :reset="resetZoom">
                 <button 
                     data-cy-reset 

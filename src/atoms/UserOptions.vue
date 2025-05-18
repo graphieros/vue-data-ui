@@ -264,7 +264,7 @@ const isInfo = ref({
     <div
         data-cy="user-options"
         v-click-outside="closeIfOpen" 
-        data-html2canvas-ignore 
+        data-dom-to-png-ignore 
         class="vue-ui-user-options" 
         :style="`z-index: ${zIndex}; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; ${position === 'right' ? `right:${isFullscreen ? '12px': '0'}` : `left:${isFullscreen ? '12px' : '0'}`}; padding: 4px; background:transparent;`">
 

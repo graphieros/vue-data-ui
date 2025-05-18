@@ -1,56 +1,63 @@
-import html2canvas from 'html2canvas';
 import JsPDF from "jspdf";
+import { domToPng } from "./dom-to-png"; 
 
-export default function pdf({domElement, fileName, options = {} }) {
-    if(domElement) {
-            const a4 = {
-            height: 851.89,
-            width: 595.28,
-        };
-        const pdf = new JsPDF("", "pt", "a4");
-        let contentWidth, contentHeight, imgWidth, imgHeight, pageData;
-        return html2canvas(domElement, { ...options })
-            .then((canvasChart) => {
-                contentWidth = canvasChart.width;
-                contentHeight = canvasChart.height;
-                let leftHeight = contentHeight;
-                const pageHeight = (contentWidth / a4.width) * a4.height;
-                let position = 0;
+export default async function pdf({ domElement, fileName, scale = 2, options = {} }) {
+    if (!domElement) return Promise.reject("No domElement provided");
 
-                imgWidth = a4.width;
-                imgHeight = (582.28 / contentWidth) * contentHeight;
-                pageData = canvasChart.toDataURL("image/png", 1.0);
-                if (leftHeight < pageHeight) {
+    const a4 = {
+        width: 595.28,
+        height: 841.89,
+    };
+
+    const imgData = await domToPng({ container: domElement, scale });
+    return await new Promise((resolve, reject) => {
+        const img = new window.Image();
+        img.onload = function () {
+            const contentWidth = img.naturalWidth;
+            const contentHeight = img.naturalHeight;
+
+            let imgWidth = a4.width;
+            let imgHeight = (a4.width / contentWidth) * contentHeight;
+
+            const pdf = new JsPDF("", "pt", "a4");
+            let position = 0;
+            let leftHeight = contentHeight;
+            const pageHeight = (contentWidth / a4.width) * a4.height;
+
+            if (leftHeight < pageHeight) {
                 pdf.addImage(
-                    pageData,
+                    imgData,
                     "PNG",
-                    33,
-                    24,
-                    imgWidth * 0.9,
-                    imgHeight * 0.9,
+                    0,
+                    0,
+                    imgWidth,
+                    imgHeight,
                     "",
                     "FAST"
                 );
-                } else {
+            } else {
                 while (leftHeight > 0) {
                     pdf.addImage(
-                    pageData,
-                    "PNG",
-                    33,
-                    position,
-                    imgWidth * 0.9,
-                    imgHeight * 0.9,
-                    "",
-                    "FAST"
+                        imgData,
+                        "PNG",
+                        0,
+                        position,
+                        imgWidth,
+                        imgHeight,
+                        "",
+                        "FAST"
                     );
                     leftHeight -= pageHeight;
-                    position -= a4.height - 24;
+                    position -= a4.height;
                     if (leftHeight > 0) {
-                    pdf.addPage();
+                        pdf.addPage();
                     }
                 }
-                }
-                pdf.save(`${fileName}.pdf`);
-            })
-    }
+            }
+            pdf.save(`${fileName}.pdf`);
+            resolve();
+        };
+        img.onerror = err => reject("Failed to load image for PDF: " + err);
+        img.src = imgData;
+    });
 }

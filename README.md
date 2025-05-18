@@ -7,7 +7,7 @@
 # vue-data-ui
 
 [![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
-[![Static Badge](https://img.shields.io/badge/components-61-blue)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-60-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -94,7 +94,6 @@ Available components
 - [VueUiIcon](https://vue-data-ui.graphieros.com/docs#vue-ui-icon)
 - [VueUiKpi](https://vue-data-ui.graphieros.com/docs#vue-ui-kpi)
 - [VueUiMiniLoader](https://vue-data-ui.graphieros.com/docs#vue-ui-mini-loader)
-- [VueUiScreenshot](https://vue-data-ui.graphieros.com/docs#vue-ui-screenshot)
 - [VueUiSkeleton](https://vue-data-ui.graphieros.com/docs#vue-ui-skeleton)
 - [VueUiTimer](https://vue-data-ui.graphieros.com/docs#vue-ui-timer)
 
@@ -488,7 +487,6 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiDigits`     | `number`                  | `VueUiDigitsConfig`     | ❌                                               | ❌                                                      |
 | `VueUiKpi`        | `number`                  | `VueUiKpiConfig`        | ❌                                               | `#title`, `#value`, `#comment-before`, `#comment-after` |
 | `VueUiMiniLoader` | ❌                        | `VueUiMiniLoaderConfig` | ❌                                               | ❌                                                      |
-| `VueUiScreenshot` | ❌                        | `VueUiScreenshotConfig` | `@postImage`, `shoot`, `close`                   | ❌                                                      |
 | `VueUiSkeleton`   | ❌                        | `VueUiSkeletonConfig`   | ❌                                               | ❌                                                      |
 | `VueUiTimer`      | ❌                        | `VueUiTimerConfig`      | `@start`, `@pause`, `@reset`, `@restart`, `@lap` | `#time`, `#controls`, `#laps`, `#chart-background`      |
 | `VueUiIcon`       | see below                 |

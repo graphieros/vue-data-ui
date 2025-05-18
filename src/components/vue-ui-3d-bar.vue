@@ -693,7 +693,7 @@ defineExpose({
             </text>
             
             <!-- FIX KILLER -->
-            <g v-if="selectionIsFixed" @click="selectionIsFixed = false; selectedSerie = null" data-html2canvas-ignore style="cursor:pointer">
+            <g v-if="selectionIsFixed" @click="selectionIsFixed = false; selectedSerie = null" data-dom-to-png-ignore style="cursor:pointer">
                 <rect :x="svg.width / 2 - 6" :y="svg.top - 20" :height="12" :width="12" fill="transparent"/>
                 <path :d="`M${svg.width / 2 - 6},${svg.top - 20} ${svg.width / 2 + 6},${svg.top - 9}`" :stroke="FINAL_CONFIG.style.chart.color" stroke-linecap="round" stroke-width="1"/>
                 <path :d="`M${svg.width / 2 + 6},${svg.top - 20} ${svg.width / 2 - 6},${svg.top - 9}`" :stroke="FINAL_CONFIG.style.chart.color" stroke-linecap="round" stroke-width="1"/>
