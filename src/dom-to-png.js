@@ -161,14 +161,14 @@ function toBase64Unicode(str) {
 function svgElementToPngDataUrl(svgEl, width, height) {
     const serializer = new XMLSerializer();
     let svgString = serializer.serializeToString(svgEl);
-    if (!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+    if (!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
         svgString = svgString.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
     }
     const base64 = window.btoa(unescape(encodeURIComponent(svgString)));
     const img = new window.Image();
     img.src = `data:image/svg+xml;base64,${base64}`;
     return new Promise((resolve, reject) => {
-        img.onload = function() {
+        img.onload = function () {
             const canvas = document.createElement("canvas");
             canvas.width = width;
             canvas.height = height;
@@ -201,33 +201,83 @@ function applyAllSvgComputedStylesInline(svgEl) {
 }
 
 /**
- * Exports a DOM container (including mixed HTML and SVG) to a high-resolution PNG data URL.
- * 
- * - Clones the given DOM container, inlines all computed styles and images,
- * - Converts the chart SVG (with aria-label) to a pixel-perfect PNG and swaps it in,
- * - Applies optional scaling for retina/high-DPI output,
- * - Serializes everything via <foreignObject> to preserve the on-screen layout,
- * - Renders to a final canvas and exports as a PNG data URL.
- * 
- * @param {Object} params - Export options.
- * @param {HTMLElement} params.container - The DOM element to export (must contain the chart SVG).
- * @param {number} [params.scale=2] - Optional resolution scale factor (e.g., 2 for retina). Default is 2.
- * @returns {Promise<string>} Resolves to a PNG data URL representing the rendered container at the requested scale.
- * 
+ * Extracts all @font-face rules from same-origin stylesheets in the current document.
+ * Handles cross-origin stylesheets gracefully.
+ *
+ * @returns {string[]} An array of CSS strings representing @font-face rules.
+ */
+function extractFontFaceRules() {
+    const fontCssRules = [];
+
+    for (const sheet of document.styleSheets) {
+        try {
+            const rules = sheet.cssRules;
+            if (!rules) continue;
+
+            for (const rule of rules) {
+                if (rule.constructor.name === "CSSFontFaceRule" || rule.cssText.startsWith("@font-face")) {
+                    fontCssRules.push(rule.cssText);
+                }
+            }
+        } catch {
+            // Skip stylesheets from other origins
+            continue;
+        }
+    }
+
+    return fontCssRules;
+}
+
+function injectFontFaceStyles(svgEl) {
+    const fontRules = extractFontFaceRules();
+    if (!fontRules.length) return;
+
+    const style = document.createElement('style');
+    style.setAttribute('type', 'text/css');
+    style.textContent = fontRules.join('\n');
+
+    const defs = svgEl.querySelector('defs') || document.createElementNS(XMLNS, 'defs');
+    defs.appendChild(style);
+    if (!svgEl.querySelector('defs')) {
+        svgEl.insertBefore(defs, svgEl.firstChild);
+    }
+}
+
+/**
+ * Converts a DOM element (including HTML, SVG, and canvas) into a high-resolution PNG data URL.
+ *
+ * Features:
+ * - Clones the container DOM tree and inlines all computed styles.
+ * - Rasterizes `<canvas>` elements and replaces them with `<img>` to preserve their content.
+ * - Finds `<svg aria-label>` charts, rasterizes them separately to PNG, and swaps them in for pixel-perfect results.
+ * - Inlines all images as base64 to prevent CORS/tainting issues.
+ * - Injects all available @font-face definitions into the output to preserve custom fonts.
+ * - Automatically falls back to "Helvetica" if the container's font is unavailable or not specified.
+ * - Supports scaling for high-DPI exports (e.g., retina).
+ *
+ * @param {Object} params - Parameters for PNG export.
+ * @param {HTMLElement} params.container - The DOM element to export. Should contain HTML, SVG, or canvas content.
+ * @param {number} [params.scale=2] - Scaling factor for higher resolution output (e.g., 2 for retina). Default is 2.
+ *
+ * @returns {Promise<string>} Resolves to a PNG data URL of the rendered container.
+ *
  * @example
- * domToPng({ container: document.getElementById('chart-root'), scale: 2 })
- *   .then(dataUrl => {
- *     // Use the PNG data URL (e.g., for download or <img> src)
- *     console.log(dataUrl);
- *   });
- * 
- * @throws {Error} If the container is missing or chart SVG is not found.
+ * const dataUrl = await domToPng({ container: document.getElementById('chart'), scale: 2 });
+ * const img = new Image();
+ * img.src = dataUrl;
+ * document.body.appendChild(img);
+ *
+ * @throws {Error} If container is not provided or rendering fails.
  */
 async function domToPng({ container, scale = 2 }) {
     if (!container) throw new Error("No container provided");
 
     await document.fonts.ready;
-    const containerFontFamily = window.getComputedStyle(container).fontFamily;
+    let containerFontFamily = window.getComputedStyle(container).fontFamily || 'Helvetica';
+    if (!containerFontFamily.toLowerCase().includes('helvetica')) {
+        containerFontFamily += ', Helvetica';
+    }
+
     const clone = container.cloneNode(true);
     const cloneCanvasList = clone.querySelectorAll('canvas');
     const originalCanvasList = container.querySelectorAll('canvas');
@@ -299,6 +349,7 @@ async function domToPng({ container, scale = 2 }) {
     clone.style.background = window.getComputedStyle(container).backgroundColor;
 
     fo.appendChild(clone);
+    injectFontFaceStyles(temp_svg);
     temp_svg.appendChild(fo);
 
     const serializer = new XMLSerializer().serializeToString(temp_svg);
@@ -326,7 +377,6 @@ async function domToPng({ container, scale = 2 }) {
         };
     });
 }
-
 
 
 export { domToPng, applyAllComputedStylesDeep };
