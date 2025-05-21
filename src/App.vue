@@ -119,7 +119,7 @@ const components = ref([             //------|
  * Modify the index to display a component
  * [0] = VueUiXy 
  */
- const selectedComponent = ref(components.value[1]);
+ const selectedComponent = ref(components.value[34]);
 
 /**
  * Legacy testing arena where some non chart components can be tested
