@@ -2271,6 +2271,199 @@ export function deepClone(value) {
     return result;
 }
 
+export function getAreaSegments(points) {
+    const segments = [];
+    let current = [];
+    for (const p of points) {
+        if (!p || p.value == null || Number.isNaN(p.x) || Number.isNaN(p.y)) {
+            if (current.length) segments.push(current);
+            current = [];
+        } else {
+            current.push(p);
+        }
+    }
+    if (current.length) segments.push(current);
+    return segments;
+}
+
+export function createAreaWithCuts(plots, zero) {
+    if (!plots[0]) return [-10, -10, '', -10, -10].toString();
+
+    const segments = getAreaSegments(plots);
+    if (!segments.length) return '';
+    return segments.map(seg => {
+        const start = { x: seg[0].x, y: zero };
+        const end = { x: seg.at(-1).x, y: zero };
+        const path = [];
+        seg.forEach(plot => {
+            path.push(`${plot.x},${plot.y} `);
+        });
+        return [start.x, start.y, ...path, end.x, end.y].toString();
+    }).join(';');
+}
+
+export function createIndividualArea(plots, zero) {
+    const validPlots = plots.filter(p => !!p);
+    if (!validPlots[0]) return [-10, -10, '', -10, -10].toString();
+    const start = { x: validPlots[0].x, y: zero };
+    const end = { x: validPlots.at(-1).x, y: zero };
+    const path = [];
+    validPlots.forEach(plot => {
+        path.push(`${plot.x},${plot.y} `);
+    });
+    return [start.x, start.y, ...path, end.x, end.y].toString();
+}
+
+export function createIndividualAreaWithCuts(plots, zero) {
+    if (!plots[0]) return [-10, -10, '', -10, -10].toString();
+
+    const segments = getAreaSegments(plots);
+    if (!segments.length) return '';
+    return segments.map(seg => {
+        const start = { x: seg[0].x, y: zero };
+        const end = { x: seg.at(-1).x, y: zero };
+        const path = [];
+        seg.forEach(plot => {
+            path.push(`${plot.x},${plot.y} `);
+        });
+        return [start.x, start.y, ...path, end.x, end.y].toString();
+    }).join(';');
+}
+
+export function getValidSegments(points) {
+    const segments = [];
+    let current = [];
+    for (const p of points) {
+        if (p.value == null || Number.isNaN(p.x) || Number.isNaN(p.y)) {
+            if (current.length > 1) segments.push(current);
+            current = [];
+        } else {
+            current.push(p);
+        }
+    }
+    if (current.length > 1) segments.push(current);
+    return segments;
+}
+
+export function createStraightPathWithCuts(points) {
+    let d = '';
+    let started = false;
+    for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        if (p.value == null || Number.isNaN(p.x) || Number.isNaN(p.y)) {
+            started = false;
+            continue;
+        }
+        if (!started) {
+            d += `${i === 0 ? '' : 'M'}${checkNaN(p.x)},${checkNaN(p.y)} `;
+            started = true;
+        } else {
+            d += `L${checkNaN(p.x)},${checkNaN(p.y)} `;
+        }
+    }
+    return d.trim();
+}
+
+export function createSmoothPathWithCuts(points) {
+    const segments = getValidSegments(points);
+
+    if (!segments.length) return '';
+
+    let fullPath = '';
+    for (const [idx, seg] of segments.entries()) {
+        if (seg.length < 2) continue;
+        const n = seg.length - 1;
+        const dx = [], dy = [], slopes = [], tangents = [];
+        for (let i = 0; i < n; i += 1) {
+            dx[i] = seg[i + 1].x - seg[i].x;
+            dy[i] = seg[i + 1].y - seg[i].y;
+            slopes[i] = dy[i] / dx[i];
+        }
+        tangents[0] = slopes[0];
+        tangents[n] = slopes[n - 1];
+        for (let i = 1; i < n; i += 1) {
+            if (slopes[i - 1] * slopes[i] <= 0) {
+                tangents[i] = 0;
+            } else {
+                const harmonicMean = (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+                tangents[i] = harmonicMean;
+            }
+        }
+
+        fullPath += `${idx === 0 ? '' : 'M'}${checkNaN(seg[0].x)},${checkNaN(seg[0].y)} `;
+        for (let i = 0; i < n; i += 1) {
+            const x1 = seg[i].x;
+            const y1 = seg[i].y;
+            const x2 = seg[i + 1].x;
+            const y2 = seg[i + 1].y;
+            const m1 = tangents[i];
+            const m2 = tangents[i + 1];
+            const controlX1 = x1 + (x2 - x1) / 3;
+            const controlY1 = y1 + m1 * (x2 - x1) / 3;
+            const controlX2 = x2 - (x2 - x1) / 3;
+            const controlY2 = y2 - m2 * (x2 - x1) / 3;
+            fullPath += `C${checkNaN(controlX1)},${checkNaN(controlY1)} ${checkNaN(controlX2)},${checkNaN(controlY2)} ${checkNaN(x2)},${checkNaN(y2)} `;
+        }
+    }
+    return fullPath.trim();
+}
+
+export function createSmoothAreaSegments(points, zero, cut = false) {
+    function getSegments(points) {
+        const segs = [];
+        let curr = [];
+        for (const p of points) {
+            if (!p || p.value == null || Number.isNaN(p.x) || Number.isNaN(p.y)) {
+                if (curr.length > 1) segs.push(curr);
+                curr = [];
+            } else {
+                curr.push(p);
+            }
+        }
+        if (curr.length > 1) segs.push(curr);
+        return segs;
+    }
+    const segments = cut ? getSegments(points) : [points];
+    return segments.map(seg => {
+        if (seg.length < 2) return '';
+        const n = seg.length - 1;
+        const dx = [], dy = [], slopes = [], tangents = [];
+        for (let i = 0; i < n; i += 1) {
+            dx[i] = seg[i + 1].x - seg[i].x;
+            dy[i] = seg[i + 1].y - seg[i].y;
+            slopes[i] = dy[i] / dx[i];
+        }
+        tangents[0] = slopes[0];
+        tangents[n] = slopes[n - 1];
+        for (let i = 1; i < n; i += 1) {
+            if (slopes[i - 1] * slopes[i] <= 0) {
+                tangents[i] = 0;
+            } else {
+                const harmonicMean = (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+                tangents[i] = harmonicMean;
+            }
+        }
+        let d = `M${seg[0].x},${zero}`;
+        d += ` L${seg[0].x},${seg[0].y}`;
+        for (let i = 0; i < n; i += 1) {
+            const x1 = seg[i].x;
+            const y1 = seg[i].y;
+            const x2 = seg[i + 1].x;
+            const y2 = seg[i + 1].y;
+            const m1 = tangents[i];
+            const m2 = tangents[i + 1];
+            const controlX1 = x1 + (x2 - x1) / 3;
+            const controlY1 = y1 + m1 * (x2 - x1) / 3;
+            const controlX2 = x2 - (x2 - x1) / 3;
+            const controlY2 = y2 - m2 * (x2 - x1) / 3;
+            d += ` C${controlX1},${controlY1} ${controlX2},${controlY2} ${x2},${y2}`;
+        }
+        d += ` L${seg[n].x},${zero} Z`;
+        return d;
+    }).filter(Boolean);
+}
+
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -2348,5 +2541,12 @@ const lib = {
     themePalettes,
     translateSize,
     treeShake,
+    createStraightPathWithCuts,
+    createSmoothPathWithCuts,
+    getAreaSegments,
+    createAreaWithCuts,
+    createIndividualAreaWithCuts,
+    createSmoothAreaSegments,
+    createIndividualArea
 };
 export default lib;

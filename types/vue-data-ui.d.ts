@@ -2768,6 +2768,7 @@ declare module "vue-data-ui" {
             radius?: number;
             useGradient?: boolean;
             strokeWidth?: number;
+            cutNullValues?: boolean;
             dot?: {
                 hideAboveMaxSerieLength?: number;
                 useSerieColor?: boolean;

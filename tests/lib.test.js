@@ -72,6 +72,14 @@ import {
     treeShake,
     getPathLengthFromCoordinates,
     sumSeries,
+    getAreaSegments,
+    createAreaWithCuts,
+    createIndividualArea,
+    createIndividualAreaWithCuts,
+    getValidSegments,
+    createStraightPathWithCuts,
+    createSmoothPathWithCuts,
+    createSmoothAreaSegments
 } from "../src/lib";
 
 describe("calcTrend", () => {
@@ -2569,5 +2577,868 @@ describe("placeHTMLElementAtSVGCoordinates", () => {
         const elementMock = createMockHTMLElement(50, 60);
         const result = placeHTMLElementAtSVGCoordinates({ svgElement: svgMock, x: 250, y: 490, element: elementMock, offsetY: 10 });
         expect(result.top).toBe(420);
+    });
+});
+
+describe('getAreaSegments', () => {
+    test('returns empty array for empty input', () => {
+        expect(getAreaSegments([])).toEqual([]);
+    });
+
+    test('returns one segment for all valid points', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: 2 },
+            { x: 3, y: 4, value: 3 },
+        ];
+        expect(getAreaSegments(points)).toEqual([points]);
+    });
+
+    test('splits at value null', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 3 },
+            { x: 4, y: 5, value: 4 }
+        ];
+        expect(getAreaSegments(points)).toEqual([
+            [points[0]],
+            [points[2], points[3]]
+        ]);
+    });
+
+    test('splits at undefined, NaN x, or NaN y', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            undefined,
+            { x: 2, y: 3, value: 2 },
+            { x: NaN, y: 5, value: 3 },
+            { x: 4, y: 5, value: 4 },
+            { x: 5, y: NaN, value: 5 },
+            { x: 6, y: 7, value: 6 }
+        ];
+        expect(getAreaSegments(points)).toEqual([
+            [points[0]],
+            [points[2]],
+            [points[4]],
+            [points[6]]
+        ]);
+    });
+
+    test('handles multiple consecutive invalid points', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: null },
+            undefined,
+            { x: 3, y: 4, value: 2 }
+        ];
+        expect(getAreaSegments(points)).toEqual([
+            [points[0]],
+            [points[3]]
+        ]);
+    });
+
+    test('returns no segment for all invalid points', () => {
+        const points = [
+            { x: 1, y: 2, value: null },
+            undefined,
+            { x: NaN, y: 2, value: 2 },
+            { x: 1, y: NaN, value: 2 }
+        ]
+        expect(getAreaSegments(points)).toEqual([]);
+    });
+
+    test('segment must be at least length 1 (single point is valid)', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 2 }
+        ];
+        expect(getAreaSegments(points)).toEqual([
+            [points[0]],
+            [points[2]]
+        ]);
+    });
+
+    test('works if last point is invalid', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: 2 },
+            { x: 3, y: 4, value: null }
+        ];
+        expect(getAreaSegments(points)).toEqual([
+            [points[0], points[1]]
+        ]);
+    });
+
+    test('works if first point is invalid', () => {
+        const points = [
+            { x: 1, y: 2, value: null },
+            { x: 2, y: 3, value: 2 },
+            { x: 3, y: 4, value: 3 }
+        ];
+        expect(getAreaSegments(points)).toEqual([
+            [points[1], points[2]]
+        ]);
+    });
+
+    test('works if valid segment is at the end', () => {
+        const points = [
+            { x: 1, y: 2, value: null },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 3 }
+        ];
+        expect(getAreaSegments(points)).toEqual([
+            [points[2]]
+        ]);
+    });
+});
+
+describe('createAreaWithCuts', () => {
+    test('returns default string for empty input', () => {
+        expect(createAreaWithCuts([], 100)).toBe('-10,-10,,-10,-10');
+    });
+
+    test('returns default string if first plot is falsy', () => {
+        expect(createAreaWithCuts([null, { x: 1, y: 2, value: 1 }], 100)).toBe('-10,-10,,-10,-10');
+    });
+
+    test('returns empty string for no valid segments', () => {
+        const plots = [
+            { x: 1, y: 2, value: null },
+            { x: NaN, y: 2, value: 1 }
+        ];
+        expect(createAreaWithCuts(plots, 100)).toBe('');
+    });
+
+    test('returns area string for all valid points', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: 2 },
+            { x: 3, y: 30, value: 3 }
+        ];
+        const expected = [1, 100, '1,10 ', '2,20 ', '3,30 ', 3, 100].toString();
+        expect(createAreaWithCuts(plots, 100)).toBe(expected);
+    });
+
+    test('handles a cut in the middle', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 30, value: 3 }
+        ];
+        const expectedA = [1, 100, '1,10 ', 1, 100].toString();
+        const expectedB = [3, 100, '3,30 ', 3, 100].toString();
+        expect(createAreaWithCuts(plots, 100)).toBe(`${expectedA};${expectedB}`);
+    });
+
+    test('handles multiple cuts', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 30, value: 3 },
+            { x: 4, y: 40, value: null },
+            { x: 5, y: 50, value: 5 }
+        ];
+        const segA = [1, 100, '1,10 ', 1, 100].toString();
+        const segB = [3, 100, '3,30 ', 3, 100].toString();
+        const segC = [5, 100, '5,50 ', 5, 100].toString();
+        expect(createAreaWithCuts(plots, 100)).toBe(`${segA};${segB};${segC}`);
+    });
+
+    test('handles valid points at the end after invalids', () => {
+        const plots = [
+            { x: 1, y: 10, value: null },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 30, value: 3 }
+        ];
+        const expected = [3, 100, '3,30 ', 3, 100].toString();
+        expect(createAreaWithCuts(plots, 100)).toBe(expected);
+    });
+
+    test('handles valid points at the beginning before invalids', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 30, value: null }
+        ];
+        const expected = [1, 100, '1,10 ', 1, 100].toString();
+        expect(createAreaWithCuts(plots, 100)).toBe(expected);
+    });
+
+    test('handles segments of length 1', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 30, value: 3 }
+        ];
+        const expectedA = [1, 100, '1,10 ', 1, 100].toString();
+        const expectedB = [3, 100, '3,30 ', 3, 100].toString();
+        expect(createAreaWithCuts(plots, 100)).toBe(`${expectedA};${expectedB}`);
+    });
+
+    test('handles NaN x or y as cut', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: NaN, y: 20, value: 2 },
+            { x: 3, y: NaN, value: 3 },
+            { x: 4, y: 40, value: 4 }
+        ];
+        const expectedA = [1, 100, '1,10 ', 1, 100].toString();
+        const expectedB = [4, 100, '4,40 ', 4, 100].toString();
+        expect(createAreaWithCuts(plots, 100)).toBe(`${expectedA};${expectedB}`);
+    })
+
+    test('handles all invalid plots', () => {
+        const plots = [
+            { x: 1, y: 10, value: null },
+            { x: 2, y: 20, value: undefined }
+        ];
+        expect(createAreaWithCuts(plots, 100)).toBe('');
+    });
+});
+
+describe('createIndividualArea', () => {
+    test('returns default string for empty input', () => {
+        expect(createIndividualArea([], 100)).toBe('-10,-10,,-10,-10');
+    });
+
+    test('returns correct path if first plot is falsy but a valid plot exists', () => {
+        expect(createIndividualArea([null, { x: 1, y: 2, value: 1 }], 100))
+            .toBe([1, 100, '1,2 ', 1, 100].toString());
+    });
+
+    test('returns default string if all plots are falsy', () => {
+        expect(createIndividualArea([null, undefined], 100)).toBe('-10,-10,,-10,-10')
+    });
+
+    test('returns correct path for all valid points', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: 2 },
+            { x: 3, y: 30, value: 3 }
+        ];
+        const expected = [1, 100, '1,10 ', '2,20 ', '3,30 ', 3, 100].toString();
+        expect(createIndividualArea(plots, 100)).toBe(expected);
+    })
+
+    test('ignores falsy plots in the middle', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            null,
+            { x: 2, y: 20, value: 2 },
+            undefined,
+            { x: 3, y: 30, value: 3 }
+        ];
+        const expected = [1, 100, '1,10 ', '2,20 ', '3,30 ', 3, 100].toString();
+        expect(createIndividualArea(plots, 100)).toBe(expected);
+    });
+
+    test('works for single valid plot', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 }
+        ];
+        const expected = [1, 100, '1,10 ', 1, 100].toString();
+        expect(createIndividualArea(plots, 100)).toBe(expected);
+    });
+
+    test('works for two valid plots', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: 2 }
+        ];
+        const expected = [1, 100, '1,10 ', '2,20 ', 2, 100].toString();
+        expect(createIndividualArea(plots, 100)).toBe(expected);
+    });
+
+    test('uses first and last valid plot for start and end', () => {
+        const plots = [
+            null,
+            { x: 2, y: 20, value: 2 },
+            undefined,
+            { x: 3, y: 30, value: 3 },
+            null
+        ];
+        const expected = [2, 100, '2,20 ', '3,30 ', 3, 100].toString();
+        expect(createIndividualArea(plots, 100)).toBe(expected);
+    })
+
+    test('returns default string if only falsy in plots', () => {
+        const plots = [null, undefined, false];
+        expect(createIndividualArea(plots, 100)).toBe('-10,-10,,-10,-10');
+    });
+});
+
+describe('createIndividualAreaWithCuts', () => {
+    test('returns default string for empty input', () => {
+        expect(createIndividualAreaWithCuts([], 100)).toBe('-10,-10,,-10,-10');
+    });
+
+    test('returns default string if first plot is falsy', () => {
+        expect(createIndividualAreaWithCuts([null, { x: 1, y: 2, value: 1 }], 100)).toBe('-10,-10,,-10,-10');
+    });
+
+    test('returns empty string for no valid segments', () => {
+        const plots = [
+            { x: 1, y: 10, value: null },
+            { x: NaN, y: 2, value: 1 },
+            undefined,
+            { x: 3, y: 30, value: null }
+        ];
+        expect(createIndividualAreaWithCuts(plots, 100)).toBe('');
+    });
+
+    test('returns area string for all valid points', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: 2 },
+            { x: 3, y: 30, value: 3 }
+        ];
+        const expected = [1, 100, '1,10 ', '2,20 ', '3,30 ', 3, 100].toString();
+        expect(createIndividualAreaWithCuts(plots, 100)).toBe(expected);
+    });
+
+    test('returns correct string for a cut in the middle', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 30, value: 3 }
+        ];
+        const segA = [1, 100, '1,10 ', 1, 100].toString();
+        const segB = [3, 100, '3,30 ', 3, 100].toString();
+        expect(createIndividualAreaWithCuts(plots, 100)).toBe(`${segA};${segB}`);
+    });
+
+    test('returns correct string for multiple cuts', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 30, value: 3 },
+            { x: 4, y: 40, value: null },
+            { x: 5, y: 50, value: 5 }
+        ];
+        const segA = [1, 100, '1,10 ', 1, 100].toString();
+        const segB = [3, 100, '3,30 ', 3, 100].toString();
+        const segC = [5, 100, '5,50 ', 5, 100].toString();
+        expect(createIndividualAreaWithCuts(plots, 100)).toBe(`${segA};${segB};${segC}`);
+    });
+
+    test('returns correct string when valid segment is at the end', () => {
+        const plots = [
+            { x: 1, y: 10, value: null },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 30, value: 3 }
+        ];
+        const expected = [3, 100, '3,30 ', 3, 100].toString();
+        expect(createIndividualAreaWithCuts(plots, 100)).toBe(expected);
+    });
+
+    test('returns correct string when valid segment is at the beginning', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: 2, y: 20, value: null },
+            { x: 3, y: 30, value: null }
+        ];
+        const expected = [1, 100, '1,10 ', 1, 100].toString();
+        expect(createIndividualAreaWithCuts(plots, 100)).toBe(expected);
+    });
+
+    test('handles single-point segments', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            null,
+            { x: 2, y: 20, value: 2 },
+            undefined,
+            { x: 3, y: 30, value: 3 }
+        ];
+        const segA = [1, 100, '1,10 ', 1, 100].toString();
+        const segB = [2, 100, '2,20 ', 2, 100].toString();
+        const segC = [3, 100, '3,30 ', 3, 100].toString();
+        expect(createIndividualAreaWithCuts(plots, 100)).toBe(`${segA};${segB};${segC}`);
+    });
+
+    test('handles NaN x or y as a cut', () => {
+        const plots = [
+            { x: 1, y: 10, value: 1 },
+            { x: NaN, y: 20, value: 2 },
+            { x: 3, y: NaN, value: 3 },
+            { x: 4, y: 40, value: 4 }
+        ];
+        const segA = [1, 100, '1,10 ', 1, 100].toString();
+        const segB = [4, 100, '4,40 ', 4, 100].toString();
+        expect(createIndividualAreaWithCuts(plots, 100)).toBe(`${segA};${segB}`);
+    });
+
+    test('returns default string if all plots are falsy', () => {
+        expect(createIndividualAreaWithCuts([null, undefined, false], 100)).toBe('-10,-10,,-10,-10');
+    });
+
+    test('returns empty string for all plots invalid', () => {
+        const plots = [
+            { x: 1, y: 10, value: null },
+            { x: 2, y: 20, value: undefined }
+        ];
+        expect(createIndividualAreaWithCuts(plots, 100)).toBe('');
+    });
+});
+
+describe('getValidSegments', () => {
+    test('returns empty array for empty input', () => {
+        expect(getValidSegments([])).toEqual([]);
+    });
+
+    test('returns one segment if all points are valid (length > 1)', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: 2 },
+            { x: 3, y: 4, value: 3 }
+        ];
+        expect(getValidSegments(points)).toEqual([points]);
+    });
+
+    test('does not return single-point segments', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 2 }
+        ];
+        expect(getValidSegments(points)).toEqual([]);
+    });
+
+    test('splits into two valid segments', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: 2 },
+            { x: 3, y: 4, value: null },
+            { x: 4, y: 5, value: 4 },
+            { x: 5, y: 6, value: 5 }
+        ];
+        expect(getValidSegments(points)).toEqual([
+            [points[0], points[1]],
+            [points[3], points[4]]
+        ]);
+    });
+
+    test('ignores single-point segments between invalids', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: 2 },
+            { x: 3, y: 4, value: null },
+            { x: 4, y: 5, value: 4 },
+            { x: 5, y: 6, value: null },
+            { x: 6, y: 7, value: 7 }
+        ];
+        expect(getValidSegments(points)).toEqual([
+            [points[0], points[1]]
+        ]);
+    });
+
+    test('handles invalid value (null)', () => {
+        const points = [
+            { x: 1, y: 2, value: null },
+            { x: 2, y: 3, value: 2 },
+            { x: 3, y: 4, value: 3 }
+        ];
+        expect(getValidSegments(points)).toEqual([
+            [points[1], points[2]]
+        ]);
+    });
+
+    test('handles NaN x or y as invalid', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: NaN, y: 3, value: 2 },
+            { x: 3, y: NaN, value: 3 },
+            { x: 4, y: 4, value: 4 },
+            { x: 5, y: 5, value: 5 }
+        ];
+        expect(getValidSegments(points)).toEqual([
+            [points[3], points[4]]
+        ]);
+    });
+
+    test('returns empty if all are invalid or all single-point segments', () => {
+        const points = [
+            { x: NaN, y: 3, value: 2 },
+            { x: 1, y: 2, value: null },
+            { x: 3, y: NaN, value: 4 }
+        ];
+        expect(getValidSegments(points)).toEqual([]);
+    });
+
+    test('handles segment at end only if > 1 points', () => {
+        const points = [
+            { x: 1, y: 2, value: null },
+            { x: 2, y: 3, value: 2 },
+            { x: 3, y: 4, value: 3 }
+        ];
+        expect(getValidSegments(points)).toEqual([
+            [points[1], points[2]]
+        ]);
+    });
+
+    test('handles valid segment at start and single valid at end', () => {
+        const points = [
+            { x: 1, y: 2, value: 1 },
+            { x: 2, y: 3, value: 2 },
+            { x: 3, y: 4, value: null },
+            { x: 4, y: 5, value: 4 }
+        ];
+        expect(getValidSegments(points)).toEqual([
+            [points[0], points[1]]
+        ]);
+    });
+
+    test('returns empty for single-point valid input', () => {
+        expect(getValidSegments([{ x: 1, y: 2, value: 1 }])).toEqual([]);
+    });
+});
+
+describe('createStraightPathWithCuts', () => {
+    test('returns empty string for empty input', () => {
+        expect(createStraightPathWithCuts([])).toBe('');
+    });
+
+    test('returns one line for all valid points', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: 20 },
+            { x: 3, y: 4, value: 30 }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('1,2 L2,3 L3,4');
+    });
+
+    test('cuts path at null value', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 30 }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('1,2 M3,4');
+    });
+
+    test('cuts path at NaN x or y', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: NaN, y: 3, value: 20 },
+            { x: 3, y: NaN, value: 30 },
+            { x: 4, y: 5, value: 40 }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('1,2 M4,5');
+    });
+
+    test('handles consecutive invalids', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: null },
+            { x: 4, y: 5, value: 40 }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('1,2 M4,5');
+    });
+
+    test('returns empty string if all points are invalid', () => {
+        const points = [
+            { x: 1, y: 2, value: null },
+            { x: NaN, y: 2, value: 1 }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('');
+    });
+
+    test('handles valid points at the end after invalids', () => {
+        const points = [
+            { x: 1, y: 2, value: null },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 30 }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('M3,4');
+    });
+
+    test('handles valid points at the beginning before invalids', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: 20 },
+            { x: 3, y: 4, value: null }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('1,2 L2,3');
+    });
+
+    test('handles a single valid point', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('1,2');
+    });
+
+    test('uses 0 for NaN x/y when valid', () => {
+        const points = [
+            { x: NaN, y: 2, value: 10 },
+            { x: 3, y: NaN, value: 20 }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('');
+    });
+
+    test('handles multiple segments', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 30 },
+            { x: 4, y: 5, value: null },
+            { x: 5, y: 6, value: 50 }
+        ];
+        expect(createStraightPathWithCuts(points)).toBe('1,2 M3,4 M5,6');
+    });
+});
+
+
+function roundPathNumbers(str, precision = 3) {
+    return str.replace(/-?\d+(\.\d+)?/g, n =>
+        Number.parseFloat(n).toFixed(precision).replace(/\.?0+$/, '')
+    )
+}
+
+// Simple monotone cubic for two points
+function simpleCubicStr(x0, y0, x1, y1) {
+    const dx = x1 - x0
+    const dy = y1 - y0
+    const slope = dy / dx
+    const c1x = x0 + dx / 3
+    const c1y = y0 + slope * dx / 3
+    const c2x = x1 - dx / 3
+    const c2y = y1 - slope * dx / 3
+    return `C${c1x},${c1y} ${c2x},${c2y} ${x1},${y1}`
+}
+
+describe('createSmoothPathWithCuts', () => {
+    test('returns empty string for empty input', () => {
+        expect(createSmoothPathWithCuts([])).toBe('');
+    });
+
+    test('returns empty string for single valid point', () => {
+        expect(createSmoothPathWithCuts([{ x: 1, y: 2, value: 10 }])).toBe('');
+    });
+
+    test('returns one cubic segment for two valid points (rounded)', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 3, y: 4, value: 20 }
+        ];
+        const expected = `1,2 ${simpleCubicStr(1, 2, 3, 4)}`;
+        const actual = createSmoothPathWithCuts(points);
+        expect(roundPathNumbers(actual)).toBe(roundPathNumbers(expected));
+    });
+
+    test('returns correct cubic path for a simple three-point line (format and points, rounded)', () => {
+        const points = [
+            { x: 0, y: 0, value: 10 },
+            { x: 1, y: 1, value: 20 },
+            { x: 2, y: 0, value: 30 }
+        ];
+        const d = createSmoothPathWithCuts(points);
+        expect(roundPathNumbers(d)).toContain('0,0');
+        expect(roundPathNumbers(d)).toContain('1,1');
+        expect(roundPathNumbers(d)).toContain('2,0');
+    })
+
+    test('cuts the path at a null value (rounded)', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 30 },
+            { x: 4, y: 5, value: 40 }
+        ];
+        const expected = `3,4 ${simpleCubicStr(3, 4, 4, 5)}`;
+        const actual = createSmoothPathWithCuts(points);
+        expect(roundPathNumbers(actual)).toBe(roundPathNumbers(expected));
+    });
+
+    test('cuts at NaN x/y (rounded)', () => {
+        const points = [
+            { x: 0, y: 0, value: 10 },
+            { x: NaN, y: 1, value: 20 },
+            { x: 2, y: 2, value: 30 },
+            { x: 3, y: 3, value: 40 }
+        ];
+        const expected = `2,2 ${simpleCubicStr(2, 2, 3, 3)}`;
+        const actual = createSmoothPathWithCuts(points);
+        expect(roundPathNumbers(actual)).toBe(roundPathNumbers(expected));
+    });
+
+    test('multiple segments, separated by invalids (rounded)', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: 20 },
+            { x: 3, y: 4, value: null },
+            { x: 4, y: 5, value: 40 },
+            { x: 5, y: 6, value: 50 }
+        ];
+        const expected = `1,2 ${simpleCubicStr(1, 2, 2, 3)} M4,5 ${simpleCubicStr(4, 5, 5, 6)}`;
+        const actual = createSmoothPathWithCuts(points);
+        expect(roundPathNumbers(actual)).toBe(roundPathNumbers(expected));
+    })
+
+    test('ignores segments of length 1 (no output)', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 30 }
+        ];
+        expect(createSmoothPathWithCuts(points)).toBe('');
+    });
+
+    test('returns empty string for all invalid points', () => {
+        const points = [
+            { x: NaN, y: 2, value: 10 },
+            { x: 2, y: 3, value: null }
+        ];
+        expect(createSmoothPathWithCuts(points)).toBe('');
+    });
+
+    test('returns correct path with valid segment at the end (rounded)', () => {
+        const points = [
+            { x: 1, y: 2, value: null },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 30 },
+            { x: 4, y: 5, value: 40 }
+        ];
+        const expected = `3,4 ${simpleCubicStr(3, 4, 4, 5)}`;
+        const actual = createSmoothPathWithCuts(points);
+        expect(roundPathNumbers(actual)).toBe(roundPathNumbers(expected));
+    });
+});
+
+// Simple monotone cubic for two points with zero base points on y
+function simpleSmoothArea(x0, y0, x1, y1, zero) {
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const slope = dy / dx;
+    const c1x = x0 + dx / 3;
+    const c1y = y0 + slope * dx / 3;
+    const c2x = x1 - dx / 3;
+    const c2y = y1 - slope * dx / 3;
+    return `M${x0},${zero} L${x0},${y0} C${c1x},${c1y} ${c2x},${c2y} ${x1},${y1} L${x1},${zero} Z`;
+}
+
+describe('createSmoothAreaSegments', () => {
+    test('returns empty array for empty input', () => {
+        expect(createSmoothAreaSegments([], 100, true)).toEqual([]);
+    });
+
+    test('returns empty array for single valid point', () => {
+        expect(createSmoothAreaSegments([{ x: 1, y: 2, value: 10 }], 100, true)).toEqual([]);
+    });
+
+    test('returns area for two valid points (no cut)', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 3, y: 4, value: 20 }
+        ];
+        const zero = 100;
+        const expected = simpleSmoothArea(1, 2, 3, 4, zero);
+        const result = createSmoothAreaSegments(points, zero, false);
+        expect(roundPathNumbers(result[0])).toBe(roundPathNumbers(expected));
+        expect(result.length).toBe(1);
+    });
+
+    test('returns area for two valid points (cut=true)', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 3, y: 4, value: 20 }
+        ];
+        const zero = 100;
+        const expected = simpleSmoothArea(1, 2, 3, 4, zero);
+        const result = createSmoothAreaSegments(points, zero, true);
+        expect(roundPathNumbers(result[0])).toBe(roundPathNumbers(expected));
+        expect(result.length).toBe(1);
+    });
+
+    test('returns two segments if split by a null', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 30 },
+            { x: 4, y: 5, value: 40 }
+        ];
+        const zero = 100;
+        const segB = simpleSmoothArea(3, 4, 4, 5, zero);
+        const result = createSmoothAreaSegments(points, zero, true);
+        expect(result.length).toBe(1);
+        expect(roundPathNumbers(result[0])).toBe(roundPathNumbers(segB));
+    });
+
+    test('returns two segments if split by NaN x/y', () => {
+        const points = [
+            { x: 0, y: 0, value: 10 },
+            { x: NaN, y: 1, value: 20 },
+            { x: 2, y: 2, value: 30 },
+            { x: 3, y: 3, value: 40 }
+        ];
+        const zero = 100;
+        const segB = simpleSmoothArea(2, 2, 3, 3, zero);
+        const result = createSmoothAreaSegments(points, zero, true);
+        expect(result.length).toBe(1);
+        expect(roundPathNumbers(result[0])).toBe(roundPathNumbers(segB));
+    });
+
+    test('returns multiple segments, separated by invalids', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: 20 },
+            { x: 3, y: 4, value: null },
+            { x: 4, y: 5, value: 40 },
+            { x: 5, y: 6, value: 50 }
+        ];
+        const zero = 100;
+        const segA = simpleSmoothArea(1, 2, 2, 3, zero);
+        const segB = simpleSmoothArea(4, 5, 5, 6, zero);
+        const result = createSmoothAreaSegments(points, zero, true);
+        expect(result.length).toBe(2);
+        expect(roundPathNumbers(result[0])).toBe(roundPathNumbers(segA));
+        expect(roundPathNumbers(result[1])).toBe(roundPathNumbers(segB));
+    });
+
+    test('returns empty array for all invalid', () => {
+        const points = [
+            { x: NaN, y: 2, value: 10 },
+            { x: 2, y: 3, value: null }
+        ];
+        const zero = 100;
+        expect(createSmoothAreaSegments(points, zero, true)).toEqual([]);
+    });
+
+    test('returns area for non-cut mode even with invalids (should include all points)', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: 20 }
+        ];
+        const zero = 100;
+        const expected = simpleSmoothArea(1, 2, 2, 3, zero);
+        const result = createSmoothAreaSegments(points, zero, false);
+        expect(roundPathNumbers(result[0])).toBe(roundPathNumbers(expected));
+    });
+
+    test('ignores segments of length 1', () => {
+        const points = [
+            { x: 1, y: 2, value: 10 },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 30 }
+        ];
+        const zero = 100;
+        const result = createSmoothAreaSegments(points, zero, true);
+        expect(result).toEqual([]);
+    });
+
+    test('returns area for valid segment at the end', () => {
+        const points = [
+            { x: 1, y: 2, value: null },
+            { x: 2, y: 3, value: null },
+            { x: 3, y: 4, value: 30 },
+            { x: 4, y: 5, value: 40 }
+        ];
+        const zero = 100;
+        const seg = simpleSmoothArea(3, 4, 4, 5, zero);
+        const result = createSmoothAreaSegments(points, zero, true);
+        expect(result.length).toBe(1);
+        expect(roundPathNumbers(result[0])).toBe(roundPathNumbers(seg));
     });
 });

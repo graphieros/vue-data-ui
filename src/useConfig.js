@@ -554,6 +554,7 @@ export function useConfig() {
             radius: 3,
             useGradient: true,
             strokeWidth: 3,
+            cutNullValues: false,
             dot: {
                 hideAboveMaxSerieLength: 62,
                 useSerieColor: true,

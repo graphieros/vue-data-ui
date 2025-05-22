@@ -11,7 +11,11 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 function createDs(n,m=100) {
     const arr = [];
     for(let i = 0; i < n; i += 1) {
-        arr.push(Math.random()*m)
+        if ([7,8,9].includes(i)) {
+            arr.push(null)
+        } else {
+            arr.push(Math.random()*m * (i % 2 === 0 ? -1 : 1))
+        }
     }
     return arr
 }
@@ -45,16 +49,16 @@ function createDs(n,m=100) {
 const dataset = ref([
     {
         name: "Curved",
-        series: createDs(120),
-        type: "plot",
-        smooth: false,
+        series: createDs(12),
+        type: "line",
+        smooth: true,
         useArea: true,
         useTag: 'start',
         dataLabels: false,
     },
     {
         name: "Curved",
-        series: createDs(120),
+        series: createDs(12),
         type: "line",
         smooth: false,
         useArea: true,
@@ -407,6 +411,8 @@ const model = ref([
     { key: 'line.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'line' },
     { key: 'line.useGradient', def: false, type: 'checkbox', label: 'useGradient', category: 'line' },
     { key: 'line.strokeWidth', def: 2, type: 'number', min: 1, max: 20, label: 'thickness', category: 'line' },
+    { key: 'line.cutNullValues', def: true, type: 'checkbox'},
+
     { key: 'line.labels.show', def: true, type: 'checkbox', label: 'showDataLabels', category: 'line' },
     { key: 'line.labels.offsetY', def: -8, type: 'number', min: -100, max: 100, label: 'offsetYDataLabels', category: 'line' },
     { key: 'line.labels.rounding', def: 0, type: 'number', min: 0, max: 6, label: 'rounding', category: 'line' },
@@ -525,7 +531,7 @@ const config = computed(() => {
                 tag:  {
                     formatter: ({ value, config }) => {
                         const { datapoint, seriesIndex, serieName } = config;
-                        console.log(datapoint, seriesIndex, serieName)
+                        // console.log(datapoint, seriesIndex, serieName)
                         return `<div>${serieName}: <b>${value.toFixed(2)}</b></div>`
                     }
                 }
@@ -849,7 +855,7 @@ function selectTimeLabel(data) {
             </LocalVueDataUi>
         </template>
 
-        <template #build>
+        <!-- <template #build>
             <VueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend"
                 @selectX="selectX" ref="build">
                 <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
@@ -951,7 +957,7 @@ function selectTimeLabel(data) {
                     </div>
                 </template> 
             </VueDataUi>
-        </template>
+        </template> -->
 
         <template #knobs>
             <div

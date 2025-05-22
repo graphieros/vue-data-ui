@@ -626,17 +626,31 @@
 
                     <g v-if="serie.useArea && serie.plots.length > 1">
                         <template v-if="serie.smooth">
-                            <path 
-                                :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"
-                            />
-                            <path 
-                                v-if="$slots.pattern" 
-                                :d="`M ${serie.plots[0] ? serie.plots[0].x : Math.min(...serie.plots.filter(p => !!p).map(p => p.x))},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} ${serie.curve} L ${serie.plots.at(-1) ? serie.plots.at(-1).x : (drawingArea.left + (slot.line * i) + slot.line / 2)},${mutableConfig.isStacked ? drawingArea.bottom - serie.yOffset : drawingArea.bottom} Z`" :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
-                            />
+                            <template v-for="(d, segIndex) in serie.curveAreas" :key="segIndex">
+                                <path 
+                                :d="d"
+                                :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"
+                                />
+                                <path
+                                v-if="$slots.pattern"
+                                :d="d"
+                                :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
+                                />
+                            </template>
                         </template>
                         <template v-else>
-                            <path data-cy="datapoint-line-area-straight" :d="`M${serie.area}Z`" :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"/>
-                            <path v-if="$slots.pattern" :d="`M${serie.area}Z`" :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"/>
+                            <template v-for="(d, segIndex) in serie.area.split(';')" :key="segIndex">
+                                <path
+                                    data-cy="datapoint-line-area-straight"
+                                    :d="`M${d}Z`"
+                                    :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)"
+                                />
+                                <path
+                                    v-if="$slots.pattern"
+                                    :d="`M${d}Z`"
+                                    :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
+                                />
+                            </template>
                         </template>
                     </g>
 
@@ -1588,6 +1602,12 @@ import {
     objectIsEmpty,
     themePalettes,
     translateSize,
+    createSmoothPathWithCuts,
+    createStraightPathWithCuts,
+    createAreaWithCuts,
+    createIndividualAreaWithCuts,
+    createSmoothAreaSegments,
+    createIndividualArea
 } from '../lib';
 import themes from "../themes.json";
 import DataTable from "../atoms/DataTable.vue";
@@ -2248,10 +2268,21 @@ export default {
                     }
                 })
 
-                const curve = this.createSmoothPath(plots.filter(p => p.value !== null));
-                const autoScaleCurve = this.createSmoothPath(autoScalePlots.filter(p => p.value !== null));
-                const straight = this.createStraightPath(plots.filter(p => p.value !== null));
-                const autoScaleStraight = this.createStraightPath(autoScalePlots.filter(p => p.value !== null));
+                const curve = this.FINAL_CONFIG.line.cutNullValues 
+                    ? this.createSmoothPathWithCuts(plots) 
+                    : this.createSmoothPath(plots.filter(p => p.value !== null));
+
+                const autoScaleCurve = this.FINAL_CONFIG.line.cutNullValues 
+                    ? this.createSmoothPathWithCuts(autoScalePlots) 
+                    : this.createSmoothPath(autoScalePlots.filter(p => p.value !== null));
+
+                const straight = this.FINAL_CONFIG.line.cutNullValues 
+                    ? this.createStraightPathWithCuts(plots) 
+                    : this.createStraightPath(plots.filter(p => p.value !== null));
+
+                const autoScaleStraight = this.FINAL_CONFIG.line.cutNullValues 
+                    ? this.createStraightPathWithCuts(autoScalePlots) 
+                    : this.createStraightPath(autoScalePlots.filter(p => p.value !== null));
 
                 const scaleYLabels = individualScale.ticks.map(t => {
                     return {
@@ -2299,11 +2330,37 @@ export default {
                     zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
                     curve: datapoint.autoScaling ? autoScaleCurve : curve,
                     plots: datapoint.autoScaling ? autoScalePlots : plots,
-                    area: !datapoint.useArea ? '' : this.mutableConfig.useIndividualScale ? this.createIndividualArea(datapoint.autoScaling ? autoScalePlots: plots, datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition) :  this.createArea(plots),
+                    area: !datapoint.useArea 
+                        ? '' 
+                        : this.mutableConfig.useIndividualScale 
+                            ? this.FINAL_CONFIG.line.cutNullValues 
+                                ? this.createIndividualAreaWithCuts(datapoint.autoScaling
+                                        ? autoScalePlots
+                                        : plots,
+                                        datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
+                                    )
+                                : this.createIndividualArea(datapoint.autoScaling 
+                                    ? autoScalePlots.filter(p => p.value !== null)
+                                    : plots.filter(p => p.value !== null),
+                                    datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,) 
+                            :  this.createArea(plots.filter(p => p.value !== null), yOffset),    
+
+                    curveAreas: !datapoint.useArea
+                        ? [] 
+                        :createSmoothAreaSegments(
+                            datapoint.autoScaling 
+                                ? this.FINAL_CONFIG.line.cutNullValues 
+                                    ? autoScalePlots
+                                    : autoScalePlots.filter(p => p.value !== null)
+                                : this.FINAL_CONFIG.line.cutNullValues 
+                                    ? plots
+                                    : plots.filter(p => p.value !== null),
+                                    this.mutableConfig.useIndividualScale ? datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition : this.zero,
+                            this.FINAL_CONFIG.line.cutNullValues),
                     straight: datapoint.autoScaling ? autoScaleStraight : straight,
                     groupId: this.scaleGroups[datapoint.scaleLabel].groupId
                 }
-            })
+            });
         },
         plotSet() {
             return this.activeSeriesWithStackRatios.filter(s => s.type === 'plot').map((datapoint) => {
@@ -2784,6 +2841,12 @@ export default {
         useNestedProp,
         createUid,
         placeXYTag,
+        createSmoothPathWithCuts,
+        createStraightPathWithCuts,
+        createAreaWithCuts,
+        createIndividualAreaWithCuts,
+        createSmoothAreaSegments,
+        createIndividualArea,
         hideTags() {
             const tags = document.querySelectorAll('.vue-ui-xy-tag')
             if (tags.length) {
@@ -3098,22 +3161,13 @@ export default {
                 }
             }
         },
-        createArea(plots) {
+        createArea(plots, yOffset) {
+            const zero = this.mutableConfig.isStacked ? this.drawingArea.bottom - yOffset : this.drawingArea.bottom;
             if(!plots[0]) return [-10,-10, '', -10, -10];
-            const start = { x: plots[0].x, y: this.zero };
-            const end = { x: plots.at(-1).x, y: this.zero };
+            const start = { x: plots[0].x, y: zero };
+            const end = { x: plots.at(-1).x, y: zero };
             const path = [];
             plots.forEach(plot => {
-                path.push(`${plot.x},${plot.y} `);
-            });
-            return [ start.x, start.y, ...path, end.x, end.y].toString();
-        },
-        createIndividualArea(plots, zero) {
-            if(!plots[0]) return [-10,-10, '', -10, -10];
-            const start = { x: plots[0] ? plots[0].x : Math.min(...plots.filter(p => !!p).map(p => p.x)), y: zero };
-            const end = { x: plots.at(-1) ? plots.at(-1).x : Math.min(...plots.filter(p => !!p).map(p => p.x)), y: zero };
-            const path = [];
-            plots.filter(p => !!p).forEach(plot => {
                 path.push(`${plot.x},${plot.y} `);
             });
             return [ start.x, start.y, ...path, end.x, end.y].toString();
