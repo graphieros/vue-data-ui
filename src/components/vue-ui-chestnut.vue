@@ -371,7 +371,7 @@ function pickNut(branch) {
             branch.x2 + 24 + FINAL_CONFIG.value.style.chart.layout.nuts.offsetX,
             branch.y1 + svg.value.branchSize / 2,
             80,
-            80
+            80,
         );
         emit('selectNut', branch.breakdown)
     })
@@ -1026,7 +1026,7 @@ defineExpose({
                             16,
                             false,
                             false,
-                            64
+                            64,
                         )"
                         :stroke="arc.color"
                         stroke-width="1"
@@ -1057,7 +1057,7 @@ defineExpose({
                 <circle
                     :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="selectedNut.y1 + svg.branchSize / 2"
-                    :r="100"
+                    :r="110"
                     :fill="`url(#nutpick_${uid})`"
                     @click="leaveNut"
                     :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
@@ -1065,7 +1065,7 @@ defineExpose({
                 <circle
                     :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
                     :cy="selectedNut.y1 + svg.branchSize / 2"
-                    :r="48"
+                    :r="64"
                     :fill="FINAL_CONFIG.style.chart.backgroundColor"
                     @click="leaveNut"
                     :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
@@ -1112,9 +1112,9 @@ defineExpose({
                         v-if="isArcBigEnough(arc)"
                         :x="calcMarkerOffsetX(arc).x"
                         :text-anchor="calcMarkerOffsetX(arc).anchor"
-                        :y="calcMarkerOffsetY(arc)"
+                        :y="calcMarkerOffsetY(arc) - (FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize / 6)"
                         :fill="arc.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize / 2"
                         :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
                         :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
                     >
