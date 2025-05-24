@@ -73,6 +73,7 @@ function startSvgTextEditing(event) {
     tspan.setAttribute("dy", "0");
     tspan.textContent = '';
     textNode.appendChild(tspan);
+    textNode.style.pointerEvents = 'none';
 
     G.value.appendChild(textNode);
     editingTextNode.value = textNode;
