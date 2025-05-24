@@ -1159,7 +1159,8 @@ declare module "vue-data-ui" {
         | "computer"
         | "htmlTag"
         | "curlyBrackets"
-        | "curlySpread";
+        | "curlySpread"
+        | "text";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;

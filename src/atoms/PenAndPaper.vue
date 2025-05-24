@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from "vue";
 import BaseIcon from "./BaseIcon.vue";
 import ColorPicker from "./ColorPicker.vue";
-import { lightenHexColor } from "../lib";
+import { dataLabel, lightenHexColor } from "../lib";
 
 const props = defineProps({
     svgRef: {
@@ -38,6 +38,246 @@ const currentPath = ref("");
 const G = ref(null);
 const currentDrawingPath = ref(null);
 const startPoint = ref(null);
+
+const mode = ref('draw'); // or 'text'
+const isEditingText = ref(false);
+const editingTextNode = ref(null); 
+const editingTextAnchor = ref({ x: 0, y: 0 });
+const editingTextContent = ref(['']);
+const editingCaret = ref({ row: 0, col: 0 });
+const fontSize = ref(16);
+
+const cursorDraw = ref(`url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==') 5 5, auto`);
+
+function startSvgTextEditing(event) {
+    if (!G.value) return;
+
+    if (mode.value !== 'text' || isEditingText.value) return;
+    const { x, y } = toSvgPoint(event);
+    editingTextAnchor.value = { x, y };
+    editingTextContent.value = [''];
+    editingCaret.value = { row: 0, col: 0 };
+
+    const textNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    textNode.setAttribute("x", x);
+    textNode.setAttribute("y", y);
+    textNode.setAttribute("fill", currentColor.value);
+    textNode.setAttribute("font-size", fontSize.value * props.scale);
+    textNode.setAttribute("font-family", "sans-serif");
+    textNode.setAttribute("class", "vue-data-ui-doodle");
+    textNode.setAttribute("dominant-baseline", "hanging");
+    textNode.setAttribute("pointer-events", "all");
+
+    const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+    tspan.setAttribute("x", x);
+    tspan.setAttribute("dy", "0");
+    tspan.textContent = '';
+    textNode.appendChild(tspan);
+
+    G.value.appendChild(textNode);
+    editingTextNode.value = textNode;
+    isEditingText.value = true;
+
+    window.addEventListener('keydown', handleSvgTextKeydown);
+    window.addEventListener('mousedown', handleSvgTextBlur, true);
+    updateSvgTextDisplay();
+    drawSvgCaret();
+}
+
+function handleSvgTextKeydown(e) {
+    if (!isEditingText.value) return;
+    let { row, col } = editingCaret.value;
+    let lines = editingTextContent.value.slice();
+    let updated = false;
+
+    if (e.key === 'Enter') {
+        const line = lines[row];
+        const before = line.slice(0, col);
+        const after = line.slice(col);
+        lines.splice(row, 1, before, after);
+        row += 1;
+        col = 0;
+        updated = true;
+        e.preventDefault();
+    } else if (e.key === 'Backspace') {
+        if (col > 0) {
+            // Delete char before caret
+            lines[row] = lines[row].slice(0, col - 1) + lines[row].slice(col);
+            col -= 1;
+            updated = true;
+        } else if (row > 0) {
+            // Merge with previous line
+            const prevLen = lines[row - 1].length;
+            lines[row - 1] += lines[row];
+            lines.splice(row, 1);
+            row -= 1;
+            col = prevLen;
+            updated = true;
+        }
+        e.preventDefault();
+    } else if (e.key === 'Delete') {
+        if (col < lines[row].length) {
+            lines[row] = lines[row].slice(0, col) + lines[row].slice(col + 1);
+            updated = true;
+        } else if (row < lines.length - 1) {
+            lines[row] += lines[row + 1];
+            lines.splice(row + 1, 1);
+            updated = true;
+        }
+        e.preventDefault();
+    } else if (e.key === 'ArrowLeft') {
+        if (col > 0) {
+            col -= 1;
+        } else if (row > 0) {
+            row -= 1;
+            col = lines[row].length;
+        }
+        updated = true;
+        e.preventDefault();
+    } else if (e.key === 'ArrowRight') {
+        if (col < lines[row].length) {
+            col += 1;
+        } else if (row < lines.length - 1) {
+            row += 1;
+            col = 0;
+        }
+        updated = true;
+        e.preventDefault();
+    } else if (e.key === 'ArrowUp') {
+        if (row > 0) {
+            row -= 1;
+            col = Math.min(col, lines[row].length);
+            updated = true;
+        }
+        e.preventDefault();
+    } else if (e.key === 'ArrowDown') {
+        if (row < lines.length - 1) {
+            row += 1;
+            col = Math.min(col, lines[row].length);
+            updated = true;
+        }
+        e.preventDefault();
+    } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        lines[row] = lines[row].slice(0, col) + e.key + lines[row].slice(col);
+        col += 1;
+        updated = true;
+        e.preventDefault();
+    } else if (e.key === 'Escape') {
+        cleanupSvgTextEditing(true);
+        return;
+    } else if (e.key === 'Tab') {
+        // TODO: manage Tab ? Not sure it's that important
+        e.preventDefault();
+    }
+
+    if (updated) {
+        editingTextContent.value = lines;
+        editingCaret.value = { row, col };
+        updateSvgTextDisplay();
+        drawSvgCaret();
+    }
+}
+
+function updateSvgTextDisplay() {
+    const textNode = editingTextNode.value;
+    const { x } = editingTextAnchor.value;
+    while (textNode.firstChild) textNode.removeChild(textNode.firstChild);
+    editingTextContent.value.forEach((line, i) => {
+        const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
+        tspan.setAttribute("x", x);
+        tspan.setAttribute("dy", i === 0 ? "0" : `${fontSize.value * 1.2 * props.scale}`);
+        tspan.textContent = line.length ? line : "\u200B";
+        textNode.appendChild(tspan);
+    });
+}
+
+function drawSvgCaret() {
+    const existingCaret = G.value.querySelector('.vue-data-ui-svg-caret');
+    if (existingCaret) G.value.removeChild(existingCaret);
+
+    const textNode = editingTextNode.value;
+    if (!textNode) return;
+
+    const { x, y } = editingTextAnchor.value;
+    const { row, col } = editingCaret.value;
+    const fontPx = fontSize.value * props.scale;
+
+    const tspan = textNode.childNodes[row];
+    if (!tspan) return;
+    let tempText = tspan.textContent.slice(0, col);
+    if (tempText.endsWith(' ')) {
+        tempText += '\u00A0';
+    }
+
+    const measureText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    measureText.setAttribute("x", x);
+    measureText.setAttribute("y", y);
+    measureText.setAttribute("font-size", fontPx);
+    measureText.setAttribute("font-family", "sans-serif");
+    measureText.textContent = tempText || "";
+    G.value.appendChild(measureText);
+    const bbox = measureText.getBBox();
+    G.value.removeChild(measureText);
+
+    // Y offset
+    let caretY = y + row * fontPx * 1.2;
+    let caretX = x + bbox.width;
+
+    const caret = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    caret.setAttribute("x", caretX);
+    caret.setAttribute("y", caretY);
+    caret.setAttribute("width", 2);
+    caret.setAttribute("height", fontPx);
+    caret.setAttribute("fill", currentColor.value);
+    caret.setAttribute("class", "vue-data-ui-svg-caret");
+    G.value.appendChild(caret);
+}
+
+function handleSvgTextBlur(e) {
+    if (!editingTextNode.value) return;
+
+    if (!editingTextNode.value.contains(e.target)) {
+        const tspans = editingTextNode.value.children;
+        if (
+            tspans.length === 1 &&
+            (tspans[0].textContent === "" || tspans[0].textContent === "\u200B")
+        ) {
+            editingTextNode.value.remove();
+        }
+        cleanupSvgTextEditing(false);
+    }
+}
+
+function cleanupSvgTextEditing(remove = false) {
+    window.removeEventListener('keydown', handleSvgTextKeydown);
+    window.removeEventListener('mousedown', handleSvgTextBlur, true);
+
+    const caret = G.value.querySelector('.vue-data-ui-svg-caret');
+    caret && G.value.removeChild(caret);
+
+    const tspans = editingTextNode.value?.children;
+    let isEmpty = false;
+    if (tspans && tspans.length === 1) {
+        const content = tspans[0].textContent;
+        isEmpty = !content || content === "\u200B";
+    }
+
+    if (remove || isEmpty) {
+        if (editingTextNode.value && G.value.contains(editingTextNode.value)) {
+            G.value.removeChild(editingTextNode.value);
+        }
+    } else {
+        if (editingTextNode.value && G.value.contains(editingTextNode.value)) {
+            stack.value.push(editingTextNode.value);
+        }
+    }
+
+    isEditingText.value = false;
+    editingTextNode.value = null;
+    editingTextContent.value = [''];
+    editingCaret.value = { row: 0, col: 0 };
+}
+
 
 const buttonBorderColor = computed(() => lightenHexColor(props.color, 0.6));
 
@@ -180,6 +420,7 @@ function optimizeSvgPath(path) {
 }
 
 function startDrawing(event) {
+    if (mode.value !== 'draw') return;
     if (!props.active || !G.value) return;
     isDrawing.value = true;
     const { x, y } = toSvgPoint(event);
@@ -256,17 +497,31 @@ function reset() {
     addInteractionMask();
 }
 
+watch(mode, () => {
+    if (!props.active) return;
+    disableDrawing();
+    enableDrawing();
+
+    if (mode.value === 'text') {
+        G.value.style.cursor = 'text';
+    } else {
+        G.value.style.cursor = cursorDraw.value;
+    }
+});
+
 function enableDrawing() {
     if (!props.svgRef || !props.active) return;
-
-    props.svgRef.addEventListener("mousedown", startDrawing);
-    props.svgRef.addEventListener("mousemove", draw);
-    props.svgRef.addEventListener("mouseup", stopDrawing);
-    props.svgRef.addEventListener("mouseleave", stopDrawing);
-    props.svgRef.addEventListener("touchstart", startDrawing, { passive: false });
-    props.svgRef.addEventListener("touchmove", draw, { passive: false });
-    props.svgRef.addEventListener("touchend", stopDrawing);
-
+    if (mode.value === 'draw') {
+        props.svgRef.addEventListener("mousedown", startDrawing);
+        props.svgRef.addEventListener("mousemove", draw);
+        props.svgRef.addEventListener("mouseup", stopDrawing);
+        props.svgRef.addEventListener("mouseleave", stopDrawing);
+        props.svgRef.addEventListener("touchstart", startDrawing, { passive: false });
+        props.svgRef.addEventListener("touchmove", draw, { passive: false });
+        props.svgRef.addEventListener("touchend", stopDrawing);
+    } else if (mode.value === 'text') {
+        props.svgRef.addEventListener("mousedown", startSvgTextEditing);
+    }
     if (G.value) {
         G.value.style.pointerEvents = "auto";
     }
@@ -274,7 +529,6 @@ function enableDrawing() {
 
 function disableDrawing() {
     if (!props.svgRef) return;
-
     props.svgRef.removeEventListener("mousedown", startDrawing);
     props.svgRef.removeEventListener("mousemove", draw);
     props.svgRef.removeEventListener("mouseup", stopDrawing);
@@ -282,6 +536,7 @@ function disableDrawing() {
     props.svgRef.removeEventListener("touchstart", startDrawing);
     props.svgRef.removeEventListener("touchmove", draw);
     props.svgRef.removeEventListener("touchend", stopDrawing);
+    props.svgRef.removeEventListener("mousedown", startSvgTextEditing);
 
     if (G.value) {
         G.value.style.pointerEvents = "none";
@@ -307,7 +562,7 @@ onMounted(() => {
         if (props.svgRef) {
             G.value = document.createElementNS("http://www.w3.org/2000/svg", "g");
             G.value.setAttribute("class", "vue-data-ui-doodles");
-            G.value.style.cursor = `url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==') 5 5, auto`;
+            G.value.style.cursor = cursorDraw.value;
             props.svgRef.appendChild(G.value);
             disableDrawing();
         }
@@ -334,10 +589,40 @@ onBeforeUnmount(() => {
             <ColorPicker v-model:value="currentColor" :backgroundColor="backgroundColor"
                 :buttonBorderColor="buttonBorderColor" />
         </button>
+        <button
+            data-cy="pen-and-paper-toggle-text"
+            class="vue-ui-pen-and-paper-action"
+            :class="{ 'vue-ui-pen-and-paper-action-active': mode === 'text' }"
+            @click="mode = (mode === 'text' ? 'draw' : 'text')"
+            :style="{
+                backgroundColor: backgroundColor,
+                border: `1px solid ${buttonBorderColor}`,
+            }"
+            >
+            <BaseIcon :name="mode === 'draw' ? 'annotator' : 'text'" :stroke="color" />
+            <div :style="{
+                position: 'absolute',
+                bottom: '-20px',
+                color: buttonBorderColor,
+                width: '100%',
+                textAlign: 'center',
+                fontSize: '12px',
+                fontVariantNumeric: 'tabular-nums'
+            }">
+                {{ dataLabel({
+                    v: mode === 'draw' ? strokeWidth : fontSize,
+                    s: 'px',
+                    r: 1
+                }) }}
+
+            </div>
+        </button>
+
         <button class="vue-ui-pen-and-paper-action" :class="{ 'vue-ui-pen-and-paper-action-disabled': !stack.length }"
             :disabled="!stack.length" @click="deleteLastDraw" :style="{
                 backgroundColor: backgroundColor,
-                border: `1px solid ${buttonBorderColor}`
+                border: `1px solid ${buttonBorderColor}`,
+                marginTop: '20px'
             }">
             <BaseIcon name="restart" :stroke="color" />
         </button>
@@ -355,12 +640,35 @@ onBeforeUnmount(() => {
             }">
             <BaseIcon name="trash" :stroke="color" />
         </button>
-        <input ref="range" type="range" class="vertical-range" :min="0.5" :max="12" :step="0.1" v-model="strokeWidth"
-            :style="{ accentColor: color }" />
+
+        <input
+            v-if="mode === 'draw'" 
+            ref="range" 
+            type="range" 
+            class="vertical-range" 
+            :min="0.5" 
+            :max="12" 
+            :step="0.1" 
+            v-model="strokeWidth"
+            :style="{ accentColor: color }" 
+        />
+
+        <input
+            data-cy="pen-and-paper-font-size"
+            v-if="mode === 'text'" 
+            ref="range" 
+            type="range" 
+            class="vertical-range" 
+            :min="3" 
+            :max="48" 
+            :step="0.1" 
+            v-model="fontSize"
+            :style="{ accentColor: color }" 
+        />
     </div>
 </template>
 
-<style scoped>
+<style>
 .vue-ui-pen-and-paper-actions {
     position: absolute;
     top: 50%;
@@ -398,5 +706,24 @@ input[type="range"].vertical-range {
     top: 50%;
     transform: translateY(-50%) rotate(180deg);
     left: 36px;
+}
+</style>
+
+<style>
+.vue-data-ui-svg-caret {
+    opacity: 0;
+    animation: caret 1s linear infinite;
+}
+
+@keyframes caret {
+    0% {
+        opacity: 0;
+    }
+    40% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
 }
 </style>

@@ -71,4 +71,38 @@ describe('<PenAndPaper />', () => {
         .trigger('mouseup', { force: true });  
         cy.get('.vue-ui-pen-and-paper-path').eq(0).should('be.visible').invoke('css', 'stroke').should('equal', 'rgb(255, 87, 51)')
     });
+
+    it('renders text', () => {
+        cy.log('Switch to text mode');
+        cy.get('[data-cy="pen-and-paper-toggle-text"]').click({ force: true });
+    
+        cy.log('Change font size');
+        cy.get('[data-cy="pen-and-paper-font-size"]').invoke('val', 24).trigger('input');
+    
+        cy.log('Click on the canvas to start text editing');
+        cy.get('[data-cy="pen-and-paper"]')
+            .trigger('mousedown', { clientX: 150, clientY: 180, force: true });
+    
+        cy.window().then(win => {
+            ['h', 'e', 'l', 'l', 'o', 'Enter', 'ع', 'ر', 'ب', 'ي'].forEach(char => {
+                win.dispatchEvent(new win.KeyboardEvent('keydown', {
+                    key: char === 'Enter' ? 'Enter' : char,
+                    bubbles: true,
+                }));
+            });
+        });
+    
+        cy.log('Finish editing');
+        cy.get('body').click(0, 0, { force: true });
+    
+        cy.log('Expect an SVG text element in the annotation stack');
+        cy.get('[data-cy="pen-and-paper"] g text').should('exist').and('be.visible');
+    
+        cy.log('Expect multiple tspan for multiple lines');
+        cy.get('[data-cy="pen-and-paper"] g text tspan').should('have.length.at.least', 2);
+    
+        cy.log('Text should include both English and Arabic');
+        cy.get('[data-cy="pen-and-paper"] g text').should('contain.text', 'hello');
+        cy.get('[data-cy="pen-and-paper"] g text').should('contain.text', 'عربي');
+    });
 });

@@ -188,6 +188,7 @@ const icons = computed(() => {
         htmlTag: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 6 5 L 1 10 L 6 15 M 14 5 L 19 10 L 14 15 M 7 18 L 13 2"/>`,
         curlyBrackets: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 5 2 C 3 2 2 3 2 5 L 2.35 7.988 C 2 9 1 9 1 10 C 1 11 2 11 2.396 11.949 L 2 15 C 2 17 3 18 5 18 M 15 2 C 17 2 18 3 18 5 L 17.611 8.035 C 18 9 19 9 19 10 C 19 11 18 11 17.611 12.008 L 18 15 C 18 17 17 18 15 18"/>`,
         curlySpread: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 5 2 C 3 2 2 3 2 5 L 2.35 7.988 C 2 9 1 9 1 10 C 1 11 2 11 2.396 11.949 L 2 15 C 2 17 3 18 5 18 M 15 2 C 17 2 18 3 18 5 L 17.611 8.035 C 18 9 19 9 19 10 C 19 11 18 11 17.611 12.008 L 18 15 C 18 17 17 18 15 18 M 10 9 A 1 1 0 0 0 10 11 A 1 1 0 0 0 10 9 M 6 9 A 1 1 0 0 0 6 11 A 1 1 0 0 0 6 9 M 14 9 A 1 1 0 0 0 14 11 A 1 1 0 0 0 14 9"/>`,
+        text: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 2 2 L 12 2 L 12 4 L 8 4 L 8 18 L 6 18 L 6 4 L 2 4 L 2 2 M 12 15 L 18 15 M 12 7 L 18 7 M 12 11 L 18 11"/>`
     }
 });
 
