@@ -74,6 +74,7 @@ function startSvgTextEditing(event) {
     tspan.textContent = '';
     textNode.appendChild(tspan);
     textNode.style.pointerEvents = 'none';
+    textNode.style.userSelect = 'none';
 
     G.value.appendChild(textNode);
     editingTextNode.value = textNode;
@@ -579,7 +580,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div v-if="active" data-dom-to-png-ignore class="vue-ui-pen-and-paper-actions">
+    <div v-if="active" data-dom-to-png-ignore class="vue-ui-pen-and-paper-actions" :style="{ backgroundColor: backgroundColor }">
         <button class="vue-ui-pen-and-paper-action" @click="emit('close')" :style="{
             backgroundColor: backgroundColor,
             border: `1px solid ${buttonBorderColor}`

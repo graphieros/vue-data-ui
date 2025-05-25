@@ -89,6 +89,7 @@ function startSvgTextEditing(event) {
     tspan.textContent = '';
     textNode.appendChild(tspan);
     textNode.style.pointerEvents = 'none';
+    textNode.style.userSelect = 'none';
 
     G.value.appendChild(textNode);
     editingTextNode.value = textNode;
@@ -540,6 +541,7 @@ const range = ref(null);
             'vue-ui-pen-and-paper-actions': true,
             'visible': active
         }"
+        :style="{ backgroundColor: backgroundColor }"
     >
         <button
             class="vue-ui-pen-and-paper-action"
