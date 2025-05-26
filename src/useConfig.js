@@ -457,6 +457,7 @@ export function useConfig() {
                         showBaseline: false,
                     },
                     yAxis: {
+                        position: 'left',
                         showBaseline: true,
                         commonScaleSteps: 10,
                         useIndividualScale: false,
