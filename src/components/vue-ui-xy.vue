@@ -2319,6 +2319,9 @@ export default {
                 this.scaleGroups[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
                 this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1 
 
+                const areaZeroPosition = this.mutableConfig.useIndividualScale ? datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition : this.zero;
+                const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : scaleYLabels.at(-1).y, this.drawingArea.top), areaZeroPosition);
+
                 return {
                     ...datapoint,
                     yOffset,
@@ -2337,14 +2340,13 @@ export default {
                                 ? this.createIndividualAreaWithCuts(datapoint.autoScaling
                                         ? autoScalePlots
                                         : plots,
-                                        datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
+                                        adustedAreaZeroPosition,
                                     )
                                 : this.createIndividualArea(datapoint.autoScaling 
                                     ? autoScalePlots.filter(p => p.value !== null)
                                     : plots.filter(p => p.value !== null),
-                                    datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,) 
-                            :  this.createArea(plots.filter(p => p.value !== null), yOffset),    
-
+                                    adustedAreaZeroPosition) 
+                            :  this.createIndividualArea(plots.filter(p => p.value !== null), adustedAreaZeroPosition),
                     curveAreas: !datapoint.useArea
                         ? [] 
                         :createSmoothAreaSegments(
@@ -2355,7 +2357,7 @@ export default {
                                 : this.FINAL_CONFIG.line.cutNullValues 
                                     ? plots
                                     : plots.filter(p => p.value !== null),
-                                    this.mutableConfig.useIndividualScale ? datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition : this.zero,
+                                    adustedAreaZeroPosition,
                             this.FINAL_CONFIG.line.cutNullValues),
                     straight: datapoint.autoScaling ? autoScaleStraight : straight,
                     groupId: this.scaleGroups[datapoint.scaleLabel].groupId
@@ -3161,8 +3163,7 @@ export default {
                 }
             }
         },
-        createArea(plots, yOffset) {
-            const zero = this.mutableConfig.isStacked ? this.drawingArea.bottom - yOffset : this.drawingArea.bottom;
+        createArea(plots, zero) {
             if(!plots[0]) return [-10,-10, '', -10, -10];
             const start = { x: plots[0].x, y: zero };
             const end = { x: plots.at(-1).x, y: zero };

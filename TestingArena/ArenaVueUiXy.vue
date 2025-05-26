@@ -8,14 +8,22 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
-function createDs(n,m=100) {
+// function createDs(n,m=100) {
+//     const arr = [];
+//     for(let i = 0; i < n; i += 1) {
+//         if ([7,8,9].includes(i)) {
+//             arr.push(null)
+//         } else {
+//             arr.push(Math.random()*m * (i % 2 === 0 ? -1 : 1))
+//         }
+//     }
+//     return arr
+// }
+
+function createDs(n, m = 100) {
     const arr = [];
-    for(let i = 0; i < n; i += 1) {
-        if ([7,8,9].includes(i)) {
-            arr.push(null)
-        } else {
-            arr.push(Math.random()*m * (i % 2 === 0 ? -1 : 1))
-        }
+    for (let i = 0; i < n; i += 1) {
+        arr.push(Math.random() * m * - 1)
     }
     return arr
 }
@@ -46,6 +54,39 @@ function createDs(n,m=100) {
 //     ]
 // })
 
+
+// Negative dataset with positive display:
+// const config = ref({
+//     // ...rest of your config
+//     chart: {
+//         grid: {
+//             labels: {
+//                 yAxis: {
+//                     formatter: ({ value }) => {
+//                         return Math.abs(value)
+//                     }
+//                 }
+//             }
+//         },
+//         tooltip: {
+//             customFormat: ({ datapoint }) => {
+//                 let html = "";
+//                 datapoint.forEach(d => {
+//                     html += `<li>${d.name}: ${Math.abs(d.value)}</li>`
+//                 })
+//                 return `<ul>${html}</ul>`
+//             }
+//         }
+//     },
+//     line: {
+//         labels: {
+//             formatter: ({ value }) => {
+//                 return Math.abs(value)
+//             }
+//         }
+//     },
+// })
+
 const dataset = ref([
     {
         name: "Curved",
@@ -55,6 +96,7 @@ const dataset = ref([
         useArea: true,
         useTag: 'start',
         dataLabels: false,
+        autoScale: true
     },
     {
         name: "Curved",
@@ -159,35 +201,35 @@ const dataset = ref([
 //         },
 //     ])
 
-    const alternateDataset = ref([
+const alternateDataset = ref([
     {
-            name: "Alternate datapoint",
-            series: [12, 19, 16, 15, 9, 17, 44, 13, 40],
-            comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
-            type: "line",
-            smooth: false,
-            useArea: false,
-            dataLabels: true,
-        },
-    ])
+        name: "Alternate datapoint",
+        series: [12, 19, 16, 15, 9, 17, 44, 13, 40],
+        comments: ["", "", "", "", "This is a comment that can be long, or that can be short but it depends."],
+        type: "line",
+        smooth: false,
+        useArea: false,
+        dataLabels: true,
+    },
+])
 
-    function alterDataset() {
-        dataset.value[0].series = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
-    }
+function alterDataset() {
+    dataset.value[0].series = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+}
 
-    const alternateConfig = ref({
-        chart: {
-            title: {
-                text: 'Alternate version'
-            }
+const alternateConfig = ref({
+    chart: {
+        title: {
+            text: 'Alternate version'
         }
-    })
-
-    const isPropsToggled = ref(false);
-
-    function toggleProps() {
-        isPropsToggled.value = !isPropsToggled.value
     }
+})
+
+const isPropsToggled = ref(false);
+
+function toggleProps() {
+    isPropsToggled.value = !isPropsToggled.value
+}
 
 // const dataset = ref([
 //     {
@@ -246,21 +288,21 @@ const dataset = ref([
 // ]);
 
 const model = ref([
-    { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA']},
-    { key: 'responsive', def: false, type: 'checkbox'},
+    { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA'] },
+    { key: 'responsive', def: false, type: 'checkbox' },
     { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
-    { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox'},
-    { key: 'chart.userOptions.buttons.csv', def: true, type: 'checkbox'},
-    { key: 'chart.userOptions.buttons.img', def: true, type: 'checkbox'},
-    { key: 'chart.userOptions.buttons.table', def: true, type: 'checkbox'},
-    { key: 'chart.userOptions.buttons.labels', def: true, type: 'checkbox'},
-    { key: 'chart.userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
-    { key: 'chart.userOptions.buttons.stack', def: true, type: 'checkbox'},
-    { key: 'chart.userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
-    { key: 'chart.userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'chart.userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox' },
+    { key: 'chart.userOptions.buttons.csv', def: true, type: 'checkbox' },
+    { key: 'chart.userOptions.buttons.img', def: true, type: 'checkbox' },
+    { key: 'chart.userOptions.buttons.table', def: true, type: 'checkbox' },
+    { key: 'chart.userOptions.buttons.labels', def: true, type: 'checkbox' },
+    { key: 'chart.userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
+    { key: 'chart.userOptions.buttons.stack', def: true, type: 'checkbox' },
+    { key: 'chart.userOptions.position', def: 'right', type: 'select', options: ['left', 'right'] },
+    { key: 'chart.userOptions.showOnChartHover', def: true, type: 'checkbox' },
+    { key: 'chart.userOptions.keepStateOnChartLeave', def: true, type: 'checkbox' },
 
-    { key: 'useCanvas', def: false, type: 'checkbox'}, // DEPRECATED (removed)
+    { key: 'useCanvas', def: false, type: 'checkbox' }, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
     { key: 'chart.backgroundColor', def: 'transparent', type: 'color', label: 'backgroundColor', category: 'general' },
@@ -270,22 +312,22 @@ const model = ref([
     { key: 'chart.zoom.show', def: true, type: 'checkbox', label: 'zoom', category: 'general' },
     { key: 'chart.zoom.color', def: '#CCCCCC', type: 'color' },
     { key: 'chart.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
-    { key: 'chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
-    { key: 'chart.zoom.useResetSlot', def: false, type: 'checkbox'},
-    { key: 'chart.zoom.enableRangeHandles', def: true, type: 'chexkbox'},
-    { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
+    { key: 'chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42 },
+    { key: 'chart.zoom.useResetSlot', def: false, type: 'checkbox' },
+    { key: 'chart.zoom.enableRangeHandles', def: true, type: 'chexkbox' },
+    { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox' },
 
-    { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox'},
-    { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox'},
-    { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color'},
+    { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color' },
     { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
-    { key: 'chart.zoom.minimap.lineColor', def: '#1A1A1A', type: 'color'},
-    { key: 'chart.zoom.minimap.selectionRadius', def: 2, type: 'number', min: 0, max: 24},
-    { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color'},
-    { key: 'chart.zoom.minimap.verticalHandles', def: false, type: 'checkbox'},
+    { key: 'chart.zoom.minimap.lineColor', def: '#1A1A1A', type: 'color' },
+    { key: 'chart.zoom.minimap.selectionRadius', def: 2, type: 'number', min: 0, max: 24 },
+    { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color' },
+    { key: 'chart.zoom.minimap.verticalHandles', def: false, type: 'checkbox' },
 
-    { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100},
-    { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100},
+    { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
+    { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
 
     { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
     { key: 'chart.padding.right', def: 36, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
@@ -316,12 +358,12 @@ const model = ref([
     { key: 'chart.grid.showVerticalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
     { key: 'chart.grid.showHorizontalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
 
-    { key: 'chart.grid.frame.show', def: false, type: 'checkbox'},
-    { key: 'chart.grid.frame.stroke', def: '#1A1A1A', type: 'color'},
-    { key: 'chart.grid.frame.strokeWidth', def: 4, type: 'number', min: 0, max: 12},
-    { key: 'chart.grid.frame.strokeLinecap', def: 'round', type: 'select', options: ['round', 'square', 'butt']},
-    { key: 'chart.grid.frame.strokeLinejoin', def: 'round', type: 'select', options: ['round', 'miter']},
-    { key: 'chart.grid.frame.strokeDasharray', def: 0, type: 'range', min: 0, max: 100},
+    { key: 'chart.grid.frame.show', def: false, type: 'checkbox' },
+    { key: 'chart.grid.frame.stroke', def: '#1A1A1A', type: 'color' },
+    { key: 'chart.grid.frame.strokeWidth', def: 4, type: 'number', min: 0, max: 12 },
+    { key: 'chart.grid.frame.strokeLinecap', def: 'round', type: 'select', options: ['round', 'square', 'butt'] },
+    { key: 'chart.grid.frame.strokeLinejoin', def: 'round', type: 'select', options: ['round', 'miter'] },
+    { key: 'chart.grid.frame.strokeDasharray', def: 0, type: 'range', min: 0, max: 100 },
 
     { key: 'chart.grid.labels.show', def: true, type: 'checkbox', label: 'showLabels', category: 'grid' },
     { key: 'chart.grid.labels.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'grid' },
@@ -338,23 +380,24 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
     { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 24, type: 'number', min: -100, max: 100 },
 
-    { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: true, type: 'checkbox'},
-    { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number'},
+    { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: true, type: 'checkbox' },
+    { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number' },
 
+    { key: 'chart.grid.labels.yAxis.position', def: 'right', type: 'select', options: ['left', 'right'] },
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 10, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 48, min: 0, max: 100, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.showBaseline', def: true,  type: 'checkbox'},
+    { key: 'chart.grid.labels.yAxis.showBaseline', def: true, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.scaleMin', def: -90, type: 'number', min: -1000, max: 1000 },
     { key: 'chart.grid.labels.yAxis.scaleMax', def: 90, type: 'number', min: -1000, max: 1000 },
-    { key: 'chart.grid.labels.yAxis.groupColor', def: '#1A1A1A', type: 'color'},
-    { key: 'chart.grid.labels.yAxis.scaleLabelOffsetX', def: 36, type: 'number', min: -100, max: 100},
-    { key: 'chart.grid.labels.yAxis.scaleValueOffsetX', def: -20, type: 'number', min: -100, max: 100},
+    { key: 'chart.grid.labels.yAxis.groupColor', def: '#1A1A1A', type: 'color' },
+    { key: 'chart.grid.labels.yAxis.scaleLabelOffsetX', def: 36, type: 'number', min: -100, max: 100 },
+    { key: 'chart.grid.labels.yAxis.scaleValueOffsetX', def: -20, type: 'number', min: -100, max: 100 },
 
-    { key: 'chart.grid.labels.xAxis.showBaseline', def: true,  type: 'checkbox'},
-    { key: 'chart.grid.labels.zeroLine.show', def: true, type: 'checkbox'},
+    { key: 'chart.grid.labels.xAxis.showBaseline', def: true, type: 'checkbox' },
+    { key: 'chart.grid.labels.zeroLine.show', def: true, type: 'checkbox' },
 
     { key: 'chart.labels.fontSize', def: 20, type: 'number', min: 6, max: 30, label: 'fontSize', category: 'labels' },
     { key: 'chart.labels.prefix', def: '', type: 'text', label: 'prefix', category: 'labels' },
@@ -371,8 +414,8 @@ const model = ref([
     { key: 'chart.title.bold', def: true, type: 'checkbox', label: 'bold', category: 'title' },
     { key: 'chart.title.offsetX', def: 0, type: 'number', label: 'offsetX', category: 'title' },
     { key: 'chart.title.offsetY', def: 0, type: 'number', label: 'offsetY', category: 'title' },
-    { key: 'chart.title.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'chart.title.paddingLeft', def: 12, type: 'number', min: 0, max: 24},
+    { key: 'chart.title.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right'] },
+    { key: 'chart.title.paddingLeft', def: 12, type: 'number', min: 0, max: 24 },
 
     { key: 'chart.title.subtitle.text', def: 'Subtitle', type: 'text', label: 'textContent', category: 'subtitle' },
     { key: 'chart.title.subtitle.color', def: '#CCCCCC', type: 'color', label: 'textColor', category: 'subtitle' },
@@ -385,11 +428,11 @@ const model = ref([
     { key: 'chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'tooltip' },
     { key: 'chart.tooltip.roundingValue', def: 3, type: 'number', min: 0, max: 6, label: 'valueRounding', category: 'tooltip' },
     { key: 'chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'tooltip' },
-    { key: 'chart.tooltip.fontSize', def: 14, type: 'range', min: 8, max: 48},
+    { key: 'chart.tooltip.fontSize', def: 14, type: 'range', min: 8, max: 48 },
     { key: 'chart.tooltip.backgroundOpacity', def: 20, type: 'range', min: 0, max: 100 },
-    { key: 'chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
-    { key: 'chart.tooltip.showTimeLabel', def: true, type: 'checkbox'},
+    { key: 'chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right'] },
+    { key: 'chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48 },
+    { key: 'chart.tooltip.showTimeLabel', def: true, type: 'checkbox' },
 
     { key: 'bar.borderRadius', def: 2, type: 'number', min: 0, max: 120, label: 'borderRadius', category: 'bar' },
     { key: 'bar.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'bar' },
@@ -403,15 +446,15 @@ const model = ref([
     { key: 'bar.serieName.abbreviationSize', def: 3, type: 'number', min: 0, max: 12, label: ['serieName', 'abbreviation', 'is', 'size'], category: 'bar' },
     { key: 'bar.serieName.useSerieColor', def: true, type: 'checkbox', label: ['serieName', 'textColor', 'is', 'series'], category: 'bar' },
     { key: 'bar.serieName.color', def: '#1A1A1A', type: 'color', label: ['serieName', 'is', 'textColor'], category: 'bar' },
-    { key: 'bar.periodGap', def: 0.1, type: 'number', min: 0, max: 24},
-    { key: 'bar.border.useSerieColor', def: false, type: 'checkbox'},
-    { key: 'bar.border.stroke', def: '#FFFFFF', type: 'color'},
-    { key: 'bar.border.strokeWidth', def: 1, type: 'number', min: 0, max: 12, step: 0.5},
+    { key: 'bar.periodGap', def: 0.1, type: 'number', min: 0, max: 24 },
+    { key: 'bar.border.useSerieColor', def: false, type: 'checkbox' },
+    { key: 'bar.border.stroke', def: '#FFFFFF', type: 'color' },
+    { key: 'bar.border.strokeWidth', def: 1, type: 'number', min: 0, max: 12, step: 0.5 },
 
     { key: 'line.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'line' },
     { key: 'line.useGradient', def: false, type: 'checkbox', label: 'useGradient', category: 'line' },
     { key: 'line.strokeWidth', def: 2, type: 'number', min: 1, max: 20, label: 'thickness', category: 'line' },
-    { key: 'line.cutNullValues', def: true, type: 'checkbox'},
+    { key: 'line.cutNullValues', def: true, type: 'checkbox' },
 
     { key: 'line.labels.show', def: true, type: 'checkbox', label: 'showDataLabels', category: 'line' },
     { key: 'line.labels.offsetY', def: -8, type: 'number', min: -100, max: 100, label: 'offsetYDataLabels', category: 'line' },
@@ -420,11 +463,11 @@ const model = ref([
     { key: 'line.area.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'line' },
     { key: 'line.area.opacity', def: 20, type: 'range', min: 0, max: 100, label: 'opacity', category: 'line' },
 
-    { key: 'line.dot.useSerieColor', def: false, type: 'checkbox'},
-    { key: 'line.dot.fill', def: '#FFFFFF', type: 'color'},
-    { key: 'line.dot.strokeWidth', def: 2, type: 'number', min: 0, max:12, step: 0.1},
+    { key: 'line.dot.useSerieColor', def: false, type: 'checkbox' },
+    { key: 'line.dot.fill', def: '#FFFFFF', type: 'color' },
+    { key: 'line.dot.strokeWidth', def: 2, type: 'number', min: 0, max: 12, step: 0.1 },
 
-    { key: 'line.tag.followValue', def: true, type: 'checkbox'},
+    { key: 'line.tag.followValue', def: true, type: 'checkbox' },
     { key: 'line.tag.fontSize', def: 14, type: 'number' },
 
     { key: 'plot.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'plot' },
@@ -435,11 +478,11 @@ const model = ref([
     { key: 'plot.labels.rounding', def: 0, type: 'number', min: 0, max: 6, label: 'rounding', category: 'plot' },
     { key: 'plot.labels.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'plot' },
 
-    { key: 'plot.dot.useSerieColor', def: false, type: 'checkbox'},
-    { key: 'plot.dot.fill', def: '#FFFFFF', type: 'color'},
-    { key: 'plot.dot.strokeWidth', def: 0.5, type: 'number', min: 0, max:12, step: 0.1},
+    { key: 'plot.dot.useSerieColor', def: false, type: 'checkbox' },
+    { key: 'plot.dot.fill', def: '#FFFFFF', type: 'color' },
+    { key: 'plot.dot.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.1 },
 
-    { key: 'plot.tag.followValue', def: true, type: 'checkbox'},
+    { key: 'plot.tag.followValue', def: true, type: 'checkbox' },
     { key: 'plot.tag.fontSize', def: 14, type: 'number' },
 
     { key: 'showTable', def: false, type: 'checkbox', label: 'show', category: 'table' },
@@ -454,16 +497,16 @@ const model = ref([
     { key: 'table.td.backgroundColor', def: '#FAFAFA', type: 'color', label: 'backgroundColorRow', category: 'table' },
     { key: 'table.td.color', def: '#1A1A1A', type: 'color', label: 'textColorRow', category: 'table' },
     { key: 'table.td.outline', def: '', type: 'text', label: 'outlineRow', category: 'table' },
-    { key: 'table.showSum', def: false, type: 'checkbox'},
+    { key: 'table.showSum', def: false, type: 'checkbox' },
 
-    { key: 'chart.comments.show', def: true, type: 'checkbox'},
-    { key: 'chart.comments.showInTooltip', def: true, type: 'checkbox'},
-    { key: 'chart.comments.width', def: 200, type: 'number', min: 50, max: 400},
-    { key: 'chart.comments.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'chart.comments.show', def: true, type: 'checkbox' },
+    { key: 'chart.comments.showInTooltip', def: true, type: 'checkbox' },
+    { key: 'chart.comments.width', def: 200, type: 'number', min: 50, max: 400 },
+    { key: 'chart.comments.offsetY', def: 0, type: 'number', min: -100, max: 100 },
 
     { key: 'chart.userOptions.print.allowTaint', def: true, type: 'checkbox' },
-    { key: 'chart.userOptions.print.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'chart.userOptions.print.useCORS', def: true, type: 'checkbox'},
+    { key: 'chart.userOptions.print.backgroundColor', def: '#FFFFFF', type: 'color' },
+    { key: 'chart.userOptions.print.useCORS', def: true, type: 'checkbox' },
     { key: 'chart.userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5 }
 ]);
 
@@ -483,7 +526,7 @@ const currentTheme = ref(themeOptions.value[0])
 
 const size = ref({
     height: 600,
-            width: 1000
+    width: 1000
 })
 
 const timeValues = computed(() => {
@@ -528,7 +571,7 @@ const config = computed(() => {
                     //     return `f - ${value}`
                     // }
                 },
-                tag:  {
+                tag: {
                     formatter: ({ value, config }) => {
                         const { datapoint, seriesIndex, serieName } = config;
                         // console.log(datapoint, seriesIndex, serieName)
@@ -574,39 +617,39 @@ const config = computed(() => {
                     }
                 },
                 highlightArea: [{
-                        show: true,
-                        from: 2,
-                        to: 2,
-                        color: '#00FF00',
-                        opacity: 20,
-                        caption: {
-                            text: 'AREA 1',
-                            fontSize: 12,
-                            color: '#1A1A1A',
-                            bold: false,
-                            offsetY: 0,
-                            width: 'auto',
-                            padding: 3,
-                            textAlign: 'center'
-                        }
-                    },
-                    {
-                        show: true,
-                        from: 4,
-                        to: 6,
-                        color: '#FF0000',
-                        opacity: 20,
-                        caption: {
-                            text: 'AREA 2',
-                            fontSize: 12,
-                            color: '#1A1A1A',
-                            bold: false,
-                            offsetY: 0,
-                            width: 'auto',
-                            padding: 3,
-                            textAlign: 'center'
-                        }
-                    }],
+                    show: true,
+                    from: 2,
+                    to: 2,
+                    color: '#00FF00',
+                    opacity: 20,
+                    caption: {
+                        text: 'AREA 1',
+                        fontSize: 12,
+                        color: '#1A1A1A',
+                        bold: false,
+                        offsetY: 0,
+                        width: 'auto',
+                        padding: 3,
+                        textAlign: 'center'
+                    }
+                },
+                {
+                    show: true,
+                    from: 4,
+                    to: 6,
+                    color: '#FF0000',
+                    opacity: 20,
+                    caption: {
+                        text: 'AREA 2',
+                        fontSize: 12,
+                        color: '#1A1A1A',
+                        bold: false,
+                        offsetY: 0,
+                        width: 'auto',
+                        padding: 3,
+                        textAlign: 'center'
+                    }
+                }],
                 grid: {
                     ...c.chart.grid,
                     // position: 'start',
@@ -685,90 +728,86 @@ function selectTimeLabel(data) {
             responsive: true,
         }" @selectTimeLabel="selectTimeLabel">
 
-        <template #pattern="{ seriesIndex, patternId }">
-            <pattern v-if="seriesIndex === 0" :id="patternId" width="70" height="8" patternTransform="scale(2)" patternUnits="userSpaceOnUse" opacity="0.5" ><rect width="100%" height="100%" fill="#FFFFFF20"/><path fill="none" stroke="#ecc94b" d="M-.02 22c8.373 0 11.938-4.695 16.32-9.662C20.785 7.258 25.728 2 35 2s14.215 5.258 18.7 10.338C58.082 17.305 61.647 22 70.02 22M-.02 14.002C8.353 14 11.918 9.306 16.3 4.339 20.785-.742 25.728-6 35-6S49.215-.742 53.7 4.339c4.382 4.967 7.947 9.661 16.32 9.664M70 6.004c-8.373-.001-11.918-4.698-16.3-9.665C49.215-8.742 44.272-14 35-14S20.785-8.742 16.3-3.661C11.918 1.306 8.353 6-.02 6.002"/></pattern>
+            <template #pattern="{ seriesIndex, patternId }">
+                <pattern v-if="seriesIndex === 0" :id="patternId" width="70" height="8" patternTransform="scale(2)"
+                    patternUnits="userSpaceOnUse" opacity="0.5">
+                    <rect width="100%" height="100%" fill="#FFFFFF20" />
+                    <path fill="none" stroke="#ecc94b"
+                        d="M-.02 22c8.373 0 11.938-4.695 16.32-9.662C20.785 7.258 25.728 2 35 2s14.215 5.258 18.7 10.338C58.082 17.305 61.647 22 70.02 22M-.02 14.002C8.353 14 11.918 9.306 16.3 4.339 20.785-.742 25.728-6 35-6S49.215-.742 53.7 4.339c4.382 4.967 7.947 9.661 16.32 9.664M70 6.004c-8.373-.001-11.918-4.698-16.3-9.665C49.215-8.742 44.272-14 35-14S20.785-8.742 16.3-3.661C11.918 1.306 8.353 6-.02 6.002" />
+                </pattern>
 
-            <pattern v-if="seriesIndex === 1" :id="patternId" width="29" height="50.115" patternTransform="scale(2)" patternUnits="userSpaceOnUse"><rect width="100%" height="100%" fill="#2b2b3150"/><path fill="none" stroke="#ecc94b" stroke-linecap="square" stroke-width=".5" d="M14.5 6.628 8.886 3.372v-6.515L14.502-6.4l5.612 3.257-.001 6.514zm0 50.06-5.613-3.256v-6.515l5.614-3.258 5.612 3.257-.001 6.515zm14.497-25.117-5.612-3.257v-6.515L29 18.541l5.612 3.257-.001 6.515zm-29 0-5.612-3.257v-6.515L0 18.541l5.612 3.257v6.515zM14.5 11.82 4.36 5.967l.002-11.706 10.14-5.855L24.638-5.74l-.001 11.707zm0 50.06L4.36 56.028l.002-11.706 10.14-5.855 10.137 5.852-.001 11.707zm14.498-25.118-10.14-5.852.002-11.707L29 13.349l10.137 5.853-.001 11.706zm-29 0-10.139-5.852.002-11.707L0 13.349l10.138 5.853-.002 11.706zm14.501-19.905L0 8.488.002-8.257l14.5-8.374L29-8.26l-.002 16.745zm0 50.06L0 58.548l.002-16.745 14.5-8.373L29 41.8l-.002 16.744zM28.996 41.8l-14.498-8.37.002-16.744L29 8.312l14.498 8.37-.002 16.745zm-29 0-14.498-8.37.002-16.744L0 8.312l14.498 8.37-.002 16.745z"/></pattern>
+                <pattern v-if="seriesIndex === 1" :id="patternId" width="29" height="50.115" patternTransform="scale(2)"
+                    patternUnits="userSpaceOnUse">
+                    <rect width="100%" height="100%" fill="#2b2b3150" />
+                    <path fill="none" stroke="#ecc94b" stroke-linecap="square" stroke-width=".5"
+                        d="M14.5 6.628 8.886 3.372v-6.515L14.502-6.4l5.612 3.257-.001 6.514zm0 50.06-5.613-3.256v-6.515l5.614-3.258 5.612 3.257-.001 6.515zm14.497-25.117-5.612-3.257v-6.515L29 18.541l5.612 3.257-.001 6.515zm-29 0-5.612-3.257v-6.515L0 18.541l5.612 3.257v6.515zM14.5 11.82 4.36 5.967l.002-11.706 10.14-5.855L24.638-5.74l-.001 11.707zm0 50.06L4.36 56.028l.002-11.706 10.14-5.855 10.137 5.852-.001 11.707zm14.498-25.118-10.14-5.852.002-11.707L29 13.349l10.137 5.853-.001 11.706zm-29 0-10.139-5.852.002-11.707L0 13.349l10.138 5.853-.002 11.706zm14.501-19.905L0 8.488.002-8.257l14.5-8.374L29-8.26l-.002 16.745zm0 50.06L0 58.548l.002-16.745 14.5-8.373L29 41.8l-.002 16.744zM28.996 41.8l-14.498-8.37.002-16.744L29 8.312l14.498 8.37-.002 16.745zm-29 0-14.498-8.37.002-16.744L0 8.312l14.498 8.37-.002 16.745z" />
+                </pattern>
 
-            <pattern v-if="seriesIndex === 2" :id="patternId" width="40" height="40" patternTransform="scale(2)" patternUnits="userSpaceOnUse"><rect width="100%" height="100%" fill="#2b2b31"/><path fill="#ecc94b" d="M20 8.52h20v2.96H20zM20 20h20v20H20z"/><path fill="#f44034" d="M21.63 0 20 1.63v1.54L23.15 0zm3.08 0L20 4.71v1.54L26.25 0zm3.08 0L20 7.79v1.53L29.32 0zm3.07 0L20 10.86v1.54L32.4 0zm3.08 0L20 13.94v1.54L35.48 0zm3.08 0L20 17.02v1.54L38.55 0zM40 .1l-20 20L.1 40h1.53L40 1.63zm0 3.07L3.17 40h1.54L40 4.71zm0 3.08L6.25 40h1.54L40 7.79zm0 3.07L9.32 40h1.54L40 10.86zm0 3.08L12.4 40h1.54L40 13.94zm0 3.08L15.48 40h1.54L40 17.02zm0 3.08L18.55 40h1.55L40 20.1V20zM1.63 20 0 21.63v1.54L3.15 20zm3.08 0L0 24.71v1.54L6.25 20zm3.08 0L0 27.79v1.53L9.32 20zm3.07 0L0 30.86v1.54L12.4 20zm3.08 0L0 33.94v1.54L15.48 20zm3.08 0L0 37.02v1.54L18.55 20zM40 21.63 21.63 40h1.54L40 23.17zm0 3.08L24.71 40h1.54L40 26.25zm0 3.08L27.79 40h1.53L40 29.33zm0 3.08L30.86 40h1.54l7.6-7.6zm0 3.07L33.94 40h1.54L40 35.48zm0 3.08L37.02 40h1.54L40 38.56zM9.32 0l-.8.8v1.54L10.86 0zm2.16.92L8.52 3.88v1.54l2.96-2.96zm0 3.08L8.52 6.96V8.5l2.96-2.96zm0 3.08-1.44 1.44-2.96 2.96h1.44v.1l.1-.1 2.86-2.87.1-.09h-.1zM.8 8.52l-.8.8v1.54l2.34-2.34zm3.08 0L.92 11.48h1.54l2.96-2.96zm3.08 0L4 11.48h1.54L8.5 8.52zm6.16 0-1.64 1.63-1.33 1.33-1.63 1.63v1.54l2.96-2.96v-.21h.21l2.96-2.96zm3.07 0-2.96 2.96h1.54l2.96-2.96zm3.08 0-2.96 2.96h1.53L20 9.32v-.8zm.73 2.34-.62.62H20zm-8.52 2.37-2.96 2.96v1.54l2.96-2.96zm0 3.07-2.96 2.97V40h2.96V20H9.32l2.16-2.16z"/></pattern>
-        </template> 
+                <pattern v-if="seriesIndex === 2" :id="patternId" width="40" height="40" patternTransform="scale(2)"
+                    patternUnits="userSpaceOnUse">
+                    <rect width="100%" height="100%" fill="#2b2b31" />
+                    <path fill="#ecc94b" d="M20 8.52h20v2.96H20zM20 20h20v20H20z" />
+                    <path fill="#f44034"
+                        d="M21.63 0 20 1.63v1.54L23.15 0zm3.08 0L20 4.71v1.54L26.25 0zm3.08 0L20 7.79v1.53L29.32 0zm3.07 0L20 10.86v1.54L32.4 0zm3.08 0L20 13.94v1.54L35.48 0zm3.08 0L20 17.02v1.54L38.55 0zM40 .1l-20 20L.1 40h1.53L40 1.63zm0 3.07L3.17 40h1.54L40 4.71zm0 3.08L6.25 40h1.54L40 7.79zm0 3.07L9.32 40h1.54L40 10.86zm0 3.08L12.4 40h1.54L40 13.94zm0 3.08L15.48 40h1.54L40 17.02zm0 3.08L18.55 40h1.55L40 20.1V20zM1.63 20 0 21.63v1.54L3.15 20zm3.08 0L0 24.71v1.54L6.25 20zm3.08 0L0 27.79v1.53L9.32 20zm3.07 0L0 30.86v1.54L12.4 20zm3.08 0L0 33.94v1.54L15.48 20zm3.08 0L0 37.02v1.54L18.55 20zM40 21.63 21.63 40h1.54L40 23.17zm0 3.08L24.71 40h1.54L40 26.25zm0 3.08L27.79 40h1.53L40 29.33zm0 3.08L30.86 40h1.54l7.6-7.6zm0 3.07L33.94 40h1.54L40 35.48zm0 3.08L37.02 40h1.54L40 38.56zM9.32 0l-.8.8v1.54L10.86 0zm2.16.92L8.52 3.88v1.54l2.96-2.96zm0 3.08L8.52 6.96V8.5l2.96-2.96zm0 3.08-1.44 1.44-2.96 2.96h1.44v.1l.1-.1 2.86-2.87.1-.09h-.1zM.8 8.52l-.8.8v1.54l2.34-2.34zm3.08 0L.92 11.48h1.54l2.96-2.96zm3.08 0L4 11.48h1.54L8.5 8.52zm6.16 0-1.64 1.63-1.33 1.33-1.63 1.63v1.54l2.96-2.96v-.21h.21l2.96-2.96zm3.07 0-2.96 2.96h1.54l2.96-2.96zm3.08 0-2.96 2.96h1.53L20 9.32v-.8zm.73 2.34-.62.62H20zm-8.52 2.37-2.96 2.96v1.54l2.96-2.96zm0 3.07-2.96 2.97V40h2.96V20H9.32l2.16-2.16z" />
+                </pattern>
+            </template>
 
-        <!-- <template #chart-background>
+            <!-- <template #chart-background>
             <div style="width: 100%; height:100%; background: radial-gradient(at top left, red, white)">
             </div>
         </template> -->
 
-        <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
-            <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
-                <text
-                    :x="x"
-                    :y="y"
-                    :font-size="fontSize"
-                    :text-anchor="textAnchor"
-                    :fill="fill"
-                >
-                    {{ content }}
-                </text>
-                <text
-                    :x="x"
-                    :y="y + fontSize"
-                    :font-size="fontSize * 0.8"
-                    :text-anchor="textAnchor"
-                    fill="grey"
-                >
-                    {{ content }}
-                </text>
-            </g>
-        </template>
+            <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <g @click="() => selectTimeLabel({ x, y, fontSize, absoluteIndex })">
+                    <text :x="x" :y="y" :font-size="fontSize" :text-anchor="textAnchor" :fill="fill">
+                        {{ content }}
+                    </text>
+                    <text :x="x" :y="y + fontSize" :font-size="fontSize * 0.8" :text-anchor="textAnchor" fill="grey">
+                        {{ content }}
+                    </text>
+                </g>
+            </template>
 
-        <template #plot-comment="{ plot }">
-            <div :style="`font-size: 12px; color:${plot.color}; text-align:center`">
-                {{ plot.comment }}
-            </div>
-        </template>
-        
-        <template #watermark="{ isPrinting }">
-            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.2; transform: rotate(-10deg)">
-                WATERMARK
-            </div>
-        </template>
+            <template #plot-comment="{ plot }">
+                <div :style="`font-size: 12px; color:${plot.color}; text-align:center`">
+                    {{ plot.comment }}
+                </div>
+            </template>
 
-        <template #source>
-            <div style="width:100%;font-size:10px;text-align:left">
-                SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
-            </div>
-        </template>
-    </LocalVueUiXy>
+            <template #watermark="{ isPrinting }">
+                <div v-if="isPrinting" style="font-size: 100px; opacity: 0.2; transform: rotate(-10deg)">
+                    WATERMARK
+                </div>
+            </template>
+
+            <template #source>
+                <div style="width:100%;font-size:10px;text-align:left">
+                    SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis
+                    nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore!
+                    Sapiente aspernatur corrupti quis ad.
+                </div>
+            </template>
+        </LocalVueUiXy>
     </div>
 
     <Box :dataset="isPropsToggled ? alternateDataset : dataset" comp="VueUiXy">
         <template #title>VueUiXy</template>
 
         <template #local>
-            <LocalVueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend"
+            <LocalVueUiXy :dataset="isPropsToggled ? alternateDataset : dataset"
+                :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend"
                 @selectX="selectX" ref="local">
                 <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template> -->
-                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
-                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
-                        <text
-                            :x="x"
-                            :y="y"
-                            :font-size="fontSize"
-                            :text-anchor="textAnchor"
-                            :fill="fill"
-                        >
+                <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({ x, y, fontSize, absoluteIndex })">
+                        <text :x="x" :y="y" :font-size="fontSize" :text-anchor="textAnchor" :fill="fill">
                             {{ content }}
                         </text>
-                        <text
-                            :x="x"
-                            :y="y + fontSize"
-                            :font-size="fontSize * 0.8"
-                            :text-anchor="textAnchor"
-                            fill="grey"
-                        >
+                        <text :x="x" :y="y + fontSize" :font-size="fontSize * 0.8" :text-anchor="textAnchor"
+                            fill="grey">
                             {{ content }}
                         </text>
                     </g>
@@ -798,31 +837,21 @@ function selectTimeLabel(data) {
                     <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                         WATERMARK
                     </div>
-                </template> 
+                </template>
             </LocalVueUiXy>
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset: dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
+            <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
+                :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
-                <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
-                    <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
-                        <text
-                            :x="x"
-                            :y="y"
-                            :font-size="fontSize"
-                            :text-anchor="textAnchor"
-                            :fill="fill"
-                        >
+                <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                    <g @click="() => selectTimeLabel({ x, y, fontSize, absoluteIndex })">
+                        <text :x="x" :y="y" :font-size="fontSize" :text-anchor="textAnchor" :fill="fill">
                             {{ content }}
                         </text>
-                        <text
-                            :x="x"
-                            :y="y + fontSize"
-                            :font-size="fontSize * 0.8"
-                            :text-anchor="textAnchor"
-                            fill="grey"
-                        >
+                        <text :x="x" :y="y + fontSize" :font-size="fontSize * 0.8" :text-anchor="textAnchor"
+                            fill="grey">
                             {{ content }}
                         </text>
                     </g>
@@ -855,7 +884,7 @@ function selectTimeLabel(data) {
             </LocalVueDataUi>
         </template>
 
-        <!-- <template #build>
+        <template #build>
             <VueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend"
                 @selectX="selectX" ref="build">
                 <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
@@ -957,7 +986,7 @@ function selectTimeLabel(data) {
                     </div>
                 </template> 
             </VueDataUi>
-        </template> -->
+        </template>
 
         <template #knobs>
             <div
@@ -966,8 +995,8 @@ function selectTimeLabel(data) {
                     <label style="font-size: 10px">{{ knob.key }}</label>
                     <div
                         style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
-                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
+                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type"
+                            :min="knob.min ?? 0" :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
                         <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
                             <option v-for="opt in knob.options">{{ opt }}</option>
                         </select>
