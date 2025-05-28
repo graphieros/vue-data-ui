@@ -238,10 +238,29 @@ const model = ref([
     { key: 'style.chart.tooltip.showMinimap', def: true, type: 'checkbox'},
 ]);
 
+const projections = ref([
+    'aitoff',
+    'azimuthalEquidistant',
+    'bonne',
+    'equirectangular',
+    'gallPeters',
+    'globe',
+    'hammer',
+    'mercator',
+    'mollweide',
+    'robinson',
+    'sinusoidal',
+    'vanDerGrinten',
+    'winkelTripel'
+])
+
+const currentProjection = ref('globe')
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        projection: currentProjection.value,
         style: {
             ...c.style,
             chart: {
@@ -260,11 +279,23 @@ const config = computed(() => {
 </script>
 
 <template>
+    <select v-model="currentProjection">
+        <option v-for="p in projections">{{ p }}</option>
+    </select>
     <Box>
         <template #title>VueUiWorld</template>
         
         <template #local>
-            <LocalVueUiWorld :dataset="dataset" :config="config"/>
+            <LocalVueUiWorld :dataset="dataset" :config="config">
+                <template #pattern="{ datapoint, patternId }">
+                <pattern :id="patternId" width="70" height="8" patternTransform="scale(2)"
+                    patternUnits="userSpaceOnUse" opacity="0.5">
+                    <rect width="100%" height="100%" fill="#FFFFFF20" />
+                    <path fill="none" stroke="#ecc94b"
+                        d="M-.02 22c8.373 0 11.938-4.695 16.32-9.662C20.785 7.258 25.728 2 35 2s14.215 5.258 18.7 10.338C58.082 17.305 61.647 22 70.02 22M-.02 14.002C8.353 14 11.918 9.306 16.3 4.339 20.785-.742 25.728-6 35-6S49.215-.742 53.7 4.339c4.382 4.967 7.947 9.661 16.32 9.664M70 6.004c-8.373-.001-11.918-4.698-16.3-9.665C49.215-8.742 44.272-14 35-14S20.785-8.742 16.3-3.661C11.918 1.306 8.353 6-.02 6.002" />
+                </pattern>
+                </template>
+            </LocalVueUiWorld>
         </template>
 
         <template #VDUI-local>

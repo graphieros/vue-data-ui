@@ -793,6 +793,15 @@ defineExpose({
                         </title>
                     </path>
                     <path
+                        v-if="$slots.pattern"
+                        :d="country.path" 
+                        :fill="`url(#pattern_${uid}_${country.code})`"
+                        :stroke="FINAL_CONFIG.style.chart.territory.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.territory.strokeWidthSelected"
+                        style="pointer-events: none;"
+                        class="vue-ui-world-territory"
+                    />
+                    <path
                         v-if="selectedDatapoint"
                         :d="geoToPath(selectedDatapoint.geometry)"
                         fill="transparent"
