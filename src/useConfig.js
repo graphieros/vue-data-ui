@@ -5263,6 +5263,82 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_world = {
+        userOptions: USER_OPTIONS({
+            tooltip: true,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: false,
+            fullscreen: true,
+            stack: false,
+            annotator: true
+        }),
+        customPalette: [],
+        projection: 'globe',
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                padding: PADDING([12,12,12,12]),
+                dataLabels: {
+                    prefix: '',
+                    suffix: '',
+                    rounding: 0,
+                    formatter: null
+                },
+                dimensions: {
+                    height: null,
+                    width: null
+                },
+                // Specific config for the globe projection
+                globe: {
+                    // Center on China: x:98, y:34
+                    // Center on USA: x:-101, y:42
+                    // Center on Australia: x:133, y:-26.5
+                    // Center on Europe: x:13, y:44
+                    // etc
+                    center: {
+                        x: 0,
+                        y: 0
+                    },
+                    waterColor: '#1f77b4',
+                },
+                territory: {
+                    stroke: '#666666',
+                    emptyColor: '#E0E0E0',
+                    strokeWidth: 0.5,
+                    strokeWidthSelected: 2,
+                    colors: {
+                        min: '#E0E0E0',
+                        max: null, // defaults to palette[0] if kept null
+                    }
+                },
+                tooltip: {
+                    ...TOOLTIP,
+                    showMinimap: true
+                },
+                title: TITLE,
+                legend: LEGEND
+            }
+        },
+        table: {
+            ...TABLE,
+            th: TABLE_TH,
+            td: {
+                ...TABLE_TD,
+                roundingValue: 0,
+            },
+            columnNames: {
+                series: 'Country',
+                value: 'Value',
+                category: 'Category'
+            }
+        },
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -5311,6 +5387,7 @@ export function useConfig() {
         vue_ui_bullet,
         vue_ui_funnel,
         vue_ui_history_plot,
+        vue_ui_world,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,

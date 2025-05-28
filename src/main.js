@@ -63,7 +63,8 @@ import {
     VueUiFunnel,
     VueUiHistoryPlot,
     VueUiPattern,
-    VueUiCirclePack
+    VueUiCirclePack,
+    VueUiWorld
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -130,5 +131,6 @@ app.component("VueUiFunnel", VueUiFunnel);
 app.component("VueUiHistoryPlot", VueUiHistoryPlot);
 app.component('VueUiPattern', VueUiPattern);
 app.component('VueUiCirclePack', VueUiCirclePack);
+app.component('VueUiWorld', VueUiWorld);
 
 app.mount('#app');

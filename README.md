@@ -7,7 +7,7 @@
 # vue-data-ui
 
 [![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
-[![Static Badge](https://img.shields.io/badge/components-60-blue)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-61-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -83,6 +83,10 @@ Available components
 
 - [VueUiRating](https://vue-data-ui.graphieros.com/docs#vue-ui-rating)
 - [VueUiSmiley](https://vue-data-ui.graphieros.com/docs#vue-ui-smiley)
+
+## Maps
+
+- [VueUiWorld](https://vue-data-ui.graphieros.com/docs#vue-ui-world)
 
 ## Utilities
 
@@ -283,6 +287,7 @@ The following charts bear these slots:
 - VueUiXy \*
 - VueUiXyCanvas
 - VueUiwaffle
+- VueUiWorld
 
 \* VueUiXy slots specifically expose the following additional attributes:
 
@@ -460,6 +465,12 @@ From the dataset you pass into the props, this component will produce the most a
 | ------------ | ------------------- | ------------------ | --------------------------------------------- | ----------------------------------------- | -------------- | ------ |
 | `VueUi3dBar` | `VueUi3dBarDataset` | `VueUi3dBarConfig` | `generatePdf`, `generateImage`, `toggleTable` | `#svg`, `#watermark`, `#chart-background` | ❌             | ✅     |
 
+### Maps
+
+| Name         | dataset type        | config type        | emits / exposed methods                                                                      | slots                                                 | custom tooltip | themes |
+| ------------ | ------------------- | ------------------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------- | ------ |
+| `VueUiWorld` | `VueUiWorldDataset` | `VueUiWorldConfig` | `getData`, `generatePdf`, `generateImage`, `toggleTable`, `toggleTooltip`, `toggleAnnotator` | `#svg`, `#watermark`, `#pattern`, `#chart-background` | ✅             | ❌     |
+
 ### Data tables
 
 | Name                  | dataset type                       | config type                 | emits / exposed methods                                                                               | slots                                                           | themes |
@@ -610,6 +621,7 @@ User options actions available per chart:
 | VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiXy                     | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
 | VueUiXyCanvas               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
+| VueUiWorld                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 
 User options menu icon can be customized using the #menuIcon slot:
 
@@ -654,6 +666,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiWordCloud
 - VueUiXy
 - VueUiXyCanvas
+- VueUiWorld
 
 If the array of colors provided in customPalette is too small for the dataset, remaining colors will be computed from the default internal palette.
 Accepted color formats: HEX, RGB, HSL, named colors.
@@ -712,6 +725,7 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiWordCloud              | ✅                             |
 | VueUiXy                     | ✅                             |
 | VueUiXyCanvas               | ✅                             |
+| VueUiWorld                  | -                              |
 
 To activate responsiveness, set the config.responsive attribute to true:
 
@@ -813,6 +827,7 @@ The #pattern slot is available on the following components:
 - VueUiVerticalBar
 - VueUiWaffle
 - VueUiXy
+- VueUiWorld
 
 A set of 12 readymade patterns are available through the VueUiPattern component:
 

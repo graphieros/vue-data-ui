@@ -184,6 +184,12 @@ From the dataset you pass into the props, this component will produce the most a
 | ------------ | ------------------- | ------------------ | --------------------------------------------- | -------------------- | -------------- | ------ |
 | `VueUi3dBar` | `VueUi3dBarDataset` | `VueUi3dBarConfig` | `generatePdf`, `generateImage`, `toggleTable` | `#svg`, `#watermark` | ❌             | ✅     |
 
+### Maps
+
+| Name         | dataset type        | config type        | emits / exposed methods                                                                      | slots                                                 | custom tooltip | themes |
+| ------------ | ------------------- | ------------------ | -------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------- | ------ |
+| `VueUiWorld` | `VueUiWorldDataset` | `VueUiWorldConfig` | `getData`, `generatePdf`, `generateImage`, `toggleTable`, `toggleTooltip`, `toggleAnnotator` | `#svg`, `#watermark`, `#pattern`, `#chart-background` | ✅             | ❌     |
+
 ### Data tables
 
 | Name                  | dataset type                       | config type                 | emits / exposed methods                                                                               | slots                                                           |
