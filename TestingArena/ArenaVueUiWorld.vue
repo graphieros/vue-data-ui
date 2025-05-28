@@ -241,7 +241,17 @@ const model = ref([
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
-        ...c
+        ...c,
+        style: {
+            ...c.style,
+            chart: {
+                ...c.style.chart,
+                dimensions: {
+                    height: null,
+                    width: null
+                }
+            }
+        }
     }
 });
 

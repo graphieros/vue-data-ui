@@ -84,6 +84,18 @@ function prepareConfig() {
         mergedConfig.style.chart.territory.colors.max = palette[0];
     }
 
+    if (props.config && hasDeepProperty(props.config, 'style.chart.dimensions.width')) {
+        mergedConfig.style.chart.dimensions.width = props.config.style.chart.dimensions.width;
+    } else {
+        mergedConfig.style.chart.dimensions.width = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.dimensions.height')) {
+        mergedConfig.style.chart.dimensions.height = props.config.style.chart.dimensions.height;
+    } else {
+        mergedConfig.style.chart.dimensions.height = null;
+    }
+
     // --------------------------------------------------------------------
 
     return mergedConfig;
