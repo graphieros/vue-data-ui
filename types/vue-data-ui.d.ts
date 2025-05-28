@@ -56,7 +56,8 @@ declare module "vue-data-ui" {
         | VueUiBulletDataset
         | VueUiFunnelDatasetItem[]
         | VueUiHistoryPlotDatasetItem[]
-        | VueUiCirclePackDatasetItem[];
+        | VueUiCirclePackDatasetItem[]
+        | VueUiWorldDataset;
         config?:
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -113,7 +114,8 @@ declare module "vue-data-ui" {
         | VueUiBulletConfig
         | VueUiFunnelConfig
         | VueUiHistoryPlotConfig
-        | VueUiCirclePackConfig;
+        | VueUiCirclePackConfig
+        | VueUiWorldConfig;
     }>;
 
     export type VueUiPatternName =
@@ -1160,7 +1162,8 @@ declare module "vue-data-ui" {
         | "htmlTag"
         | "curlyBrackets"
         | "curlySpread"
-        | "text";
+        | "text"
+        | "world";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -6697,6 +6700,85 @@ declare module "vue-data-ui" {
         dataset: VueUiCirclePackDatasetItem[];
     }>;
 
+    export type VueUiWorldConfig = {
+        userOptions?: ChartUserOptions;
+        customPalette?: string[];
+        projection?: 'aitoff' | 'azimuthalEquidistant' | 'bonne' | 'equirectangular' | 'gallPeters' | 'globe' | 'hammer' | 'mercator' | 'mollweide' | 'robinson' | 'sinusoidal' | 'vanDerGrinten' | 'winkelTripel',
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string?;
+                padding?: ChartPadding;
+                dataLabels?: {
+                    prefix?: string;
+                    suffix?: string;
+                    rounding?: number;
+                    formatter: Formatter;
+                };
+                dimensions?: {
+                    height?: number | null;
+                    width?: number | null;
+                };
+                globe?: {
+                    center?: {
+                        x?: number;
+                        y?: number;
+                    };
+                    waterColor?: string;
+                };
+                territory?: {
+                    stroke?: string;
+                    emptyColor?: string;
+                    strokeWidth?: number;
+                    strokeWidthSelected?: number;
+                    colors?: {
+                        min?: string;
+                        max?: string | null;
+                    }
+                };
+                tooltip?: ChartTooltip & {
+                    showMinimap?: boolean;
+                    customFormat?:
+                    | null
+                    | ((
+                        params: VueUiTooltipParams<any>
+                    ) => string);
+                };
+                title?: ChartTitle;
+                legend?: ChartBaseLegend & {
+                    backgroundColor?: string;
+                };
+            }
+        };
+        table?: {
+            show?: boolean;
+            responsiveBreakpoint?: number;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
+                roundingValue?: number;
+            };
+            columnNames?: {
+                series?: string;
+                datapoint?: string;
+                category?: string;
+            };
+        };
+    }
+
+    export type VueUiWorldDataset = {
+        [key: string]: {
+            value: number;
+            category?: string;
+            color?: string
+        }
+    }
+
+    export const VueUiWorld: DefineComponent<{
+        config?: VueUiWorldConfig;
+        dataset?: VueUiWorldDataset
+    }>
+
     export type VueDataUiConfig =
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -6755,7 +6837,8 @@ declare module "vue-data-ui" {
         | VueUiBulletConfig
         | VueUiFunnelConfig
         | VueUiHistoryPlotConfig
-        | VueUiCirclePackConfig;
+        | VueUiCirclePackConfig
+        | VueUiWorldConfig;
 
     export type VueDataUiConfigKey =
         | "vue_ui_3d_bar"
@@ -6815,7 +6898,8 @@ declare module "vue-data-ui" {
         | "vue_ui_bullet"
         | "vue_ui_funnel"
         | "vue_ui_history_plot"
-        | "vue_ui_circle_pack";
+        | "vue_ui_circle_pack"
+        | "vue_ui_world";
 
     export type VueDataUiWordCloudTransformCallback =
         | ((word: string) => string)

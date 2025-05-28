@@ -6,6 +6,11 @@
  */
 export const components = [
     {
+        name: "VueUiWorld",
+        dataset: { FRA: { value: 100 }},
+        wrapperClass: '.vue-ui-world'
+    },
+    {
         name: "VueUi3dBar",
         dataset: { percentage: 100 },
         dataset2: {

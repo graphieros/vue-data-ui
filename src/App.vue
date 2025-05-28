@@ -53,6 +53,7 @@ import ArenaVueUiBullet from "../TestingArena/ArenaVueUiBullet.vue";
 import ArenaVueUiFunnel from "../TestingArena/ArenaVueUiFunnel.vue";
 import ArenaVueUiHistoryPlot from "../TestingArena/ArenaVueUiHistoryPlot.vue";
 import ArenaVueUiCirclePack from "../TestingArena/ArenaVueUiCirclePack.vue";
+import ArenaVueUiWorld from "../TestingArena/ArenaVueUiWorld.vue";
 
 const components = ref([             //------|
   /*____________________*/"VueUiXy", //  0
@@ -107,6 +108,7 @@ const components = ref([             //------|
   /*________________*/"VueUiFunnel", // 49
   /*___________*/"VueUiHistoryPlot", // 50
   /*____________*/"VueUiCirclePack", // 51
+  /*_________________*/"VueUiWorld", // 52
 
   /**
    * TODO: migrate manual testing for the following:
@@ -119,7 +121,7 @@ const components = ref([             //------|
  * Modify the index to display a component
  * [0] = VueUiXy 
  */
- const selectedComponent = ref(components.value[0]);
+ const selectedComponent = ref(components.value[52]);
 
 /**
  * Legacy testing arena where some non chart components can be tested
@@ -294,6 +296,9 @@ const showOldArena = ref(false);
 
   <!-- 51 -->
   <ArenaVueUiCirclePack v-if="selectedComponent === 'VueUiCirclePack'" />
+
+  <!-- 51 -->
+  <ArenaVueUiWorld v-if="selectedComponent === 'VueUiWorld'" />
 
   <!-- Add testing arena for new components here -->
 </template>

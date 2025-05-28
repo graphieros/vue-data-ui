@@ -67,6 +67,7 @@ export const VueUiFunnel = defineAsyncComponent(() => import('./components/vue-u
 export const VueUiHistoryPlot = defineAsyncComponent(() => import('./components/vue-ui-history-plot.vue'))
 export const VueUiPattern = defineAsyncComponent(() => import('./atoms/vue-ui-pattern.vue'))
 export const VueUiCirclePack = defineAsyncComponent(() => import('./components/vue-ui-circle-pack.vue'))
+export const VueUiWorld = defineAsyncComponent(() => import('./components/vue-ui-world.vue'))
 export {
     abbreviate,
     createWordCloudDatasetFromPlainText,
