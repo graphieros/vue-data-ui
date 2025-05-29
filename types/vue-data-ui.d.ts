@@ -212,7 +212,7 @@ declare module "vue-data-ui" {
             table?: string;
             tooltip?: string;
         };
-        // html2canvas options
+        // old html2canvas options
         print?: {
             allowTaint?: boolean;
             backgroundColor?: string;

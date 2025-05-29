@@ -1172,7 +1172,6 @@
 import { opacity, treeShake, convertConfigColors } from "../lib";
 import { useConfig } from "../useConfig";
 import { domToPng } from "../dom-to-png";
-import JsPDF from "jspdf";
 
 // TODO: add tooltips for all buttons
 
@@ -2852,6 +2851,13 @@ export default {
         });
 
         try {
+          let JsPDF;
+          try {
+            JsPDF = (await import("jspdf")).default;
+          } catch (e) {
+            throw new Error("jspdf is not installed.");
+          }
+
           const pngDataUrl = await domToPng({
             container: wrapper,
             scale: 2,
