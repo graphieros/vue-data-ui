@@ -92,12 +92,17 @@
     "preprod": "node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node copy-docs.cjs && node post-build.cjs"
   },
   "peerDependencies": {
-    "vue": ">=3.3.0"
+    "vue": ">=3.3.0",
+    "jspdf": "^3.0.1"
+  },
+  "peerDependenciesMeta": {
+    "jspdf": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
     "cypress": "^14.0.3",
-    "jspdf": "^3.0.1",
     "remove-attr": "^0.0.13",
     "sass": "^1.57.1",
     "simple-git": "^3.24.0",

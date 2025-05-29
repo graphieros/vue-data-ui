@@ -1,8 +1,15 @@
-import JsPDF from "jspdf";
 import { domToPng } from "./dom-to-png"; 
 
 export default async function pdf({ domElement, fileName, scale = 2, options = {} }) {
     if (!domElement) return Promise.reject("No domElement provided");
+
+    let JsPDF;
+
+    try {
+        JsPDF = (await import('jspdf')).default;
+    } catch (e) {
+        return Promise.reject('jspdf is not installed.')
+    }
 
     const a4 = {
         width: 595.28,

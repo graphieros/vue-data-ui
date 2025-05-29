@@ -951,3 +951,7 @@ const textContent = createTSpans({
   v-html="textContent"
 />
 ```
+
+## PDF generation
+
+This package requires jspdf as a peer dependency. Please install it in your project if you intend on using the PDF printing feature.
