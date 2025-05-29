@@ -421,8 +421,8 @@ function onMouseMove(e) {
     if (!drag.value || projection.value !== 'globe' || isAnnotator.value) return;
     const dx = e.clientX - dragStart.value.x;
     const dy = e.clientY - dragStart.value.y;
-    let lon = center.value[0] + dx * 0.5;
-    let lat = center.value[1] - dy * 0.5;
+    let lon = center.value[0] - dx * 0.5;
+    let lat = center.value[1] + dy * 0.5;
     lat = Math.max(-90, Math.min(90, lat));
     center.value = [lon, lat];
     dragStart.value = { x: e.clientX, y: e.clientY };
@@ -443,8 +443,8 @@ function onTouchMove(e) {
     const touch = e.touches[0];
     const dx = touch.clientX - dragStart.value.x;
     const dy = touch.clientY - dragStart.value.y;
-    let lon = center.value[0] + dx * 0.5;
-    let lat = center.value[1] - dy * 0.5;
+    let lon = center.value[0] - dx * 0.5;
+    let lat = center.value[1] + dy * 0.5;
     lat = Math.max(-90, Math.min(90, lat));
     center.value = [lon, lat];
     dragStart.value = { x: touch.clientX, y: touch.clientY };
