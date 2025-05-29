@@ -10,7 +10,7 @@
  *
  * 
  */
-import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { ref, computed, onMounted, nextTick, watch, markRaw } from "vue";
 import Box from "./Box.vue";
 import BaseIcon from "./atoms/BaseIcon.vue";
 import TableTest from "./components/vue-ui-table.vue";
@@ -63,6 +63,7 @@ import TestCursor from "./components/vue-ui-cursor.vue";
 import TestTrend from "./components/vue-ui-spark-trend.vue";
 import TestStrip from "./components/vue-ui-strip-plot.vue";
 import TestDumb from "./components/vue-ui-dumbbell.vue";
+import SomeTest from "./SomeTest.vue";
 
 const dataset = ref([
   {
@@ -1462,6 +1463,15 @@ const comps = ref([
     top: 50,
     component: "VueUiOnion",
     props: { config: { userOptions: { show: false } }, dataset: onionDataset },
+  },
+  {
+    id: 3,
+    width: 20,
+    height: 60,
+    left: 44,
+    top: 50,
+    component: markRaw(SomeTest),
+    props: { str: 'SOME TEST' },
   },
 ]);
 

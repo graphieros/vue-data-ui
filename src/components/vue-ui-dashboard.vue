@@ -1,12 +1,71 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, defineAsyncComponent } from 'vue';
 import pdf from '../pdf';
 import { useNestedProp } from "../useNestedProp";
 import { useConfig } from '../useConfig';
 import { createUid } from '../lib';
 
-// TODO: prevent default on all chart interactions involving mouse movements
-// TODO: find a way to make height of each item fit the content
+const builtInComponents = {
+    VueDataUi : defineAsyncComponent(() => import("../components/vue-data-ui.vue")),
+    VueUi3dBar : defineAsyncComponent(() => import("../components/vue-ui-3d-bar.vue")),
+    VueUiAccordion : defineAsyncComponent(() => import("../components/vue-ui-accordion.vue")),
+    VueUiAgePyramid : defineAsyncComponent(() => import("../components/vue-ui-age-pyramid.vue")),
+    VueUiAnnotator : defineAsyncComponent(() => import("../components/vue-ui-annotator.vue")),
+    VueUiCandlestick : defineAsyncComponent(() => import("../components/vue-ui-candlestick.vue")),
+    VueUiChestnut : defineAsyncComponent(() => import("../components/vue-ui-chestnut.vue")),
+    VueUiDigits : defineAsyncComponent(() => import("../components/vue-ui-digits.vue")),
+    VueUiDonut : defineAsyncComponent(() => import("../components/vue-ui-donut.vue")),
+    VueUiDonutEvolution : defineAsyncComponent(() => import("../components/vue-ui-donut-evolution.vue")),
+    VueUiDumbbell : defineAsyncComponent(() => import("../components/vue-ui-dumbbell.vue")),
+    VueUiFlow : defineAsyncComponent(() => import("../components/vue-ui-flow.vue")),
+    VueUiGalaxy : defineAsyncComponent(() => import("../components/vue-ui-galaxy.vue")),
+    VueUiGauge : defineAsyncComponent(() => import("../components/vue-ui-gauge.vue")),
+    VueUiHeatmap : defineAsyncComponent(() => import("../components/vue-ui-heatmap.vue")),
+    VueUiKpi : defineAsyncComponent(() => import("../components/vue-ui-kpi.vue")),
+    VueUiMiniLoader : defineAsyncComponent(() => import("../components/vue-ui-mini-loader.vue")),
+    VueUiMolecule : defineAsyncComponent(() => import("../components/vue-ui-molecule.vue")),
+    VueUiMoodRadar : defineAsyncComponent(() => import("../components/vue-ui-mood-radar.vue")),
+    VueUiNestedDonuts : defineAsyncComponent(() => import("../components/vue-ui-nested-donuts.vue")),
+    VueUiOnion : defineAsyncComponent(() => import("../components/vue-ui-onion.vue")),
+    VueUiParallelCoordinatePlot : defineAsyncComponent(() => import("../components/vue-ui-parallel-coordinate-plot.vue")),
+    VueUiQuadrant : defineAsyncComponent(() => import("../components/vue-ui-quadrant.vue")),
+    VueUiQuickChart : defineAsyncComponent(() => import("../components/vue-ui-quick-chart.vue")),
+    VueUiRadar : defineAsyncComponent(() => import("../components/vue-ui-radar.vue")),
+    VueUiRating : defineAsyncComponent(() => import("../components/vue-ui-rating.vue")),
+    VueUiRelationCircle : defineAsyncComponent(() => import("../components/vue-ui-relation-circle.vue")),
+    VueUiRings : defineAsyncComponent(() => import("../components/vue-ui-rings.vue")),
+    VueUiScatter : defineAsyncComponent(() => import("../components/vue-ui-scatter.vue")),
+    VueUiSkeleton : defineAsyncComponent(() => import("../components/vue-ui-skeleton.vue")),
+    VueUiSmiley : defineAsyncComponent(() => import("../components/vue-ui-smiley.vue")),
+    VueUiSparkHistogram : defineAsyncComponent(() => import("../components/vue-ui-sparkhistogram.vue")),
+    VueUiSparkStackbar : defineAsyncComponent(() => import("../components/vue-ui-sparkstackbar.vue")),
+    VueUiSparkTrend : defineAsyncComponent(() => import("../components/vue-ui-spark-trend.vue")),
+    VueUiSparkbar : defineAsyncComponent(() => import("../components/vue-ui-sparkbar.vue")),
+    VueUiSparkgauge : defineAsyncComponent(() => import('../components/vue-ui-sparkgauge.vue')),
+    VueUiSparkline : defineAsyncComponent(() => import("../components/vue-ui-sparkline.vue")),
+    VueUiStripPlot : defineAsyncComponent(() => import("../components/vue-ui-strip-plot.vue")),
+    VueUiTable : defineAsyncComponent(() => import("../components/vue-ui-table.vue")),
+    VueUiTableHeatmap : defineAsyncComponent(() => import("../components/vue-ui-table-heatmap.vue")),
+    VueUiTableSparkline : defineAsyncComponent(() => import("../components/vue-ui-table-sparkline.vue")),
+    VueUiThermometer : defineAsyncComponent(() => import("../components/vue-ui-thermometer.vue")),
+    VueUiTimer : defineAsyncComponent(() => import("../components/vue-ui-timer.vue")),
+    VueUiTiremarks : defineAsyncComponent(() => import("../components/vue-ui-tiremarks.vue")),
+    VueUiTreemap : defineAsyncComponent(() => import("../components/vue-ui-treemap.vue")),
+    VueUiVerticalBar : defineAsyncComponent(() => import("../components/vue-ui-vertical-bar.vue")),
+    VueUiWaffle : defineAsyncComponent(() => import("../components/vue-ui-waffle.vue")),
+    VueUiWheel : defineAsyncComponent(() => import("../components/vue-ui-wheel.vue")),
+    VueUiWordCloud : defineAsyncComponent(() => import("../components/vue-ui-word-cloud.vue")),
+    VueUiXy : defineAsyncComponent(() => import("../components/vue-ui-xy.vue")),
+    VueUiXyCanvas : defineAsyncComponent(() => import("../components/vue-ui-xy-canvas.vue")),
+    VueUiCarouselTable : defineAsyncComponent(() => import('../components/vue-ui-carousel-table.vue')),
+    VueUiGizmo : defineAsyncComponent(() => import('../components/vue-ui-gizmo.vue')),
+    VueUiStackbar : defineAsyncComponent(() => import('../components/vue-ui-stackbar.vue')),
+    VueUiBullet : defineAsyncComponent(() => import('../components/vue-ui-bullet.vue')),
+    VueUiFunnel : defineAsyncComponent(() => import('../components/vue-ui-funnel.vue')),
+    VueUiHistoryPlot : defineAsyncComponent(() => import('../components/vue-ui-history-plot.vue')),
+    VueUiCirclePack : defineAsyncComponent(() => import('../components/vue-ui-circle-pack.vue')),
+    VueUiWorld : defineAsyncComponent(() => import('../components/vue-ui-world.vue')),
+};
 
 const { vue_ui_dashboard: DEFAULT_CONFIG } = useConfig();
 
@@ -30,13 +89,21 @@ function toggleLock() {
     isLocked.value = !isLocked.value;
 }
 
-const gridSize = 20;
-const items = ref(props.dataset.map((item,i) => {
-    return {
+const gridSize = 1;
+const items = ref(props.dataset.map((item, i) => ({
+    ...item,
+    index: i
+})));
+
+const resolvedItems = computed(() =>
+    items.value.map(item => ({
         ...item,
-        index: i
-    }
-}));
+        resolvedComponent: typeof item.component === 'string'
+            ? builtInComponents[item.component]
+            : item.component
+    }))
+);
+
 const dragging = ref(null);
 const resizing = ref(null);
 const dragStart = ref({ x: 0, y: 0 });
@@ -297,7 +364,6 @@ defineExpose({
     getItemsPositions,
     toggleLock
 })
-
 </script>
 
 <template>
@@ -320,7 +386,7 @@ defineExpose({
                 <span v-else>PDF</span>
             </button>
         </div>
-        <div class="vue-ui-dashboard-container" ref="dashboardContainer" :id="`vue-ui-dashboard_${uid}`" :style="`border:${borderBoard}; sbackground:${boardColor}; aspect-ratio:${aspectRatio}`">
+        <div class="vue-ui-dashboard-container" ref="dashboardContainer" :id="`vue-ui-dashboard_${uid}`" :style="`border:${borderBoard}; background:${boardColor}; aspect-ratio:${aspectRatio}`">
             <div 
                 class="vue-ui-dashboard-grid-container" 
                 ref="container" 
@@ -332,7 +398,7 @@ defineExpose({
             >
                 <div class="vue-ui-dashboard-grid"></div>
                 <div
-                    v-for="(item, index) in items"
+                    v-for="(item, index) in resolvedItems"
                     :key="item.id"
                     :class="{'vue-ui-dashboard-grid-item': true, 'vue-ui-dashboard-grid-item--locked': isLocked }"
                     :style="{
@@ -342,7 +408,7 @@ defineExpose({
                         top: `${item.top}%`,
                         cursor: 'move',
                         boxShadow: changeIndex === index ? '0 6px 12px -3px rgba(0,0,0,0.3)' : '',
-                        zIndex: changeIndex === index ? items.length + 1 : item.index,
+                        zIndex: changeIndex === index ? resolvedItems.length + 1 : item.index,
                         backgroundColor: FINAL_CONFIG.style.item.backgroundColor
                     }"
                     @mousedown="startDrag(index)"
@@ -378,8 +444,15 @@ defineExpose({
                             @touchend="onTouchEnd"
                         ></div>
                     </template>
-
-                    <slot name="content" :item="item" :index="index" :left="item.left" :top="item.top" :height="item.height" :width="item.width"></slot>
+                    
+                    <component
+                        :is="item.resolvedComponent"
+                        v-bind="item.props"
+                        v-if="item.resolvedComponent"
+                    />
+                    <template v-else>
+                        <slot name="content" :item="item" :index="index" :left="item.left" :top="item.top" :height="item.height" :width="item.width"></slot>
+                    </template>
                 </div>
             </div>
         </div>
