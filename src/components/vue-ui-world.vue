@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
-import worldGeo from "../resources/worldGeo.json"
+import WORLD_DATA from "../resources/worldGeo.json"
 import { useConfig } from '../useConfig';
 import { applyDataLabel, convertColorToHex, convertCustomPalette, createCsvContent, createUid, darkenHexColor, dataLabel, downloadCsv, hasDeepProperty, interpolateColorHex, isFunction, lightenHexColor, palette, XMLNS } from '../lib';
 import { useNestedProp } from '../useNestedProp';
@@ -64,8 +64,11 @@ const isTooltip = ref(false);
 const tooltipContent = ref('');
 const step = ref(0);
 
+let worldGeo = WORLD_DATA;
+const { projections, getProjectedBounds, setupTerritories } = geo;
+
 function prepareConfig() {
-    const mergedConfig = useNestedProp({
+    let mergedConfig = useNestedProp({
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
@@ -95,6 +98,8 @@ function prepareConfig() {
     } else {
         mergedConfig.style.chart.dimensions.height = null;
     }
+
+    worldGeo = setupTerritories(mergedConfig, worldGeo);
 
     // --------------------------------------------------------------------
 
@@ -153,8 +158,6 @@ const sizes = computed(() => {
         winkelTripel: { width: width || 1000, height: height || 1000},
     }[projection.value];
 });
-
-const { projections, getProjectedBounds } = geo;
 
 const viewBox = computed(() => {
     const { minX, minY, width, height } = getProjectedBounds(projections[projection.value], worldGeo.features, sizes.value.width, sizes.value.height);

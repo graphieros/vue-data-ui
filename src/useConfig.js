@@ -5314,7 +5314,8 @@ export function useConfig() {
                     colors: {
                         min: '#E0E0E0',
                         max: null, // defaults to palette[0] if kept null
-                    }
+                    },
+                    showTaiwanAsPartOfChina: false,
                 },
                 tooltip: {
                     ...TOOLTIP,

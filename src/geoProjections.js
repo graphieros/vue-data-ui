@@ -114,7 +114,7 @@ const projections = {
     },
     aitoff([lon, lat], width, height, center) {
         if (!Math.sinc) {
-            Math.sinc = function(x) {
+            Math.sinc = function (x) {
                 return x === 0 ? 1 : Math.sin(Math.PI * x) / (Math.PI * x);
             };
         }
@@ -140,7 +140,7 @@ const projections = {
         const y = height / 2 - height / 2 * (Math.SQRT2 * Math.sin(φ) / denom) / 1.4142135623730951;
         return [x, y];
     },
-    bonne([lon, lat], width, height, center = [0,0]) {
+    bonne([lon, lat], width, height, center = [0, 0]) {
         const φ = 45 * Math.PI / 180;
         const [lon0, _lat0] = center;
         const λ = (lon - lon0) * Math.PI / 180;
@@ -196,7 +196,7 @@ const projections = {
             x = Math.sign(λ) * pi * (A * G_P2 + Math.sqrt(Math.max(0, A2 * G_P2 * G_P2 - P2_A2 * (G * G - P2)))) / P2_A2;
             y = Math.sign(φ) * pi * (P * Q - A * Math.sqrt(Math.max(0, (A2 + 1) * P2_A2 - Q * Q))) / P2_A2;
         }
-        const scale = (width/2) / pi * 0.98;
+        const scale = (width / 2) / pi * 0.98;
         const cx = width / 2, cy = height / 2;
         return [cx + x * scale, cy - y * scale];
     },
@@ -253,7 +253,7 @@ function geoToPath(geometry) {
     return '';
 }
 
-function getProjectedBounds(projection, features, width, height, center = [0,0]) {
+function getProjectedBounds(projection, features, width, height, center = [0, 0]) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const feature of features) {
         const geom = feature.geometry;
@@ -281,10 +281,50 @@ function getProjectedBounds(projection, features, width, height, center = [0,0])
     }
 }
 
+function mergeCountries(features, parent, child) {
+    const parentFeature = features.find(
+        f => (f.properties.admin === parent || f.properties.name === parent)
+    );
+    const childFeature = features.find(
+        f => (f.properties.admin === child || f.properties.name === child)
+    );
+    if (parentFeature && childFeature) {
+        if (parentFeature.geometry.type === 'Polygon') {
+            parentFeature.geometry = {
+                type: 'MultiPolygon',
+                coordinates: [parentFeature.geometry.coordinates]
+            };
+        }
+        if (childFeature.geometry.type === 'Polygon') {
+            parentFeature.geometry.coordinates.push(childFeature.geometry.coordinates);
+        } else if (childFeature.geometry.type === 'MultiPolygon') {
+            parentFeature.geometry.coordinates.push(...childFeature.geometry.coordinates);
+        }
+        features = features.filter(
+            f => !(f.properties.admin === child || f.properties.name === child)
+        );
+    }
+    return features
+}
+
+function setupTerritories(config, geoData) {
+    let features = Array.isArray(geoData)
+        ? geoData.map(f => ({ ...f }))
+        : (geoData.features ? geoData.features.map(f => ({ ...f })) : []);
+
+    if (config.style.chart.territory.showTaiwanAsPartOfChina) {
+        features = mergeCountries(features, 'China', 'Taiwan');
+    }
+    if (geoData.type === 'FeatureCollection') {
+        return { ...geoData, features };
+    }
+    return features;
+}
 
 const geo = {
     projections,
     getProjectedBounds,
+    setupTerritories
 }
 
 export default geo

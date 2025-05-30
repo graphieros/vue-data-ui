@@ -6735,7 +6735,8 @@ declare module "vue-data-ui" {
                     colors?: {
                         min?: string;
                         max?: string | null;
-                    }
+                    },
+                    showTaiwanAsPartOfChina?: boolean;
                 };
                 tooltip?: ChartTooltip & {
                     showMinimap?: boolean;
