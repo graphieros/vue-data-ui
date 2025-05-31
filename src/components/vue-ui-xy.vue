@@ -359,8 +359,8 @@
                             </defs>
                             <line
                                 v-if="serie.plots.length > 1"
-                                :x1="calcLinearProgression(serie.plots).x1"
-                                :x2="calcLinearProgression(serie.plots).x2"
+                                :x1="calcLinearProgression(serie.plots).x1 + calcRectWidth()"
+                                :x2="calcLinearProgression(serie.plots).x2 + calcRectWidth()"
                                 :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
                                 :y2="forceValidValue(calcLinearProgression(serie.plots).y2)"
                                 :stroke-width="1"
@@ -372,7 +372,7 @@
                                 v-if="serie.plots.length > 1"
                                 :data-cy="`xy-bar-progression-label-${i}`"
                                 text-anchor="middle"
-                                :x="calcLinearProgression(serie.plots).x2"
+                                :x="calcLinearProgression(serie.plots).x2 + calcRectWidth()"
                                 :y="calcLinearProgression(serie.plots).y2 - 6"
                                 :font-size="fontSizes.plotLabels"
                                 :fill="serie.color"
