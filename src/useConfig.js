@@ -4571,7 +4571,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 outline: `1px solid ${COLOR_WHITE}`,
                 selected: {
-                    backgroundColor: COLOR_BLUE,
+                    backgroundColor: "#1f77b4",
                     color: COLOR_WHITE
                 }
             },
@@ -4580,7 +4580,7 @@ export function useConfig() {
                     backgroundColor: '#f3f5f7',
                     color: COLOR_BLACK,
                     selectedCell: {
-                        backgroundColor: '#6375dd5b',
+                        backgroundColor: '#1f77b45b',
                         color: COLOR_BLACK
                     },
                     selectedNeighbors: {
@@ -4592,7 +4592,7 @@ export function useConfig() {
                     backgroundColor: COLOR_WHITE,
                     color: COLOR_BLACK,
                     selectedCell: {
-                        backgroundColor: '#6375dd5b',
+                        backgroundColor: '#1f77b45b',
                         color: COLOR_BLACK
                     },
                     selectedNeighbors: {
@@ -4605,7 +4605,7 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 border: '1px solid #CCCCCC',
-                accentColor: COLOR_BLUE
+                accentColor: '#1f77b4'
             },
             dropdowns: {
                 backgroundColor: COLOR_GREY_LIGHT,
@@ -4632,7 +4632,7 @@ export function useConfig() {
                     opacityDisabled: 0.5
                 },
                 navigationIndicator: {
-                    backgroundColor: COLOR_BLUE
+                    backgroundColor: '#1f77b4'
                 }
             },
             exportMenu: {
@@ -4654,7 +4654,7 @@ export function useConfig() {
                     color: COLOR_BLACK,
                     buttons: {
                         selected: {
-                            backgroundColor: COLOR_BLUE,
+                            backgroundColor: '#1f77b4',
                             color: COLOR_WHITE
                         },
                         unselected: {
@@ -4670,25 +4670,27 @@ export function useConfig() {
                         strokeWidth: 2
                     },
                     bar: {
-                        fill: '',
+                        fill: '#1f77b4',
                         stroke: COLOR_WHITE
                     },
                     line: {
-                        stroke: '#6376DD75',
+                        smooth: true,
+                        useArea: false,
+                        stroke: '#1f77b4',
                         strokeWidth: 4,
                         plot: {
-                            fill: '#22348f',
-                            stroke: COLOR_WHITE,
+                            fill: '#1f77b4',
+                            stroke: COLOR_WHITE, // DEPRECATED
                             strokeWidth: 1,
                             radius: {
                                 selected: 6,
                                 unselected: 4
                             }
                         },
-                        selector: {
-                            stroke: '#ccc',
-                            strokeWidth: 1,
-                            strokeDasharray: 5
+                        selector: { // DEPRECATED
+                            stroke: '#ccc', // DEPRECATED
+                            strokeWidth: 1, // DEPRECATED
+                            strokeDasharray: 5 // DEPRECATED
                         }
                     },
                     labels: {

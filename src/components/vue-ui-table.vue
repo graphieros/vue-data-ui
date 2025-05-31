@@ -67,13 +67,19 @@
                                 <span v-if="th.sum && !hasNaN[i]"
                                     style="display: flex; align-items:center; justify-content:flex-end;">
                                     <span v-html="icons.sum" style="margin-bottom:-4px; margin-right: 3px" />
-                                    {{ th.prefix }}
-                                    {{ Number(getSum(i).toFixed(th.decimals)).toLocaleString() }}
-                                    {{ th.suffix }}
+                                    {{ dataLabel({
+                                        p: th.prefix,
+                                        v: Number(getSum(i)),
+                                        s: th.suffix,
+                                        r: th.decimals
+                                    }) }}
                                     <span v-if="percentages[i] && th.percentageTo && !th.isPercentage"
                                         style="margin-left:3px">
-                                        ({{ isNaN(getSum(i) / getSum(percentages[i].referenceIndex)) ? '-' : (getSum(i)
-                                            / getSum(percentages[i].referenceIndex) * 100).toFixed(th.decimals) }}%)
+                                        ({{ isNaN(getSum(i) / getSum(percentages[i].referenceIndex)) ? '-' : dataLabel({
+                                            v: (getSum(i) / getSum(percentages[i].referenceIndex) * 100),
+                                            s: '%',
+                                            r: th.decimals
+                                        })}})
                                     </span>
                                 </span>
                             </th>
@@ -86,10 +92,12 @@
                                 :class="{ 'th-numeric': true, 'th-has-nan': hasNaN[i] }"
                                 :style="`background:${FINAL_CONFIG.style.th.backgroundColor};color:${FINAL_CONFIG.style.th.color};outline:${FINAL_CONFIG.style.th.outline}`">
                                 <span v-if="th.average && !hasNaN[i]">
-                                    ~ {{ th.prefix }}
-                                    {{ isNaN(getAverage(i)) ? '' :
-                                        Number(getAverage(i).toFixed(th.decimals)).toLocaleString() }}
-                                    {{ th.suffix }}
+                                    ~ {{ isNaN(getAverage(i)) ? '' : dataLabel({
+                                        p: th.prefix,
+                                        v: Number(getAverage(i)),
+                                        s: th.suffix,
+                                        r: th.decimals
+                                    })}}
                                 </span>
                             </th>
                         </tr>
@@ -280,28 +288,39 @@
 
                             <!-- PERCENTAGE -->
                             <span v-else-if="dataset.header[j].isPercentage">
-                                {{ Number((td * 100).toFixed(dataset.header[j].decimals)).toLocaleString() }}%
+                                {{ dataLabel({
+                                    v: Number(td * 100),
+                                    s: '%',
+                                    r: dataset.header[j].decimals,
+                                }) }}
                             </span>
 
                             <!-- NUMERIC VALUE WITH PERCENTAGE TO SUM OF ANOTHER COL -->
                             <span
                                 v-else-if="(percentages[j] && dataset.header[j].percentageTo && !dataset.header[j].isPercentage)"
                                 :class="{ 'td-nan': isNaN(Number(td)) }">
-                                {{ dataset.header[j].prefix }}
-                                {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` :
-                                    Number(td.toFixed(dataset.header[j].decimals)).toLocaleString() }}
-                                {{ dataset.header[j].suffix }}
-                                ({{ isNaN(Number(td)) ? '' : Number((td / getSum(percentages[j].referenceIndex) *
-                                    100).toFixed(dataset.header[j].decimals)).toLocaleString() }}%)
+                                {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` : dataLabel({
+                                    p: dataset.header[j].prefix,
+                                    v: Number(td),
+                                    s: dataset.header[j].suffix,
+                                    r: dataset.header[j].decimals
+                                }) }}
+                                ({{ isNaN(Number(td)) ? '' : dataLabel({
+                                    v: Number((td / getSum(percentages[j].referenceIndex) * 100)),
+                                    s: '%',
+                                    r: dataset.header[j].decimals
+                                })}})
                             </span>
 
                             <!-- NUMERIC -->
                             <span v-else-if="dataset.header[j].type === constants.NUMERIC"
                                 :class="{ 'td-nan': isNaN(Number(td)) }">
-                                {{ dataset.header[j].prefix }}
-                                {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` :
-                                    Number(td.toFixed(dataset.header[j].decimals)).toLocaleString() }}
-                                {{ dataset.header[j].suffix }}
+                                {{ isNaN(Number(td)) ? `${td} is not ${constants.NUMERIC}` : dataLabel({
+                                    p: dataset.header[j].prefix,
+                                    v: Number(td.toFixed(dataset.header[j].decimals)),
+                                    s: dataset.header[j].suffix,
+                                    r: dataset.header[j].decimals
+                                }) }}
                             </span>
 
                             <!-- ALL OTHER -->
@@ -437,11 +456,12 @@
 
         <!-- CHART MODAL -->
         <div class="vue-ui-table-chart-modal" v-if="showChart && canChart"
-            :style="`top:${clientY}px; left:${clientX}px;background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
-            <button class="close-chart-modal" @click="showChart = false"
+            :style="`width: ${modalWidth}px;top:${clientY}px; left:${clientX}px;background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
+            <button style="z-index: 1" class="close-chart-modal" @click="showChart = false"
                 :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
                 ✖
             </button>
+
             <div class="chart-modal-options">
                 <button v-if="availableDonutCategories.length" @click="showDonutOptions = true" v-html="icons.donut"
                     :class="{ 'is-active-chart': chart.type === constants.DONUT || showDonutOptions }"
@@ -452,20 +472,6 @@
                 <button @click="chart.type = constants.BAR; showDonutOptions = false" v-html="icons.bar"
                     :class="{ 'is-active-chart': chart.type === constants.BAR && !showDonutOptions }"
                     :style="`background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
-            </div>
-
-            <!-- CHART TITLE -->
-            <div style="margin-bottom:12px">
-                <b>{{ dataset.header[currentSelectionSpan.col].name }}
-                    <span
-                        v-if="dataset.header[currentSelectionSpan.col].isPercentage && dataset.header[currentSelectionSpan.col].percentageTo">
-                        / {{ dataset.header[percentages[currentSelectionSpan.col].referenceIndex].name }}
-                    </span>
-                    <span v-if="chart.type === constants.DONUT && selectedDonutCategory && selectedDonutCategory.name">
-                        {{ FINAL_CONFIG.translations.by }}
-                        {{ selectedDonutCategory.name }}
-                    </span>
-                </b>
             </div>
 
             <div style="width:100%; height: fit-content; cursor:move" ref="chartModal">
@@ -500,129 +506,11 @@
 
                 <!-- BAR | LINE CHARTS -->
                 <template v-if="[constants.BAR, constants.LINE].includes(chart.type) && !showDonutOptions">
-                    <svg :viewBox="`0 0 ${chart.width} ${chart.height}`" class="vue-ui-table-chart-svg"
-                        :style="`background:${FINAL_CONFIG.style.chart.layout.backgroundColor}`">
-                        <defs>
-                            <marker id="arrowhead" :markerWidth="FINAL_CONFIG.style.chart.layout.progression.arrowSize"
-                                :markerHeight="FINAL_CONFIG.style.chart.layout.progression.arrowSize" refX="0"
-                                :refY="FINAL_CONFIG.style.chart.layout.progression.arrowSize / 2" orient="auto">
-                                <polygon
-                                    :points="`0 0, ${FINAL_CONFIG.style.chart.layout.progression.arrowSize} ${FINAL_CONFIG.style.chart.layout.progression.arrowSize / 2}, 0 ${FINAL_CONFIG.style.chart.layout.progression.arrowSize}`"
-                                    :fill="FINAL_CONFIG.style.chart.layout.progression.stroke" />
-                            </marker>
-                        </defs>
-
-                        <!-- X & Y AXIS -->
-                        <g>
-                            <line :x1="0" :x2="chart.width" :y1="chartData.zero" :y2="chartData.zero"
-                                :stroke="FINAL_CONFIG.style.chart.layout.axis.stroke"
-                                :stroke-width="FINAL_CONFIG.style.chart.layout.axis.strokeWidth"
-                                stroke-linecap="round" />
-                            <line :x1="0" :x2="0" :y1="0" :y2="chart.height"
-                                :stroke="FINAL_CONFIG.style.chart.layout.axis.stroke"
-                                :stroke-width="FINAL_CONFIG.style.chart.layout.axis.strokeWidth"
-                                stroke-linecap="round" />
-                        </g>
-
-                        <!-- LINE SELECTOR INDICATOR -->
-                        <template v-if="chart.type === constants.LINE">
-                            <g v-for="(plot, i) in chartData.plots" :key="`trap_fill_${i}`">
-                                <rect :x="i * chartData.slot" :y="0" :width="chartData.slot" :height="chart.height"
-                                    :fill="selectedPlot === i ? 'rgba(0,0,0,0.03)' : 'transparent'" />
-                            </g>
-                        </template>
-
-                        <g v-for="(plot, i) in chartData.plots" :key="`plot_${i}`">
-
-                            <!-- BAR VARIANT -->
-                            <template v-if="chart.type === constants.BAR">
-                                <linearGradient id="barGradientSelected" x2="0%" y2="100%">
-                                    <stop offset="0.2" stop-color="#6376DD" />
-                                    <stop offset="1" stop-color="#6376DD80" />
-                                </linearGradient>
-                                <linearGradient id="barGradientSelectedNeg" x2="0%" y2="100%">
-                                    <stop offset="0.2" stop-color="#6376DD80" />
-                                    <stop offset="1" stop-color="#6376DD" />
-                                </linearGradient>
-                                <linearGradient id="barGradient" x2="0%" y2="100%">
-                                    <stop offset="0.2" stop-color="#6376DDB3" />
-                                    <stop offset="1" stop-color="#6376DD66" />
-                                </linearGradient>
-                                <linearGradient id="barGradientNeg" x2="0%" y2="100%">
-                                    <stop offset="0.2" stop-color="#6376DD66" />
-                                    <stop offset="1" stop-color="#6376DDB3" />
-                                </linearGradient>
-                                <rect :x="plot.x - chartData.slot / 2"
-                                    :y="chartData.isAllNegative ? 0 : calcRectY(plot.value, plot.y)"
-                                    :height="plot.value >= 0 ? chartData.zero - plot.y : chartData.isAllNegative ? plot.y : plot.y - chartData.zero"
-                                    :width="chartData.slot"
-                                    :fill="FINAL_CONFIG.style.chart.layout.bar.fill ? FINAL_CONFIG.style.chart.layout.bar.fill : selectedPlot === i ? plot.value >= 0 ? 'url(#barGradientSelected)' : 'url(#barGradientSelectedNeg)' : plot.value >= 0 ? 'url(#barGradient)' : 'url(#barGradient)'"
-                                    :stroke="FINAL_CONFIG.style.chart.layout.bar.stroke" stroke-width="1" />
-                                <foreignObject v-if="selectedPlot === i"
-                                    :x="plot.x - (chartData.slot < 100 ? 50 : chartData.slot / 2)"
-                                    :y="plot.value >= 0 ? plot.y - 32 : plot.y + 4" height="20"
-                                    :width="chartData.slot < 100 ? 100 : chartData.slot" style="overflow:visible">
-                                    <div
-                                        :style="`width:100%;text-align:center;font-size:20px;color:${FINAL_CONFIG.style.chart.layout.labels.color}`">
-                                        {{ plot.prefix }}
-                                        {{
-                                            Number(plot.value.toFixed(dataset.header[currentSelectionSpan.col].decimals)).toLocaleString()
-                                        }}
-                                        {{ plot.suffix }}
-                                    </div>
-                                </foreignObject>
-                            </template>
-
-                            <!-- LINE VARIANT -->
-                            <template v-if="chart.type === constants.LINE">
-                                <line v-if="i + 1 < chartData.plots.length" :x1="plot.x" :y1="plot.y"
-                                    :x2="chartData.plots[i + 1].x" :y2="chartData.plots[i + 1].y"
-                                    :stroke-width="FINAL_CONFIG.style.chart.layout.line.strokeWidth"
-                                    :stroke="FINAL_CONFIG.style.chart.layout.line.stroke" />
-                                <line v-if="selectedPlot === i" :x1="plot.x" :y1="plot.y" :x2="plot.x"
-                                    :y2="chart.height" :stroke="FINAL_CONFIG.style.chart.layout.line.selector.stroke"
-                                    :stroke-width="FINAL_CONFIG.style.chart.layout.line.selector.strokeWidth"
-                                    :stroke-dasharray="FINAL_CONFIG.style.chart.layout.line.selector.strokeDasharray" />
-                                <circle :cx="plot.x" :cy="plot.y"
-                                    :r="selectedPlot === i ? FINAL_CONFIG.style.chart.layout.line.plot.radius.selected : FINAL_CONFIG.style.chart.layout.line.plot.radius.unselected"
-                                    :fill="FINAL_CONFIG.style.chart.layout.line.plot.fill"
-                                    :stroke="FINAL_CONFIG.style.chart.layout.line.plot.stroke"
-                                    :stroke-width="FINAL_CONFIG.style.chart.layout.line.plot.strokeWidth" />
-                                <foreignObject v-if="selectedPlot === i"
-                                    :x="plot.x - (chartData.slot < 100 ? 50 : chartData.slot / 2)" :y="placeLabelOnTopOrBottom({
-                                        previousPlot: chartData.plots[i - 1],
-                                        currentPlot: plot,
-                                        nextPlot: chartData.plots[i + 1]
-                                    })" height="20" :width="chartData.slot < 100 ? 100 : chartData.slot"
-                                    style="overflow:visible">
-                                    <div
-                                        :style="`width:100%;text-align:center;font-size:20px;color:${FINAL_CONFIG.style.chart.layout.labels.color}`">
-                                        {{ plot.prefix }}
-                                        {{
-                                            Number(plot.value.toFixed(dataset.header[currentSelectionSpan.col].decimals)).toLocaleString()
-                                        }}
-                                        {{ plot.suffix }}
-                                    </div>
-                                </foreignObject>
-                            </template>
-                        </g>
-
-                        <!-- MOUSE TRAPS -->
-                        <g v-for="(_, i) in chartData.plots" :key="`trap_${i}`">
-                            <rect :x="i * chartData.slot" :y="0" :width="chartData.slot" :height="chart.height"
-                                fill="transparent" @mouseenter="selectedPlot = i"
-                                @mouseleave="selectedPlot = undefined" />
-                        </g>
-
-                        <!-- PROGRESSION LINE -->
-                        <line v-if="chartData.progression && chartData.plots.length > 2" :x1="chartData.progression.x1"
-                            :y1="chartData.progression.y1" :x2="chartData.progression.x2" :y2="chartData.progression.y2"
-                            :stroke="FINAL_CONFIG.style.chart.layout.progression.stroke"
-                            :stroke-width="FINAL_CONFIG.style.chart.layout.progression.strokeWidth"
-                            :stroke-dasharray="FINAL_CONFIG.style.chart.layout.progression.strokeDasharray"
-                            marker-end="url(#arrowhead)" />
-                    </svg>
-                    <div v-if="chartData.plots.length >= 2" class="chart-trend"
+                    <div style="width: 100%; margin-bottom: 12px">
+                        <VueUiXy :dataset="chartData.xyDatasetLine" :config="chartData.xyConfig" v-if="chart.type === constants.LINE"/>
+                        <VueUiXy :dataset="chartData.xyDatasetBar" :config="chartData.xyConfig" v-if="chart.type === constants.BAR"/>
+                    </div>
+                    <div v-if="currentSelectionSpan.rows.length >= 2" class="chart-trend"
                         :style="`color:${FINAL_CONFIG.style.chart.modal.color}`">
                         <span>---</span> Trend: {{ ((chartData.progression.trend) * 100).toFixed(1) }} %
                     </div>
@@ -630,61 +518,8 @@
 
                 <!-- DONUT CHART -->
                 <template v-if="[constants.DONUT].includes(chart.type) && !showDonutOptions">
-                    <svg viewBox="0 0 100 100"
-                        :style="`max-width:100%; overflow: visible; padding: 0 24px;background:${FINAL_CONFIG.style.chart.layout.backgroundColor}`"
-                        class="vue-ui-table-donut-chart">
-                        <path v-for="(arc, i) in currentDonut" :key="`arc_${i}`" :d="arc.path"
-                            :stroke="`${arc.color}CC`" :stroke-width="20" fill="none" />
-
-                        <foreignObject v-for="(arc, i) in currentDonut" :key="`text_marker_${i}`"
-                            :x="calcDonutMarkerLabelPositionX(arc) - 15" :y="arc.center.endY - 15" height="30" width="30"
-                            style="overflow:visible; display:flex;align-items:center;justify-content:center">
-                            <div v-if="isArcBigEnough(arc)" class="vue-ui-table-donut-label"
-                                :style="`color:${FINAL_CONFIG.style.chart.layout.labels.color}`">
-                                <b>{{ displayArcPercentage(arc, currentDonut) }}</b>
-                                <span class="vue-ui-table-donut-label-name">{{ arc.name }}</span>
-                            </div>
-                        </foreignObject>
-
-                        <text :x="50" :y="42" text-anchor="middle" font-size="6"
-                            :fill="FINAL_CONFIG.style.chart.layout.labels.color">
-                            {{ FINAL_CONFIG.translations.total }}
-                        </text>
-                        <text :x="50" :y="48" text-anchor="middle" font-size="4"
-                            :fill="FINAL_CONFIG.style.chart.layout.labels.color">
-                            {{ dataset.header[currentSelectionSpan.col].prefix }}
-                            {{ donutHollowLabels.total }}
-                            {{ dataset.header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
-                            {{ dataset.header[currentSelectionSpan.col].suffix }}
-                        </text>
-                        <text :x="50" :y="56" text-anchor="middle" font-size="6"
-                            :fill="FINAL_CONFIG.style.chart.layout.labels.color">
-                            {{ FINAL_CONFIG.translations.average }}
-                        </text>
-                        <text :x="50" :y="62" text-anchor="middle" font-size="4"
-                            :fill="FINAL_CONFIG.style.chart.layout.labels.color">
-                            {{ dataset.header[currentSelectionSpan.col].prefix }}
-                            {{ donutHollowLabels.average }}
-                            {{ dataset.header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
-                            {{ dataset.header[currentSelectionSpan.col].suffix }}
-                        </text>
-                    </svg>
-
-                    <!-- DONUT LEGEND  -->
-                    <div class="vue-ui-table-donut-legend">
-                        <div v-for="(legendItem, i) in currentDonut.filter(c => c.value > 0)"
-                            class="vue-ui-table-donut-legend-item" :key="`donut_legend_${i}`"
-                            :style="`color:${FINAL_CONFIG.style.chart.layout.labels.color}`">
-                            <span :style="`color:${legendItem.color}`">●</span>
-                            <span>{{ legendItem.name }} : </span>
-                            <b>
-                                {{ dataset.header[currentSelectionSpan.col].prefix }}
-                                {{ getDonutLegendValue(legendItem.absoluteValue) }}
-                                {{ dataset.header[currentSelectionSpan.col].isPercentage ? '%' : '' }}
-                                {{ dataset.header[currentSelectionSpan.col].suffix }}
-                            </b>
-                            <span>({{ (legendItem.proportion * 100).toFixed(1) }}%)</span>
-                        </div>
+                    <div style="width: 100%; margin-bottom: 32px">
+                        <VueUiDonut :dataset="currentDonut" :config="chartData.donutConfig"/>
                     </div>
                 </template>
             </div>
@@ -694,8 +529,22 @@
 </template>
 
 <script>
-import { makeDonut, treeShake, palette, convertColorToHex, convertConfigColors, calcLinearProgression, createCsvContent, downloadCsv } from "../lib";
+import { 
+    adaptColorToBackground,
+    calcLinearProgression, 
+    convertColorToHex, 
+    convertConfigColors, 
+    createCsvContent,
+    dataLabel, 
+    darkenHexColor, 
+    downloadCsv, 
+    lightenHexColor, 
+    palette, 
+    treeShake,
+} from "../lib";
 import { useConfig } from "../useConfig";
+import VueUiXy from "./vue-ui-xy.vue";
+import VueUiDonut from "./vue-ui-donut.vue";
 
 export default {
     name: "vue-ui-table",
@@ -713,6 +562,7 @@ export default {
             }
         }
     },
+    components: { VueUiXy, VueUiDonut },
     data() {
         const uid = `vue-ui-table-${Math.random()}`;
         return {
@@ -743,6 +593,10 @@ export default {
             },
             clientX: 100,
             clientY: 100,
+            dragOffsetX: 0,
+            dragOffsetY: 0,
+            modalWidth: 400,
+            modalHeight: 200,
             cssClass: {
                 CELL: "smart-td-selected",
                 FIRST_TD: "smart-td-selected-first",
@@ -911,7 +765,6 @@ export default {
         },
         chartData() {
             if (!this.canChart) return [];
-
             const height = 316;
             const width = 512;
             const items = this.currentSelectionSpan.rows.length;
@@ -919,11 +772,121 @@ export default {
             const max = Math.max(...this.currentSelectionSpan.rows.map(row => row.value));
             const min = Math.min(...this.currentSelectionSpan.rows.map(row => row.value));
 
+            const hasPercentageTo = this.dataset.header[this.currentSelectionSpan.col].isPercentage && this.dataset.header[this.currentSelectionSpan.col].percentageTo;
+            const isDonut = this.chart.type === this.constants.DONUT && this.selectedDonutCategory && this.selectedDonutCategory.name;
+
+            const title = this.dataset.header[this.currentSelectionSpan.col].name + (hasPercentageTo ? ` / ${this.dataset.header[this.percentages[this.currentSelectionSpan.col].referenceIndex].name}` : '') + (isDonut ? ` ${this.FINAL_CONFIG.translations.by} ${this.selectedDonutCategory.name}` : '');
+
+            const prefix = this.dataset.header[this.currentSelectionSpan.col].prefix;
+            const suffix = this.dataset.header[this.currentSelectionSpan.col].suffix;
+
+            const xyDatasetLine = [
+                {
+                    name: title,
+                    series: this.currentSelectionSpan.rows.map(r => r.value),
+                    type: 'line',
+                    useProgression: true,
+                    smooth: this.FINAL_CONFIG.style.chart.layout.line.smooth,
+                    color: this.FINAL_CONFIG.style.chart.layout.line.stroke,
+                    useArea: this.FINAL_CONFIG.style.chart.layout.line.useArea
+                }
+            ]
+            const xyDatasetBar = [
+                {
+                    name: title,
+                    series: this.currentSelectionSpan.rows.map(r => r.value),
+                    type: 'bar',
+                    useProgression: true,
+                    color: this.FINAL_CONFIG.style.chart.layout.bar.fill
+                }
+            ]
+
+            const bg = this.FINAL_CONFIG.style.chart.modal.backgroundColor;
+            const textColor = this.adaptColorToBackground(bg)
+            const rounding = this.dataset.header[this.currentSelectionSpan.col].decimals;
+
+            const xyConfig = {
+                chart: {
+                    backgroundColor: bg,
+                    color: textColor,
+                    labels: {
+                        fontSize: 18,
+                        prefix,
+                        suffix
+                    },
+                    grid: {
+                        stroke: lightenHexColor(textColor, 0.5),
+                        labels: {
+                            xAxisLabels: { show: false },
+                        }
+                    },
+                    highlighter: {
+                        color: textColor,
+                    },
+                    legend: {
+                        color: textColor,
+                    },
+                    padding: {
+                        left: 72,
+                        bottom: 24,
+                        top: 36
+                    },
+                    title: {
+                        text: title,
+                        color: textColor,
+                        fontSize: 18,
+                    },
+                    tooltip: {
+                        showTimeLabel: false,
+                        backgroundOpacity: 30,
+                        color: textColor,
+                        backgroundColor: bg,
+                        showPercentage: false,
+                        roundingValue: rounding
+                    },
+                    userOptions: {
+                        position: 'left',
+                        buttons: {
+                            pdf: false,
+                            csv: false,
+                            table: false,
+                            annotator: false
+                        }
+                    },
+                    zoom: { show: false },
+                },
+                line: {
+                    labels: {
+                        show: true,
+                        color: textColor,
+                        rounding
+                    },
+                    dot: {
+                        useSerieColor: false,
+                        fill: this.FINAL_CONFIG.style.chart.layout.line.plot.fill,
+                        strokeWidth: this.FINAL_CONFIG.style.chart.layout.line.plot.strokeWidth
+                    }
+                },
+                bar: {
+                    useGradient: false,
+                    border: {
+                        useSerieColor: false,
+                        stroke: this.FINAL_CONFIG.style.chart.layout.bar.stroke,
+                        strokeWidth: this.FINAL_CONFIG.style.chart.layout.bar.strokeWidth
+                    },
+                    labels: {
+                        show: true,
+                        color: textColor,
+                        rounding
+                    }
+                }
+            }
+
             const relativeZero = min >= 0 ? 0 : Math.abs(min);
             const absoluteMax = max + relativeZero;
-            const isAllNegative = max < 0 && min < 0;
 
             const isPercentage = this.dataset.header[this.currentSelectionSpan.col].isPercentage;
+
             const plots = this.currentSelectionSpan.rows.map((row, i) => {
                 return {
                     x: (slot * i) + slot / 2,
@@ -936,15 +899,93 @@ export default {
                 }
             });
 
-            const zero = height - (height * (relativeZero / absoluteMax));
-
-            return { isAllNegative, zero, plots, slot, progression: plots.length >= 2 ? this.calcLinearProgression(plots) : false };
-        },
-        donutHollowLabels() {
-            return {
-                total: Number((this.currentDonut.map(el => el.absoluteValue).reduce((a, b) => a + b, 0) * (this.dataset.header[this.currentSelectionSpan.col].isPercentage ? 100 : 1)).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
-                average: Number((this.currentDonut.map(el => el.absoluteValue).reduce((a, b) => a + b, 0) / this.currentSelectionSpan.rows.length * (this.dataset.header[this.currentSelectionSpan.col].isPercentage ? 100 : 1)).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString()
+            const donutConfig = {
+                userOptions: {
+                        position: 'left',
+                        buttons: {
+                            pdf: false,
+                            csv: false,
+                            table: false,
+                            annotator: false
+                        }
+                    },
+                style: {
+                    chart: {
+                        backgroundColor: bg,
+                        color: textColor,
+                        layout: {
+                            curvedMarkers: true,
+                            donut: {
+                                strokeWidth: 64,
+                            },
+                            labels: {
+                                dataLabels: {
+                                    suffix: isPercentage ? '%' : '',
+                                    prefix,
+                                },
+                                value: {
+                                    rounding
+                                },
+                                percentage: {
+                                    color: textColor,
+                                    rounding
+                                },
+                                name: {
+                                    color: textColor
+                                },
+                                hollow: {
+                                    average: {
+                                        color: textColor,
+                                        text: this.FINAL_CONFIG.translations.average,
+                                        value: {
+                                            color: textColor
+                                        }
+                                    },
+                                    total: {
+                                        color: textColor,
+                                        offsetY: -12,
+                                        text: this.FINAL_CONFIG.translations.total,
+                                        value: {
+                                            color: textColor,
+                                            offsetY: -12
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        legend: {
+                            backgroundColor: bg,
+                            color: textColor,
+                            roundingValue: rounding,
+                            roundingPercentage: rounding
+                        },
+                        padding: {
+                            left: 12,
+                            right: 12
+                        },
+                        title: {
+                            text: title,
+                            color: textColor,
+                            fontSize: 18,
+                        },
+                        tooltip: {
+                            backgroundOpacity: 30,
+                            color: textColor,
+                            backgroundColor: bg,
+                            roundingValue: rounding,
+                            roundingValue: rounding
+                        },
+                    }
+                },
             }
+
+            return { 
+                donutConfig, 
+                xyConfig, 
+                xyDatasetLine, 
+                xyDatasetBar, 
+                progression: plots.length >= 2 ? this.calcLinearProgression(plots) : false 
+            };
         },
         hasNumericTypes() {
             return this.dataset.header.map(h => h.type).includes(this.constants.NUMERIC);
@@ -1011,22 +1052,25 @@ export default {
     },
     methods: {
         // lib
-        treeShake,
-        makeDonut,
+        adaptColorToBackground,
         convertColorToHex,
         convertConfigColors,
         createCsvContent,
+        darkenHexColor,
+        dataLabel,
         downloadCsv,
+        lightenHexColor,
+        treeShake,
         // specific
         applyDonutOption() {
             const donutSet = this.selectedDonutCategory.options.map((option, i) => {
                 return {
                     name: option,
                     color: this.palette[i] || this.palette[i % this.palette.length],
-                    value: this.visibleRows
+                    values: [this.visibleRows
                         .filter((row, i) => row.td[this.selectedDonutCategory.index] === option && this.currentSelectionSpan.rows.map(row => row.index).includes(i))
                         .map(row => row.td[this.currentSelectionSpan.col])
-                        .reduce((a, b) => Math.abs(a) + Math.abs(b), 0),
+                        .reduce((a, b) => Math.abs(a) + Math.abs(b), 0)],
                     absoluteValue: this.visibleRows
                         .filter((row, i) => row.td[this.selectedDonutCategory.index] === option && this.currentSelectionSpan.rows.map(row => row.index).includes(i))
                         .map(row => row.td[this.currentSelectionSpan.col])
@@ -1034,7 +1078,7 @@ export default {
                 }
             }).sort((a, b) => b.value - a.value);
 
-            this.currentDonut = this.makeDonut({ series: donutSet }, 50, 50, 30, 30);
+            this.currentDonut = donutSet
             this.$nextTick(() => {
                 this.chart.type = this.constants.DONUT;
                 this.showDonutOptions = false;
@@ -1691,21 +1735,26 @@ export default {
         dragMouseDown(e) {
             e = e || window.event;
             e.preventDefault();
+            const chartModal = this.$refs.chartModal;
+            const rect = chartModal.getBoundingClientRect();
+            this.dragOffsetX = e.clientX - rect.left;
+            this.dragOffsetY = e.clientY - rect.top;
+            this.modalWidth = rect.width;
+            this.modalHeight = rect.height;
+
             document.onmouseup = this.closeDragElement;
             document.onmousemove = this.elementDrag;
         },
         elementDrag(e) {
             if (this.rafId) return;
-            this.rafId = window.requestAnimationFrame(() => this.onElementDrag(e));
-        },
-        onElementDrag(e) {
-            e = e || window.event;
-            e.preventDefault();
             const chartModal = this.$refs.chartModal;
             const rect = chartModal.getBoundingClientRect();
-            this.clientX = e.clientX - (rect.width / 2);
-            this.clientY = e.clientY - (rect.height / 2);
-            this.rafId = null;
+            this.clientX = e.clientX - this.dragOffsetX;
+            this.clientY = e.clientY - this.dragOffsetY;
+            if (this.clientX < 0) this.clientX = 0;
+            if (this.clientX + rect.width > window.innerWidth) this.clientX = window.innerWidth - rect.width - 48
+            if (this.clientY < 0) this.clientY = 0;
+            if (this.clientY + rect.height > window.innerHeight) this.clientY = window.innerHeight - rect.height - 24;
         },
     }
 }
@@ -1882,13 +1931,13 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main .th-button-active {
-    background: radial-gradient(at top, #968bf1, #6376DD);
+    background: radial-gradient(at top, #62b5f0, #1f77b4);
     color: white;
 }
 
 .vue-ui-table-main .th-button-active:hover,
 .vue-ui-table-main .th-button-active:focus {
-    outline: 3px solid #6375dd7a;
+    outline: 3px solid #1f77b47a;
 }
 
 .vue-ui-table-main .th-date {
@@ -2082,7 +2131,7 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main th.col-selector--selected {
-    background: radial-gradient(at top left, #9586eb, #6376DD);
+    background: radial-gradient(at top left, #62b5f0, #1f77b4);
     color: white;
 }
 
@@ -2253,7 +2302,7 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main td:focus {
-    outline: 3px solid #202d7470;
+    outline: 3px solid #1f77b490;
 }
 
 .vue-ui-table-main .vue-ui-table-export-hub {

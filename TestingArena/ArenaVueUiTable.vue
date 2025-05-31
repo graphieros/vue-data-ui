@@ -224,5 +224,8 @@ onMounted(() => {
 <template>
     <div style="background: white">
         <LocalVueUiTable :dataset="dataset"/>
+        <LocalVueDataUi component="VueUiTable" :dataset="dataset"/>
+        <VueUiTable :dataset="dataset"/>
+        <VueDataUi component="VueUiTable" :dataset="dataset"/>
     </div>
 </template>

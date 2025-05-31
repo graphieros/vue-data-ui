@@ -4500,6 +4500,8 @@ declare module "vue-data-ui" {
                         stroke?: string;
                     };
                     line?: {
+                        smooth?: boolean;
+                        useArea?: boolean;
                         stroke?: string;
                         strokeWidth?: number;
                         plot?: {
