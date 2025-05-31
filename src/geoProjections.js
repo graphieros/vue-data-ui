@@ -237,22 +237,6 @@ const projections = {
     },
 };
 
-function geoToPath(geometry) {
-    const drawPoly = coords =>
-        coords.map(
-            ring => {
-                const pts = ring.map(([lon, lat]) => project([lon, lat]));
-                const validPts = pts.filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
-                if (validPts.length < 3) return '';
-                return 'M' + validPts.map(([x, y]) => `${x},${y}`).join('L') + 'Z';
-            }
-        ).filter(Boolean).join(' ');
-    if (geometry.type === 'Polygon') return drawPoly(geometry.coordinates);
-    if (geometry.type === 'MultiPolygon')
-        return geometry.coordinates.map(drawPoly).join(' ');
-    return '';
-}
-
 function getProjectedBounds(projection, features, width, height, center = [0, 0]) {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const feature of features) {
