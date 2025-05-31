@@ -2855,7 +2855,7 @@ export default {
           try {
             JsPDF = (await import("jspdf")).default;
           } catch (e) {
-            throw new Error("jspdf is not installed.");
+            throw new Error("jspdf is not installed. Run npm install jspdf");
           }
 
           const pngDataUrl = await domToPng({

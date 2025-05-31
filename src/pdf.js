@@ -8,7 +8,7 @@ export default async function pdf({ domElement, fileName, scale = 2, options = {
     try {
         JsPDF = (await import('jspdf')).default;
     } catch (e) {
-        return Promise.reject('jspdf is not installed.')
+        return Promise.reject('jspdf is not installed. Run npm install jspdf')
     }
 
     const a4 = {
