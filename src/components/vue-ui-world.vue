@@ -191,6 +191,20 @@ function project([lon, lat]) {
 }
 
 function geoToPath(geometry) {
+    //----------------------------------------------------------------------------------------------
+    // NOTE: Should we decide to use d3-geo in the future:
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // if (projection.value === 'globe') {
+        //     const globeProj = geoOrthographic()
+        //         .translate([sizes.value.width / 2, sizes.value.height / 2])
+        //         .scale(Math.min(sizes.value.width, sizes.value.height) / 2 * 0.95)
+        //         .rotate([-center.value[0], -center.value[1]])
+        //         .clipAngle(90);
+        //     const pathGen = geoPath(globeProj);
+        //     return pathGen(geometry);
+        // }
+    //----------------------------------------------------------------------------------------------
+    
     const drawPoly = coords =>
         coords.map(
             ring => {
