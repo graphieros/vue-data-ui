@@ -457,6 +457,11 @@
         <!-- CHART MODAL -->
         <div class="vue-ui-table-chart-modal" v-if="showChart && canChart"
             :style="`width: ${modalWidth}px;top:${clientY}px; left:${clientX}px;background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
+            <div class="modal-drag-handle" @mousedown="dragMouseDown">
+                <!-- Your modal title or drag icon here -->
+                <span v-html="icons.grip"/>
+                <button class="close-chart-modal" @click="showChart = false">✖</button>
+            </div>
             <button style="z-index: 1" class="close-chart-modal" @click="showChart = false"
                 :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
                 ✖
@@ -474,7 +479,7 @@
                     :style="`background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
             </div>
 
-            <div style="width:100%; height: fit-content; cursor:move" ref="chartModal">
+            <div style="width:100%; height: fit-content" ref="chartModal">
                 <!-- DONUT OPTIONS -->
                 <div v-if="showDonutOptions && availableDonutCategories.length"
                     :style="`background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
@@ -685,8 +690,6 @@ export default {
             if (hasChart) {
                 this.$nextTick(() => {
                     this.closeDragElement();
-                    const chart = this.$refs.chartModal;
-                    chart.onmousedown = this.dragMouseDown;
                 })
             }
         },
@@ -817,6 +820,7 @@ export default {
                     grid: {
                         stroke: lightenHexColor(textColor, 0.5),
                         labels: {
+                            color: textColor,
                             xAxisLabels: { show: false },
                         }
                     },
@@ -1009,7 +1013,8 @@ export default {
                 sortZA: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 21v-5c0 -1.38 .62 -2 2 -2s2 .62 2 2v5m0 -3h-4" /><path d="M19 10h-4l4 -7h-4" /><path d="M4 15l3 3l3 -3" /><path d="M7 6v12" /></svg>`,
                 sum: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
                 table: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" fill="white" d="M 10 2, 21 2, 21 21, 10 21Z"/><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z" /><path d="M3 10h18" /><path d="M10 3v18" /></svg>`,
-                warning: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize * 0.8}" height="${this.iconSize * 0.8}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.24 3.957l-8.422 14.06a1.989 1.989 0 0 0 1.7 2.983h16.845a1.989 1.989 0 0 0 1.7 -2.983l-8.423 -14.06a1.989 1.989 0 0 0 -3.4 0z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>`
+                warning: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize * 0.8}" height="${this.iconSize * 0.8}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.24 3.957l-8.422 14.06a1.989 1.989 0 0 0 1.7 2.983h16.845a1.989 1.989 0 0 0 1.7 -2.983l-8.423 -14.06a1.989 1.989 0 0 0 -3.4 0z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>`,
+                grip: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M5 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>`
             }
         },
         pages() {
@@ -1750,7 +1755,7 @@ export default {
             const chartModal = this.$refs.chartModal;
             const rect = chartModal.getBoundingClientRect();
             this.clientX = e.clientX - this.dragOffsetX;
-            this.clientY = e.clientY - this.dragOffsetY;
+            this.clientY = e.clientY - this.dragOffsetY - 40;
             if (this.clientX < 0) this.clientX = 0;
             if (this.clientX + rect.width > window.innerWidth) this.clientX = window.innerWidth - rect.width - 48
             if (this.clientY < 0) this.clientY = 0;
@@ -2374,6 +2379,14 @@ button.th-reset:not(:disabled) {
     background: #F17171;
     min-width: 100px;
     color: white;
+}
+
+.vue-ui-table-chart-modal .modal-drag-handle {
+    cursor: move;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 @keyframes open-dropdown {
