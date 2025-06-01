@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
-import WORLD_DATA from "../resources/worldGeo.json"
+import WORLD_DATA from "../resources/worldGeo.js"
 import { useConfig } from '../useConfig';
 import { applyDataLabel, convertColorToHex, convertCustomPalette, createCsvContent, createUid, darkenHexColor, dataLabel, downloadCsv, hasDeepProperty, interpolateColorHex, isFunction, lightenHexColor, palette, XMLNS } from '../lib';
 import { useNestedProp } from '../useNestedProp';
@@ -204,7 +204,7 @@ function geoToPath(geometry) {
         //     return pathGen(geometry);
         // }
     //----------------------------------------------------------------------------------------------
-    
+
     const drawPoly = coords =>
         coords.map(
             ring => {

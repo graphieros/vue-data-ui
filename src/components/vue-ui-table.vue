@@ -517,7 +517,11 @@
                     </div>
                     <div v-if="currentSelectionSpan.rows.length >= 2" class="chart-trend"
                         :style="`color:${FINAL_CONFIG.style.chart.modal.color}`">
-                        <span>---</span> Trend: {{ ((chartData.progression.trend) * 100).toFixed(1) }} %
+                        <span>---</span> Trend: {{ dataLabel({
+                            v: chartData.progression.trend,
+                            s: '%',
+                            r: 1
+                        }) }}
                     </div>
                 </template>
 
