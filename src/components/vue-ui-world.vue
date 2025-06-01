@@ -143,19 +143,19 @@ const projection = computed(() => FINAL_CONFIG.value.projection || 'globe');
 const sizes = computed(() => {
     const { height, width } = FINAL_CONFIG.value.style.chart.dimensions;
     return {
-        aitoff: { width: width || 1000, height: height || 500},
-        azimuthalEquidistant: { width: width || 1000, height: height || 1000},
-        bonne: { width: width || 1000, height: height || 1000},
+        aitoff: { width: width || 1000, height: height || 500 },
+        azimuthalEquidistant: { width: width || 1000, height: height || 1000 },
+        bonne: { width: width || 1000, height: height || 1000 },
         equirectangular: { width: width || 1000, height: height || 700 },
-        gallPeters: { width: width || 1000, height: height || 800},
-        globe: { width: width || 1000, height: height || 1000},
-        hammer: { width: width || 1000, height: height || 500},
+        gallPeters: { width: width || 1000, height: height || 800 },
+        globe: { width: width || 1000, height: height || 1000 },
+        hammer: { width: width || 1000, height: height || 500 },
         mercator: { width: width || 1000, height: height || 750 },
-        mollweide: { width: width || 1000, height: height || 600},
+        mollweide: { width: width || 1000, height: height || 600 },
         robinson: { width: width || 1000, height: height || 600 },
-        sinusoidal: { width: width || 1000, height: height || 500},
-        vanDerGrinten: { width: width || 1000, height: height || 1000},
-        winkelTripel: { width: width || 1000, height: height || 1000},
+        sinusoidal: { width: width || 1000, height: height || 500 },
+        vanDerGrinten: { width: width || 1000, height: height || 1000 },
+        winkelTripel: { width: width || 1000, height: height || 1000 },
     }[projection.value];
 });
 
@@ -177,10 +177,10 @@ const max = computed(() => Math.max(...values.value));
 function getHeatmapColor(value) {
     if (typeof value !== 'number') return FINAL_CONFIG.value.style.chart.territory.emptyColor;
     return interpolateColorHex(
-        FINAL_CONFIG.value.style.chart.territory.colors.min || '#FFFFFF00', 
-        FINAL_CONFIG.value.style.chart.territory.colors.max || customPalette.value[0] || palette[0], 
-        min.value, 
-        max.value, 
+        FINAL_CONFIG.value.style.chart.territory.colors.min || '#FFFFFF00',
+        FINAL_CONFIG.value.style.chart.territory.colors.max || customPalette.value[0] || palette[0],
+        min.value,
+        max.value,
         value
     )
 }
@@ -195,14 +195,14 @@ function geoToPath(geometry) {
     // NOTE: Should we decide to use d3-geo in the future:
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // if (projection.value === 'globe') {
-        //     const globeProj = geoOrthographic()
-        //         .translate([sizes.value.width / 2, sizes.value.height / 2])
-        //         .scale(Math.min(sizes.value.width, sizes.value.height) / 2 * 0.95)
-        //         .rotate([-center.value[0], -center.value[1]])
-        //         .clipAngle(90);
-        //     const pathGen = geoPath(globeProj);
-        //     return pathGen(geometry);
-        // }
+    //     const globeProj = geoOrthographic()
+    //         .translate([sizes.value.width / 2, sizes.value.height / 2])
+    //         .scale(Math.min(sizes.value.width, sizes.value.height) / 2 * 0.95)
+    //         .rotate([-center.value[0], -center.value[1]])
+    //         .clipAngle(90);
+    //     const pathGen = geoPath(globeProj);
+    //     return pathGen(geometry);
+    // }
     //----------------------------------------------------------------------------------------------
 
     const drawPoly = coords =>
@@ -221,12 +221,17 @@ function geoToPath(geometry) {
 }
 
 const categories = computed(() => {
-    return [...new Set(Object.values(props.dataset).map(d => d.category).filter(Boolean))].map((name, i) => {
-        return {
-            name,
-            color: customPalette.value[i] || palette[i] || palette[i % palette.length]
+    const entries = Object.values(props.dataset).filter(d => !!d.category);
+    const uniqueCategoriesMap = {};
+    entries.forEach(entry => {
+        if (!uniqueCategoriesMap[entry.category]) {
+            uniqueCategoriesMap[entry.category] = entry;
         }
     });
+    return Object.values(uniqueCategoriesMap).map((el, i) => ({
+        name: el.category,
+        color: el.color ? convertColorToHex(el.color) : customPalette.value[i] || palette[i] || palette[i % palette.length]
+    }));
 });
 
 function getColorByCategory(category) {
@@ -234,28 +239,29 @@ function getColorByCategory(category) {
     return found ? found.color : '#000000';
 }
 
-const countries = computed(() =>{
+const countries = computed(() => {
     const _center = center.value;
     return worldGeo.features.map(feature => {
         let code = feature.properties.iso_a3
-            // Use iso_a3_eh fallback if iso_a3 is missing or invalid
-            if (!code || code === '-99') {
-                code = feature.properties.iso_a3_eh
-            }
-            const item = props.dataset[code]
-            return {
-                path: geoToPath(feature.geometry),
-                name: feature.properties.name,
-                geo: feature,
-                code,
-                geometry: feature.geometry,
-                color: item && item.color ? convertColorToHex(item.color) : item && item.category ? getColorByCategory(item.category) : getHeatmapColor(item ? item.value : null),
-                value: item ? item.value : null,
-                category: item ? item.category || null : null,
-                isActive: !!item,
-                uid: `territory-${createUid()}`
-            }
-        })}
+        // Use iso_a3_eh fallback if iso_a3 is missing or invalid
+        if (!code || code === '-99') {
+            code = feature.properties.iso_a3_eh
+        }
+        const item = props.dataset[code]
+        return {
+            path: geoToPath(feature.geometry),
+            name: feature.properties.name,
+            geo: feature,
+            code,
+            geometry: feature.geometry,
+            color: item && item.color ? convertColorToHex(item.color) : item && item.category ? getColorByCategory(item.category) : getHeatmapColor(item ? item.value : null),
+            value: item ? item.value : null,
+            category: item ? item.category || null : null,
+            isActive: !!item,
+            uid: `territory-${createUid()}`
+        }
+    })
+}
 )
 
 const isFullscreen = ref(false)
@@ -296,8 +302,8 @@ function getLargestPolygon(geometry) {
     if (geometry.type === "Polygon") return geometry.coordinates;
     if (geometry.type === "MultiPolygon") {
         return geometry.coordinates.reduce(
-        (max, coords) => (coords[0].length > (max[0]?.length || 0) ? coords : max),
-        []
+            (max, coords) => (coords[0].length > (max[0]?.length || 0) ? coords : max),
+            []
         );
     }
     return [];
@@ -334,8 +340,8 @@ const tooltipPreviewSvg = computed(() => {
     const scale = Math.min(innerW / countryW, innerH / countryH);
     function toMini([x, y]) {
         return [
-        ((x - minX) * scale + padding),
-        ((y - minY) * scale + padding)
+            ((x - minX) * scale + padding),
+            ((y - minY) * scale + padding)
         ];
     }
 
@@ -358,7 +364,7 @@ const tooltipPreviewSvg = computed(() => {
 
 function useTooltip({ datapoint }) {
     selectedDatapoint.value = datapoint;
-    dataTooltipSlot.value = { datapoint , config: FINAL_CONFIG.value, series: countries.value };
+    dataTooltipSlot.value = { datapoint, config: FINAL_CONFIG.value, series: countries.value };
     isTooltip.value = true;
     let html = '';
 
@@ -393,15 +399,15 @@ function useTooltip({ datapoint }) {
                 <span>${datapoint.name}:</span>
                 <b>
                     ${applyDataLabel(
-                        FINAL_CONFIG.value.style.chart.dataLabels.formatter,
-                        datapoint.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.value.style.chart.dataLabels.prefix,
-                            v: datapoint.value,
-                            s: FINAL_CONFIG.value.style.chart.dataLabels.suffix,
-                            r: FINAL_CONFIG.value.style.chart.dataLabels.rounding
-                        })
-                    )}    
+            FINAL_CONFIG.value.style.chart.dataLabels.formatter,
+            datapoint.value,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.chart.dataLabels.prefix,
+                v: datapoint.value,
+                s: FINAL_CONFIG.value.style.chart.dataLabels.suffix,
+                r: FINAL_CONFIG.value.style.chart.dataLabels.rounding
+            })
+        )}    
                 </b>
             </div>
         </div>
@@ -415,18 +421,18 @@ const drag = ref(false);
 const dragStart = ref({ x: 0, y: 0 });
 
 const center = ref([
-  FINAL_CONFIG.value.style.chart.globe.center.x,
-  FINAL_CONFIG.value.style.chart.globe.center.y
+    FINAL_CONFIG.value.style.chart.globe.center.x,
+    FINAL_CONFIG.value.style.chart.globe.center.y
 ]);
 
 watch(
-  () => [
-    FINAL_CONFIG.value.style.chart.globe.center.x,
-    FINAL_CONFIG.value.style.chart.globe.center.y
-  ],
-  ([newX, newY]) => {
-    center.value = [newX, newY];
-  }
+    () => [
+        FINAL_CONFIG.value.style.chart.globe.center.x,
+        FINAL_CONFIG.value.style.chart.globe.center.y
+    ],
+    ([newX, newY]) => {
+        center.value = [newX, newY];
+    }
 );
 
 function onMouseDown(e) {
@@ -472,7 +478,7 @@ function onTouchEnd() {
 }
 
 const table = computed(() => {
-    const src = countries.value.toSorted((a, b) => (b.value || 0) - (a.value || 0))
+    const src = countries.value.toSorted((a, b) => (b.value || 0) - (a.value || 0))
     const head = src.map(c => {
         return {
             name: c.name,
@@ -491,7 +497,7 @@ const dataTable = computed(() => {
         FINAL_CONFIG.value.table.columnNames.category,
     ];
 
-    const body = table.value.head.map((h,i) => {
+    const body = table.value.head.map((h, i) => {
         return [
             {
                 color: h.color,
@@ -533,12 +539,12 @@ const dataTable = computed(() => {
 
 function generateCsv() {
     nextTick(() => {
-        const labels = table.value.head.map((h,i) => {
+        const labels = table.value.head.map((h, i) => {
             return [[
                 h.name
-            ],[table.value.body[i]]]
+            ], [table.value.body[i]]]
         });
-        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[
+        const tableXls = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [[
             FINAL_CONFIG.value.table.columnNames.series,
             FINAL_CONFIG.value.table.columnNames.value,
             FINAL_CONFIG.value.table.columnNames.category,
@@ -606,86 +612,53 @@ defineExpose({
 </script>
 
 <template>
-    <div
-        ref="worldChart"
-        :id="`world_${uid}`" 
-        :class="`vue-ui-world ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen': ''}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" 
-        @mouseenter="() => setUserOptionsVisibility(true)" 
-        @mouseleave="() => setUserOptionsVisibility(false)"
-    >
-        <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef"
-            :color="FINAL_CONFIG.style.chart.color"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :active="isAnnotator"
-            :svgRef="svgRef"
-            @close="toggleAnnotator"
-        />
+    <div ref="worldChart" :id="`world_${uid}`"
+        :class="`vue-ui-world ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+        <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef" :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :active="isAnnotator" :svgRef="svgRef"
+            @close="toggleAnnotator" />
 
         <slot name="userConfig"></slot>
 
-        <div
-            ref="noTitle"
-            v-if="hasOptionsNoTitle" 
-            class="vue-data-ui-no-title-space" 
-            :style="`height:36px; width: 100%;background:transparent`"
-        />
+        <div ref="noTitle" v-if="hasOptionsNoTitle" class="vue-data-ui-no-title-space"
+            :style="`height:36px; width: 100%;background:transparent`" />
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent`">
-            <Title
-                :key="`title_${titleStep}`"
-                :config="{
-                    title: {
-                        cy: 'donut-div-title',
-                        ...FINAL_CONFIG.style.chart.title,
-                    },
-                    subtitle: {
-                        cy: 'donut-div-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle
-                    }
-                }"
-            />
+            <Title :key="`title_${titleStep}`" :config="{
+                title: {
+                    cy: 'donut-div-title',
+                    ...FINAL_CONFIG.style.chart.title,
+                },
+                subtitle: {
+                    cy: 'donut-div-subtitle',
+                    ...FINAL_CONFIG.style.chart.title.subtitle
+                }
+            }" />
         </div>
 
-        <UserOptions
-            :key="`user_option_${step}`"
+        <UserOptions :key="`user_option_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
-            :isPrinting="isPrinting"
-            :isImaging="isImaging"
-            :uid="uid"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
+            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid"
             :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show && FINAL_CONFIG.userOptions.buttons.tooltip"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasLabel="false"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :isFullscreen="isFullscreen"
-            :chartElement="worldChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :isTooltip="mutableConfig.showTooltip"
-            :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
-            :isAnnotation="isAnnotator"
-            @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf"
-            @generateCsv="generateCsv"
-            @generateImage="generateImage"
-            @toggleTable="toggleTable"
-            @toggleTooltip="toggleTooltip"
-            @toggleAnnotator="toggleAnnotator"
-            :style="{
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasLabel="false" :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
+            :chartElement="worldChart" :position="FINAL_CONFIG.userOptions.position"
+            :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
+            @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"
+            @generateImage="generateImage" @toggleTable="toggleTable" @toggleTooltip="toggleTooltip"
+            @toggleAnnotator="toggleAnnotator" :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
-            }"
-        >
+            }">
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
             <template #optionTooltip v-if="$slots.optionTooltip">
-                <slot name="optionTooltip"/>
+                <slot name="optionTooltip" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -700,23 +673,17 @@ defineExpose({
                 <slot name="optionTable" />
             </template>
             <template v-if="$slots.optionFullscreen" #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }" />
             </template>
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :viewBox="viewBox.str"
-            :xmlns="XMLNS"
-            :class="{
-                'vue-data-ui-fullscreen--on': isFullscreen,
-                'vue-data-ui-fullscreen--off': !isFullscreen
-            }"
-            data-cy="world-svg"
-            :style="{
+        <svg ref="svgRef" :viewBox="viewBox.str" :xmlns="XMLNS" :class="{
+            'vue-data-ui-fullscreen--on': isFullscreen,
+            'vue-data-ui-fullscreen--off': !isFullscreen
+        }" data-cy="world-svg" :style="{
                 maxWidth: '100%',
                 overflow: projection === 'globe' ? 'visible' : 'hidden',
                 background: 'transparent',
@@ -725,83 +692,58 @@ defineExpose({
                 paddingRight: FINAL_CONFIG.style.chart.padding.right + 'px',
                 paddingBottom: FINAL_CONFIG.style.chart.padding.bottom + 'px',
                 paddingLeft: FINAL_CONFIG.style.chart.padding.left + 'px'
-            }"
-            @mousedown="onMouseDown"
-            @mousemove="onMouseMove"
-            @mouseup="onMouseUp"
-            @mouseleave="onMouseUp"
-            @touchstart="onTouchStart"
-            @touchmove.prevent="onTouchMove"
-            @touchend="onTouchEnd"
-        >
+            }" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @mouseleave="onMouseUp"
+            @touchstart="onTouchStart" @touchmove.prevent="onTouchMove" @touchend="onTouchEnd">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="viewBox.minX"
-                :y="viewBox.minY"
-                :width="viewBox.width"
-                :height="viewBox.height"
-                :style="{
+            <foreignObject v-if="$slots['chart-background']" :x="viewBox.minX" :y="viewBox.minY" :width="viewBox.width"
+                :height="viewBox.height" :style="{
                     pointerEvents: 'none'
-                }"
-            >
-                <slot name="chart-background"/>
+                }">
+                <slot name="chart-background" />
             </foreignObject>
 
             <g v-if="isDataset">
                 <template v-if="projection === 'globe'">
                     <defs>
-                        <radialGradient 
-                            :id="`water-${uid}`"
-                            :cx="0.48" :cy="0.52" r="0.55" fx="0.40" fy="0.48">
-                            <stop offset="0%"   :stop-color="lightenHexColor(FINAL_CONFIG.style.chart.globe.waterColor, 0.4)" />
-                            <stop offset="45%"  :stop-color="FINAL_CONFIG.style.chart.globe.waterColor" />
-                            <stop offset="80%"  :stop-color="darkenHexColor(FINAL_CONFIG.style.chart.globe.waterColor, 0.2)" />
-                            <stop offset="100%" :stop-color="darkenHexColor(FINAL_CONFIG.style.chart.globe.waterColor, 0.5)" stop-opacity="0.95"/>
+                        <radialGradient :id="`water-${uid}`" :cx="0.48" :cy="0.52" r="0.55" fx="0.40" fy="0.48">
+                            <stop offset="0%"
+                                :stop-color="lightenHexColor(FINAL_CONFIG.style.chart.globe.waterColor, 0.4)" />
+                            <stop offset="45%" :stop-color="FINAL_CONFIG.style.chart.globe.waterColor" />
+                            <stop offset="80%"
+                                :stop-color="darkenHexColor(FINAL_CONFIG.style.chart.globe.waterColor, 0.2)" />
+                            <stop offset="100%"
+                                :stop-color="darkenHexColor(FINAL_CONFIG.style.chart.globe.waterColor, 0.5)"
+                                stop-opacity="0.95" />
                         </radialGradient>
-                        <radialGradient :id="`atmo-realistic-${uid}`"
-                        :cx="0.5" :cy="0.5" r="0.54">
+                        <radialGradient :id="`atmo-realistic-${uid}`" :cx="0.5" :cy="0.5" r="0.54">
                             <stop offset="87%" stop-color="rgba(120,200,255,0)" />
                             <stop offset="98%" :stop-color="FINAL_CONFIG.style.chart.globe.waterColor" />
                             <stop offset="100%" stop-color="rgba(120,200,255,0)" />
                         </radialGradient>
                         <filter :id="`blur-${uid}`" x="-30%" y="-30%" width="160%" height="160%">
-                            <feGaussianBlur stdDeviation="8"/>
+                            <feGaussianBlur stdDeviation="8" />
                         </filter>
                     </defs>
                     <g v-if="$slots.pattern">
                         <defs v-for="(country, i) in countries">
-                            <slot name="pattern" v-bind="{...country, patternId: `pattern_${uid}_${country.code}`}"/>
+                            <slot name="pattern" v-bind="{ ...country, patternId: `pattern_${uid}_${country.code}` }" />
                         </defs>
                     </g>
-                    <circle 
-                        :cx="viewBox.width / 2 + 20"
-                        :cy="viewBox.height / 2 + 20"
-                        :r="viewBox.height / 2"
-                        :fill="`url(#water-${uid})`"
-                    />
-                    <circle
-                        :cx="viewBox.width / 2 + 20"
-                        :cy="viewBox.height / 2 + 20"
-                        :r="viewBox.height / 2 + 10"
-                        :fill="`url(#atmo-realistic-${uid})`"
-                        pointer-events="none"
-                        :filter="`url(#blur-${uid})`"
-                    />
+                    <circle :cx="viewBox.width / 2 + 20" :cy="viewBox.height / 2 + 20" :r="viewBox.height / 2"
+                        :fill="`url(#water-${uid})`" />
+                    <circle :cx="viewBox.width / 2 + 20" :cy="viewBox.height / 2 + 20" :r="viewBox.height / 2 + 10"
+                        :fill="`url(#atmo-realistic-${uid})`" pointer-events="none" :filter="`url(#blur-${uid})`" />
                 </template>
                 <template v-for="country in countries" :key="country.code">
-                    <path 
-                        :d="country.path" 
-                        :fill="country.category && segregated.includes(country.category) ? FINAL_CONFIG.style.chart.territory.emptyColor : country.color" 
-                        :stroke="FINAL_CONFIG.style.chart.territory.stroke" 
+                    <path :d="country.path"
+                        :fill="country.category && segregated.includes(country.category) ? FINAL_CONFIG.style.chart.territory.emptyColor : country.color"
+                        :stroke="FINAL_CONFIG.style.chart.territory.stroke"
                         :stroke-width="selectedDatapoint && selectedDatapoint.uid === country.uid ? FINAL_CONFIG.style.chart.territory.strokeWidthSelected : FINAL_CONFIG.style.chart.territory.strokeWidth"
                         @mouseenter="useTooltip({ datapoint: country })"
                         @mouseleave="isTooltip = false; selectedDatapoint = null"
-                        @click="emit('selectDatapoint', country)"
-                        class="vue-ui-world-territory"
-                    >
+                        @click="emit('selectDatapoint', country)" class="vue-ui-world-territory">
                         <title v-if="!isTooltip || !mutableConfig.showTooltip">
                             {{ country.name }}
                             <template v-if="typeof country.value === 'number'">
@@ -809,61 +751,38 @@ defineExpose({
                             </template>
                         </title>
                     </path>
-                    <path
-                        v-if="$slots.pattern"
-                        :d="country.path" 
-                        :fill="`url(#pattern_${uid}_${country.code})`"
+                    <path v-if="$slots.pattern" :d="country.path" :fill="`url(#pattern_${uid}_${country.code})`"
                         :stroke="FINAL_CONFIG.style.chart.territory.stroke"
                         :stroke-width="FINAL_CONFIG.style.chart.territory.strokeWidthSelected"
-                        style="pointer-events: none;"
-                        class="vue-ui-world-territory"
-                    />
-                    <path
-                        v-if="selectedDatapoint"
-                        :d="geoToPath(selectedDatapoint.geometry)"
-                        fill="transparent"
+                        style="pointer-events: none;" class="vue-ui-world-territory" />
+                    <path v-if="selectedDatapoint" :d="geoToPath(selectedDatapoint.geometry)" fill="transparent"
                         :stroke="FINAL_CONFIG.style.chart.territory.stroke"
                         :stroke-width="FINAL_CONFIG.style.chart.territory.strokeWidthSelected"
-                        style="pointer-events: none;"
-                        class="vue-ui-world-territory"
-                    />
+                        style="pointer-events: none;" class="vue-ui-world-territory" />
                 </template>
             </g>
 
             <slot name="svg" :svg="{
                 height: sizes.height,
                 width: sizes.width
-            }"/>
+            }" />
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
 
-        <div ref="chartLegend" v-if="hasCategories">        
-            <Legend
-                v-if="FINAL_CONFIG.style.chart.legend.show"
-                :key="`legend_${legendStep}`"
-                :legendSet="legendSet"
-                :config="legendConfig"
-                @clickMarker="(el) => segregate(el)"
-            >
+        <div ref="chartLegend" v-if="hasCategories">
+            <Legend v-if="FINAL_CONFIG.style.chart.legend.show" :key="`legend_${legendStep}`" :legendSet="legendSet"
+                :config="legendConfig" @clickMarker="(el) => segregate(el)">
                 <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
-                    <Shape
-                        :shape="legend.shape"
-                        :radius="30"
-                        stroke="none"
-                        :plot="{ x: 30, y: 30}"
-                        :fill="`url(#pattern_${uid}_${index})`"
-                    />
+                    <Shape :shape="legend.shape" :radius="30" stroke="none" :plot="{ x: 30, y: 30 }"
+                        :fill="`url(#pattern_${uid}_${index})`" />
                 </template>
 
                 <template #item="{ legend, index }">
-                    <div 
-                        data-cy="legend-item"
-                        :style="`opacity:${segregated.includes(legend.name) ? 0.5 : 1}`"
-                        @click="legend.segregate()" 
-                    >
+                    <div data-cy="legend-item" :style="`opacity:${segregated.includes(legend.name) ? 0.5 : 1}`"
+                        @click="legend.segregate()">
                         {{ legend.name }}
                     </div>
                 </template>
@@ -875,27 +794,20 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <Tooltip
-            :show="mutableConfig.showTooltip && isTooltip"
+        <Tooltip :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color"
-            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :color="FINAL_CONFIG.style.chart.tooltip.color" :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
-            :position="FINAL_CONFIG.style.chart.tooltip.position"
-            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
-            :parent="worldChart"
-            :content="tooltipContent"
-            :isCustom="useCustomFormat"
-            :isFullscreen="isFullscreen"
-        >
+            :position="FINAL_CONFIG.style.chart.tooltip.position" :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :parent="worldChart" :content="tooltipContent" :isCustom="useCustomFormat" :isFullscreen="isFullscreen">
             <template #tooltip-before>
-                <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+                <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>
             <template #tooltip-after>
-                <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
+                <slot name="tooltip-after" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>
         </Tooltip>
 
@@ -912,16 +824,11 @@ defineExpose({
                 color: FINAL_CONFIG.style.chart.color
             }
         }">
-            <template #content>            
-                <DataTable
-                    :key="`table_${tableStep}`"
-                    :colNames="dataTable.colNames"
-                    :head="dataTable.head" 
-                    :body="dataTable.body"
-                    :config="dataTable.config"
+            <template #content>
+                <DataTable :key="`table_${tableStep}`" :colNames="dataTable.colNames" :head="dataTable.head"
+                    :body="dataTable.body" :config="dataTable.config"
                     :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
-                    @close="mutableConfig.showTable = false"
-                >
+                    @close="mutableConfig.showTable = false">
                     <template #th="{ th }">
                         <div v-html="th" style="display:flex;align-items:center"></div>
                     </template>
@@ -945,6 +852,7 @@ defineExpose({
 
 <style scoped>
 @import "../vue-data-ui.css";
+
 .vue-ui-world * {
     transition: unset;
 }
@@ -955,6 +863,6 @@ defineExpose({
 }
 
 path.vue-ui-world-territory {
-    transition: stroke-width 0.3s cubic-bezier(.25,.8,.25,1);
+    transition: stroke-width 0.3s cubic-bezier(.25, .8, .25, 1);
 }
 </style>

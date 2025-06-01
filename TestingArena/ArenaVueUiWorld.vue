@@ -6,8 +6,8 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
 const dataset = ref({
-  AFG: { value: 20 },     // Afghanistan
-  ALB: { value: 18 },     // Albania
+  AFG: { value: 20, category: 'CAT1', color: 'red' },     // Afghanistan
+  ALB: { value: 18, category: 'CAT2', color: 'blue' },     // Albania
   DZA: { value: 225 },    // Algeria
   AND: { value: 3 },      // Andorra
   AGO: { value: 74 },     // Angola
