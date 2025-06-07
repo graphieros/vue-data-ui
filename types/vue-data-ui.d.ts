@@ -57,7 +57,8 @@ declare module "vue-data-ui" {
         | VueUiFunnelDatasetItem[]
         | VueUiHistoryPlotDatasetItem[]
         | VueUiCirclePackDatasetItem[]
-        | VueUiWorldDataset;
+        | VueUiWorldDataset
+        | VueUiRidgelineDatasetItem[];
         config?:
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -115,7 +116,8 @@ declare module "vue-data-ui" {
         | VueUiFunnelConfig
         | VueUiHistoryPlotConfig
         | VueUiCirclePackConfig
-        | VueUiWorldConfig;
+        | VueUiWorldConfig
+        | VueUiRidgelineConfig;
     }>;
 
     export type VueUiPatternName =
@@ -1163,7 +1165,9 @@ declare module "vue-data-ui" {
         | "curlyBrackets"
         | "curlySpread"
         | "text"
-        | "world";
+        | "world"
+        | "eye"
+        | "chartRidgeline";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -4723,12 +4727,16 @@ declare module "vue-data-ui" {
         | "flow"
         | "bullet"
         | "historyPlot"
-        | "circlePack";
+        | "circlePack"
+        | "ridgeline";
         style?: {
             backgroundColor?: string;
             color?: string;
             animated?: boolean;
             maxHeight?: number;
+            ridgeline?: {
+                color?: string;
+            };
             circlePack?: {
                 color?: string;
             };
@@ -6782,6 +6790,129 @@ declare module "vue-data-ui" {
         dataset?: VueUiWorldDataset
     }>
 
+    export type VueUiRidgelineDatapoint = {
+        name: string;
+        values: number[];
+        color?: string;
+    }
+
+    export type VueUiRidgelineDatasetItem = {
+        name: string;
+        datapoints: VueUiRidgelineDatapoint[]
+    }
+
+    export type VueUiRidgelineConfig = {
+        theme?: Theme;
+        customPalette?: string[];
+        responsive?: boolean;
+        userOptions?: ChartUserOptions;
+        table?: {
+            show?: boolean;
+            responsiveBreakpoint?: number;
+            th?: ChartTableCell;
+            td?: ChartTableCell & {
+                roundingValue?: number;
+            };
+            columnNames?: {
+                series?: string;
+            };
+        };
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                padding?: ChartPadding;
+                title?: ChartTitle;
+                legend?: ChartBaseLegend & {
+                    backgroundColor?: string;
+                };
+                dialog?: {
+                    show?: boolean;
+                    backgroundColor?: string;
+                    color?: string;
+                    header?: {
+                        backgroundColor?: string;
+                        color?: string;
+                    };
+                    xyChart?: VueUiXyConfig;
+                };
+                areas?: {
+                    height?: number;
+                    rowHeight?: number;
+                    strokeWidth?: number;
+                    stroke?: {
+                        useSerieColor?: boolean;
+                        color?: string;
+                    };
+                    smooth?: boolean;
+                    opacity?: number;
+                    maxPoint?: {
+                        show?: boolean;
+                        adaptStrokeToBackground?: boolean;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        strokeDasharray?: number;
+                    };
+                };
+                selector?: {
+                    show?: boolean;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    strokeDasharray?: number;
+                    labels?: {
+                        fontSize?: number;
+                        formatter?: Formatter;
+                        rounding?: number;
+                        color?: string;
+                    };
+                    dot?: {
+                        radius?: number;
+                        useDatapointColor?: boolean;
+                        fill?: string;
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                };
+                zeroLine?: {
+                    show?: boolean;
+                    strokeWidth?:number;
+                    strokeDasharray?: number;
+                    useSerieColor?: boolean;
+                    stroke?: string;
+                };
+                xAxis?: {
+                    labels?: {
+                        prefix?: string;
+                        suffix?: string;
+                        rotation?: number;
+                        values?: string[];
+                        color?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                        showOnlyAtModulo?: boolean;
+                        modulo?: number;
+                        showOnlyFirstAndLast?: boolean;
+                        offsetY?: number;
+                    };
+                };
+                yAxis?: {
+                    labels?: {
+                        fontSize?: number;
+                        bold?: number;
+                        color?: string;
+                        offsetX?: number;
+                    };
+                };
+            };
+        };
+    };
+
+    export const VueUiRidgeline: DefineComponent<{
+        config?: VueUiRidgelineConfig;
+        dataset: VueUiRidgelineDatasetItem[]
+    }>
+
     export type VueDataUiConfig =
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -6841,7 +6972,8 @@ declare module "vue-data-ui" {
         | VueUiFunnelConfig
         | VueUiHistoryPlotConfig
         | VueUiCirclePackConfig
-        | VueUiWorldConfig;
+        | VueUiWorldConfig
+        | VueUiRidgelineConfig;
 
     export type VueDataUiConfigKey =
         | "vue_ui_3d_bar"
@@ -6902,12 +7034,12 @@ declare module "vue-data-ui" {
         | "vue_ui_funnel"
         | "vue_ui_history_plot"
         | "vue_ui_circle_pack"
-        | "vue_ui_world";
+        | "vue_ui_world"
+        | "vue_ui_ridgeline";
 
     export type VueDataUiWordCloudTransformCallback =
         | ((word: string) => string)
         | null;
-
 
     export type Point = {
         [key: string]: any

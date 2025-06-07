@@ -373,6 +373,7 @@ export function useConfig() {
         }
     }
 
+    // NOTE: Any update to this config will be reflected in VueUiRidgeline, which uses VueUiXy in its dialog.
     const vue_ui_xy = {
         theme: '',
         responsive: false,
@@ -4385,6 +4386,9 @@ export function useConfig() {
             color: COLOR_BLACK,
             maxHeight: 500,
             animated: true,
+            ridgeline: {
+                color: COLOR_GREY_LIGHT
+            },
             circlePack: {
                 color: COLOR_GREY_LIGHT
             },
@@ -5342,6 +5346,158 @@ export function useConfig() {
         },
     }
 
+    const vue_ui_ridgeline = {
+        theme: '',
+        customPalette: [],
+        responsive: false,
+        userOptions: USER_OPTIONS({
+            tooltip: false,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: false,
+            fullscreen: true,
+            stack: false,
+            annotator: true
+        }),
+        table: {
+            ...TABLE,
+            th: TABLE_TH,
+            td: {
+                ...TABLE_TD,
+                roundingValue: 0
+            },
+            columnNames: {
+                series: 'Series',
+            }
+        },
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                padding: PADDING([12, 0, 0, 12]),
+                title: TITLE,
+                legend: LEGEND,
+                dialog: {
+                    show: true,
+                    backgroundColor: COLOR_WHITE,
+                    color: COLOR_BLACK,
+                    header: {
+                        backgroundColor: COLOR_GREY_LIGHT,
+                        color: COLOR_BLACK
+                    },
+                    xyChart: {
+                        ...vue_ui_xy,
+                        responsive: true,
+                        line: {
+                            ...vue_ui_xy.line,
+                            labels: {
+                                ...vue_ui_xy.line.labels,
+                                show: true
+                            }
+                        },
+                        chart: {
+                            ...vue_ui_xy.chart,
+                            padding: {
+                                top: 24,
+                                right: 25,
+                                bottom: 24,
+                                left: 64
+                            },
+                            tooltip: {
+                                ...vue_ui_xy.chart.tooltip,
+                                showPercentage: false
+                            },
+                            userOptions: {
+                                ...vue_ui_xy.chart.userOptions,
+                                buttons: {
+                                    ...vue_ui_xy.chart.userOptions.buttons,
+                                    pdf: false,
+                                }
+                            },
+                            zoom: {
+                                ...vue_ui_xy.chart.zoom,
+                                minimap: {
+                                    ...vue_ui_xy.chart.zoom.minimap,
+                                    show: true,
+                                }
+                            }
+                        }
+                    }
+                },
+                areas: {
+                    height: 60, // height > rowHeight results in the classic ridgeline look
+                    rowHeight: 30,
+                    strokeWidth: 1,
+                    stroke: {
+                        useSerieColor: false,
+                        color: COLOR_WHITE,
+                    },
+                    smooth: true, // Also applied in dialog chart
+                    opacity: 0.9,
+                    maxPoint: {
+                        show: true,
+                        adaptStrokeToBackground: true,
+                        stroke: COLOR_BLACK,
+                        strokeWidth: 1,
+                        strokeDasharray: 4,
+                    },
+                },
+                selector: {
+                    show: true,
+                    stroke: COLOR_GREY_MID,
+                    strokeWidth: 1,
+                    strokeDasharray: 2,
+                    labels: {
+                        fontSize: 12,
+                        formatter: null,
+                        rounding: 0,
+                        color: COLOR_BLACK,
+                    },
+                    dot: {
+                        radius: 4,
+                        useDatapointColor: true,
+                        fill: COLOR_GREY_MID,
+                        stroke: COLOR_WHITE,
+                        strokeWidth: 0.5
+                    },
+                },
+                zeroLine: {
+                    show: true,
+                    strokeWidth: 1,
+                    strokeDasharray: 0,
+                    useSerieColor: false,
+                    stroke: COLOR_GREY_MID
+                },
+                xAxis: {
+                    labels: {
+                        prefix: '',
+                        suffix: '',
+                        rotation: 0,
+                        values: [],
+                        color: COLOR_BLACK,
+                        fontSize: 14,
+                        bold: false,
+                        showOnlyAtModulo: false,
+                        modulo: 12,
+                        showOnlyFirstAndLast: false,
+                        offsetY: 0,
+                    }
+                },
+                yAxis: {
+                    labels: {
+                        fontSize: 16,
+                        bold: false,
+                        color: COLOR_BLACK,
+                        offsetX: 0
+                    }
+                }
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -5391,6 +5547,7 @@ export function useConfig() {
         vue_ui_funnel,
         vue_ui_history_plot,
         vue_ui_world,
+        vue_ui_ridgeline,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,

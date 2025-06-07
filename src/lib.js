@@ -2408,7 +2408,7 @@ export function createSmoothPathWithCuts(points) {
     return fullPath.trim();
 }
 
-export function createSmoothAreaSegments(points, zero, cut = false) {
+export function createSmoothAreaSegments(points, zero, cut = false, close = true) {
     function getSegments(points) {
         const segs = [];
         let curr = [];
@@ -2458,9 +2458,20 @@ export function createSmoothAreaSegments(points, zero, cut = false) {
             const controlY2 = y2 - m2 * (x2 - x1) / 3;
             d += ` C${controlX1},${controlY1} ${controlX2},${controlY2} ${x2},${y2}`;
         }
-        d += ` L${seg[n].x},${zero} Z`;
+        d += ` L${seg[n].x},${zero} ${close ? 'Z': ''}`;
         return d;
     }).filter(Boolean);
+}
+
+export function slugify(str) {
+    return str
+        .toString()
+        .toLowerCase()
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+        .replace(/\-\-+/g, '-') // Replace multiple - with single -
+        .replace(/^-+/, '') // Trim start
+        .replace(/-+$/, ''); // Trim end
 }
 
 
@@ -2536,6 +2547,7 @@ const lib = {
     sanitizeArray,
     setOpacity,
     shiftHue,
+    slugify,
     sumByAttribute,
     sumSeries,
     themePalettes,

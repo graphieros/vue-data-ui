@@ -72,7 +72,8 @@ const components = {
     VueUiFunnel: defineAsyncComponent(() => import('./vue-ui-funnel.vue')),
     VueUiHistoryPlot: defineAsyncComponent(() => import('./vue-ui-history-plot.vue')),
     VueUiCirclePack: defineAsyncComponent(() => import('./vue-ui-circle-pack.vue')),
-    VueUiWorld: defineAsyncComponent(() => import('./vue-ui-world.vue'))
+    VueUiWorld: defineAsyncComponent(() => import('./vue-ui-world.vue')),
+    VueUiRidgeline: defineAsyncComponent(() => import('./vue-ui-ridgeline.vue'))
 };
 
 const componentProps = {
@@ -135,7 +136,8 @@ const componentProps = {
     VueUiFunnel: ['config', 'dataset'],
     VueUiHistoryPlot: ['config', 'dataset'],
     VueUiCirclePack: ['config', 'dataset'],
-    VueUiWorld: ['config', 'dataset']
+    VueUiWorld: ['config', 'dataset'],
+    VueUiRidgeline: ['config', 'dataset']
 };
 
 const emit = defineEmits([
