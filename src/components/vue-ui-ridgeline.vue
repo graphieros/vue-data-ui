@@ -83,6 +83,7 @@ const baseWidth = ref(512);
 const selectedX = ref(null);
 const selectedDatapoint = ref(null);
 const dialog = ref(null);
+const parentHeight = ref(0);
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -184,12 +185,14 @@ function prepareChart() {
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
                 source: source.value,
-                noTitle: noTitle.value
+                noTitle: noTitle.value,
+                padding: FINAL_CONFIG.value.style.chart.padding
             });
 
             requestAnimationFrame(() => {
                 baseWidth.value = width;
                 rowHeight.value = (height / props.dataset.length);
+                parentHeight.value = height
             });
         });
 
@@ -720,7 +723,7 @@ defineExpose({
         <svg ref="svgRef" :xmlns="XMLNS" v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight}`"
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};${FINAL_CONFIG.responsive ? 'height: 100%; width: 100%;' : ''}`">
+            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};${FINAL_CONFIG.responsive ? `height: ${parentHeight}px; width: 100%;` : ''}`">
             <defs>
                 <linearGradient 
                     v-for="(dp, i) in legendSet" 
