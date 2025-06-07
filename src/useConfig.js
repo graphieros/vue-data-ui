@@ -5439,6 +5439,7 @@ export function useConfig() {
                     smooth: true, // Also applied in dialog chart
                     opacity: 0.9,
                     useCommonColor: false,
+                    useGradient: true,
                     maxPoint: {
                         show: true,
                         adaptStrokeToBackground: true,

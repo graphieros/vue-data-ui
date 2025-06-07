@@ -6843,6 +6843,7 @@ declare module "vue-data-ui" {
                     rowHeight?: number;
                     strokeWidth?: number;
                     useCommonColor?: boolean;
+                    useGradient?: boolean;
                     stroke?: {
                         useSerieColor?: boolean;
                         color?: string;

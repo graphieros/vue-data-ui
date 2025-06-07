@@ -715,25 +715,23 @@ defineExpose({
                 </template>
             </defs>
 
-
-            <g v-if="$slots.pattern">
-                <defs v-for="(variable, i) in legendSet">
-                    <slot name="pattern" v-bind="{ variable, patternId: `pattern_${uid}_${i}` }" />
-                </defs>
-            </g>
-
             <g v-for="(ds, i) in drawableDataset" :key="`ds-${i}`">
                 <!-- Paths -->
                 <g v-for="(dp, j) in ds.datapoints" :key="dp.id">
+                    <g v-if="$slots.pattern">
+                        <defs>
+                            <slot name="pattern" v-bind="{ datapointIndex: i, seriesIndex: j, patternId: `pattern_${uid}_${dp.uid}` }" />
+                        </defs>
+                    </g>
                     <!-- PATH BACKGROUND -->
-                    <path :fill="FINAL_CONFIG.style.chart.backgroundColor" stroke="none" stroke-linecap="round"
+                    <path :fill="$slots.pattern ? `url(#pattern_${uid}_${dp.uid})` : FINAL_CONFIG.style.chart.backgroundColor" stroke="none" stroke-linecap="round"
                         :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath" :style="{
                             opacity: FINAL_CONFIG.style.chart.areas.opacity,
                         }" />
 
                     <!-- PATH -->
                     <path
-                        :fill="FINAL_CONFIG.style.chart.areas.useCommonColor ? `url(#gradient-${dp.id}-${uid})` : `url(#gradient-single-${uid}-${dp.uid})`"
+                        :fill="!FINAL_CONFIG.style.chart.areas.useGradient ? dp.color : FINAL_CONFIG.style.chart.areas.useCommonColor ? `url(#gradient-${dp.id}-${uid})` : `url(#gradient-single-${uid}-${dp.uid})`"
                         :stroke="FINAL_CONFIG.style.chart.areas.stroke.useSerieColor ? dp.color : FINAL_CONFIG.style.chart.areas.stroke.color"
                         :stroke-width="FINAL_CONFIG.style.chart.areas.strokeWidth"
                         :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath"
