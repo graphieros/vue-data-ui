@@ -7,6 +7,7 @@ import {
     convertCustomPalette,
     createCsvContent,
     createSmoothAreaSegments,
+    createSmoothPath,
     createStraightPath,
     createUid,
     dataLabel,
@@ -391,12 +392,14 @@ const drawableDataset = computed(() => {
                     const smoothPath = `${createSmoothAreaSegments(plots, zero, false, false)}`;
                     const straightPath = `M ${startX},${zero} ${createStraightPath(plots)} ${plots.at(-1).x},${zero}`;
                     const zeroPath = `M ${startX},${zero} ${plots.at(-1).x},${zero}`;
+                    const smoothPathRidge = `M ${createSmoothPath(plots)}`;
+                    const straightPathRidge = `M ${createStraightPath(plots)}`;
 
 
                     const pathLength = getPathLengthFromCoordinates(
                         FINAL_CONFIG.value.style.chart.areas.smooth
-                            ? smoothPath
-                            : straightPath
+                            ? smoothPathRidge
+                            : straightPathRidge
                     );
 
                     return {
@@ -406,7 +409,9 @@ const drawableDataset = computed(() => {
                         smoothPath,
                         straightPath,
                         zeroPath,
-                        pathLength
+                        pathLength,
+                        smoothPathRidge,
+                        straightPathRidge
                     }
                 })
                 .filter(dp => !segregated.value.includes(dp.id))
@@ -731,15 +736,26 @@ defineExpose({
 
                     <!-- PATH -->
                     <path
-                        :fill="!FINAL_CONFIG.style.chart.areas.useGradient ? dp.color : FINAL_CONFIG.style.chart.areas.useCommonColor ? `url(#gradient-${dp.id}-${uid})` : `url(#gradient-single-${uid}-${dp.uid})`"
+                        fill="none"
                         :stroke="FINAL_CONFIG.style.chart.areas.stroke.useSerieColor ? dp.color : FINAL_CONFIG.style.chart.areas.stroke.color"
                         :stroke-width="FINAL_CONFIG.style.chart.areas.strokeWidth"
-                        :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath"
+                        :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPathRidge : dp.straightPathRidge"
                         stroke-linecap="round" stroke-linejoin="round"
-                        :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation }" :style="{
+                        :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation }" 
+                        :style="{
                             strokeDasharray: dp.pathLength,
                             strokeDashoffset: FINAL_CONFIG.useCssAnimation ? dp.pathLength : 0,
-
+                        }" 
+                    />
+                    <path
+                        :fill="!FINAL_CONFIG.style.chart.areas.useGradient ? dp.color : FINAL_CONFIG.style.chart.areas.useCommonColor ? `url(#gradient-${dp.id}-${uid})` : `url(#gradient-single-${uid}-${dp.uid})`"
+                        stroke="none"
+                        :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath"
+                        stroke-linecap="round" stroke-linejoin="round"
+                        :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation }" 
+                        :style="{
+                            strokeDasharray: dp.pathLength,
+                            strokeDashoffset: FINAL_CONFIG.useCssAnimation ? dp.pathLength : 0,
                         }" />
 
                     <!-- ZERO LINE -->
