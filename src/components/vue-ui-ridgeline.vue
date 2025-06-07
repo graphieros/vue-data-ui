@@ -10,6 +10,7 @@ import {
     createStraightPath, 
     createUid, 
     dataLabel, 
+    deepEmptyObjectToNull,
     downloadCsv, 
     error, 
     getMissingDatasetAttributes, 
@@ -254,7 +255,6 @@ const formattedDataset = computed(() => {
             uid: createUid(),
             datapoints: ds.datapoints.map((dp, j) => {
                 const color = dp.color ? convertColorToHex(dp.color) : customPalette.value[j] || palette[j] || palette[j % palette.length];
-                console.log(color);
                 const id = slugify(dp.name);
                 return {
                     ...dp,
@@ -469,7 +469,7 @@ function createXyDatasetForDialog(ds) {
 
     selectedDatapoint.value = ds;
 
-    xyConfig.value = {
+    xyConfig.value = deepEmptyObjectToNull({
         ...FINAL_CONFIG.value.style.chart.dialog.xyChart,
         responsive: true, // Overriding 
         chart: {
@@ -489,7 +489,7 @@ function createXyDatasetForDialog(ds) {
                 showTimeLabel: FINAL_CONFIG.value.style.chart.xAxis.labels.values.length > 0 // Overriding
             }
         }
-    };
+    })
 
     dialog.value && dialog.value.open();
 }

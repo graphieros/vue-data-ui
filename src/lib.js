@@ -2474,6 +2474,37 @@ export function slugify(str) {
         .replace(/-+$/, ''); // Trim end
 }
 
+export function emptyObjectToNull(obj) {
+    if (
+        obj &&
+        typeof obj === 'object' &&
+        !Array.isArray(obj) &&
+        Object.keys(obj).length === 0
+    ) {
+        return null;
+    }
+    return obj;
+}
+
+export function deepEmptyObjectToNull(value) {
+    if (Array.isArray(value)) {
+        return value.map(deepEmptyObjectToNull);
+    } else if (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+    ) {
+        const result = {};
+        for (const key in value) {
+            if (Object.hasOwn(value, key)) {
+                result[key] = deepEmptyObjectToNull(value[key]);
+            }
+        }
+        return emptyObjectToNull(result);
+    }
+    return value;
+}
+
 
 const lib = {
     XMLNS,
@@ -2515,8 +2546,10 @@ const lib = {
     darkenHexColor,
     dataLabel,
     deepClone,
+    deepEmptyObjectToNull,
     degreesToRadians,
     downloadCsv,
+    emptyObjectToNull,
     error,
     forceValidValue,
     functionReturnsString,
