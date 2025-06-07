@@ -254,6 +254,7 @@ const formattedDataset = computed(() => {
             uid: createUid(),
             datapoints: ds.datapoints.map((dp, j) => {
                 const color = dp.color ? convertColorToHex(dp.color) : customPalette.value[j] || palette[j] || palette[j % palette.length];
+                console.log(color);
                 const id = slugify(dp.name);
                 return {
                     ...dp,
@@ -390,6 +391,7 @@ const drawableDataset = computed(() => {
 
                     return {
                         ...dp,
+                        uid: createUid(),
                         plots,
                         smoothPath,
                         straightPath,
@@ -730,7 +732,22 @@ defineExpose({
                     <stop offset="70%" :stop-color="dp.color" stop-opacity="0.3" />
                     <stop offset="100%" :stop-color="dp.color" stop-opacity="0.1" />
                 </linearGradient>
+
+                <template v-for="(ds, i) in drawableDataset">
+                    <linearGradient 
+                        v-for="(dp, j) in ds.datapoints" 
+                        :key="`grad${dp.id}`"
+                        :id="`gradient-single-${uid}-${dp.uid}`"
+                        x1="50%" y1="0%" x2="50%"
+                        y2="100%">
+                        <stop offset="0%" :stop-color="dp.color" stop-opacity="1" />
+                        <stop offset="30%" :stop-color="dp.color" stop-opacity="0.7" />
+                        <stop offset="70%" :stop-color="dp.color" stop-opacity="0.3" />
+                        <stop offset="100%" :stop-color="dp.color" stop-opacity="0.1" />
+                    </linearGradient>
+                </template>
             </defs>
+
 
             <g v-if="$slots.pattern">
                 <defs v-for="(variable, i) in legendSet">
@@ -738,9 +755,9 @@ defineExpose({
                 </defs>
             </g>
 
-            <g v-for="(ds, i) in drawableDataset">
+            <g v-for="(ds, i) in drawableDataset" :key="`ds-${i}`">
                 <!-- Paths -->
-                <g v-for="(dp, j) in ds.datapoints">
+                <g v-for="(dp, j) in ds.datapoints" :key="dp.id">
                     <!-- PATH BACKGROUND -->
                     <path 
                         :fill="FINAL_CONFIG.style.chart.backgroundColor" 
@@ -752,7 +769,7 @@ defineExpose({
 
                     <!-- PATH -->
                     <path 
-                        :fill="`url(#gradient-${dp.id}-${uid})`"
+                        :fill="FINAL_CONFIG.style.chart.areas.useCommonColor ? `url(#gradient-${dp.id}-${uid})` : `url(#gradient-single-${uid}-${dp.uid})`"
                         :stroke="FINAL_CONFIG.style.chart.areas.stroke.useSerieColor ? dp.color : FINAL_CONFIG.style.chart.areas.stroke.color"
                         :stroke-width="FINAL_CONFIG.style.chart.areas.strokeWidth" 
                         :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath"
