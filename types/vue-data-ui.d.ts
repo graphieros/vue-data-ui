@@ -6806,6 +6806,7 @@ declare module "vue-data-ui" {
         customPalette?: string[];
         responsive?: boolean;
         userOptions?: ChartUserOptions;
+        useCssAnimation?: boolean;
         table?: {
             show?: boolean;
             responsiveBreakpoint?: number;

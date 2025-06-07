@@ -5350,6 +5350,7 @@ export function useConfig() {
         theme: '',
         customPalette: [],
         responsive: false,
+        useCssAnimation: true,
         userOptions: USER_OPTIONS({
             tooltip: false,
             pdf: true,
