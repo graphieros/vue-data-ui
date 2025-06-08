@@ -760,10 +760,13 @@ defineExpose({
 
                     <!-- ZERO LINE -->
                     <path
+                        v-if="FINAL_CONFIG.style.chart.zeroLine.show"
                         :stroke="FINAL_CONFIG.style.chart.zeroLine.useSerieColor ? dp.color : FINAL_CONFIG.style.chart.zeroLine.stroke"
                         :stroke-dasharray="FINAL_CONFIG.style.chart.zeroLine.strokeDasharray"
-                        :stroke-width="FINAL_CONFIG.style.chart.zeroLine.strokeWidth" :d="dp.zeroPath"
-                        stroke-linecap="round" />
+                        :stroke-width="FINAL_CONFIG.style.chart.zeroLine.strokeWidth" 
+                        :d="dp.zeroPath"
+                        stroke-linecap="round" 
+                    />
 
                     <!-- MAX POINT INDICATOR -->
                     <template v-if="FINAL_CONFIG.style.chart.areas.maxPoint.show && dp.plots.length > 1">
