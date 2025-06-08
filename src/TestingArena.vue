@@ -2204,10 +2204,11 @@ const skeletonOptions = ref([
   'stripPlot',
   'bullet',
   'historyPlot',
-  'circlePack'
+  'circlePack',
+  'ridgleline'
 ]);
 
-const skeletonChoice = ref('circlePack')
+const skeletonChoice = ref('ridgeline')
 
 const tiremarksDataset = ref({
   percentage: 75
