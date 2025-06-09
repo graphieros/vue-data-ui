@@ -135,6 +135,7 @@ export function positionWords({
     words,
     proximity = 0,
     svg,
+    strictPixelPadding
 }) {
     const { width, height } = svg;
     const maskW = Math.round(width);
@@ -178,7 +179,9 @@ export function positionWords({
                 svg
             });
 
-            wordMask = dilateWordMask({ wordMask, w, h, dilation: 2 });
+            if (strictPixelPadding) {
+                wordMask = dilateWordMask({ wordMask, w, h, dilation: 1 });
+            }
 
             let r = 0;
             let attempts = 0;

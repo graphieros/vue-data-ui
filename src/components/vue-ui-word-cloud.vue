@@ -237,6 +237,7 @@ function generateWordCloud() {
         words: scaledWords,
         svg: svg.value,
         proximity: FINAL_CONFIG.value.style.chart.words.proximity,
+        strictPixelPadding: FINAL_CONFIG.value.strictPixelPadding
     });
 }
 

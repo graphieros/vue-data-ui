@@ -3645,6 +3645,7 @@ export function useConfig() {
         customPalette: [],
         useCssAnimation: true,
         animationDelayMs: 20,
+        strictPixelPadding: false, // If true, strict per-pixel padding is used (dilateWordMask); if false, just rectangular bounding box (or pad).
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,
