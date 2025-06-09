@@ -166,7 +166,7 @@ export function positionWords({
     const maskH = Math.round(height);
     const minFontSize = 1;
     const configMinFontSize = svg.minFontSize;
-    const maxFontSize = svg.maxFontSize;
+    const maxFontSize = Math.min(svg.maxFontSize, 100);
     const values = words.map(w => w.value);
     const minValue = Math.min(...values);
     const maxValue = Math.max(...values);
