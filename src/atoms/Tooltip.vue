@@ -1,8 +1,8 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch, onUnmounted, nextTick } from "vue";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useMouse } from "../useMouse";
-import { opacity, setOpacity } from "../lib";
+import { setOpacity } from "../lib";
 
 const props = defineProps({
     backgroundColor: {
@@ -64,28 +64,82 @@ const props = defineProps({
     isFullscreen: {
         type: Boolean,
         default: false
+    },
+    disableSmoothing: {
+        type: Boolean,
+        default: false
     }
 });
 
-const tooltip = ref(null)
+const tooltip = ref(null);
 
-const clientPosition = ref(useMouse(props.parent));
+const { x, y } = useMouse(props.parent);
+const targetPosition = ref({ x: 0, y: 0 });
+const displayPosition = ref({ x: 0, y: 0 });
+
+const smoothing = 0.18;
+let animationFrameId = null;
+
+function animate() {
+    if (props.disableSmoothing) {
+        displayPosition.value.x = targetPosition.value.x;
+        displayPosition.value.y = targetPosition.value.y;
+        return;
+    }
+    displayPosition.value.x += (targetPosition.value.x - displayPosition.value.x) * smoothing;
+    displayPosition.value.y += (targetPosition.value.y - displayPosition.value.y) * smoothing;
+    animationFrameId = requestAnimationFrame(animate);
+}
+
+watch([x, y], ([newX, newY]) => {
+    targetPosition.value.x = newX;
+    targetPosition.value.y = newY;
+    if (props.disableSmoothing) {
+        displayPosition.value.x = newX;
+        displayPosition.value.y = newY;
+    }
+});
+
+watch(() => props.show, async (show) => {
+    if (show) {
+        const initialX = x.value;
+        const initialY = y.value;
+        targetPosition.value.x = initialX;
+        targetPosition.value.y = initialY;
+        displayPosition.value.x = initialX;
+        displayPosition.value.y = initialY;
+        await nextTick();
+        if (!animationFrameId) animate();
+    } else {
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+    }
+});
+
+onUnmounted(() => {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+});
 
 const position = computed(() => {
-    return calcTooltipPosition({
+    const pos = calcTooltipPosition({
         tooltip: tooltip.value,
         chart: props.parent,
-        clientPosition: clientPosition.value,
+        clientPosition: displayPosition.value,
         positionPreference: props.position,
         defaultOffsetY: props.offsetY,
         blockShiftY: props.blockShiftY
     });
-})
+    return {
+        top: Math.round(pos.top),
+        left: Math.round(pos.left)
+    };
+});
 
 const convertedBackground = computed(() => {
     return setOpacity(props.backgroundColor, props.backgroundOpacity);
-})
-
+});
 </script>
 
 <template>
@@ -98,7 +152,15 @@ const convertedBackground = computed(() => {
             data-cy="tooltip"
             :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
             v-if="show"
-            :style="`pointer-events:none;top:${position.top}px;left:${position.left}px;${isCustom ? '' : `background:${convertedBackground};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};border-radius:${borderRadius}px;border:${borderWidth}px solid ${borderColor};z-index:2147483647;`"
+            :style="`
+                pointer-events:none;
+                top:${position.top}px;
+                left:${position.left}px;
+                ${isCustom ? '' : `background:${convertedBackground};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};
+                border-radius:${borderRadius}px;
+                border:${borderWidth}px solid ${borderColor};
+                z-index:2147483647;
+            `"
         >
             <slot name="tooltip-before"/>
             <slot/>
@@ -119,5 +181,9 @@ const convertedBackground = computed(() => {
 .vue-data-ui-custom-tooltip {
     position: fixed;
     z-index: 3;
+}
+.vue-data-ui-tooltip,
+.vue-data-ui-custom-tooltip {
+    will-change: top, left;
 }
 </style>

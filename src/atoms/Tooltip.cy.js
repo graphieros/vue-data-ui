@@ -7,6 +7,7 @@ describe('<Tooltip />', () => {
       props: {
         content: `<div data-cy="tooltip-content">Content</div>`,
         show: true,
+        disableSmoothing: true
       },
       slots: {
         default: {
