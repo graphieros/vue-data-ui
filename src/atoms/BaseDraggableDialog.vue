@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, defineExpose, onUnmounted, nextTick } from "vue";
+import { ref, reactive, computed, onUnmounted, nextTick } from "vue";
 import BaseIcon from "./BaseIcon.vue";
 import { XMLNS } from "../lib";
 
