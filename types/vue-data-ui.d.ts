@@ -5480,6 +5480,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         useCssAnimation?: boolean;
         animationDelayMs?: number;
+        strictPixelPadding?: boolean;
         style?: {
             fontFamily?: string;
             chart?: {

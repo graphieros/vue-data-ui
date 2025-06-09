@@ -237,6 +237,7 @@ function generateWordCloud() {
         words: scaledWords,
         svg: svg.value,
         proximity: FINAL_CONFIG.value.style.chart.words.proximity,
+        strictPixelPadding: FINAL_CONFIG.value.strictPixelPadding
     });
 }
 
@@ -499,8 +500,19 @@ function useTooltip(word) {
             <g
                 :transform="`translate(${(svg.width <= 0 ? 10 : svg.width) / 2}, ${(svg.height <= 0 ? 10 : svg.height) / 2})`">
                 <g v-for="(word, index) in positionedWords">
-                    <text
+                    <rect
+                        v-if="word.minX !== undefined"
                         data-cy="datapoint-word"
+                        :x="word.x + word.minX"
+                        :y="word.y + (word.minY * 1.25)"
+                        :width="word.maxX - word.minX"
+                        :height="word.maxY - word.minY"
+                        fill="transparent"
+                        pointer-events="visiblePainted"
+                        @mouseover="useTooltip(word)"
+                        @mouseleave="selectedWord = null; isTooltip = false"
+                    />
+                    <text
                         :fill="word.color" 
                         :font-weight="FINAL_CONFIG.style.chart.words.bold ? 'bold' : 'normal'" :key="index"
                         :x="word.x" :y="word.y" :font-size="word.fontSize"
@@ -508,9 +520,7 @@ function useTooltip(word) {
                         :class="{'animated': FINAL_CONFIG.useCssAnimation, 'word-selected': selectedWord && selectedWord === word.id && mutableConfig.showTooltip, 'word-not-selected': selectedWord && selectedWord !== word.id && mutableConfig.showTooltip }"
                         text-anchor="middle"
                         dominant-baseline="central"
-                        @mouseover="useTooltip(word)"
-                        @mouseleave="selectedWord = null; isTooltip = false"
-                        :style="`animation-delay:${index * FINAL_CONFIG.animationDelayMs}ms !important;`"
+                        :style="`animation-delay:${index * FINAL_CONFIG.animationDelayMs}ms !important; pointer-events:none;`"
                     >
                         {{ word.name }}
                     </text>

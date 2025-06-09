@@ -10,6 +10,28 @@
  * - position words inside a given area using a spiral placement algorithm (the actual function of this file used in the component @generateWordCloud)
  */
 
+function getTightBoundingBox(canvas, ctx) {
+    const { width, height } = canvas;
+    const img = ctx.getImageData(0, 0, width, height);
+    const data = img.data;
+    let minX = width, minY = height, maxX = 0, maxY = 0;
+    let found = false;
+    for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+            const alpha = data[(y * width + x) * 4 + 3];
+            if (alpha > 1) {
+                found = true;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+        }
+    }
+    if (!found) return [0, 0, 0, 0];
+    return [minX, minY, maxX, maxY];
+}
+
 /**
  * Generates a bitmap and mask representing a word, given font size and padding.
  * @param {Object} params
@@ -52,9 +74,11 @@ export function getWordBitmap({
             if (data[(y * textW + x) * 4 + 3] > 1) wordMask.push([x, y]);
         }
     }
+
+    const [minX, minY, maxX, maxY] = getTightBoundingBox(canvas, ctx);
     ctx.restore();
 
-    return { w: textW, h: textH, wordMask };
+    return { w: textW, h: textH, wordMask, minX, minY, maxX, maxY };
 }
 
 /**
@@ -135,13 +159,14 @@ export function positionWords({
     words,
     proximity = 0,
     svg,
+    strictPixelPadding
 }) {
     const { width, height } = svg;
     const maskW = Math.round(width);
     const maskH = Math.round(height);
     const minFontSize = 1;
     const configMinFontSize = svg.minFontSize;
-    const maxFontSize = svg.maxFontSize;
+    const maxFontSize = Math.min(svg.maxFontSize, 100);
     const values = words.map(w => w.value);
     const minValue = Math.min(...values);
     const maxValue = Math.max(...values);
@@ -169,7 +194,7 @@ export function positionWords({
         let fontSize = targetFontSize;
 
         while (!placed && fontSize >= minFontSize) {
-            let { w, h, wordMask } = getWordBitmap({
+            let { w, h, wordMask, minX, minY, maxX, maxY } = getWordBitmap({
                 word: wordRaw, 
                 fontSize, 
                 pad: proximity,
@@ -178,7 +203,9 @@ export function positionWords({
                 svg
             });
 
-            wordMask = dilateWordMask({ wordMask, w, h, dilation: 2 });
+            if (strictPixelPadding) {
+                wordMask = dilateWordMask({ wordMask, w, h, dilation: 1 });
+            }
 
             let r = 0;
             let attempts = 0;
@@ -190,7 +217,7 @@ export function positionWords({
                     const py = Math.round(cy + r * Math.sin(theta * Math.PI / 180) - h / 2);
                     if (px < 0 || py < 0 || px + w > maskW || py + h > maskH) continue;
                     if (canPlaceAt({ mask, maskW, maskH, wx:px, wy:py, wordMask})) {
-                        positionedWords.push({ ...wordRaw, x: px - maskW / 2, y: py - maskH / 2, fontSize, width: w, height: h, angle: 0 });
+                        positionedWords.push({ ...wordRaw, x: px - maskW / 2, y: py - maskH / 2, fontSize, width: w, height: h, angle: 0, minX, minY, maxX, maxY });
                         markMask({ mask, maskW, maskH, wx: px, wy: py, wordMask });
                         placed = true;
                         break;
@@ -203,7 +230,7 @@ export function positionWords({
 
         if (!placed && fontSize < minFontSize) {
             fontSize = minFontSize;
-            const { w, h, wordMask } = getWordBitmap({
+            const { w, h, wordMask, minX, minY, maxX, maxY } = getWordBitmap({
                 word: wordRaw, 
                 fontSize, 
                 pad: proximity,
@@ -222,7 +249,7 @@ export function positionWords({
                     const py = Math.round(cy + r * Math.sin(theta * Math.PI / 180) - h / 2);
                     if (px < 0 || py < 0 || px + w > maskW || py + h > maskH) continue;
                     if (canPlaceAt({ mask, maskW, maskH, wx: px, wy: py, wordMask })) {
-                        positionedWords.push({ ...wordRaw, x: px - maskW / 2, y: py - maskH / 2, fontSize, width: w, height: h, angle: 0 });
+                        positionedWords.push({ ...wordRaw, x: px - maskW / 2, y: py - maskH / 2, fontSize, width: w, height: h, angle: 0, minX, minY, maxX, maxY });
                         markMask({ mask, maskW, maskH, wx: px, wy: py, wordMask });
                         placed = true;
                         break;

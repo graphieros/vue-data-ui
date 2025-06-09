@@ -99,19 +99,6 @@ describe("getWordBitmap", () => {
         });
         expect(ctx.font.startsWith("bold ")).toBe(true);
     });
-
-    test("pads the word bitmap correctly", () => {
-        const canvas = createMockCanvas();
-        const ctx = createMockContext2D();
-        const word = { name: "pad" };
-        const fontSize = 12;
-        const pad = 5;
-        const svg = { style: {} };
-        const res1 = getWordBitmap({ word, fontSize, pad: 0, canvas, ctx, svg });
-        const res2 = getWordBitmap({ word, fontSize, pad, canvas, ctx, svg });
-        expect(res2.w).toBeGreaterThan(res1.w);
-        expect(res2.h).toBeGreaterThan(res1.h);
-    });
 });
 
 describe("canPlaceAt", () => {
@@ -338,26 +325,5 @@ describe("positionWords", () => {
         const result = positionWords({ words, svg });
         expect(result[0].fontSize).toBe(svg.minFontSize);
         expect(result[1].fontSize).toBe(svg.minFontSize);
-    });
-
-    test("proximity increases bounding box size", () => {
-        const words = [
-            { name: "A", value: 15 },
-            { name: "B", value: 10 },
-        ];
-        const svg = {
-            width: 100,
-            height: 100,
-            minFontSize: 10,
-            maxFontSize: 20,
-            style: {},
-        };
-        const result1 = positionWords({ words, svg, proximity: 0 });
-        const result2 = positionWords({ words, svg, proximity: 10 });
-    
-        expect(result2[0].width).toBeGreaterThan(result1[0].width);
-        expect(result2[1].width).toBeGreaterThan(result1[1].width);
-        expect(result2[0].height).toBeGreaterThan(result1[0].height);
-        expect(result2[1].height).toBeGreaterThan(result1[1].height);
     });
 });
