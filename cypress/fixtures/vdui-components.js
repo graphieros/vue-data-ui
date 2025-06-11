@@ -520,6 +520,9 @@ export const components = [
             { name: "C", values: [3], comment: "C-C" },
         ],
         config: {
+            loadAnimation: {
+                show: false,
+            },
             style: {
                 chart: {
                     comments: {

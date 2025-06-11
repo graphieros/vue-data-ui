@@ -2923,8 +2923,17 @@ declare module "vue-data-ui" {
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
-        useCssAnimation?: boolean;
         useBlurOnHover?: boolean;
+        useCssAnimation?: boolean;
+        serieToggleAnimation?: {
+            show?: boolean;
+            durationMs?: number;
+        };
+        startAnimation?: {
+            show?: boolean;
+            durationMs?: number;
+            staggerMs?: number;
+        };
         style?: {
             fontFamily?: string;
             chart?: {

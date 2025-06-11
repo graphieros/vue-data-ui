@@ -622,6 +622,15 @@ export function useConfig() {
         theme: '',
         customPalette: [],
         useCssAnimation: true,
+        serieToggleAnimation: {
+            show: true,
+            durationMs: 500,
+        },
+        startAnimation: {
+            show: true,
+            durationMs: 1000,
+            staggerMs: 50
+        },
         useBlurOnHover: true,
         userOptions: USER_OPTIONS({
             tooltip: true,
