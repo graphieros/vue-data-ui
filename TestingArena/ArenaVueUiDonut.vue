@@ -66,8 +66,9 @@ function alterDataset() {
 }
 
 const model = ref([
-    { key: 'type', def: 'classic', type: 'select', options: ['classic', 'polar']},
-    { key: 'useSerieToggleAnimation', def: true, type: 'checkbox'},
+    { key: 'type', def: 'polar', type: 'select', options: ['classic', 'polar']},
+    { key: 'serieToggleAnimation.show', def: true, type: 'checkbox'},
+    { key: 'serieToggleAnimation.durationMs', def: 500, type: 'number', min: 0, max: 5000, step: 100},
     { key: 'loadAnimation.show', def: true, type: 'checkbox'},
     { key: 'loadAnimation.durationMs', def: 1000, type: 'number', min: 0, max: 5000, step: 500},
     { key: 'loadAnimation.staggerMs', def: 50, type: 'number', min: 0, max: 1000, step: 25},

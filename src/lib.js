@@ -2506,6 +2506,10 @@ export function deepEmptyObjectToNull(value) {
     return value;
 }
 
+export function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+}
+
 
 const lib = {
     XMLNS,
@@ -2550,6 +2554,7 @@ const lib = {
     deepEmptyObjectToNull,
     degreesToRadians,
     downloadCsv,
+    easeOutCubic,
     emptyObjectToNull,
     error,
     forceValidValue,

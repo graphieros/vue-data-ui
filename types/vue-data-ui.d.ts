@@ -2925,7 +2925,10 @@ declare module "vue-data-ui" {
         customPalette?: string[];
         useBlurOnHover?: boolean;
         useCssAnimation?: boolean;
-        useSerieToggleAnimation?: boolean;
+        serieToggleAnimation?: {
+            show?: boolean;
+            durationMs?: number;
+        };
         startAnimation?: {
             show?: boolean;
             durationMs?: number;

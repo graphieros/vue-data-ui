@@ -12,6 +12,7 @@ import {
     createUid,
     dataLabel,
     downloadCsv,
+    easeOutCubic,
     error,
     getMissingDatasetAttributes,
     isFunction,
@@ -171,10 +172,6 @@ const FINAL_CONFIG = computed({
 const isFirstLoad = ref(true);
 const animatedValues = ref([]);
 
-function easeOutCubic(t) {
-    return 1 - Math.pow(1 - t, 3);
-}
-
 function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
     return new Promise(resolve => {
         const N = finalValues.length;
@@ -280,7 +277,6 @@ const donutThickness = computed(() => {
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
 
-
 const immutableSet = computed(() => {
     return props.dataset
         .map((serie, i) => {
@@ -317,105 +313,101 @@ const rafUp = ref(null);
 const rafDown = ref(null);
 const isAnimating = ref(false);
 
+function animateValue({ from, to, duration, onUpdate, onDone, easing = easeOutCubic }) {
+    const start = performance.now();
+    function step(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = easing(t);
+        const current = from + (to - from) * eased;
+        onUpdate(current, t);
+        if (t < 1) {
+            requestAnimationFrame(step);
+        } else {
+            onUpdate(to, 1);
+            if (onDone) onDone();
+        }
+    }
+    requestAnimationFrame(step);
+}
+
 function segregate(index) {
-    const target = immutableSet.value.find((_, idx) => idx === index)
-    const source = mutableSet.value.find((_, idx) => idx === index)
+    const target = immutableSet.value.find((_, idx) => idx === index);
+    const source = mutableSet.value.find((_, idx) => idx === index);
     let initVal = source.value;
+
     if (segregated.value.includes(index)) {
         segregated.value = segregated.value.filter(s => s !== index);
         const targetVal = target.value;
 
         function setFinalUpState() {
-            mutableSet.value = mutableSet.value.map((ds, i) => {
-                    if (index === i) {
-                        return {
-                            ...ds,
-                            value: targetVal
-                        }
-                    } else {
-                        return ds
-                    }
-                });
+            mutableSet.value = mutableSet.value.map((ds, i) =>
+                index === i ? { ...ds, value: targetVal } : ds
+            );
         }
 
-        function animUp() {
-            if (initVal > targetVal) {
-                cancelAnimationFrame(rafUp.value);
-                setFinalUpState();
-                isAnimating.value = false;
-            } else {
-                isAnimating.value = true;
-                initVal += (targetVal * (FINAL_CONFIG.value.type === 'polar' ? 1 : 0.045));
-                mutableSet.value = mutableSet.value.map((ds, i) => {
-                    if ((index === i)) {
-                        return {
-                            ...ds,
-                            value: initVal
-                        }
-                    } else {
-                        return ds
-                    }
-                })
-                rafUp.value = requestAnimationFrame(animUp)
-            }
+        function doAnimUp() {
+            isAnimating.value = true;
+            animateValue({
+                from: initVal,
+                to: targetVal,
+                duration: FINAL_CONFIG.value.serieToggleAnimation.durationMs,
+                onUpdate: (val, t) => {
+                    mutableSet.value = mutableSet.value.map((ds, i) =>
+                        index === i ? { ...ds, value: val } : ds
+                    );
+                },
+                onDone: () => {
+                    setFinalUpState();
+                    isAnimating.value = false;
+                }
+            });
         }
 
-        if (FINAL_CONFIG.value.useSerieToggleAnimation) {
-            animUp();
+        if (FINAL_CONFIG.value.serieToggleAnimation.show && FINAL_CONFIG.value.type === 'classic') {
+            doAnimUp();
         } else {
             setFinalUpState();
         }
-
     } else if (segregated.value.length < immutableSet.value.length - 1) {
         function setFinalDownState() {
             segregated.value.push(index);
-                mutableSet.value = mutableSet.value.map((ds, i) => {
-                    if (index === i) {
-                        return {
-                            ...ds,
-                            value: 0,
-                        }
-                    } else {
-                        return ds;
-                    }
-                });
+            mutableSet.value = mutableSet.value.map((ds, i) =>
+                index === i ? { ...ds, value: 0 } : ds
+            );
         }
 
-        function animDown() {
-            if (initVal < source.value / 100) {
-                cancelAnimationFrame(rafDown.value);
-                setFinalDownState();
-                isAnimating.value = false;
-            } else {
-                isAnimating.value = true;
-                initVal /= (FINAL_CONFIG.value.type === 'polar' ? 20 : 1.18);
-                mutableSet.value = mutableSet.value.map((ds, i) => {
-                    if (index === i) {
-                        return {
-                            ...ds,
-                            value: initVal
-                        }
-                    } else {
-                        return ds;
-                    }
-                })
-                rafDown.value = requestAnimationFrame(animDown);
-            }
+        function doAnimDown() {
+            isAnimating.value = true;
+            animateValue({
+                from: initVal,
+                to: 0,
+                duration: FINAL_CONFIG.value.serieToggleAnimation.durationMs,
+                onUpdate: (val, t) => {
+                    mutableSet.value = mutableSet.value.map((ds, i) =>
+                        index === i ? { ...ds, value: val } : ds
+                    );
+                },
+                onDone: () => {
+                    setFinalDownState();
+                    isAnimating.value = false;
+                }
+            });
         }
-        if (FINAL_CONFIG.value.useSerieToggleAnimation) {
-            animDown();
+
+        if (FINAL_CONFIG.value.serieToggleAnimation.show && FINAL_CONFIG.value.type === 'classic') {
+            doAnimDown();
         } else {
             setFinalDownState();
         }
     }
-    emit('selectLegend', donutSet.value.map(ds => {
-        return {
-            name: ds.name,
-            color: ds.color,
-            value: ds.value
-        }
-    }));
+
+    emit('selectLegend', donutSet.value.map(ds => ({
+        name: ds.name,
+        color: ds.color,
+        value: ds.value
+    })));
 }
+
 
 const _total = computed(() => props.dataset.reduce((sum, ds) => sum + ds.values.reduce((a, b) => a + b, 0), 0));
 
@@ -922,14 +914,18 @@ defineExpose({
             </template>
             <template v-if="FINAL_CONFIG.type === 'polar'">
                 <g v-for="(arc, i) in currentDonut.filter(el => !el.ghost)">
-                    <line data-cy="polar-datapoint" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                        :x1="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
-                        :y1="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).y"
-                        :x2="polarAreas[i].middlePoint.x" :y2="polarAreas[i].middlePoint.y" :stroke="arc.color"
-                        stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="none"
+                    <path 
+                        data-cy="polar-datapoint" 
+                        v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                        :d="`M ${offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).x},${offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).y} ${polarAreas[i].middlePoint.x},${polarAreas[i].middlePoint.y}`" 
+                        :stroke="arc.color"
+                        stroke-width="1" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        fill="none"
                         :filter="getBlurFilter(i)"
                         :style="{
-                            transition: isFirstLoad ? '' : 'all 0.1s ease-in-out'
+                            transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
                         }"
                     />
                 </g>
@@ -969,7 +965,7 @@ defineExpose({
                     <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         :d="polarAreas[i].path" fill="#FFFFFF" 
                         :style="{
-                            transition: isFirstLoad ? 'none' : 'all 0.1s ease-in-out'
+                            transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
                         }"
                     />
                     <g v-if="FINAL_CONFIG.style.chart.layout.donut.useShadow">
@@ -979,7 +975,7 @@ defineExpose({
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                             :filter="`url(#drop_shadow_${uid})`" 
                             :style="{
-                                transition: isFirstLoad ? 'none' : 'all 0.1s ease-in-out'
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
                             }"
                         />
                     </g>
@@ -992,7 +988,7 @@ defineExpose({
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                             :filter="getBlurFilter(i)"
                             :style="{
-                                transition: isFirstLoad ? 'none' : 'all 0.1s ease-in-out'
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
                             }"
                         />
                     </g>
@@ -1002,7 +998,7 @@ defineExpose({
                         :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)"
                         :style="{
-                            transition: isFirstLoad ? 'none' : 'all 0.1s ease-in-out'
+                            transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
                         }"
                     />
                 </g>
@@ -1145,7 +1141,11 @@ defineExpose({
                             :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="1"
                             :r="3"
                             :filter="!FINAL_CONFIG.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? `` : `url(#blur_${uid})`"
-                            @click="selectDatapoint(arc, i)" />
+                            @click="selectDatapoint(arc, i)" 
+                            :style="{
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                            }"
+                        />
                     </template>
                     <template v-if="FINAL_CONFIG.type === 'classic'">
                         <text data-cy="donut-label-value" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
@@ -1185,7 +1185,10 @@ defineExpose({
                             :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y"
                             :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
                             :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
-                            :style="`transition: all 0.1s ease-in-out; font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold' : ''}`"
+                            :style="{
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
+                                fontWeight: FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold': 'normal'
+                            }"
                             @click="selectDatapoint(arc, i)">
                             {{ displayArcPercentage(arc, noGhostDonut) }} {{
                                 FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${applyDataLabel(
@@ -1206,7 +1209,10 @@ defineExpose({
                             :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
                             :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
                             :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize"
-                            :style="`transition: all 0.1s ease-in-out; font-weight:${FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold' : ''}`"
+                            :style="{
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
+                                fontWeight: FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold': 'normal'
+                            }"
                             @click="selectDatapoint(arc, i)">
                             {{ arc.name }}
                         </text>
@@ -1228,7 +1234,12 @@ defineExpose({
                         :x="FINAL_CONFIG.style.chart.comments.offsetX + (getPolarAnchor(polarAreas[i].middlePoint) === 'end' ? offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x - FINAL_CONFIG.style.chart.comments.width : getPolarAnchor(polarAreas[i].middlePoint) === 'middle' ? offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x - (FINAL_CONFIG.style.chart.comments.width / 2) : offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x)"
                         :y="getPolarCommentY(polarAreas[i]) + FINAL_CONFIG.style.chart.comments.offsetY"
                         :width="FINAL_CONFIG.style.chart.comments.width" height="200"
-                        style="overflow: visible; pointer-events: none">
+                        :style="{
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
+                                overflow: 'visible',
+                                pointerEvents: 'none'
+                            }"
+                        >
                         <div>
                             <slot name="plot-comment"
                                 :plot="{ ...arc, textAlign: getPolarAnchor(polarAreas[i].middlePoint), flexAlign: getPolarAnchor(polarAreas[i].middlePoint), isFirstLoad }" />

@@ -622,7 +622,10 @@ export function useConfig() {
         theme: '',
         customPalette: [],
         useCssAnimation: true,
-        useSerieToggleAnimation: true,
+        serieToggleAnimation: {
+            show: true,
+            durationMs: 500,
+        },
         startAnimation: {
             show: true,
             durationMs: 1000,
