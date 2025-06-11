@@ -69,10 +69,11 @@ describe('<VueUiDonut />', () => {
 				'path',
 				'pattern',
 				'patternIndex',
+				'seriesIndex',
 				'proportion',
 				'ratio',
 				'separator',
-				'seriesIndex',
+				'ghost',
 				'startX',
 				'startY',
 				'value'

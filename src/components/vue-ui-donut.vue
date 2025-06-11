@@ -291,6 +291,8 @@ const immutableSet = computed(() => {
                 absoluteValues: serie.values,
                 comment: serie.comment || '',
                 patternIndex: i,
+                seriesIndex: i,
+                ghost: false,
                 pattern: `pattern_${uid.value}_${i}`
             }
         })
@@ -957,7 +959,9 @@ defineExpose({
                 <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path" :data-cy="`donut-arc-${i}`"
                     :d="arc.arcSlice" :fill="setOpacity(arc.color, 80)"
                     :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)" />
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)" 
+                        
+                />
             </template>
 
             <template v-if="total && FINAL_CONFIG.type === 'polar'">
@@ -965,17 +969,17 @@ defineExpose({
                     <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         :d="polarAreas[i].path" fill="#FFFFFF" 
                         :style="{
-                            transition: isFirstLoad ? '' : 'all 0.1s ease-in-out'
+                            transition: isFirstLoad ? 'none' : 'all 0.1s ease-in-out'
                         }"
                     />
                     <g v-if="FINAL_CONFIG.style.chart.layout.donut.useShadow">
-                        <path data-cy="polar-shadow" v-for="(_arc, i) in currentDonut" class="vue-ui-donut-arc-path"
+                        <path data-cy="polar-shadow" v-for="(_arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
                             :d="polarAreas[i].path" :fill="'transparent'"
                             :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                             :filter="`url(#drop_shadow_${uid})`" 
                             :style="{
-                                transition: isFirstLoad ? '' : 'all 0.1s ease-in-out'
+                                transition: isFirstLoad ? 'none' : 'all 0.1s ease-in-out'
                             }"
                         />
                     </g>
@@ -988,7 +992,7 @@ defineExpose({
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                             :filter="getBlurFilter(i)"
                             :style="{
-                                transition: isFirstLoad ? '' : 'all 0.1s ease-in-out'
+                                transition: isFirstLoad ? 'none' : 'all 0.1s ease-in-out'
                             }"
                         />
                     </g>
@@ -998,7 +1002,7 @@ defineExpose({
                         :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                         :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)"
                         :style="{
-                            transition: isFirstLoad ? '' : 'all 0.1s ease-in-out'
+                            transition: isFirstLoad ? 'none' : 'all 0.1s ease-in-out'
                         }"
                     />
                 </g>
@@ -1023,7 +1027,8 @@ defineExpose({
             <circle data-cy="donut-gradient-hollow"
                 v-if="FINAL_CONFIG.style.chart.useGradient && FINAL_CONFIG.type === 'classic'" :cx="svg.width / 2"
                 :cy="svg.height / 2" :r="/* This might require adjustments */minSize <= 0 ? 10 : minSize"
-                :fill="`url(#gradient_${uid})`" />
+                :fill="`url(#gradient_${uid})`"
+            />
 
             <!-- TOOLTIP TRAPS -->
             <template v-if="total">
