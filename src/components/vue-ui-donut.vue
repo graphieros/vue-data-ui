@@ -1104,7 +1104,7 @@ defineExpose({
             </template>
 
             <!-- DATALABELS -->
-            <g v-for="(arc, i) in currentDonut.filter(el => !el.ghost)" :filter="getBlurFilter(i)"
+            <g v-for="(arc, i) in noGhostDonut.filter(el => !el.ghost)" :filter="getBlurFilter(i)"
                 :class="{ 'animated': FINAL_CONFIG.useCssAnimation }">
                 <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useLabelSlots">
                     <foreignObject
@@ -1119,7 +1119,7 @@ defineExpose({
                                 isVisible: isArcBigEnough(arc) && mutableConfig.dataLabels.show,
                                 textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor,
                                 flexAlign: calcMarkerOffsetX(arc, true, 16).anchor,
-                                percentage: displayArcPercentage(arc, currentDonut),
+                                percentage: displayArcPercentage(arc, noGhostDonut),
                             }" />
                         </div>
                     </foreignObject>
@@ -1150,7 +1150,7 @@ defineExpose({
                             :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
                             :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold' : ''}`"
                             @click="selectDatapoint(arc, i)">
-                            {{ displayArcPercentage(arc, currentDonut) }} {{
+                            {{ displayArcPercentage(arc, noGhostDonut) }} {{
                                 FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${applyDataLabel(
                                     FINAL_CONFIG.style.chart.layout.labels.value.formatter,
                                     arc.value,
@@ -1182,7 +1182,7 @@ defineExpose({
                             :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
                             :style="`transition: all 0.1s ease-in-out; font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold' : ''}`"
                             @click="selectDatapoint(arc, i)">
-                            {{ displayArcPercentage(arc, currentDonut) }} {{
+                            {{ displayArcPercentage(arc, noGhostDonut) }} {{
                                 FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${applyDataLabel(
                                     FINAL_CONFIG.style.chart.layout.labels.value.formatter,
                                     arc.value,
@@ -1216,7 +1216,7 @@ defineExpose({
                         style="overflow: visible; pointer-events: none">
                         <div>
                             <slot name="plot-comment"
-                                :plot="{ ...arc, textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor, flexAlign: calcMarkerOffsetX(arc, true, 16).anchor }" />
+                                :plot="{ ...arc, textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor, flexAlign: calcMarkerOffsetX(arc, true, 16).anchor, isFirstLoad }" />
                         </div>
                     </foreignObject>
                     <foreignObject v-if="isArcBigEnough(arc) && FINAL_CONFIG.type === 'polar'"
@@ -1226,7 +1226,7 @@ defineExpose({
                         style="overflow: visible; pointer-events: none">
                         <div>
                             <slot name="plot-comment"
-                                :plot="{ ...arc, textAlign: getPolarAnchor(polarAreas[i].middlePoint), flexAlign: getPolarAnchor(polarAreas[i].middlePoint) }" />
+                                :plot="{ ...arc, textAlign: getPolarAnchor(polarAreas[i].middlePoint), flexAlign: getPolarAnchor(polarAreas[i].middlePoint), isFirstLoad }" />
                         </div>
                     </foreignObject>
 
