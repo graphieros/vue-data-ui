@@ -67,6 +67,11 @@ function alterDataset() {
 
 const model = ref([
     { key: 'type', def: 'classic', type: 'select', options: ['classic', 'polar']},
+    { key: 'useSerieToggleAnimation', def: true, type: 'checkbox'},
+    { key: 'loadAnimation.show', def: true, type: 'checkbox'},
+    { key: 'loadAnimation.durationMs', def: 1000, type: 'number', min: 0, max: 5000, step: 500},
+    { key: 'loadAnimation.staggerMs', def: 50, type: 'number', min: 0, max: 1000, step: 25},
+
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
@@ -134,7 +139,7 @@ const model = ref([
     { key: 'style.chart.layout.labels.hollow.average.value.suffix', def: '', type: 'text', label: ['hollow', 'average', 'value', 'is', 'suffix'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.average.value.offsetY', def: 0, type: 'number', min: -100, max: 100, label: ['hollow', 'average', 'value', 'is', 'offsetY'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.average.value.rounding', def: 0, type: 'number', min: 0, max: 6, label: ['hollow', 'average', 'value', 'is', 'rounding'], category: 'labels' },
-    { key: 'style.chart.layout.donut.strokeWidth', def: 6, type: 'range', min: 3, max: 130, label: 'thickness', category: 'donut' },
+    { key: 'style.chart.layout.donut.strokeWidth', def: 64, type: 'range', min: 3, max: 130, label: 'thickness', category: 'donut' },
     { key: 'style.chart.layout.donut.borderWidth', def: 1, type: 'range', min: 0, max: 36, label: ['border', 'is', 'thickness'], category: 'donut' },
     { key: 'style.chart.layout.donut.useShadow', def: false,  type: 'checkbox' },
     { key: 'style.chart.layout.donut.shadowColor', def: '#1A1A1A', type: 'color' },

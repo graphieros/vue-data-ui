@@ -1979,9 +1979,9 @@ export function setOpacity(hex, opac = 100) {
     return hex + opacity[opac]
 }
 
-export function createPolarAreas({ series, center, maxRadius }) {
+export function createPolarAreas({ series, center, maxRadius, hasGhost = false }) {
     const totalSegments = series.length;
-    const anglePerSegment = 360 / totalSegments;
+    const anglePerSegment = 360 / (totalSegments - (hasGhost ? 1 : 0));
 
     const paths = series.map((item, index) => {
         const proportion = item;
@@ -2011,7 +2011,8 @@ export function createPolarAreas({ series, center, maxRadius }) {
 
         return {
             path: path.trim(),
-            middlePoint: { x: middleX, y: middleY }
+            middlePoint: { x: middleX, y: middleY },
+            radius
         };
     });
 

@@ -67,6 +67,7 @@ describe('<VueUiDonut />', () => {
 				'firstSeparator',
 				'name',
 				'path',
+				'pattern',
 				'patternIndex',
 				'proportion',
 				'ratio',
