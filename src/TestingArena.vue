@@ -5507,8 +5507,15 @@ function testGetData() {
             @change="testchange"
             :config="dashboardConfig"
           >
+            <template #top="{ item }">
+              TOP CONTENT
+            </template>
+            <template #bottom="{ item }">
+              BOTTOM CONTENT
+            </template>
             <template v-slot:content="{ item }">
               <div style="padding: 12px">
+                LOREM IPSUM
                 <component :is="item.component" v-bind="item.props"></component>
               </div>
             </template>

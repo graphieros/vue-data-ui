@@ -444,6 +444,8 @@ defineExpose({
                             @touchend="onTouchEnd"
                         ></div>
                     </template>
+
+                    <slot name="top" :item="item" :index="index"/>
                     
                     <component
                         :is="item.resolvedComponent"
@@ -453,6 +455,8 @@ defineExpose({
                     <template v-else>
                         <slot name="content" :item="item" :index="index" :left="item.left" :top="item.top" :height="item.height" :width="item.width"></slot>
                     </template>
+
+                    <slot name="bottom" :item="item" :index="index"/>
                 </div>
             </div>
         </div>
