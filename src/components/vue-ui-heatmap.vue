@@ -49,6 +49,8 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['selectDatapoint']);
+
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 })
@@ -445,6 +447,9 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+function selectDatapoint(cell) {
+    emit('selectDatapoint', cell);
+}
 
 defineExpose({
     generatePdf,
@@ -656,6 +661,7 @@ defineExpose({
                         stroke="none"
                         @mouseover="useTooltip(cell, i, drawingArea.left + cellSize.width * j, drawingArea.top + cellSize.height * i)"
                         @mouseout="isTooltip = false; hoveredCell = undefined; hoveredValue = null; selectedClone = null"
+                        @click="() => selectDatapoint(cell)"
                     />
                 </g>
                 <g v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show">
