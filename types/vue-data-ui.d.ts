@@ -5728,6 +5728,37 @@ declare module "vue-data-ui" {
 
     export type VueUiFlowDatasetItem = [string, string, number];
 
+    export type VueUiFlowNode = {
+        color: string;
+        from?: Array<{ source: string; value: number; color: string }>;
+        to?: Array<{ source: string; value: number; color: string }>;
+        inflow?: number;
+        outflow?: number;
+        percentOfTotal: number;
+    }
+
+    export type VueUiFlowFormattedDataset = {
+        links: Array<{
+            id: string;
+            path: string;
+            source: string;
+            sourceColor: string;
+            target: string;
+            targetColor: string;
+            value: number;
+        }>;
+        nodes: Array<{
+            absoluteY: number;
+            color: string;
+            height: number;
+            i: number;
+            name: string;
+            value: number;
+            x: number;
+            y: number;
+        }>
+    }
+
     export type VueUiFlowConfig = {
         theme?: Theme;
         customPalette?: string[];
@@ -5737,6 +5768,24 @@ declare module "vue-data-ui" {
             chart?: {
                 backgroundColor?: string;
                 color?: string;
+                tooltip?: ChartTooltip & {
+                    showPercentage?: boolean;
+                    roundingPercentage?: number;
+                    translations?: {
+                        from?: string;
+                        to?: string;
+                        percentOfTotal?: string;
+                    };
+                    customFormat?:
+                    | null
+                    | ((
+                        params: VueUiTooltipParams<
+                            VueUiFlowNode,
+                            VueUiFlowFormattedDataset,
+                            VueUiFlowConfig
+                        >
+                    ) => string);
+                };
                 padding?: {
                     top?: number;
                     left?: number;

@@ -3863,7 +3863,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            tooltip: true,
         }),
         style: {
             fontFamily: 'inherit',
@@ -3872,6 +3873,16 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 padding: PADDING([12, 12, 0, 12]),
                 title: TITLE,
+                tooltip: {
+                    ...TOOLTIP,
+                    showPercentage: true,
+                    roundingPercentage: 0,
+                    translations: {
+                        from: 'From:',
+                        to: 'To:',
+                        percentOfTotal: 'Percent of total:'
+                    }
+                },
                 nodes: {
                     gap: 10,
                     minHeight: 20,

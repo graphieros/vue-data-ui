@@ -1,21 +1,22 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from "vue";
 import themes from "../themes.json";
-import { 
+import {
     abbreviate,
-    adaptColorToBackground, 
+    adaptColorToBackground,
     applyDataLabel,
     checkNaN,
     convertCustomPalette,
-    createCsvContent, 
-    createUid, 
-    dataLabel, 
-    downloadCsv, 
-    error, 
-    objectIsEmpty, 
-    palette, 
+    createCsvContent,
+    createUid,
+    dataLabel,
+    downloadCsv,
+    error,
+    isFunction,
+    objectIsEmpty,
+    palette,
     themePalettes,
-    XMLNS, 
+    XMLNS,
 } from "../lib";
 import Title from "../atoms/Title.vue";
 import UserOptions from "../atoms/UserOptions.vue";
@@ -29,6 +30,7 @@ import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import Tooltip from "../atoms/Tooltip.vue";
 
 const { vue_ui_flow: DEFAULT_CONFIG } = useConfig();
 
@@ -68,6 +70,9 @@ const uid = ref(createUid());
 const flowChart = ref(null);
 const step = ref(0);
 const titleStep = ref(0);
+const isTooltip = ref(false);
+const tooltipContent = ref("");
+
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -138,7 +143,8 @@ const nodeWidth = computed(() => {
 });
 
 const mutableConfig = ref({
-    showTable: FINAL_CONFIG.value.table.show
+    showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
 const unitWidth = computed(() => {
@@ -146,7 +152,7 @@ const unitWidth = computed(() => {
 });
 
 const sanitizedDataset = computed(() => {
-    if(!props.dataset || !props.dataset.length) return [];
+    if (!props.dataset || !props.dataset.length) return [];
     return props.dataset.map(dp => {
         return [
             dp[0],
@@ -169,7 +175,7 @@ const max = computed(() => {
         addNode(source);
         addNode(target);
 
-        nodes[source].outflow += value; 
+        nodes[source].outflow += value;
         nodes[target].inflow += value;
     });
 
@@ -197,7 +203,7 @@ function computeSankeyCoordinates(ds) {
 
     function addNode(node, level) {
         if (!nodes[node]) {
-            nodes[node] = { height: 0, level: null, inflow: 0, outflow: 0 };
+            nodes[node] = { height: 0, level: null, inflow: 0, outflow: 0, uid: createUid() };
         }
         if (nodes[node].level === null) {
             nodes[node].level = level;
@@ -220,12 +226,12 @@ function computeSankeyCoordinates(ds) {
             nodes[source].children = [];
         }
         nodes[source].children.push({ target, value });
-        nodes[source].outflow += value; 
+        nodes[source].outflow += value;
         nodes[target].inflow += value;
     });
 
     Object.keys(nodes).forEach((key, i) => {
-        nodes[key].color = customPalette.value[i] || customPalette.value[i % customPalette.value.length] || palette[i] || palette[i % d.length]  
+        nodes[key].color = customPalette.value[i] || customPalette.value[i % customPalette.value.length] || palette[i] || palette[i % d.length]
     });
 
 
@@ -363,19 +369,142 @@ function findConnectedNodes(startNode) {
 
 const selectedNodes = ref(null)
 const selectedSource = ref(null);
+const dataTooltipSlot = ref(null);
+const useCustomFormat = ref(false);
 
 function selectNode(node) {
     selectedNodes.value = findConnectedNodes(node.name);
     selectedSource.value = node.name;
+
+    const nodeName = node.name;
+    const dataset = sanitizedDataset.value;
+
+    let inflow = 0;
+    let outflow = 0;
+    let from = [];
+    let to = [];
+
+    // Identify root nodes (nodes that only appear as sources)
+    const sources = new Set(dataset.map(([s]) => s));
+    const targets = new Set(dataset.map(([, t]) => t));
+    const rootNodes = Array.from(sources).filter(src => !targets.has(src));
+
+    // Total amount injected into the system from root nodes
+    const totalRootFlow = dataset
+        .filter(([source]) => rootNodes.includes(source))
+        .reduce((sum, [_s, _t, value]) => sum + value, 0);
+
+    // Build a node name → color map
+    const nodeColorMap = {};
+    mutableDataset.value.nodes.forEach(n => {
+        nodeColorMap[n.name] = n.color;
+    });
+
+    // Collect flow info (with color)
+    dataset.forEach(([source, target, value]) => {
+        if (target === nodeName) {
+            inflow += value;
+            from.push({ source, value, color: nodeColorMap[source] });
+        }
+        if (source === nodeName) {
+            outflow += value;
+            to.push({ target, value, color: nodeColorMap[target] });
+        }
+    });
+
+    const nodeTotalFlow = Math.max(inflow, outflow);
+    const percentOfTotal = totalRootFlow > 0
+        ? ((nodeTotalFlow / totalRootFlow) * 100)
+        : 0;
+
+    const datapoint = {
+        name: nodeName,
+        inflow,
+        outflow,
+        from,
+        to,
+        percentOfTotal,
+        color: nodeColorMap[nodeName] || '#000000'
+    };
+
+    dataTooltipSlot.value = { datapoint };
+    isTooltip.value = true;
+
+    let html = '';
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    useCustomFormat.value = false;
+
+    if (isFunction(customFormat)) {
+        try {
+            const customFormatString = customFormat({
+                datapoint,
+                series: mutableDataset.value,
+                config: FINAL_CONFIG.value
+            });
+            if (typeof customFormatString === 'string') {
+                tooltipContent.value = customFormatString;
+                useCustomFormat.value = true;
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied.');
+        }
+    }
+
+    if (!useCustomFormat.value) {
+        const percentageDisplay = FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `<div>${dataLabel({
+            p: FINAL_CONFIG.value.style.chart.tooltip.translations.percentOfTotal,
+            v: datapoint.percentOfTotal,
+            s: '%',
+            r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+        })}</div>` : ''
+
+        html += `<div data-cy="tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;"><span style="margin-right:4px; color:${datapoint.color}">⏹</span>${datapoint.name}${percentageDisplay}</div>`;
+
+        if (datapoint.from.length) {
+            html += `<div>${FINAL_CONFIG.value.style.chart.tooltip.translations.from}</div>`;
+            datapoint.from.forEach(item => {
+                html += `<div><span style="color:${item.color}">⏹←</span> ${item.source}: ${applyDataLabel(
+                    FINAL_CONFIG.value.style.chart.nodes.labels.formatter,
+                    item.value,
+                    dataLabel({
+                        p: FINAL_CONFIG.value.style.chart.nodes.labels.prefix,
+                        v: item.value,
+                        s: FINAL_CONFIG.value.style.chart.nodes.labels.suffix,
+                        r: FINAL_CONFIG.value.style.chart.nodes.labels.rounding
+                    })
+                )}</div>`;
+            });
+        }
+
+        if (datapoint.to.length) {
+            html += `<div style="margin-top:6px;">${FINAL_CONFIG.value.style.chart.tooltip.translations.to}</div>`;
+            datapoint.to.forEach(item => {
+                html += `<div><span style="color:${item.color}">⏹→</span> ${item.target}: ${applyDataLabel(
+                    FINAL_CONFIG.value.style.chart.nodes.labels.formatter,
+                    item.value,
+                    dataLabel({
+                        p: FINAL_CONFIG.value.style.chart.nodes.labels.prefix,
+                        v: item.value,
+                        s: FINAL_CONFIG.value.style.chart.nodes.labels.suffix,
+                        r: FINAL_CONFIG.value.style.chart.nodes.labels.rounding
+                    })
+                )}</div>`;
+            });
+        }
+
+        tooltipContent.value = html;
+    }
 }
+
 
 function unselectNode() {
     selectedNodes.value = null;
     selectedSource.value = null;
+    isTooltip.value = false;
 }
 
 const table = computed(() => {
-    return mutableDataset.value.links.map(({ source, target, sourceColor, targetColor , value }) => {
+    return mutableDataset.value.links.map(({ source, target, sourceColor, targetColor, value }) => {
         return {
             source,
             target,
@@ -388,21 +517,21 @@ const table = computed(() => {
 
 function generateCsv() {
     nextTick(() => {
-        const labels = table.value.map((el,i) => {
+        const labels = table.value.map((el, i) => {
             return [
-                [ el.source ],
-                [ el.target ],
-                [ el.value ]
+                [el.source],
+                [el.target],
+                [el.value]
             ]
         });
 
         const tableXls = [
-            [ FINAL_CONFIG.value.style.chart.title.text ],
-            [ FINAL_CONFIG.value.style.chart.title.subtitle.text ],
+            [FINAL_CONFIG.value.style.chart.title.text],
+            [FINAL_CONFIG.value.style.chart.title.subtitle.text],
             [
-                [ FINAL_CONFIG.value.table.columnNames.source ],
-                [ FINAL_CONFIG.value.table.columnNames.target ],
-                [ FINAL_CONFIG.value.table.columnNames.value ],
+                [FINAL_CONFIG.value.table.columnNames.source],
+                [FINAL_CONFIG.value.table.columnNames.target],
+                [FINAL_CONFIG.value.table.columnNames.value],
             ]
         ].concat(labels);
 
@@ -481,89 +610,68 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
 defineExpose({
     getData,
     generateCsv,
     generateImage,
     generatePdf,
     toggleTable,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleTooltip
 })
 </script>
 
 <template>
-    <div
-        ref="flowChart"
-        :class="`vue-ui-flow ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" 
-        :id="`flow_${uid}`"
-        @mouseenter="() => setUserOptionsVisibility(true)" 
-        @mouseleave="() => setUserOptionsVisibility(false)"
-    >
-        <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
-            :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
-            :active="isAnnotator"
-            @close="toggleAnnotator"
-        />
+    <div ref="flowChart" :class="`vue-ui-flow ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :id="`flow_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="() => setUserOptionsVisibility(false)">
+        <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator" :svgRef="svgRef"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator" @close="toggleAnnotator" />
 
-        <div
-            ref="noTitle"
-            v-if="hasOptionsNoTitle" 
-            class="vue-data-ui-no-title-space" 
-            :style="`height:36px; width: 100%;background:transparent`"
-        />
+        <div ref="noTitle" v-if="hasOptionsNoTitle" class="vue-data-ui-no-title-space"
+            :style="`height:36px; width: 100%;background:transparent`" />
 
-        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">
-            <Title
-                :key="`title_${titleStep}`"
-                :config="{
-                    title: {
-                        cy: 'flow-title',
-                        ...FINAL_CONFIG.style.chart.title
-                    },
-                    subtitle: {
-                        cy: 'flow-subtitle',
-                        ...FINAL_CONFIG.style.chart.title.subtitle
-                    }
-                }"
-            />
+        <div v-if="FINAL_CONFIG.style.chart.title.text"
+            :style="`width:100%;background:transparent;padding-bottom:24px`">
+            <Title :key="`title_${titleStep}`" :config="{
+                title: {
+                    cy: 'flow-title',
+                    ...FINAL_CONFIG.style.chart.title
+                },
+                subtitle: {
+                    cy: 'flow-subtitle',
+                    ...FINAL_CONFIG.style.chart.title.subtitle
+                }
+            }" />
         </div>
 
-        <UserOptions
-            ref="details"
-            :key="`user_option_${step}`"
+        <UserOptions ref="details" :key="`user_option_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.color"
-            :isPrinting="isPrinting"
-            :isImaging="isImaging"
-            :uid="uid"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
+            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
-            :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :chartElement="flowChart"
-            :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="flowChart"
+            :position="FINAL_CONFIG.userOptions.position" :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
-            @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf"
-            @generateCsv="generateCsv"
-            @generateImage="generateImage"
-            @toggleTable="toggleTable"
-            @toggleAnnotator="toggleAnnotator"
-            :style="{
+            :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show && FINAL_CONFIG.userOptions.buttons.tooltip"
+            :isTooltip="mutableConfig.showTooltip" @toggleTooltip="toggleTooltip" @toggleFullscreen="toggleFullscreen"
+            @generatePdf="generatePdf" @generateCsv="generateCsv" @generateImage="generateImage"
+            @toggleTable="toggleTable" @toggleAnnotator="toggleAnnotator" :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
-            }"
-        >
+            }">
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
-                <slot name="menuIcon" v-bind="{ isOpen, color }"/>
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
+            </template>
+            <template #optionTooltip v-if="$slots.optionTooltip">
+                <slot name="optionTooltip" />
             </template>
             <template #optionPdf v-if="$slots.optionPdf">
                 <slot name="optionPdf" />
@@ -578,98 +686,61 @@ defineExpose({
                 <slot name="optionTable" />
             </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
-                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
+                <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }" />
             </template>
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS"
-            :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-        >
+        <svg ref="svgRef" :xmlns="XMLNS" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="drawingArea.width"
-                :height="drawingArea.height"
-                :style="{
+            <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="drawingArea.width"
+                :height="drawingArea.height" :style="{
                     pointerEvents: 'none'
-                }"
-            >
-                <slot name="chart-background"/>
+                }">
+                <slot name="chart-background" />
             </foreignObject>
-            
+
             <defs>
-                <linearGradient 
-                    v-for="(grad, i) in mutableDataset.links"
-                    :id="grad.id"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="0%"
-                >
-                    <stop offset="0%" :stop-color="grad.sourceColor"/>
-                    <stop offset="100%" :stop-color="grad.targetColor"/>
+                <linearGradient v-for="(grad, i) in mutableDataset.links" :id="grad.id" x1="0%" y1="0%" x2="100%"
+                    y2="0%">
+                    <stop offset="0%" :stop-color="grad.sourceColor" />
+                    <stop offset="100%" :stop-color="grad.targetColor" />
                 </linearGradient>
             </defs>
 
-            <path
-                data-cy="link"
-                v-for="path in mutableDataset.links" 
-                class="vue-ui-flow-link"
-                :d="path.path" 
-                :fill="`url(#${path.id})`" 
-                :stroke="FINAL_CONFIG.style.chart.links.stroke"
+            <path data-cy="link" v-for="path in mutableDataset.links" class="vue-ui-flow-link" :d="path.path"
+                :fill="`url(#${path.id})`" :stroke="FINAL_CONFIG.style.chart.links.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.links.strokeWidth"
-                :style="`opacity:${selectedSource ? [path.target, path.source].includes(selectedSource) ? 1 : 0.3 : FINAL_CONFIG.style.chart.links.opacity}`"
-            />
+                :style="`opacity:${selectedSource ? [path.target, path.source].includes(selectedSource) ? 1 : 0.3 : FINAL_CONFIG.style.chart.links.opacity}`" />
 
-            <rect 
-                data-cy="node"
-                v-for="(node, i) in mutableDataset.nodes"
-                class="vue-ui-flow-node"
-                :x="node.x"
-                :y="checkNaN(node.absoluteY) + FINAL_CONFIG.style.chart.padding.top"
-                :height="checkNaN(node.height)"
-                :width="nodeWidth"
-                :fill="node.color"
-                :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.nodes.strokeWidth"
-                @mouseenter="selectNode(node)"
+            <rect data-cy="node" v-for="(node, i) in mutableDataset.nodes" class="vue-ui-flow-node" :x="node.x"
+                :y="checkNaN(node.absoluteY) + FINAL_CONFIG.style.chart.padding.top" :height="checkNaN(node.height)"
+                :width="nodeWidth" :fill="node.color" :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.nodes.strokeWidth" @mouseenter="selectNode(node)"
                 @mouseleave="unselectNode()"
-                :style="`opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0.2 : 1}`"
-            />
+                :style="`opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0.2 : 1}`" />
 
-            <text 
-                data-cy="node-name"
-                v-for="(node, i) in mutableDataset.nodes"
-                :x="node.x + nodeWidth / 2"
+            <text data-cy="node-name" v-for="(node, i) in mutableDataset.nodes" :x="node.x + nodeWidth / 2"
                 :y="checkNaN(node.absoluteY + node.height / 2 - (FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4)) + FINAL_CONFIG.style.chart.padding.top"
-                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                :fill="adaptColorToBackground(node.color)"
+                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" :fill="adaptColorToBackground(node.color)"
                 text-anchor="middle"
-                :style="`pointer-events: none; opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0 : 1}`"
-            >
-                {{ FINAL_CONFIG.style.chart.nodes.labels.abbreviation.use ? abbreviate({ source: node.name, length: FINAL_CONFIG.style.chart.nodes.labels.abbreviation.length}) : node.name }}
+                :style="`pointer-events: none; opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0 : 1}`">
+                {{ FINAL_CONFIG.style.chart.nodes.labels.abbreviation.use ? abbreviate({
+                    source: node.name, length:
+                        FINAL_CONFIG.style.chart.nodes.labels.abbreviation.length
+                }) : node.name }}
             </text>
-            <text
-                data-cy="node-value"
-                v-for="(node, i) in mutableDataset.nodes"
-                :x="node.x + nodeWidth / 2"
+            <text data-cy="node-value" v-for="(node, i) in mutableDataset.nodes" :x="node.x + nodeWidth / 2"
                 :y="checkNaN(node.absoluteY + node.height / 2 + (FINAL_CONFIG.style.chart.nodes.labels.fontSize)) + FINAL_CONFIG.style.chart.padding.top"
-                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                :fill="adaptColorToBackground(node.color)"
+                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" :fill="adaptColorToBackground(node.color)"
                 text-anchor="middle"
-                :style="`pointer-events: none; opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0 : 1}`"
-            >
+                :style="`pointer-events: none; opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0 : 1}`">
                 {{ applyDataLabel(
                     FINAL_CONFIG.style.chart.nodes.labels.formatter,
                     node.value,
@@ -680,30 +751,45 @@ defineExpose({
                         r: FINAL_CONFIG.style.chart.nodes.labels.rounding
                     }),
                     { datapoint: node, seriesIndex: i }
-                    )
+                )
                 }}
             </text>
 
-            <slot name="svg" :svg="drawingArea"/>
+            <slot name="svg" :svg="drawingArea" />
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
 
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'flow',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                }
-            }"
-        />
+        <Skeleton v-if="!isDataset" :config="{
+            type: 'flow',
+            style: {
+                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+            }
+        }" />
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>
+
+        <!-- TOOLTIP -->
+        <Tooltip :show="mutableConfig.showTooltip && isTooltip"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color" :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.style.chart.tooltip.position" :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :parent="flowChart" :content="tooltipContent" :isCustom="useCustomFormat" :isFullscreen="isFullscreen">
+            <template #tooltip-before>
+                <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after" v-bind="{ ...dataTooltipSlot }"></slot>
+            </template>
+        </Tooltip>
 
         <Accordion hideDetails v-if="isDataset" :config="{
             open: mutableConfig.showTable,
@@ -717,15 +803,11 @@ defineExpose({
                 color: FINAL_CONFIG.style.chart.color
             }
         }">
-            <template #content>            
-                <DataTable
-                    :colNames="dataTable.colNames"
-                    :head="dataTable.head" 
-                    :body="dataTable.body"
+            <template #content>
+                <DataTable :colNames="dataTable.colNames" :head="dataTable.head" :body="dataTable.body"
                     :config="dataTable.config"
                     :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
-                    @close="mutableConfig.showTable = false"
-                >
+                    @close="mutableConfig.showTable = false">
                     <template #th="{ th }">
                         <div v-html="th" style="display:flex;align-items:center"></div>
                     </template>
@@ -740,13 +822,16 @@ defineExpose({
 
 <style scoped>
 @import "../vue-data-ui.css";
-.vue-ui-flow *{
+
+.vue-ui-flow * {
     transition: unset;
 }
+
 .vue-ui-flow {
     user-select: none;
     position: relative;
 }
+
 .vue-ui-flow-node,
 .vue-ui-flow-link {
     transition: opacity 0.2s ease-in-out;

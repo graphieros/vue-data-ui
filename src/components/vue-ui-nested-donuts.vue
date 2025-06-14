@@ -136,7 +136,6 @@ watch(
         tableStep.value += 1;
         legendStep.value += 1;
 
-        // Reset mutable config
         mutableConfig.value.dataLabels.show =
             FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
@@ -176,7 +175,6 @@ function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
                     animatedValues.value[i] = value;
                     animatedValues.value = [...animatedValues.value];
 
-                    // 🛠 Fix glitch by recalculating ghost per group
                     const ghostByGroup = [];
                     let cursor = 0;
                     props.dataset.forEach((ds, groupIndex) => {
@@ -237,7 +235,6 @@ onMounted(async () => {
         animatedValues.value = finalValues.map(() => 0);
         isFirstLoad.value = true;
 
-        // 👇 NEW: Inject full ghost ring before nextTick
         ghostSlices.value = props.dataset.map((ds, i) => {
             const total = ds.series.reduce(
                 (sum, s) => sum + sanitizeArray(s.values).reduce((a, b) => a + b, 0),
@@ -260,14 +257,13 @@ onMounted(async () => {
 
         await nextTick();
 
-        // Now animate to real values
         animateWithGhost(
             finalValues,
             FINAL_CONFIG.value.startAnimation.durationMs,
             FINAL_CONFIG.value.startAnimation.staggerMs
         ).then(() => {
             isFirstLoad.value = false;
-            ghostSlices.value = []; // cleanup after
+            ghostSlices.value = [];
         });
     } else {
         isFirstLoad.value = false;
