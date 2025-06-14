@@ -3111,6 +3111,15 @@ declare module "vue-data-ui" {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        serieToggleAnimation?: {
+            show?: boolean;
+            durationMs?: number;
+        };
+        startAnimation?: {
+            show?: boolean;
+            durationMs?: number;
+            staggerMs?: number;
+        };
         useBlurOnHover?: boolean;
         userOptions?: ChartUserOptions;
         style?: {

@@ -3067,6 +3067,15 @@ export function useConfig() {
         customPalette: [],
         useCssAnimation: true,
         useBlurOnHover: true,
+        serieToggleAnimation: {
+            show: true,
+            durationMs: 500,
+        },
+        startAnimation: {
+            show: true,
+            durationMs: 1000,
+            staggerMs: 50
+        },
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,
