@@ -412,34 +412,14 @@ function computeTotalHeight(nodeCoordinates) {
 }
 
 const drawingArea = computed(() => {
-    const pad = FINAL_CONFIG.value.style.chart.padding;
-    const padTop    = pad.top;
-    const padBottom = pad.bottom;
-    const padLeft   = pad.left;
-    const padRight  = pad.right;
-
-    const maxX = mutableDataset.value.nodes.reduce(
-        (mx, n) => Math.max(mx, n.x),
-        0
+    const { top: pTop, right: pRight, bottom: pBottom, left: pLeft } = FINAL_CONFIG.value.style.chart.padding;
+    const maxNodeX = Math.max(...mutableDataset.value.nodes.map(n => n.x));
+    const width = pLeft + maxNodeX + nodeWidth.value + pRight;
+    const maxNodeBottom = Math.max(
+        ...mutableDataset.value.nodes.map(n => n.absoluteY + n.height)
     );
-    const width = padLeft + maxX + nodeWidth.value + padRight;
-
-    const maxNodeBottom = mutableDataset.value.nodes.reduce((mb, n) => {
-        const nodeTop = n.y + padTop;
-        const nodeBot = nodeTop + n.height;
-        return Math.max(mb, nodeBot);
-    }, 0);
-
-    const height = maxNodeBottom + padBottom;
-
-    return {
-        width,
-        height,
-        left: padLeft,
-        top: padTop,
-        right: padRight,
-        bottom: padBottom
-    };
+    const height = pTop + maxNodeBottom + pBottom;
+    return { width, height };
 });
 
 function findConnectedNodes(startNode) {

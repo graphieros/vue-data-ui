@@ -3875,7 +3875,7 @@ export function useConfig() {
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
-                padding: PADDING([12, 12, 0, 12]),
+                padding: PADDING([12, 12, 12, 12]),
                 title: TITLE,
                 tooltip: {
                     ...TOOLTIP,

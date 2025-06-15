@@ -144,6 +144,11 @@ const model = ref([
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox' },
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox' },
 
+    { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 100,},
+    { key: 'style.chart.padding.right', def: 12, type: 'number', min: 0, max: 100,},
+    { key: 'style.chart.padding.bottom', def: 12, type: 'number', min: 0, max: 100,},
+    { key: 'style.chart.padding.left', def: 12, type: 'number', min: 0, max: 100,},
+
     { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5 },
     { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox' },
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox' },
