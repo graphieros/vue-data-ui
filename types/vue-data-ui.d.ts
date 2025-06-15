@@ -5763,11 +5763,16 @@ declare module "vue-data-ui" {
         theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
+        nodeCategories?: Record<string, string>;
+        nodeCategoryColors?: Record<string, string>;
         style?: {
             fontFamily?: string;
             chart?: {
                 backgroundColor?: string;
                 color?: string;
+                legend?: ChartBaseLegend & {
+                    backgroundColor?: string;
+                };
                 tooltip?: ChartTooltip & {
                     showPercentage?: boolean;
                     roundingPercentage?: number;

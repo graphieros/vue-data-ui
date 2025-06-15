@@ -8729,6 +8729,10 @@
                         "color": "#424242",
                         "borderColor": "#FF8A65"
                     },
+                    "legend": {
+                        "backgroundColor": "#FFF8E1",
+                        "color": "#424242"
+                    },
                     "title": {
                         "color": "#424242",
                         "subtitle": {
@@ -8771,6 +8775,10 @@
                             "color": "#BDBDBD"
                         }
                     },
+                    "legend": {
+                        "backgroundColor": "#1E1E1E",
+                        "color": "#BDBDBD"
+                    },
                     "nodes": {
                         "stroke": "#1E1E1E"
                     },
@@ -8806,6 +8814,10 @@
                             "color": "#99AA99"
                         }
                     },
+                    "legend": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#99AA99"
+                    },
                     "nodes": {
                         "stroke": "#1A1A1A"
                     },
@@ -8840,6 +8852,10 @@
                             "color": "#99AA99"
                         }
                     },
+                    "legend": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#99AA99"
+                    },
                     "nodes": {
                         "stroke": "#fbfafa"
                     },
@@ -8873,6 +8889,10 @@
                         "subtitle": {
                             "color": "#718890"
                         }
+                    },
+                    "legend": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#61747E"
                     },
                     "nodes": {
                         "stroke": "#f6f6fb"

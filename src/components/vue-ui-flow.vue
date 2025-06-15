@@ -6,6 +6,7 @@ import {
     adaptColorToBackground,
     applyDataLabel,
     checkNaN,
+    convertColorToHex,
     convertCustomPalette,
     createCsvContent,
     createUid,
@@ -31,6 +32,7 @@ import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import Tooltip from "../atoms/Tooltip.vue";
+import Legend from "../atoms/Legend.vue";
 
 const { vue_ui_flow: DEFAULT_CONFIG } = useConfig();
 
@@ -38,15 +40,15 @@ const props = defineProps({
     config: {
         type: Object,
         default() {
-            return {}
-        }
+            return {};
+        },
     },
     dataset: {
         type: Array,
         default() {
-            return []
-        }
-    }
+            return [];
+        },
+    },
 });
 
 const isDataset = computed(() => {
@@ -60,9 +62,9 @@ onMounted(() => {
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
-            componentName: 'VueUiFlow',
-            type: 'dataset'
-        })
+            componentName: "VueUiFlow",
+            type: "dataset",
+        });
     }
 }
 
@@ -72,9 +74,9 @@ const step = ref(0);
 const titleStep = ref(0);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
+const chartLegend = ref(null);
 
-
-const isFullscreen = ref(false)
+const isFullscreen = ref(false);
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -85,53 +87,71 @@ const FINAL_CONFIG = computed({
         return prepareConfig();
     },
     set: (newCfg) => {
-        return newCfg
-    }
+        return newCfg;
+    },
 });
 
-const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
-const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
+    useUserOptionState({ config: FINAL_CONFIG.value });
+const { svgRef } = useChartAccessibility({
+    config: FINAL_CONFIG.value.style.chart.title,
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
-        defaultConfig: DEFAULT_CONFIG
+        defaultConfig: DEFAULT_CONFIG,
     });
+
+    let final = mergedConfig;
+
     if (mergedConfig.theme) {
-        return {
+        final = {
             ...useNestedProp({
                 userConfig: themes.vue_ui_flow[mergedConfig.theme] || props.config,
                 defaultConfig: mergedConfig,
             }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
-        }
+            customPalette: themePalettes[mergedConfig.theme] || palette,
+        };
     } else {
-        return mergedConfig;
+        final = mergedConfig;
     }
+
+    final.nodeCategories = props.config.nodeCategories || {};
+    final.nodeCategoryColors = props.config.nodeCategoryColors || {};
+
+    return final;
 }
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    prepareChart();
-    titleStep.value += 1;
+watch(
+    () => props.config,
+    (_newCfg) => {
+        FINAL_CONFIG.value = prepareConfig();
+        userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        prepareChart();
+        titleStep.value += 1;
 
-    // Reset mutable config
-    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-}, { deep: true });
+        // Reset mutable config
+        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+    },
+    { deep: true }
+);
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `flow_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-flow',
-    options: FINAL_CONFIG.value.userOptions.print
+    fileName: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-flow",
+    options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const hasOptionsNoTitle = computed(() => {
-    return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
+    return (
+        FINAL_CONFIG.value.userOptions.show &&
+        !FINAL_CONFIG.value.style.chart.title.text
+    );
 });
 
 const customPalette = computed(() => {
-    return convertCustomPalette(FINAL_CONFIG.value.customPalette)
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
 const gap = computed(() => {
@@ -144,23 +164,37 @@ const nodeWidth = computed(() => {
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
 });
 
 const unitWidth = computed(() => {
     return FINAL_CONFIG.value.style.chart.links.width;
 });
 
+function getNodeColor({ node, source, customColor }) {
+    return (
+        customColor ||
+        (rootNodes.includes(node) ? rootColors[node] : nodeColorMap[source]) ||
+        "#cccccc"
+    );
+}
+
 const sanitizedDataset = computed(() => {
     if (!props.dataset || !props.dataset.length) return [];
-    return props.dataset.map(dp => {
+    return props.dataset.map((dp, i) => {
         return [
             dp[0],
             dp[1],
-            checkNaN(dp[2])
-        ]
-    })
-})
+            checkNaN(dp[2]),
+            dp[3]
+                ? convertColorToHex(dp[3])
+                : customPalette.value[i] ||
+                customPalette.value[i % customPalette.value.length] ||
+                palette[i] ||
+                palette[i % d.length],
+        ];
+    });
+});
 
 const max = computed(() => {
     const nodes = {};
@@ -189,7 +223,9 @@ const max = computed(() => {
 });
 
 function setHeight(val) {
-    return val / max.value * 100 + FINAL_CONFIG.value.style.chart.nodes.minHeight;
+    return (
+        (val / max.value) * 100 + FINAL_CONFIG.value.style.chart.nodes.minHeight
+    );
 }
 
 function getValueFromHeight(height) {
@@ -203,7 +239,13 @@ function computeSankeyCoordinates(ds) {
 
     function addNode(node, level) {
         if (!nodes[node]) {
-            nodes[node] = { height: 0, level: null, inflow: 0, outflow: 0, uid: createUid() };
+            nodes[node] = {
+                height: 0,
+                level: null,
+                inflow: 0,
+                outflow: 0,
+                uid: createUid(),
+            };
         }
         if (nodes[node].level === null) {
             nodes[node].level = level;
@@ -216,9 +258,11 @@ function computeSankeyCoordinates(ds) {
         }
     }
 
-    ds.forEach(([source, target, value], i) => {
-        const sourceLevel = nodes[source] ? nodes[source].level : 0;
+    // 1) Build the graph structure
+    ds.forEach(([source, target, value]) => {
+        const sourceLevel = nodes[source]?.level ?? 0;
         const targetLevel = sourceLevel + 1;
+
         addNode(source, sourceLevel);
         addNode(target, targetLevel);
 
@@ -226,64 +270,113 @@ function computeSankeyCoordinates(ds) {
             nodes[source].children = [];
         }
         nodes[source].children.push({ target, value });
+
         nodes[source].outflow += value;
         nodes[target].inflow += value;
     });
 
-    Object.keys(nodes).forEach((key, i) => {
-        nodes[key].color = customPalette.value[i] || customPalette.value[i % customPalette.value.length] || palette[i] || palette[i % d.length]
+    // 2) Identify root nodes & assign root colors
+    const sources = new Set(ds.map(([s]) => s));
+    const targets = new Set(ds.map(([, t]) => t));
+    const rootNodes = Array.from(sources).filter((s) => !targets.has(s));
+
+    const rootColors = {};
+    rootNodes.forEach((name, i) => {
+        rootColors[name] = customPalette.value[i] || palette[i % palette.length];
     });
 
+    // 3) Build custom‐override map
+    const customColorMap = {};
+    ds.forEach(([s, t, _v, c]) => {
+        if (c) {
+            customColorMap[s] = c;
+            customColorMap[t] = c;
+        }
+    });
 
-    for (const node in nodes) {
-        nodes[node].height = setHeight(Math.max(nodes[node].inflow, nodes[node].outflow));
-        nodes[node].name = node
+    // 4) Assign colors per unique node
+    const nodeList = Object.keys(nodes);
+    nodeList.forEach((name, idx) => {
+        const category = FINAL_CONFIG.value.nodeCategories?.[name];
+        const categoryColor = category
+            ? FINAL_CONFIG.value.nodeCategoryColors?.[category]
+            : null;
+
+        nodes[name].color =
+            customColorMap[name] || // 1) explicit
+            categoryColor || // 2) category
+            (rootNodes.includes(name) ? rootColors[name] : null) || // 3) root
+            palette[idx % palette.length]; // 4) fallback
+    });
+
+    // 5) Compute heights & names
+    for (const key in nodes) {
+        nodes[key].height = setHeight(
+            Math.max(nodes[key].inflow, nodes[key].outflow)
+        );
+        nodes[key].name = key;
     }
 
+    // 6) Layout node coordinates
     const nodeCoordinates = {};
     for (const level in levels) {
         let yOffset = 0;
         levels[level].forEach((node, i) => {
-            const nodeHeight = nodes[node].height;
+            const n = nodes[node];
             nodeCoordinates[node] = {
-                x: parseInt(level, 10) * unitWidth.value + FINAL_CONFIG.value.style.chart.padding.left,
+                x:
+                    parseInt(level, 10) * unitWidth.value +
+                    FINAL_CONFIG.value.style.chart.padding.left,
                 y: yOffset,
                 absoluteY: yOffset,
-                height: nodeHeight,
+                height: n.height,
                 i,
-                color: nodes[node].color,
-                value: getValueFromHeight(nodeHeight)
+                color: n.color,
+                value: getValueFromHeight(n.height),
             };
-            yOffset += nodeHeight + gap.value;
+            yOffset += n.height + gap.value;
         });
     }
 
+    // 7) Build links
     const links = [];
-    for (const node in nodes) {
-        let sourceY = nodeCoordinates[node].absoluteY + FINAL_CONFIG.value.style.chart.padding.top;
+    for (const node of Object.keys(nodes)) {
+        let sourceY =
+            nodeCoordinates[node].absoluteY +
+            FINAL_CONFIG.value.style.chart.padding.top;
+        const srcNode = nodes[node];
+        const srcCoord = nodeCoordinates[node];
 
-        if (nodes[node].children) {
-            nodes[node].children.forEach(({ target, value }, i) => {
-                const targetY = nodeCoordinates[target].y + FINAL_CONFIG.value.style.chart.padding.top;
-                const sourceCoord = nodeCoordinates[node];
-                const targetCoord = nodeCoordinates[target];
+        if (srcNode.children) {
+            srcNode.children.forEach(({ target, value }) => {
+                const tgtCoord = nodeCoordinates[target];
+                const targetNode = nodes[target];
 
                 const sourceLinkY1 = checkNaN(sourceY);
-                const sourceLinkY2 = checkNaN(sourceY + (value / nodes[node].outflow) * sourceCoord.height);
-                const targetLinkY1 = checkNaN(targetY);
-                const targetLinkY2 = checkNaN(targetY + (value / nodes[target].inflow) * targetCoord.height);
+                const sourceLinkY2 = checkNaN(
+                    sourceY + (value / srcNode.outflow) * srcCoord.height
+                );
+                const targetLinkY1 = checkNaN(
+                    tgtCoord.y + FINAL_CONFIG.value.style.chart.padding.top
+                );
+                const targetLinkY2 = checkNaN(
+                    targetLinkY1 + (value / targetNode.inflow) * tgtCoord.height
+                );
 
-                const link = {
+                links.push({
                     id: createUid(),
                     source: node,
-                    target: target,
-                    path: `M ${checkNaN(sourceCoord.x) + checkNaN(nodeWidth.value)} ${sourceLinkY1} L ${checkNaN(sourceCoord.x) + checkNaN(nodeWidth.value)} ${sourceLinkY2} L ${checkNaN(targetCoord.x)} ${targetLinkY2} L ${checkNaN(targetCoord.x)} ${targetLinkY1} Z`,
-                    value: value,
-                    sourceColor: nodes[node].color,
-                    targetColor: nodes[target].color
-                };
+                    target,
+                    path:
+                        `M ${checkNaN(srcCoord.x + nodeWidth.value)} ${sourceLinkY1}` +
+                        ` L ${checkNaN(srcCoord.x + nodeWidth.value)} ${sourceLinkY2}` +
+                        ` L ${checkNaN(tgtCoord.x)} ${targetLinkY2}` +
+                        ` L ${checkNaN(tgtCoord.x)} ${targetLinkY1} Z`,
+                    value,
+                    sourceColor: srcNode.color,
+                    targetColor: targetNode.color,
+                });
 
-                links.push(link);
                 sourceY += sourceLinkY2 - sourceLinkY1;
                 nodeCoordinates[target].y += targetLinkY2 - targetLinkY1;
             });
@@ -301,11 +394,11 @@ const mutableDataset = computed(() => {
             return {
                 ...d.nodeCoordinates[key],
                 name: key,
-            }
+            };
         }),
-        links: d.links
-    }
-})
+        links: d.links,
+    };
+});
 
 const totalHeight = computed(() => {
     return computeTotalHeight(mutableDataset.value.nodes);
@@ -327,17 +420,25 @@ function computeTotalHeight(nodeCoordinates) {
 }
 
 const drawingArea = computed(() => {
-    const { top: p_top, right: p_right, left: p_left, bottom: p_bottom } = FINAL_CONFIG.value.style.chart.padding;
+    const {
+        top: p_top,
+        right: p_right,
+        left: p_left,
+        bottom: p_bottom,
+    } = FINAL_CONFIG.value.style.chart.padding;
     const width = sanitizedDataset.value.length * unitWidth.value;
     return {
         height: totalHeight.value + p_top + p_bottom,
-        width: p_right + Math.max(...mutableDataset.value.nodes.map(n => n.x)) + nodeWidth.value,
+        width:
+            p_right +
+            Math.max(...mutableDataset.value.nodes.map((n) => n.x)) +
+            nodeWidth.value,
         left: p_left,
         top: p_top,
         right: width - p_right,
         p_top,
-        p_bottom
-    }
+        p_bottom,
+    };
 });
 
 function findConnectedNodes(startNode) {
@@ -357,22 +458,23 @@ function findConnectedNodes(startNode) {
     });
 
     if (nodes[startNode]) {
-        nodes[startNode].forEach(child => result.add(child));
+        nodes[startNode].forEach((child) => result.add(child));
     }
 
     if (reverseNodes[startNode]) {
-        reverseNodes[startNode].forEach(parent => result.add(parent));
+        reverseNodes[startNode].forEach((parent) => result.add(parent));
     }
 
     return Array.from(result).concat(startNode);
 }
 
-const selectedNodes = ref(null)
+const selectedNodes = ref(null);
 const selectedSource = ref(null);
 const dataTooltipSlot = ref(null);
 const useCustomFormat = ref(false);
 
 function selectNode(node) {
+    segregated.value = [];
     selectedNodes.value = findConnectedNodes(node.name);
     selectedSource.value = node.name;
 
@@ -384,23 +486,19 @@ function selectNode(node) {
     let from = [];
     let to = [];
 
-    // Identify root nodes (nodes that only appear as sources)
     const sources = new Set(dataset.map(([s]) => s));
     const targets = new Set(dataset.map(([, t]) => t));
-    const rootNodes = Array.from(sources).filter(src => !targets.has(src));
+    const rootNodes = Array.from(sources).filter((src) => !targets.has(src));
 
-    // Total amount injected into the system from root nodes
     const totalRootFlow = dataset
         .filter(([source]) => rootNodes.includes(source))
         .reduce((sum, [_s, _t, value]) => sum + value, 0);
 
-    // Build a node name → color map
     const nodeColorMap = {};
-    mutableDataset.value.nodes.forEach(n => {
+    mutableDataset.value.nodes.forEach((n) => {
         nodeColorMap[n.name] = n.color;
     });
 
-    // Collect flow info (with color)
     dataset.forEach(([source, target, value]) => {
         if (target === nodeName) {
             inflow += value;
@@ -413,9 +511,8 @@ function selectNode(node) {
     });
 
     const nodeTotalFlow = Math.max(inflow, outflow);
-    const percentOfTotal = totalRootFlow > 0
-        ? ((nodeTotalFlow / totalRootFlow) * 100)
-        : 0;
+    const percentOfTotal =
+        totalRootFlow > 0 ? (nodeTotalFlow / totalRootFlow) * 100 : 0;
 
     const datapoint = {
         name: nodeName,
@@ -424,13 +521,13 @@ function selectNode(node) {
         from,
         to,
         percentOfTotal,
-        color: nodeColorMap[nodeName] || '#000000'
+        color: nodeColorMap[nodeName] || "#000000",
     };
 
     dataTooltipSlot.value = { datapoint };
     isTooltip.value = true;
 
-    let html = '';
+    let html = "";
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
     useCustomFormat.value = false;
 
@@ -439,63 +536,67 @@ function selectNode(node) {
             const customFormatString = customFormat({
                 datapoint,
                 series: mutableDataset.value,
-                config: FINAL_CONFIG.value
+                config: FINAL_CONFIG.value,
             });
-            if (typeof customFormatString === 'string') {
+            if (typeof customFormatString === "string") {
                 tooltipContent.value = customFormatString;
                 useCustomFormat.value = true;
             }
         } catch (err) {
-            console.warn('Custom format cannot be applied.');
+            console.warn("Custom format cannot be applied.");
         }
     }
 
     if (!useCustomFormat.value) {
-        const percentageDisplay = FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `<div>${dataLabel({
-            p: FINAL_CONFIG.value.style.chart.tooltip.translations.percentOfTotal,
-            v: datapoint.percentOfTotal,
-            s: '%',
-            r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
-        })}</div>` : ''
+        const percentageDisplay = FINAL_CONFIG.value.style.chart.tooltip
+            .showPercentage
+            ? `<div>${dataLabel({
+                p: FINAL_CONFIG.value.style.chart.tooltip.translations.percentOfTotal,
+                v: datapoint.percentOfTotal,
+                s: "%",
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+            })}</div>`
+            : "";
 
         html += `<div data-cy="tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;"><span style="margin-right:4px; color:${datapoint.color}">⏹</span>${datapoint.name}${percentageDisplay}</div>`;
 
         if (datapoint.from.length) {
             html += `<div>${FINAL_CONFIG.value.style.chart.tooltip.translations.from}</div>`;
-            datapoint.from.forEach(item => {
-                html += `<div><span style="color:${item.color}">⏹←</span> ${item.source}: ${applyDataLabel(
-                    FINAL_CONFIG.value.style.chart.nodes.labels.formatter,
-                    item.value,
-                    dataLabel({
-                        p: FINAL_CONFIG.value.style.chart.nodes.labels.prefix,
-                        v: item.value,
-                        s: FINAL_CONFIG.value.style.chart.nodes.labels.suffix,
-                        r: FINAL_CONFIG.value.style.chart.nodes.labels.rounding
-                    })
-                )}</div>`;
+            datapoint.from.forEach((item) => {
+                html += `<div><span style="color:${item.color}">⏹←</span> ${item.source
+                    }: ${applyDataLabel(
+                        FINAL_CONFIG.value.style.chart.nodes.labels.formatter,
+                        item.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.value.style.chart.nodes.labels.prefix,
+                            v: item.value,
+                            s: FINAL_CONFIG.value.style.chart.nodes.labels.suffix,
+                            r: FINAL_CONFIG.value.style.chart.nodes.labels.rounding,
+                        })
+                    )}</div>`;
             });
         }
 
         if (datapoint.to.length) {
             html += `<div style="margin-top:6px;">${FINAL_CONFIG.value.style.chart.tooltip.translations.to}</div>`;
-            datapoint.to.forEach(item => {
-                html += `<div><span style="color:${item.color}">⏹→</span> ${item.target}: ${applyDataLabel(
-                    FINAL_CONFIG.value.style.chart.nodes.labels.formatter,
-                    item.value,
-                    dataLabel({
-                        p: FINAL_CONFIG.value.style.chart.nodes.labels.prefix,
-                        v: item.value,
-                        s: FINAL_CONFIG.value.style.chart.nodes.labels.suffix,
-                        r: FINAL_CONFIG.value.style.chart.nodes.labels.rounding
-                    })
-                )}</div>`;
+            datapoint.to.forEach((item) => {
+                html += `<div><span style="color:${item.color}">⏹→</span> ${item.target
+                    }: ${applyDataLabel(
+                        FINAL_CONFIG.value.style.chart.nodes.labels.formatter,
+                        item.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.value.style.chart.nodes.labels.prefix,
+                            v: item.value,
+                            s: FINAL_CONFIG.value.style.chart.nodes.labels.suffix,
+                            r: FINAL_CONFIG.value.style.chart.nodes.labels.rounding,
+                        })
+                    )}</div>`;
             });
         }
 
         tooltipContent.value = html;
     }
 }
-
 
 function unselectNode() {
     selectedNodes.value = null;
@@ -504,25 +605,23 @@ function unselectNode() {
 }
 
 const table = computed(() => {
-    return mutableDataset.value.links.map(({ source, target, sourceColor, targetColor, value }) => {
-        return {
-            source,
-            target,
-            sourceColor,
-            targetColor,
-            value
+    return mutableDataset.value.links.map(
+        ({ source, target, sourceColor, targetColor, value }) => {
+            return {
+                source,
+                target,
+                sourceColor,
+                targetColor,
+                value,
+            };
         }
-    });
+    );
 });
 
 function generateCsv() {
     nextTick(() => {
         const labels = table.value.map((el, i) => {
-            return [
-                [el.source],
-                [el.target],
-                [el.value]
-            ]
+            return [[el.source], [el.target], [el.value]];
         });
 
         const tableXls = [
@@ -532,15 +631,15 @@ function generateCsv() {
                 [FINAL_CONFIG.value.table.columnNames.source],
                 [FINAL_CONFIG.value.table.columnNames.target],
                 [FINAL_CONFIG.value.table.columnNames.value],
-            ]
+            ],
         ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
         downloadCsv({
             csvContent,
-            title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-flow'
-        })
-    })
+            title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-flow",
+        });
+    });
 }
 
 const dataTable = computed(() => {
@@ -554,47 +653,47 @@ const dataTable = computed(() => {
         return [
             {
                 color: el.sourceColor,
-                name: el.source
+                name: el.source,
             },
             {
                 color: el.targetColor,
-                name: el.target
+                name: el.target,
             },
             dataLabel({
                 p: FINAL_CONFIG.value.style.chart.nodes.labels.prefix,
                 v: el.value,
                 s: FINAL_CONFIG.value.style.chart.nodes.labels.suffix,
-                r: FINAL_CONFIG.value.style.chart.nodes.labels.rounding
-            })
-        ]
+                r: FINAL_CONFIG.value.style.chart.nodes.labels.rounding,
+            }),
+        ];
     });
 
     const config = {
         th: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
             color: FINAL_CONFIG.value.table.th.color,
-            outline: FINAL_CONFIG.value.table.th.outline
+            outline: FINAL_CONFIG.value.table.th.outline,
         },
         td: {
             backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
             color: FINAL_CONFIG.value.table.td.color,
-            outline: FINAL_CONFIG.value.table.td.outline
+            outline: FINAL_CONFIG.value.table.td.outline,
         },
-        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
-    }
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+    };
 
     const colNames = [
         FINAL_CONFIG.value.table.columnNames.source,
         FINAL_CONFIG.value.table.columnNames.target,
-        FINAL_CONFIG.value.table.columnNames.value
+        FINAL_CONFIG.value.table.columnNames.value,
     ];
 
     return {
         colNames,
         head,
         body,
-        config
-    }
+        config,
+    };
 });
 
 function getData() {
@@ -614,6 +713,73 @@ function toggleTooltip() {
     mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
+const legendSet = computed(() => {
+    const cats = new Set(
+        mutableDataset.value.nodes.map(
+            (n) => FINAL_CONFIG.value.nodeCategories[n.name] || "__uncategorized__"
+        )
+    );
+
+    return Array.from(cats)
+        .map((cat) => {
+            return {
+                name: cat,
+                color: FINAL_CONFIG.value.nodeCategoryColors[cat] || palette[0],
+                shape: "square",
+                count: mutableDataset.value.nodes.filter(
+                    (n) =>
+                        (FINAL_CONFIG.value.nodeCategories[n.name] || "__uncategorized__") ===
+                        cat
+                ).length,
+            };
+        })
+        .map((cat, i) => {
+            return {
+                ...cat,
+                segregate: () => drillCategory({ legend: cat, i }),
+                opacity: segregated.value.length ? segregated.value.includes(i) ? 1: 0.5 : 1
+            }
+        })
+});
+
+const legendSetFiltered = computed(() =>
+    legendSet.value.filter((l) => l.name !== "__uncategorized__")
+);
+
+const segregated = ref([])
+
+function drillCategory({ legend, i }) {
+    const cat = legend.name;
+
+    if (
+        selectedNodes.value?.every(
+            (n) => FINAL_CONFIG.value.nodeCategories[n] === cat
+        )
+    ) {
+        selectedNodes.value = null;
+        selectedSource.value = null;
+        segregated.value = [];
+        return;
+    }
+
+    segregated.value = [i]
+
+    selectedNodes.value = mutableDataset.value.nodes
+        .filter((n) => FINAL_CONFIG.value.nodeCategories[n.name] === cat)
+        .map((n) => n.name);
+
+    selectedSource.value = null;
+}
+
+const legendConfig = computed(() => ({
+    cy: "flow-legend",
+    backgroundColor: FINAL_CONFIG.value.style.chart.legend.backgroundColor,
+    color: FINAL_CONFIG.value.style.chart.legend.color,
+    fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
+    paddingBottom: FINAL_CONFIG.value.style.chart.legend.paddingBottom,
+    fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? "bold" : "normal",
+}));
+
 defineExpose({
     getData,
     generateCsv,
@@ -621,13 +787,15 @@ defineExpose({
     generatePdf,
     toggleTable,
     toggleAnnotator,
-    toggleTooltip
-})
+    toggleTooltip,
+    drillCategory,
+    unselectNode,
+});
 </script>
 
 <template>
-    <div ref="flowChart" :class="`vue-ui-flow ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+    <div ref="flowChart" :class="`vue-ui-flow ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''
+        }`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`flow_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator" :svgRef="svgRef"
@@ -642,30 +810,36 @@ defineExpose({
             <Title :key="`title_${titleStep}`" :config="{
                 title: {
                     cy: 'flow-title',
-                    ...FINAL_CONFIG.style.chart.title
+                    ...FINAL_CONFIG.style.chart.title,
                 },
                 subtitle: {
                     cy: 'flow-subtitle',
-                    ...FINAL_CONFIG.style.chart.title.subtitle
-                }
+                    ...FINAL_CONFIG.style.chart.title.subtitle,
+                },
             }" />
         </div>
 
-        <UserOptions ref="details" :key="`user_option_${step}`"
-            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
+        <UserOptions ref="details" :key="`user_option_${step}`" v-if="
+            FINAL_CONFIG.userOptions.show &&
+            isDataset &&
+            (keepUserOptionState ? true : userOptionsVisible)
+        " :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
             :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="flowChart"
             :position="FINAL_CONFIG.userOptions.position" :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
-            :isAnnotation="isAnnotator"
-            :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show && FINAL_CONFIG.userOptions.buttons.tooltip"
-            :isTooltip="mutableConfig.showTooltip" @toggleTooltip="toggleTooltip" @toggleFullscreen="toggleFullscreen"
+            :isAnnotation="isAnnotator" :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show &&
+                FINAL_CONFIG.userOptions.buttons.tooltip
+                " :isTooltip="mutableConfig.showTooltip" @toggleTooltip="toggleTooltip" @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf" @generateCsv="generateCsv" @generateImage="generateImage"
             @toggleTable="toggleTable" @toggleAnnotator="toggleAnnotator" :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+                visibility: keepUserOptionState
+                    ? userOptionsVisible
+                        ? 'visible'
+                        : 'hidden'
+                    : 'visible',
             }">
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }" />
@@ -693,15 +867,16 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg ref="svgRef" :xmlns="XMLNS" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
+        <svg ref="svgRef" :xmlns="XMLNS" :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" :class="{
+            'vue-data-ui-fullscreen--on': isFullscreen,
+            'vue-data-ui-fulscreen--off': !isFullscreen,
+        }" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
             <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="drawingArea.width"
                 :height="drawingArea.height" :style="{
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
                 }">
                 <slot name="chart-background" />
             </foreignObject>
@@ -716,41 +891,64 @@ defineExpose({
 
             <path data-cy="link" v-for="path in mutableDataset.links" class="vue-ui-flow-link" :d="path.path"
                 :fill="`url(#${path.id})`" :stroke="FINAL_CONFIG.style.chart.links.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.links.strokeWidth"
-                :style="`opacity:${selectedSource ? [path.target, path.source].includes(selectedSource) ? 1 : 0.3 : FINAL_CONFIG.style.chart.links.opacity}`" />
+                :stroke-width="FINAL_CONFIG.style.chart.links.strokeWidth" :style="`
+                    opacity:${selectedNodes
+                        ? selectedNodes.includes(path.source) &&
+                            selectedNodes.includes(path.target)
+                            ? 1
+                            : 0.3
+                        : selectedSource
+                            ? [path.target, path.source].includes(selectedSource)
+                                ? 1
+                                : 0.3
+                            : FINAL_CONFIG.style.chart.links.opacity
+                    }
+                `" />
 
             <rect data-cy="node" v-for="(node, i) in mutableDataset.nodes" class="vue-ui-flow-node" :x="node.x"
                 :y="checkNaN(node.absoluteY) + FINAL_CONFIG.style.chart.padding.top" :height="checkNaN(node.height)"
                 :width="nodeWidth" :fill="node.color" :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.nodes.strokeWidth" @mouseenter="selectNode(node)"
-                @mouseleave="unselectNode()"
-                :style="`opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0.2 : 1}`" />
+                @mouseleave="unselectNode()" :style="`opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0.3) : 1
+                    }`" />
 
-            <text data-cy="node-name" v-for="(node, i) in mutableDataset.nodes" :x="node.x + nodeWidth / 2"
-                :y="checkNaN(node.absoluteY + node.height / 2 - (FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4)) + FINAL_CONFIG.style.chart.padding.top"
-                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" :fill="adaptColorToBackground(node.color)"
-                text-anchor="middle"
-                :style="`pointer-events: none; opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0 : 1}`">
-                {{ FINAL_CONFIG.style.chart.nodes.labels.abbreviation.use ? abbreviate({
-                    source: node.name, length:
-                        FINAL_CONFIG.style.chart.nodes.labels.abbreviation.length
-                }) : node.name }}
+            <text data-cy="node-name" v-for="(node, i) in mutableDataset.nodes" :x="node.x + nodeWidth / 2" :y="checkNaN(
+                node.absoluteY +
+                node.height / 2 -
+                FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4
+            ) + FINAL_CONFIG.style.chart.padding.top
+                " :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" :fill="adaptColorToBackground(node.color)"
+                text-anchor="middle" :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1
+                    }`">
+                {{
+                    FINAL_CONFIG.style.chart.nodes.labels.abbreviation.use
+                        ? abbreviate({
+                            source: node.name,
+                            length:
+                                FINAL_CONFIG.style.chart.nodes.labels.abbreviation.length,
+                        })
+                        : node.name
+                }}
             </text>
-            <text data-cy="node-value" v-for="(node, i) in mutableDataset.nodes" :x="node.x + nodeWidth / 2"
-                :y="checkNaN(node.absoluteY + node.height / 2 + (FINAL_CONFIG.style.chart.nodes.labels.fontSize)) + FINAL_CONFIG.style.chart.padding.top"
-                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" :fill="adaptColorToBackground(node.color)"
-                text-anchor="middle"
-                :style="`pointer-events: none; opacity:${selectedNodes ? selectedNodes.includes(node.name) ? 1 : 0 : 1}`">
-                {{ applyDataLabel(
-                    FINAL_CONFIG.style.chart.nodes.labels.formatter,
-                    node.value,
-                    dataLabel({
-                        p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
-                        v: node.value,
-                        s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
-                        r: FINAL_CONFIG.style.chart.nodes.labels.rounding
-                    }),
-                    { datapoint: node, seriesIndex: i }
+            <text data-cy="node-value" v-for="(node, i) in mutableDataset.nodes" :x="node.x + nodeWidth / 2" :y="checkNaN(
+                node.absoluteY +
+                node.height / 2 +
+                FINAL_CONFIG.style.chart.nodes.labels.fontSize
+            ) + FINAL_CONFIG.style.chart.padding.top
+                " :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" :fill="adaptColorToBackground(node.color)"
+                text-anchor="middle" :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1
+                    }`">
+                {{
+                    applyDataLabel(
+                        FINAL_CONFIG.style.chart.nodes.labels.formatter,
+                        node.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
+                            v: node.value,
+                            s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
+                            r: FINAL_CONFIG.style.chart.nodes.labels.rounding,
+                        }),
+                        { datapoint: node, seriesIndex: i }
                 )
                 }}
             </text>
@@ -766,8 +964,21 @@ defineExpose({
             type: 'flow',
             style: {
                 backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-            }
+            },
         }" />
+
+        <div ref="chartLegend">
+            <Legend v-if="FINAL_CONFIG.style.chart.legend.show && legendSetFiltered.length"
+                :legendSet="legendSetFiltered" :config="legendConfig"
+                @clickMarker="(payload) => drillCategory(payload)">
+                <template #item="{ legend, index }">
+                    <div @click="legend.segregate()" :style="`opacity:${segregated.length ? segregated.includes(index) ? 1 : 0.5 : 1}`">
+                        {{ legend.name }} ({{ legend.count }})
+                    </div>
+                </template>
+            </Legend>
+            <slot name="legend" v-bind:legend="legendSet" />
+        </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
@@ -796,20 +1007,21 @@ defineExpose({
             maxHeight: 10000,
             body: {
                 backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                color: FINAL_CONFIG.style.chart.color
+                color: FINAL_CONFIG.style.chart.color,
             },
             head: {
                 backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                color: FINAL_CONFIG.style.chart.color
-            }
+                color: FINAL_CONFIG.style.chart.color,
+            },
         }">
             <template #content>
                 <DataTable :colNames="dataTable.colNames" :head="dataTable.head" :body="dataTable.body"
-                    :config="dataTable.config"
-                    :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}` : ''}`"
-                    @close="mutableConfig.showTable = false">
+                    :config="dataTable.config" :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text
+                            ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}`
+                            : ''
+                        }`" @close="mutableConfig.showTable = false">
                     <template #th="{ th }">
-                        <div v-html="th" style="display:flex;align-items:center"></div>
+                        <div v-html="th" style="display: flex; align-items: center"></div>
                     </template>
                     <template #td="{ td }">
                         {{ td.name || td }}

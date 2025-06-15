@@ -3673,6 +3673,8 @@ export function useConfig() {
             fullscreen: true,
             annotator: true
         }),
+        nodeCategories: {},
+        nodeCategoryColors: {},
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -3866,6 +3868,8 @@ export function useConfig() {
             annotator: true,
             tooltip: true,
         }),
+        nodeCategories: {},
+        nodeCategoryColors: {},
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -3882,6 +3886,9 @@ export function useConfig() {
                         to: 'To:',
                         percentOfTotal: 'Percent of total:'
                     }
+                },
+                legend: {
+                    ...LEGEND,
                 },
                 nodes: {
                     gap: 10,

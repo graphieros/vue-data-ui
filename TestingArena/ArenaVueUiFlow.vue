@@ -9,29 +9,39 @@ import { useArena } from "../src/useArena";
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
-    // Sources
-    ['Households', 'Collection Centers', 40],
-    ['Restaurants', 'Collection Centers', 20],
-    ['Industries', 'Collection Centers', 30],
-    ['Littering', 'Environment', 10],
+    // Raw materials → Components
+    ['Mining', 'Copper', 40,],
+    ['Mining', 'Lithium', 30,],
+    ['Mining', 'Gold', 10,],
+    ['Mining', 'Rare Earths', 20],
 
-    // Collection to Processing
-    ['Collection Centers', 'Recycling Plants', 50],
-    ['Collection Centers', 'Landfills', 25],
-    ['Collection Centers', 'Incineration', 15],
+    // Components → Manufacturing
+    ['Copper', 'PCB Assembly', 40],
+    ['Lithium', 'Battery Production', 30],
+    ['Gold', 'Microchips', 10],
+    ['Rare Earths', 'Microchips', 20],
 
-    // Processing to Final Outcome
-    ['Recycling Plants', 'Recycled Products', 30],
-    ['Recycling Plants', 'Exported Waste', 20],
-    ['Landfills', 'Methane Emission', 10],
-    ['Landfills', 'Buried Waste', 15],
-    ['Incineration', 'Energy Recovery', 10],
-    ['Incineration', 'Air Pollution', 5],
+    // Manufacturing → Assembly
+    ['PCB Assembly', 'Phone Assembly', 40],
+    ['Battery Production', 'Phone Assembly', 30],
+    ['Microchips', 'Phone Assembly', 30],
 
-    // Direct Environment impact
-    ['Environment', 'Ocean Pollution', 6],
-    ['Environment', 'Soil Contamination', 4],
-]);
+    // Assembly → Distribution
+    ['Phone Assembly', 'Retail', 100],
+
+    // Distribution → Consumers
+    ['Retail', 'Consumer Use', 100],
+
+    // Consumers → End-of-life
+    ['Consumer Use', 'Recycling', 40],
+    ['Consumer Use', 'Landfill', 30],
+    ['Consumer Use', 'Resale', 30],
+
+    // End-of-life → Secondary flow
+    ['Recycling', 'Recovered Materials', 25],
+    ['Recycling', 'E-Waste', 15],
+    ['Resale', 'Second-hand Use', 30]
+    ]);
 
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox' },
@@ -96,6 +106,50 @@ const config = computed(() => {
     return {
         theme: currentTheme.value,
         ...c,
+        nodeCategories: {
+            // Raw Materials
+            'Mining': 'raw',
+
+            // Components
+            'Copper': 'component',
+            'Lithium': 'component',
+            'Gold': 'component',
+            'Rare Earths': 'component',
+
+            // Manufacturing
+            'PCB Assembly': 'manufacturing',
+            'Battery Production': 'manufacturing',
+            'Microchips': 'manufacturing',
+
+            // Assembly
+            'Phone Assembly': 'assembly',
+
+            // Distribution
+            'Retail': 'distribution',
+
+            // Consumer Use
+            'Consumer Use': 'consumer',
+
+            // End-of-life
+            'Recycling': 'endOfLife',
+            'Landfill': 'endOfLife',
+            'Resale': 'endOfLife',
+
+            // Secondary flow
+            'Recovered Materials': 'secondary',
+            'E-Waste': 'secondary',
+            'Second-hand Use': 'secondary'
+        },
+        nodeCategoryColors: {
+            raw: '#8B4513',             // Brown - for extraction
+            component: '#1E90FF',       // Blue - technical materials
+            manufacturing: '#FFD700',   // Gold - active production
+            assembly: '#FF8C00',        // Dark orange
+            distribution: '#A020F0',    // Purple - logistics
+            consumer: '#228B22',        // Green - use phase
+            endOfLife: '#B22222',       // Firebrick red
+            secondary: '#20B2AA'        // Light sea green - reuse/recover
+        },
         style: {
             ...c.style,
             chart: {
