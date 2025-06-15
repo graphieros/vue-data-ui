@@ -171,14 +171,6 @@ const unitWidth = computed(() => {
     return FINAL_CONFIG.value.style.chart.links.width;
 });
 
-function getNodeColor({ node, source, customColor }) {
-    return (
-        customColor ||
-        (rootNodes.includes(node) ? rootColors[node] : nodeColorMap[source]) ||
-        "#cccccc"
-    );
-}
-
 const sanitizedDataset = computed(() => {
     if (!props.dataset || !props.dataset.length) return [];
     return props.dataset.map((dp, i) => {
@@ -191,7 +183,7 @@ const sanitizedDataset = computed(() => {
                 : customPalette.value[i] ||
                 customPalette.value[i % customPalette.value.length] ||
                 palette[i] ||
-                palette[i % d.length],
+                palette[i % palette.length],
         ];
     });
 });
@@ -420,25 +412,12 @@ function computeTotalHeight(nodeCoordinates) {
 }
 
 const drawingArea = computed(() => {
-    const {
-        top: p_top,
-        right: p_right,
-        left: p_left,
-        bottom: p_bottom,
-    } = FINAL_CONFIG.value.style.chart.padding;
-    const width = sanitizedDataset.value.length * unitWidth.value;
-    return {
-        height: totalHeight.value + p_top + p_bottom,
-        width:
-            p_right +
-            Math.max(...mutableDataset.value.nodes.map((n) => n.x)) +
-            nodeWidth.value,
-        left: p_left,
-        top: p_top,
-        right: width - p_right,
-        p_top,
-        p_bottom,
-    };
+    const { left, right, top, bottom } = FINAL_CONFIG.value.style.chart.padding;
+    const maxNodeX = Math.max(...mutableDataset.value.nodes.map(n => n.x));
+    const width    = Math.ceil(maxNodeX + nodeWidth.value + right);
+    const maxNodeY = Math.max(...mutableDataset.value.nodes.map(n => n.absoluteY + n.height));
+    const height   = Math.ceil(maxNodeY + bottom);
+    return { width, height, left, top, right, bottom };
 });
 
 function findConnectedNodes(startNode) {

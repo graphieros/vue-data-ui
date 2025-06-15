@@ -9,39 +9,129 @@ import { useArena } from "../src/useArena";
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
-    // Raw materials → Components
-    ['Mining', 'Copper', 40,],
-    ['Mining', 'Lithium', 30,],
-    ['Mining', 'Gold', 10,],
-    ['Mining', 'Rare Earths', 20],
+  // root
+  ['Config', 'theme', 1],
+  ['Config', 'customPalette', 1],
+  ['Config', 'userOptions', 1],
+  ['Config', 'nodeCategories', 1],
+  ['Config', 'nodeCategoryColors', 1],
+  ['Config', 'style', 1],
+  ['Config', 'table', 1],
 
-    // Components → Manufacturing
-    ['Copper', 'PCB Assembly', 40],
-    ['Lithium', 'Battery Production', 30],
-    ['Gold', 'Microchips', 10],
-    ['Rare Earths', 'Microchips', 20],
+  // userOptions
+  ['userOptions', 'show', 1],
+  ['userOptions', 'showOnChartHover', 1],
+  ['userOptions', 'position', 1],
+  ['userOptions', 'buttons', 1],
+  ['buttons', 'pdf', 1],
+  ['buttons', 'csv', 1],
+  ['buttons', 'img', 1],
+  ['buttons', 'table', 1],
+  ['buttons', 'fullscreen', 1],
+  ['buttons', 'annotator', 1],
+  ['buttons', 'tooltip', 1],
+  ['userOptions', 'buttonTitles', 1],
 
-    // Manufacturing → Assembly
-    ['PCB Assembly', 'Phone Assembly', 40],
-    ['Battery Production', 'Phone Assembly', 30],
-    ['Microchips', 'Phone Assembly', 30],
+  // style
+  ['style', 'fontFamily', 1],
+  ['style', 'chart', 1],
 
-    // Assembly → Distribution
-    ['Phone Assembly', 'Retail', 100],
+  // chart
+  ['chart', 'backgroundColor', 1],
+  ['chart', 'color', 1],
+  ['chart', 'padding', 1],
+  ['chart', 'title', 1],
+  ['chart', 'tooltip', 1],
+  ['chart', 'legend', 1],
+  ['chart', 'nodes', 1],
+  ['chart', 'links', 1],
 
-    // Distribution → Consumers
-    ['Retail', 'Consumer Use', 100],
+  // padding
+  ['padding', 'top', 1],
+  ['padding', 'right', 1],
+  ['padding', 'bottom', 1],
+  ['padding', 'left', 1],
 
-    // Consumers → End-of-life
-    ['Consumer Use', 'Recycling', 40],
-    ['Consumer Use', 'Landfill', 30],
-    ['Consumer Use', 'Resale', 30],
+  // title
+  ['title', 'text', 1],
+  ['title', 'subtitle', 1],
+  ['subtitle', 'text', 1],
+  ['title', 'cy', 1],
 
-    // End-of-life → Secondary flow
-    ['Recycling', 'Recovered Materials', 25],
-    ['Recycling', 'E-Waste', 15],
-    ['Resale', 'Second-hand Use', 30]
-    ]);
+  // tooltip
+  ['tooltip', 'show', 1],
+  ['tooltip', 'fontSize', 1],
+  ['tooltip', 'backgroundColor', 1],
+  ['tooltip', 'color', 1],
+  ['tooltip', 'borderColor', 1],
+  ['tooltip', 'borderWidth', 1],
+  ['tooltip', 'borderRadius', 1],
+  ['tooltip', 'backgroundOpacity', 1],
+  ['tooltip', 'position', 1],
+  ['tooltip', 'offsetY', 1],
+  ['tooltip', 'showPercentage', 1],
+  ['tooltip', 'roundingPercentage', 1],
+  ['tooltip', 'translations', 1],
+  ['translations', 'from', 1],
+  ['translations', 'to', 1],
+  ['translations', 'percentOfTotal', 1],
+
+  // legend
+  ['legend', 'show', 1],
+  ['legend', 'backgroundColor', 1],
+  ['legend', 'color', 1],
+  ['legend', 'fontSize', 1],
+  ['legend', 'paddingBottom', 1],
+  ['legend', 'paddingTop', 1],
+  ['legend', 'bold', 1],
+  ['legend', 'cy', 1],
+
+  // nodes
+  ['nodes', 'gap', 1],
+  ['nodes', 'minHeight', 1],
+  ['nodes', 'width', 1],
+  ['nodes', 'labels', 1],
+  ['nodes', 'stroke', 1],
+  ['nodes', 'strokeWidth', 1],
+
+  // labels
+  ['labels', 'fontSize', 1],
+  ['labels', 'abbreviation', 1],
+  ['labels', 'prefix', 1],
+  ['labels', 'suffix', 1],
+  ['labels', 'rounding', 1],
+  ['labels', 'formatter', 1],
+
+  // abbreviation
+  ['abbreviation', 'use', 1],
+  ['abbreviation', 'length', 1],
+
+  // links
+  ['links', 'width', 1],
+  ['links', 'opacity', 1],
+  ['links', 'stroke', 1],
+  ['links', 'strokeWidth', 1],
+
+  // table
+  ['table', 'show', 1],
+  ['table', 'responsiveBreakpoint', 1],
+  ['table', 'columnNames', 1],
+  ['columnNames', 'source', 1],
+  ['columnNames', 'target', 1],
+  ['columnNames', 'value', 1],
+  ['table', 'th', 1],
+  ['table', 'td', 1],
+
+  // th
+  ['th', 'backgroundColor', 1],
+  ['th', 'color', 1],
+  ['th', 'outline', 1],
+
+  // td
+  ['td', 'backgroundColor', 1],
+  ['td', 'color', 1],
+  ['td', 'outline', 1],
+]);
 
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox' },
@@ -107,49 +197,159 @@ const config = computed(() => {
         theme: currentTheme.value,
         ...c,
         nodeCategories: {
-            // Raw Materials
-            'Mining': 'raw',
+  // top‐level
+  theme:                   'config',
+  customPalette:           'config',
+  userOptions:             'config',
+  nodeCategories:          'config',
+  nodeCategoryColors:      'config',
+  style:                   'config',
+  table:                   'config',
 
-            // Components
-            'Copper': 'component',
-            'Lithium': 'component',
-            'Gold': 'component',
-            'Rare Earths': 'component',
+  // userOptions
+  show:                    'userOptions',
+  showOnChartHover:        'userOptions',
+  position:                'userOptions',
+  buttons:                 'userOptions',
+  buttonTitles:            'userOptions',
 
-            // Manufacturing
-            'PCB Assembly': 'manufacturing',
-            'Battery Production': 'manufacturing',
-            'Microchips': 'manufacturing',
+  // buttons
+  pdf:                     'userOptionsButtons',
+  csv:                     'userOptionsButtons',
+  img:                     'userOptionsButtons',
+  table:                   'userOptionsButtons',
+  fullscreen:              'userOptionsButtons',
+  annotator:               'userOptionsButtons',
+  tooltip:                 'userOptionsButtons',
 
-            // Assembly
-            'Phone Assembly': 'assembly',
+  // style
+  fontFamily:              'style',
+  chart:                   'style',
 
-            // Distribution
-            'Retail': 'distribution',
+  // chart
+  backgroundColor:         'chart',
+  color:                   'chart',
+  padding:                 'chart',
+  title:                   'chart',
+  tooltip:                 'chart',
+  legend:                  'chart',
+  nodes:                   'chart',
+  links:                   'chart',
 
-            // Consumer Use
-            'Consumer Use': 'consumer',
+  // padding
+  top:                     'chartPadding',
+  right:                   'chartPadding',
+  bottom:                  'chartPadding',
+  left:                    'chartPadding',
 
-            // End-of-life
-            'Recycling': 'endOfLife',
-            'Landfill': 'endOfLife',
-            'Resale': 'endOfLife',
+  // title
+  text:                    'chartTitle',
+  subtitle:                'chartTitle',
+  cy:                      'chartTitle',
+  // subtitle.text lives under the same category
 
-            // Secondary flow
-            'Recovered Materials': 'secondary',
-            'E-Waste': 'secondary',
-            'Second-hand Use': 'secondary'
-        },
-        nodeCategoryColors: {
-            raw: '#8B4513',             // Brown - for extraction
-            component: '#1E90FF',       // Blue - technical materials
-            manufacturing: '#FFD700',   // Gold - active production
-            assembly: '#FF8C00',        // Dark orange
-            distribution: '#A020F0',    // Purple - logistics
-            consumer: '#228B22',        // Green - use phase
-            endOfLife: '#B22222',       // Firebrick red
-            secondary: '#20B2AA'        // Light sea green - reuse/recover
-        },
+  // tooltip
+  show:                    'chartTooltip',
+  fontSize:                'chartTooltip',
+  backgroundColor:         'chartTooltip',
+  color:                   'chartTooltip',
+  borderColor:             'chartTooltip',
+  borderWidth:             'chartTooltip',
+  borderRadius:            'chartTooltip',
+  backgroundOpacity:       'chartTooltip',
+  position:                'chartTooltip',
+  offsetY:                 'chartTooltip',
+  showPercentage:          'chartTooltip',
+  roundingPercentage:      'chartTooltip',
+  translations:            'chartTooltip',
+  from:                    'chartTooltipTranslations',
+  to:                      'chartTooltipTranslations',
+  percentOfTotal:          'chartTooltipTranslations',
+
+  // legend
+  show:                    'chartLegend',
+  backgroundColor:         'chartLegend',
+  color:                   'chartLegend',
+  fontSize:                'chartLegend',
+  paddingBottom:           'chartLegend',
+  paddingTop:              'chartLegend',
+  bold:                    'chartLegend',
+  cy:                      'chartLegend',
+
+  // nodes
+  gap:                     'chartNodes',
+  minHeight:               'chartNodes',
+  width:                   'chartNodes',
+  labels:                  'chartNodes',
+  stroke:                  'chartNodes',
+  strokeWidth:             'chartNodes',
+
+  // labels
+  fontSize:                'chartLabels',
+  abbreviation:            'chartLabels',
+  prefix:                  'chartLabels',
+  suffix:                  'chartLabels',
+  rounding:                'chartLabels',
+  formatter:               'chartLabels',
+
+  // abbreviation
+  use:                     'chartLabelsAbbreviation',
+  length:                  'chartLabelsAbbreviation',
+
+  // links
+  width:                   'chartLinks',
+  opacity:                 'chartLinks',
+  stroke:                  'chartLinks',
+  strokeWidth:             'chartLinks',
+
+  // table
+  show:                    'table',
+  responsiveBreakpoint:    'table',
+  columnNames:             'table',
+  th:                      'table',
+  td:                      'table',
+
+  // columnNames
+  source:                  'tableColumnNames',
+  target:                  'tableColumnNames',
+  value:                   'tableColumnNames',
+
+  // th
+  backgroundColor:         'tableTh',
+  color:                   'tableTh',
+  outline:                 'tableTh',
+
+  // td
+  backgroundColor:         'tableTd',
+  color:                   'tableTd',
+  outline:                 'tableTd',
+},
+
+nodeCategoryColors: {
+  // top‐level
+  config:                 '#1f77b4',
+  userOptions:            '#ff7f0e',
+  userOptionsButtons:     '#2ca02c',
+  style:                  '#d62728',
+
+  // chart
+  chart:                  '#9467bd',
+  chartPadding:           '#8c564b',
+  chartTitle:             '#e377c2',
+  chartTooltip:           '#bcbd22',
+  chartTooltipTranslations:'#17becf',
+  chartLegend:            '#aec7e8',
+  chartNodes:             '#98df8a',
+  chartLabels:            '#ff9896',
+  chartLabelsAbbreviation:'#c5b0d5',
+  chartLinks:             '#c49c94',
+
+  // table
+  table:                  '#dbdb8d',
+  tableColumnNames:       '#9edae5',
+  tableTh:                '#393b79',
+  tableTd:                '#5254a3',
+},
         style: {
             ...c.style,
             chart: {
