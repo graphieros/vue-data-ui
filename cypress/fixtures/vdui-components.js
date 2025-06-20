@@ -6,6 +6,17 @@
  */
 export const components = [
     {
+        name: 'VueUiChord',
+        dataset: {
+            matrix: [
+                [1, 1],
+                [1, 1],
+            ],
+            labels: ['S1', 'S2']
+        },
+        wrapperClass: '.vue-ui-chord'
+    },
+    {
         name: 'VueUiRidgeline',
         dataset: [
             {

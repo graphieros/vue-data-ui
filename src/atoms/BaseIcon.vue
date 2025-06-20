@@ -191,7 +191,8 @@ const icons = computed(() => {
         text: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 2 2 L 12 2 L 12 4 L 8 4 L 8 18 L 6 18 L 6 4 L 2 4 L 2 2 M 12 15 L 18 15 M 12 7 L 18 7 M 12 11 L 18 11"/>`,
         world: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 10 1 A 1 1 0 0 0 10 19 A 1 1 0 0 0 10 1 C 3 4 3 16 10 19 M 10 1 C 17 4 17 16 10 19 M 10 1 L 10 19 M 1 10 L 19 10 M 1 10"/>`,
         eye: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1 10 Q 10 1 19 10 Q 10 19 1 10 M 10 7 A 1 1 0 0 0 10 13 A 1 1 0 0 0 10 7 M 10 9 A 1 1 0 0 0 10 11 A 1 1 0 0 0 10 9"/>`,
-        chartRidgeline: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1 15 L 4 16 L 7 14 L 10 18 L 14 10 L 17 16 L 19 15 M 1 12 L 6 11 L 10 12 L 14 6 M 14 6 L 17 11 L 19 12 M 1 9 L 6 8 L 9 8 L 14 1 L 17 6 L 19 6"/>`
+        chartRidgeline: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 1 15 L 4 16 L 7 14 L 10 18 L 14 10 L 17 16 L 19 15 M 1 12 L 6 11 L 10 12 L 14 6 M 14 6 L 17 11 L 19 12 M 1 9 L 6 8 L 9 8 L 14 1 L 17 6 L 19 6"/>`,
+        chartChord: `<path fill="none" stroke="${props.stroke}" stroke-width="${props.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" d="M 9 1 Q 2 2 1 9 M 1 11 Q 2 18 9 19 M 11 19 Q 18 18 19 11 M 19 9 Q 18 2 11 1 M 5.683 2.021 C 9 6 13 4 14.893 2.322 M 2.421 4.987 C 14.469 7.137 15.545 12.216 17.361 15.33 M 4.83 17.48 C 9.02 13.773 11.207 14.218 15.433 17.369 M 1.976 14.033 C 11.207 12.735 15.952 9.065 17.213 4.393"/>`
     }
 });
 

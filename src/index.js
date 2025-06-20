@@ -69,6 +69,7 @@ export const VueUiPattern = defineAsyncComponent(() => import('./atoms/vue-ui-pa
 export const VueUiCirclePack = defineAsyncComponent(() => import('./components/vue-ui-circle-pack.vue'))
 export const VueUiWorld = defineAsyncComponent(() => import('./components/vue-ui-world.vue'))
 export const VueUiRidgeline = defineAsyncComponent(() => import('./components/vue-ui-ridgeline.vue'))
+export const VueUiChord = defineAsyncComponent(() => import('./components/vue-ui-chord.vue'))
 export {
     abbreviate,
     createWordCloudDatasetFromPlainText,

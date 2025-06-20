@@ -65,7 +65,8 @@ import {
     VueUiPattern,
     VueUiCirclePack,
     VueUiWorld,
-    VueUiRidgeline
+    VueUiRidgeline,
+    VueUiChord
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
@@ -134,5 +135,6 @@ app.component('VueUiPattern', VueUiPattern);
 app.component('VueUiCirclePack', VueUiCirclePack);
 app.component('VueUiWorld', VueUiWorld);
 app.component('VueUiRidgeline', VueUiRidgeline);
+app.component('VueUiChord', VueUiChord);
 
 app.mount('#app');
