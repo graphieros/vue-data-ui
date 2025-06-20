@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { markRaw, ref, computed } from "vue";
 import TestingArena from "./TestingArena.vue";
 import ArenaVueUiXy from "../TestingArena/ArenaVueUiXy.vue";
 import ArenaVueUiDonut from "../TestingArena/ArenaVueUiDonut.vue";
@@ -56,76 +56,81 @@ import ArenaVueUiCirclePack from "../TestingArena/ArenaVueUiCirclePack.vue";
 import ArenaVueUiWorld from "../TestingArena/ArenaVueUiWorld.vue";
 import ArenaVueUiTable from "../TestingArena/ArenaVueUiTable.vue";
 import ArenaVueUiRidgeline from "../TestingArena/ArenaVueUiRidgeline.vue";
+import ArenaVueUiChord from "../TestingArena/ArenaVueUiChord.vue"
 
-const components = ref([             //------|
-  /*____________________*/"VueUiXy", //  0
-  /*_________________*/"VueUiDonut", //  1
-  /*_______________*/"VueUiTreemap", //  2
-  /*________________*/"VueUiWaffle", //  3
-  /*_________________*/"VueUiRadar", //  4
-  /*______________*/"VueUiQuadrant", //  5
-  /*_________________*/"VueUiGauge", //  6
-  /*_________________*/"VueUiWheel", //  7
-  /*_____________*/"VueUiTiremarks", //  8
-  /*______________*/"VueUiChestnut", //  9
-  /*_________________*/"VueUiOnion", // 10
-  /*___________*/"VueUiVerticalBar", // 11
-  /*_______________*/"VueUiHeatmap", // 12
-  /*_______________*/"VueUiScatter", // 13
-  /*___________*/"VueUiCandlestick", // 14
-  /*_____________*/"VueUiSparkline", // 15
-  /*______________*/"VueUiSparkbar", // 16
-  /*_________*/"VueUiSparkStackbar", // 17
-  /*________*/"VueUiSparkHistogram", // 18
-  /*____________*/"VueUiSparkgauge", // 19
-  /*____________*/"VueUiSparkTrend", // 20
-  /*____________*/"VueUiQuickChart", // 21
-  /*____________*/"VueUiAgePyramid", // 22
-  /*________*/"VueUiRelationCircle", // 23
-  /*___________*/"VueUiThermometer", // 24
-  /*_________________*/"VueUiRings", // 25
-  /*________*/"VueUiDonutEvolution", // 26
-  /*__________________*/"VueUiIcon", // 27
-  /*_____________*/"VueUiMoodRadar", // 28
-  /*______________*/"VueUiMolecule", // 29
-  /*__________*/"VueUiNestedDonuts", // 30
-  /*________________*/"VueUiGalaxy", // 31
-  /*_____________*/"VueUiStripPlot", // 32
-  /*______________*/"VueUiDumbbell", // 33
-  /*_________________*/"VueUi3dBar", // 34
-  /*________*/"VueUiTableSparkline", // 35
-  /*__________*/"VueUiTableHeatmap", // 36
-  /*____________ */"VueUiWordCloud", // 37
-  /*______________*/"VueUiXyCanvas", // 38
-  /*__________________*/"VueUiFlow", // 39
-  /**/"VueUiParallelCoordinatePlot", // 40
-  /*_________________*/"VueUiTimer", // 41
-  /*_________*/"VueUiCarouselTable", // 42
-  /*_________________*/"VueUiGizmo", // 43
-  /*___________________*/"VueUiKpi", // 44
-  /*______________*/"VueUiStackbar", // 45
-  /*________________*/"VueUiRating", // 46
-  /*________________*/"VueUiSmiley", // 47
-  /*________________*/"VueUiBullet", // 48
-  /*________________*/"VueUiFunnel", // 49
-  /*___________*/"VueUiHistoryPlot", // 50
-  /*____________*/"VueUiCirclePack", // 51
-  /*_________________*/"VueUiWorld", // 52
-  /*_________________*/"VueUiTable", // 53
-  /*_____________*/"VueUiRidgeline", // 54
 
   /**
    * TODO: migrate manual testing for the following:
    * - VueUiDashboard
    * - VueUiCursor
    */
-]);
+
+const mapping = ref({
+  VueUiXy: markRaw(ArenaVueUiXy), 
+  VueUiDonut: markRaw(ArenaVueUiDonut), 
+  VueUiTreemap: markRaw(ArenaVueUiTreemap), 
+  VueUiWaffle: markRaw(ArenaVueUiWaffle),
+  VueUiRadar: markRaw(ArenaVueUiRadar), 
+  VueUiQuadrant: markRaw(ArenaVueUiQuadrant), 
+  VueUiGauge: markRaw(ArenaVueUiGauge),
+  VueUiWheel: markRaw(ArenaVueUiWheel), 
+  VueUiTiremarks: markRaw(ArenaVueUiTiremarks), 
+  VueUiChestnut: markRaw(ArenaVueUiChestnut), 
+  VueUiOnion: markRaw(ArenaVueUiOnion), 
+  VueUiVerticalBar: markRaw(ArenaVueUiVerticalBar), 
+  VueUiHeatmap: markRaw(ArenaVueUiHeatmap), 
+  VueUiScatter: markRaw(ArenaVueUiScatter), 
+  VueUiCandlestick: markRaw(ArenaVueUiCandlestick), 
+  VueUiSparkline: markRaw(ArenaVueUiSparkline), 
+  VueUiSparkbar: markRaw(ArenaVueUiSparkbar), 
+  VueUiSparkStackbar: markRaw(ArenaVueUiSparkStackbar), 
+  VueUiSparkHistogram: markRaw(ArenaVueUiSparkHistogram), 
+  VueUiSparkgauge: markRaw(ArenaVueUiSparkGauge),
+  VueUiSparkTrend: markRaw(ArenaVueUiSparkTrend), 
+  VueUiQuickChart: markRaw(ArenaVueUiQuickChart), 
+  VueUiAgePyramid: markRaw(ArenaVueUiAgePyramid), 
+  VueUiRelationCircle: markRaw(ArenaVueUiRelationCircle),
+  VueUiThermometer: markRaw(ArenaVueUiThermometer), 
+  VueUiRings: markRaw(ArenaVueUiRings),
+  VueUiDonutEvolution: markRaw(ArenaVueUiDonutEvolution), 
+  VueUiIcon: markRaw(ArenaVueUiIcon),
+  VueUiMoodRadar: markRaw(ArenaVueUiMoodRadar), 
+  VueUiMolecule: markRaw(ArenaVueUiMolecule), 
+  VueUiNestedDonuts: markRaw(ArenaVueUiNestedDonuts), 
+  VueUiGalaxy: markRaw(ArenaVueUiGalaxy),
+  VueUiStripPlot: markRaw(ArenaVueUiStripPlot), 
+  VueUiDumbbell: markRaw(ArenaVueUiDumbbell), 
+  VueUi3dBar: markRaw(ArenaVueUi3dBar), 
+  VueUiTableSparkline: markRaw(ArenaVueUiTableSparkline), 
+  VueUiTableHeatmap: markRaw(ArenaVueUiTableHeatmap),
+  VueUiWordCloud: markRaw(ArenaVueUiWordCloud),
+  VueUiXyCanvas: markRaw(ArenaVueUiXyCanvas), 
+  VueUiFlow: markRaw(ArenaVueUiFlow),
+  VueUiParallelCoordinatePlot: markRaw(ArenaVueUiParallelCoordinatePlot), 
+  VueUiTimer: markRaw(ArenaVueUiTimer), 
+  VueUiCarouselTable: markRaw(ArenaVueUiCarouselTable), 
+  VueUiGizmo: markRaw(ArenaVueUiGizmo),
+  VueUiKpi: markRaw(ArenaVueUiKpi), 
+  VueUiStackbar: markRaw(ArenaVueUiStackbar), 
+  VueUiRating: markRaw(ArenaVueUiRating), 
+  VueUiSmiley: markRaw(ArenaVueUiSmiley), 
+  VueUiBullet: markRaw(ArenaVueUiBullet), 
+  VueUiFunnel: markRaw(ArenaVueUiFunnel), 
+  VueUiHistoryPlot: markRaw(ArenaVueUiHistoryPlot), 
+  VueUiCirclePack: markRaw(ArenaVueUiCirclePack),
+  VueUiWorld: markRaw(ArenaVueUiWorld), 
+  VueUiTable: markRaw(ArenaVueUiTable), 
+  VueUiRidgeline: markRaw(ArenaVueUiRidgeline), 
+  VueUiChord: markRaw(ArenaVueUiChord) 
+})
+
+const options = computed(() => Object.keys(mapping.value));
 
 /**
  * Modify the index to display a component
  * [0] = VueUiXy 
  */
- const selectedComponent = ref(components.value[39]);
+ const selectedComponent = ref('VueUiChord');
 
 /**
  * Legacy testing arena where some non chart components can be tested
@@ -137,7 +142,7 @@ const showOldArena = ref(false);
 <template>
   <div>
     <select v-model="selectedComponent">
-      <option v-for="c in components">
+      <option v-for="c in options">
         {{ c }}
       </option>
     </select>
@@ -145,170 +150,6 @@ const showOldArena = ref(false);
 
   <TestingArena v-if="showOldArena"/>
 
-  <!--  0 -->
-  <ArenaVueUiXy v-if="selectedComponent === 'VueUiXy'"/>
+  <component :is="mapping[selectedComponent]"/>
 
-  <!--  1 -->
-  <ArenaVueUiDonut v-if="selectedComponent === 'VueUiDonut'"/>
-
-  <!--  2 -->
-  <ArenaVueUiTreemap v-if="selectedComponent === 'VueUiTreemap'" />
-
-  <!--  3 -->
-  <ArenaVueUiWaffle v-if="selectedComponent === 'VueUiWaffle'" />
-
-  <!--  4 -->
-  <ArenaVueUiRadar v-if="selectedComponent === 'VueUiRadar'" />
-
-  <!--  5 -->
-  <ArenaVueUiQuadrant v-if="selectedComponent === 'VueUiQuadrant'" />
-
-  <!--  6 -->
-  <ArenaVueUiGauge v-if="selectedComponent === 'VueUiGauge'" />
-
-  <!--  7 -->
-  <ArenaVueUiWheel v-if="selectedComponent === 'VueUiWheel'" />
-
-  <!--  8 -->
-  <ArenaVueUiTiremarks v-if="selectedComponent === 'VueUiTiremarks'" />
-
-  <!--  9 -->
-  <ArenaVueUiChestnut v-if="selectedComponent === 'VueUiChestnut'" />
-
-  <!-- 10 -->
-  <ArenaVueUiOnion v-if="selectedComponent === 'VueUiOnion'" />
-
-  <!-- 11 -->
-  <ArenaVueUiVerticalBar v-if="selectedComponent === 'VueUiVerticalBar'" />
-
-  <!-- 12 -->
-  <ArenaVueUiHeatmap v-if="selectedComponent === 'VueUiHeatmap'" />
-
-  <!-- 13 -->
-  <ArenaVueUiScatter v-if="selectedComponent === 'VueUiScatter'" />
-
-  <!-- 14 -->
-  <ArenaVueUiCandlestick v-if="selectedComponent === 'VueUiCandlestick'" />
-
-  <!-- 15 -->
-  <ArenaVueUiSparkline v-if="selectedComponent === 'VueUiSparkline'" />
-
-  <!-- 16 -->
-  <ArenaVueUiSparkbar v-if="selectedComponent === 'VueUiSparkbar'" />
-
-  <!-- 17 -->
-  <ArenaVueUiSparkStackbar v-if="selectedComponent === 'VueUiSparkStackbar'" />
-
-  <!-- 18 -->
-  <ArenaVueUiSparkHistogram v-if="selectedComponent === 'VueUiSparkHistogram'" />
-
-  <!-- 19 -->
-  <ArenaVueUiSparkGauge v-if="selectedComponent === 'VueUiSparkgauge'" />
-
-  <!-- 20 -->
-  <ArenaVueUiSparkTrend v-if="selectedComponent === 'VueUiSparkTrend'" />
-
-  <!-- 21 -->
-  <ArenaVueUiQuickChart v-if="selectedComponent === 'VueUiQuickChart'" />
-
-  <!-- 22 -->
-  <ArenaVueUiAgePyramid v-if="selectedComponent === 'VueUiAgePyramid'" />
-
-  <!-- 23 -->
-  <ArenaVueUiRelationCircle v-if="selectedComponent === 'VueUiRelationCircle'" />
-
-  <!-- 24 -->
-  <ArenaVueUiThermometer v-if="selectedComponent === 'VueUiThermometer'" />
-
-  <!-- 25 -->
-  <ArenaVueUiRings v-if="selectedComponent === 'VueUiRings'" />
-
-  <!-- 26 -->
-  <ArenaVueUiDonutEvolution v-if="selectedComponent === 'VueUiDonutEvolution'" />
-
-  <!-- 27 -->
-  <ArenaVueUiIcon v-if="selectedComponent === 'VueUiIcon'" />
-
-  <!-- 28 -->
-  <ArenaVueUiMoodRadar v-if="selectedComponent === 'VueUiMoodRadar'" />
-
-  <!-- 29 -->
-  <ArenaVueUiMolecule v-if="selectedComponent === 'VueUiMolecule'" />
-
-  <!-- 30 -->
-  <ArenaVueUiNestedDonuts v-if="selectedComponent === 'VueUiNestedDonuts'" />
-
-  <!-- 31 -->
-  <ArenaVueUiGalaxy v-if="selectedComponent === 'VueUiGalaxy'" />
-
-  <!-- 32 -->
-  <ArenaVueUiStripPlot v-if="selectedComponent === 'VueUiStripPlot'" />
-
-  <!-- 33 -->
-  <ArenaVueUiDumbbell v-if="selectedComponent === 'VueUiDumbbell'" />
-
-  <!-- 34 -->
-  <ArenaVueUi3dBar v-if="selectedComponent === 'VueUi3dBar'" />
-
-  <!-- 35 -->
-  <ArenaVueUiTableSparkline v-if="selectedComponent === 'VueUiTableSparkline'" />
-
-  <!-- 36 -->
-  <ArenaVueUiTableHeatmap v-if="selectedComponent === 'VueUiTableHeatmap'" />
-
-  <!-- 37 -->
-  <ArenaVueUiWordCloud v-if="selectedComponent === 'VueUiWordCloud'" />
-
-  <!-- 38 -->
-  <ArenaVueUiXyCanvas v-if="selectedComponent === 'VueUiXyCanvas'" />
-
-  <!-- 39 -->
-  <ArenaVueUiFlow v-if="selectedComponent === 'VueUiFlow'" />
-
-  <!-- 40 -->
-  <ArenaVueUiParallelCoordinatePlot v-if="selectedComponent === 'VueUiParallelCoordinatePlot'" />
-
-  <!-- 41 -->
-  <ArenaVueUiTimer v-if="selectedComponent === 'VueUiTimer'" />
-
-  <!-- 42 -->
-  <ArenaVueUiCarouselTable v-if="selectedComponent === 'VueUiCarouselTable'" />
-
-  <!-- 43 -->
-  <ArenaVueUiGizmo v-if="selectedComponent === 'VueUiGizmo'" />
-
-  <!-- 44 -->
-  <ArenaVueUiKpi v-if="selectedComponent === 'VueUiKpi'" />
-
-  <!-- 45 -->
-  <ArenaVueUiStackbar v-if="selectedComponent === 'VueUiStackbar'" />
-
-  <!-- 46 -->
-  <ArenaVueUiRating v-if="selectedComponent === 'VueUiRating'" />
-
-  <!-- 47 -->
-  <ArenaVueUiSmiley v-if="selectedComponent === 'VueUiSmiley'" />
-
-  <!-- 48 -->
-  <ArenaVueUiBullet v-if="selectedComponent === 'VueUiBullet'" />
-
-  <!-- 49 -->
-  <ArenaVueUiFunnel v-if="selectedComponent === 'VueUiFunnel'" />
-
-  <!-- 50 -->
-  <ArenaVueUiHistoryPlot v-if="selectedComponent === 'VueUiHistoryPlot'" />
-
-  <!-- 51 -->
-  <ArenaVueUiCirclePack v-if="selectedComponent === 'VueUiCirclePack'" />
-
-  <!-- 52 -->
-  <ArenaVueUiWorld v-if="selectedComponent === 'VueUiWorld'" />
-
-  <!-- 53 -->
-  <ArenaVueUiTable v-if="selectedComponent === 'VueUiTable'" />
-
-  <!-- 54 -->
-  <ArenaVueUiRidgeline v-if="selectedComponent === 'VueUiRidgeline'" />
-
-  <!-- Add testing arena for new components here -->
 </template>
