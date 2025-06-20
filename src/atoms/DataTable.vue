@@ -53,10 +53,12 @@ const emit = defineEmits(['close'])
             <thead>
                 <tr role="row" style="font-variant-numeric: tabular-nums" class="vue-ui-data-table__thead-row" :style="{backgroundColor: thbg, color: thc }">
                     <th role="cell" :style="{outline: tho}" v-for="(th, i) in head" :key="`th_${i}`">
-                        <div style="display: flex; align-items:center; justify-content:center; justify-content:flex-end;padding-right: 3px; gap:3px">
-                            <svg height="12" width="12" v-if="th.color" viewBox="0 0 20 20" style="background: none;">
-                                <circle cx="10" cy="10" r="10" :fill="th.color"/>
-                            </svg>
+                        <div style="display: flex; align-items:center; justify-content:center; justify-content:flex-end;padding-right: 3px; gap:3px;">
+                            <div style="width:12px; height: 12px">
+                                <svg height="12" width="12" v-if="th.color" viewBox="0 0 20 20" style="background: none;">
+                                    <circle cx="10" cy="10" r="10" :fill="th.color"/>
+                                </svg>
+                            </div>
                             <slot name="th" :th="th"/>
                         </div>
                     </th>

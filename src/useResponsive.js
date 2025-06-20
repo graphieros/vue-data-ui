@@ -57,6 +57,9 @@ export function useResponsive({
         width,
         height,
         heightTitle,
-        heightNoTitle
+        heightNoTitle,
+        heightSource,
+        heightNoTitle,
+        heightLegend
     }
 }

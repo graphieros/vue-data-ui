@@ -58,7 +58,8 @@ declare module "vue-data-ui" {
         | VueUiHistoryPlotDatasetItem[]
         | VueUiCirclePackDatasetItem[]
         | VueUiWorldDataset
-        | VueUiRidgelineDatasetItem[];
+        | VueUiRidgelineDatasetItem[]
+        | VueUiChordDataset;
         config?:
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -117,7 +118,8 @@ declare module "vue-data-ui" {
         | VueUiHistoryPlotConfig
         | VueUiCirclePackConfig
         | VueUiWorldConfig
-        | VueUiRidgelineConfig;
+        | VueUiRidgelineConfig
+        | VueUiChordConfig;
     }>;
 
     export type VueUiPatternName =
@@ -1167,7 +1169,8 @@ declare module "vue-data-ui" {
         | "text"
         | "world"
         | "eye"
-        | "chartRidgeline";
+        | "chartRidgeline"
+        | "chartChord";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -6989,6 +6992,88 @@ declare module "vue-data-ui" {
         dataset: VueUiRidgelineDatasetItem[]
     }>
 
+    export type VueUiChordDataset = {
+        matrix: number[][];
+        labels?: string[];
+        colors?: string[];
+    }
+
+    export type VueUiChordConfig = {
+        theme?: Theme;
+        customPalette?: string[];
+        enableRotation?: boolean;
+        initialRotation?: nulber;
+        useCssAnimation?: boolean;
+        responsive?: boolean;
+        userOptions?: ChartUserOptions;
+        table?: {
+            show?: boolean;
+            responsiveBreakpoint?: number;
+            th?: ChartTableCell;
+            td?: ChartTableCell;
+        };
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                legend?: ChartBaseLegend & {
+                    backgroundColor?: string;
+                };
+                title?: ChartTitle;
+                arcs?: {
+                    innerRadiusRatio?: number;
+                    outerRadiusRatio?: number;
+                    padAngle?: number;
+                    stroke?: string;
+                    strokeWidth?: string;
+                    labels?: {
+                        show?: boolean;
+                        fontSize?: number;
+                        bold?: boolean;
+                        curved?: boolean;
+                        adaptColorToBackground?: boolean;
+                        color?: string;
+                        offset?: number;
+                    };
+                };
+                ribbons?: {
+                    stroke?: string;
+                    strokeWidth?: number;
+                    underlayerOpacity?: number;
+                    labels?: {
+                        show?: boolean;
+                        formatter?: Formatter;
+                        prefix?: string;
+                        suffix?: string;
+                        rounding?: number;
+                        fontSize?: number;
+                        bold?: boolean;
+                        useSerieColor?: boolean;
+                        color?: string;
+                        offset?: number;
+                        minSeparationDeg?: number;
+                        connector?: {
+                            stroke?: string;
+                            strokeWidth?: number;
+                        };
+                        marker?: {
+                            show?: boolean;
+                            radius?: number;
+                            stroke?: string;
+                            strokeWidth?: number;
+                        };
+                    };
+                };
+            };
+        };
+    };
+
+    export const VueUiChord: DefineComponent<{
+        config?: VueUiChordConfig;
+        dataset: VueUiChordDataset
+    }>
+
     export type VueDataUiConfig =
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -7049,7 +7134,8 @@ declare module "vue-data-ui" {
         | VueUiHistoryPlotConfig
         | VueUiCirclePackConfig
         | VueUiWorldConfig
-        | VueUiRidgelineConfig;
+        | VueUiRidgelineConfig
+        | VueUiChordConfig;
 
     export type VueDataUiConfigKey =
         | "vue_ui_3d_bar"
@@ -7111,7 +7197,8 @@ declare module "vue-data-ui" {
         | "vue_ui_history_plot"
         | "vue_ui_circle_pack"
         | "vue_ui_world"
-        | "vue_ui_ridgeline";
+        | "vue_ui_ridgeline"
+        | "vue_ui_chord";
 
     export type VueDataUiWordCloudTransformCallback =
         | ((word: string) => string)

@@ -73,7 +73,8 @@ const components = {
     VueUiHistoryPlot: defineAsyncComponent(() => import('./vue-ui-history-plot.vue')),
     VueUiCirclePack: defineAsyncComponent(() => import('./vue-ui-circle-pack.vue')),
     VueUiWorld: defineAsyncComponent(() => import('./vue-ui-world.vue')),
-    VueUiRidgeline: defineAsyncComponent(() => import('./vue-ui-ridgeline.vue'))
+    VueUiRidgeline: defineAsyncComponent(() => import('./vue-ui-ridgeline.vue')),
+    VueUiChord: defineAsyncComponent(() => import('./vue-ui-chord.vue'))
 };
 
 const componentProps = {
@@ -137,7 +138,8 @@ const componentProps = {
     VueUiHistoryPlot: ['config', 'dataset'],
     VueUiCirclePack: ['config', 'dataset'],
     VueUiWorld: ['config', 'dataset'],
-    VueUiRidgeline: ['config', 'dataset']
+    VueUiRidgeline: ['config', 'dataset'],
+    VueUiChord: ['config', 'dataset']
 };
 
 const emit = defineEmits([
@@ -163,7 +165,9 @@ const emit = defineEmits([
     'reset',
     'restart',
     'lap',
-    'toggleAnnotator'
+    'toggleAnnotator',
+    'selectGroup',
+    'selectRibbon'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -204,6 +208,8 @@ const pauseAnimation = ref(() => null);
 const resumeAnimation = ref(() => null);
 const toggleAnnotator = ref(() => null);
 const selectNode = ref(() => null);
+const selectGroup = ref(() => null);
+const selectRibbon = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -289,6 +295,12 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.selectNode) {
             selectNode.value = newRef.selectNode;
         }
+        if (newRef.selectGroup) {
+            selectGroup.value = newRef.selectGroup;
+        }
+        if (newRef.selectRibbon) {
+            selectRibbon.value = newRef.selectRibbon;
+        }
     }
 })
 
@@ -319,7 +331,9 @@ const getEventHandlers = () => {
         'pauseAnimation',
         'resumeAnimation',
         'toggleAnnotator',
-        'selectNode'
+        'selectNode',
+        'selectGroup',
+        'selectRibbon'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -366,7 +380,9 @@ defineExpose({
     resumeAnimation,
     toggleAnimation,
     toggleAnnotator,
-    selectNode
+    selectNode,
+    selectGroup,
+    selectRibbon
 });
 
 const notSupported = computed(() => {

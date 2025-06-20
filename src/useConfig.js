@@ -1,3 +1,5 @@
+import { adaptColorToBackground } from "./lib"
+
 export function useConfig() {
     const COLOR_BLACK = '#2D353C'
     const COLOR_GREY = '#A1A1A1'
@@ -4423,6 +4425,9 @@ export function useConfig() {
             color: COLOR_BLACK,
             maxHeight: 500,
             animated: true,
+            chord: {
+                color: COLOR_GREY_LIGHT
+            },
             ridgeline: {
                 color: COLOR_GREY_LIGHT
             },
@@ -5538,6 +5543,84 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_chord = {
+        theme: '',
+        customPalette: [],
+        enableRotation: true,
+        initialRotation: 0,
+        useCssAnimation: true,
+        responsive: false,
+        userOptions: USER_OPTIONS({
+            tooltip: false,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: false,
+            fullscreen: true,
+            stack: false,
+            annotator: true
+        }),
+        table: {
+            ...TABLE,
+            th: TABLE_TH,
+            td: TABLE_TD,
+        },
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                legend: LEGEND,
+                title: TITLE,
+                arcs: {
+                    innerRadiusRatio: 1,
+                    outerRadiusRatio: 1,
+                    padAngle: 5,
+                    stroke: COLOR_WHITE,
+                    strokeWidth: 1,
+                    labels: {
+                        show: true,
+                        fontSize: 14,
+                        bold: false,
+                        curved: false,
+                        adaptColorToBackground: true, // Applied if curved
+                        color: COLOR_BLACK, // If curved, applied if !adaptColorToBackground
+                        offset: 0,
+                    }
+                },
+                ribbons: {
+                    stroke: COLOR_WHITE,
+                    strokeWidth: 1,
+                    underlayerOpacity: 1,
+                    labels: {
+                        show: true,
+                        formatter: null,
+                        prefix: '',
+                        suffix: '',
+                        rounding: 0,
+                        fontSize: 14,
+                        bold: false,
+                        useSerieColor: false,
+                        color: COLOR_BLACK,
+                        offset: 0,
+                        minSeparationDeg: 3,
+                        connector: {
+                            stroke: COLOR_BLACK,
+                            strokeWidth: 1
+                        },
+                        marker: {
+                            show: true,
+                            radius: 3,
+                            stroke: COLOR_WHITE,
+                            strokeWidth: 1
+                        }
+                    }
+                },
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -5588,6 +5671,7 @@ export function useConfig() {
         vue_ui_history_plot,
         vue_ui_world,
         vue_ui_ridgeline,
+        vue_ui_chord,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,
