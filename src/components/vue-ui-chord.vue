@@ -613,7 +613,6 @@ function selectGroup(group) {
 }
 
 function selectRibbon(ribbon) {
-    console.log(ribbon)
     if (selectedLegendId.value) return;
     selectedRibbon.value = ribbon;
 }
