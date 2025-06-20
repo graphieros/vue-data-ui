@@ -1,5 +1,3 @@
-import { adaptColorToBackground } from "./lib"
-
 export function useConfig() {
     const COLOR_BLACK = '#2D353C'
     const COLOR_GREY = '#A1A1A1'
