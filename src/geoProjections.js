@@ -22,6 +22,29 @@
  *     const [x, y] = geo.projections.mercator([lon, lat], width, height, [centerLon, centerLat]);
  *     const bounds = geo.getProjectedBounds(geo.projections.mercator, features, width, height, [0, 0]);
  */
+
+function simplifyGeoJSON(geoJson, keepProps = []) {
+    const simplifiedFeatures = geoJson.features.map(feature => {
+        const props = {};
+        keepProps.forEach(key => {
+            if (feature.properties && feature.properties.hasOwnProperty(key)) {
+                props[key] = feature.properties[key];
+            }
+        });
+
+        return {
+            type: 'Feature',
+            geometry: feature.geometry,
+            properties: props
+        };
+    });
+
+    return {
+        type: 'FeatureCollection',
+        features: simplifiedFeatures
+    };
+}
+
 const projections = {
     mercator([lon, lat], width, height, center) {
         const maxLat = 85.05113;
@@ -308,7 +331,8 @@ function setupTerritories(config, geoData) {
 const geo = {
     projections,
     getProjectedBounds,
-    setupTerritories
+    setupTerritories,
+    simplifyGeoJSON
 }
 
 export default geo
