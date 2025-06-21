@@ -42,7 +42,12 @@ import { throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
 import themes from "../themes.json";
 
-// TODO: patterns
+/**
+ * 
+ * - Diplay percentages per group (#donut)
+ * - Add grab cursor when mousedown
+ * 
+ */
 
 const { vue_ui_chord: DEFAULT_CONFIG } = useConfig();
 

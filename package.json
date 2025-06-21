@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "2.11.2",
+  "version": "2.11.3-beta.0",
   "type": "module",
   "description": "A user-empowering data visualization Vue 3 components library for eloquent data storytelling",
   "keywords": [
@@ -75,7 +75,6 @@
     },
     "./style.css": "./dist/style.css"
   },
-  "main": "dist/vue-data-ui.cjs",
   "module": "dist/vue-data-ui.js",
   "types": "dist/types/vue-data-ui.d.ts",
   "scripts": {
