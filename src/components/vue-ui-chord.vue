@@ -42,13 +42,6 @@ import { throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
 import themes from "../themes.json";
 
-/**
- * 
- * - Diplay percentages per group (#donut)
- * - Add grab cursor when mousedown
- * 
- */
-
 const { vue_ui_chord: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
@@ -290,7 +283,8 @@ function computeChord(matrix, padAngle) {
             endAngle, 
             name: formattedDataset.value.labels[i], 
             id: createUid(),
-            color: formattedDataset.value.colors[i]
+            color: formattedDataset.value.colors[i],
+            proportion: groupSums[i] / totalSum
         });
         currentAngle = endAngle + padAngle;
     }
@@ -910,6 +904,7 @@ defineExpose({
             :style="{
                 overflow: 'visible'
             }"
+            :class="{'vue-ui-chord-rotating': dragging, 'vue-ui-chord-idle': !rotating }"
             @mousedown.prevent="onDown"
             @touchstart.prevent="onDown"
         >
@@ -1121,13 +1116,18 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.chart.arcs.labels.show">
                     <template v-if="FINAL_CONFIG.style.chart.arcs.labels.curved">
                         <text 
-                            v-for="(_g, i) in chordData.groups" 
+                            v-for="(g, i) in chordData.groups" 
                             :key="`curved-label-${i}`"
                             :font-size="FINAL_CONFIG.style.chart.arcs.labels.fontSize"
                             :font-weight="FINAL_CONFIG.style.chart.arcs.labels.bold ? 'bold' : 'normal'"
                             :fill="FINAL_CONFIG.style.chart.arcs.labels.adaptColorToBackground ? adaptColorToBackground(formattedDataset.colors[i]) : FINAL_CONFIG.style.chart.arcs.labels.color">
                             <textPath :href="`#labelPath-${i}_${uid}`" startOffset="50%" text-anchor="middle">
-                                {{ formattedDataset.labels[i] }}
+                                {{ formattedDataset.labels[i] }}{{ FINAL_CONFIG.style.chart.arcs.labels.showPercentage ? dataLabel({
+                                    p: ' (',
+                                    v: isNaN(g.proportion) ? 0 : g.proportion * 100,
+                                    s: '%)',
+                                    r: FINAL_CONFIG.style.chart.arcs.labels.roundingPercentage 
+                                }) : '' }}
                             </textPath>
                         </text>
                     </template>
@@ -1143,8 +1143,14 @@ defineExpose({
                             :text-anchor="rotatedMidAngle(g) > Math.PI ? 'end' : 'start'"
                             :font-size="FINAL_CONFIG.style.chart.arcs.labels.fontSize"
                             :font-weight="FINAL_CONFIG.style.chart.arcs.labels.bold ? 'bold' : 'normal'"
-                            :fill="FINAL_CONFIG.style.chart.arcs.labels.color">
-                            {{ formattedDataset.labels[i] }}
+                            :fill="FINAL_CONFIG.style.chart.arcs.labels.color"
+                        >
+                            {{ formattedDataset.labels[i] }}{{ FINAL_CONFIG.style.chart.arcs.labels.showPercentage ? dataLabel({
+                                    p: ' (',
+                                    v: isNaN(g.proportion) ? 0 : g.proportion * 100,
+                                    s: '%)',
+                                    r: FINAL_CONFIG.style.chart.arcs.labels.roundingPercentage 
+                                }) : '' }}
                         </text>
                     </template>
                 </g>
@@ -1323,5 +1329,13 @@ defineExpose({
     &:hover {
         transform: rotate(-90deg)
     }
+}
+
+.vue-ui-chord-idle {
+    cursor: grab;
+}
+
+.vue-ui-chord-rotating {
+    cursor: grabbing;
 }
 </style>

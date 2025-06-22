@@ -7035,6 +7035,8 @@ declare module "vue-data-ui" {
                         adaptColorToBackground?: boolean;
                         color?: string;
                         offset?: number;
+                        showPercentage?: boolean;
+                        roundingPercentage?: number;
                     };
                 };
                 ribbons?: {

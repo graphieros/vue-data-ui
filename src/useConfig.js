@@ -5585,6 +5585,8 @@ export function useConfig() {
                         adaptColorToBackground: true, // Applied if curved
                         color: COLOR_BLACK, // If curved, applied if !adaptColorToBackground
                         offset: 0,
+                        showPercentage: true,
+                        roundingPercentage: 0,
                     }
                 },
                 ribbons: {
