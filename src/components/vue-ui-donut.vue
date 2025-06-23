@@ -309,8 +309,6 @@ function getData() {
 }
 
 const segregated = ref([]);
-const rafUp = ref(null);
-const rafDown = ref(null);
 const isAnimating = ref(false);
 
 function animateValue({ from, to, duration, onUpdate, onDone, easing = easeOutCubic }) {
@@ -447,7 +445,6 @@ const donutSet = computed(() => {
             })
             .filter((_, i) => !segregated.value.includes(i))
     }
-
 });
 
 const legendSet = computed(() => {
@@ -734,11 +731,11 @@ const isSafari = computed(() => {
 })
 
 function dashLabel(num) {
-    return num.toFixed(FINAL_CONFIG.value.style.chart.legend.roundingPercentage).split('').map(el => '-').join('')
+    return num.toFixed(FINAL_CONFIG.value.style.chart.legend.roundingPercentage).split('').map(_ => '-').join('');
 }
 
 function selectDatapoint(datapoint, index) {
-    emit('selectDatapoint', { datapoint, index })
+    emit('selectDatapoint', { datapoint, index });
 }
 
 function toggleTable() {
