@@ -6,8 +6,8 @@ export function useConfig() {
     const COLOR_GREY_DARK = '#4A4A4A'
     const COLOR_WHITE = '#FFFFFF'
     const COLOR_WHITE_ALMOST = '#fafafa'
-    const COLOR_BLUE = '#5f8bee'
-    const COLOR_RED = '#dc3912'
+    const COLOR_BLUE = '#1f77b4'
+    const COLOR_RED = '#d62728'
     const COLOR_GREEN = '#2ca02c'
     const COLOR_VUE = '#42d392'
     const COLOR_YELLOW = '#FFD055'
@@ -174,7 +174,7 @@ export function useConfig() {
             buttonTitles,
             print: {
                 allowTaint: false,
-                backgroundColor: '#FFFFFF',
+                backgroundColor: COLOR_WHITE,
                 useCORS: false,
                 onclone: null,
                 scale: 2,
@@ -227,11 +227,11 @@ export function useConfig() {
     const MINIMAP = {
         show: false,
         smooth: false,
-        selectedColor: '#1f77b4',
+        selectedColor: COLOR_BLUE,
         selectedColorOpacity: 0.2,
-        lineColor: '#2D353C',
+        lineColor: COLOR_BLACK,
         selectionRadius: 2,
-        indicatorColor: '#2D353C',
+        indicatorColor: COLOR_BLACK,
         verticalHandles: false,
     }
 
@@ -262,7 +262,6 @@ export function useConfig() {
             labels: true,
             fullscreen: true,
             annotator: true
-            // IDEA : add a distributed toggle ?
         }),
         style: {
             fontFamily: 'inherit',
@@ -560,7 +559,7 @@ export function useConfig() {
             dot: {
                 hideAboveMaxSerieLength: 62,
                 useSerieColor: true,
-                fill: '#FFFFFF',
+                fill: COLOR_WHITE,
                 strokeWidth: 0.5
             },
             labels: {
@@ -585,7 +584,7 @@ export function useConfig() {
             useGradient: true,
             dot: {
                 useSerieColor: true,
-                fill: '#FFFFFF',
+                fill: COLOR_WHITE,
                 strokeWidth: 0.5
             },
             labels: {
@@ -1201,7 +1200,7 @@ export function useConfig() {
                     indicatorArc: {
                         show: false,
                         radius: 123,
-                        fill: '#E1E5E8',
+                        fill: COLOR_GREY_LIGHT,
                     },
                     pointer: {
                         show: true,
@@ -2514,7 +2513,7 @@ export function useConfig() {
         },
         userOptionsPrint: {
             allowTaint: false,
-            backgroundColor: '#FFFFFF',
+            backgroundColor: COLOR_WHITE,
             useCORS: false,
             onclone: null,
             scale: 2,
@@ -4615,7 +4614,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 outline: `1px solid ${COLOR_WHITE}`,
                 selected: {
-                    backgroundColor: "#1f77b4",
+                    backgroundColor: COLOR_BLUE,
                     color: COLOR_WHITE
                 }
             },
@@ -4649,18 +4648,18 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 border: '1px solid #CCCCCC',
-                accentColor: '#1f77b4'
+                accentColor: COLOR_BLUE
             },
             dropdowns: {
                 backgroundColor: COLOR_GREY_LIGHT,
                 color: COLOR_BLACK,
                 icons: {
                     selected: {
-                        color: '#008000',
+                        color: COLOR_GREEN,
                         unicode: '✔'
                     },
                     unselected: {
-                        color: '#ff0000',
+                        color: COLOR_RED,
                         unicode: '✖'
                     }
                 }
@@ -4676,14 +4675,14 @@ export function useConfig() {
                     opacityDisabled: 0.5
                 },
                 navigationIndicator: {
-                    backgroundColor: '#1f77b4'
+                    backgroundColor: COLOR_BLUE
                 }
             },
             exportMenu: {
                 backgroundColor: COLOR_GREY_LIGHT,
                 color: COLOR_BLACK,
                 buttons: {
-                    backgroundColor: '#FAFAFA',
+                    backgroundColor: COLOR_WHITE_ALMOST,
                     color: COLOR_BLACK
                 }
             },
@@ -4698,7 +4697,7 @@ export function useConfig() {
                     color: COLOR_BLACK,
                     buttons: {
                         selected: {
-                            backgroundColor: '#1f77b4',
+                            backgroundColor: COLOR_BLUE,
                             color: COLOR_WHITE
                         },
                         unselected: {
@@ -4714,16 +4713,16 @@ export function useConfig() {
                         strokeWidth: 2
                     },
                     bar: {
-                        fill: '#1f77b4',
+                        fill: COLOR_BLUE,
                         stroke: COLOR_WHITE
                     },
                     line: {
                         smooth: true,
                         useArea: false,
-                        stroke: '#1f77b4',
+                        stroke: COLOR_BLUE,
                         strokeWidth: 4,
                         plot: {
-                            fill: '#1f77b4',
+                            fill: COLOR_BLUE,
                             stroke: COLOR_WHITE, // DEPRECATED
                             strokeWidth: 1,
                             radius: {
@@ -4764,7 +4763,7 @@ export function useConfig() {
             page: 'Page',
             paginatorLabel: 'Rows per page',
             sizeWarning: 'Displaying too many rows at a time can lead to slower performance',
-            sum: 'Somme',
+            sum: 'Sum',
             to: 'To',
             total: 'Total',
             totalRows: 'Total rows'
@@ -4944,17 +4943,17 @@ export function useConfig() {
                 },
                 target: {
                     onTop: true,
-                    color: '#1A1A1A',
+                    color: COLOR_BLACK,
                     rounded: true,
                     heightRatio: 0.8,
-                    stroke: '#FFFFFF',
+                    stroke: COLOR_WHITE,
                     strokeWidth: 1,
                     width: 6,
                 },
                 valueBar: {
                     color: '#3A3A3A',
                     heightRatio: 0.33,
-                    stroke: '#FFFFFF',
+                    stroke: COLOR_WHITE,
                     strokeWidth: 1,
                     label: {
                         show: true,
@@ -5040,7 +5039,7 @@ export function useConfig() {
                 },
                 bars: {
                     stroke: COLOR_WHITE,
-                    defaultColor: '#1f77b4',
+                    defaultColor: COLOR_BLUE,
                     strokeWidth: 1,
                     gapRatio: 0.2,
                     borderRadius: 3,
@@ -5350,7 +5349,7 @@ export function useConfig() {
                         x: 0,
                         y: 0
                     },
-                    waterColor: '#1f77b4',
+                    waterColor: COLOR_BLUE,
                 },
                 territory: {
                     stroke: '#666666',
