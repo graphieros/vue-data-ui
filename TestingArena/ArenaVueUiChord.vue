@@ -122,7 +122,7 @@ const config = computed(()=> {
         }"/>
 </div>
 
-    <Box>
+    <Box comp="VueUiChord" :dataset="dataset">
         <template #title>VueUiChord</template>
 
         <template #local>

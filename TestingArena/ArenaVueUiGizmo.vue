@@ -34,7 +34,7 @@ const step = ref(0)
 
 <template>
     <input type="range" v-model="dataset" :min="0" :max="100"/>
-    <Box>
+    <Box comp="VueUiGizmo" :dataset="dataset">
         <template #title>VueUiGizmo</template>
         
         <template #local>
