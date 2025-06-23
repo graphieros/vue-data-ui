@@ -128,8 +128,6 @@ watch(() => props.config, (_newCfg) => {
     titleStep.value += 1;
     tableStep.value += 1;
     legendStep.value += 1;
-
-    
     // Reset mutable config
     rotation.value = FINAL_CONFIG.value.initialRotation;
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
@@ -158,7 +156,6 @@ function prepareChart() {
     isDataset.value && checkDataset();
 
     if (FINAL_CONFIG.value.responsive) {
-
         const wrapperEl = chordChart.value.parentNode;
     
         const resizeHandler = throttle(() => {
@@ -168,7 +165,7 @@ function prepareChart() {
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
-            })
+            });
     
             const otherH = heightTitle + heightLegend + heightSource + heightNoTitle;
     
@@ -184,12 +181,12 @@ function prepareChart() {
         ro.observe(wrapperEl)
         resizeObserver.value = ro;
 
-        resizeHandler()
+        resizeHandler();
     }
 
     loadingTimeout.value = setTimeout(() => {
         loaded.value = true;
-    },500)
+    }, 500)
 }
 
 function checkDataset(){
@@ -204,7 +201,7 @@ function checkDataset(){
             console.warn(`VueUiChord - Invalid matrix: dataset.matrix at index ${i} has ${m.length} elements instead of the required ${props.dataset.matrix.length}\n\ndataset.matrix[${i}] = [${m.toString()}] has a length of ${m.length} but should have the same length as the matrix itself (${props.dataset.matrix.length})`);
             isDataset.value = false;
         }
-    })
+    });
 }
 
 const loadingTimeout = ref(null);
@@ -231,11 +228,11 @@ const radii = computed(() => {
         inner: svg.value.width * 0.3 * FINAL_CONFIG.value.style.chart.arcs.innerRadiusRatio,
         outer: svg.value.width * 0.34 * FINAL_CONFIG.value.style.chart.arcs.outerRadiusRatio,
     }
-})
+});
 
 const paddingAngle = computed(() => {
-    return FINAL_CONFIG.value.style.chart.arcs.padAngle / 100
-})
+    return FINAL_CONFIG.value.style.chart.arcs.padAngle / 100;
+});
 
 const formattedDataset = computed(() => {
     if (!isDataset.value) {
@@ -254,7 +251,7 @@ const formattedDataset = computed(() => {
                 return customPalette.value[i] || palette[i] || palette[i % palette.length]
             })
     }
-})
+});
 
 function computeChord(matrix, padAngle) {
     const n = matrix.length;
@@ -1064,8 +1061,8 @@ defineExpose({
                         <!-- BACKGROUND STROKE -->
                         <line
                             :x1="lbl.midBaseX" :y1="lbl.midBaseY"
-                            :x2="Math.cos(lbl.theta - Math.PI/2)*(radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset +12)"
-                            :y2="Math.sin(lbl.theta - Math.PI/2)*(radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset +12)"
+                            :x2="Math.cos(lbl.theta - Math.PI/2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 12)"
+                            :y2="Math.sin(lbl.theta - Math.PI/2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 12)"
                             :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                             :stroke-width="FINAL_CONFIG.style.chart.ribbons.labels.connector.strokeWidth * 3"
                             pointer-events="none"
@@ -1073,8 +1070,8 @@ defineExpose({
                         <!-- MAIN STROKE -->
                         <line
                             :x1="lbl.midBaseX" :y1="lbl.midBaseY"
-                            :x2="Math.cos(lbl.theta - Math.PI/2)*(radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset +12)"
-                            :y2="Math.sin(lbl.theta - Math.PI/2)*(radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset +12)"
+                            :x2="Math.cos(lbl.theta - Math.PI/2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 12)"
+                            :y2="Math.sin(lbl.theta - Math.PI/2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 12)"
                             :stroke="FINAL_CONFIG.style.chart.ribbons.labels.connector.stroke"
                             :stroke-width="FINAL_CONFIG.style.chart.ribbons.labels.connector.strokeWidth"
                             pointer-events="none"
@@ -1082,8 +1079,8 @@ defineExpose({
                         <!-- DOT -->
                         <circle
                             v-if="FINAL_CONFIG.style.chart.ribbons.labels.marker.show"
-                            :cx="Math.cos(lbl.theta - Math.PI/2)*(radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset +12)"
-                            :cy="Math.sin(lbl.theta - Math.PI/2)*(radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset +12)"
+                            :cx="Math.cos(lbl.theta - Math.PI/2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 12)"
+                            :cy="Math.sin(lbl.theta - Math.PI/2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 12)"
                             :r="FINAL_CONFIG.style.chart.ribbons.labels.marker.radius"
                             :stroke="FINAL_CONFIG.style.chart.ribbons.labels.marker.stroke"
                             :stroke-width="FINAL_CONFIG.style.chart.ribbons.labels.marker.strokeWidth"
@@ -1094,8 +1091,8 @@ defineExpose({
                         <text
                             :transform="`
                             translate(
-                                ${Math.cos(lbl.theta - Math.PI/2)*(radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset +24)},
-                                ${Math.sin(lbl.theta - Math.PI/2)*(radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset +24)}
+                                ${Math.cos(lbl.theta - Math.PI/2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 24)},
+                                ${Math.sin(lbl.theta - Math.PI/2) * (radii.outer + FINAL_CONFIG.style.chart.ribbons.labels.offset + 24)}
                             ) rotate(${-rotation})
                             `"
                             :fill="FINAL_CONFIG.style.chart.ribbons.labels.useSerieColor 
@@ -1181,10 +1178,15 @@ defineExpose({
                 @clickMarker="({ legend }) => selectLegendItem(legend.id)"
             >
                 <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
-                    <Shape :shape="legend.shape" :radius="30" stroke="none" :plot="{ x: 30, y: 30 }"
-                        :fill="`url(#pattern_${uid}_${index})`" />
+                    <Shape 
+                        :shape="legend.shape" 
+                        :radius="30" 
+                        stroke="none" 
+                        :plot="{ x: 30, y: 30 }"
+                        :fill="`url(#pattern_${uid}_${index})`" 
+                    />
                 </template>
-                <template #item="{ legend, index }">
+                <template #item="{ legend }">
                     <div 
                         data-cy="legend-item"
                         :style="{
