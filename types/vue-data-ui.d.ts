@@ -1193,9 +1193,21 @@ declare module "vue-data-ui" {
                     hover?: {
                         hideLabelsUnderValue?: number;
                     };
+                    /** Deprecated since v2.12.4. Use style.chart.dialog */
                     zoom?: {
+                        /** Deprecated since v2.12.4. Use style.chart.dialog */
                         hideLabelsUnderValue?: number;
                     }
+                };
+                dialog?: {
+                    show?: boolean;
+                    backgroundColor?: string;
+                    color?: string;
+                    header?: {
+                        backgroundColor?: string;
+                        color?: string;
+                    };
+                    donutChart?: VueUiDonutConfig;
                 };
                 layout?: {
                     height?: number;

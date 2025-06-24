@@ -2849,8 +2849,56 @@ export function useConfig() {
                     hover: {
                         hideLabelsUnderValue: 5,
                     },
-                    zoom: {
-                        hideLabelsUnderValue: 3,
+                },
+                dialog: {
+                    show: true,
+                    backgroundColor: COLOR_WHITE,
+                    color: COLOR_BLACK,
+                    header: {
+                        backgroundColor: COLOR_WHITE,
+                        color: COLOR_BLACK
+                    },
+                    donutChart: {
+                        ...vue_ui_donut,
+                        responsive: true,
+                        userOptions: {
+                            ...vue_ui_donut.userOptions,
+                            buttons: {
+                                ...vue_ui_donut.userOptions.buttons,
+                                pdf: false,
+                            }
+                        },
+                        style: {
+                            ...vue_ui_donut.style,
+                            chart: {
+                                ...vue_ui_donut.style.chart,
+                                layout: {
+                                    ...vue_ui_donut.style.chart.layout,
+                                    donut: {
+                                        ...vue_ui_donut.style.chart.layout.donut,
+                                        strokeWidth: 64,
+                                    },
+                                    labels: {
+                                        ...vue_ui_donut.style.chart.layout.labels,
+                                        percentage: {
+                                            ...vue_ui_donut.style.chart.layout.labels.percentage,
+                                            fontSize: 16
+                                        },
+                                        name: {
+                                            ...vue_ui_donut.style.chart.layout.labels.name,
+                                            fontSize: 12
+                                        },
+                                        hollow: {
+                                            ...vue_ui_donut.style.chart.layout.labels.hollow,
+                                            average: {
+                                                ...vue_ui_donut.style.chart.layout.labels.hollow.average,
+                                                show: false,
+                                            },
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 layout: {
