@@ -901,7 +901,7 @@ defineExpose({
             :style="{
                 overflow: 'visible'
             }"
-            :class="{'vue-ui-chord-rotating': dragging, 'vue-ui-chord-idle': !rotating }"
+            :class="{'vue-ui-chord-rotating': dragging, 'vue-ui-chord-idle': !dragging }"
             @mousedown.prevent="onDown"
             @touchstart.prevent="onDown"
         >
