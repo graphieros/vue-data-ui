@@ -183,7 +183,7 @@ onUnmounted(() => {
 
 <template>
     <Teleport to="body">
-        <div v-if="isOpen" class="modal vue-ui-draggable-dialog" :style="modalStyle" @click.stop>
+        <div v-if="isOpen" data-cy="draggable-dialog" class="modal vue-ui-draggable-dialog" :style="modalStyle" @click.stop>
             <div class="modal-header" :style="{
                 backgroundColor: headerBg,
                 color: headerColor
@@ -213,7 +213,7 @@ onUnmounted(() => {
                 <span class="modal-title">
                     <slot name="title"/>
                 </span>
-                <button class="close" @click="close">
+                <button data-cy="draggable-dialog-close" class="close" @click="close">
                     <BaseIcon name="close" :stroke="headerColor"/>
                 </button>
             </div>

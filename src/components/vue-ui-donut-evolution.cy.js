@@ -41,10 +41,9 @@ describe('<VueUiDonutEvolution />', () => {
   
       cy.log('shows zoomed donut on trap click');
       cy.get('[data-cy-trap]').eq(0).click();
-      cy.get('[data-cy-zoom]').should('be.visible');
-      cy.get('[data-cy-zoom-donut]').should('be.visible');
-      cy.get('[data-cy-close]').should('be.visible').click({ force: true});
-      cy.get('[data-cy-zoom]').should('not.exist');
+      cy.get('[data-cy="draggable-dialog"]').should('be.visible');
+      cy.get('[data-cy="draggable-dialog-close"]').should('be.visible').click({ force: true});
+      cy.get('[data-cy="draggable-dialog"]').should('not.exist');
   
       cy.log('segregates series when selecting legend items');
       cy.get('[data-cy="legend-item"]').eq(0).click().then(() => {

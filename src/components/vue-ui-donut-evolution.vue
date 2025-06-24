@@ -13,6 +13,7 @@ import {
     createCsvContent, 
     createUid, 
     dataLabel,
+    deepEmptyObjectToNull,
     downloadCsv,
     error,
     getMissingDatasetAttributes,
@@ -41,6 +42,8 @@ import PackageVersion from "../atoms/PackageVersion.vue";
 import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import BaseDraggableDialog from "../atoms/BaseDraggableDialog.vue";
+import VueUiDonut from "./vue-ui-donut.vue";
 
 const { vue_ui_donut_evolution: DEFAULT_CONFIG } = useConfig();
 
@@ -422,13 +425,11 @@ function displayArcPercentage(arc, stepBreakdown) {
 }
 
 function leave() {
-    if (isFixed.value) return;
     hoveredIndex.value = null;
     hoveredDatapoint.value = null;
 }
 
 function enter(datapoint) {
-    if (isFixed.value) return;
     hoveredIndex.value = datapoint.index;
     hoveredDatapoint.value = datapoint;
 }
@@ -436,20 +437,15 @@ function enter(datapoint) {
 const fixedDatapointIndex = ref(null);
 
 function fixDatapoint(datapoint, index) {
-    if(!datapoint.subtotal) return;
+    if(!datapoint.subtotal || !FINAL_CONFIG.value.style.chart.dialog.show) return;
     hoveredDatapoint.value = null;
     hoveredIndex.value = null;
     isFixed.value = true;
     fixedDatapoint.value = datapoint;
+    createDonutDatasetForDialog(datapoint);
     if(![null, undefined].includes(index)) {
         fixedDatapointIndex.value = index;
     }
-}
-
-function unfixDatapoint() {
-    fixedDatapoint.value = null;
-    isFixed.value = false;
-    fixedDatapointIndex.value = null;
 }
 
 const legendSet = computed(() => {
@@ -582,8 +578,27 @@ function toggleAnnotator() {
 function isArcBigEnoughHover(arc) {
     return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.donuts.hover.hideLabelsUnderValue;
 }
-function isArcBigEnoughZoom(arc) {
-    return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.donuts.zoom.hideLabelsUnderValue;
+
+const donutDataset = ref([]);
+const donutConfig = ref({});
+const dialog = ref(null);
+
+function createDonutDatasetForDialog(ds) {
+    donutDataset.value = ds.donut.map(ds => {
+        return {
+            name: ds.name,
+            values: [ds.value],
+            color: ds.color
+        }
+    });
+
+    donutConfig.value = deepEmptyObjectToNull({
+        ...FINAL_CONFIG.value.style.chart.dialog.donutChart,
+        responsive: true,
+        theme: FINAL_CONFIG.value.theme,
+    });
+
+    dialog.value && dialog.value.open();
 }
 
 defineExpose({
@@ -692,7 +707,7 @@ defineExpose({
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
             data-cy="donut-evolution-svg" 
             :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" 
-            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
         >
             <PackageVersion />
 
@@ -764,7 +779,7 @@ defineExpose({
             </g>
 
             <!-- Y LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null || isFixed}">
+            <g v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null}">
                 <g v-for="(yLabel, i) in yLabels">
                     <line 
                         data-cy="axis-y-tick"
@@ -803,7 +818,7 @@ defineExpose({
             </g>
 
             <!-- X LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': isFixed}">
+            <g v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true,}">
                 <g v-for="(_, i) in (slicer.end - slicer.start)">
                     <text
                         data-cy="axis-x-label"
@@ -822,7 +837,7 @@ defineExpose({
             <!-- DATAPOINTS -->
             <g v-for="(datapoint, i ) in drawableDataset">
                 <line
-                    :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null || isFixed}"
+                    :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null}"
                     v-if="FINAL_CONFIG.style.chart.layout.line.show && i < drawableDataset.length - 1 && ![datapoint.subtotal, drawableDataset[i + 1].subtotal].includes(null)"
                     :x1="datapoint.x"
                     :y1="datapoint.y"
@@ -844,7 +859,7 @@ defineExpose({
                 </g>
             </g>
 
-            <g v-for="(datapoint, i ) in drawableDataset" :data-cy="`donut-wrapper-${i}`" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || isFixed}">
+            <g v-for="(datapoint, i ) in drawableDataset" :data-cy="`donut-wrapper-${i}`" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null)}">
                 <g v-if="datapoint.subtotal">
                     <g v-if="hoveredIndex !== null && hoveredIndex === i">
                         <g v-for="arc in datapoint.donutHover">
@@ -886,7 +901,7 @@ defineExpose({
                     </g>
                 </g>
             </g>
-            <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || isFixed}">
+            <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null)}">
                 <g v-if="datapoint.subtotal !== null">
                     <circle 
                         v-if="datapoint.subtotal === 0"
@@ -918,7 +933,7 @@ defineExpose({
             </g>
 
             <!-- DATALABELS -->
-            <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || isFixed}">
+            <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || (isFixed && i !== fixedDatapoint.index)}">
                 <text 
                     v-if="datapoint.subtotal !== null && FINAL_CONFIG.style.chart.layout.dataLabels.show"
                     text-anchor="middle"
@@ -936,12 +951,14 @@ defineExpose({
             <rect 
                 v-for="(datapoint, i) in drawableDataset"
                 :x="padding.left + (i * slit)"
-                :y="svg.absoluteHeight - padding.bottom - 10"
+                :y="padding.top"
                 :width="slit"
-                :height="10"
-                :fill="hoveredIndex === datapoint.index ? `url(#hover_${uid})` : 'transparent'"
-                @click="fixDatapoint(datapoint, i)"
-                :class="{'donut-hover': hoveredIndex === datapoint.index && datapoint.subtotal}"
+                :height="svg.height"
+                :fill="[hoveredIndex, fixedDatapointIndex].includes(datapoint.index) ? `url(#hover_${uid})` : 'transparent'"
+                :class="{'donut-hover': datapoint.subtotal && [hoveredIndex, fixedDatapointIndex].includes(datapoint.index)}"
+                :style="{
+                    pointerEvents: 'none'
+                }"
             />
             <rect 
                 v-for="(datapoint, i) in drawableDataset"
@@ -957,124 +974,6 @@ defineExpose({
                 @click="fixDatapoint(datapoint, i)"
                 :class="{'donut-hover': hoveredIndex === datapoint.index && datapoint.subtotal}"
             />
-
-            <!-- DIALOG -->
-            <g v-if="isFixed" data-cy-zoom class="vue-ui-donut-evolution-dialog">
-                <rect 
-                    :rx="4"
-                    :x="padding.left"
-                    :y="padding.top"
-                    :width="svg.width"
-                    :height="svg.height"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                    style="filter:drop-shadow(0 12px 12px rgba(0,0,0,0.3))"
-                />
-                <line
-                    data-dom-to-png-ignore
-                    :x1="svg.absoluteWidth - padding.right - 15"
-                    :y1="padding.top + 5"
-                    :x2="svg.absoluteWidth - padding.right - 4"
-                    :y2="padding.top + 15.5"
-                    stroke-linecap="round"
-                    :stroke="FINAL_CONFIG.style.chart.color"
-                    stroke-width="1.5"
-                />
-                <line
-                    data-dom-to-png-ignore
-                    :x1="svg.absoluteWidth - padding.right - 15"
-                    :y2="padding.top + 5"
-                    :x2="svg.absoluteWidth - padding.right - 4"
-                    :y1="padding.top + 15.5"
-                    stroke-linecap="round"
-                    :stroke="FINAL_CONFIG.style.chart.color"
-                    stroke-width="1.5"
-                />
-                <circle
-                    data-cy-close
-                    @click="unfixDatapoint"
-                    @keypress.enter="unfixDatapoint"
-                    :cx="svg.absoluteWidth - padding.right - svg.width / 40"
-                    :cy="padding.top + svg.height / 30"
-                    :r="svg.height / 12"
-                    fill="transparent"
-                    style="cursor:pointer"
-                    tabindex="0"
-                />
-
-                <g v-for="arc in fixedDatapoint.donutFocus">
-                    <path
-                        v-if="isArcBigEnoughZoom(arc)"
-                        data-cy-zoom-donut
-                        :d="calcNutArrowPath(arc, {x: svg.centerX, y: svg.centerY}, 12, 12, false, false, 15)"
-                        :stroke="arc.color"
-                        stroke-width="1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        fill="none"
-                        class="vue-ui-donut-evolution-focus"
-                    />
-                </g>
-                <circle 
-                    :cx="padding.left + svg.width / 2"
-                    :cy="padding.top + svg.height / 2"
-                    :r="svg.height / 7"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                />
-                <path 
-                    v-for="(arc, k) in fixedDatapoint.donutFocus"
-                    :d="arc.arcSlice"
-                    :fill="`${arc.color}`"
-                    :stroke-width="1"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    class="vue-ui-donut-evolution-focus"
-                />
-                <g v-for="(arc, i) in fixedDatapoint.donutFocus" class="vue-ui-donut-evolution-focus">
-                    <text
-                        v-if="isArcBigEnoughZoom(arc)"
-                        :data-cy="`donut-datalabel-value-${i}`"
-                        :text-anchor="calcMarkerOffsetX(arc, true, 20).anchor"
-                        :x="calcMarkerOffsetX(arc, true, 10).x"
-                        :y="calcMarkerOffsetY(arc)"
-                        :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
-                        :font-size="10"
-                        :font-weight="'bold'"
-                    >
-                    {{ arc.name}}: {{ displayArcPercentage(arc, fixedDatapoint.donutFocus)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value, arc, i) }})
-                    </text>
-                </g>
-                <circle
-                    :cx="padding.left + (svg.width / 2)"
-                    :cy="padding.top + (svg.height / 2)"
-                    :r="svg.height / 3.8"
-                    :fill="`url(#focus_${uid})`"
-                />
-                <circle
-                    :cx="padding.left + (svg.width / 2)"
-                    :cy="padding.top + (svg.height / 2)"
-                    :r="svg.height / 7.7"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                />
-                <text 
-                    text-anchor="middle"
-                    :x="padding.left + svg.width / 2"
-                    :y="padding.top + (svg.height / 2) + 14 / 3"
-                    :font-size="14"
-                    :font-weight="'bold'"
-                    :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
-                    class="vue-ui-donut-evolution-focus"
-                >
-                    {{ labellizeValue(fixedDatapoint.subtotal, fixedDatapoint, null) }}
-                </text>
-                <text 
-                    v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[fixedDatapoint.index]"
-                    :x="padding.left + 6"
-                    :y="padding.top + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2"
-                    :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 1.6"
-                    :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
-                >
-                    {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(fixedDatapoint.index) + Number(slicer.start)] }}
-                </text>
-            </g>
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -1209,6 +1108,24 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <BaseDraggableDialog 
+            v-if="FINAL_CONFIG.style.chart.dialog.show" 
+            ref="dialog" 
+            @close="fixedDatapoint = null; isFixed = false"
+            :backgroundColor="FINAL_CONFIG.style.chart.dialog.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.dialog.color"
+            :headerBg="FINAL_CONFIG.style.chart.dialog.header.backgroundColor"
+            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color">
+            <template #title>
+                {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(fixedDatapoint.index) + Number(slicer.start)] }}
+            </template>
+            <VueUiDonut 
+                v-if="fixedDatapoint" 
+                :config="donutConfig" 
+                :dataset="donutDataset" 
+            />
+        </BaseDraggableDialog>
     </div>
 </template>
 
