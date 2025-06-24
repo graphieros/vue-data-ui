@@ -1112,7 +1112,7 @@ defineExpose({
         <BaseDraggableDialog 
             v-if="FINAL_CONFIG.style.chart.dialog.show" 
             ref="dialog" 
-            @close="fixedDatapoint = null; isFixed = false"
+            @close="fixedDatapoint = null; isFixed = false; hoveredDatapoint = null; hoveredIndex = null; fixedDatapointIndex = null"
             :backgroundColor="FINAL_CONFIG.style.chart.dialog.backgroundColor"
             :color="FINAL_CONFIG.style.chart.dialog.color"
             :headerBg="FINAL_CONFIG.style.chart.dialog.header.backgroundColor"
