@@ -3,7 +3,6 @@
     <br>
     <a href="https://vue-data-ui.graphieros.com/"><img width="100%" src="https://github.com/user-attachments/assets/0474eb0e-0918-43e1-9756-30a5a8052d82"></a>
 
-
 </p>
 
 # vue-data-ui
@@ -895,6 +894,8 @@ import {
   lightenColor,
   shiftColorHue,
   createTSpans,
+  getCumulativeAverage,
+  getCumulativeMedian,
 } from "vue-data-ui";
 ```
 
@@ -964,6 +965,60 @@ const textContent = createTSpans({
   text-anchor="middle"
   v-html="textContent"
 />
+```
+
+### getCumulativeAverage
+
+```js
+import { getCumulativeAverage } from "vue-data-ui";
+
+// simple usage
+const arr = [0, 1, 2, 3, 4];
+const cumulativeAvg = getCumulativeAverage({ values: arr });
+
+// Ignore invalid values entirely
+const arrWithInvalid = [1, null, 2, Infinity, NaN, undefined];
+const cumulativeAvgNoInvalid = getCumulativeAverage({
+  values: arrWithInvalid,
+  config: {
+    keepInvalid: false,
+  },
+});
+
+// Convert invalid values to zero
+const cumulativeAvgZeroed = getCumulativeAverage({
+  values: arrWithInvalid,
+  config: {
+    convertInvalidToZero: true,
+  },
+});
+```
+
+### getCumulativeMedian
+
+```js
+import { getCumulativeMedian } from "vue-data-ui";
+
+// simple usage
+const arr = [0, 1, 2, 3, 4];
+const cumulativeMed = getCumulativeMedian({ values: arr });
+
+// Ignore invalid values entirely
+const arrWithInvalid = [1, null, 2, Infinity, NaN, undefined];
+const cumulativeMedNoInvalid = getCumulativeMedian({
+  values: arrWithInvalid,
+  config: {
+    keepInvalid: false,
+  },
+});
+
+// Convert invalid values to zero
+const cumulativeMedZeroed = getCumulativeMedian({
+  values: arrWithInvalid,
+  config: {
+    convertInvalidToZero: true,
+  },
+});
 ```
 
 ## PDF generation
