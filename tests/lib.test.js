@@ -46,6 +46,8 @@ import {
     functionReturnsString,
     generateSpiralCoordinates,
     getCloserPoint,
+    getCumulativeAverage,
+    getCumulativeMedian,
     getMissingDatasetAttributes,
     getScaleFactorUsingArcSize,
     hasDeepProperty,
@@ -3441,4 +3443,56 @@ describe('createSmoothAreaSegments', () => {
         expect(result.length).toBe(1);
         expect(roundPathNumbers(result[0])).toBe(roundPathNumbers(seg));
     });
+});
+
+describe('getCumulativeAverage', () => {
+    const valid = [0, 1, 2, 3, 1];
+    const invalid = [0, 1, NaN, undefined, null, Infinity, -Infinity, 2, 3, 1];
+    test('returns cumulative average for a complete array of numbers', () => {
+        expect(getCumulativeAverage({values: valid})).toEqual([0, 0.5, 1, 1.5, 1.4]);
+    });
+
+    test('returns cumulative average and invalid values, but invalid values ignored in average', () => {
+        expect(getCumulativeAverage({values: invalid})).toEqual([0, 0.5, NaN, undefined, null, Infinity, -Infinity, 1 , 1.5, 1.4]);
+    });
+
+    test('returns cumulative average without invalid values', () => {
+        expect(getCumulativeAverage({
+            values: invalid,
+            config: { keepInvalid: false }
+        })).toEqual([0, 0.5, 1, 1.5, 1.4])
+    });
+
+    test ('returns cumulative average with zero values replacing invalid values', () => {
+        expect(getCumulativeAverage({
+            values: invalid,
+            config: { convertInvalidToZero: true }
+        })).toEqual([0, 0.5, 0.3333333333333333, 0.25, 0.2, 0.16666666666666666, 0.14285714285714285, 0.375, 0.6666666666666666, 0.7])
+    })
+});
+
+describe('getCumulativeMedian', () => {
+    const valid = [0, 1, 2, 3, 1];
+    const invalid = [0, 1, NaN, undefined, null, Infinity, -Infinity, 2, 3, 1];
+    test('returns cumulative median for a complete array of numbers', () => {
+        expect(getCumulativeMedian({values: valid})).toEqual([0, 0.5, 1, 1.5, 1]);
+    });
+
+    test('returns cumulative median and invalid values, but invalid values ignored in median', () => {
+        expect(getCumulativeMedian({values: invalid})).toEqual([0, 0.5, NaN, undefined, null, Infinity, -Infinity, 1, 1.5, 1]);
+    });
+
+    test('returns cumulative median without invalid values', () => {
+        expect(getCumulativeMedian({
+            values: invalid,
+            config: { keepInvalid: false }
+        })).toEqual([0, 0.5, 1, 1.5, 1])
+    });
+
+    test ('returns cumulative median with zero values replacing invalid values', () => {
+        expect(getCumulativeMedian({
+            values: invalid,
+            config: { convertInvalidToZero: true }
+        })).toEqual([0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0])
+    })
 });

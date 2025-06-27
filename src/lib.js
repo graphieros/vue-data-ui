@@ -2510,6 +2510,68 @@ export function easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3);
 }
 
+export function getCumulativeAverage({ values, config = {} }) {
+    const {
+        keepInvalid = true,
+        convertInvalidToZero = false,
+    } = config;
+
+    const avg = [];
+    let sum = 0;
+    let count = 0;
+
+    function isInvalid(n) {
+        return typeof n !== "number" || !Number.isFinite(n)
+    }
+
+    function addAvg(n) {
+        sum += n;
+        count += 1;
+        avg.push(sum / count);
+    }
+
+    for (const v of values) {
+        if(!isInvalid(v)) addAvg(v);
+        else if (convertInvalidToZero && keepInvalid) addAvg(0);
+        else if (!convertInvalidToZero && keepInvalid) avg.push(v);
+    }
+
+    return avg;
+}
+
+export function getCumulativeMedian({ values, config = {} }) {
+    const {
+        keepInvalid = true,
+        convertInvalidToZero = false,
+    } = config;
+
+    const medians = [];
+    const list = [];
+
+    function isInvalid(n) {
+        return typeof n !== "number" || !Number.isFinite(n);
+    }
+
+    function addMedian(n) {
+        list.push(n);
+        list.sort((a, b) => a - b);
+        const len = list.length;
+        const mid = len >> 1;
+        if (len % 2 === 1) {
+            medians.push(list[mid]);
+        } else {
+            medians.push((list[mid - 1] + list[mid]) / 2);
+        }
+    }
+
+    for (const v of values) {
+        if (!isInvalid(v)) addMedian(v)
+        else if (convertInvalidToZero && keepInvalid) addMedian(0);
+        else if (!convertInvalidToZero && keepInvalid) medians.push(v);
+    }
+    return medians;
+}
+
 
 const lib = {
     XMLNS,
@@ -2561,6 +2623,8 @@ const lib = {
     functionReturnsString,
     generateSpiralCoordinates,
     getCloserPoint,
+    getCumulativeAverage,
+    getCumulativeMedian,
     getMissingDatasetAttributes,
     getPalette,
     getScaleFactorUsingArcSize,

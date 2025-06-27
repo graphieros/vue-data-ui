@@ -1,7 +1,7 @@
 import { defineAsyncComponent } from "vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
 import getThemeConfig from "./getThemeConfig";
-import { getPalette, createWordCloudDatasetFromPlainText, abbreviate, createTSpans, createStraightPath, createSmoothPath } from "./lib";
+import { getPalette, createWordCloudDatasetFromPlainText, abbreviate, createTSpans, createStraightPath, createSmoothPath, getCumulativeAverage, getCumulativeMedian } from "./lib";
 import { lightenColor, darkenColor, shiftColorHue } from "./exposedLib";
 
 export const Arrow = defineAsyncComponent(() => import("./atoms/Arrow.vue"))
@@ -72,14 +72,16 @@ export const VueUiRidgeline = defineAsyncComponent(() => import('./components/vu
 export const VueUiChord = defineAsyncComponent(() => import('./components/vue-ui-chord.vue'))
 export {
     abbreviate,
+    createSmoothPath,
+    createStraightPath,
+    createTSpans,
     createWordCloudDatasetFromPlainText,
     darkenColor,
+    getCumulativeAverage,
+    getCumulativeMedian,
     getPalette,
     getThemeConfig,
     getVueDataUiConfig,
     lightenColor,
     shiftColorHue,
-    createTSpans,
-    createStraightPath,
-    createSmoothPath
 }
