@@ -9,6 +9,14 @@ assignees: ''
 
 **Describe the bug**
 A clear and concise description of what the bug is.
+Important: Are you using the component directly or through the universal component?
+For example: 
+
+```html
+<VueUiXy />
+<!-- OR -->
+<VueDataUi component="VueUiXy"/>
+```
 
 **To Reproduce**
 Steps to reproduce the behavior:
