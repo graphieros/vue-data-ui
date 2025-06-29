@@ -35,13 +35,13 @@ import { useResponsive } from '../useResponsive';
 import themes from "../themes.json";
 import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import Shape from '../atoms/Shape.vue';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
 const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 

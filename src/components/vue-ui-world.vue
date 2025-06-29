@@ -8,13 +8,13 @@ import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import { usePrinter } from '../usePrinter';
 import geo from "../geoProjections";
+import Shape from '../atoms/Shape.vue';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const Legend = defineAsyncComponent(() => import('../atoms/Legend.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
 const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));

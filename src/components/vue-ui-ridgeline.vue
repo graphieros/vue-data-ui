@@ -29,17 +29,16 @@ import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
 import { useNestedProp } from "../useNestedProp";
-
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue";
 import Title from "../atoms/Title.vue";
+import Shape from "../atoms/Shape.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
 const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const VueUiXy = defineAsyncComponent(() => import('./vue-ui-xy.vue'));

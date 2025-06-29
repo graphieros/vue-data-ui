@@ -15,9 +15,9 @@ import { useNestedProp } from "../useNestedProp";
 import { useConfig } from "../useConfig";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
+import Shape from "../atoms/Shape.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
 const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 
 const { vue_ui_sparkhistogram: DEFAULT_CONFIG } = useConfig()

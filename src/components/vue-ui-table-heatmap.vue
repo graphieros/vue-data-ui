@@ -15,8 +15,8 @@ import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
 import { useUserOptionState } from "../useUserOptionState";
 import themes from "../themes.json";
+import Shape from "../atoms/Shape.vue";
 
-const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_table_heatmap: DEFAULT_CONFIG } = useConfig();
