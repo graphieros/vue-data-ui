@@ -299,7 +299,7 @@ const squarified = computed(() => {
             const totalValue = el.children ? el.children.reduce((acc, child) => acc + child.value, 0) : el.value;
             return {
                 value: el.value,
-                id: el.id,
+                id: el.id || createUid(),
                 children: el.children
                     ? mapChildren(el.children.sort((a, b) => b.value - a.value), el.color, el.name, totalValue)
                     : undefined,
@@ -793,7 +793,7 @@ defineExpose({
         >
             <PackageVersion />
 
-            <g v-for="(rect, _i) in squarified">            
+            <g v-for="(rect, _i) in squarified" :key="`tgrad_${rect.id}`">            
                 <defs v-if="FINAL_CONFIG.style.chart.layout.rects.gradient.show">
                     <radialGradient :id="`tgrad_${rect.id}`" gradientTransform="translate(-1, -1.000001) scale(2, 2)">
                         <stop offset="18%" :stop-color="rect.color"/>
@@ -802,7 +802,7 @@ defineExpose({
                 </defs>
             </g>
 
-            <g v-for="(rect, i) in squarified">
+            <g v-for="(rect, i) in squarified" :key="`k_${rect.id}`">
                 <rect
                     data-cy="datapoint-rect"
                     :x="rect.x0" 
