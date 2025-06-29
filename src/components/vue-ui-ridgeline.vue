@@ -1009,11 +1009,17 @@ defineExpose({
             </template>
         </Accordion>
 
-        <BaseDraggableDialog v-if="FINAL_CONFIG.style.chart.dialog.show" ref="dialog" @close="selectedDatapoint = null"
+        <BaseDraggableDialog 
+            v-if="FINAL_CONFIG.style.chart.dialog.show" 
+            ref="dialog" 
+            @close="selectedDatapoint = null"
             :backgroundColor="FINAL_CONFIG.style.chart.dialog.backgroundColor"
             :color="FINAL_CONFIG.style.chart.dialog.color"
             :headerBg="FINAL_CONFIG.style.chart.dialog.header.backgroundColor"
-            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color">
+            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color"
+            :isFullscreen="isFullscreen"
+            :fullscreenParent="ridgelineChart"
+        >
             <template #title>
                 {{ selectedDatapoint.name }}
             </template>

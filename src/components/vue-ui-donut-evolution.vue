@@ -1117,7 +1117,10 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.dialog.backgroundColor"
             :color="FINAL_CONFIG.style.chart.dialog.color"
             :headerBg="FINAL_CONFIG.style.chart.dialog.header.backgroundColor"
-            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color">
+            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color"
+            :isFullscreen="isFullscreen"
+            :fullscreenParent="donutEvolutionChart"
+        >
             <template #title>
                 {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(fixedDatapoint.index) + Number(slicer.start)] }}
             </template>
