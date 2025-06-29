@@ -1613,9 +1613,10 @@ import themes from "../themes.json";
 import { useConfig } from '../useConfig';
 import { useMouse } from '../useMouse';
 import { useNestedProp } from '../useNestedProp';
+import { defineAsyncComponent } from 'vue';
 import Slicer from '../atoms/Slicer.vue';
 import Title from '../atoms/Title.vue';
-import { defineAsyncComponent } from 'vue';
+import Shape from '../atoms/Shape.vue';
 
 const sliderId = createUid();
 
@@ -1638,8 +1639,8 @@ export default {
     components: {
         Slicer, // Must be ready in responsive mode
         Title, // Must be ready in responsive mode
+        Shape,
         DataTable: defineAsyncComponent(() => import('../atoms/DataTable.vue')),
-        Shape: defineAsyncComponent(() => import('../atoms/Shape.vue')),
         Tooltip: defineAsyncComponent(() => import('../atoms/Tooltip.vue')),
         UserOptions: defineAsyncComponent(() => import('../atoms/UserOptions.vue')),
         BaseIcon: defineAsyncComponent(() => import('../atoms/BaseIcon.vue')),
