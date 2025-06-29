@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from "vue";
+import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent } from "vue";
 import { 
     convertColorToHex,
     convertCustomPalette,
@@ -17,25 +17,26 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Tooltip from "../atoms/Tooltip.vue";
-import RecursiveCircles from "../atoms/RecursiveCircles.vue";
-import RecursiveLinks from "../atoms/RecursiveLinks.vue";
-import RecursiveLabels from "../atoms/RecursiveLabels.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import usePanZoom from "../usePanZoom";
-import BaseIcon from "../atoms/BaseIcon.vue";
+import themes from "../themes.json";
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const RecursiveCircles = defineAsyncComponent(() => import('../atoms/RecursiveCircles.vue'));
+const RecursiveLabels = defineAsyncComponent(() => import('../atoms/RecursiveLabels.vue'));
+const RecursiveLinks = defineAsyncComponent(() => import('../atoms/RecursiveLinks.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_molecule: DEFAULT_CONFIG } = useConfig();
 

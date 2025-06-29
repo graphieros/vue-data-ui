@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { ref, computed, onMounted, nextTick, watch, defineAsyncComponent, shallowRef, onBeforeUnmount } from "vue";
 import { 
     adaptColorToBackground,
     applyDataLabel,
@@ -22,18 +22,19 @@ import {
     themePalettes,
     XMLNS
 } from "../lib";
-import themes from "../themes.json";
-import UserOptions from "../atoms/UserOptions.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import BaseIcon from "../atoms/BaseIcon.vue";
-import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 
 const { vue_ui_chestnut: DEFAULT_CONFIG } = useConfig()
 
@@ -419,20 +420,33 @@ function isArcBigEnough(arc) {
     return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.dataLabels.hideUnderValue;
 }
 
+const tableObserver = shallowRef(null);
+
 function observeTable() {
-    const observer = new ResizeObserver((entries) => {
+    if (tableObserver.value) {
+        tableObserver.value.disconnect();
+    }
+
+    tableObserver.value = new ResizeObserver((entries) => {
         entries.forEach(entry => {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
         })
     })
+
     if (tableContainer.value) {
-        observer.observe(tableContainer.value)
+        tableObserver.value.observe(tableContainer.value);
     }
 }
 
 onMounted(() => {
     prepareChart();
 });
+
+onBeforeUnmount(() => {
+    if (tableObserver.value) {
+        tableObserver.value.disconnect();
+    }
+})
 
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {

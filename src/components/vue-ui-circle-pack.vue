@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, watchEffect, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, watchEffect, nextTick, defineAsyncComponent, shallowRef, onBeforeUnmount } from 'vue'
 import { useConfig } from '../useConfig';
 import {
     XMLNS,
@@ -19,21 +19,22 @@ import {
     palette,
     themePalettes
 } from '../lib';
-import themes from "../themes.json";
 import { useNestedProp } from '../useNestedProp';
 import { usePrinter } from '../usePrinter';
-import Title from '../atoms/Title.vue';
-import PenAndPaper from '../atoms/PenAndPaper.vue';
-import UserOptions from '../atoms/UserOptions.vue';
 import { useUserOptionState } from '../useUserOptionState';
-import PackageVersion from '../atoms/PackageVersion.vue';
-import Accordion from "./vue-ui-accordion.vue";
-import DataTable from '../atoms/DataTable.vue';
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useChartAccessibility } from '../useChartAccessibility';
 import { pack, bounds } from "../packCircles";
 import { throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
+import themes from "../themes.json";
+import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const props = defineProps({
     config: {
@@ -128,11 +129,13 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
 });
 
-const resizeObserver = ref(null)
-const SIZE = ref({ h: 10, w: 10 })
-const titleSize = ref(0)
-const boundValues = ref([0, 0, 100, 100])
-const PARENT_SIZE = ref({ h: 0, w: 0})
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
+
+const SIZE = ref({ h: 10, w: 10 });
+const titleSize = ref(0);
+const boundValues = ref([0, 0, 100, 100]);
+const PARENT_SIZE = ref({ h: 0, w: 0});
 
 async function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -170,13 +173,30 @@ async function prepareChart() {
                 PARENT_SIZE.value = getParentDimensions(circlePackChart.value)
             })
         })
-    })
+    });
+
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 
     resizeObserver.value = new ResizeObserver(handleResize);
-    resizeObserver.value.observe(circlePackChart.value.parentNode);
+    observedEl.value = circlePackChart.value.parentNode;
+    resizeObserver.value.observe(observedEl.value);
 }
 
 onMounted(prepareChart);
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
+});
 
 function getParentDimensions(component) {
     if (!component || !component.parentElement) {

@@ -1,9 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, defineAsyncComponent } from "vue";
 import { useNestedProp } from "../useNestedProp";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
 import { 
 applyDataLabel,
     checkNaN,
@@ -14,15 +11,19 @@ applyDataLabel,
     shiftHue,
     XMLNS
 } from "../lib";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Title from "../atoms/Title.vue";
 
-const { vue_ui_tiremarks: DEFAULT_CONFIG } = useConfig()
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+
+const { vue_ui_tiremarks: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -41,7 +42,7 @@ const props = defineProps({
 
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
-})
+});
 
 const uid = ref(createUid());
 const tiremarksChart = ref(null);

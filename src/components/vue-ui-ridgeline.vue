@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, nextTick } from "vue";
+import { ref, computed, onMounted, watch, onBeforeUnmount, nextTick, defineAsyncComponent, shallowRef } from "vue";
 import {
     adaptColorToBackground,
     applyDataLabel,
@@ -29,17 +29,19 @@ import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
 import { useNestedProp } from "../useNestedProp";
-import Accordion from "./vue-ui-accordion.vue";
-import BaseDraggableDialog from "../atoms/BaseDraggableDialog.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Legend from "../atoms/Legend.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
-import Shape from "../atoms/Shape.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import VueUiXy from "./vue-ui-xy.vue";
 import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue";
+import Title from "../atoms/Title.vue";
+import Shape from "../atoms/Shape.vue";
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const VueUiXy = defineAsyncComponent(() => import('./vue-ui-xy.vue'));
 
 const { vue_ui_ridgeline: DEFAULT_CONFIG } = useConfig();
 
@@ -72,7 +74,8 @@ const emit = defineEmits(['selectLegend', 'selectDatapoint', 'selectX'])
 const ridgelineChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 const source = ref(null);
 const noTitle = ref(null);
 const titleStep = ref(0);
@@ -128,10 +131,6 @@ const {
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 onMounted(prepareChart);
-
-onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
-});
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -198,10 +197,27 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(ridgelineChart.value.parentNode);
+        observedEl.value = ridgelineChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
+});
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-ridgeline_${uid.value}`,
@@ -700,6 +716,8 @@ defineExpose({
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};${FINAL_CONFIG.responsive ? `height: ${parentHeight}px; width: 100%;` : ''}`">
+            <PackageVersion />
+
             <defs>
                 <linearGradient v-for="(dp, i) in legendSet" :id="`gradient-${dp.id}-${uid}`" x1="50%" y1="0%" x2="50%"
                     y2="100%">
@@ -991,11 +1009,17 @@ defineExpose({
             </template>
         </Accordion>
 
-        <BaseDraggableDialog v-if="FINAL_CONFIG.style.chart.dialog.show" ref="dialog" @close="selectedDatapoint = null"
+        <BaseDraggableDialog 
+            v-if="FINAL_CONFIG.style.chart.dialog.show" 
+            ref="dialog" 
+            @close="selectedDatapoint = null"
             :backgroundColor="FINAL_CONFIG.style.chart.dialog.backgroundColor"
             :color="FINAL_CONFIG.style.chart.dialog.color"
             :headerBg="FINAL_CONFIG.style.chart.dialog.header.backgroundColor"
-            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color">
+            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color"
+            :isFullscreen="isFullscreen"
+            :fullscreenParent="ridgelineChart"
+        >
             <template #title>
                 {{ selectedDatapoint.name }}
             </template>

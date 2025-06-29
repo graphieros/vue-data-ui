@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, watch, useSlots } from "vue";
+import { ref, computed, onMounted, watch, useSlots, defineAsyncComponent } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import { applyDataLabel, dataLabel } from "../lib";
 import { useConfig } from "../useConfig";
-import Digits from "./vue-ui-digits.vue";
+
+const Digits = defineAsyncComponent(() => import('./vue-ui-digits.vue'));
 
 const { vue_ui_kpi: DEFAULT_CONFIG } = useConfig();
 

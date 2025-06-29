@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef } from "vue";
 import {
     applyDataLabel,
     calculateNiceScale,
@@ -16,21 +16,22 @@ import {
     XMLNS,
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import Legend from "../atoms/Legend.vue";
-import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_dumbbell: DEFAULT_CONFIG } = useConfig();
 
@@ -118,7 +119,8 @@ watch(() => props.dataset, (_) => {
     prepareDataset();
 }, { deep: true })
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 onMounted(() => {
     prepareChart();
@@ -164,13 +166,26 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(dumbbellChart.value.parentNode);
+        observedEl.value = dumbbellChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -539,8 +554,8 @@ defineExpose({
                 v-if="$slots['chart-background']"
                 :x="drawingArea.left"
                 :y="drawingArea.top"
-                :width="drawingArea.width"
-                :height="drawingArea.height"
+                :width="Math.max(0.1, drawingArea.width)"
+                :height="Math.max(0.1, drawingArea.height)"
                 :style="{
                     pointerEvents: 'none'
                 }"

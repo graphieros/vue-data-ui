@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount, useSlots } from "vue";
+import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount, useSlots, defineAsyncComponent, shallowRef } from "vue";
 import {
     applyDataLabel,
     calcMarkerOffsetX,
@@ -26,25 +26,26 @@ import {
     XMLNS
 } from '../lib';
 import { throttle } from "../canvas-lib";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Tooltip from "../atoms/Tooltip.vue";
-import Legend from "../atoms/Legend.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
-import Shape from "../atoms/Shape.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import Shape from "../atoms/Shape.vue";
 
-const { vue_ui_donut: DEFAULT_CONFIG } = useConfig()
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+
+const { vue_ui_donut: DEFAULT_CONFIG } = useConfig();
 const slots = useSlots();
 
 const props = defineProps({
@@ -71,12 +72,13 @@ const isDataset = computed({
     }
 })
 
-const donutChart = ref(null);
-const chartTitle = ref(null);
-const chartLegend = ref(null);
-const resizeObserver = ref(null);
-const source = ref(null);
-const noTitle = ref(null);
+const donutChart = shallowRef(null);
+const chartTitle = shallowRef(null);
+const chartLegend = shallowRef(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
+const source = shallowRef(null);
+const noTitle = shallowRef(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
@@ -86,7 +88,12 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 function prepareChart() {
@@ -129,8 +136,16 @@ function prepareChart() {
             })
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(donutChart.value.parentNode);
+        observedEl.value = donutChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
 
@@ -170,7 +185,7 @@ const FINAL_CONFIG = computed({
 });
 
 const isFirstLoad = ref(true);
-const animatedValues = ref([]);
+const animatedValues = shallowRef([]);
 
 function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
     return new Promise(resolve => {
@@ -215,6 +230,14 @@ onMounted(async () => {
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
+
+function showOptions() {
+    setUserOptionsVisibility(true);
+}
+
+function hideOptions() {
+    setUserOptionsVisibility(false);
+}
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
@@ -294,7 +317,7 @@ const immutableSet = computed(() => {
         })
 });
 
-const mutableSet = ref(immutableSet.value)
+const mutableSet = shallowRef(immutableSet.value)
 
 watch(() => immutableSet.value, (val) => mutableSet.value = val)
 
@@ -772,8 +795,8 @@ defineExpose({
     <div ref="donutChart"
         :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height:100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
-        :id="`donut__${uid}`" @mouseenter="() => setUserOptionsVisibility(true)"
-        @mouseleave="() => setUserOptionsVisibility(false)">
+        :id="`donut__${uid}`" @mouseenter="showOptions"
+        @mouseleave="hideOptions">
         <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef" :color="FINAL_CONFIG.style.chart.color"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :active="isAnnotator" :svgRef="svgRef"
             @close="toggleAnnotator" />
@@ -1037,7 +1060,7 @@ defineExpose({
                 </g>
                 <g v-else>
                     <circle data-cy="tooltip-trap" :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize"
-                        :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" @mouseenter="useTooltip({
+                        :fill="'transparent'" @mouseenter="useTooltip({
                             datapoint: currentDonut[0],
                             relativeIndex: 0,
                             seriesIndex: currentDonut[0].seriesIndex,

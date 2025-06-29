@@ -1,13 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch, useSlots } from 'vue';
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import Tooltip from "../atoms/Tooltip.vue";
-import Legend from "../atoms/Legend.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import DataTable from '../atoms/DataTable.vue';
-import Accordion from './vue-ui-accordion.vue';
+import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef } from 'vue';
 import {
     adaptColorToBackground,
     applyDataLabel,
@@ -34,11 +26,20 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
 import { useConfig } from '../useConfig';
-import PackageVersion from '../atoms/PackageVersion.vue';
-import PenAndPaper from '../atoms/PenAndPaper.vue';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
 import BaseIcon from '../atoms/BaseIcon.vue';
+import themes from "../themes.json";
+import Title from "../atoms/Title.vue";
+import Legend from "../atoms/Legend.vue";
+
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_treemap: DEFAULT_CONFIG } = useConfig()
 
@@ -80,11 +81,11 @@ const tooltipContent = ref("");
 const isFullscreen = ref(false);
 const step = ref(0);
 const segregated = ref([]);
-const treemapChart = ref(null);
-const chartTitle = ref(null);
-const chartLegend = ref(null);
-const source = ref(null);
-const noTitle = ref(null);
+const treemapChart = shallowRef(null);
+const chartTitle = shallowRef(null);
+const chartLegend = shallowRef(null);
+const source = shallowRef(null);
+const noTitle = shallowRef(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
@@ -182,9 +183,10 @@ function addIdsToTree(tree) {
     });
 }
 
-const immutableDataset = ref(props.dataset);
+const immutableDataset = shallowRef(props.dataset);
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 onMounted(() => {
     prepareChart();
@@ -216,13 +218,26 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(treemapChart.value.parentNode);
+        observedEl.value = treemapChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 const currentSet = ref(immutableDataset.value);
@@ -284,7 +299,7 @@ const squarified = computed(() => {
             const totalValue = el.children ? el.children.reduce((acc, child) => acc + child.value, 0) : el.value;
             return {
                 value: el.value,
-                id: el.id,
+                id: el.id || createUid(),
                 children: el.children
                     ? mapChildren(el.children.sort((a, b) => b.value - a.value), el.color, el.name, totalValue)
                     : undefined,
@@ -412,7 +427,7 @@ const breadcrumbs = computed(() => {
     return crumbs;
 });
 
-const selectedRect = ref(null);
+const selectedRect = shallowRef(null);
 
 const legendSet = computed(() => {
     return immutableDataset.value.map((ds, i) => {
@@ -444,7 +459,6 @@ const legendConfig = computed(() => {
 });
 
 function segregate(rect) {
-    isZoom.value = false;
     selectedRect.value = null;
     if(segregated.value.includes(rect.id)) {
         segregated.value = segregated.value.filter(s => s !== rect.id)
@@ -779,7 +793,7 @@ defineExpose({
         >
             <PackageVersion />
 
-            <g v-for="(rect, _i) in squarified">            
+            <g v-for="(rect, _i) in squarified" :key="`tgrad_${rect.id}`">            
                 <defs v-if="FINAL_CONFIG.style.chart.layout.rects.gradient.show">
                     <radialGradient :id="`tgrad_${rect.id}`" gradientTransform="translate(-1, -1.000001) scale(2, 2)">
                         <stop offset="18%" :stop-color="rect.color"/>
@@ -788,7 +802,7 @@ defineExpose({
                 </defs>
             </g>
 
-            <g v-for="(rect, i) in squarified">
+            <g v-for="(rect, i) in squarified" :key="`k_${rect.id}`">
                 <rect
                     data-cy="datapoint-rect"
                     :x="rect.x0" 

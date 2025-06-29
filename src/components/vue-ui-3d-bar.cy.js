@@ -23,15 +23,25 @@ describe('<VueUi3dBar />', () => {
             props: {
                 dataset
             }
-        }).then(({ wrapper }) => {
+        }).then(() => {
+            cy.wait(0)
             testCommonFeatures({ userOptions: true });
-
+            
             cy.get('.vue-ui-3d-bar-stack').should('exist').and('have.length', 6)
             dataset.series.forEach((ds) => {
                 cy.get(`[data-cy="bar-3d-value-${ds.value}"]`).should('exist').and('be.visible')
             })
+        })
+    });
 
-            cy.log('Props reactivity')
+    it('handles dataset reactivity', () => {
+        const dataset = components.find(c => c.name === 'VueUi3dBar').dataset2;
+        cy.viewport(500, 500)
+        cy.mount(VueUi3dBar, {
+            props: {
+                dataset
+            }
+        }).then(({ wrapper }) => {
             wrapper.setProps({
                 dataset: {
                     series: [dataset.series[0], dataset.series[1]]
@@ -39,7 +49,7 @@ describe('<VueUi3dBar />', () => {
             }).then(() => {
                 cy.get('.vue-ui-3d-bar-stack').should('exist').and('have.length', 2)
             });
-        });
+        })
     });
 
     it('emits', () => {

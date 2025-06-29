@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef } from "vue";
 import { 
 adaptColorToBackground,
     applyDataLabel,
@@ -15,18 +15,19 @@ adaptColorToBackground,
     XMLNS
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
+import themes from "../themes.json";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_relation_circle: DEFAULT_CONFIG } = useConfig()
 
@@ -152,7 +153,8 @@ const radiusOffset = computed(() => {
     return radius.value * 4;
 })
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 onMounted(() => {
     prepareChart();
@@ -227,8 +229,16 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(relationCircleChart.value.parentNode);
+        observedEl.value = relationCircleChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     } else {
         circles.value = [];
         relations.value = [];
@@ -240,7 +250,12 @@ function prepareChart() {
 onBeforeUnmount(() => {
     const chart = document.getElementById(`relation_circle_${uid.value}`);
     chart.removeEventListener("click", clickOutside);
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 })
 
 function clickOutside(e) {

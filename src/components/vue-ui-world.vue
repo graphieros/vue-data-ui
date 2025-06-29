@@ -1,22 +1,23 @@
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch, nextTick, defineAsyncComponent } from 'vue';
 import WORLD_DATA from "../resources/worldGeo.js"
 import { useConfig } from '../useConfig';
 import { applyDataLabel, convertColorToHex, convertCustomPalette, createCsvContent, createUid, darkenHexColor, dataLabel, downloadCsv, hasDeepProperty, interpolateColorHex, isFunction, lightenHexColor, palette, XMLNS } from '../lib';
 import { useNestedProp } from '../useNestedProp';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
-import PenAndPaper from '../atoms/PenAndPaper.vue';
-import Title from '../atoms/Title.vue';
-import UserOptions from '../atoms/UserOptions.vue';
 import { usePrinter } from '../usePrinter';
-import PackageVersion from '../atoms/PackageVersion.vue';
-import Tooltip from '../atoms/Tooltip.vue';
 import geo from "../geoProjections";
-import Accordion from "./vue-ui-accordion.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Legend from '../atoms/Legend.vue';
 import Shape from '../atoms/Shape.vue';
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const Legend = defineAsyncComponent(() => import('../atoms/Legend.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_world: DEFAULT_CONFIG } = useConfig();
 

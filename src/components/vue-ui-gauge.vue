@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, shallowRef } from "vue";
 import {
     applyDataLabel,
     convertColorToHex,
@@ -20,18 +20,19 @@ import {
     calcMarkerOffsetX,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
-import themes from "../themes.json";
-import UserOptions from "../atoms/UserOptions.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import Title from "../atoms/Title.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
+import themes from "../themes.json";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_gauge: DEFAULT_CONFIG } = useConfig()
 
@@ -219,7 +220,8 @@ const ratingColor = computed(() => {
     return "#2D353C";
 });
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -309,8 +311,16 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(gaugeChart.value.parentNode);
+        observedEl.value = gaugeChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
 
@@ -319,7 +329,12 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 function useAnimation(targetValue) {

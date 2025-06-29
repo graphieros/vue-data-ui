@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed, onMounted, watch, useSlots } from "vue";
+import { ref, computed, onMounted, watch, useSlots, defineAsyncComponent } from "vue";
 import { useConfig } from "../useConfig";
 import { createUid, error, applyDataLabel, dataLabel } from "../lib";
 import { useNestedProp } from "../useNestedProp";
-import PackageVersion from "../atoms/PackageVersion.vue";
+
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_gizmo: DEFAULT_CONFIG } = useConfig();
     

@@ -7,7 +7,9 @@ const props = defineProps({
     backgroundColor: { type: String },
     color: { type: String },
     headerBg: { type: String },
-    headerColor: { type: String }
+    headerColor: { type: String },
+    fullscreenParent: { type: HTMLElement },
+    isFullscreen: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(["close"]);
@@ -182,7 +184,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Teleport to="body">
+    <Teleport :to="isFullscreen ? fullscreenParent : 'body'">
         <div v-if="isOpen" data-cy="draggable-dialog" class="modal vue-ui-draggable-dialog" :style="modalStyle" @click.stop>
             <div class="modal-header" :style="{
                 backgroundColor: headerBg,

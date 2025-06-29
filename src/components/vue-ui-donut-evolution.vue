@@ -1,6 +1,6 @@
 
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from "vue";
+import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent } from "vue";
 import {
     applyDataLabel,
     calcMarkerOffsetX, 
@@ -27,23 +27,24 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Legend from "../atoms/Legend.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import Slicer from "../atoms/Slicer.vue";
-import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import BaseDraggableDialog from "../atoms/BaseDraggableDialog.vue";
-import VueUiDonut from "./vue-ui-donut.vue";
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const VueUiDonut = defineAsyncComponent(() => import('./vue-ui-donut.vue'));
 
 const { vue_ui_donut_evolution: DEFAULT_CONFIG } = useConfig();
 
@@ -1116,7 +1117,10 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.dialog.backgroundColor"
             :color="FINAL_CONFIG.style.chart.dialog.color"
             :headerBg="FINAL_CONFIG.style.chart.dialog.header.backgroundColor"
-            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color">
+            :headerColor="FINAL_CONFIG.style.chart.dialog.header.color"
+            :isFullscreen="isFullscreen"
+            :fullscreenParent="donutEvolutionChart"
+        >
             <template #title>
                 {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(fixedDatapoint.index) + Number(slicer.start)] }}
             </template>
