@@ -1,8 +1,5 @@
 <script setup>
-import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
-import themes from "../themes.json";
-import Title from '../atoms/Title.vue';
-import UserOptions from '../atoms/UserOptions.vue';
+import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent, shallowRef } from 'vue';
 import { checkNaN, createUid, createWordCloudDatasetFromPlainText, isFunction } from '../lib';
 import { debounce } from '../canvas-lib';
 import {
@@ -17,20 +14,24 @@ import {
     XMLNS
 } from '../lib';
 import { throttle } from '../canvas-lib';
-import Accordion from "./vue-ui-accordion.vue";
-import DataTable from '../atoms/DataTable.vue';
 import { useNestedProp } from '../useNestedProp';
 import { usePrinter } from '../usePrinter';
 import { useResponsive } from '../useResponsive';
 import { useConfig } from '../useConfig';
-import PackageVersion from '../atoms/PackageVersion.vue';
-import Tooltip from '../atoms/Tooltip.vue';
-import PenAndPaper from '../atoms/PenAndPaper.vue';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
-import usePanZoom from '../usePanZoom';
 import { positionWords } from '../wordcloud';
-import BaseIcon from '../atoms/BaseIcon.vue';
+import usePanZoom from '../usePanZoom';
+import themes from "../themes.json";
+import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 
@@ -151,7 +152,8 @@ const handleResize = throttle(() => {
     });
 });
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 onMounted(prepareChart);
 
@@ -178,13 +180,27 @@ function prepareChart() {
         });
     }
     if (FINAL_CONFIG.value.responsive) {
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+        
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(wordCloudChart.value.parentNode);
+        observedEl.value = wordCloudChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({

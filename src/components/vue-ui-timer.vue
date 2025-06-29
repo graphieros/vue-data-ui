@@ -1,15 +1,16 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import { XMLNS, createUid, translateSize } from "../lib";
 import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
 import { Timer } from "../timer";
-import BaseIcon from "../atoms/BaseIcon.vue";
-import Title from "../atoms/Title.vue";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import BaseIcon from "../atoms/BaseIcon.vue"; // Must be ready in responsive mode
+
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_timer: DEFAULT_CONFIG } = useConfig();
 
@@ -27,7 +28,8 @@ const emit = defineEmits(['start', 'pause', 'reset', 'restart', 'lap']);
 const timerChart = ref(null);
 const chartTitle = ref(null);
 const chartLegend = ref(null);
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 const uid = ref(createUid());
 const titleStep = ref(0);
 
@@ -74,13 +76,26 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(timerChart.value.parentNode);
+        observedEl.value = timerChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 const FINAL_CONFIG = computed({

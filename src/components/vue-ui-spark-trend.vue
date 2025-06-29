@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, defineAsyncComponent } from "vue";
 import {
     applyDataLabel,
     calcTrend,
@@ -13,12 +13,13 @@ import {
     setOpacity,
     XMLNS,
 } from "../lib"
-import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
-import BaseIcon from "../atoms/BaseIcon.vue";
-import Skeleton from './vue-ui-skeleton.vue';
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
+import themes from "../themes.json";
+
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 
 const { vue_ui_spark_trend: DEFAULT_CONFIG } = useConfig();
 

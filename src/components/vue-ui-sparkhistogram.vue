@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, defineAsyncComponent } from "vue";
 import { 
     applyDataLabel,
     createUid,
@@ -11,13 +11,14 @@ import {
     shiftHue,
     XMLNS 
 } from "../lib";
-import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
-import Shape from "../atoms/Shape.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 
 const { vue_ui_sparkhistogram: DEFAULT_CONFIG } = useConfig()
 

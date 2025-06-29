@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, computed, onMounted, watch, nextTick, defineAsyncComponent, shallowRef, onBeforeUnmount } from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
@@ -18,18 +18,19 @@ import {
 } from "../lib";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Accordion from "./vue-ui-accordion.vue";
 import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
-import themes from "../themes.json";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useUserOptionState } from "../useUserOptionState";
-import PackageVersion from "../atoms/PackageVersion.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json"; // Must be ready in responsive mode
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_funnel: DEFAULT_CONFIG } = useConfig();
 
@@ -47,6 +48,18 @@ const props = defineProps({
         }
     }
 });
+
+const funnelChart = ref(null);
+const uid = ref(createUid());
+const step = ref(0);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const noTitle = ref(null);
+const source = ref(null);
+const chartTitle = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
+const loaded = ref(false);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -117,21 +130,27 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(funnelChart.value.parentNode);
+        observedEl.value = funnelChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
 
-const funnelChart = ref(null);
-const uid = ref(createUid());
-const step = ref(0);
-const titleStep = ref(0);
-const tableStep = ref(0);
-const noTitle = ref(null);
-const source = ref(null);
-const chartTitle = ref(null);
-const resizeObserver = ref(null);
-const loaded = ref(false);
+onBeforeUnmount(() => {
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({

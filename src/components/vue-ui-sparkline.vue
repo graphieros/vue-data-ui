@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, defineAsyncComponent, shallowRef, onBeforeUnmount } from "vue";
 import {
     applyDataLabel,
     calcLinearProgression,
@@ -18,15 +18,16 @@ import {
     shiftHue,
     XMLNS
 } from "../lib";
-import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
 import { useResponsive } from "../useResponsive";
 import { throttle } from "../canvas-lib";
-import PackageVersion from "../atoms/PackageVersion.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
-import SparkTooltip from "../atoms/SparkTooltip.vue"
+import themes from "../themes.json";
+
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const SparkTooltip = defineAsyncComponent(() => import('../atoms/SparkTooltip.vue'));
 
 const { vue_ui_sparkline: DEFAULT_CONFIG } = useConfig();
 
@@ -164,7 +165,8 @@ function prepareDsCopy() {
     })
 }
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 onMounted(() => {
     prepareChart();
@@ -186,7 +188,7 @@ onMounted(() => {
         }
         animate();
     }
-})
+});
 
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
@@ -226,10 +228,27 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(sparklineChart.value.parentNode);
+        observedEl.value = sparklineChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     };
 }
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
+});
 
 const svg = ref({
     height: 80 * props.heightRatio,

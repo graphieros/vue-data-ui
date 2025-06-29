@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch } from "vue";
+import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch, defineAsyncComponent, shallowRef } from "vue";
 import { 
     calculateNiceScale, 
     canShowValue, 
@@ -18,24 +18,25 @@ import {
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import themes from "../themes.json";
-import Tooltip from "../atoms/Tooltip.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import Slicer from "../atoms/Slicer.vue";
-import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 
-const { vue_ui_candlestick: DEFAULT_CONFIG } = useConfig()
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+
+const { vue_ui_candlestick: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -148,7 +149,8 @@ const svg = ref({
     yAxisFontSize: FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.fontSize
 })
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 onMounted(() => {
     prepareChart();
@@ -193,14 +195,27 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(candlestickChart.value.parentNode);
+        observedEl.value = candlestickChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
     setupSlicer();
 }
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -659,8 +674,8 @@ defineExpose({
                 v-if="$slots['chart-background']"
                 :x="drawingArea.left"
                 :y="drawingArea.top"
-                :width="drawingArea.width"
-                :height="drawingArea.height"
+                :width="Math.max(0.1, drawingArea.width)"
+                :height="Math.max(0.1, drawingArea.height)"
                 :style="{
                     pointerEvents: 'none'
                 }"

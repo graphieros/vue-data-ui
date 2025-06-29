@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef } from "vue";
 import {
     applyDataLabel,
     calculateNiceScale, 
@@ -23,23 +23,24 @@ import {
     XMLNS,
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue";
-import Legend from "../atoms/Legend.vue";
-import Tooltip from "../atoms/Tooltip.vue";
-import Shape from "../atoms/Shape.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Accordion from "./vue-ui-accordion.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_parallel_coordinate_plot: DEFAULT_CONFIG } = useConfig();
 
@@ -128,7 +129,8 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 onMounted(() => {
     prepareChart();
@@ -201,13 +203,26 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(pcpChart.value.parentNode);
+        observedEl.value = pcpChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({

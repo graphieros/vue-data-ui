@@ -1,6 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
-import themes from "../themes.json";
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick, defineAsyncComponent, shallowRef } from "vue";
 import * as detector from "../chartDetector";
 import {
     applyDataLabel,
@@ -27,18 +26,20 @@ import {
 import {
     throttle
 } from "../canvas-lib"
-import BaseIcon from "../atoms/BaseIcon.vue";
-import Tooltip from "../atoms/Tooltip.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import Slicer from "../atoms/Slicer.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Slicer from "../atoms/Slicer.vue";
+
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig()
 
@@ -206,7 +207,8 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.showTooltip
 });
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 onMounted(() => {
     prepareChart();
@@ -230,14 +232,27 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(quickChart.value.parentNode);
+        observedEl.value = quickChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
     setupSlicer();
 }
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 const viewBox = computed(() => {

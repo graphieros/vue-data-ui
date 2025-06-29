@@ -1610,21 +1610,12 @@ import {
     createIndividualArea
 } from '../lib';
 import themes from "../themes.json";
-import DataTable from "../atoms/DataTable.vue";
-import Title from '../atoms/Title.vue';
-import Tooltip from "../atoms/Tooltip.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import Shape from "../atoms/Shape.vue";
-import BaseIcon from '../atoms/BaseIcon.vue';
-import TableSparkline from "./vue-ui-table-sparkline.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import Slicer from '../atoms/Slicer.vue';
-import Accordion from "./vue-ui-accordion.vue";
 import { useConfig } from '../useConfig';
 import { useMouse } from '../useMouse';
 import { useNestedProp } from '../useNestedProp';
-import PackageVersion from '../atoms/PackageVersion.vue';
-import PenAndPaper from '../atoms/PenAndPaper.vue';
+import Slicer from '../atoms/Slicer.vue';
+import Title from '../atoms/Title.vue';
+import { defineAsyncComponent } from 'vue';
 
 const sliderId = createUid();
 
@@ -1645,19 +1636,19 @@ export default {
         }
     },
     components: {
-    DataTable,
-    Shape,
-    Title,
-    Tooltip,
-    UserOptions,
-    BaseIcon,
-    TableSparkline,
-    Skeleton,
-    Slicer,
-    Accordion,
-    PackageVersion,
-    PenAndPaper
-},
+        Slicer, // Must be ready in responsive mode
+        Title, // Must be ready in responsive mode
+        DataTable: defineAsyncComponent(() => import('../atoms/DataTable.vue')),
+        Shape: defineAsyncComponent(() => import('../atoms/Shape.vue')),
+        Tooltip: defineAsyncComponent(() => import('../atoms/Tooltip.vue')),
+        UserOptions: defineAsyncComponent(() => import('../atoms/UserOptions.vue')),
+        BaseIcon: defineAsyncComponent(() => import('../atoms/BaseIcon.vue')),
+        TableSparkline: defineAsyncComponent(() => import('./vue-ui-table-sparkline.vue')),
+        Skeleton: defineAsyncComponent(() => import('./vue-ui-skeleton.vue')),
+        Accordion: defineAsyncComponent(() => import('./vue-ui-accordion.vue')),
+        PackageVersion: defineAsyncComponent(() => import('../atoms/PackageVersion.vue')),
+        PenAndPaper: defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'))
+    },
     data(){
         this.dataset.forEach((ds, i) => {
             if([null, undefined].includes(ds.series)) {
@@ -1679,6 +1670,8 @@ export default {
         }
 
         return {
+            resizeObserver: null,
+            observedEl: null,
             themePalettes,
             themes,
             slicerStep: 0,
@@ -2808,6 +2801,10 @@ export default {
     },
     beforeUnmount() {
         document.removeEventListener('scroll', this.hideTags);
+        if (this.resizeObserver) {
+            this.resizeObserver.unobserve(this.observedEl);
+            this.resizeObserver.disconnect();
+        }
     },
     methods: {
         abbreviate,
@@ -3008,6 +3005,12 @@ export default {
                 const chart = this.$refs.chart;
                 // Parent container (must have fixed height or max-height. Setting 100% will result in infinite height growth which looks aweful on top of being useless)
                 const parent = chart.parentNode;
+
+                if (this.resizeObserver) {
+                    this.resizeObserver.unobserve(this.observedEl);
+                    this.resizeObserver.disconnect();
+                }
+
                 const { height, width } = parent.getBoundingClientRect();
 
                 // Title height to substract
@@ -3051,7 +3054,7 @@ export default {
                 this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
                 this.convertSizes();
 
-                const resizeObserver = new ResizeObserver((entries) => {
+                const ro = new ResizeObserver((entries) => {
                     for(const entry of entries) {
                         if (this.$refs.chartTitle) {
                             titleHeight = this.$refs.chartTitle.getBoundingClientRect().height;
@@ -3074,7 +3077,10 @@ export default {
                     }
                 })
 
-                resizeObserver.observe(parent);
+                this.resizeObserver = ro;
+                this.observedEl = parent;
+
+                ro.observe(parent);
 
             } else {
                 this.height = this.FINAL_CONFIG.chart.height;

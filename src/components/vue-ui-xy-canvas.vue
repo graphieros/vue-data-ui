@@ -6,7 +6,9 @@ import {
     watch,
     onBeforeUnmount,
     nextTick,
-    useSlots
+    useSlots,
+    defineAsyncComponent,
+    shallowRef
 } from "vue";
 import {
     applyDataLabel,
@@ -40,22 +42,23 @@ import {
     rect,
     text,
 } from "../canvas-lib";
-import themes from "../themes.json";
-import Tooltip from "../atoms/Tooltip.vue";
-import Legend from "../atoms/Legend.vue";
-import Title from "../atoms/Title.vue";
-import Slicer from "../atoms/Slicer.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import Accordion from "./vue-ui-accordion.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Skeleton from "./vue-ui-skeleton.vue"
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import NonSvgPenAndPaper from "../atoms/NonSvgPenAndPaper.vue";
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const NonSvgPenAndPaper = defineAsyncComponent(() => import('../atoms/NonSvgPenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_xy_canvas: DEFAULT_CONFIG } = useConfig();
 
@@ -1322,8 +1325,9 @@ function handleMouseLeave() {
     draw();
 }
 
-const responsiveObserver = ref(null);
-const resizeObserver = ref(null);
+const responsiveObserver = shallowRef(null);
+const observedEl = shallowRef(null);
+const resizeObserver = shallowRef(null);
 
 onMounted(() => {
     prepareChart();
@@ -1357,8 +1361,20 @@ function prepareChart() {
             });
         });
 
+        if (responsiveObserver.value) {
+            if (observedEl.value) {
+                responsiveObserver.value.unobserve(observedEl.value)
+            }
+            responsiveObserver.value.disconnect();
+        }
+
         responsiveObserver.value = new ResizeObserver(handleResize);
-        responsiveObserver.value.observe(xy.value.parentNode);
+        observedEl.value = xy.value.parentNode;
+        responsiveObserver.value.observe(observedEl.value);
+    }
+
+    if (resizeObserver.value) {
+        resizeObserver.value.disconnect();
     }
 
     resizeObserver.value = new ResizeObserver((entries) => {
@@ -1376,7 +1392,12 @@ function prepareChart() {
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
-    if (responsiveObserver.value) responsiveObserver.value.disconnect();
+    if (responsiveObserver.value) {
+        if (observedEl.value) {
+            responsiveObserver.value.unobserve(observedEl.value);
+        }
+        responsiveObserver.value.disconnect();
+    }
 });
 
 function segregate(index) {

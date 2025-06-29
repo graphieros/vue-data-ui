@@ -1,6 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
-import themes from "../themes.json";
+import { ref, computed, onMounted, watch, defineAsyncComponent } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import {
     applyDataLabel,
@@ -13,10 +12,12 @@ import {
     objectIsEmpty,
     XMLNS
 } from "../lib";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 
 const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig()
 

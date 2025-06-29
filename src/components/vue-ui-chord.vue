@@ -5,7 +5,9 @@ import {
     onMounted, 
     onBeforeUnmount, 
     watch, 
-    nextTick 
+    nextTick, 
+    defineAsyncComponent,
+    shallowRef
 } from 'vue';
 import { 
     adaptColorToBackground, 
@@ -27,20 +29,21 @@ import { useConfig } from '../useConfig';
 import { useUserOptionState } from '../useUserOptionState';
 import { useNestedProp } from '../useNestedProp';
 import { useChartAccessibility } from '../useChartAccessibility';
-import Title from '../atoms/Title.vue';
-import PackageVersion from '../atoms/PackageVersion.vue';
-import PenAndPaper from '../atoms/PenAndPaper.vue';
-import BaseIcon from '../atoms/BaseIcon.vue';
 import { usePrinter } from '../usePrinter';
-import Legend from '../atoms/Legend.vue';
-import Shape from '../atoms/Shape.vue';
-import UserOptions from '../atoms/UserOptions.vue';
-import DataTable from "../atoms/DataTable.vue";
-import Accordion from "./vue-ui-accordion.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
 import themes from "../themes.json";
+import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
+import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_chord: DEFAULT_CONFIG } = useConfig();
 
@@ -77,7 +80,8 @@ const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
 const loaded = ref(false);
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 const FINAL_CONFIG = computed({
     get: () => {
@@ -156,8 +160,6 @@ function prepareChart() {
     isDataset.value && checkDataset();
 
     if (FINAL_CONFIG.value.responsive) {
-        const wrapperEl = chordChart.value.parentNode;
-    
         const resizeHandler = throttle(() => {
             const { width, height, heightNoTitle, heightSource, heightTitle, heightLegend } = useResponsive({
                 chart:  chordChart.value,
@@ -176,10 +178,17 @@ function prepareChart() {
             svgRef.value.style.height = `calc(100% - ${otherH}px)`;
             }
         }, 100);
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
     
-        const ro = new ResizeObserver(resizeHandler)
-        ro.observe(wrapperEl)
-        resizeObserver.value = ro;
+        resizeObserver.value = new ResizeObserver(resizeHandler);
+        observedEl.value = chordChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
 
         resizeHandler();
     }
@@ -595,7 +604,12 @@ onBeforeUnmount(() => {
     window.removeEventListener('touchmove', onMove);
     window.removeEventListener('touchend', onUp);
     clearTimeout(loadingTimeout.value);
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 const isFullscreen = ref(false)

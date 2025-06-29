@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, nextTick, watch, useSlots } from "vue";
+import { computed, ref, onMounted, nextTick, watch, useSlots, defineAsyncComponent } from "vue";
 import {
     adaptColorToBackground,
     calcMedian,
@@ -10,13 +10,14 @@ import {
     interpolateColorHex,
     objectIsEmpty,
 } from "../lib";
-import themes from "../themes.json";
 import { useNestedProp } from "../useNestedProp";
-import UserOptions from "../atoms/UserOptions.vue";
-import Shape from "../atoms/Shape.vue";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
 import { useUserOptionState } from "../useUserOptionState";
+import themes from "../themes.json";
+
+const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_table_heatmap: DEFAULT_CONFIG } = useConfig();
 

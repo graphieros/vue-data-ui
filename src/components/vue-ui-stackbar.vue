@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick, useSlots } from "vue";
+import { ref, computed, onMounted, watch, nextTick, useSlots, defineAsyncComponent, shallowRef, onBeforeUnmount } from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
@@ -29,20 +29,21 @@ import { useNestedProp } from "../useNestedProp";
 import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
 import { usePrinter } from "../usePrinter";
-import themes from "../themes.json";
-import Slicer from "../atoms/Slicer.vue";
-import Tooltip from "../atoms/Tooltip.vue";
-import Title from "../atoms/Title.vue";
-import Legend from "../atoms/Legend.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import Accordion from "./vue-ui-accordion.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Skeleton from "./vue-ui-skeleton.vue"
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
-import Shape from "../atoms/Shape.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig();
 const slots = useSlots();
@@ -205,7 +206,8 @@ const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 const to = ref(null)
 onMounted(() => {
     prepareChart();
@@ -258,11 +260,28 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(stackbarChart.value.parentNode);
+        observedEl.value = stackbarChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
     setupSlicer();
 }
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
+});
 
 const drawingArea = computed(() => {
     const { height: H, width: W } = defaultSizes.value;

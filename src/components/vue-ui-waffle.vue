@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, useSlots } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef } from "vue";
 import { 
     abbreviate,
     adaptColorToBackground,
@@ -22,23 +22,24 @@ import {
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import Tooltip from "../atoms/Tooltip.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Legend from "../atoms/Legend.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
-import Accordion from "./vue-ui-accordion.vue";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
 import { useUserOptionState } from "../useUserOptionState";
-import Shape from "../atoms/Shape.vue";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const Shape = defineAsyncComponent(() => import('../atoms/Shape.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_waffle: DEFAULT_CONFIG } = useConfig();
 
@@ -122,7 +123,8 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
@@ -164,8 +166,16 @@ function prepareChart() {
             })
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(waffleChart.value.parentNode);
+        observedEl.value = waffleChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
 
@@ -174,7 +184,12 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
 
 

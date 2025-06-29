@@ -1,6 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, watch, useSlots } from "vue";
-import themes from "../themes.json";
+import { ref, computed, onMounted, nextTick, watch, useSlots, defineAsyncComponent, onBeforeUnmount, shallowRef } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import {
     applyDataLabel,
@@ -17,13 +16,15 @@ import {
     palette,
     themePalettes,
 } from "../lib";
-import SparkLine from "./vue-ui-sparkline.vue";
-import BaseIcon from "../atoms/BaseIcon.vue";
-import UserOptions from "../atoms/UserOptions.vue";
 import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
-import vClickOutside from "../directives/vClickOutside";
 import { useUserOptionState } from "../useUserOptionState";
+import vClickOutside from "../directives/vClickOutside";
+import themes from "../themes.json";
+
+const SparkLine = defineAsyncComponent(() => import('./vue-ui-sparkline.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_table_sparkline: DEFAULT_CONFIG } = useConfig();
 
@@ -117,6 +118,8 @@ onMounted(() => {
 
 const usableColNames = ref(FINAL_CONFIG.value.colNames)
 
+const tableObserver = shallowRef(null);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
@@ -125,13 +128,17 @@ function prepareChart() {
         })
     }
 
-    const observer = new ResizeObserver((entries) => {
+    if (tableObserver.value) {
+        tableObserver.value.disconnect();
+    }
+
+    tableObserver.value = new ResizeObserver((entries) => {
         entries.forEach((entry) => {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
         });
     });
     if (tableContainer.value) {
-        observer.observe(tableContainer.value);
+        tableObserver.value.observe(tableContainer.value);
     }
     usableColNames.value = [];
 
@@ -139,6 +146,12 @@ function prepareChart() {
         usableColNames.value.push(FINAL_CONFIG.value.colNames[i] || `col ${i}`)
     }
 }
+
+onBeforeUnmount(() => {
+    if (tableObserver.value) {
+        tableObserver.value.disconnect();
+    }
+});
 
 const computedDataset = computed(() => {
     props.dataset.forEach((ds, i) => {

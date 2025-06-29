@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, useSlots } from "vue";
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount, useSlots, defineAsyncComponent, shallowRef } from "vue";
 import { useConfig } from "../useConfig";
 import { useNestedProp } from "../useNestedProp";
 import { 
@@ -11,9 +11,10 @@ import {
     setOpacity
 } from "../lib";
 import { usePrinter } from "../usePrinter";
-import UserOptions from "../atoms/UserOptions.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useUserOptionState } from "../useUserOptionState";
+
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_carousel_table: DEFAULT_CONFIG } = useConfig();
 
@@ -328,8 +329,10 @@ watch(
 
 const breakpoint = computed(() => FINAL_CONFIG.value.responsiveBreakpoint);
 
+const tableObserver = shallowRef(null);
+
 onMounted(() => {
-    const observer = new ResizeObserver((entries) => {
+    tableObserver.value = new ResizeObserver((entries) => {
         entries.forEach(entry => {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
         })
@@ -345,9 +348,15 @@ onMounted(() => {
         });
     })
     if(tableContainer.value) {
-        observer.observe(tableContainer.value);
+        tableObserver.value.observe(tableContainer.value);
     }     
 });
+
+onBeforeUnmount(() => {
+    if (tableObserver.value) {
+        tableObserver.value.disconnect();
+    }
+})
 
 function generatePdf() {
     makePdf();

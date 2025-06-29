@@ -1,23 +1,24 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent } from "vue";
 import { useConfig } from "../useConfig";
 import { XMLNS, createUid, error, getMissingDatasetAttributes, objectIsEmpty } from "../lib";
 import { useNestedProp } from "../useNestedProp";
-import themes from "../themes.json";
 import { convertColorToHex } from "../lib";
 import { lightenHexColor } from "../lib";
 import { calculateNiceScale } from "../lib";
 import { applyDataLabel } from "../lib";
 import { dataLabel } from "../lib";
-import Title from "../atoms/Title.vue";
-import Legend from "../atoms/Legend.vue";
-import UserOptions from "../atoms/UserOptions.vue";
 import { usePrinter } from "../usePrinter";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_bullet: DEFAULT_CONFIG } = useConfig();
 

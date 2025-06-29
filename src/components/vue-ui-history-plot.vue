@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick, defineAsyncComponent, shallowRef } from "vue";
 import { useConfig } from "../useConfig";
 import { 
     XMLNS,
@@ -24,21 +24,22 @@ import {
     translateSize,
 } from "../lib";
 import { useNestedProp } from "../useNestedProp";
-import themes from "../themes.json";
 import { usePrinter } from "../usePrinter";
-import PackageVersion from "../atoms/PackageVersion.vue";
-import Legend from "../atoms/Legend.vue";
-import Title from "../atoms/Title.vue";
-import Tooltip from "../atoms/Tooltip.vue";
-import DataTable from "../atoms/DataTable.vue";
-import Accordion from "./vue-ui-accordion.vue";
-import UserOptions from "../atoms/UserOptions.vue";
-import PenAndPaper from "../atoms/PenAndPaper.vue";
-import Skeleton from "./vue-ui-skeleton.vue";
 import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_history_plot: DEFAULT_CONFIG } = useConfig();
 
@@ -64,7 +65,8 @@ const chartLegend = ref(null);
 const legendStep = ref(0);
 const tableStep = ref(0);
 const step = ref(0);
-const resizeObserver = ref(null);
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
 const noTitle = ref(null);
 const uid = ref(createUid());
 const isTooltip = ref(false);
@@ -87,10 +89,6 @@ const isDataset = computed({
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
 
 onMounted(prepareChart);
-
-onBeforeUnmount(() => {
-    if (resizeObserver.value) resizeObserver.value.disconnect();
-});
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -187,10 +185,27 @@ function prepareChart() {
             });
         });
 
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(historyPlotChart.value.parentNode);
+        observedEl.value = historyPlotChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
 }
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
+});
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
