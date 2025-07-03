@@ -172,34 +172,37 @@ function prepareChart() {
             requestAnimationFrame(() => {
                 chartDimensions.value.width = width;
                 chartDimensions.value.height = height;
-                chartDimensions.value.plotSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.plots.radius,
-                    threshold: 2,
-                    fallback: 2
-                });
-                chartDimensions.value.ticksFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.yAxis.labels.ticks.fontSize,
-                    threshold: 10,
-                    fallback: 10
-                });
-                chartDimensions.value.datapointFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.yAxis.labels.datapoints.fontSize,
-                    threshold: 10,
-                    fallback: 10
-                });
-                chartDimensions.value.axisNameFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.yAxis.labels.axisNamesFontSize,
-                    threshold: 12,
-                    fallback: 12
-                });
+
+                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
+                    chartDimensions.value.plotSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.plots.radius,
+                        threshold: 2,
+                        fallback: 2
+                    });
+                    chartDimensions.value.ticksFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.yAxis.labels.ticks.fontSize,
+                        threshold: 10,
+                        fallback: 10
+                    });
+                    chartDimensions.value.datapointFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.yAxis.labels.datapoints.fontSize,
+                        threshold: 10,
+                        fallback: 10
+                    });
+                    chartDimensions.value.axisNameFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.yAxis.labels.axisNamesFontSize,
+                        threshold: 12,
+                        fallback: 12
+                    });
+                }
             });
         });
 

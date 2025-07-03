@@ -202,30 +202,32 @@ function prepareChart() {
                 relations.value = [];
                 createPlots();
                 createRelations();
-    
-                dataLabelSize.value = translateSize({
-                    relator: size.value,
-                    adjuster: FINAL_CONFIG.value.style.size,
-                    source: FINAL_CONFIG.value.style.weightLabels.size,
-                    threshold: 6,
-                    fallback: 6
-                });
-    
-                plotRadius.value = translateSize({
-                    relator: size.value,
-                    adjuster: FINAL_CONFIG.value.style.size,
-                    source: FINAL_CONFIG.value.style.plot.radius,
-                    threshold: 1,
-                    fallback: 1
-                });
-    
-                labelFontSize.value = translateSize({
-                    relator: size.value,
-                    adjuster: FINAL_CONFIG.value.style.size,
-                    source: FINAL_CONFIG.value.style.labels.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
+
+                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
+                    dataLabelSize.value = translateSize({
+                        relator: size.value,
+                        adjuster: FINAL_CONFIG.value.style.size,
+                        source: FINAL_CONFIG.value.style.weightLabels.size,
+                        threshold: 6,
+                        fallback: 6
+                    });
+        
+                    plotRadius.value = translateSize({
+                        relator: size.value,
+                        adjuster: FINAL_CONFIG.value.style.size,
+                        source: FINAL_CONFIG.value.style.plot.radius,
+                        threshold: 1,
+                        fallback: 1
+                    });
+        
+                    labelFontSize.value = translateSize({
+                        relator: size.value,
+                        adjuster: FINAL_CONFIG.value.style.size,
+                        source: FINAL_CONFIG.value.style.labels.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+                }
             });
         });
 

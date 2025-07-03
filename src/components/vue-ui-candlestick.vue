@@ -178,20 +178,22 @@ function prepareChart() {
             requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height;
-                svg.value.xAxisFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: FINAL_CONFIG.value.style.width,
-                    source: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
-                svg.value.yAxisFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: FINAL_CONFIG.value.style.width,
-                    source: FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
+                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
+                    svg.value.xAxisFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: FINAL_CONFIG.value.style.width,
+                        source: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+                    svg.value.yAxisFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: FINAL_CONFIG.value.style.width,
+                        source: FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+                }
             });
         });
 

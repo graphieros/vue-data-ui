@@ -127,61 +127,63 @@ function prepareChart() {
                 svg.value.width = width;
                 svg.value.height = height;
     
-                sizes.value.plots = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.plots.radius,
-                    threshold: 3,
-                    fallback: 3
-                });
-    
-                sizes.value.indexLabels = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.plots.indexLabels.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
-    
-                sizes.value.labels = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.plots.labels.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
-    
-                sizes.value.xAxisLabels = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.axes.x.labels.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
-    
-                sizes.value.xAxisName = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.axes.x.name.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
-    
-                sizes.value.yAxisLabels = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.axes.y.labels.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
-    
-                sizes.value.yAxisName = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.axes.y.name.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
+                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
+                    sizes.value.plots = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.plots.radius,
+                        threshold: 3,
+                        fallback: 3
+                    });
+        
+                    sizes.value.indexLabels = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.plots.indexLabels.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+        
+                    sizes.value.labels = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.plots.labels.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+        
+                    sizes.value.xAxisLabels = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.axes.x.labels.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+        
+                    sizes.value.xAxisName = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.axes.x.name.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+        
+                    sizes.value.yAxisLabels = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.axes.y.labels.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+        
+                    sizes.value.yAxisName = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.axes.y.name.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+                }
             });
         });
 

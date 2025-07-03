@@ -3099,6 +3099,7 @@ export default {
             this.selectedMinimapIndex = minimapIndex;
         },
         convertSizes() {
+            if (!this.FINAL_CONFIG.responsiveProportionalSizing) return;
             // Adaptative sizes in responsive mode
             this.fontSizes.dataLabels = this.translateSize({
                 relator: this.height,

@@ -186,13 +186,16 @@ function prepareChart() {
                 svg.value.height = height;
                 
                 stripWidth.value = (width - padding.value.left - padding.value.right) / props.dataset.length;
-                plotRadius.value = translateSize({
-                    relator: Math.min(height, width),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.plots.radius,
-                    threshold: 6,
-                    fallback: 6
-                });
+
+                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
+                    plotRadius.value = translateSize({
+                        relator: Math.min(height, width),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.plots.radius,
+                        threshold: 6,
+                        fallback: 6
+                    });
+                }
             });
         });
 
