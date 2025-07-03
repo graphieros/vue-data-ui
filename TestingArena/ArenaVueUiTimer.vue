@@ -7,6 +7,8 @@ import convertArrayToObject from "./convertModel";
 
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
+    { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
+
     { key: 'type', def: 'stopwatch', type: 'select', options: ['stopwatch']},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.height', def: 300, type: 'number', min: 100, max: 1000},

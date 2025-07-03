@@ -290,6 +290,8 @@ function toggleProps() {
 const model = ref([
     { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA'] },
     { key: 'responsive', def: false, type: 'checkbox' },
+    { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
+
     { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox' },
     { key: 'chart.userOptions.buttons.csv', def: true, type: 'checkbox' },

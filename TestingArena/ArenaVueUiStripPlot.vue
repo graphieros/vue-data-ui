@@ -89,6 +89,8 @@ const dataset = ref([
 
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
+    { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
+
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
