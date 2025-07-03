@@ -1750,6 +1750,7 @@ declare module "vue-data-ui" {
 
     export type VueUiRelationCircleConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -2140,6 +2141,7 @@ declare module "vue-data-ui" {
 
     export type VueUiCandlestickConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
         style?: {
@@ -2624,6 +2626,7 @@ declare module "vue-data-ui" {
 
     export type VueUiXyConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -5241,6 +5244,7 @@ declare module "vue-data-ui" {
 
     export type VueUiStripPlotConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -5879,6 +5883,7 @@ declare module "vue-data-ui" {
 
     export type VueUiParallelCoordinatePlotConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
         customPalette?: string[];
@@ -6005,6 +6010,7 @@ declare module "vue-data-ui" {
     export type VueUiTimerConfig = {
         type?: "stopwatch";
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -6447,6 +6453,7 @@ declare module "vue-data-ui" {
     export type VueUiFunnelConfig = {
         theme?: Theme;
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         useCssAnimation?: boolean;
         table?: {
             show?: boolean;
@@ -6539,6 +6546,7 @@ declare module "vue-data-ui" {
 
     export type VueUiHistoryPlotConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;

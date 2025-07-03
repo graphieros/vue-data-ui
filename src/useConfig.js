@@ -376,6 +376,7 @@ export function useConfig() {
     const vue_ui_xy = {
         theme: '',
         responsive: false,
+        responsiveProportionalSizing: true,
         customPalette: [],
         useCssAnimation: true,
         downsample: LTTB,
@@ -1980,6 +1981,7 @@ export function useConfig() {
 
     const vue_ui_candlestick = {
         responsive: false,
+        responsiveProportionalSizing: true,
         theme: '',
         useCssAnimation: true,
         style: {
@@ -2668,6 +2670,7 @@ export function useConfig() {
 
     const vue_ui_relation_circle = {
         responsive: false,
+        responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
         style: {
@@ -3283,6 +3286,7 @@ export function useConfig() {
 
     const vue_ui_strip_plot = {
         responsive: false,
+        responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
         useCssAnimation: true,
@@ -3977,6 +3981,7 @@ export function useConfig() {
 
     const vue_ui_parallel_coordinate_plot = {
         responsive: false,
+        responsiveProportionalSizing: true,
         theme: '',
         useCssAnimation: true,
         customPalette: [],
@@ -4067,6 +4072,7 @@ export function useConfig() {
     const vue_ui_timer = {
         type: 'stopwatch',
         responsive: false,
+        responsiveProportionalSizing: true,
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
@@ -5027,6 +5033,7 @@ export function useConfig() {
     const vue_ui_funnel = {
         theme: '',
         responsive: false,
+        responsiveProportionalSizing: true,
         useCssAnimation: true,
         table: {
             ...TABLE,
@@ -5118,6 +5125,7 @@ export function useConfig() {
 
     const vue_ui_history_plot = {
         responsive: false,
+        responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
         useCssAnimation: true,
