@@ -378,7 +378,7 @@ function useTooltip(index, datapoint) {
     isTooltip.value = true;
 }
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = [FINAL_CONFIG.value.translations.year, FINAL_CONFIG.value.translations.age, FINAL_CONFIG.value.translations.female, FINAL_CONFIG.value.translations.male, FINAL_CONFIG.value.translations.total];
 
@@ -394,7 +394,11 @@ function generateCsv() {
 
         const tableXls = [[FINAL_CONFIG.value.style.title.text],[FINAL_CONFIG.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-heatmap"});
+        if(!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-heatmap"});
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

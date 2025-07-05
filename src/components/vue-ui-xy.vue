@@ -3522,13 +3522,18 @@ export default {
                 }
             }, 100);
         },
-        generateCsv() {
+        generateCsv(callback=null) {
             const title = [[this.FINAL_CONFIG.chart.title.text], [this.FINAL_CONFIG.chart.title.subtitle.text], [""]];
             const head = ["",...this.table.head.map(h => h.label)]
             const body = this.table.body
             const table = title.concat([head]).concat(body);
             const csvContent = this.createCsvContent(table);
-            this.downloadCsv({ csvContent, title: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy'})
+            if(!callback) {
+                this.downloadCsv({ csvContent, title: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy'});
+            } else {
+                callback(csvContent);
+            }
+            
         },
         showSpinnerImage() {
             this.isImaging = true;

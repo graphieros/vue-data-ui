@@ -405,7 +405,7 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const thead = [FINAL_CONFIG.value.translations.serie].concat(colNames.value)
         const tbody = computedDataset.value.map((ds, i) => {
@@ -419,10 +419,15 @@ function generateCsv() {
         });
         const t = [thead].concat(tbody)
         const csvContent = createCsvContent(t)
-        downloadCsv({
-            csvContent,
-            title: FINAL_CONFIG.value.title.text || "vue-ui-table-sparkline"
-        })
+
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title: FINAL_CONFIG.value.title.text || "vue-ui-table-sparkline"
+            })
+        } else {
+            callback(csvContent);
+        }
     })
 }
 

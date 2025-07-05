@@ -268,7 +268,7 @@ const table = computed(() => {
     return { head, body };
 })
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.head.map((h, i) => {
             return [[
@@ -278,7 +278,12 @@ function generateCsv() {
         const tableXls = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [[""], [FINAL_CONFIG.value.table.columnNames.value],]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-word-cloud" })
+
+        if (!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-word-cloud" })
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

@@ -441,7 +441,7 @@ const table = computed(() => {
     }
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     if(!hasStack.value) {
         console.warn('VueUi3dBar : CSV download is only available in stack mode (providing dataset.series instead of dataset.percentage)');
         return;
@@ -456,7 +456,11 @@ function generateCsv() {
         const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-3d-bar" })
+        if (!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-3d-bar" })
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

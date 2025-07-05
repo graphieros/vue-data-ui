@@ -174,7 +174,7 @@ const borderWidth = computed(() => {
     return `${FINAL_CONFIG.value.table.borderWidth}px`;
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = formattedDataset.value.map((ds) => {
             return [
@@ -188,7 +188,12 @@ function generateCsv() {
 
         const tableXls = [[[""], FINAL_CONFIG.value.table.head.values, ['sum'],['average'],['median']],].concat(labels);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: "vue-ui-table-heatmap" })
+
+        if (!callback) {
+            downloadCsv({ csvContent, title: "vue-ui-table-heatmap" })
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

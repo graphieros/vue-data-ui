@@ -530,13 +530,18 @@ const tableCsv = computed(() => {
     }
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
     const head = tableCsv.value.head
     const body = tableCsv.value.body;
     const table = title.concat([head]).concat(body);
     const csvContent = createCsvContent(table);
-    downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot'});
+
+    if (!callback) {
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot'});
+    } else {
+        callback(csvContent);
+    }
 }
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])

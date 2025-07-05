@@ -600,7 +600,7 @@ const dataTable = computed(() => {
     }
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = [
             [FINAL_CONFIG.value.table.columnNames.series, ...FINAL_CONFIG.value.style.chart.xAxis.labels.values.map(v => [v])],
@@ -613,10 +613,16 @@ function generateCsv() {
             [FINAL_CONFIG.value.style.chart.title.subtitle.text],
         ].concat(labels);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({
-            csvContent,
-            title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-ridgeline'
-        });
+
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-ridgeline'
+            });
+        } else {
+            callback(csvContent);
+        }
+            
     });
 }
 

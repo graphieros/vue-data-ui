@@ -406,7 +406,7 @@ const dataTable = computed(() => {
 });
 
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = dataTable.value.body.map((b, i) => {
             return [[b[0].name],[b[1]],[b[2]]]
@@ -414,7 +414,12 @@ function generateCsv() {
         const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[...dataTable.value.head]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-molecule" })
+
+        if(!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-molecule" })
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

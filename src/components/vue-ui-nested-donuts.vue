@@ -932,7 +932,7 @@ const table = computed(() => {
     return { head, body };
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.head.map((h, i) => {
             return [
@@ -952,11 +952,17 @@ function generateCsv() {
         ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({
-            csvContent,
-            title:
-                FINAL_CONFIG.value.style.chart.title.text || "vue-ui-nested-donuts",
-        });
+
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title:
+                    FINAL_CONFIG.value.style.chart.title.text || "vue-ui-nested-donuts",
+            });
+        } else {
+            callback(csvContent);
+        }
+
     });
 }
 

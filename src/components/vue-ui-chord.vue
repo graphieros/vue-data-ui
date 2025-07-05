@@ -780,7 +780,7 @@ const dataTable = computed(() => {
     }
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const rows = formattedDataset.value.matrix.map((m, i) => {
             return [
@@ -799,7 +799,12 @@ function generateCsv() {
         ].concat(rows);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-chord" })
+
+        if (!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-chord" })
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

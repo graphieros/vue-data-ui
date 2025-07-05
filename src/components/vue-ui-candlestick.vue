@@ -479,7 +479,7 @@ function validSlicerEnd(v) {
     return v;
 }
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = [FINAL_CONFIG.value.translations.period, FINAL_CONFIG.value.translations.open, FINAL_CONFIG.value.translations.high, FINAL_CONFIG.value.translations.low, FINAL_CONFIG.value.translations.last, FINAL_CONFIG.value.translations.volume];
 
@@ -496,7 +496,11 @@ function generateCsv() {
 
         const tableXls = [[FINAL_CONFIG.value.style.title.text],[FINAL_CONFIG.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-candlestick"});
+        if(!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-candlestick"});
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

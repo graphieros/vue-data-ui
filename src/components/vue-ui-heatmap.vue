@@ -416,7 +416,7 @@ const table = computed(() => {
 });
 
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = ["", ...props.dataset.map((ds,i) => {
             return ds.name
@@ -434,7 +434,12 @@ function generateCsv() {
 
         const tableXls = [[FINAL_CONFIG.value.style.title.text],[FINAL_CONFIG.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-heatmap"})
+
+        if (!callback) {
+            downloadCsv({csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-heatmap"})
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

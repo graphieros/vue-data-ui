@@ -589,7 +589,7 @@ const table = computed(() => {
     return { head, body };
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
     const head = table.value.head;
     const body = table.value.body.map(tr => {
@@ -606,7 +606,12 @@ function generateCsv() {
     
     const tableXls = title.concat([head]).concat(body);
     const csvContent = createCsvContent(tableXls);
-    downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-vertical-bar"})
+
+    if (!callback) {
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-vertical-bar"})
+    } else {
+        callback(csvContent);
+    }
 }
 
 const isFullscreen = ref(false)

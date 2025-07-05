@@ -557,7 +557,7 @@ function segregate(id) {
     }
 }
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = ["", FINAL_CONFIG.value.table.translations.correlationCoefficient, FINAL_CONFIG.value.table.translations.nbrPlots, `${FINAL_CONFIG.value.style.layout.dataLabels.xAxis.name} ${FINAL_CONFIG.value.table.translations.average}`, `${FINAL_CONFIG.value.style.layout.dataLabels.yAxis.name} ${FINAL_CONFIG.value.table.translations.average}`];
 
@@ -573,7 +573,13 @@ function generateCsv() {
 
         const tableXls = [[FINAL_CONFIG.value.style.title.text],[FINAL_CONFIG.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-heatmap"})
+
+        if (!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-heatmap"})
+        } else {
+            callback(csvContent);
+        }
+
     });
 }
 

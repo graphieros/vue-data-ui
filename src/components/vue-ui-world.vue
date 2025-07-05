@@ -538,7 +538,7 @@ const dataTable = computed(() => {
     }
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.head.map((h, i) => {
             return [[
@@ -552,7 +552,12 @@ function generateCsv() {
         ]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-world" })
+
+        if (!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-world" })
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

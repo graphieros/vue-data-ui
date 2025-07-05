@@ -600,7 +600,7 @@ const table = computed(() => {
     );
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.map((el, i) => {
             return [[el.source], [el.target], [el.value]];
@@ -617,10 +617,15 @@ function generateCsv() {
         ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({
-            csvContent,
-            title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-flow",
-        });
+
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-flow",
+            });
+        } else {
+            callback(csvContent);
+        }
     });
 }
 

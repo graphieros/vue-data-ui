@@ -716,8 +716,11 @@ const config = computed(() => {
                 userOptions: {
                     ...c.chart.userOptions,
                     callbacks: {
-                        pdf: () => {
-                            console.log('PDF')
+                        img: (b64) => {
+                            console.log(b64)
+                        },
+                        csv: (xls) => {
+                            console.log(xls)
                         }
                     },
                     print: {

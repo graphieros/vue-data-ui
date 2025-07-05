@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from "./BaseIcon.vue";
+import img from "../img";
 
 const props = defineProps({
     hasPdf: {
@@ -127,7 +128,7 @@ const props = defineProps({
         default() {
             return {}
         }
-    }
+    },
 });
 
 const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack', 'toggleTooltip', 'toggleAnimation', 'toggleAnnotator']);
@@ -141,16 +142,13 @@ function generatePdf() {
 }
 
 function generateCsv() {
-    if (props.callbacks.csv) {
-        props.callbacks.csv();
-    } else {
-        emit('generateCsv');
-    }
+    emit('generateCsv', props.callbacks.csv);
 }
 
-function generateImage() {
+async function generateImage() {
     if (props.callbacks.img) {
-        props.callbacks.img();
+        const b64 = await img({ domElement: props.chartElement, base64: true })
+        props.callbacks.img(b64);
     } else {
         emit('generateImage');
     }

@@ -216,6 +216,19 @@ declare module "vue-data-ui" {
             table?: string;
             tooltip?: string;
         };
+        callbacks?: {
+            animation?: null | (() => void);
+            annotator?: null | (() => void);
+            csv?: null | ((csvStr?: string) => void);
+            fullscreen?: null | (() => void);
+            img?: null | ((base64?: string) => void);
+            labels?: null | (() => void);
+            pdf?: null | (() => void);
+            sort?: null | (() => void);
+            stack?: null | (() => void);
+            table?: null | (() => void);
+            tooltip?: null | (() => void);
+        };
         // old html2canvas options
         print?: {
             allowTaint?: boolean;
@@ -5172,7 +5185,7 @@ declare module "vue-data-ui" {
         userOptionsCallbacks?: {
             tooltip?: null | (() => void);
             pdf?: null | (() => void);
-            img?: null | (() => void);
+            img?: null | ((base64?: string) => void);
             fullscreen?: null | (() => void);
             annotator?: null | (() => void);
         };

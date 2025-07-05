@@ -740,13 +740,19 @@ const tableCsv = computed(() => {
     return { head, body };
 })
 
-function generateCsv() {
+function generateCsv(callback=null) {
     const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
     const head = ["",...tableCsv.value.head.map(h => h.label)];
     const body = tableCsv.value.body;
     const table = title.concat([head]).concat(body);
     const csvContent = createCsvContent(table);
-    downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-stackbar'});
+
+    if (!callback) {
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-stackbar'});
+    } else {
+        callback(csvContent);
+    }
+
 }
 
 const dataTable = computed(() => {

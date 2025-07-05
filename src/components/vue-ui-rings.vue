@@ -472,7 +472,7 @@ const dataTable = computed(() => {
 });
 
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.head.map((h,i) => {
             return [[
@@ -481,7 +481,12 @@ function generateCsv() {
         });
         const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[""],["val"],["%"]]].concat(labels);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-rings"});
+
+        if (!callback){
+          downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-rings"});
+        } else {
+          callback(csvContent);
+        }
     });
 }
 

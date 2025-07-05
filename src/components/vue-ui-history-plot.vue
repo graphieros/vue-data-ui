@@ -629,7 +629,7 @@ const dataTable = computed(() => {
     }
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const head = [
             [ FINAL_CONFIG.value.table.columnNames.series ],
@@ -656,10 +656,16 @@ function generateCsv() {
         ].concat(rows);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({
-            csvContent,
-            title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-history-plot"
-        });
+
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-history-plot"
+            });
+        } else {
+            callback(csvContent);
+        }
+
     });
 }
 
