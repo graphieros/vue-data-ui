@@ -573,7 +573,7 @@ const model = ref([
     { key: 'chart.userOptions.print.allowTaint', def: true, type: 'checkbox' },
     { key: 'chart.userOptions.print.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'chart.userOptions.print.useCORS', def: true, type: 'checkbox' },
-    { key: 'chart.userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5 }
+    { key: 'chart.userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5 },
 ]);
 
 const testCustomTooltip = ref(false);
@@ -666,6 +666,46 @@ const config = computed(() => {
             chart: {
                 ...c.chart,
                 // Attempt a scale groups
+                annotations: [
+                    {
+                        show: true,
+                        yAxis: {
+                            yTop: 125,
+                            yBottom: 70,
+                            label: {
+                                text: 'average',
+                                textAnchor: 'start', // or end
+                                position: 'start', // or end
+                                offsetY: 0,
+                                offsetX: 0,
+                                border: {
+                                    stroke: '#FF0000',
+                                    strokeWidth: 1,
+                                    rx: 0,
+                                    ry: 0
+                                },
+                                padding: {
+                                    top: 5,
+                                    right: 10,
+                                    bottom: 5,
+                                    left: 10
+                                },
+                                fontSize: 14,
+                                color: '#1A1A1A',
+                                backgroundColor: '#E1E5E8'
+                            },
+                            line: {
+                                stroke: '#1A1A1A',
+                                strokeWidth: 1,
+                                strokeDasharray: 2,
+                            },
+                            area: {
+                                fill: '#E1E5E8',
+                                opacity: 50
+                            }
+                        }
+                    }
+                ],
                 scaleGroups: {
                     enabled: true,
                     groups: [
@@ -675,6 +715,11 @@ const config = computed(() => {
                 },
                 userOptions: {
                     ...c.chart.userOptions,
+                    callbacks: {
+                        pdf: () => {
+                            console.log('PDF')
+                        }
+                    },
                     print: {
                         ...c.chart.userOptions.print,
                         // onclone: (doc) => {

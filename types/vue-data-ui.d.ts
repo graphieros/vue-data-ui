@@ -2624,6 +2624,40 @@ declare module "vue-data-ui" {
         };
     };
 
+    export type VueUiXyAnnotation = {
+        show?: boolean;
+        yAxis?: {
+            yTop?: number;
+            yBottom?: number;
+            label?: {
+                text?: string;
+                textAnchor?: 'start' | 'end';
+                position?: 'start' | 'end';
+                offsetX?: number;
+                offsetY?: number;
+                padding?: ChartPadding;
+                border?: {
+                    stroke?: string;
+                    strokeWidth?: number;
+                    rx?: number;
+                    ry?: number;
+                };
+                fontSize?: number;
+                color?: string;
+                backgroundColor?: string;
+            };
+            line?: {
+                stroke?: string;
+                strokeWidth?: number;
+                strokeDasharray?: number;
+            };
+            area?: {
+                fill?: string;
+                opacity?: number; // 0 - 100
+            }
+        }
+    }
+
     export type VueUiXyConfig = {
         responsive?: boolean;
         responsiveProportionalSizing?: boolean;
@@ -2641,6 +2675,7 @@ declare module "vue-data-ui" {
             width?: number;
             zoom?: ChartZoom;
             padding?: ChartPadding;
+            annotations?: VueUiXyAnnotation[];
             highlighter?: {
                 color?: string;
                 opacity?: number;
@@ -5133,6 +5168,13 @@ declare module "vue-data-ui" {
             onclone?: null | ((doc: Document) => void),
             scale?: number;
             logging?: boolean;
+        };
+        userOptionsCallbacks?: {
+            tooltip?: null | (() => void);
+            pdf?: null | (() => void);
+            img?: null | (() => void);
+            fullscreen?: null | (() => void);
+            annotator?: null | (() => void);
         };
         showUserOptionsOnChartHover?: boolean;
         keepUserOptionsStateOnChartLeave?: boolean;

@@ -554,6 +554,7 @@ defineExpose({
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :zIndex="3"
             :offsetX="12"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"

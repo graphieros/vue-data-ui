@@ -59,6 +59,7 @@
             :titles="{ ...FINAL_CONFIG.chart.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.chart.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.chart.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -147,6 +148,7 @@
                         :y1="forceValidValue(drawingArea.bottom)"
                         :y2="forceValidValue(drawingArea.bottom)"
                         stroke-linecap="round"
+                        :style="{ animation: 'none !important' }"
                     />
                     <template v-if="!mutableConfig.useIndividualScale">
                         <line
@@ -159,6 +161,7 @@
                             :y1="forceValidValue(drawingArea.top)" 
                             :y2="forceValidValue(drawingArea.bottom)" 
                             stroke-linecap="round"
+                            :style="{ animation: 'none !important' }"
                         />
                         <g v-if="FINAL_CONFIG.chart.grid.showHorizontalLines">
                             <line
@@ -171,6 +174,7 @@
                                 :stroke="FINAL_CONFIG.chart.grid.stroke"
                                 :stroke-width="0.5"
                                 stroke-linecap="round"
+                                :style="{ animation: 'none !important' }"
                             />
                         </g>
                     </template>
@@ -186,6 +190,7 @@
                                     :stroke="grid.color"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
+                                    :style="{ animation: 'none !important' }"
                                 />
                             </template>
                             <template v-else-if="grid.yLabels.length">
@@ -198,6 +203,7 @@
                                     :stroke="FINAL_CONFIG.chart.grid.stroke"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
+                                    :style="{ animation: 'none !important' }"
                                 />
                             </template>
                         </g>
@@ -213,6 +219,7 @@
                             :y2="forceValidValue(drawingArea.bottom)"
                             stroke-width="0.5"
                             :stroke="FINAL_CONFIG.chart.grid.stroke"
+                            :style="{ animation: 'none !important' }"
                         />
                     </g>
                 </g>
@@ -1158,6 +1165,62 @@
                     </template>
                 </g>
 
+                <!-- ANNOTATIONS -->
+                <!-- YAXIS ANNOTATIONS -->
+                <g v-if="annotationsY.length && !mutableConfig.isStacked">
+                    <g v-for="annotation in annotationsY" :key="annotation.uid">
+                        <line 
+                            v-if="annotation.yTop"
+                            :x1="annotation.x1"
+                            :y1="annotation.yTop"
+                            :x2="annotation.x2"
+                            :y2="annotation.yTop"
+                            :stroke="annotation.config.line.stroke"
+                            :stroke-width="annotation.config.line.strokeWidth"
+                            :stroke-dasharray="annotation.config.line.strokeDasharray"
+                            stroke-linecap="round"
+                        />
+                        <line 
+                            v-if="annotation.yBottom"
+                            :x1="annotation.x1"
+                            :y1="annotation.yBottom"
+                            :x2="annotation.x2"
+                            :y2="annotation.yBottom"
+                            :stroke="annotation.config.line.stroke"
+                            :stroke-width="annotation.config.line.strokeWidth"
+                            :stroke-dasharray="annotation.config.line.strokeDasharray"
+                            stroke-linecap="round"
+                        />
+                        <rect 
+                            v-if="annotation.hasArea"
+                            :y="Math.min(annotation.yTop, annotation.yBottom)"
+                            :x="annotation.x1"
+                            :width="drawingArea.width"
+                            :height="annotation.areaHeight"
+                            :fill="setOpacity(annotation.config.area.fill, annotation.config.area.opacity)"
+                            :style="{ animation: 'none !important' }"
+                        />
+                        <rect
+                            v-if="annotation.config.label.text"
+                            class="vue-ui-xy-annotation-label-box"
+                            v-bind="annotation._box"
+                            :style="{ animation: 'none !important', transition: 'none !important'}"
+                        />
+                        <text
+                            :id="annotation.id"
+                            class="vue-ui-xy-annotation-label"
+                            v-if="annotation.config.label.text"
+                            :x="annotation._text.x"
+                            :y="annotation._text.y"
+                            :font-size="annotation.config.label.fontSize"
+                            :fill="annotation.config.label.color"
+                            :text-anchor="annotation.config.label.textAnchor"
+                        >
+                            {{ annotation.config.label.text }}
+                        </text>
+                    </g>
+                </g>
+
                 <!-- TOOLTIP TRAPS -->
                 <g>
                     <rect
@@ -1741,7 +1804,8 @@ export default {
             keepUserOptionState: true,
             userOptionsVisible: true,
             svgRef: null,
-            tagRefs: {}
+            tagRefs: {},
+            _textMeasurer: null,
         }
     },
     watch: {
@@ -2790,6 +2854,81 @@ export default {
                 return this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(this.relativeZero));
             }
         },
+        annotationsY() {
+            const ann = this.FINAL_CONFIG.chart.annotations;
+            if (!ann.length || ann.every(a => !a.show) || ann.every(a => a.yAxis.yTop === null && a.yAxis.yBottom === null)) {
+                return []
+            }
+
+            const visible = ann.filter(a => a.show && (a.yAxis.yTop != null || a.yAxis.yBottom != null));
+            if (!visible.length) return [];
+
+            const { bottom, height, left, right } = this.drawingArea;
+
+            return visible.map(annotation => {
+                const { yTop: rawTop, yBottom: rawBottom, label } = annotation.yAxis;
+
+                const hasArea = rawTop != null && rawBottom != null && Math.abs(rawTop - rawBottom) > 0;
+
+                const yTop = rawTop == null
+                    ? null
+                    : bottom - height * this.ratioToMax(rawTop);
+                const yBottom = rawBottom == null
+                    ? null
+                    : bottom - height * this.ratioToMax(rawBottom);
+
+                const ctx = this.getTextMeasurer(label.fontSize);
+                ctx.font = `${label.fontSize}px sans-serif`;
+                const textWidth = ctx.measureText(label.text).width;
+                const textHeight = label.fontSize;
+
+                const xText = (label.position === 'start' ? left + label.padding.left : right - label.padding.right) + label.offsetX;
+
+                const baselineY =
+                    (yTop != null && yBottom != null)
+                    ? Math.min(yTop, yBottom)
+                    : (yTop != null ? yTop : yBottom);
+
+                const yText = baselineY
+                    - label.fontSize / 3
+                    + label.offsetY
+                    - label.padding.top;
+
+                let rectX;
+                if (label.textAnchor === 'middle') {
+                    rectX = xText - textWidth / 2 - label.padding.left;
+                } else if (label.textAnchor === 'end') {
+                    rectX = xText - textWidth - label.padding.right;
+                } else {
+                    rectX = xText - label.padding.left;
+                }
+                const rectY = yText - textHeight * 0.75 - label.padding.top;
+
+                return {
+                    id: `annotation_y_${this.createUid()}`,
+                    hasArea,
+                    areaHeight: hasArea ? Math.abs(yTop - yBottom) : 0,
+                    yTop,
+                    yBottom,
+                    config: annotation.yAxis,
+                    x1: left,
+                    x2: right,
+
+                    _text: { x: xText, y: yText },
+                    _box: {
+                        x: rectX,
+                        y: rectY,
+                        width:  textWidth + (label.padding.left + label.padding.right),
+                        height: textHeight + label.padding.top + label.padding.bottom,
+                        fill:   label.backgroundColor,
+                        stroke: label.border.stroke,
+                        rx: label.border.rx,
+                        ry: label.border.ry,
+                        strokeWidth: label.border.strokeWidth
+                    }
+                };
+            });
+        }
     },
     mounted() {
         this.svgRef = this.$refs.svgRef;
@@ -2853,6 +2992,15 @@ export default {
         createIndividualAreaWithCuts,
         createSmoothAreaSegments,
         createIndividualArea,
+        getTextMeasurer(fontSize, fontFamily, fontWeight) {
+            if (!this._textMeasurer) {
+                const canvas = document.createElement('canvas')
+                this._textMeasurer = canvas.getContext('2d')
+            }
+            this._textMeasurer.font = 
+                `${fontWeight || 'normal'} ${fontSize}px ${fontFamily || 'sans-serif'}`
+            return this._textMeasurer
+        },
         hideTags() {
             const tags = document.querySelectorAll('.vue-ui-xy-tag')
             if (tags.length) {
@@ -2949,6 +3097,15 @@ export default {
                     mergedConfig.chart.grid.labels.yAxis.groupColor = this.config.chart.grid.labels.yAxis.groupColor;
                 } else {
                     mergedConfig.chart.grid.labels.yAxis.groupColor = null;
+                }
+
+                if (this.config && Array.isArray(this.config.chart.annotations) && this.config.chart.annotations.length) {
+                    mergedConfig.chart.annotations = this.config.chart.annotations.map(annotation => {
+                        return useNestedProp({
+                            defaultConfig: DEFAULT_CONFIG.chart.annotations[0],
+                            userConfig: annotation
+                        })
+                    })
                 }
 
                 // ----------------------------------------------------------------------------

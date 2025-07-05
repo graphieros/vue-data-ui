@@ -830,7 +830,7 @@ defineExpose({
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
-            :chartElement="donutChart" :position="FINAL_CONFIG.userOptions.position"
+            :chartElement="donutChart" :position="FINAL_CONFIG.userOptions.position" :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
             @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"

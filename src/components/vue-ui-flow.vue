@@ -809,6 +809,7 @@ defineExpose({
             :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="flowChart"
             :position="FINAL_CONFIG.userOptions.position" :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"

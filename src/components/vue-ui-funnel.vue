@@ -487,6 +487,7 @@ defineExpose({
             :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleAnnotator="toggleAnnotator"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"

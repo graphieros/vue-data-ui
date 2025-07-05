@@ -171,6 +171,19 @@ export function useConfig() {
                 animation,
                 annotator
             },
+            callbacks: {
+                animation: null,
+                annotator: null,
+                csv: null,
+                fullscreen: null,
+                img: null,
+                labels: null,
+                pdf: null,
+                sort: null,
+                stack: null,
+                table: null,
+                tooltip: null,
+            },
             buttonTitles,
             print: {
                 allowTaint: false,
@@ -386,6 +399,42 @@ export function useConfig() {
             color: COLOR_BLACK,
             height: 600,
             width: 1000,
+            // Annotations are hidden in stack mode
+            annotations: [
+                {
+                    show: false,
+                    yAxis: {
+                        yTop: null,
+                        yBottom: null,
+                        label: {
+                            text: '',
+                            textAnchor: 'start', // or middle or end
+                            position: 'start', // or end
+                            offsetX: 0,
+                            offsetY: 0,
+                            padding: PADDING([5, 10, 5, 10]),
+                            border: {
+                                stroke: COLOR_WHITE,
+                                strokeWidth: 1,
+                                rx: 0,
+                                ry: 0,
+                            },
+                            fontSize: 14,
+                            color: COLOR_BLACK,
+                            backgroundColor: COLOR_GREY_LIGHT
+                        },
+                        line: {
+                            stroke: COLOR_BLACK,
+                            strokeWidth: 1,
+                            strokeDasharray: 0,
+                        },
+                        area: {
+                            fill: COLOR_GREY_LIGHT,
+                            opacity: 30
+                        }
+                    }
+                }
+            ],
             zoom: {
                 ...ZOOM,
                 minimap: MINIMAP,
@@ -2521,6 +2570,13 @@ export function useConfig() {
             onclone: null,
             scale: 2,
             logging: false,
+        },
+        userOptionsCallbacks: {
+            tooltip: null,
+            pdf: null,
+            img: null,
+            fullscreen: null,
+            annotator: null
         },
         title: '',
         titleBold: true,

@@ -576,6 +576,21 @@ What happens when the button is clicked is taken care of by the component, excep
 </VueUiDonut>
 ```
 
+You can pass a callback trhough the config, for each button, to override the default behavior:
+
+```js
+const config = {
+  userOptions: {
+    callbacks: {
+      pdf: () => {
+        // use your custom pdf solution
+      },
+      // the other atributes have the same names as the buttons (img, csv, etc)
+    },
+  },
+};
+```
+
 User options actions available per chart:
 
 | Chart name                  | User options actions slot names                                                                                           |

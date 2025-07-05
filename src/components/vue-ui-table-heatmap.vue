@@ -225,6 +225,7 @@ defineExpose({
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="tableContainer"
             :position="FINAL_CONFIG.userOptions.position"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
