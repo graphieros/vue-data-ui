@@ -3159,7 +3159,7 @@ describe('createStraightPathWithCuts', () => {
             { x: 2, y: 3, value: null },
             { x: 3, y: 4, value: 30 }
         ];
-        expect(createStraightPathWithCuts(points)).toBe('M3,4');
+        expect(createStraightPathWithCuts(points)).toBe('3,4');
     });
 
     test('handles valid points at the beginning before invalids', () => {
