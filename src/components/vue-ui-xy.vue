@@ -2784,7 +2784,11 @@ export default {
             })
         },
         zero(){
-            return this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(this.relativeZero));
+            if (isNaN(this.ratioToMax(this.relativeZero))) {
+                return this.drawingArea.bottom;
+            } else {
+                return this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(this.relativeZero));
+            }
         },
     },
     mounted() {
