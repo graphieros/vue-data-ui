@@ -1571,6 +1571,7 @@ import {
     assignStackRatios,
     applyDataLabel,
     calcLinearProgression,
+    calculateNiceScale,
     calculateNiceScaleWithExactExtremes,
     checkNaN, 
     closestDecimal,
@@ -2066,9 +2067,9 @@ export default {
 
                 const corrector = 1.0000001;
 
-                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
+                const individualScale = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
                 
-                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
+                const autoScaleSteps = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
 
                 const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
                 const autoScaleZero = 0;
@@ -2205,9 +2206,9 @@ export default {
 
                 const corrector = 1.0000001;
 
-                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
+                const individualScale = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
                 
-                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
+                const autoScaleSteps = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
 
                 const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min));
                 const autoScaleZero = 0;
@@ -2512,7 +2513,7 @@ export default {
             return min;
         },
         niceScale() {
-            return this.calculateNiceScaleWithExactExtremes(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps)
+            return this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps) : this.calculateNiceScaleWithExactExtremes(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps)
         },
         maxSeries(){
             return this.slicer.end - this.slicer.start;
@@ -2813,6 +2814,7 @@ export default {
         applyDataLabel,
         assignStackRatios,
         calcLinearProgression,
+        calculateNiceScale,
         calculateNiceScaleWithExactExtremes,
         checkNaN,
         closestDecimal,

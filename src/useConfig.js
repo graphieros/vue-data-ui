@@ -462,6 +462,7 @@ export function useConfig() {
                         showBaseline: true,
                         commonScaleSteps: 10,
                         useIndividualScale: false,
+                        useNiceScale: false,
                         stacked: false,
                         gap: 12,
                         labelWidth: 40,
