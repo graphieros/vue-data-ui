@@ -223,7 +223,7 @@ declare module "vue-data-ui" {
             fullscreen?: null | (() => void);
             img?: null | ((base64?: string) => void);
             labels?: null | (() => void);
-            pdf?: null | (() => void);
+            pdf?: null | ((chart?: HTMLElement) => void);
             sort?: null | (() => void);
             stack?: null | (() => void);
             table?: null | (() => void);
@@ -5184,7 +5184,7 @@ declare module "vue-data-ui" {
         };
         userOptionsCallbacks?: {
             tooltip?: null | (() => void);
-            pdf?: null | (() => void);
+            pdf?: null | ((chart?: HTMLElement) => void);
             img?: null | ((base64?: string) => void);
             fullscreen?: null | (() => void);
             annotator?: null | (() => void);

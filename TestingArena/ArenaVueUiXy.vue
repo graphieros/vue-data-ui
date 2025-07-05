@@ -721,6 +721,9 @@ const config = computed(() => {
                         },
                         csv: (xls) => {
                             console.log(xls)
+                        },
+                        pdf: (chart) => {
+                            console.log(chart)
                         }
                     },
                     print: {

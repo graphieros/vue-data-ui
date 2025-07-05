@@ -578,14 +578,20 @@ What happens when the button is clicked is taken care of by the component, excep
 
 You can pass a callback trhough the config, for each button, to override the default behavior:
 
-```js
+```ts
 const config = {
   userOptions: {
     callbacks: {
-      pdf: () => {
-        // use your custom pdf solution
+      pdf: (chartElement: HTMLElement) => {
+        console.log(chartElement);
       },
-      // the other atributes have the same names as the buttons (img, csv, etc)
+      img: (base64: string) => {
+        console.log(base64);
+      },
+      csv: (csvStr: string) => {
+        console.log(csvStr);
+      },
+      // the other atributes also have the same names as the buttons
     },
   },
 };

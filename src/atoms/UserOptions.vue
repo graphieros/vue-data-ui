@@ -135,7 +135,7 @@ const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggle
 
 function generatePdf() {
     if (props.callbacks.pdf) {
-        props.callbacks.pdf();
+        props.callbacks.pdf(props.chartElement);
     } else {
         emit('generatePdf');
     }
