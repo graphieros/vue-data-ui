@@ -1021,6 +1021,23 @@ const cumulativeMedZeroed = getCumulativeMedian({
 });
 ```
 
+### mergeConfigs
+
+```js
+import { mergeConfigs, getVueDataUiConfig } from "vue-data-ui";
+const defaultConfig = getVueDataUiConfig("vue_ui_xy");
+
+// Create a full config with user overrides
+const merged = mergeConfigs({
+  defaultConfig,
+  userConfig: {
+    chart: {
+      backgroundColor: "#FF0000",
+    },
+  },
+});
+```
+
 ## PDF generation
 
 This package requires jspdf as a peer dependency. Please install it in your project if you intend on using the PDF printing feature.

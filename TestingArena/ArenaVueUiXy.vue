@@ -87,26 +87,89 @@ function createDs(n, m = 100) {
 //     },
 // })
 
+// const dataset = ref([
+//     {
+//         name: "Curved",
+//         series: createDs(12),
+//         type: "line",
+//         smooth: true,
+//         useArea: true,
+//         useTag: 'start',
+//         dataLabels: false,
+//         autoScale: true
+//     },
+//     {
+//         name: "Curved",
+//         series: createDs(12),
+//         type: "line",
+//         smooth: false,
+//         useArea: true,
+//         useTag: 'end',
+//         dataLabels: false,
+//     },
+// ])
+
 const dataset = ref([
     {
-        name: "Curved",
-        series: createDs(12),
-        type: "line",
-        smooth: true,
-        useArea: true,
-        useTag: 'start',
+        name: "A",
+        series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
+        type: "bar",
         dataLabels: false,
-        autoScale: true
     },
     {
-        name: "Curved",
-        series: createDs(12),
-        type: "line",
-        smooth: false,
-        useArea: true,
-        useTag: 'end',
+        name: "B",
+        series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
+        type: "bar",
         dataLabels: false,
     },
+    // {
+    //     name: "A",
+    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
+    //     type: "bar",
+    //     dataLabels: false,
+    // },
+    // {
+    //     name: "B",
+    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
+    //     type: "bar",
+    //     dataLabels: false,
+    // },
+    // {
+    //     name: "A",
+    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
+    //     type: "bar",
+    //     dataLabels: false,
+    // },
+    // {
+    //     name: "B",
+    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
+    //     type: "bar",
+    //     dataLabels: false,
+    // },
+    // {
+    //     name: "A",
+    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
+    //     type: "bar",
+    //     dataLabels: false,
+    // },
+    // {
+    //     name: "B",
+    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
+    //     type: "bar",
+    //     dataLabels: false,
+    // },
+    // {
+    //     name: "A",
+    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
+    //     type: "bar",
+    //     dataLabels: false,
+    // },
+    // {
+    //     name: "B",
+    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
+    //     type: "bar",
+    //     dataLabels: false,
+    // },
 ])
 
 // const dataset = ref([
@@ -319,7 +382,7 @@ const model = ref([
     { key: 'chart.zoom.enableRangeHandles', def: true, type: 'chexkbox' },
     { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox' },
 
-    { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.show', def: false, type: 'checkbox' },
     { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color' },
     { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
@@ -387,16 +450,17 @@ const model = ref([
 
     { key: 'chart.grid.labels.yAxis.position', def: 'right', type: 'select', options: ['left', 'right'] },
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 10, min: 0, max: 100, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
+    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 48, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.showBaseline', def: true, type: 'checkbox' },
-    { key: 'chart.grid.labels.yAxis.scaleMin', def: -90, type: 'number', min: -1000, max: 1000 },
-    { key: 'chart.grid.labels.yAxis.scaleMax', def: 90, type: 'number', min: -1000, max: 1000 },
+    { key: 'chart.grid.labels.yAxis.scaleMin', def: null, type: 'number', min: -1000, max: 1000 },
+    { key: 'chart.grid.labels.yAxis.scaleMax', def: null, type: 'number', min: -1000, max: 1000 },
     { key: 'chart.grid.labels.yAxis.groupColor', def: '#1A1A1A', type: 'color' },
     { key: 'chart.grid.labels.yAxis.scaleLabelOffsetX', def: 36, type: 'number', min: -100, max: 100 },
     { key: 'chart.grid.labels.yAxis.scaleValueOffsetX', def: -20, type: 'number', min: -100, max: 100 },
+    { key: 'chart.grid.labels.yAxis.useNiceScale', def: true, type: 'checkbox'},
 
     { key: 'chart.grid.labels.xAxis.showBaseline', def: true, type: 'checkbox' },
     { key: 'chart.grid.labels.zeroLine.show', def: true, type: 'checkbox' },
@@ -448,7 +512,7 @@ const model = ref([
     { key: 'bar.serieName.abbreviationSize', def: 3, type: 'number', min: 0, max: 12, label: ['serieName', 'abbreviation', 'is', 'size'], category: 'bar' },
     { key: 'bar.serieName.useSerieColor', def: true, type: 'checkbox', label: ['serieName', 'textColor', 'is', 'series'], category: 'bar' },
     { key: 'bar.serieName.color', def: '#1A1A1A', type: 'color', label: ['serieName', 'is', 'textColor'], category: 'bar' },
-    { key: 'bar.periodGap', def: 0.1, type: 'number', min: 0, max: 24 },
+    { key: 'bar.periodGap', def: 0.01, type: 'number', min: 0, max: 24 },
     { key: 'bar.border.useSerieColor', def: false, type: 'checkbox' },
     { key: 'bar.border.stroke', def: '#FFFFFF', type: 'color' },
     { key: 'bar.border.strokeWidth', def: 1, type: 'number', min: 0, max: 12, step: 0.5 },
@@ -730,7 +794,7 @@ function selectTimeLabel(data) {
             responsive: true,
         }" @selectTimeLabel="selectTimeLabel">
 
-            <template #pattern="{ seriesIndex, patternId }">
+            <!-- <template #pattern="{ seriesIndex, patternId }">
                 <pattern v-if="seriesIndex === 0" :id="patternId" width="70" height="8" patternTransform="scale(2)"
                     patternUnits="userSpaceOnUse" opacity="0.5">
                     <rect width="100%" height="100%" fill="#FFFFFF20" />
@@ -752,7 +816,7 @@ function selectTimeLabel(data) {
                     <path fill="#f44034"
                         d="M21.63 0 20 1.63v1.54L23.15 0zm3.08 0L20 4.71v1.54L26.25 0zm3.08 0L20 7.79v1.53L29.32 0zm3.07 0L20 10.86v1.54L32.4 0zm3.08 0L20 13.94v1.54L35.48 0zm3.08 0L20 17.02v1.54L38.55 0zM40 .1l-20 20L.1 40h1.53L40 1.63zm0 3.07L3.17 40h1.54L40 4.71zm0 3.08L6.25 40h1.54L40 7.79zm0 3.07L9.32 40h1.54L40 10.86zm0 3.08L12.4 40h1.54L40 13.94zm0 3.08L15.48 40h1.54L40 17.02zm0 3.08L18.55 40h1.55L40 20.1V20zM1.63 20 0 21.63v1.54L3.15 20zm3.08 0L0 24.71v1.54L6.25 20zm3.08 0L0 27.79v1.53L9.32 20zm3.07 0L0 30.86v1.54L12.4 20zm3.08 0L0 33.94v1.54L15.48 20zm3.08 0L0 37.02v1.54L18.55 20zM40 21.63 21.63 40h1.54L40 23.17zm0 3.08L24.71 40h1.54L40 26.25zm0 3.08L27.79 40h1.53L40 29.33zm0 3.08L30.86 40h1.54l7.6-7.6zm0 3.07L33.94 40h1.54L40 35.48zm0 3.08L37.02 40h1.54L40 38.56zM9.32 0l-.8.8v1.54L10.86 0zm2.16.92L8.52 3.88v1.54l2.96-2.96zm0 3.08L8.52 6.96V8.5l2.96-2.96zm0 3.08-1.44 1.44-2.96 2.96h1.44v.1l.1-.1 2.86-2.87.1-.09h-.1zM.8 8.52l-.8.8v1.54l2.34-2.34zm3.08 0L.92 11.48h1.54l2.96-2.96zm3.08 0L4 11.48h1.54L8.5 8.52zm6.16 0-1.64 1.63-1.33 1.33-1.63 1.63v1.54l2.96-2.96v-.21h.21l2.96-2.96zm3.07 0-2.96 2.96h1.54l2.96-2.96zm3.08 0-2.96 2.96h1.53L20 9.32v-.8zm.73 2.34-.62.62H20zm-8.52 2.37-2.96 2.96v1.54l2.96-2.96zm0 3.07-2.96 2.97V40h2.96V20H9.32l2.16-2.16z" />
                 </pattern>
-            </template>
+            </template> -->
 
             <!-- <template #chart-background>
             <div style="width: 100%; height:100%; background: radial-gradient(at top left, red, white)">

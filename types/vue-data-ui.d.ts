@@ -2689,6 +2689,7 @@ declare module "vue-data-ui" {
                     yAxis?: {
                         commonScaleSteps?: number;
                         useIndividualScale?: boolean;
+                        useNiceScale?: boolean;
                         stacked?: boolean;
                         gap?: number;
                         labelWidth?: number;
@@ -7325,6 +7326,45 @@ declare module "vue-data-ui" {
         values: Array<number | T>;
         config?: CumulativeConfig;
     }): Array<number | T>;
+
+    /**
+     * Recursively makes all properties in T optional.
+     * - Leaves functions as-is
+     * - Handles arrays by making their item type DeepPartial
+     */
+    export type DeepPartial<T> =
+    T extends Function
+    ? T
+    : T extends Array<infer U>
+        ? Array<DeepPartial<U>>
+        : T extends object
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : T;
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Merge a partial config with a full default config
+     * ---
+     * @example
+     * const defaultConfig = getVueDataUiConfig('vue_ui_xy');
+     * const merged = mergeConfigs({
+     *      defaultConfig,
+     *      userConfig: {
+     *          chart: {
+     *              backgroundColor: '#FF0000'
+     *          }
+     *      }
+     * })
+     */
+    export function mergeConfigs<T extends Record<string, any>>({
+            defaultConfig,
+            userConfig,
+        }: {
+            defaultConfig: T;
+            userConfig: DeepPartial<T>;
+        }
+    ): T;
 
     /**
      * Vue Data UI utility

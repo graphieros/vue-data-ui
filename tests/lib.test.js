@@ -257,6 +257,7 @@ describe("treeShake", () => {
             key3: {
                 subkey: {
                     subsubkey: "subsubkey",
+                    withNull: null
                 },
             },
         };
@@ -275,6 +276,7 @@ describe("treeShake", () => {
             key3: {
                 subkey: {
                     subsubkey: "test",
+                    withNull: null
                 },
             },
         };
@@ -288,6 +290,7 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "subsubkey",
+                        withNull: null
                     },
                 },
             }
@@ -302,6 +305,7 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "subsubkey",
+                        withNull: null
                     },
                 },
             }
@@ -316,6 +320,7 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "subsubkey",
+                        withNull: null
                     },
                 },
             }
@@ -330,6 +335,7 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "test",
+                        withNull: null
                     },
                 },
             }
