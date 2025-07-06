@@ -186,13 +186,16 @@ function prepareChart() {
                 svg.value.height = height;
                 
                 stripWidth.value = (width - padding.value.left - padding.value.right) / props.dataset.length;
-                plotRadius.value = translateSize({
-                    relator: Math.min(height, width),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.plots.radius,
-                    threshold: 6,
-                    fallback: 6
-                });
+
+                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
+                    plotRadius.value = translateSize({
+                        relator: Math.min(height, width),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.plots.radius,
+                        threshold: 6,
+                        fallback: 6
+                    });
+                }
             });
         });
 
@@ -410,7 +413,7 @@ const table = computed(() => {
     return { head, body };
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.head.map((h,i) => {
             return [[
@@ -420,7 +423,12 @@ function generateCsv() {
         const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[FINAL_CONFIG.value.table.columnNames.series],[FINAL_CONFIG.value.table.columnNames.value]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-strip-plot" })
+
+        if (!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-strip-plot" })
+        } else {
+            callback(csvContent);
+        }
     });
 }
 
@@ -569,6 +577,7 @@ defineExpose({
             :position="FINAL_CONFIG.userOptions.position"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

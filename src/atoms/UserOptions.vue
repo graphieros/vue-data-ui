@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from "./BaseIcon.vue";
+import img from "../img";
 
 const props = defineProps({
     hasPdf: {
@@ -121,27 +122,46 @@ const props = defineProps({
     isAnnotation: {
         type: Boolean,
         default: false,
-    }
+    },
+    callbacks: {
+        type: Object,
+        default() {
+            return {}
+        }
+    },
 });
 
 const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack', 'toggleTooltip', 'toggleAnimation', 'toggleAnnotator']);
 
 function generatePdf() {
-    emit('generatePdf');
+    if (props.callbacks.pdf) {
+        props.callbacks.pdf(props.chartElement);
+    } else {
+        emit('generatePdf');
+    }
 }
 
 function generateCsv() {
-    emit('generateCsv');
+    emit('generateCsv', props.callbacks.csv);
 }
 
-function generateImage() {
-    emit('generateImage');
+async function generateImage() {
+    if (props.callbacks.img) {
+        const b64 = await img({ domElement: props.chartElement, base64: true })
+        props.callbacks.img(b64);
+    } else {
+        emit('generateImage');
+    }
 }
 
 const isTableOpen = ref(false);
 function toggleTable() {
-    isTableOpen.value = !isTableOpen.value;
-    emit('toggleTable');
+    if (props.callbacks.table) {
+        props.callbacks.table();
+    } else {
+        isTableOpen.value = !isTableOpen.value;
+        emit('toggleTable');
+    }
 }
 
 const isOpen = ref(false);
@@ -169,15 +189,23 @@ function closeIfOpen() {
 const isLabel = ref(props.isLabelActive);
 
 function toggleLabels() {
-    isLabel.value = !isLabel.value;
-    emit('toggleLabels')
+    if (props.callbacks.labels) {
+        props.callbacks.labels();
+    } else {
+        isLabel.value = !isLabel.value;
+        emit('toggleLabels')
+    }
 }
 
 const isAnimated = ref(props.isAnimation);
 
 function toggleAnimation() {
-    isAnimated.value = !isAnimated.value;
-    emit('toggleAnimation');
+    if (props.callbacks.animation) {
+        props.callbacks.animation();
+    } else {
+        isAnimated.value = !isAnimated.value;
+        emit('toggleAnimation');
+    }
 }
 
 const isAnnotator = computed({
@@ -189,40 +217,60 @@ const isAnnotator = computed({
     }
 })
 function toggleAnnotator() {
-    isAnnotator.value = !isAnnotator.value;
-    emit('toggleAnnotator')
+    if (props.callbacks.annotator) {
+        props.callbacks.annotator();
+    } else {
+        isAnnotator.value = !isAnnotator.value;
+        emit('toggleAnnotator');
+    }
 }
 
 function toggleSort() {
-    emit('toggleSort')
+    if (props.callbacks.sort) {
+        props.callbacks.sort();
+    } else {
+        emit('toggleSort');
+    }
 }
 
 const isItStacked = ref(props.isStacked);
 
 function toggleStack() {
-    isItStacked.value = !isItStacked.value;
-    emit('toggleStack')
+    if (props.callbacks.stack) {
+        props.callbacks.stack();
+    } else {
+        isItStacked.value = !isItStacked.value;
+        emit('toggleStack');
+    }
 }
 
 const isItTooltip = ref(props.isTooltip);
 
 function toggleTooltip() {
-    isItTooltip.value = !isItTooltip.value;
-    emit('toggleTooltip');
+    if (props.callbacks.tooltip) {
+        props.callbacks.tooltip();
+    } else {
+        isItTooltip.value = !isItTooltip.value;
+        emit('toggleTooltip');
+    }
 }
 
 const isFullscreen = ref(false);
 
 function toggleFullscreen(state) {
-    if(!props.chartElement) return;
-    if(state === "in") {
-        isFullscreen.value = true;
-        props.chartElement.requestFullscreen();
-        emit('toggleFullscreen', true)
-    }else {
-        isFullscreen.value = false;
-        document && document.exitFullscreen();
-        emit('toggleFullscreen', false)
+    if (props.callbacks.fullscreen) {
+        props.callbacks.fullscreen();
+    } else {
+        if(!props.chartElement) return;
+        if(state === "in") {
+            isFullscreen.value = true;
+            props.chartElement.requestFullscreen();
+            emit('toggleFullscreen', true);
+        }else {
+            isFullscreen.value = false;
+            document && document.exitFullscreen();
+            emit('toggleFullscreen', false);
+        }
     }
 }
 
@@ -535,4 +583,4 @@ const isInfo = ref({
         transform: translateY(-50%) scale(1, 1);
     }
 }
-</style>
+</style>props.callbacks.annotator

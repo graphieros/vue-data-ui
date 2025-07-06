@@ -576,6 +576,27 @@ What happens when the button is clicked is taken care of by the component, excep
 </VueUiDonut>
 ```
 
+You can pass a callback trhough the config, for each button, to override the default behavior:
+
+```ts
+const config = {
+  userOptions: {
+    callbacks: {
+      pdf: (chartElement: HTMLElement) => {
+        console.log(chartElement);
+      },
+      img: (base64: string) => {
+        console.log(base64);
+      },
+      csv: (csvStr: string) => {
+        console.log(csvStr);
+      },
+      // the other atributes also have the same names as the buttons
+    },
+  },
+};
+```
+
 User options actions available per chart:
 
 | Chart name                  | User options actions slot names                                                                                           |
@@ -1017,6 +1038,23 @@ const cumulativeMedZeroed = getCumulativeMedian({
   values: arrWithInvalid,
   config: {
     convertInvalidToZero: true,
+  },
+});
+```
+
+### mergeConfigs
+
+```js
+import { mergeConfigs, getVueDataUiConfig } from "vue-data-ui";
+const defaultConfig = getVueDataUiConfig("vue_ui_xy");
+
+// Create a full config with user overrides
+const merged = mergeConfigs({
+  defaultConfig,
+  userConfig: {
+    chart: {
+      backgroundColor: "#FF0000",
+    },
   },
 });
 ```

@@ -600,7 +600,7 @@ const table = computed(() => {
     );
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.map((el, i) => {
             return [[el.source], [el.target], [el.value]];
@@ -617,10 +617,15 @@ function generateCsv() {
         ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({
-            csvContent,
-            title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-flow",
-        });
+
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-flow",
+            });
+        } else {
+            callback(csvContent);
+        }
     });
 }
 
@@ -809,6 +814,7 @@ defineExpose({
             :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="flowChart"
             :position="FINAL_CONFIG.userOptions.position" :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"

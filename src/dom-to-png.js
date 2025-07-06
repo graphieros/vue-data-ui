@@ -428,6 +428,7 @@ function forceInlineImageStyles(clone, original) {
  * @param {Object} params - Parameters for PNG export.
  * @param {HTMLElement} params.container - The DOM element to export. Should contain HTML, SVG, or canvas content.
  * @param {number} [params.scale=2] - Scaling factor for higher resolution output (e.g., 2 for retina). Default is 2.
+ * @param {boolean} [params.base64=false] -  If true, resolves the image as base64, else resolves the image 
  *
  * @returns {Promise<string>} Resolves to a PNG data URL of the rendered container.
  *
@@ -439,7 +440,7 @@ function forceInlineImageStyles(clone, original) {
  *
  * @throws {Error} If container is not provided or rendering fails.
  */
-async function domToPng({ container, scale = 2 }) {
+async function domToPng({ container, scale = 2, base64 = false }) {
     if (!container) throw new Error("No container provided");
 
     await document.fonts.ready;
@@ -533,25 +534,33 @@ async function domToPng({ container, scale = 2 }) {
 
     const img = new window.Image();
     img.crossOrigin = "anonymous";
-    img.src = `data:image/svg+xml;base64,${encodedData}`;
+    const b64 = `data:image/svg+xml;base64,${encodedData}`;
+    img.src = b64;
 
-    return new Promise((resolve, reject) => {
-        img.onload = function () {
-            try {
-                const canvas = document.createElement("canvas");
-                canvas.width = exportWidth;
-                canvas.height = exportHeight;
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, exportWidth, exportHeight);
-                resolve(canvas.toDataURL("image/png", 1.0));
-            } catch (err) {
-                reject("Failed to draw SVG on canvas: " + err);
-            }
-        };
-        img.onerror = function () {
-            reject("Failed to load SVG image for conversion");
-        };
-    });
+    if (base64) {
+        return new Promise((resolve) => {
+            resolve(b64);
+        })
+    }else {
+        return new Promise((resolve, reject) => {
+            
+            img.onload = function () {
+                try {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = exportWidth;
+                    canvas.height = exportHeight;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, exportWidth, exportHeight);
+                    resolve(canvas.toDataURL("image/png", 1.0));
+                } catch (err) {
+                    reject("Failed to draw SVG on canvas: " + err);
+                }
+            };
+            img.onerror = function () {
+                reject("Failed to load SVG image for conversion");
+            };
+        });
+    }
 }
 
 export { domToPng, applyAllComputedStylesDeep };

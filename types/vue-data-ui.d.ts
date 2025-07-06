@@ -216,6 +216,19 @@ declare module "vue-data-ui" {
             table?: string;
             tooltip?: string;
         };
+        callbacks?: {
+            animation?: null | (() => void);
+            annotator?: null | (() => void);
+            csv?: null | ((csvStr?: string) => void);
+            fullscreen?: null | (() => void);
+            img?: null | ((base64?: string) => void);
+            labels?: null | (() => void);
+            pdf?: null | ((chart?: HTMLElement) => void);
+            sort?: null | (() => void);
+            stack?: null | (() => void);
+            table?: null | (() => void);
+            tooltip?: null | (() => void);
+        };
         // old html2canvas options
         print?: {
             allowTaint?: boolean;
@@ -1750,6 +1763,7 @@ declare module "vue-data-ui" {
 
     export type VueUiRelationCircleConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -2140,6 +2154,7 @@ declare module "vue-data-ui" {
 
     export type VueUiCandlestickConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
         style?: {
@@ -2622,8 +2637,43 @@ declare module "vue-data-ui" {
         };
     };
 
+    export type VueUiXyAnnotation = {
+        show?: boolean;
+        yAxis?: {
+            yTop?: number;
+            yBottom?: number;
+            label?: {
+                text?: string;
+                textAnchor?: 'start' | 'end';
+                position?: 'start' | 'end';
+                offsetX?: number;
+                offsetY?: number;
+                padding?: ChartPadding;
+                border?: {
+                    stroke?: string;
+                    strokeWidth?: number;
+                    rx?: number;
+                    ry?: number;
+                };
+                fontSize?: number;
+                color?: string;
+                backgroundColor?: string;
+            };
+            line?: {
+                stroke?: string;
+                strokeWidth?: number;
+                strokeDasharray?: number;
+            };
+            area?: {
+                fill?: string;
+                opacity?: number; // 0 - 100
+            }
+        }
+    }
+
     export type VueUiXyConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -2638,6 +2688,7 @@ declare module "vue-data-ui" {
             width?: number;
             zoom?: ChartZoom;
             padding?: ChartPadding;
+            annotations?: VueUiXyAnnotation[];
             highlighter?: {
                 color?: string;
                 opacity?: number;
@@ -2686,10 +2737,13 @@ declare module "vue-data-ui" {
                     yAxis?: {
                         commonScaleSteps?: number;
                         useIndividualScale?: boolean;
+                        useNiceScale?: boolean;
                         stacked?: boolean;
                         gap?: number;
                         labelWidth?: number;
                         showBaseline?: boolean;
+                        showCrosshairs?: boolean;
+                        crosshairSize?: number;
                         formatter?: Formatter;
                         scaleMin?: number | null;
                         scaleMax?: number | null;
@@ -2699,6 +2753,8 @@ declare module "vue-data-ui" {
                     };
                     xAxis?: {
                         showBaseline?: boolean;
+                        showCrosshairs?: boolean;
+                        crosshairSize?: number;
                     };
                     xAxisLabels?: {
                         color?: string;
@@ -5130,6 +5186,13 @@ declare module "vue-data-ui" {
             scale?: number;
             logging?: boolean;
         };
+        userOptionsCallbacks?: {
+            tooltip?: null | (() => void);
+            pdf?: null | ((chart?: HTMLElement) => void);
+            img?: null | ((base64?: string) => void);
+            fullscreen?: null | (() => void);
+            annotator?: null | (() => void);
+        };
         showUserOptionsOnChartHover?: boolean;
         keepUserOptionsStateOnChartLeave?: boolean;
     };
@@ -5138,7 +5201,7 @@ declare module "vue-data-ui" {
         [key: string]: string | number | number[];
     };
 
-    export type VueUiQuickChartDataset =
+    export type VueUiQuickChartDataset = 
         | number[]
         | VueUiQuickChartDatasetObjectItem
         | VueUiQuickChartDatasetObjectItem[];
@@ -5241,6 +5304,7 @@ declare module "vue-data-ui" {
 
     export type VueUiStripPlotConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -5879,6 +5943,7 @@ declare module "vue-data-ui" {
 
     export type VueUiParallelCoordinatePlotConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
         customPalette?: string[];
@@ -6005,6 +6070,7 @@ declare module "vue-data-ui" {
     export type VueUiTimerConfig = {
         type?: "stopwatch";
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
@@ -6447,6 +6513,7 @@ declare module "vue-data-ui" {
     export type VueUiFunnelConfig = {
         theme?: Theme;
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         useCssAnimation?: boolean;
         table?: {
             show?: boolean;
@@ -6539,6 +6606,7 @@ declare module "vue-data-ui" {
 
     export type VueUiHistoryPlotConfig = {
         responsive?: boolean;
+        responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -7317,6 +7385,45 @@ declare module "vue-data-ui" {
         values: Array<number | T>;
         config?: CumulativeConfig;
     }): Array<number | T>;
+
+    /**
+     * Recursively makes all properties in T optional.
+     * - Leaves functions as-is
+     * - Handles arrays by making their item type DeepPartial
+     */
+    export type DeepPartial<T> =
+    T extends Function
+    ? T
+    : T extends Array<infer U>
+        ? Array<DeepPartial<U>>
+        : T extends object
+        ? { [K in keyof T]?: DeepPartial<T[K]> }
+        : T;
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Merge a partial config with a full default config
+     * ---
+     * @example
+     * const defaultConfig = getVueDataUiConfig('vue_ui_xy');
+     * const merged = mergeConfigs({
+     *      defaultConfig,
+     *      userConfig: {
+     *          chart: {
+     *              backgroundColor: '#FF0000'
+     *          }
+     *      }
+     * })
+     */
+    export function mergeConfigs<T extends Record<string, any>>({
+            defaultConfig,
+            userConfig,
+        }: {
+            defaultConfig: T;
+            userConfig: DeepPartial<T>;
+        }
+    ): T;
 
     /**
      * Vue Data UI utility

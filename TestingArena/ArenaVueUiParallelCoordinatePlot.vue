@@ -48,6 +48,7 @@ const dataset = ref([
 ])
 
 const model = ref([
+    { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
     { key: 'style.chart.comments.show', def: true, type: 'checkbox'},
     { key: 'style.chart.comments.showInTooltip', def: true, type: 'checkbox'},
     { key: 'style.chart.comments.width', def: 200, type: 'number', min: 50, max: 400},

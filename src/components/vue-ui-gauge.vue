@@ -558,7 +558,7 @@ defineExpose({
             :isImaging="isImaging" :isPrinting="isPrinting" :uid="uid" :hasXls="false"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="gaugeChart"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="gaugeChart" :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :position="FINAL_CONFIG.userOptions.position" :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator" @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf"
             @generateImage="generateImage" @toggleAnnotator="toggleAnnotator" :style="{

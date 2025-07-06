@@ -726,6 +726,8 @@ input[type="range"] {
     background: transparent;
     pointer-events: none;
     z-index: 3;
+    top:6px;
+    height: 8px;
 }
 
 input[type="range"].range-minimap {
@@ -848,7 +850,7 @@ input[type="range"]::-ms-thumb {
     justify-content: center;
     border-radius: 50%;
     cursor: pointer;
-    transition: transform 0.2s ease-in-out;
+    transition: transform 0.2s ease-in-out !important;
     transform-origin: center;
     &:focus {
         outline: 1px solid v-bind(slicerColor);

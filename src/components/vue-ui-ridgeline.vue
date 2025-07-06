@@ -600,7 +600,7 @@ const dataTable = computed(() => {
     }
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = [
             [FINAL_CONFIG.value.table.columnNames.series, ...FINAL_CONFIG.value.style.chart.xAxis.labels.values.map(v => [v])],
@@ -613,10 +613,16 @@ function generateCsv() {
             [FINAL_CONFIG.value.style.chart.title.subtitle.text],
         ].concat(labels);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({
-            csvContent,
-            title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-ridgeline'
-        });
+
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-ridgeline'
+            });
+        } else {
+            callback(csvContent);
+        }
+            
     });
 }
 
@@ -675,7 +681,7 @@ defineExpose({
         <UserOptions ref="details" :key="`user_option_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
-            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasTooltip="false"
+            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasTooltip="false" :callbacks="FINAL_CONFIG.userOptions.callbacks" 
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="false" :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"

@@ -172,34 +172,37 @@ function prepareChart() {
             requestAnimationFrame(() => {
                 chartDimensions.value.width = width;
                 chartDimensions.value.height = height;
-                chartDimensions.value.plotSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.plots.radius,
-                    threshold: 2,
-                    fallback: 2
-                });
-                chartDimensions.value.ticksFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.yAxis.labels.ticks.fontSize,
-                    threshold: 10,
-                    fallback: 10
-                });
-                chartDimensions.value.datapointFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.yAxis.labels.datapoints.fontSize,
-                    threshold: 10,
-                    fallback: 10
-                });
-                chartDimensions.value.axisNameFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.yAxis.labels.axisNamesFontSize,
-                    threshold: 12,
-                    fallback: 12
-                });
+
+                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
+                    chartDimensions.value.plotSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.plots.radius,
+                        threshold: 2,
+                        fallback: 2
+                    });
+                    chartDimensions.value.ticksFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.yAxis.labels.ticks.fontSize,
+                        threshold: 10,
+                        fallback: 10
+                    });
+                    chartDimensions.value.datapointFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.yAxis.labels.datapoints.fontSize,
+                        threshold: 10,
+                        fallback: 10
+                    });
+                    chartDimensions.value.axisNameFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.yAxis.labels.axisNamesFontSize,
+                        threshold: 12,
+                        fallback: 12
+                    });
+                }
             });
         });
 
@@ -527,13 +530,18 @@ const tableCsv = computed(() => {
     }
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
     const head = tableCsv.value.head
     const body = tableCsv.value.body;
     const table = title.concat([head]).concat(body);
     const csvContent = createCsvContent(table);
-    downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot'});
+
+    if (!callback) {
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-parallel-coordinate-plot'});
+    } else {
+        callback(csvContent);
+    }
 }
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
@@ -644,6 +652,7 @@ defineExpose({
             :position="FINAL_CONFIG.userOptions.position"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

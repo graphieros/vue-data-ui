@@ -371,7 +371,7 @@ function toggleAnimation() {
     }
 }
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = props.dataset.head.map((_, i) => {
             return [
@@ -386,10 +386,15 @@ function generateCsv() {
 
         const csvContent = createCsvContent(tableXls);
 
-        downloadCsv({
-            csvContent,
-            title: FINAL_CONFIG.value.caption.text || 'vue-ui-carousel-table'
-        });
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title: FINAL_CONFIG.value.caption.text || 'vue-ui-carousel-table'
+            });
+        } else {
+            callback(csvContent);
+        }
+
     });
 }
 
@@ -554,6 +559,7 @@ defineExpose({
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :zIndex="3"
             :offsetX="12"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"

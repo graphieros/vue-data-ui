@@ -33,6 +33,8 @@ const dataset = ref([
 
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
+    { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
+    
     { key: 'useCssAnimation', def: true, type: 'checkbox' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },

@@ -548,7 +548,7 @@ function getData() {
     return convertedDataset.value;
 }
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const title = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[""]];
         const head = [...table.value.head.map(h => h.name ?? h)];
@@ -557,7 +557,12 @@ function generateCsv() {
         })];
         const tableXls = title.concat([head]).concat(body);
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-donut-evolution"});
+
+        if(!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-donut-evolution"});
+        } else {
+            callback(csvContent);
+        }
     });
 }
 
@@ -668,6 +673,7 @@ defineExpose({
             :position="FINAL_CONFIG.userOptions.position"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

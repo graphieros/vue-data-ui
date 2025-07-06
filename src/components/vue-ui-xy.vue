@@ -59,6 +59,7 @@
             :titles="{ ...FINAL_CONFIG.chart.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.chart.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.chart.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -104,7 +105,7 @@
             </template>
         </UserOptions>
         
-        <svg 
+        <svg  
             ref="svgRef"
             xmlns="http://www.w3.org/2000/svg" 
             v-if="isDataset" 
@@ -147,6 +148,7 @@
                         :y1="forceValidValue(drawingArea.bottom)"
                         :y2="forceValidValue(drawingArea.bottom)"
                         stroke-linecap="round"
+                        :style="{ animation: 'none !important' }"
                     />
                     <template v-if="!mutableConfig.useIndividualScale">
                         <line
@@ -159,6 +161,7 @@
                             :y1="forceValidValue(drawingArea.top)" 
                             :y2="forceValidValue(drawingArea.bottom)" 
                             stroke-linecap="round"
+                            :style="{ animation: 'none !important' }"
                         />
                         <g v-if="FINAL_CONFIG.chart.grid.showHorizontalLines">
                             <line
@@ -171,6 +174,7 @@
                                 :stroke="FINAL_CONFIG.chart.grid.stroke"
                                 :stroke-width="0.5"
                                 stroke-linecap="round"
+                                :style="{ animation: 'none !important' }"
                             />
                         </g>
                     </template>
@@ -186,6 +190,7 @@
                                     :stroke="grid.color"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
+                                    :style="{ animation: 'none !important' }"
                                 />
                             </template>
                             <template v-else-if="grid.yLabels.length">
@@ -198,6 +203,7 @@
                                     :stroke="FINAL_CONFIG.chart.grid.stroke"
                                     :stroke-width="0.5"
                                     stroke-linecap="round"
+                                    :style="{ animation: 'none !important' }"
                                 />
                             </template>
                         </g>
@@ -213,6 +219,7 @@
                             :y2="forceValidValue(drawingArea.bottom)"
                             stroke-width="0.5"
                             :stroke="FINAL_CONFIG.chart.grid.stroke"
+                            :style="{ animation: 'none !important' }"
                         />
                     </g>
                 </g>
@@ -398,6 +405,7 @@
                         :y1="forceValidValue(zero)" 
                         :y2="forceValidValue(zero)" 
                         stroke-linecap="round"
+                        :style="{ animation: 'none !important' }"
                     />
                 </template>
 
@@ -419,7 +427,7 @@
                 <rect
                     data-cy="frame"
                     v-if="FINAL_CONFIG.chart.grid.frame.show"
-                    :style="{ pointerEvents: 'none', transition: 'none' }"
+                    :style="{ pointerEvents: 'none', transition: 'none', animation: 'none !important' }"
                     :x="(drawingArea.left + xPadding) < 0 ? 0 : drawingArea.left + xPadding"
                     :y="drawingArea.top"
                     :width="(drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)) < 0 ? 0 : drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)"
@@ -444,7 +452,7 @@
                                 :stroke="el.color"
                                 :stroke-width="FINAL_CONFIG.chart.grid.stroke"
                                 stroke-linecap="round"
-                                :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
+                                :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out; animation: none !important`"
                             />
                         </g>
                         <g v-for="el in allScales" :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
@@ -456,16 +464,19 @@
                             >
                                 {{ el.name }} {{ el.scaleLabel && el.unique && el.scaleLabel !== el.id ? `- ${el.scaleLabel}` : '' }}
                             </text>
-                            <line
-                                v-for="(yLabel, j) in el.yLabels"
-                                :x1="el.x - 3 + xPadding"
-                                :x2="el.x + xPadding"
-                                :y1="forceValidValue(yLabel.y)"
-                                :y2="forceValidValue(yLabel.y)"
-                                :stroke="el.color"
-                                :stroke-width="1"
-                                stroke-linecap="round"
-                            />
+                            <template v-for="(yLabel, j) in el.yLabels">
+                                <line
+                                    v-if="FINAL_CONFIG.chart.grid.labels.yAxis.showCrosshairs"
+                                    :x1="el.x + 3 + xPadding - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
+                                    :x2="el.x + xPadding"
+                                    :y1="forceValidValue(yLabel.y)"
+                                    :y2="forceValidValue(yLabel.y)"
+                                    :stroke="el.color"
+                                    :stroke-width="1"
+                                    stroke-linecap="round"
+                                    :style="{ animation: 'none !important' }"
+                                />
+                            </template>
                             <text 
                                 v-for="(yLabel, j) in el.yLabels"
                                 :x="el.x - 5 + xPadding + FINAL_CONFIG.chart.grid.labels.yAxis.scaleValueOffsetX" 
@@ -494,14 +505,15 @@
                         <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
                             <line
                                 data-cy="axis-y-tick"
-                                v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
+                                v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max && FINAL_CONFIG.chart.grid.labels.yAxis.showCrosshairs"
                                 :x1="drawingArea.left + xPadding" 
-                                :x2="drawingArea.left - 5 + xPadding" 
+                                :x2="drawingArea.left - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize + xPadding" 
                                 :y1="forceValidValue(yLabel.y)" 
                                 :y2="forceValidValue(yLabel.y)" 
                                 :stroke="FINAL_CONFIG.chart.grid.stroke" 
                                 stroke-width="1" 
                                 stroke-linecap="round"
+                                :style="{ animation: 'none !important' }"
                             />
                             <text
                                 data-cy="axis-y-label"
@@ -1111,7 +1123,8 @@
                     >
                         {{ FINAL_CONFIG.chart.grid.labels.axis.xLabel }}
                     </text>
-                </g>v-for="(label, i) in timeLabels" :key="`time_label_${i}`"
+
+                </g>
                 
                 <!-- TIME LABELS -->
                 <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show">
@@ -1135,27 +1148,94 @@
                     </template>
                     <template v-else>
                         <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
-                            <text
-                                data-cy="time-label"
-                                v-if="
-                                    (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
-                                    (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
-                                    (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                    (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
-                                "
-                                :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
-                                :font-size="fontSizes.xAxis"
-                                :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                                :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
-                                :style="{
-                                    cursor: 'pointer'
-                                }"
-                                @click="() => selectTimeLabel(label, i)"
-                            >
-                                {{ label.text || "" }}
-                            </text>
+                            <template 
+                            v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
+                                <line 
+                                    v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showCrosshairs"
+                                    :y1="drawingArea.bottom"
+                                    :y2="drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize"
+                                    :x1="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
+                                    :x2="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
+                                    :stroke="FINAL_CONFIG.chart.grid.stroke"
+                                    :stroke-width="1"
+                                    stroke-linecap="round"
+                                    :style="{ animation: 'none !important '}"
+                                />
+
+                                <text
+                                    data-cy="time-label"
+                                    :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
+                                    :font-size="fontSizes.xAxis"
+                                    :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
+                                    :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                    :style="{
+                                        cursor: 'pointer'
+                                    }"
+                                    @click="() => selectTimeLabel(label, i)"
+                                >
+                                    {{ label.text || "" }}
+                                </text>
+                            </template>
                         </g>
                     </template>
+                </g>
+
+                <!-- ANNOTATIONS -->
+                <!-- YAXIS ANNOTATIONS -->
+                <g v-if="annotationsY.length && !mutableConfig.isStacked">
+                    <g v-for="annotation in annotationsY" :key="annotation.uid">
+                        <line 
+                            v-if="annotation.yTop"
+                            :x1="annotation.x1"
+                            :y1="annotation.yTop"
+                            :x2="annotation.x2"
+                            :y2="annotation.yTop"
+                            :stroke="annotation.config.line.stroke"
+                            :stroke-width="annotation.config.line.strokeWidth"
+                            :stroke-dasharray="annotation.config.line.strokeDasharray"
+                            stroke-linecap="round"
+                            :style="{ animation: 'none !important'}"
+                        />
+                        <line 
+                            v-if="annotation.yBottom"
+                            :x1="annotation.x1"
+                            :y1="annotation.yBottom"
+                            :x2="annotation.x2"
+                            :y2="annotation.yBottom"
+                            :stroke="annotation.config.line.stroke"
+                            :stroke-width="annotation.config.line.strokeWidth"
+                            :stroke-dasharray="annotation.config.line.strokeDasharray"
+                            stroke-linecap="round"
+                            :style="{ animation: 'none !important'}"
+                        />
+                        <rect 
+                            v-if="annotation.hasArea"
+                            :y="Math.min(annotation.yTop, annotation.yBottom)"
+                            :x="annotation.x1"
+                            :width="drawingArea.width"
+                            :height="annotation.areaHeight"
+                            :fill="setOpacity(annotation.config.area.fill, annotation.config.area.opacity)"
+                            :style="{ animation: 'none !important' }"
+                        />
+                        <rect
+                            v-if="annotation.config.label.text"
+                            class="vue-ui-xy-annotation-label-box"
+                            v-bind="annotation._box"
+                            :style="{ animation: 'none !important', transition: 'none !important'}"
+                        />
+                        <text
+                            :id="annotation.id"
+                            class="vue-ui-xy-annotation-label"
+                            v-if="annotation.config.label.text"
+                            :x="annotation._text.x"
+                            :y="annotation._text.y"
+                            :font-size="annotation.config.label.fontSize"
+                            :fill="annotation.config.label.color"
+                            :text-anchor="annotation.config.label.textAnchor"
+                        >
+                            {{ annotation.config.label.text }}
+                        </text>
+                    </g>
                 </g>
 
                 <!-- TOOLTIP TRAPS -->
@@ -1571,6 +1651,7 @@ import {
     assignStackRatios,
     applyDataLabel,
     calcLinearProgression,
+    calculateNiceScale,
     calculateNiceScaleWithExactExtremes,
     checkNaN, 
     closestDecimal,
@@ -1740,7 +1821,8 @@ export default {
             keepUserOptionState: true,
             userOptionsVisible: true,
             svgRef: null,
-            tagRefs: {}
+            tagRefs: {},
+            _textMeasurer: null,
         }
     },
     watch: {
@@ -2066,9 +2148,9 @@ export default {
 
                 const corrector = 1.0000001;
 
-                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
+                const individualScale = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
                 
-                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
+                const autoScaleSteps = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
 
                 const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
                 const autoScaleZero = 0;
@@ -2205,9 +2287,9 @@ export default {
 
                 const corrector = 1.0000001;
 
-                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
+                const individualScale = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
                 
-                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
+                const autoScaleSteps = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
 
                 const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min));
                 const autoScaleZero = 0;
@@ -2512,7 +2594,7 @@ export default {
             return min;
         },
         niceScale() {
-            return this.calculateNiceScaleWithExactExtremes(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps)
+            return this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps) : this.calculateNiceScaleWithExactExtremes(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps)
         },
         maxSeries(){
             return this.slicer.end - this.slicer.start;
@@ -2783,8 +2865,87 @@ export default {
             })
         },
         zero(){
-            return this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(this.relativeZero));
+            if (isNaN(this.ratioToMax(this.relativeZero))) {
+                return this.drawingArea.bottom;
+            } else {
+                return this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(this.relativeZero));
+            }
         },
+        annotationsY() {
+            const ann = this.FINAL_CONFIG.chart.annotations;
+            if (!ann.length || ann.every(a => !a.show) || ann.every(a => a.yAxis.yTop === null && a.yAxis.yBottom === null)) {
+                return []
+            }
+
+            const visible = ann.filter(a => a.show && (a.yAxis.yTop != null || a.yAxis.yBottom != null));
+            if (!visible.length) return [];
+
+            const { bottom, height, left, right } = this.drawingArea;
+
+            return visible.map(annotation => {
+                const { yTop: rawTop, yBottom: rawBottom, label } = annotation.yAxis;
+
+                const hasArea = rawTop != null && rawBottom != null && Math.abs(rawTop - rawBottom) > 0;
+
+                const yTop = rawTop == null
+                    ? null
+                    : bottom - height * this.ratioToMax(rawTop);
+                const yBottom = rawBottom == null
+                    ? null
+                    : bottom - height * this.ratioToMax(rawBottom);
+
+                const ctx = this.getTextMeasurer(label.fontSize);
+                ctx.font = `${label.fontSize}px sans-serif`;
+                const textWidth = ctx.measureText(label.text).width;
+                const textHeight = label.fontSize;
+
+                const xText = (label.position === 'start' ? left + label.padding.left : right - label.padding.right) + label.offsetX;
+
+                const baselineY =
+                    (yTop != null && yBottom != null)
+                    ? Math.min(yTop, yBottom)
+                    : (yTop != null ? yTop : yBottom);
+
+                const yText = baselineY
+                    - label.fontSize / 3
+                    + label.offsetY
+                    - label.padding.top;
+
+                let rectX;
+                if (label.textAnchor === 'middle') {
+                    rectX = xText - textWidth / 2 - label.padding.left;
+                } else if (label.textAnchor === 'end') {
+                    rectX = xText - textWidth - label.padding.right;
+                } else {
+                    rectX = xText - label.padding.left;
+                }
+                const rectY = yText - textHeight * 0.75 - label.padding.top;
+
+                return {
+                    id: `annotation_y_${this.createUid()}`,
+                    hasArea,
+                    areaHeight: hasArea ? Math.abs(yTop - yBottom) : 0,
+                    yTop,
+                    yBottom,
+                    config: annotation.yAxis,
+                    x1: left,
+                    x2: right,
+
+                    _text: { x: xText, y: yText },
+                    _box: {
+                        x: rectX,
+                        y: rectY,
+                        width:  textWidth + (label.padding.left + label.padding.right),
+                        height: textHeight + label.padding.top + label.padding.bottom,
+                        fill:   label.backgroundColor,
+                        stroke: label.border.stroke,
+                        rx: label.border.rx,
+                        ry: label.border.ry,
+                        strokeWidth: label.border.strokeWidth
+                    }
+                };
+            });
+        }
     },
     mounted() {
         this.svgRef = this.$refs.svgRef;
@@ -2813,6 +2974,7 @@ export default {
         applyDataLabel,
         assignStackRatios,
         calcLinearProgression,
+        calculateNiceScale,
         calculateNiceScaleWithExactExtremes,
         checkNaN,
         closestDecimal,
@@ -2847,6 +3009,15 @@ export default {
         createIndividualAreaWithCuts,
         createSmoothAreaSegments,
         createIndividualArea,
+        getTextMeasurer(fontSize, fontFamily, fontWeight) {
+            if (!this._textMeasurer) {
+                const canvas = document.createElement('canvas')
+                this._textMeasurer = canvas.getContext('2d')
+            }
+            this._textMeasurer.font = 
+                `${fontWeight || 'normal'} ${fontSize}px ${fontFamily || 'sans-serif'}`
+            return this._textMeasurer
+        },
         hideTags() {
             const tags = document.querySelectorAll('.vue-ui-xy-tag')
             if (tags.length) {
@@ -2943,6 +3114,15 @@ export default {
                     mergedConfig.chart.grid.labels.yAxis.groupColor = this.config.chart.grid.labels.yAxis.groupColor;
                 } else {
                     mergedConfig.chart.grid.labels.yAxis.groupColor = null;
+                }
+
+                if (this.config && Array.isArray(this.config.chart.annotations) && this.config.chart.annotations.length) {
+                    mergedConfig.chart.annotations = this.config.chart.annotations.map(annotation => {
+                        return useNestedProp({
+                            defaultConfig: DEFAULT_CONFIG.chart.annotations[0],
+                            userConfig: annotation
+                        })
+                    })
                 }
 
                 // ----------------------------------------------------------------------------
@@ -3099,6 +3279,7 @@ export default {
             this.selectedMinimapIndex = minimapIndex;
         },
         convertSizes() {
+            if (!this.FINAL_CONFIG.responsiveProportionalSizing) return;
             // Adaptative sizes in responsive mode
             this.fontSizes.dataLabels = this.translateSize({
                 relator: this.height,
@@ -3358,13 +3539,18 @@ export default {
                 }
             }, 100);
         },
-        generateCsv() {
+        generateCsv(callback=null) {
             const title = [[this.FINAL_CONFIG.chart.title.text], [this.FINAL_CONFIG.chart.title.subtitle.text], [""]];
             const head = ["",...this.table.head.map(h => h.label)]
             const body = this.table.body
             const table = title.concat([head]).concat(body);
             const csvContent = this.createCsvContent(table);
-            this.downloadCsv({ csvContent, title: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy'})
+            if(!callback) {
+                this.downloadCsv({ csvContent, title: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy'});
+            } else {
+                callback(csvContent);
+            }
+            
         },
         showSpinnerImage() {
             this.isImaging = true;

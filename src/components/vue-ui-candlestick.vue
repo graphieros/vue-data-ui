@@ -178,20 +178,22 @@ function prepareChart() {
             requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height;
-                svg.value.xAxisFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: FINAL_CONFIG.value.style.width,
-                    source: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
-                svg.value.yAxisFontSize = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: FINAL_CONFIG.value.style.width,
-                    source: FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.fontSize,
-                    threshold: 6,
-                    fallback: 6
-                });
+                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
+                    svg.value.xAxisFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: FINAL_CONFIG.value.style.width,
+                        source: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+                    svg.value.yAxisFontSize = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: FINAL_CONFIG.value.style.width,
+                        source: FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.fontSize,
+                        threshold: 6,
+                        fallback: 6
+                    });
+                }
             });
         });
 
@@ -477,7 +479,7 @@ function validSlicerEnd(v) {
     return v;
 }
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = [FINAL_CONFIG.value.translations.period, FINAL_CONFIG.value.translations.open, FINAL_CONFIG.value.translations.high, FINAL_CONFIG.value.translations.low, FINAL_CONFIG.value.translations.last, FINAL_CONFIG.value.translations.volume];
 
@@ -494,7 +496,11 @@ function generateCsv() {
 
         const tableXls = [[FINAL_CONFIG.value.style.title.text],[FINAL_CONFIG.value.style.title.subtitle.text],[[""],[""],[""]]].concat([labels]).concat(values)
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-candlestick"});
+        if(!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.title.text || "vue-ui-candlestick"});
+        } else {
+            callback(csvContent);
+        }
     });
 }
 
@@ -622,6 +628,7 @@ defineExpose({
             :position="FINAL_CONFIG.userOptions.position"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

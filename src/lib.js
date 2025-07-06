@@ -138,7 +138,9 @@ export function treeShake({ defaultConfig, userConfig }) {
     Object.keys(finalConfig).forEach(key => {
         if (Object.hasOwn(userConfig, key)) {
             const currentVal = userConfig[key]
-            if (['boolean', 'function'].includes(typeof currentVal)) {
+            if (currentVal === null) {
+                finalConfig[key] = null;
+            } else if (['boolean', 'function'].includes(typeof currentVal)) {
                 finalConfig[key] = currentVal;
             } else if (["string", "number"].includes(typeof currentVal)) {
                 if (isValidUserValue(currentVal)) {
@@ -2348,19 +2350,30 @@ export function getValidSegments(points) {
 
 export function createStraightPathWithCuts(points) {
     let d = '';
-    let started = false;
+    let sawFirst = false;
+
+    const isValid = p =>
+        p.value != null &&
+        Number.isFinite(p.x) &&
+        Number.isFinite(p.y);
+
     for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        if (p.value == null || Number.isNaN(p.x) || Number.isNaN(p.y)) {
-            started = false;
+        if (!isValid(p)) {
             continue;
         }
-        if (!started) {
-            d += `${i === 0 ? '' : 'M'}${checkNaN(p.x)},${checkNaN(p.y)} `;
-            started = true;
+
+        const coord = `${checkNaN(p.x)},${checkNaN(p.y)}`;
+
+        if (!sawFirst) {
+            d += coord;
+            sawFirst = true;
         } else {
-            d += `L${checkNaN(p.x)},${checkNaN(p.y)} `;
+            const prev = points[i - 1];
+            const cmd = isValid(prev) ? 'L' : 'M';
+            d += `${cmd}${coord}`;
         }
+        d += ' ';
     }
     return d.trim();
 }
@@ -2459,7 +2472,7 @@ export function createSmoothAreaSegments(points, zero, cut = false, close = true
             const controlY2 = y2 - m2 * (x2 - x1) / 3;
             d += ` C${controlX1},${controlY1} ${controlX2},${controlY2} ${x2},${y2}`;
         }
-        d += ` L${seg[n].x},${zero} ${close ? 'Z': ''}`;
+        d += ` L${seg[n].x},${zero} ${close ? 'Z' : ''}`;
         return d;
     }).filter(Boolean);
 }
@@ -2531,7 +2544,7 @@ export function getCumulativeAverage({ values, config = {} }) {
     }
 
     for (const v of values) {
-        if(!isInvalid(v)) addAvg(v);
+        if (!isInvalid(v)) addAvg(v);
         else if (convertInvalidToZero && keepInvalid) addAvg(0);
         else if (!convertInvalidToZero && keepInvalid) avg.push(v);
     }

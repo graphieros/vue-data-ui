@@ -932,7 +932,7 @@ const table = computed(() => {
     return { head, body };
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.head.map((h, i) => {
             return [
@@ -952,11 +952,17 @@ function generateCsv() {
         ].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({
-            csvContent,
-            title:
-                FINAL_CONFIG.value.style.chart.title.text || "vue-ui-nested-donuts",
-        });
+
+        if (!callback) {
+            downloadCsv({
+                csvContent,
+                title:
+                    FINAL_CONFIG.value.style.chart.title.text || "vue-ui-nested-donuts",
+            });
+        } else {
+            callback(csvContent);
+        }
+
     });
 }
 
@@ -1091,7 +1097,7 @@ defineExpose({
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="nestedDonutsChart" :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator" :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"
             @generateImage="generateImage" @toggleTable="toggleTable" @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip" @toggleAnnotator="toggleAnnotator" :style="{

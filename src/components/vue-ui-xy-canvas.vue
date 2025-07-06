@@ -1499,13 +1499,18 @@ const tableCsv = computed(() => {
     return { head, body};
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
     const head = ["",...tableCsv.value.head.map(h => h.label)];
     const body = tableCsv.value.body;
     const table = title.concat([head]).concat(body);
     const csvContent = createCsvContent(table);
-    downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-xy-canvas'});
+
+    if (!callback) {
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-xy-canvas'});
+    } else {
+        callback(csvContent);
+    }
 }
 
 function getData() {
@@ -1590,6 +1595,7 @@ defineExpose({
             :position="FINAL_CONFIG.userOptions.position"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

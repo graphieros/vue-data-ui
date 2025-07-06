@@ -780,7 +780,7 @@ const dataTable = computed(() => {
     }
 });
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const rows = formattedDataset.value.matrix.map((m, i) => {
             return [
@@ -799,7 +799,12 @@ function generateCsv() {
         ].concat(rows);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-chord" })
+
+        if (!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-chord" })
+        } else {
+            callback(csvContent);
+        }
     });
 }
 
@@ -874,6 +879,7 @@ defineExpose({
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" 
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleFullscreen="toggleFullscreen" 
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv"

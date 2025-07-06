@@ -104,29 +104,31 @@ function prepareChart() {
                 svg.value.width = width;
                 drawingArea.value = setDrawingArea();
     
-                fontSizes.value.circles = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize,
-                    threshold: 10,
-                    fallback: 10
-                });
-    
-                fontSizes.value.names = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize,
-                    threshold: 10,
-                    fallback: 10
-                });
-    
-                fontSizes.value.values = translateSize({
-                    relator: Math.min(width, height),
-                    adjuster: 600,
-                    source: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize,
-                    threshold: 10,
-                    fallback: 10
-                });
+                if (FINAL_CONFIG.value.responsiveProportionalSizing) {
+                    fontSizes.value.circles = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize,
+                        threshold: 10,
+                        fallback: 10
+                    });
+        
+                    fontSizes.value.names = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize,
+                        threshold: 10,
+                        fallback: 10
+                    });
+        
+                    fontSizes.value.values = translateSize({
+                        relator: Math.min(width, height),
+                        adjuster: 600,
+                        source: FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize,
+                        threshold: 10,
+                        fallback: 10
+                    });
+                }
             });
         });
 
@@ -400,7 +402,7 @@ const dataTable = computed(() => {
     }    
 })
 
-function generateCsv() {
+function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.head.map((h,i) => {
             return [[
@@ -410,7 +412,12 @@ function generateCsv() {
         const tableXls = [[FINAL_CONFIG.value.style.chart.title.text],[FINAL_CONFIG.value.style.chart.title.subtitle.text],[[FINAL_CONFIG.value.table.columnNames.series],[FINAL_CONFIG.value.table.columnNames.value],["%"]]].concat(labels);
 
         const csvContent = createCsvContent(tableXls);
-        downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-funnel" })
+
+        if (!callback) {
+            downloadCsv({ csvContent, title: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-funnel" })
+        } else {
+            callback(csvContent);
+        }
     });
 }
 
@@ -485,6 +492,7 @@ defineExpose({
             :titles="{...FINAL_CONFIG.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             @toggleAnnotator="toggleAnnotator"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
