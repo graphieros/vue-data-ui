@@ -628,7 +628,7 @@
                 <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`" :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                     <path 
                         data-cy="datapoint-line-coating-smooth"
-                        v-if="serie.smooth && serie.plots.length > 1" 
+                        v-if="serie.smooth && serie.plots.length > 1 && !!serie.curve" 
                         :d="`M${serie.curve}`" 
                         :stroke="FINAL_CONFIG.chart.backgroundColor" 
                         :stroke-width="FINAL_CONFIG.line.strokeWidth + 1" 
@@ -638,7 +638,7 @@
 
                     <path
                         data-cy="datapoint-line-coating-straight"
-                        v-else-if="serie.plots.length > 1"
+                        v-else-if="serie.plots.length > 1 && !!serie.straight"
                         :d="`M${serie.straight}`"
                         :stroke="FINAL_CONFIG.chart.backgroundColor"
                         :stroke-width="FINAL_CONFIG.line.strokeWidth + 1"
@@ -688,7 +688,7 @@
 
                     <path 
                         data-cy="datapoint-line-smooth"
-                        v-if="serie.smooth && serie.plots.length > 1" 
+                        v-if="serie.smooth && serie.plots.length > 1 && !!serie.curve" 
                         :d="`M${serie.curve}`" 
                         :stroke="serie.color" 
                         :stroke-width="FINAL_CONFIG.line.strokeWidth" 
@@ -699,7 +699,7 @@
 
                     <path
                         data-cy="datapoint-line-straight"
-                        v-else-if="serie.plots.length > 1"
+                        v-else-if="serie.plots.length > 1 && !!serie.straight"
                         :d="`M${serie.straight}`"
                         :stroke="serie.color"
                         :stroke-width="FINAL_CONFIG.line.strokeWidth"
