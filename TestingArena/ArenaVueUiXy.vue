@@ -112,14 +112,14 @@ function createDs(n, m = 100) {
 const dataset = ref([
     {
         name: "A",
-        series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
-        type: "bar",
+        series: [null, 100, 112, 221, 119, 75, null, 226, 243, 198, 156, 127, null],
+        type: "line",
         dataLabels: false,
     },
     {
         name: "B",
-        series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
-        type: "bar",
+        series: [null, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, null],
+        type: "line",
         dataLabels: false,
     },
     // {
@@ -445,7 +445,7 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
     { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 24, type: 'number', min: -100, max: 100 },
 
-    { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: true, type: 'checkbox' },
+    { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number' },
 
     { key: 'chart.grid.labels.yAxis.position', def: 'right', type: 'select', options: ['left', 'right'] },
@@ -461,6 +461,9 @@ const model = ref([
     { key: 'chart.grid.labels.yAxis.scaleLabelOffsetX', def: 36, type: 'number', min: -100, max: 100 },
     { key: 'chart.grid.labels.yAxis.scaleValueOffsetX', def: -20, type: 'number', min: -100, max: 100 },
     { key: 'chart.grid.labels.yAxis.useNiceScale', def: true, type: 'checkbox'},
+
+    { key: 'chart.grid.labels.yAxis.showCrosshairs', def: true, type: 'checkbox'},
+    { key: 'chart.grid.labels.xAxis.showCrosshairs', def: true, type: 'checkbox'},
 
     { key: 'chart.grid.labels.xAxis.showBaseline', def: true, type: 'checkbox' },
     { key: 'chart.grid.labels.zeroLine.show', def: true, type: 'checkbox' },
@@ -574,6 +577,7 @@ const model = ref([
     { key: 'chart.userOptions.print.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'chart.userOptions.print.useCORS', def: true, type: 'checkbox' },
     { key: 'chart.userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5 },
+    
 ]);
 
 const testCustomTooltip = ref(false);
@@ -874,7 +878,7 @@ function selectTimeLabel(data) {
             </div>
         </template> -->
 
-            <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+            <!-- <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                 <g @click="() => selectTimeLabel({ x, y, fontSize, absoluteIndex })">
                     <text :x="x" :y="y" :font-size="fontSize" :text-anchor="textAnchor" :fill="fill">
                         {{ content }}
@@ -883,7 +887,7 @@ function selectTimeLabel(data) {
                         {{ content }}
                     </text>
                 </g>
-            </template>
+            </template> -->
 
             <template #plot-comment="{ plot }">
                 <div :style="`font-size: 12px; color:${plot.color}; text-align:center`">
@@ -918,7 +922,7 @@ function selectTimeLabel(data) {
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template> -->
-                <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <!-- <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                     <g @click="() => selectTimeLabel({ x, y, fontSize, absoluteIndex })">
                         <text :x="x" :y="y" :font-size="fontSize" :text-anchor="textAnchor" :fill="fill">
                             {{ content }}
@@ -928,7 +932,7 @@ function selectTimeLabel(data) {
                             {{ content }}
                         </text>
                     </g>
-                </template>
+                </template> -->
                 <template #optionPdf>
                     PRINT PDF
                 </template>

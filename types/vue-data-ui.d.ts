@@ -2742,6 +2742,8 @@ declare module "vue-data-ui" {
                         gap?: number;
                         labelWidth?: number;
                         showBaseline?: boolean;
+                        showCrosshairs?: boolean;
+                        crosshairSize?: number;
                         formatter?: Formatter;
                         scaleMin?: number | null;
                         scaleMax?: number | null;
@@ -2751,6 +2753,8 @@ declare module "vue-data-ui" {
                     };
                     xAxis?: {
                         showBaseline?: boolean;
+                        showCrosshairs?: boolean;
+                        crosshairSize?: number;
                     };
                     xAxisLabels?: {
                         color?: string;
@@ -5197,7 +5201,7 @@ declare module "vue-data-ui" {
         [key: string]: string | number | number[];
     };
 
-    export type VueUiQuickChartDataset =
+    export type VueUiQuickChartDataset = 
         | number[]
         | VueUiQuickChartDatasetObjectItem
         | VueUiQuickChartDatasetObjectItem[];

@@ -105,7 +105,7 @@
             </template>
         </UserOptions>
         
-        <svg 
+        <svg  
             ref="svgRef"
             xmlns="http://www.w3.org/2000/svg" 
             v-if="isDataset" 
@@ -405,6 +405,7 @@
                         :y1="forceValidValue(zero)" 
                         :y2="forceValidValue(zero)" 
                         stroke-linecap="round"
+                        :style="{ animation: 'none !important' }"
                     />
                 </template>
 
@@ -426,7 +427,7 @@
                 <rect
                     data-cy="frame"
                     v-if="FINAL_CONFIG.chart.grid.frame.show"
-                    :style="{ pointerEvents: 'none', transition: 'none' }"
+                    :style="{ pointerEvents: 'none', transition: 'none', animation: 'none !important' }"
                     :x="(drawingArea.left + xPadding) < 0 ? 0 : drawingArea.left + xPadding"
                     :y="drawingArea.top"
                     :width="(drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)) < 0 ? 0 : drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)"
@@ -451,7 +452,7 @@
                                 :stroke="el.color"
                                 :stroke-width="FINAL_CONFIG.chart.grid.stroke"
                                 stroke-linecap="round"
-                                :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`"
+                                :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out; animation: none !important`"
                             />
                         </g>
                         <g v-for="el in allScales" :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
@@ -463,16 +464,19 @@
                             >
                                 {{ el.name }} {{ el.scaleLabel && el.unique && el.scaleLabel !== el.id ? `- ${el.scaleLabel}` : '' }}
                             </text>
-                            <line
-                                v-for="(yLabel, j) in el.yLabels"
-                                :x1="el.x - 3 + xPadding"
-                                :x2="el.x + xPadding"
-                                :y1="forceValidValue(yLabel.y)"
-                                :y2="forceValidValue(yLabel.y)"
-                                :stroke="el.color"
-                                :stroke-width="1"
-                                stroke-linecap="round"
-                            />
+                            <template v-for="(yLabel, j) in el.yLabels">
+                                <line
+                                    v-if="FINAL_CONFIG.chart.grid.labels.yAxis.showCrosshairs"
+                                    :x1="el.x + 3 + xPadding - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
+                                    :x2="el.x + xPadding"
+                                    :y1="forceValidValue(yLabel.y)"
+                                    :y2="forceValidValue(yLabel.y)"
+                                    :stroke="el.color"
+                                    :stroke-width="1"
+                                    stroke-linecap="round"
+                                    :style="{ animation: 'none !important' }"
+                                />
+                            </template>
                             <text 
                                 v-for="(yLabel, j) in el.yLabels"
                                 :x="el.x - 5 + xPadding + FINAL_CONFIG.chart.grid.labels.yAxis.scaleValueOffsetX" 
@@ -501,14 +505,15 @@
                         <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
                             <line
                                 data-cy="axis-y-tick"
-                                v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
+                                v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max && FINAL_CONFIG.chart.grid.labels.yAxis.showCrosshairs"
                                 :x1="drawingArea.left + xPadding" 
-                                :x2="drawingArea.left - 5 + xPadding" 
+                                :x2="drawingArea.left - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize + xPadding" 
                                 :y1="forceValidValue(yLabel.y)" 
                                 :y2="forceValidValue(yLabel.y)" 
                                 :stroke="FINAL_CONFIG.chart.grid.stroke" 
                                 stroke-width="1" 
                                 stroke-linecap="round"
+                                :style="{ animation: 'none !important' }"
                             />
                             <text
                                 data-cy="axis-y-label"
@@ -1118,7 +1123,8 @@
                     >
                         {{ FINAL_CONFIG.chart.grid.labels.axis.xLabel }}
                     </text>
-                </g>v-for="(label, i) in timeLabels" :key="`time_label_${i}`"
+
+                </g>
                 
                 <!-- TIME LABELS -->
                 <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show">
@@ -1142,25 +1148,34 @@
                     </template>
                     <template v-else>
                         <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
-                            <text
-                                data-cy="time-label"
-                                v-if="
-                                    (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
-                                    (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
-                                    (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                    (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
-                                "
-                                :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
-                                :font-size="fontSizes.xAxis"
-                                :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                                :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
-                                :style="{
-                                    cursor: 'pointer'
-                                }"
-                                @click="() => selectTimeLabel(label, i)"
-                            >
-                                {{ label.text || "" }}
-                            </text>
+                            <template 
+                            v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
+                                <line 
+                                    v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showCrosshairs"
+                                    :y1="drawingArea.bottom"
+                                    :y2="drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize"
+                                    :x1="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
+                                    :x2="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
+                                    :stroke="FINAL_CONFIG.chart.grid.stroke"
+                                    :stroke-width="1"
+                                    stroke-linecap="round"
+                                    :style="{ animation: 'none !important '}"
+                                />
+
+                                <text
+                                    data-cy="time-label"
+                                    :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
+                                    :font-size="fontSizes.xAxis"
+                                    :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
+                                    :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                    :style="{
+                                        cursor: 'pointer'
+                                    }"
+                                    @click="() => selectTimeLabel(label, i)"
+                                >
+                                    {{ label.text || "" }}
+                                </text>
+                            </template>
                         </g>
                     </template>
                 </g>
@@ -1179,6 +1194,7 @@
                             :stroke-width="annotation.config.line.strokeWidth"
                             :stroke-dasharray="annotation.config.line.strokeDasharray"
                             stroke-linecap="round"
+                            :style="{ animation: 'none !important'}"
                         />
                         <line 
                             v-if="annotation.yBottom"
@@ -1190,6 +1206,7 @@
                             :stroke-width="annotation.config.line.strokeWidth"
                             :stroke-dasharray="annotation.config.line.strokeDasharray"
                             stroke-linecap="round"
+                            :style="{ animation: 'none !important'}"
                         />
                         <rect 
                             v-if="annotation.hasArea"

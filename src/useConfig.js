@@ -505,10 +505,14 @@ export function useConfig() {
                     },
                     xAxis: {
                         showBaseline: false,
+                        showCrosshairs: true,
+                        crosshairSize: 6,
                     },
                     yAxis: {
                         position: 'left',
                         showBaseline: true,
+                        showCrosshairs: true,
+                        crosshairSize: 6,
                         commonScaleSteps: 10,
                         useIndividualScale: false,
                         useNiceScale: false,
