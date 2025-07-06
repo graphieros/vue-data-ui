@@ -1193,7 +1193,7 @@
                 <g v-if="annotationsY.length && !mutableConfig.isStacked">
                     <g v-for="annotation in annotationsY" :key="annotation.uid">
                         <line 
-                            v-if="annotation.yTop"
+                            v-if="annotation.yTop && annotation.show"
                             :x1="annotation.x1"
                             :y1="annotation.yTop"
                             :x2="annotation.x2"
@@ -1205,7 +1205,7 @@
                             :style="{ animation: 'none !important'}"
                         />
                         <line 
-                            v-if="annotation.yBottom"
+                            v-if="annotation.yBottom && annotation.show"
                             :x1="annotation.x1"
                             :y1="annotation.yBottom"
                             :x2="annotation.x2"
@@ -1217,24 +1217,24 @@
                             :style="{ animation: 'none !important'}"
                         />
                         <rect 
-                            v-if="annotation.hasArea"
+                            v-if="annotation.hasArea && annotation.show"
                             :y="Math.min(annotation.yTop, annotation.yBottom)"
                             :x="annotation.x1"
                             :width="drawingArea.width"
-                            :height="annotation.areaHeight"
+                            :height="checkNaN(annotation.areaHeight, 0)"
                             :fill="setOpacity(annotation.config.area.fill, annotation.config.area.opacity)"
                             :style="{ animation: 'none !important' }"
                         />
                         <rect
-                            v-if="annotation.config.label.text"
+                            v-if="annotation.config.label.text && annotation.show"
                             class="vue-ui-xy-annotation-label-box"
                             v-bind="annotation._box"
                             :style="{ animation: 'none !important', transition: 'none !important'}"
                         />
                         <text
+                            v-if="annotation.config.label.text && annotation.show"
                             :id="annotation.id"
                             class="vue-ui-xy-annotation-label"
-                            v-if="annotation.config.label.text"
                             :x="annotation._text.x"
                             :y="annotation._text.y"
                             :font-size="annotation.config.label.fontSize"
@@ -2404,7 +2404,7 @@ export default {
                 this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1 
 
                 const areaZeroPosition = this.mutableConfig.useIndividualScale ? datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition : this.zero;
-                const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : scaleYLabels.at(-1).y, this.drawingArea.top), areaZeroPosition);
+                const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : scaleYLabels.at(-1).y || 0, this.drawingArea.top), areaZeroPosition);
 
                 return {
                     ...datapoint,
@@ -2932,8 +2932,10 @@ export default {
                 }
 
                 const rectY = yText - (textHeight * 0.75) - label.padding.top;
+                const show = ![yTop, yBottom, rectY].includes(NaN);
 
                 return {
+                    show,
                     id: `annotation_y_${this.createUid()}`,
                     hasArea,
                     areaHeight: hasArea ? Math.abs(yTop - yBottom) : 0,
