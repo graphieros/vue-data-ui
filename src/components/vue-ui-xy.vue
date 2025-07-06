@@ -222,6 +222,26 @@
                             :style="{ animation: 'none !important' }"
                         />
                     </g>
+
+                    <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show">
+                        <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
+                            <template 
+                                v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
+                                    <line
+                                        data-cy="axis-x-tick"
+                                        v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showCrosshairs"
+                                        :y1="drawingArea.bottom"
+                                        :y2="drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize"
+                                        :x1="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
+                                        :x2="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
+                                        :stroke="FINAL_CONFIG.chart.grid.stroke"
+                                        :stroke-width="1"
+                                        stroke-linecap="round"
+                                        :style="{ animation: 'none !important '}"
+                                    />
+                            </template>
+                        </g>
+                    </g>
                 </g>
 
                 <!-- DEFS BARS -->
@@ -1150,18 +1170,6 @@
                         <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                             <template 
                             v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
-                                <line 
-                                    v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showCrosshairs"
-                                    :y1="drawingArea.bottom"
-                                    :y2="drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize"
-                                    :x1="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
-                                    :x2="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
-                                    :stroke="FINAL_CONFIG.chart.grid.stroke"
-                                    :stroke-width="1"
-                                    stroke-linecap="round"
-                                    :style="{ animation: 'none !important '}"
-                                />
-
                                 <text
                                     data-cy="time-label"
                                     :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
@@ -2873,53 +2881,57 @@ export default {
         },
         annotationsY() {
             const ann = this.FINAL_CONFIG.chart.annotations;
-            if (!ann.length || ann.every(a => !a.show) || ann.every(a => a.yAxis.yTop === null && a.yAxis.yBottom === null)) {
-                return []
-            }
+            if (!Array.isArray(ann) || ann.every(a => !a.show)) return [];
 
-            const visible = ann.filter(a => a.show && (a.yAxis.yTop != null || a.yAxis.yBottom != null));
+            const visible = ann.filter(a =>
+                a.show &&
+                (a.yAxis.yTop != null || a.yAxis.yBottom != null)
+            );
+
             if (!visible.length) return [];
 
-            const { bottom, height, left, right } = this.drawingArea;
+            const { left, right } = this.drawingArea;
+            const zeroY = this.zero;
+            const height = this.drawingArea.height;
+            const min = this.niceScale.min;
+            const max = this.niceScale.max;
+            const range = max - min;
+
+            const toY = v => {
+                const ratio = (v - 0) / range;
+                return zeroY - (ratio * height);
+            };
 
             return visible.map(annotation => {
-                const { yTop: rawTop, yBottom: rawBottom, label } = annotation.yAxis;
+                const { yAxis: { yTop: rawTop, yBottom: rawBottom, label } } = annotation;
+                const hasArea = rawTop != null && rawBottom != null && rawTop !== rawBottom;
 
-                const hasArea = rawTop != null && rawBottom != null && Math.abs(rawTop - rawBottom) > 0;
-
-                const yTop = rawTop == null
-                    ? null
-                    : bottom - height * this.ratioToMax(rawTop);
-                const yBottom = rawBottom == null
-                    ? null
-                    : bottom - height * this.ratioToMax(rawBottom);
+                const yTop = rawTop == null ? null : toY(rawTop);
+                const yBottom = rawBottom == null ? null : toY(rawBottom);
 
                 const ctx = this.getTextMeasurer(label.fontSize);
                 ctx.font = `${label.fontSize}px sans-serif`;
-                const textWidth = ctx.measureText(label.text).width;
+                const textWidth  = ctx.measureText(label.text).width;
                 const textHeight = label.fontSize;
 
                 const xText = (label.position === 'start' ? left + label.padding.left : right - label.padding.right) + label.offsetX;
 
-                const baselineY =
-                    (yTop != null && yBottom != null)
+                const baselineY = (yTop != null && yBottom != null)
                     ? Math.min(yTop, yBottom)
                     : (yTop != null ? yTop : yBottom);
 
-                const yText = baselineY
-                    - label.fontSize / 3
-                    + label.offsetY
-                    - label.padding.top;
+                const yText = baselineY - (label.fontSize / 3) + label.offsetY - label.padding.top;
 
                 let rectX;
                 if (label.textAnchor === 'middle') {
-                    rectX = xText - textWidth / 2 - label.padding.left;
+                    rectX = xText - (textWidth / 2) - label.padding.left;
                 } else if (label.textAnchor === 'end') {
                     rectX = xText - textWidth - label.padding.right;
                 } else {
                     rectX = xText - label.padding.left;
                 }
-                const rectY = yText - textHeight * 0.75 - label.padding.top;
+
+                const rectY = yText - (textHeight * 0.75) - label.padding.top;
 
                 return {
                     id: `annotation_y_${this.createUid()}`,
@@ -2930,22 +2942,21 @@ export default {
                     config: annotation.yAxis,
                     x1: left,
                     x2: right,
-
                     _text: { x: xText, y: yText },
                     _box: {
                         x: rectX,
                         y: rectY,
-                        width:  textWidth + (label.padding.left + label.padding.right),
+                        width:  textWidth + label.padding.left + label.padding.right,
                         height: textHeight + label.padding.top + label.padding.bottom,
                         fill:   label.backgroundColor,
                         stroke: label.border.stroke,
-                        rx: label.border.rx,
-                        ry: label.border.ry,
+                        rx:     label.border.rx,
+                        ry:     label.border.ry,
                         strokeWidth: label.border.strokeWidth
                     }
                 };
             });
-        }
+        },
     },
     mounted() {
         this.svgRef = this.$refs.svgRef;
