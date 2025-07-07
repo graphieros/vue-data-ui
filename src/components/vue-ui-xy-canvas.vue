@@ -52,6 +52,7 @@ import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
+import { useTimeLabels } from "../useTimeLabels";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -946,6 +947,16 @@ function drawDataLabels(ds) {
     }
 }
 
+const timeLabels = computed(() => {
+    return useTimeLabels({
+        values: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values,
+        maxDatapoints: maxSeries.value,
+        formatter: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.formatter,
+        start: 0,
+        end: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.length
+    });
+});
+
 function drawTimeLabels() {
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
         if (
@@ -955,7 +966,7 @@ function drawTimeLabels() {
         {
             text(
                 ctx.value,
-                FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values[i] || i + 1,
+                timeLabels.value[i] ? timeLabels.value[i].text : i + 1,
                 drawingArea.value.left + (drawingArea.value.slot * (i - slicer.value.start)) + (drawingArea.value.slot / 2),
                 drawingArea.value.bottom + (w.value / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.offsetY),
                 {
@@ -1281,7 +1292,7 @@ function handleMousemove(e) {
         })
     } else {
         if (FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]) {
-            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]}</div>`;
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${timeLabels.value.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value].text}</div>`;
         }
         html += tootlipDataset.value.join('')
         tooltipContent.value = html;
@@ -1453,7 +1464,7 @@ const dataTable = computed(() => {
             return ds.series[i] ?? 0
         }).reduce((a,b ) => a + b, 0);
 
-        body.push([FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.rounding))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)));
+        body.push([FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[i].text : i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.rounding))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)));
     }
 
     const config = {
@@ -1489,7 +1500,7 @@ const tableCsv = computed(() => {
     const body = [];
 
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
-        const row = [FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values[i] || i + 1];
+        const row = [FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values[i] ? timeLabels.value[i].text : i + 1];
         formattedDataset.value.forEach(s => {
             row.push(Number((s.series[i] || 0).toFixed(FINAL_CONFIG.value.table.rounding)));
         });
@@ -1704,8 +1715,8 @@ defineExpose({
                 :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
                 :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
                 :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-                :labelLeft="FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.start] ? FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.start] : ''"
-                :labelRight="FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.end-1] ? FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.end-1] : ''"
+                :labelLeft="FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.start] ? timeLabels[slicer.start].text : ''"
+                :labelRight="FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.end-1] ? timeLabels[slicer.end-1].text : ''"
                 :textColor="FINAL_CONFIG.style.chart.color"
                 :inputColor="FINAL_CONFIG.style.chart.zoom.color"
                 :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"

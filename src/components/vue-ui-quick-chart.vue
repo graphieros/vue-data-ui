@@ -33,6 +33,9 @@ import { useConfig } from "../useConfig";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Slicer from "../atoms/Slicer.vue";
+import { useTimeLabels } from "../useTimeLabels";
+
+//xyPeriodFormatter
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
@@ -726,8 +729,8 @@ const line = computed(() => {
         } else {
             let html = '';
 
-            if (FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
-                html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
+            if (timeLabels.value[mappedSeries[0].absoluteIndex]) {
+                html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${timeLabels.value[mappedSeries[0].absoluteIndex].text}</div>`
             }
 
             mappedSeries.forEach((s, i) => {
@@ -912,8 +915,8 @@ const bar = computed(() => {
         } else {
             let html = '';
 
-            if (FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]) {
-                html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.xyPeriods[mappedSeries[0].absoluteIndex]}</div>`
+            if (timeLabels.value[mappedSeries[0].absoluteIndex]) {
+                html += `<div style="border-bottom:1px solid ${FINAL_CONFIG.value.tooltipBorderColor};padding-bottom:6px;margin-bottom:3px;">${timeLabels.value[mappedSeries[0].absoluteIndex].text}</div>`
             }
 
             mappedSeries.forEach((s, i) => {
@@ -959,6 +962,16 @@ const bar = computed(() => {
         killTooltip
     }
 });
+
+const timeLabels = computed(() => {
+    return useTimeLabels({
+        values: FINAL_CONFIG.value.xyPeriods,
+        maxDatapoints: formattedDataset.value.maxSeriesLength,
+        formatter: FINAL_CONFIG.value.xyPeriodFormatter,
+        start: slicer.value.start,
+        end: slicer.value.end
+    })
+})
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -1334,7 +1347,7 @@ defineExpose({
                     </template>
                 </g>
                 <g class="periodLabels" v-if="FINAL_CONFIG.xyShowScale && FINAL_CONFIG.xyPeriods.length">
-                    <template v-for="(period, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)">
+                    <template v-for="(period, i) in timeLabels.map(l => l.text)">
                         <line
                             v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))"
                             data-cy="period-tick"
@@ -1572,7 +1585,7 @@ defineExpose({
                     />
                     <text
                         data-cy="period-label"
-                        v-for="(period, i) in FINAL_CONFIG.xyPeriods.slice(slicer.start, slicer.end)"
+                        v-for="(period, i) in timeLabels.map(l => l.text)"
                         :font-size="FINAL_CONFIG.xyLabelsXFontSize"
                         :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
                         :transform="`translate(${bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)}, ${bar.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}) rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
@@ -1742,8 +1755,8 @@ defineExpose({
                 :borderColor="FINAL_CONFIG.backgroundColor"
                 :fontSize="FINAL_CONFIG.zoomFontSize"
                 :useResetSlot="FINAL_CONFIG.zoomUseResetSlot"
-                :labelLeft="FINAL_CONFIG.xyPeriods[slicer.start] ? FINAL_CONFIG.xyPeriods[slicer.start] : ''"
-                :labelRight="FINAL_CONFIG.xyPeriods[slicer.end-1] ? FINAL_CONFIG.xyPeriods[slicer.end-1] : ''"
+                :labelLeft="FINAL_CONFIG.xyPeriods[slicer.start] ? timeLabels[0].text : ''"
+                :labelRight="FINAL_CONFIG.xyPeriods[slicer.end-1] ? timeLabels.at(-1).text : ''"
                 :textColor="FINAL_CONFIG.color"
                 :inputColor="FINAL_CONFIG.zoomColor"
                 :selectColor="FINAL_CONFIG.zoomHighlightColor"

@@ -111,6 +111,21 @@ export function useConfig() {
         offsetY: 24
     }
 
+    const AXIS_DATE_FORMATTER = {
+        enable: false,
+        locale: 'en',
+        useUTC: false,
+        januaryAsYear: false,
+        options: {
+            year: 'yyyy',
+            month: `MMM 'yy`,
+            day: 'dd MMM',
+            hour: 'HH:mm',
+            minute: 'HH:mm:ss',
+            second: 'HH:mm:ss'
+        }
+    }
+
     const USER_OPTIONS = ({
         tooltip = false,
         pdf = false,
@@ -352,6 +367,7 @@ export function useConfig() {
                         timeLabels: {
                             show: true,
                             values: [],
+                            formatter: AXIS_DATE_FORMATTER,
                             offsetY: 0,
                             rotation: 0,
                             fontSize: FONT._14,
@@ -530,6 +546,7 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         show: true,
                         values: [],
+                        formatter: AXIS_DATE_FORMATTER,
                         fontSize: FONT._14,
                         showOnlyFirstAndLast: false,
                         showOnlyAtModulo: false,
@@ -2613,6 +2630,7 @@ export function useConfig() {
         xyPaddingTop: 24,
         xyPeriodLabelsRotation: 0,
         xyPeriods: [],
+        xyPeriodFormatter: AXIS_DATE_FORMATTER,
         xyPeriodsShowOnlyAtModulo: false,
         xyPeriodsModulo: 12,
         xyScaleSegments: 15,
@@ -2989,6 +3007,7 @@ export function useConfig() {
                             dataLabels: {
                                 show: true,
                                 values: [],
+                                formatter: AXIS_DATE_FORMATTER,
                                 fontSize: FONT._10,
                                 showOnlyFirstAndLast: false,
                                 color: COLOR_BLACK,
@@ -3900,6 +3919,7 @@ export function useConfig() {
                             showMarker: true,
                             fontSizeRatio: 0.8,
                             values: [],
+                            formatter: AXIS_DATE_FORMATTER,
                             rotation: 0,
                             offsetY: 30,
                             color: COLOR_BLACK,
@@ -5636,6 +5656,7 @@ export function useConfig() {
                         suffix: '',
                         rotation: 0,
                         values: [],
+                        formatter: AXIS_DATE_FORMATTER,
                         color: COLOR_BLACK,
                         fontSize: 14,
                         bold: false,

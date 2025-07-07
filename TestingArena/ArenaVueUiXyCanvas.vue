@@ -211,7 +211,21 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[6]);
+
+const monthValues = computed(() => {
+  const yearStart = 2026
+  const arr = []
+
+  for (let i = 0; i < 200; i++) {
+    const d = new Date(yearStart, i, 1)
+    arr.push(d.getTime())
+  }
+
+  console.log(arr)
+
+  return arr
+})
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -241,20 +255,10 @@ const config = computed(() => {
                         ...c.style.chart.grid.y,
                         timeLabels: {
                             ...c.style.chart.grid.y.timeLabels,
-                            values: [
-                                "JAN",
-                                "FEV",
-                                "MAR",
-                                "APR",
-                                "MAY",
-                                "JUN",
-                                "JUL",
-                                "AUG",
-                                "SEP",
-                                "OCT",
-                                "NOV",
-                                "DEC"
-                            ]
+                            values: monthValues.value,
+                            formatter: {
+                                enable: true,
+                            }
                         }
                     }
                 }

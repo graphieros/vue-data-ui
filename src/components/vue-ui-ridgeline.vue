@@ -33,6 +33,7 @@ import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue";
 import Title from "../atoms/Title.vue";
 import Shape from "../atoms/Shape.vue";
+import { useTimeLabels } from "../useTimeLabels";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
@@ -311,20 +312,33 @@ const svg = computed(() => {
     }
 });
 
+const maxDpLen = computed(() => {
+    return Math.max(...formattedDataset.value.flatMap(el => el.datapoints.map(dp => dp.values.length)));
+})
+
+const timeLabels = computed(() => {
+    return useTimeLabels({
+        values: FINAL_CONFIG.value.style.chart.xAxis.labels.values,
+        maxDatapoints: maxDpLen.value,
+        formatter: FINAL_CONFIG.value.style.chart.xAxis.labels.formatter,
+        start: 0,
+        end: FINAL_CONFIG.value.style.chart.xAxis.labels.values.length
+    })
+})
+
 const xAxisTrapsAndLabels = computed(() => {
     const maxLabelLen = Math.max(...formattedDataset.value.map(el => el.labelLen));
-    const maxDpLen = Math.max(...formattedDataset.value.flatMap(el => el.datapoints.map(dp => dp.values.length)));
     const startX = svg.value.padding.left + maxLabelLen + 16 + FINAL_CONFIG.value.style.chart.yAxis.labels.offsetX;
-    const slotSize = (drawableArea.value.width - startX) / maxDpLen;
+    const slotSize = (drawableArea.value.width - startX) / maxDpLen.value;
 
     const arr = [];
 
-    for (let i = 0; i < maxDpLen; i += 1) {
+    for (let i = 0; i < maxDpLen.value; i += 1) {
         arr.push({
             selectorX: startX + (slotSize * i),
             x: startX + (slotSize * i) - slotSize / 2,
             y: drawableArea.value.top,
-            label: FINAL_CONFIG.value.style.chart.xAxis.labels.values[i] || '',
+            label: FINAL_CONFIG.value.style.chart.xAxis.labels.values[i] ? timeLabels.value[i].text : '',
             index: i,
             width: slotSize,
             height: baseHeight.value
@@ -512,7 +526,8 @@ function createXyDatasetForDialog(ds) {
                     ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid.labels,
                     xAxisLabels: {
                         ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid.labels.xAxisLabels,
-                        values: FINAL_CONFIG.value.style.chart.xAxis.labels.values // Overriding
+                        values: FINAL_CONFIG.value.style.chart.xAxis.labels.values, // Overriding
+                        formatter: FINAL_CONFIG.value.style.chart.xAxis.labels.formatter, // Overriding
                     }
                 }
             },
@@ -570,7 +585,7 @@ const table = computed(() => {
 const dataTable = computed(() => {
     const head = [
         FINAL_CONFIG.value.table.columnNames.series,
-        ...FINAL_CONFIG.value.style.chart.xAxis.labels.values
+        ...timeLabels.value.map(l => l.text)
     ];
 
     const config = {
@@ -589,7 +604,7 @@ const dataTable = computed(() => {
 
     const colNames = [
         FINAL_CONFIG.value.table.columnNames.series,
-        ...FINAL_CONFIG.value.style.chart.xAxis.labels.values,
+        ...timeLabels.value.map(l => l.text),
     ];
 
     return {
@@ -603,7 +618,7 @@ const dataTable = computed(() => {
 function generateCsv(callback=null) {
     nextTick(() => {
         const labels = [
-            [FINAL_CONFIG.value.table.columnNames.series, ...FINAL_CONFIG.value.style.chart.xAxis.labels.values.map(v => [v])],
+            [FINAL_CONFIG.value.table.columnNames.series, ...timeLabels.map(l => [l.text])],
             ...table.value.body.map((v, i) => {
                 return [v[0].name, ...v.slice(1)]
             })

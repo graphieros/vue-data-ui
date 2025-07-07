@@ -600,10 +600,49 @@ const size = ref({
 })
 
 const timeValues = computed(() => {
-    const arr = [];
-    for (let i = 0; i < 30; i += 1) {
-        arr.push(`${i >= 10 ? i : '0' + String(i)}-01-2026`)
+  const arr = []
+  const year = 2026
+
+  for (let month = 1; month <= 12; month++) {
+    const daysInMonth = new Date(year, month, 0).getDate()
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dd = String(day).padStart(2, '0')
+      const mm = String(month).padStart(2, '0')
+      arr.push(`${year}-${mm}-${dd}`)  // ISO format
     }
+  }
+
+  console.log(arr)
+
+  return arr
+})
+
+// const monthValues = computed(() => {
+//   const yearStart = 2026
+//   const arr = []
+
+//   for (let i = 0; i < 13; i++) {
+//     // monthIndex goes 0→12 (Jan 2026 → Jan 2027)
+//     const date = new Date(yearStart, i, 1)
+//     const yyyy = date.getFullYear()
+//     const mm   = String(date.getMonth() + 1).padStart(2, '0')
+//     const dd   = String(date.getDate()).padStart(2, '0')  // always "01" here
+
+//     arr.push(`${yyyy}-${mm}-${dd}`)
+//   }
+
+//   return arr
+// })
+
+const monthValues = computed(() => {
+    const yearStart = 2026
+    const arr = []
+
+    for (let i = 0; i < 13; i++) {
+        const d = new Date(yearStart, i, 1)
+        arr.push(d.getTime())
+    }
+
     return arr
 })
 
@@ -784,7 +823,21 @@ const config = computed(() => {
                         },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
-                            values: timeValues.value
+                            values: monthValues.value,
+                            formatter: {
+                                enable: true,
+                                locale: 'en',
+                                useUTC: false,
+                                januaryAsYear: true,
+                                options: { 
+                                    year: 'yyyy',
+                                    month: `MMM`,
+                                    day: 'dd MMM',
+                                    hour: 'HH:mm',
+                                    minute: 'HH:mm:ss',
+                                    second: 'HH:mm:ss'
+                                }
+                            }
                         }
                     }
                 }
