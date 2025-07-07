@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onUpdated } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onUpdated, watchEffect } from 'vue';
 import BaseIcon from './BaseIcon.vue';
 import { useResponsive } from '../useResponsive';
 import { throttle } from '../canvas-lib';
@@ -128,6 +128,12 @@ const highlightStyle = computed(() => {
     const range = props.max - props.min;
     const startPercent = ((startValue.value - props.min) / range) * 100;
     const endPercent = ((endValue.value - props.min) / range) * 100;
+    const centerPercent = (startPercent + endPercent) / 2;
+    const centerAdjust = overflowsRight.value 
+        ? `calc(${centerPercent}% - ${mergeTooltip.value.width}px)`
+        : overflowsLeft.value 
+        ? `calc(${centerPercent}%)`
+        : `calc(${centerPercent}% - ${mergeTooltip.value.width / 2}px)`
 
     return {
         left: `${startPercent}%`,
@@ -135,6 +141,7 @@ const highlightStyle = computed(() => {
         background: props.selectColor,
         tooltipLeft: `calc(${startPercent}% - ${overflowsLeft.value ? 0 : tooltipLeftWidth.value / 2}px)`,
         tooltipRight: `calc(${endPercent}% - ${overflowsRight.value ? tooltipRightWidth.value : tooltipRightWidth.value / 2}px)`,
+        tooltipCenter: centerAdjust,
         arrowLeft: !overflowsLeft.value,
         arrowRight: !overflowsRight.value
     };
@@ -427,6 +434,33 @@ function setLeftLabelZIndex(handle) {
     leftLabelZIndex.value = handle === 'start' ? 1 : 0
 }
 
+const tooltipsCollide = ref(false);
+const mergeTooltip = ref({
+    width:0,
+    left: 0,
+})
+
+watchEffect(async() => {
+    const leftEl = tooltipLeft.value;
+    const rightEl = tooltipRight.value;
+    const __start = startValue.value; // required for reactivity
+    const __end = endValue.value; // required for reactivity
+    const wrapper = zoomWrapper.value;
+    if (!leftEl || !rightEl || !wrapper) {
+        tooltipsCollide.value = false;
+        return;
+    }
+    await nextTick();
+    const { x: leftX, width: leftW}  = leftEl.getBoundingClientRect();
+    const { x: rightX, width: rightW} = rightEl.getBoundingClientRect();
+    const midX = (rightX + rightW / 2) - (((rightX + rightW / 2) - (leftX + leftW / 2)))
+    tooltipsCollide.value = (leftX + leftW) > rightX;
+    mergeTooltip.value = {
+        width: leftW + rightW,
+        left: midX - (leftW + rightW / 2)
+    }
+});
+
 onUpdated(() => {
     setTooltipLeft();
     setTooltipRight();
@@ -666,10 +700,34 @@ defineExpose({
                     color: adaptColorToBackground(selectColor),
                     backgroundColor: selectColor,
                     border: `1px solid ${borderColor}`,
-                    zIndex: `${leftLabelZIndex + 4}`
+                    zIndex: `${leftLabelZIndex + 4}`,
+                    visibility: tooltipsCollide ? 'hidden' : 'visible'
                 }"
             >
                 {{ labelLeft }}
+            </div>
+
+            <div
+                v-if="tooltipsCollide"
+                data-cy="slicer-label-merged"
+                ref="tooltipMerge"
+                :class="{
+                    'range-tooltip': true,
+                    'range-tooltip-visible': showTooltip,
+                    'range-tooltip-arrow': true,
+                    'range-tooltip-arrow-left': !highlightStyle.arrowLeft && !verticalHandles,
+                    'range-tooltip-arrow-right': !highlightStyle.arrowRight && !verticalHandles
+                }"
+                :style="{
+                    left: highlightStyle.tooltipCenter,
+                    width: mergeTooltip.width + 'px',
+                    color: adaptColorToBackground(selectColor),
+                    backgroundColor: selectColor,
+                    border: `1px solid ${borderColor}`,
+                    zIndex: '4'
+                }"
+            >
+                {{ labelLeft === labelRight ? labelLeft : `${labelLeft} - ${labelRight}` }}
             </div>
             
             <div
@@ -687,7 +745,8 @@ defineExpose({
                     color: adaptColorToBackground(selectColor),
                     backgroundColor: selectColor,
                     border: `1px solid ${borderColor}`,
-                    zIndex: '4'
+                    zIndex: '4',
+                    visibility: tooltipsCollide ? 'hidden' : 'visible'
                 }"
             >
                 {{ labelRight }}
@@ -917,12 +976,16 @@ input[type="range"]::-ms-thumb {
 .range-tooltip-arrow-left {
     &::after {
         left: 3px;
+        right: auto;
+        transform: none;
     }
 }
 
 .range-tooltip-arrow-right {
     &::after {
         right: 3px;
+        left: auto;
+        transform: none;
     }
 }
 

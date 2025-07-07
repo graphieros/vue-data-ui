@@ -1,6 +1,8 @@
 import { ref, reactive } from "vue";
 import Slicer from "./Slicer.vue";
 
+const ds = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+
 describe("<Slicer />", () => {
     function mountSlicer() {
         const FINAL_CONFIG = reactive({
@@ -23,7 +25,9 @@ describe("<Slicer />", () => {
                         grid: {
                             xAxis: {
                                 dataLabels: {
-                                    values: ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL"],
+                                    values: ds.map((d,i) => {
+                                        return `____ ${i} ____`
+                                    }),
                                 },
                             },
                         },
@@ -32,9 +36,9 @@ describe("<Slicer />", () => {
             },
         });
 
-        const maxLength = ref(6);
+        const maxLength = ref(ds.length);
         const slicerStep = ref(1);
-        const slicer = reactive({ start: 0, end: 6 });
+        const slicer = reactive({ start: 0, end: ds.length });
 
         return cy.mount({
             components: { Slicer },
@@ -44,7 +48,7 @@ describe("<Slicer />", () => {
                     maxLength,
                     slicerStep,
                     slicer,
-                    minimap: [0, 1000, 0, 1000, 0, 1000]
+                    minimap: ds
                 };
             },
             template: `
@@ -83,8 +87,8 @@ describe("<Slicer />", () => {
     it('shows start & end labels on hover', () => {
         mountSlicer();
         cy.get('[data-cy="slicer"]').trigger('mouseenter')
-        cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', 'JAN')
-        cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', 'JUN')
+        cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', '____ 0 ____')
+        cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', `____ ${ds.length-1} ____`)
         cy.get('[data-cy="slicer"]').trigger('mouseleave')
         cy.get('@right').should('not.be.visible')
         cy.get('@left').should('not.be.visible')
@@ -99,14 +103,14 @@ describe("<Slicer />", () => {
                 .trigger("input", { force: true });
 
             cy.get('[data-cy="slicer-handle-right"]')
-                .invoke("val", 5)
+                .invoke("val", 8)
                 .trigger("input", { force: true });
 
             cy.wrap(slicer).should('have.property', 'start', 1);
-            cy.wrap(slicer).should('have.property', 'end', 5);
+            cy.wrap(slicer).should('have.property', 'end', 8);
             cy.get('[data-cy="slicer"]').trigger('mouseenter')
-            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', 'FEB')
-            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', 'MAY')
+            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', '____ 1 ____')
+            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', '____ 7 ____')
         });
     });
 
@@ -118,7 +122,7 @@ describe("<Slicer />", () => {
                 .trigger("input", { force: true });
 
             cy.get('[data-cy="slicer-handle-right"]')
-                .invoke("val", 4)
+                .invoke("val", 10)
                 .trigger("input", { force: true });
 
             cy.wait(100)
@@ -127,9 +131,9 @@ describe("<Slicer />", () => {
                 .trigger('mousemove', {force: true, clientX: 400 })
 
             cy.wrap(slicer).should('have.property', 'start', 3);
-            cy.wrap(slicer).should('have.property', 'end', 5);
-            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', 'APR')
-            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', 'MAY')
+            cy.wrap(slicer).should('have.property', 'end', 11);
+            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', '____ 3 ____')
+            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', '____ 10 ____')
         })
     })
 
@@ -141,7 +145,7 @@ describe("<Slicer />", () => {
                 .trigger("input", { force: true });
 
             cy.get('[data-cy="slicer-handle-right"]')
-                .invoke("val", 4)
+                .invoke("val", 10)
                 .trigger("input", { force: true });
 
             cy.wait(100)
@@ -150,9 +154,51 @@ describe("<Slicer />", () => {
                 .trigger('mousemove', {force: true, clientX: 400 })
 
             cy.wrap(slicer).should('have.property', 'start', 3);
-            cy.wrap(slicer).should('have.property', 'end', 5);
-            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', 'APR')
-            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', 'MAY')
+            cy.wrap(slicer).should('have.property', 'end', 11);
+            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', '____ 3 ____')
+            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', '____ 10 ____')
+        })
+    })
+
+    it('merges tooltips when they collide on the same index', () => {
+        mountSlicer().then(cmp => {
+            cy.get('[data-cy="slicer-handle-left"]')
+                .invoke("val", 2)
+                .trigger("input", { force: true });
+
+            cy.get('[data-cy="slicer-handle-right"]')
+            .invoke("val", 2)
+            .trigger("input", { force: true });
+
+            cy.wait(100)
+            cy.get('[data-cy="slicer-range-highlight"]')
+                .trigger('mousedown', { force: true })
+                .trigger('mousemove', {force: true, clientX: 400 })
+
+            cy.get('[data-cy="slicer-label-merged"]').should('be.visible').and('contain', '____ 3 ____')
+            cy.get('[data-cy="slicer-label-left"]').should('not.be.visible')
+            cy.get('[data-cy="slicer-label-right"]').should('not.be.visible')
+        })
+    })
+
+    it('merges the two labels in a single tooltip when tooltips collide', () => {
+        mountSlicer().then(cmp => {
+            cy.get('[data-cy="slicer-handle-left"]')
+                .invoke("val", 2)
+                .trigger("input", { force: true });
+
+            cy.get('[data-cy="slicer-handle-right"]')
+            .invoke("val", 4)
+            .trigger("input", { force: true });
+
+            cy.wait(100)
+            cy.get('[data-cy="slicer-range-highlight"]')
+                .trigger('mousedown', { force: true })
+                .trigger('mousemove', {force: true, clientX: 400 })
+
+            cy.get('[data-cy="slicer-label-merged"]').should('be.visible').and('contain', '____ 3 ____ - ____ 4 ____');
+            cy.get('[data-cy="slicer-label-left"]').should('not.be.visible')
+            cy.get('[data-cy="slicer-label-right"]').should('not.be.visible')
         })
     })
 });
