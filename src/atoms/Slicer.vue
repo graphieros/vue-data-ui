@@ -19,11 +19,11 @@ const props = defineProps({
         default: 14
     },
     labelLeft: {
-        type: String,
+        type: [String, Number],
         default: ''
     },
     labelRight: {
-        type: String,
+        type: [String, Number],
         default: ''
     },
     textColor: {
@@ -701,14 +701,14 @@ defineExpose({
                     backgroundColor: selectColor,
                     border: `1px solid ${borderColor}`,
                     zIndex: `${leftLabelZIndex + 4}`,
-                    visibility: tooltipsCollide ? 'hidden' : 'visible'
+                    visibility: tooltipsCollide || labelLeft === labelRight ? 'hidden' : 'visible'
                 }"
             >
                 {{ labelLeft }}
             </div>
 
             <div
-                v-if="tooltipsCollide"
+                v-if="tooltipsCollide || labelLeft === labelRight"
                 data-cy="slicer-label-merged"
                 ref="tooltipMerge"
                 :class="{
@@ -746,7 +746,7 @@ defineExpose({
                     backgroundColor: selectColor,
                     border: `1px solid ${borderColor}`,
                     zIndex: '4',
-                    visibility: tooltipsCollide ? 'hidden' : 'visible'
+                    visibility: tooltipsCollide || labelLeft === labelRight ? 'hidden' : 'visible'
                 }"
             >
                 {{ labelRight }}
