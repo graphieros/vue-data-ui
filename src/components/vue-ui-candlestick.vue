@@ -193,6 +193,9 @@ function prepareChart() {
                         threshold: 6,
                         fallback: 6
                     });
+                } else {
+                    svg.value.xAxisFontSize = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.fontSize;
+                    svg.value.yAxisFontSize = FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.fontSize;
                 }
             });
         });

@@ -3297,7 +3297,15 @@ export default {
             this.selectedMinimapIndex = minimapIndex;
         },
         convertSizes() {
-            if (!this.FINAL_CONFIG.responsiveProportionalSizing) return;
+            if (!this.FINAL_CONFIG.responsiveProportionalSizing) {
+                this.fontSizes.dataLabels = this.FINAL_CONFIG.chart.grid.labels.fontSize;
+                this.fontSizes.yAxis = this.FINAL_CONFIG.chart.grid.labels.axis.fontSize;
+                this.fontSizes.xAxis =  this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize;
+                this.fontSizes.plotLabels = this.FINAL_CONFIG.chart.labels.fontSize;
+                this.plotRadii.plot = this.FINAL_CONFIG.plot.radius;
+                this.plotRadii.line = this.FINAL_CONFIG.line.radius;
+                return;
+            }
             // Adaptative sizes in responsive mode
             this.fontSizes.dataLabels = this.translateSize({
                 relator: this.height,

@@ -183,6 +183,14 @@ function prepareChart() {
                         threshold: 6,
                         fallback: 6
                     });
+                } else {
+                    sizes.value.plots = FINAL_CONFIG.value.style.chart.plots.radius;
+                    sizes.value.indexLabels = FINAL_CONFIG.value.style.chart.plots.indexLabels.fontSize;
+                    sizes.value.labels = FINAL_CONFIG.value.style.chart.plots.labels.fontSize;
+                    sizes.value.xAxisLabels = FINAL_CONFIG.value.style.chart.axes.x.labels.fontSize;
+                    sizes.value.xAxisName = FINAL_CONFIG.value.style.chart.axes.x.name.fontSize;
+                    sizes.value.yAxisLabels = FINAL_CONFIG.value.style.chart.axes.y.labels.fontSize;
+                    sizes.value.yAxisName = FINAL_CONFIG.value.style.chart.axes.y.name.fontSize;
                 }
             });
         });

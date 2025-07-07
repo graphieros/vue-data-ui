@@ -432,7 +432,7 @@ const model = ref([
 
     { key: 'chart.grid.labels.show', def: true, type: 'checkbox', label: 'showLabels', category: 'grid' },
     { key: 'chart.grid.labels.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'grid' },
-    { key: 'chart.grid.labels.fontSize', def: 16, type: 'number', min: 4, max: 30, label: 'fontSize', category: 'grid' },
+    { key: 'chart.grid.labels.fontSize', def: 26, type: 'number', min: 4, max: 30, label: 'fontSize', category: 'grid' },
     { key: 'chart.grid.labels.axis.yLabel', def: 'TEST', type: 'text', label: 'yAxisLabel', category: 'grid' },
     { key: 'chart.grid.labels.axis.xLabel', def: 'TEST', type: 'text', label: 'xAxisLabel', category: 'grid' },
     { key: 'chart.grid.labels.axis.fontSize', def: 14, type: 'number', min: 4, max: 30, label: 'fontSize', category: 'grid' },

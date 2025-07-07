@@ -227,6 +227,10 @@ function prepareChart() {
                         threshold: 6,
                         fallback: 6
                     });
+                } else {
+                    dataLabelSize.value = FINAL_CONFIG.value.style.weightLabels.size;
+                    plotRadius.value = FINAL_CONFIG.value.style.plot.radius;
+                    labelFontSize.value = FINAL_CONFIG.value.style.labels.fontSize;
                 }
             });
         });
