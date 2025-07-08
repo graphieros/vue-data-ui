@@ -36,6 +36,7 @@ import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
+import { useTimeLabels } from "../useTimeLabels";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -437,14 +438,13 @@ const yLabels = computed(() => {
 });
 
 const timeLabels = computed(() => {
-    const labels = [];
-    for (let i = 0; i < maxSeries.value; i += 1) {
-        labels.push({
-            text: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values[i] || String(i),
-            absoluteIndex: i
-        })
-    }
-    return labels.slice(slicer.value.start, slicer.value.end);
+    return useTimeLabels({
+        values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
+        maxDatapoints: maxSeries.value,
+        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
+        start: slicer.value.start,
+        end: slicer.value.end
+    })
 });
 
 const formattedDataset = computed(() => {
@@ -730,13 +730,14 @@ const tableCsv = computed(() => {
         }
     });
     const body = [];
-    for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
-        const row = [FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values[i] || i + 1];
+
+    timeLabels.value.forEach((tl) => {
+        const row = [FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values[tl.absoluteIndex] ? tl.text : i + 1];
         unmutableDataset.value.forEach(s => {
-            row.push(Number((s.series[i] || 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue)));
+            row.push(Number((s.series[tl.absoluteIndex] || 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue)));
         });
         body.push(row);
-    }
+    })
     return { head, body };
 })
 
@@ -765,7 +766,7 @@ const dataTable = computed(() => {
             return ds.series[i] ?? 0
         }).reduce((a,b ) => a + b, 0);
 
-        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ?? i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue)));
+        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ? timeLabels.value[i].text : i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue)));
     }
 
     const config = {
@@ -1467,8 +1468,8 @@ defineExpose({
                 :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
                 :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
                 :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-                :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] : ''"
-                :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] : ''"
+                :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[0].text : ''"
+                :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels.at(-1).text : ''"
                 :textColor="FINAL_CONFIG.style.chart.color"
                 :inputColor="FINAL_CONFIG.style.chart.zoom.color"
                 :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"

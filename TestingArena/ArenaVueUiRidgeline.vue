@@ -144,6 +144,18 @@ const model = ref([
     { key: 'style.chart.yAxis.labels.offsetX', def: 0, type: 'number', min: -100, max: 100}
 ])
 
+const monthValues = computed(() => {
+  const yearStart = 2026
+  const arr = []
+
+  for (let i = 0; i < 13; i++) {
+    const d = new Date(yearStart, i, 1)
+    arr.push(d.getTime())
+  }
+
+  return arr
+})
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
@@ -157,9 +169,10 @@ const config = computed(() => {
                     ...c.style.chart.xAxis,
                     labels: {
                         ...c.style.chart.xAxis.labels,
-                        values: dataset.value[0].datapoints[0].values.map((dp, i) => {
-                            return `YYYY-MM-DD ${i}`
-                        })
+                        values: monthValues.value,
+                        datetimeFormatter: {
+                            enable: true,
+                        }
                     }
                 }
             }

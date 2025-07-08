@@ -240,6 +240,18 @@ const themeOptions = ref([
 
 const currentTheme = ref(themeOptions.value[6])
 
+const monthValues = computed(() => {
+    const yearStart = 2026
+    const arr = []
+
+    for (let i = 0; i < 100; i++) {
+        const d = new Date(yearStart, i, 1)
+        arr.push(d.getTime())
+    }
+
+    return arr
+})
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
@@ -250,7 +262,10 @@ const config = computed(() => {
         },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
-        xyPeriods: makeTime(100)
+        xyPeriods: monthValues.value,
+        datetimeFormatter: {
+            enable: true
+        }
     }
 })
 

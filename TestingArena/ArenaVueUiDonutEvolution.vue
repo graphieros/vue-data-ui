@@ -25,7 +25,21 @@ const dataset = ref([
         name: "Serie 4",
         values: [5, null, 5, 5, 5, 5 ]
     }
-])
+]);
+
+const monthValues = computed(() => {
+  const yearStart = 2026
+  const arr = []
+
+  for (let i = 0; i < 13; i++) {
+    const d = new Date(yearStart, i, 1)
+    arr.push(d.getTime())
+  }
+
+  console.log(arr)
+
+  return arr
+})
 
 const model = ref([
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -147,7 +161,6 @@ const config = computed(() => {
                     dataLabels: {
                         ...c.style.chart.layout.dataLabels,
                         formatter: ({value, config}) => {
-                            console.log(config)
                             return `f | ${value}`
                         }
                     },
@@ -157,19 +170,10 @@ const config = computed(() => {
                             ...c.style.chart.layout.grid.xAxis,
                             dataLabels: {
                                 ...c.style.chart.layout.grid.xAxis.dataLabels,
-                                values: [
-                                    '01-01-2025',
-                                    '02-01-2025',
-                                    '03-01-2025',
-                                    '04-01-2025',
-                                    '05-01-2025',
-                                    '06-01-2025',
-                                    '07-01-2025',
-                                    '08-01-2025',
-                                    '09-01-2025',
-                                    '10-01-2025',
-                                    '11-01-2025',
-                                ]
+                                values: monthValues.value,
+                                datetimeFormatter: {
+                                    enable: true,
+                                }
                             }
                         }
                     }

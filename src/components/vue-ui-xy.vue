@@ -1177,7 +1177,7 @@
                                     :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
                                     :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                     :style="{
-                                        cursor: 'pointer'
+                                        cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
                                     }"
                                     @click="() => selectTimeLabel(label, i)"
                                 >
@@ -1506,8 +1506,8 @@
             :background="FINAL_CONFIG.chart.zoom.color"
             :fontSize="FINAL_CONFIG.chart.zoom.fontSize"
             :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
-            :labelLeft="FINAL_CONFIG.chart.grid.labels.xAxisLabels.values[slicer.start]"
-            :labelRight="FINAL_CONFIG.chart.grid.labels.xAxisLabels.values[slicer.end-1]"
+            :labelLeft="timeLabels[0].text"
+            :labelRight="timeLabels.at(-1).text"
             :textColor="FINAL_CONFIG.chart.color"
             :inputColor="FINAL_CONFIG.chart.zoom.color"
             :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
@@ -1702,6 +1702,7 @@ import themes from "../themes.json";
 import { useConfig } from '../useConfig';
 import { useMouse } from '../useMouse';
 import { useNestedProp } from '../useNestedProp';
+import { useTimeLabels } from '../useTimeLabels.js';
 import { defineAsyncComponent } from 'vue';
 import Slicer from '../atoms/Slicer.vue';
 import Title from '../atoms/Title.vue';
@@ -1871,6 +1872,9 @@ export default {
         }
     },
     computed: {
+        locale() {
+            return this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.formatter.locale;
+        },
         chartAriaLabel() {
             const titleText = this.FINAL_CONFIG.chart.title.text || 'Chart visualization';
             const subtitleText = this.FINAL_CONFIG.chart.title.subtitle.text || '';
@@ -2086,7 +2090,7 @@ export default {
                 fontFamily: this.FINAL_CONFIG.chart.fontFamily,
                 prefix: this.FINAL_CONFIG.chart.labels.prefix,
                 suffix: this.FINAL_CONFIG.chart.labels.suffix,
-                colNames: JSON.parse(JSON.stringify(this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values)),
+                colNames: this.timeLabels.map(tl => tl.text),
                 thead: {
                     backgroundColor: this.FINAL_CONFIG.table.th.backgroundColor,
                     color: this.FINAL_CONFIG.table.th.color,
@@ -2609,16 +2613,14 @@ export default {
         },
         timeLabels() {
             const max = Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data:datapoint.series, threshold: this.FINAL_CONFIG.downsample.threshold}).length));
-            const labels = [];
 
-            for (let i = 0; i < max; i += 1) {
-                labels.push({
-                    text: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values[i] || String(i),
-                    absoluteIndex: i
-                })
-            }
-
-            return labels.slice(this.slicer.start, this.slicer.end);
+            return useTimeLabels({
+                values: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values,
+                maxDatapoints: max,
+                formatter: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter,
+                start: this.slicer.start,
+                end: this.slicer.end
+            });
         },
         slot() {
             return {
@@ -3022,6 +3024,9 @@ export default {
         createIndividualAreaWithCuts,
         createSmoothAreaSegments,
         createIndividualArea,
+        usesSelectTimeLabelEvent() {
+            return !!this.$.vnode.props?.onSelectTimeLabel;
+        },
         getTextMeasurer(fontSize, fontFamily, fontWeight) {
             if (!this._textMeasurer) {
                 const canvas = document.createElement('canvas')
@@ -3292,7 +3297,15 @@ export default {
             this.selectedMinimapIndex = minimapIndex;
         },
         convertSizes() {
-            if (!this.FINAL_CONFIG.responsiveProportionalSizing) return;
+            if (!this.FINAL_CONFIG.responsiveProportionalSizing) {
+                this.fontSizes.dataLabels = this.FINAL_CONFIG.chart.grid.labels.fontSize;
+                this.fontSizes.yAxis = this.FINAL_CONFIG.chart.grid.labels.axis.fontSize;
+                this.fontSizes.xAxis =  this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize;
+                this.fontSizes.plotLabels = this.FINAL_CONFIG.chart.labels.fontSize;
+                this.plotRadii.plot = this.FINAL_CONFIG.plot.radius;
+                this.plotRadii.line = this.FINAL_CONFIG.line.radius;
+                return;
+            }
             // Adaptative sizes in responsive mode
             this.fontSizes.dataLabels = this.translateSize({
                 relator: this.height,

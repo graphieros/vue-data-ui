@@ -74,6 +74,8 @@ function prepareChart() {
                         threshold: 10,
                         fallback: 10
                     });
+                } else {
+                    svg.value.label = FINAL_CONFIG.value.stopwatch.label.fontSize;
                 }
             });
         });

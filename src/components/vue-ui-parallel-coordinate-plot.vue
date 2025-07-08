@@ -202,6 +202,11 @@ function prepareChart() {
                         threshold: 12,
                         fallback: 12
                     });
+                } else {
+                    chartDimensions.value.plotSize = FINAL_CONFIG.value.style.chart.plots.radius; 
+                    chartDimensions.value.ticksFontSize = FINAL_CONFIG.value.style.chart.yAxis.labels.ticks.fontSize;
+                    chartDimensions.value.datapointFontSize = FINAL_CONFIG.value.style.chart.yAxis.labels.datapoints.fontSize;
+                    chartDimensions.value.axisNameFontSize = FINAL_CONFIG.value.style.chart.yAxis.labels.axisNamesFontSize;
                 }
             });
         });

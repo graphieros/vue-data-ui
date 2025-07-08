@@ -27,11 +27,12 @@ import {
     themePalettes,
     XMLNS
 } from '../lib';
+import { useChartAccessibility } from "../useChartAccessibility";
+import { useConfig } from "../useConfig";
 import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
-import { useConfig } from "../useConfig";
+import { useTimeLabels } from "../useTimeLabels";
 import { useUserOptionState } from "../useUserOptionState";
-import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
@@ -313,6 +314,16 @@ const maxLength = computed(() => {
     return Math.max(...mutableDataset.value.map(ds => ds.length))
 });
 
+const timeLabels = computed(() => {
+    return useTimeLabels({
+        values: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.values,
+        maxDatapoints: maxLength.value,
+        formatter: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.datetimeFormatter,
+        start: slicer.value.start,
+        end: slicer.value.end
+    });
+});
+
 const slit = computed(() => {
     return svg.value.width / (slicer.value.end - slicer.value.start);
 });
@@ -514,7 +525,7 @@ const table = computed(() => {
             return ds.values[i] ?? 0
         }).reduce((a, b) => a + b, 0);
 
-        body.push([FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.values[i] ?? '-'].concat(convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => {
+        body.push([timeLabels[i] ? timeLabels[i].text : '-'].concat(convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => {
             return {
                 value: ds.values[i] ?? 0,
                 percentage: ds.values[i] ? ds.values[i] / sum * 100 : 0
@@ -836,7 +847,7 @@ defineExpose({
                         :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
 
                     >
-                        {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(i) + Number(slicer.start)] ?? '' }}
+                        {{ timeLabels[i] ? timeLabels[i].text  : '' }}
                     </text>
                 </g>
             </g>
@@ -1014,8 +1025,8 @@ defineExpose({
             :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
             :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
             :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-            :labelLeft="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.start)] || ''"
-            :labelRight="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(slicer.end)-1] || ''"
+            :labelLeft="timeLabels[0] ? timeLabels[0].text : ''"
+            :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''"
             :textColor="FINAL_CONFIG.style.chart.color"
             :inputColor="FINAL_CONFIG.style.chart.zoom.color"
             :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
@@ -1128,7 +1139,7 @@ defineExpose({
             :fullscreenParent="donutEvolutionChart"
         >
             <template #title>
-                {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.values[Number(fixedDatapoint.index) + Number(slicer.start)] }}
+                {{ timeLabels[Number(fixedDatapoint.index)] ? timeLabels[Number(fixedDatapoint.index)].text: '' }}
             </template>
             <VueUiDonut 
                 v-if="fixedDatapoint" 

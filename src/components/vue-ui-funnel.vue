@@ -128,6 +128,10 @@ function prepareChart() {
                         threshold: 10,
                         fallback: 10
                     });
+                } else {
+                    fontSizes.value.circles = FINAL_CONFIG.value.style.chart.circles.dataLabels.fontSize;
+                    fontSizes.value.names = FINAL_CONFIG.value.style.chart.bars.dataLabels.name.fontSize;
+                    fontSizes.value.values = FINAL_CONFIG.value.style.chart.bars.dataLabels.value.fontSize;
                 }
             });
         });

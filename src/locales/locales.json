@@ -1,0 +1,2114 @@
+{
+    "ar": {
+        "months": [
+            "يناير",
+            "فبراير",
+            "مارس",
+            "أبريل",
+            "مايو",
+            "يونيو",
+            "يوليو",
+            "أغسطس",
+            "سبتمبر",
+            "أكتوبر",
+            "نوفمبر",
+            "ديسمبر"
+        ],
+        "shortMonths": [
+            "يناير",
+            "فبراير",
+            "مارس",
+            "أبريل",
+            "مايو",
+            "يونيو",
+            "يوليو",
+            "أغسطس",
+            "سبتمبر",
+            "أكتوبر",
+            "نوفمبر",
+            "ديسمبر"
+        ],
+        "days": [
+            "الأحد",
+            "الإثنين",
+            "الثلاثاء",
+            "الأربعاء",
+            "الخميس",
+            "الجمعة",
+            "السبت"
+        ],
+        "shortDays": [
+            "أحد",
+            "إثنين",
+            "ثلاثاء",
+            "أربعاء",
+            "خميس",
+            "جمعة",
+            "سبت"
+        ]
+    },
+    "be-cyrl": {
+        "months": [
+            "Студзень",
+            "Люты",
+            "Сакавік",
+            "Красавік",
+            "Травень",
+            "Чэрвень",
+            "Ліпень",
+            "Жнівень",
+            "Верасень",
+            "Кастрычнік",
+            "Лістапад",
+            "Сьнежань"
+        ],
+        "shortMonths": [
+            "Сту",
+            "Лют",
+            "Сак",
+            "Кра",
+            "Тра",
+            "Чэр",
+            "Ліп",
+            "Жні",
+            "Вер",
+            "Кас",
+            "Ліс",
+            "Сьн"
+        ],
+        "days": [
+            "Нядзеля",
+            "Панядзелак",
+            "Аўторак",
+            "Серада",
+            "Чацьвер",
+            "Пятніца",
+            "Субота"
+        ],
+        "shortDays": [
+            "Нд",
+            "Пн",
+            "Аў",
+            "Ср",
+            "Чц",
+            "Пт",
+            "Сб"
+        ]
+    },
+    "be-latn": {
+        "months": [
+            "Studzień",
+            "Luty",
+            "Sakavik",
+            "Krasavik",
+            "Travień",
+            "Červień",
+            "Lipień",
+            "Žnivień",
+            "Vierasień",
+            "Kastryčnik",
+            "Listapad",
+            "Śniežań"
+        ],
+        "shortMonths": [
+            "Stu",
+            "Lut",
+            "Sak",
+            "Kra",
+            "Tra",
+            "Čer",
+            "Lip",
+            "Žni",
+            "Vie",
+            "Kas",
+            "Lis",
+            "Śni"
+        ],
+        "days": [
+            "Niadziela",
+            "Paniadziełak",
+            "Aŭtorak",
+            "Sierada",
+            "Čaćvier",
+            "Piatnica",
+            "Subota"
+        ],
+        "shortDays": [
+            "Nd",
+            "Pn",
+            "Aŭ",
+            "Sr",
+            "Čć",
+            "Pt",
+            "Sb"
+        ]
+    },
+    "ca": {
+        "months": [
+            "Gener",
+            "Febrer",
+            "Març",
+            "Abril",
+            "Maig",
+            "Juny",
+            "Juliol",
+            "Agost",
+            "Setembre",
+            "Octubre",
+            "Novembre",
+            "Desembre"
+        ],
+        "shortMonths": [
+            "Gen.",
+            "Febr.",
+            "Març",
+            "Abr.",
+            "Maig",
+            "Juny",
+            "Jul.",
+            "Ag.",
+            "Set.",
+            "Oct.",
+            "Nov.",
+            "Des."
+        ],
+        "days": [
+            "Diumenge",
+            "Dilluns",
+            "Dimarts",
+            "Dimecres",
+            "Dijous",
+            "Divendres",
+            "Dissabte"
+        ],
+        "shortDays": [
+            "Dg",
+            "Dl",
+            "Dt",
+            "Dc",
+            "Dj",
+            "Dv",
+            "Ds"
+        ]
+    },
+    "cs": {
+        "months": [
+            "Leden",
+            "Únor",
+            "Březen",
+            "Duben",
+            "Květen",
+            "Červen",
+            "Červenec",
+            "Srpen",
+            "Září",
+            "Říjen",
+            "Listopad",
+            "Prosinec"
+        ],
+        "shortMonths": [
+            "Led",
+            "Úno",
+            "Bře",
+            "Dub",
+            "Kvě",
+            "Čvn",
+            "Čvc",
+            "Srp",
+            "Zář",
+            "Říj",
+            "Lis",
+            "Pro"
+        ],
+        "days": [
+            "Neděle",
+            "Pondělí",
+            "Úterý",
+            "Středa",
+            "Čtvrtek",
+            "Pátek",
+            "Sobota"
+        ],
+        "shortDays": [
+            "Ne",
+            "Po",
+            "Út",
+            "St",
+            "Čt",
+            "Pá",
+            "So"
+        ]
+    },
+    "da": {
+        "months": [
+            "januar",
+            "februar",
+            "marts",
+            "april",
+            "maj",
+            "juni",
+            "juli",
+            "august",
+            "september",
+            "oktober",
+            "november",
+            "december"
+        ],
+        "shortMonths": [
+            "jan",
+            "feb",
+            "mar",
+            "apr",
+            "maj",
+            "jun",
+            "jul",
+            "aug",
+            "sep",
+            "okt",
+            "nov",
+            "dec"
+        ],
+        "days": [
+            "Søndag",
+            "Mandag",
+            "Tirsdag",
+            "Onsdag",
+            "Torsdag",
+            "Fredag",
+            "Lørdag"
+        ],
+        "shortDays": [
+            "Søn",
+            "Man",
+            "Tir",
+            "Ons",
+            "Tor",
+            "Fre",
+            "Lør"
+        ]
+    },
+    "de": {
+        "months": [
+            "Januar",
+            "Februar",
+            "März",
+            "April",
+            "Mai",
+            "Juni",
+            "Juli",
+            "August",
+            "September",
+            "Oktober",
+            "November",
+            "Dezember"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Feb",
+            "Mär",
+            "Apr",
+            "Mai",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Okt",
+            "Nov",
+            "Dez"
+        ],
+        "days": [
+            "Sonntag",
+            "Montag",
+            "Dienstag",
+            "Mittwoch",
+            "Donnerstag",
+            "Freitag",
+            "Samstag"
+        ],
+        "shortDays": [
+            "So",
+            "Mo",
+            "Di",
+            "Mi",
+            "Do",
+            "Fr",
+            "Sa"
+        ]
+    },
+    "el": {
+        "months": [
+            "Ιανουάριος",
+            "Φεβρουάριος",
+            "Μάρτιος",
+            "Απρίλιος",
+            "Μάιος",
+            "Ιούνιος",
+            "Ιούλιος",
+            "Αύγουστος",
+            "Σεπτέμβριος",
+            "Οκτώβριος",
+            "Νοέμβριος",
+            "Δεκέμβριος"
+        ],
+        "shortMonths": [
+            "Ιαν",
+            "Φευ",
+            "Μαρ",
+            "Απρ",
+            "Μάι",
+            "Ιουν",
+            "Ιουλ",
+            "Αυγ",
+            "Σεπ",
+            "Οκτ",
+            "Νοε",
+            "Δεκ"
+        ],
+        "days": [
+            "Κυριακή",
+            "Δευτέρα",
+            "Τρίτη",
+            "Τετάρτη",
+            "Πέμπτη",
+            "Παρασκευή",
+            "Σάββατο"
+        ],
+        "shortDays": [
+            "Κυρ",
+            "Δευ",
+            "Τρι",
+            "Τετ",
+            "Πεμ",
+            "Παρ",
+            "Σαβ"
+        ]
+    },
+    "en": {
+        "months": [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+        ],
+        "days": [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+        ],
+        "shortDays": [
+            "Sun",
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat"
+        ]
+    },
+    "es": {
+        "months": [
+            "Enero",
+            "Febrero",
+            "Marzo",
+            "Abril",
+            "Mayo",
+            "Junio",
+            "Julio",
+            "Agosto",
+            "Septiembre",
+            "Octubre",
+            "Noviembre",
+            "Diciembre"
+        ],
+        "shortMonths": [
+            "Ene",
+            "Feb",
+            "Mar",
+            "Abr",
+            "May",
+            "Jun",
+            "Jul",
+            "Ago",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dic"
+        ],
+        "days": [
+            "Domingo",
+            "Lunes",
+            "Martes",
+            "Miércoles",
+            "Jueves",
+            "Viernes",
+            "Sábado"
+        ],
+        "shortDays": [
+            "Dom",
+            "Lun",
+            "Mar",
+            "Mie",
+            "Jue",
+            "Vie",
+            "Sab"
+        ]
+    },
+    "et": {
+        "months": [
+            "jaanuar",
+            "veebruar",
+            "märts",
+            "aprill",
+            "mai",
+            "juuni",
+            "juuli",
+            "august",
+            "september",
+            "oktoober",
+            "november",
+            "detsember"
+        ],
+        "shortMonths": [
+            "jaan",
+            "veebr",
+            "märts",
+            "apr",
+            "mai",
+            "juuni",
+            "juuli",
+            "aug",
+            "sept",
+            "okt",
+            "nov",
+            "dets"
+        ],
+        "days": [
+            "pühapäev",
+            "esmaspäev",
+            "teisipäev",
+            "kolmapäev",
+            "neljapäev",
+            "reede",
+            "laupäev"
+        ],
+        "shortDays": [
+            "P",
+            "E",
+            "T",
+            "K",
+            "N",
+            "R",
+            "L"
+        ]
+    },
+    "fa": {
+        "months": [
+            "فروردین",
+            "اردیبهشت",
+            "خرداد",
+            "تیر",
+            "مرداد",
+            "شهریور",
+            "مهر",
+            "آبان",
+            "آذر",
+            "دی",
+            "بهمن",
+            "اسفند"
+        ],
+        "shortMonths": [
+            "فرو",
+            "ارد",
+            "خرد",
+            "تیر",
+            "مرد",
+            "شهر",
+            "مهر",
+            "آبا",
+            "آذر",
+            "دی",
+            "بهمـ",
+            "اسفـ"
+        ],
+        "days": [
+            "یکشنبه",
+            "دوشنبه",
+            "سه شنبه",
+            "چهارشنبه",
+            "پنجشنبه",
+            "جمعه",
+            "شنبه"
+        ],
+        "shortDays": [
+            "ی",
+            "د",
+            "س",
+            "چ",
+            "پ",
+            "ج",
+            "ش"
+        ]
+    },
+    "fi": {
+        "months": [
+            "Tammikuu",
+            "Helmikuu",
+            "Maaliskuu",
+            "Huhtikuu",
+            "Toukokuu",
+            "Kesäkuu",
+            "Heinäkuu",
+            "Elokuu",
+            "Syyskuu",
+            "Lokakuu",
+            "Marraskuu",
+            "Joulukuu"
+        ],
+        "shortMonths": [
+            "Tammi",
+            "Helmi",
+            "Maalis",
+            "Huhti",
+            "Touko",
+            "Kesä",
+            "Heinä",
+            "Elo",
+            "Syys",
+            "Loka",
+            "Marras",
+            "Joulu"
+        ],
+        "days": [
+            "Sunnuntai",
+            "Maanantai",
+            "Tiistai",
+            "Keskiviikko",
+            "Torstai",
+            "Perjantai",
+            "Lauantai"
+        ],
+        "shortDays": [
+            "Su",
+            "Ma",
+            "Ti",
+            "Ke",
+            "To",
+            "Pe",
+            "La"
+        ]
+    },
+    "fr": {
+        "months": [
+            "janvier",
+            "février",
+            "mars",
+            "avril",
+            "mai",
+            "juin",
+            "juillet",
+            "août",
+            "septembre",
+            "octobre",
+            "novembre",
+            "décembre"
+        ],
+        "shortMonths": [
+            "janv.",
+            "févr.",
+            "mars",
+            "avr.",
+            "mai",
+            "juin",
+            "juill.",
+            "août",
+            "sept.",
+            "oct.",
+            "nov.",
+            "déc."
+        ],
+        "days": [
+            "dimanche",
+            "lundi",
+            "mardi",
+            "mercredi",
+            "jeudi",
+            "vendredi",
+            "samedi"
+        ],
+        "shortDays": [
+            "dim.",
+            "lun.",
+            "mar.",
+            "mer.",
+            "jeu.",
+            "ven.",
+            "sam."
+        ]
+    },
+    "he": {
+        "months": [
+            "ינואר",
+            "פברואר",
+            "מרץ",
+            "אפריל",
+            "מאי",
+            "יוני",
+            "יולי",
+            "אוגוסט",
+            "ספטמבר",
+            "אוקטובר",
+            "נובמבר",
+            "דצמבר"
+        ],
+        "shortMonths": [
+            "ינו׳",
+            "פבר׳",
+            "מרץ",
+            "אפר׳",
+            "מאי",
+            "יוני",
+            "יולי",
+            "אוג׳",
+            "ספט׳",
+            "אוק׳",
+            "נוב׳",
+            "דצמ׳"
+        ],
+        "days": [
+            "ראשון",
+            "שני",
+            "שלישי",
+            "רביעי",
+            "חמישי",
+            "שישי",
+            "שבת"
+        ],
+        "shortDays": [
+            "א׳",
+            "ב׳",
+            "ג׳",
+            "ד׳",
+            "ה׳",
+            "ו׳",
+            "ש׳"
+        ]
+    },
+    "hi": {
+        "months": [
+            "जनवरी",
+            "फ़रवरी",
+            "मार्च",
+            "अप्रैल",
+            "मई",
+            "जून",
+            "जुलाई",
+            "अगस्त",
+            "सितंबर",
+            "अक्टूबर",
+            "नवंबर",
+            "दिसंबर"
+        ],
+        "shortMonths": [
+            "जनवरी",
+            "फ़रवरी",
+            "मार्च",
+            "अप्रैल",
+            "मई",
+            "जून",
+            "जुलाई",
+            "अगस्त",
+            "सितंबर",
+            "अक्टूबर",
+            "नवंबर",
+            "दिसंबर"
+        ],
+        "days": [
+            "रविवार",
+            "सोमवार",
+            "मंगलवार",
+            "बुधवार",
+            "गुरुवार",
+            "शुक्रवार",
+            "शनिवार"
+        ],
+        "shortDays": [
+            "रवि",
+            "सोम",
+            "मंगल",
+            "बुध",
+            "गुरु",
+            "शुक्र",
+            "शनि"
+        ]
+    },
+    "hr": {
+        "months": [
+            "Siječanj",
+            "Veljača",
+            "Ožujak",
+            "Travanj",
+            "Svibanj",
+            "Lipanj",
+            "Srpanj",
+            "Kolovoz",
+            "Rujan",
+            "Listopad",
+            "Studeni",
+            "Prosinac"
+        ],
+        "shortMonths": [
+            "Sij",
+            "Velj",
+            "Ožu",
+            "Tra",
+            "Svi",
+            "Lip",
+            "Srp",
+            "Kol",
+            "Ruj",
+            "Lis",
+            "Stu",
+            "Pro"
+        ],
+        "days": [
+            "Nedjelja",
+            "Ponedjeljak",
+            "Utorak",
+            "Srijeda",
+            "Četvrtak",
+            "Petak",
+            "Subota"
+        ],
+        "shortDays": [
+            "Ned",
+            "Pon",
+            "Uto",
+            "Sri",
+            "Čet",
+            "Pet",
+            "Sub"
+        ]
+    },
+    "hu": {
+        "months": [
+            "január",
+            "február",
+            "március",
+            "április",
+            "május",
+            "június",
+            "július",
+            "augusztus",
+            "szeptember",
+            "október",
+            "november",
+            "december"
+        ],
+        "shortMonths": [
+            "jan",
+            "feb",
+            "mar",
+            "ápr",
+            "máj",
+            "jún",
+            "júl",
+            "aug",
+            "szept",
+            "okt",
+            "nov",
+            "dec"
+        ],
+        "days": [
+            "hétfő",
+            "kedd",
+            "szerda",
+            "csütörtök",
+            "péntek",
+            "szombat",
+            "vasárnap"
+        ],
+        "shortDays": [
+            "H",
+            "K",
+            "Sze",
+            "Cs",
+            "P",
+            "Szo",
+            "V"
+        ]
+    },
+    "hy": {
+        "months": [
+            "Հունվար",
+            "Փետրվար",
+            "Մարտ",
+            "Ապրիլ",
+            "Մայիս",
+            "Հունիս",
+            "Հուլիս",
+            "Օգոստոս",
+            "Սեպտեմբեր",
+            "Հոկտեմբեր",
+            "Նոյեմբեր",
+            "Դեկտեմբեր"
+        ],
+        "shortMonths": [
+            "Հնվ",
+            "Փտվ",
+            "Մրտ",
+            "Ապր",
+            "Մյս",
+            "Հնս",
+            "Հլիս",
+            "Օգս",
+            "Սեպ",
+            "Հոկ",
+            "Նոյ",
+            "Դեկ"
+        ],
+        "days": [
+            "Կիրակի",
+            "Երկուշաբթի",
+            "Երեքշաբթի",
+            "Չորեքշաբթի",
+            "Հինգշաբթի",
+            "Ուրբաթ",
+            "Շաբաթ"
+        ],
+        "shortDays": [
+            "Կիր",
+            "Երկ",
+            "Երք",
+            "Չրք",
+            "Հնգ",
+            "Ուրբ",
+            "Շբթ"
+        ]
+    },
+    "id": {
+        "months": [
+            "Januari",
+            "Februari",
+            "Maret",
+            "April",
+            "Mei",
+            "Juni",
+            "Juli",
+            "Agustus",
+            "September",
+            "Oktober",
+            "November",
+            "Desember"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Mei",
+            "Jun",
+            "Jul",
+            "Agu",
+            "Sep",
+            "Okt",
+            "Nov",
+            "Des"
+        ],
+        "days": [
+            "Minggu",
+            "Senin",
+            "Selasa",
+            "Rabu",
+            "kamis",
+            "Jumat",
+            "Sabtu"
+        ],
+        "shortDays": [
+            "Min",
+            "Sen",
+            "Sel",
+            "Rab",
+            "Kam",
+            "Jum",
+            "Sab"
+        ]
+    },
+    "it": {
+        "months": [
+            "Gennaio",
+            "Febbraio",
+            "Marzo",
+            "Aprile",
+            "Maggio",
+            "Giugno",
+            "Luglio",
+            "Agosto",
+            "Settembre",
+            "Ottobre",
+            "Novembre",
+            "Dicembre"
+        ],
+        "shortMonths": [
+            "Gen",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Mag",
+            "Giu",
+            "Lug",
+            "Ago",
+            "Set",
+            "Ott",
+            "Nov",
+            "Dic"
+        ],
+        "days": [
+            "Domenica",
+            "Lunedì",
+            "Martedì",
+            "Mercoledì",
+            "Giovedì",
+            "Venerdì",
+            "Sabato"
+        ],
+        "shortDays": [
+            "Dom",
+            "Lun",
+            "Mar",
+            "Mer",
+            "Gio",
+            "Ven",
+            "Sab"
+        ]
+    },
+    "ja": {
+        "months": [
+            "1月",
+            "2月",
+            "3月",
+            "4月",
+            "5月",
+            "6月",
+            "7月",
+            "8月",
+            "9月",
+            "10月",
+            "11月",
+            "12月"
+        ],
+        "shortMonths": [
+            "1月",
+            "2月",
+            "3月",
+            "4月",
+            "5月",
+            "6月",
+            "7月",
+            "8月",
+            "9月",
+            "10月",
+            "11月",
+            "12月"
+        ],
+        "days": [
+            "日曜日",
+            "月曜日",
+            "火曜日",
+            "水曜日",
+            "木曜日",
+            "金曜日",
+            "土曜日"
+        ],
+        "shortDays": [
+            "日",
+            "月",
+            "火",
+            "水",
+            "木",
+            "金",
+            "土"
+        ]
+    },
+    "ka": {
+        "months": [
+            "იანვარი",
+            "თებერვალი",
+            "მარტი",
+            "აპრილი",
+            "მაისი",
+            "ივნისი",
+            "ივლისი",
+            "აგვისტო",
+            "სექტემბერი",
+            "ოქტომბერი",
+            "ნოემბერი",
+            "დეკემბერი"
+        ],
+        "shortMonths": [
+            "იან",
+            "თებ",
+            "მარ",
+            "აპრ",
+            "მაი",
+            "ივნ",
+            "ივლ",
+            "აგვ",
+            "სექ",
+            "ოქტ",
+            "ნოე",
+            "დეკ"
+        ],
+        "days": [
+            "კვირა",
+            "ორშაბათი",
+            "სამშაბათი",
+            "ოთხშაბათი",
+            "ხუთშაბათი",
+            "პარასკევი",
+            "შაბათი"
+        ],
+        "shortDays": [
+            "კვი",
+            "ორშ",
+            "სამ",
+            "ოთხ",
+            "ხუთ",
+            "პარ",
+            "შაბ"
+        ]
+    },
+    "ko": {
+        "months": [
+            "1월",
+            "2월",
+            "3월",
+            "4월",
+            "5월",
+            "6월",
+            "7월",
+            "8월",
+            "9월",
+            "10월",
+            "11월",
+            "12월"
+        ],
+        "shortMonths": [
+            "1월",
+            "2월",
+            "3월",
+            "4월",
+            "5월",
+            "6월",
+            "7월",
+            "8월",
+            "9월",
+            "10월",
+            "11월",
+            "12월"
+        ],
+        "days": [
+            "일요일",
+            "월요일",
+            "화요일",
+            "수요일",
+            "목요일",
+            "금요일",
+            "토요일"
+        ],
+        "shortDays": [
+            "일",
+            "월",
+            "화",
+            "수",
+            "목",
+            "금",
+            "토"
+        ]
+    },
+    "lt": {
+        "months": [
+            "Sausis",
+            "Vasaris",
+            "Kovas",
+            "Balandis",
+            "Gegužė",
+            "Birželis",
+            "Liepa",
+            "Rugpjūtis",
+            "Rugsėjis",
+            "Spalis",
+            "Lapkritis",
+            "Gruodis"
+        ],
+        "shortMonths": [
+            "Sau",
+            "Vas",
+            "Kov",
+            "Bal",
+            "Geg",
+            "Bir",
+            "Lie",
+            "Rgp",
+            "Rgs",
+            "Spl",
+            "Lap",
+            "Grd"
+        ],
+        "days": [
+            "Sekmadienis",
+            "Pirmadienis",
+            "Antradienis",
+            "Trečiadienis",
+            "Ketvirtadienis",
+            "Penktadienis",
+            "Šeštadienis"
+        ],
+        "shortDays": [
+            "Sk",
+            "Per",
+            "An",
+            "Tr",
+            "Kt",
+            "Pn",
+            "Št"
+        ]
+    },
+    "lv": {
+        "months": [
+            "janvāris",
+            "februāris",
+            "marts",
+            "aprīlis",
+            "maijs",
+            "jūnijs",
+            "jūlijs",
+            "augusts",
+            "septembris",
+            "oktobris",
+            "novembris",
+            "decembris"
+        ],
+        "shortMonths": [
+            "janv",
+            "febr",
+            "marts",
+            "apr",
+            "maijs",
+            "jūn",
+            "jūl",
+            "aug",
+            "sept",
+            "okt",
+            "nov",
+            "dec"
+        ],
+        "days": [
+            "svētdiena",
+            "pirmdiena",
+            "otrdiena",
+            "trešdiena",
+            "ceturtdiena",
+            "piektdiena",
+            "sestdiena"
+        ],
+        "shortDays": [
+            "Sv",
+            "P",
+            "O",
+            "T",
+            "C",
+            "P",
+            "S"
+        ]
+    },
+    "ms": {
+        "months": [
+            "Januari",
+            "Februari",
+            "Mac",
+            "April",
+            "Mei",
+            "Jun",
+            "Julai",
+            "Ogos",
+            "September",
+            "Oktober",
+            "November",
+            "Disember"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Feb",
+            "Mac",
+            "Apr",
+            "Mei",
+            "Jun",
+            "Jul",
+            "Ogos",
+            "Sep",
+            "Okt",
+            "Nov",
+            "Dis"
+        ],
+        "days": [
+            "Ahad",
+            "Isnin",
+            "Selasa",
+            "Rabu",
+            "Khamis",
+            "Jumaat",
+            "Sabtu"
+        ],
+        "shortDays": [
+            "Ahd",
+            "Isn",
+            "Sel",
+            "Rab",
+            "Kha",
+            "Jum",
+            "Sab"
+        ]
+    },
+    "nb": {
+        "months": [
+            "Januar",
+            "Februar",
+            "Mars",
+            "April",
+            "Mai",
+            "Juni",
+            "Juli",
+            "August",
+            "September",
+            "Oktober",
+            "November",
+            "Desember"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Mai",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Okt",
+            "Nov",
+            "Des"
+        ],
+        "days": [
+            "Søndag",
+            "Mandag",
+            "Tirsdag",
+            "Onsdag",
+            "Torsdag",
+            "Fredag",
+            "Lørdag"
+        ],
+        "shortDays": [
+            "Sø",
+            "Ma",
+            "Ti",
+            "On",
+            "To",
+            "Fr",
+            "Lø"
+        ]
+    },
+    "nl": {
+        "months": [
+            "januari",
+            "februari",
+            "maart",
+            "april",
+            "mei",
+            "juni",
+            "juli",
+            "augustus",
+            "september",
+            "oktober",
+            "november",
+            "december"
+        ],
+        "shortMonths": [
+            "jan.",
+            "feb.",
+            "mrt.",
+            "apr.",
+            "mei.",
+            "jun.",
+            "jul.",
+            "aug.",
+            "sep.",
+            "okt.",
+            "nov.",
+            "dec."
+        ],
+        "days": [
+            "zondag",
+            "maandag",
+            "dinsdag",
+            "woensdag",
+            "donderdag",
+            "vrijdag",
+            "zaterdag"
+        ],
+        "shortDays": [
+            "zo.",
+            "ma.",
+            "di.",
+            "wo.",
+            "do.",
+            "vr.",
+            "za."
+        ]
+    },
+    "pl": {
+        "months": [
+            "Styczeń",
+            "Luty",
+            "Marzec",
+            "Kwiecień",
+            "Maj",
+            "Czerwiec",
+            "Lipiec",
+            "Sierpień",
+            "Wrzesień",
+            "Październik",
+            "Listopad",
+            "Grudzień"
+        ],
+        "shortMonths": [
+            "Sty",
+            "Lut",
+            "Mar",
+            "Kwi",
+            "Maj",
+            "Cze",
+            "Lip",
+            "Sie",
+            "Wrz",
+            "Paź",
+            "Lis",
+            "Gru"
+        ],
+        "days": [
+            "Niedziela",
+            "Poniedziałek",
+            "Wtorek",
+            "Środa",
+            "Czwartek",
+            "Piątek",
+            "Sobota"
+        ],
+        "shortDays": [
+            "Nd",
+            "Pn",
+            "Wt",
+            "Śr",
+            "Cz",
+            "Pt",
+            "Sb"
+        ]
+    },
+    "pt-br": {
+        "months": [
+            "Janeiro",
+            "Fevereiro",
+            "Março",
+            "Abril",
+            "Maio",
+            "Junho",
+            "Julho",
+            "Agosto",
+            "Setembro",
+            "Outubro",
+            "Novembro",
+            "Dezembro"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Fev",
+            "Mar",
+            "Abr",
+            "Mai",
+            "Jun",
+            "Jul",
+            "Ago",
+            "Set",
+            "Out",
+            "Nov",
+            "Dez"
+        ],
+        "days": [
+            "Domingo",
+            "Segunda",
+            "Terça",
+            "Quarta",
+            "Quinta",
+            "Sexta",
+            "Sábado"
+        ],
+        "shortDays": [
+            "Dom",
+            "Seg",
+            "Ter",
+            "Qua",
+            "Qui",
+            "Sex",
+            "Sab"
+        ]
+    },
+    "pt": {
+        "months": [
+            "Janeiro",
+            "Fevereiro",
+            "Março",
+            "Abril",
+            "Maio",
+            "Junho",
+            "Julho",
+            "Agosto",
+            "Setembro",
+            "Outubro",
+            "Novembro",
+            "Dezembro"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Fev",
+            "Mar",
+            "Abr",
+            "Mai",
+            "Jun",
+            "Jul",
+            "Ag",
+            "Set",
+            "Out",
+            "Nov",
+            "Dez"
+        ],
+        "days": [
+            "Domingo",
+            "Segunda-feira",
+            "Terça-feira",
+            "Quarta-feira",
+            "Quinta-feira",
+            "Sexta-feira",
+            "Sábado"
+        ],
+        "shortDays": [
+            "Do",
+            "Se",
+            "Te",
+            "Qa",
+            "Qi",
+            "Sx",
+            "Sa"
+        ]
+    },
+    "rs": {
+        "months": [
+            "Januar",
+            "Februar",
+            "Mart",
+            "April",
+            "Maj",
+            "Jun",
+            "Jul",
+            "Avgust",
+            "Septembar",
+            "Oktobar",
+            "Novembar",
+            "Decembar"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Maj",
+            "Jun",
+            "Jul",
+            "Avg",
+            "Sep",
+            "Okt",
+            "Nov",
+            "Dec"
+        ],
+        "days": [
+            "Nedelja",
+            "Ponedeljak",
+            "Utorak",
+            "Sreda",
+            "Četvrtak",
+            "Petak",
+            "Subota"
+        ],
+        "shortDays": [
+            "Ned",
+            "Pon",
+            "Uto",
+            "Sre",
+            "Čet",
+            "Pet",
+            "Sub"
+        ]
+    },
+    "ru": {
+        "months": [
+            "Январь",
+            "Февраль",
+            "Март",
+            "Апрель",
+            "Май",
+            "Июнь",
+            "Июль",
+            "Август",
+            "Сентябрь",
+            "Октябрь",
+            "Ноябрь",
+            "Декабрь"
+        ],
+        "shortMonths": [
+            "Янв",
+            "Фев",
+            "Мар",
+            "Апр",
+            "Май",
+            "Июн",
+            "Июл",
+            "Авг",
+            "Сен",
+            "Окт",
+            "Ноя",
+            "Дек"
+        ],
+        "days": [
+            "Воскресенье",
+            "Понедельник",
+            "Вторник",
+            "Среда",
+            "Четверг",
+            "Пятница",
+            "Суббота"
+        ],
+        "shortDays": [
+            "Вс",
+            "Пн",
+            "Вт",
+            "Ср",
+            "Чт",
+            "Пт",
+            "Сб"
+        ]
+    },
+    "se": {
+        "months": [
+            "Januari",
+            "Februari",
+            "Mars",
+            "April",
+            "Maj",
+            "Juni",
+            "Juli",
+            "Augusti",
+            "September",
+            "Oktober",
+            "November",
+            "December"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Maj",
+            "Juni",
+            "Juli",
+            "Aug",
+            "Sep",
+            "Okt",
+            "Nov",
+            "Dec"
+        ],
+        "days": [
+            "Söndag",
+            "Måndag",
+            "Tisdag",
+            "Onsdag",
+            "Torsdag",
+            "Fredag",
+            "Lördag"
+        ],
+        "shortDays": [
+            "Sön",
+            "Mån",
+            "Tis",
+            "Ons",
+            "Tor",
+            "Fre",
+            "Lör"
+        ]
+    },
+    "sk": {
+        "months": [
+            "Január",
+            "Február",
+            "Marec",
+            "Apríl",
+            "Máj",
+            "Jún",
+            "Júl",
+            "August",
+            "September",
+            "Október",
+            "November",
+            "December"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Máj",
+            "Jún",
+            "Júl",
+            "Aug",
+            "Sep",
+            "Okt",
+            "Nov",
+            "Dec"
+        ],
+        "days": [
+            "Nedeľa",
+            "Pondelok",
+            "Utorok",
+            "Streda",
+            "Štvrtok",
+            "Piatok",
+            "Sobota"
+        ],
+        "shortDays": [
+            "Ne",
+            "Po",
+            "Ut",
+            "St",
+            "Št",
+            "Pi",
+            "So"
+        ]
+    },
+    "sl": {
+        "months": [
+            "Januar",
+            "Februar",
+            "Marec",
+            "April",
+            "Maj",
+            "Junij",
+            "Julij",
+            "Avgust",
+            "Septemer",
+            "Oktober",
+            "November",
+            "December"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "Maj",
+            "Jun",
+            "Jul",
+            "Avg",
+            "Sep",
+            "Okt",
+            "Nov",
+            "Dec"
+        ],
+        "days": [
+            "Nedelja",
+            "Ponedeljek",
+            "Torek",
+            "Sreda",
+            "Četrtek",
+            "Petek",
+            "Sobota"
+        ],
+        "shortDays": [
+            "Ne",
+            "Po",
+            "To",
+            "Sr",
+            "Če",
+            "Pe",
+            "So"
+        ]
+    },
+    "sq": {
+        "months": [
+            "Janar",
+            "Shkurt",
+            "Mars",
+            "Prill",
+            "Maj",
+            "Qershor",
+            "Korrik",
+            "Gusht",
+            "Shtator",
+            "Tetor",
+            "Nëntor",
+            "Dhjetor"
+        ],
+        "shortMonths": [
+            "Jan",
+            "Shk",
+            "Mar",
+            "Pr",
+            "Maj",
+            "Qer",
+            "Korr",
+            "Gush",
+            "Sht",
+            "Tet",
+            "Nën",
+            "Dhj"
+        ],
+        "days": [
+            "e Dielë",
+            "e Hënë",
+            "e Martë",
+            "e Mërkurë",
+            "e Enjte",
+            "e Premte",
+            "e Shtunë"
+        ],
+        "shortDays": [
+            "Die",
+            "Hën",
+            "Mar",
+            "Mër",
+            "Enj",
+            "Pre",
+            "Sht"
+        ]
+    },
+    "th": {
+        "months": [
+            "มกราคม",
+            "กุมภาพันธ์",
+            "มีนาคม",
+            "เมษายน",
+            "พฤษภาคม",
+            "มิถุนายน",
+            "กรกฎาคม",
+            "สิงหาคม",
+            "กันยายน",
+            "ตุลาคม",
+            "พฤศจิกายน",
+            "ธันวาคม"
+        ],
+        "shortMonths": [
+            "ม.ค.",
+            "ก.พ.",
+            "มี.ค.",
+            "เม.ย.",
+            "พ.ค.",
+            "มิ.ย.",
+            "ก.ค.",
+            "ส.ค.",
+            "ก.ย.",
+            "ต.ค.",
+            "พ.ย.",
+            "ธ.ค."
+        ],
+        "days": [
+            "อาทิตย์",
+            "จันทร์",
+            "อังคาร",
+            "พุธ",
+            "พฤหัสบดี",
+            "ศุกร์",
+            "เสาร์"
+        ],
+        "shortDays": [
+            "อา",
+            "จ",
+            "อ",
+            "พ",
+            "พฤ",
+            "ศ",
+            "ส"
+        ]
+    },
+    "tr": {
+        "months": [
+            "Ocak",
+            "Şubat",
+            "Mart",
+            "Nisan",
+            "Mayıs",
+            "Haziran",
+            "Temmuz",
+            "Ağustos",
+            "Eylül",
+            "Ekim",
+            "Kasım",
+            "Aralık"
+        ],
+        "shortMonths": [
+            "Oca",
+            "Şub",
+            "Mar",
+            "Nis",
+            "May",
+            "Haz",
+            "Tem",
+            "Ağu",
+            "Eyl",
+            "Eki",
+            "Kas",
+            "Ara"
+        ],
+        "days": [
+            "Pazar",
+            "Pazartesi",
+            "Salı",
+            "Çarşamba",
+            "Perşembe",
+            "Cuma",
+            "Cumartesi"
+        ],
+        "shortDays": [
+            "Paz",
+            "Pzt",
+            "Sal",
+            "Çar",
+            "Per",
+            "Cum",
+            "Cmt"
+        ]
+    },
+    "ua": {
+        "months": [
+            "Січень",
+            "Лютий",
+            "Березень",
+            "Квітень",
+            "Травень",
+            "Червень",
+            "Липень",
+            "Серпень",
+            "Вересень",
+            "Жовтень",
+            "Листопад",
+            "Грудень"
+        ],
+        "shortMonths": [
+            "Січ",
+            "Лют",
+            "Бер",
+            "Кві",
+            "Тра",
+            "Чер",
+            "Лип",
+            "Сер",
+            "Вер",
+            "Жов",
+            "Лис",
+            "Гру"
+        ],
+        "days": [
+            "Неділя",
+            "Понеділок",
+            "Вівторок",
+            "Середа",
+            "Четвер",
+            "П'ятниця",
+            "Субота"
+        ],
+        "shortDays": [
+            "Нд",
+            "Пн",
+            "Вт",
+            "Ср",
+            "Чт",
+            "Пт",
+            "Сб"
+        ]
+    },
+    "vi": {
+        "months": [
+            "Tháng 01",
+            "Tháng 02",
+            "Tháng 03",
+            "Tháng 04",
+            "Tháng 05",
+            "Tháng 06",
+            "Tháng 07",
+            "Tháng 08",
+            "Tháng 09",
+            "Tháng 10",
+            "Tháng 11",
+            "Tháng 12"
+        ],
+        "shortMonths": [
+            "Th01",
+            "Th02",
+            "Th03",
+            "Th04",
+            "Th05",
+            "Th06",
+            "Th07",
+            "Th08",
+            "Th09",
+            "Th10",
+            "Th11",
+            "Th12"
+        ],
+        "days": [
+            "Chủ nhật",
+            "Thứ hai",
+            "Thứ ba",
+            "Thứ Tư",
+            "Thứ năm",
+            "Thứ sáu",
+            "Thứ bảy"
+        ],
+        "shortDays": [
+            "CN",
+            "T2",
+            "T3",
+            "T4",
+            "T5",
+            "T6",
+            "T7"
+        ]
+    },
+    "zh-cn": {
+        "months": [
+            "一月",
+            "二月",
+            "三月",
+            "四月",
+            "五月",
+            "六月",
+            "七月",
+            "八月",
+            "九月",
+            "十月",
+            "十一月",
+            "十二月"
+        ],
+        "shortMonths": [
+            "一月",
+            "二月",
+            "三月",
+            "四月",
+            "五月",
+            "六月",
+            "七月",
+            "八月",
+            "九月",
+            "十月",
+            "十一月",
+            "十二月"
+        ],
+        "days": [
+            "星期天",
+            "星期一",
+            "星期二",
+            "星期三",
+            "星期四",
+            "星期五",
+            "星期六"
+        ],
+        "shortDays": [
+            "周日",
+            "周一",
+            "周二",
+            "周三",
+            "周四",
+            "周五",
+            "周六"
+        ]
+    },
+    "zh-tw": {
+        "months": [
+            "一月",
+            "二月",
+            "三月",
+            "四月",
+            "五月",
+            "六月",
+            "七月",
+            "八月",
+            "九月",
+            "十月",
+            "十一月",
+            "十二月"
+        ],
+        "shortMonths": [
+            "一月",
+            "二月",
+            "三月",
+            "四月",
+            "五月",
+            "六月",
+            "七月",
+            "八月",
+            "九月",
+            "十月",
+            "十一月",
+            "十二月"
+        ],
+        "days": [
+            "星期日",
+            "星期一",
+            "星期二",
+            "星期三",
+            "星期四",
+            "星期五",
+            "星期六"
+        ],
+        "shortDays": [
+            "週日",
+            "週一",
+            "週二",
+            "週三",
+            "週四",
+            "週五",
+            "週六"
+        ]
+    }
+}

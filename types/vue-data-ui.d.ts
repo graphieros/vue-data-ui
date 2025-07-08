@@ -312,6 +312,23 @@ declare module "vue-data-ui" {
     };
     export type Formatter = null | ((params: FormatterParams) => string | number);
 
+    export type Locale = "ar" | "be-cyrl" | "be-latn" | "ca" | "cs" | "da" | "de" | "el" | "en" | "es" | "et" | "fa" | "fi" | "fr" | "he" | "hi" | "hr" | "hu" | "hy" | "id" | "it" | "ja" | "ka" | "ko" | "lt" | "lv" | "ms" | "nb" | "nl" | "pl" | "pt-br" | "pt" | "rs" | "ru" | "se" | "sk" | "sl" | "sq" | "th" | "tr" | "ua" | "vi" | "zh-cn" | "zh-tw";
+
+    export type AxisDateFormatter = {
+        enable?: boolean;
+        locale?: Locale;
+        useUTC?: boolean;
+        januaryAsYear?: boolean;
+        options?: {
+            year?: string;
+            month?: string;
+            day?: string;
+            hour?: string;
+            minute?: string;
+            second?: string;
+        }
+    }
+
     export type VueUiTooltipParams<
         TDatapoint,
         TSeries,
@@ -1245,7 +1262,8 @@ declare module "vue-data-ui" {
                         xAxis?: {
                             dataLabels?: {
                                 show?: boolean;
-                                values?: string[];
+                                values?: Array<number | string>;
+                                datetimeFormatter?: AxisDateFormatter;
                                 fontSize?: number;
                                 showOnlyFirstAndLast?: boolean;
                                 color?: string;
@@ -2759,13 +2777,14 @@ declare module "vue-data-ui" {
                     xAxisLabels?: {
                         color?: string;
                         show?: boolean;
-                        values?: string[];
+                        values?: Array<number | string>;
                         fontSize?: number;
                         showOnlyFirstAndLast?: boolean;
                         yOffset?: number;
                         rotation?: number;
                         showOnlyAtModulo?: boolean;
                         modulo?: number;
+                        datetimeFormatter?: AxisDateFormatter;
                     };
                 };
             };
@@ -5143,6 +5162,7 @@ declare module "vue-data-ui" {
         xyPaddingRight?: number;
         xyPaddingTop?: number;
         xyPeriods?: Array<number | string>;
+        datetimeFormatter?: AxisDateFormatter;
         xyPeriodLabelsRotation?: number;
         xyPeriodsShowOnlyAtModulo?: boolean;
         xyPeriodsModulo?: number;
@@ -5721,6 +5741,7 @@ declare module "vue-data-ui" {
                             show?: boolean;
                             fontSizeRatio?: number;
                             values?: Array<string | number>;
+                            datetimeFormatter?: AxisDateFormatter;
                             rotation?: number;
                             offsetY?: number;
                             color?: string;
@@ -6384,7 +6405,8 @@ declare module "vue-data-ui" {
                         };
                         timeLabels?: {
                             show?: boolean;
-                            values?: string[];
+                            values?: Array<number | string>;
+                            datetimeFormatter?: AxisDateFormatter;
                             offsetY?: number;
                             rotation?: number;
                             fontSize?: number;
@@ -7045,7 +7067,8 @@ declare module "vue-data-ui" {
                         prefix?: string;
                         suffix?: string;
                         rotation?: number;
-                        values?: string[];
+                        values?: Array<number | string>;
+                        datetimeFormatter?: AxisDateFormatter;
                         color?: string;
                         fontSize?: number;
                         bold?: boolean;

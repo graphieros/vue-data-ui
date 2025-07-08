@@ -195,6 +195,8 @@ function prepareChart() {
                         threshold: 6,
                         fallback: 6
                     });
+                } else {
+                    plotRadius.value = FINAL_CONFIG.value.style.chart.plots.radius;
                 }
             });
         });

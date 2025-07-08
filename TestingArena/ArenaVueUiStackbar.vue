@@ -21,18 +21,30 @@ const dataset = computed(() => {
   return [
     {
       name: "Series 1",
-      series: [1],
+      series: [1, 2, 1, 3, 1, 5],
     },
     {
       name: "Series 2",
-      series: [0],
+      series: [0, 2, 3, 2, 1, 2],
     },
     {
       name: "Series 3",
-      series: [0],
+      series: [1, 2, 4, 3, 2, 1],
     },
   ];
 });
+
+const monthValues = computed(() => {
+  const yearStart = 2026
+  const arr = []
+
+  for (let i = 0; i < 13; i++) {
+    const d = new Date(yearStart, i, 1)
+    arr.push(d.getTime())
+  }
+
+  return arr
+})
 
 // const dataset = ref([
 //     {
@@ -241,6 +253,10 @@ const config = computed(() => {
                         ...c.style.chart.grid.x,
                         timeLabels: {
                             ...c.style.chart.grid.x.timeLabels,
+                            values: monthValues.value,
+                            datetimeFormatter: {
+                                enable: true
+                            }
                             // values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG']
                         }
                     }
