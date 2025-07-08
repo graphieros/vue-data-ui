@@ -522,6 +522,7 @@ export function useConfig() {
                     xAxis: {
                         showBaseline: false,
                         showCrosshairs: true,
+                        crosshairsAlwaysAtZero: false,
                         crosshairSize: 6,
                     },
                     yAxis: {

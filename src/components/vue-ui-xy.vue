@@ -230,14 +230,14 @@
                                     <line
                                         data-cy="axis-x-tick"
                                         v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showCrosshairs"
-                                        :y1="drawingArea.bottom"
-                                        :y2="drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize"
+                                        :y1="FINAL_CONFIG.chart.grid.labels.xAxis.crosshairsAlwaysAtZero ? zero - (zero === drawingArea.bottom ? 0 : FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize / 2) :  drawingArea.bottom"
+                                        :y2="FINAL_CONFIG.chart.grid.labels.xAxis.crosshairsAlwaysAtZero ? zero + (FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize / (zero === drawingArea.bottom ? 1 : 2)) : drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize"
                                         :x1="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
                                         :x2="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
                                         :stroke="FINAL_CONFIG.chart.grid.stroke"
                                         :stroke-width="1"
                                         stroke-linecap="round"
-                                        :style="{ animation: 'none !important '}"
+                                        :style="{ animation: 'none !important'}"
                                     />
                             </template>
                         </g>
@@ -2138,7 +2138,15 @@ export default {
             return result;
         },
         barSet() {
-            return this.activeSeriesWithStackRatios.filter(s => s.type === 'bar').map((datapoint, i) => {
+            const stackSeries   = this.activeSeriesWithStackRatios
+                .filter(s => ['bar','line','plot'].includes(s.type));
+            const totalSeries = stackSeries.length;
+            const gap = this.FINAL_CONFIG.chart.grid.labels.yAxis.gap;
+            const stacked = this.mutableConfig.isStacked;
+            const totalGap = stacked ? gap * (totalSeries - 1) : 0
+            const usableHeight = this.drawingArea.height - totalGap;
+
+            return stackSeries.filter(s => s.type === 'bar').map((datapoint, i) => {
                 this.checkAutoScaleError(datapoint);
                 const min = this.scaleGroups[datapoint.scaleLabel].min;
                 const max = this.scaleGroups[datapoint.scaleLabel].max;
@@ -2170,9 +2178,11 @@ export default {
                 const individualMax = individualScale.max + individualZero;
                 const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
 
-                const yOffset = this.mutableConfig.isStacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
-
-                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.FINAL_CONFIG.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const origIdx = datapoint.stackIndex;
+                const flippedIdx = totalSeries - 1 - origIdx;
+                const flippedLowerRatio  = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
+                const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
+                const individualHeight = stacked ? usableHeight * datapoint.stackRatio : this.drawingArea.height;
 
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
                 const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
@@ -2276,7 +2286,15 @@ export default {
             })
         },
         lineSet() {
-            return this.activeSeriesWithStackRatios.filter(s => s.type === 'line').map((datapoint) => {
+            const stackSeries   = this.activeSeriesWithStackRatios
+                .filter(s => ['bar','line','plot'].includes(s.type));
+            const totalSeries = stackSeries.length;
+            const gap = this.FINAL_CONFIG.chart.grid.labels.yAxis.gap;
+            const stacked = this.mutableConfig.isStacked;
+            const totalGap = stacked ? gap * (totalSeries - 1) : 0
+            const usableHeight = this.drawingArea.height - totalGap;
+
+            return stackSeries.filter(s => s.type === 'line').map((datapoint, i) => {
                 this.checkAutoScaleError(datapoint);
 
                 const min = this.scaleGroups[datapoint.scaleLabel].min;
@@ -2309,9 +2327,11 @@ export default {
                 const individualMax = individualScale.max + Math.abs(individualZero);
                 const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
 
-                const yOffset = this.mutableConfig.isStacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
-
-                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.FINAL_CONFIG.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const origIdx = datapoint.stackIndex;
+                const flippedIdx = totalSeries - 1 - origIdx;
+                const flippedLowerRatio  = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
+                const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
+                const individualHeight = stacked ? usableHeight * datapoint.stackRatio : this.drawingArea.height;
                 
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
 
@@ -2453,7 +2473,14 @@ export default {
             });
         },
         plotSet() {
-            return this.activeSeriesWithStackRatios.filter(s => s.type === 'plot').map((datapoint) => {
+            const stackSeries = this.activeSeriesWithStackRatios.filter(s => ['bar','line','plot'].includes(s.type));
+            const totalSeries = stackSeries.length;
+            const gap = this.FINAL_CONFIG.chart.grid.labels.yAxis.gap;
+            const stacked = this.mutableConfig.isStacked;
+            const totalGap = stacked ? gap * (totalSeries - 1) : 0;
+            const usableHeight = this.drawingArea.height - totalGap;
+
+            return stackSeries.filter(s => s.type === 'plot').map((datapoint) => {
                 this.checkAutoScaleError(datapoint);
                 const min = this.scaleGroups[datapoint.scaleLabel].min;
                 const max = this.scaleGroups[datapoint.scaleLabel].max;
@@ -2486,9 +2513,11 @@ export default {
                 const individualMax = individualScale.max + individualZero;
                 const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
                 
-                const yOffset = this.mutableConfig.isStacked ? (this.drawingArea.height * (1 - datapoint.cumulatedStackRatio)) : 0;
-
-                const individualHeight = this.mutableConfig.isStacked ? (this.drawingArea.height * datapoint.stackRatio) - this.FINAL_CONFIG.chart.grid.labels.yAxis.gap : this.drawingArea.height;
+                const origIdx = datapoint.stackIndex;
+                const flippedIdx = totalSeries - 1 - origIdx;
+                const flippedLowerRatio  = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
+                const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
+                const individualHeight = stacked ? usableHeight * datapoint.stackRatio : this.drawingArea.height;
 
                 const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
                 const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);

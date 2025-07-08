@@ -1727,10 +1727,11 @@ export function assignStackRatios(arr) {
     }));
 
     let cumulatedRatio = 0;
-    output = output.map(item => {
+    output = output.map((item, i) => {
         cumulatedRatio += item.stackRatio;
         return {
             ...item,
+            stackIndex: i,
             cumulatedStackRatio: cumulatedRatio
         };
     });

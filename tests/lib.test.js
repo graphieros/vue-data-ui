@@ -1745,18 +1745,21 @@ describe("assignStackRatios", () => {
             series: [1, 2, 3],
             stackRatio: 0.5,
             cumulatedStackRatio: 0.5,
+            stackIndex: 0,
         },
         {
             name: "B",
             series: [1, 2, 3],
             stackRatio: 0.25,
             cumulatedStackRatio: 0.75,
+            stackIndex: 1
         },
         {
             name: "C",
             series: [1, 2, 3],
             stackRatio: 0.25,
             cumulatedStackRatio: 1,
+            stackIndex: 2
         },
     ];
 
@@ -1777,12 +1780,14 @@ describe("assignStackRatios", () => {
             series: [1, 2, 3],
             stackRatio: 0.5,
             cumulatedStackRatio: 0.5,
+            stackIndex: 0
         },
         {
             name: "A",
             series: [1, 2, 3],
             stackRatio: 0.5,
             cumulatedStackRatio: 1,
+            stackIndex: 1
         },
     ];
 

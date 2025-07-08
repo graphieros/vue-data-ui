@@ -2773,6 +2773,7 @@ declare module "vue-data-ui" {
                         showBaseline?: boolean;
                         showCrosshairs?: boolean;
                         crosshairSize?: number;
+                        crosshairsAlwaysAtZero?: boolean;
                     };
                     xAxisLabels?: {
                         color?: string;

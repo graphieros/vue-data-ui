@@ -112,14 +112,20 @@ function createDs(n, m = 100) {
 const dataset = ref([
     {
         name: "A",
-        series: [null, 100, 112, 221, 119, 75, null, 226, 243, 198, 156, 127, null],
-        type: "line",
+        series: [null, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, null],
+        type: "bar",
         dataLabels: false,
     },
     {
         name: "B",
         series: [null, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, null],
         type: "line",
+        dataLabels: false,
+    },
+    {
+        name: "C",
+        series: [null, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, null],
+        type: "plot",
         dataLabels: false,
     },
     // {
@@ -419,7 +425,7 @@ const model = ref([
     { key: 'chart.highlightArea.caption.padding', def: 3, type: 'number', min: 0, max: 48, label: 'captionPadding', category: 'highlight' },
     { key: 'chart.highlightArea.caption.textAlign', def: 'center', type: 'select', options: ['left', 'center', 'right'], label: 'textAlign', category: 'highlight' },
 
-    { key: 'chart.grid.stroke', def: '#FF0000', type: 'color', label: 'lineColor', category: 'grid' },
+    { key: 'chart.grid.stroke', def: '#CCCCCC', type: 'color', label: 'lineColor', category: 'grid' },
     { key: 'chart.grid.showVerticalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
     { key: 'chart.grid.showHorizontalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
 
@@ -452,7 +458,7 @@ const model = ref([
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 10, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
-    { key: 'chart.grid.labels.yAxis.gap', def: 12, min: 0, max: 200, type: 'number' },
+    { key: 'chart.grid.labels.yAxis.gap', def: 24, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 48, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.showBaseline', def: true, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.scaleMin', def: null, type: 'number', min: -1000, max: 1000 },
@@ -464,6 +470,8 @@ const model = ref([
 
     { key: 'chart.grid.labels.yAxis.showCrosshairs', def: true, type: 'checkbox'},
     { key: 'chart.grid.labels.xAxis.showCrosshairs', def: true, type: 'checkbox'},
+    { key: 'chart.grid.labels.xAxis.crosshairSize', def: 6, type: 'number', min: 0, max: 24},
+    { key: 'chart.grid.labels.xAxis.crosshairsAlwaysAtZero', def: false, type: 'checkbox'},
 
     { key: 'chart.grid.labels.xAxis.showBaseline', def: true, type: 'checkbox' },
     { key: 'chart.grid.labels.zeroLine.show', def: true, type: 'checkbox' },
