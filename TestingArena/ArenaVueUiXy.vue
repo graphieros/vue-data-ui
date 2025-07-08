@@ -824,7 +824,7 @@ const config = computed(() => {
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
                             values: monthValues.value,
-                            formatter: {
+                            datetimeFormatter: {
                                 enable: true,
                                 locale: 'en',
                                 useUTC: false,

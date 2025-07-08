@@ -441,7 +441,7 @@ const timeLabels = computed(() => {
     return useTimeLabels({
         values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
         maxDatapoints: maxSeries.value,
-        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.formatter,
+        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
         start: slicer.value.start,
         end: slicer.value.end
     })

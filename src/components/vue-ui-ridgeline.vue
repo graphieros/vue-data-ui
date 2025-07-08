@@ -320,7 +320,7 @@ const timeLabels = computed(() => {
     return useTimeLabels({
         values: FINAL_CONFIG.value.style.chart.xAxis.labels.values,
         maxDatapoints: maxDpLen.value,
-        formatter: FINAL_CONFIG.value.style.chart.xAxis.labels.formatter,
+        formatter: FINAL_CONFIG.value.style.chart.xAxis.labels.datetimeFormatter,
         start: 0,
         end: FINAL_CONFIG.value.style.chart.xAxis.labels.values.length
     })
@@ -527,7 +527,7 @@ function createXyDatasetForDialog(ds) {
                     xAxisLabels: {
                         ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid.labels.xAxisLabels,
                         values: FINAL_CONFIG.value.style.chart.xAxis.labels.values, // Overriding
-                        formatter: FINAL_CONFIG.value.style.chart.xAxis.labels.formatter, // Overriding
+                        datetimeFormatter: FINAL_CONFIG.value.style.chart.xAxis.labels.datetimeFormatter, // Overriding
                     }
                 }
             },

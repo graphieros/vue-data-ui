@@ -171,7 +171,7 @@ const config = computed(() => {
                             dataLabels: {
                                 ...c.style.chart.layout.grid.xAxis.dataLabels,
                                 values: monthValues.value,
-                                formatter: {
+                                datetimeFormatter: {
                                     enable: true,
                                 }
                             }

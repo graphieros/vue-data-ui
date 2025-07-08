@@ -170,7 +170,7 @@ const config = computed(() => {
                     labels: {
                         ...c.style.chart.xAxis.labels,
                         values: monthValues.value,
-                        formatter: {
+                        datetimeFormatter: {
                             enable: true,
                         }
                     }

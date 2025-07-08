@@ -1263,7 +1263,7 @@ declare module "vue-data-ui" {
                             dataLabels?: {
                                 show?: boolean;
                                 values?: string[];
-                                formatter?: AxisDateFormatter;
+                                datetimeFormatter?: AxisDateFormatter;
                                 fontSize?: number;
                                 showOnlyFirstAndLast?: boolean;
                                 color?: string;
@@ -2784,7 +2784,7 @@ declare module "vue-data-ui" {
                         rotation?: number;
                         showOnlyAtModulo?: boolean;
                         modulo?: number;
-                        formatter?: AxisDateFormatter;
+                        datetimeFormatter?: AxisDateFormatter;
                     };
                 };
             };
@@ -5162,7 +5162,7 @@ declare module "vue-data-ui" {
         xyPaddingRight?: number;
         xyPaddingTop?: number;
         xyPeriods?: Array<number | string>;
-        xyPeriodFormatter?: AxisDateFormatter;
+        datetimeFormatter?: AxisDateFormatter;
         xyPeriodLabelsRotation?: number;
         xyPeriodsShowOnlyAtModulo?: boolean;
         xyPeriodsModulo?: number;
@@ -5741,7 +5741,7 @@ declare module "vue-data-ui" {
                             show?: boolean;
                             fontSizeRatio?: number;
                             values?: Array<string | number>;
-                            formatter?: AxisDateFormatter;
+                            datetimeFormatter?: AxisDateFormatter;
                             rotation?: number;
                             offsetY?: number;
                             color?: string;
@@ -6406,7 +6406,7 @@ declare module "vue-data-ui" {
                         timeLabels?: {
                             show?: boolean;
                             values?: string[];
-                            formatter?: AxisDateFormatter;
+                            datetimeFormatter?: AxisDateFormatter;
                             offsetY?: number;
                             rotation?: number;
                             fontSize?: number;
@@ -7068,7 +7068,7 @@ declare module "vue-data-ui" {
                         suffix?: string;
                         rotation?: number;
                         values?: string[];
-                        formatter?: AxisDateFormatter;
+                        datetimeFormatter?: AxisDateFormatter;
                         color?: string;
                         fontSize?: number;
                         bold?: boolean;

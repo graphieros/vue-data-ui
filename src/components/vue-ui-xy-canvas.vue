@@ -951,7 +951,7 @@ const timeLabels = computed(() => {
     return useTimeLabels({
         values: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values,
         maxDatapoints: maxSeries.value,
-        formatter: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.formatter,
+        formatter: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.datetimeFormatter,
         start: 0,
         end: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.length
     });

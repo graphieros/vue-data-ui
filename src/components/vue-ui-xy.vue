@@ -2617,7 +2617,7 @@ export default {
             return useTimeLabels({
                 values: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values,
                 maxDatapoints: max,
-                formatter: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.formatter,
+                formatter: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter,
                 start: this.slicer.start,
                 end: this.slicer.end
             });

@@ -318,7 +318,7 @@ const timeLabels = computed(() => {
     return useTimeLabels({
         values: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.values,
         maxDatapoints: maxLength.value,
-        formatter: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.formatter,
+        formatter: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.datetimeFormatter,
         start: slicer.value.start,
         end: slicer.value.end
     });

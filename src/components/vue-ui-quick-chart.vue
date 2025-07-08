@@ -967,7 +967,7 @@ const timeLabels = computed(() => {
     return useTimeLabels({
         values: FINAL_CONFIG.value.xyPeriods,
         maxDatapoints: formattedDataset.value.maxSeriesLength,
-        formatter: FINAL_CONFIG.value.xyPeriodFormatter,
+        formatter: FINAL_CONFIG.value.datetimeFormatter,
         start: slicer.value.start,
         end: slicer.value.end
     })

@@ -263,7 +263,7 @@ const config = computed(() => {
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         xyPeriods: monthValues.value,
-        xyPeriodFormatter: {
+        datetimeFormatter: {
             enable: true
         }
     }

@@ -256,7 +256,7 @@ const config = computed(() => {
                         timeLabels: {
                             ...c.style.chart.grid.y.timeLabels,
                             values: monthValues.value,
-                            formatter: {
+                            datetimeFormatter: {
                                 enable: true,
                             }
                         }

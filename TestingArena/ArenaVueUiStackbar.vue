@@ -254,7 +254,7 @@ const config = computed(() => {
                         timeLabels: {
                             ...c.style.chart.grid.x.timeLabels,
                             values: monthValues.value,
-                            formatter: {
+                            datetimeFormatter: {
                                 enable: true
                             }
                             // values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG']
