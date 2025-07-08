@@ -1262,7 +1262,7 @@ declare module "vue-data-ui" {
                         xAxis?: {
                             dataLabels?: {
                                 show?: boolean;
-                                values?: string[];
+                                values?: Array<number | string>;
                                 datetimeFormatter?: AxisDateFormatter;
                                 fontSize?: number;
                                 showOnlyFirstAndLast?: boolean;
@@ -2777,7 +2777,7 @@ declare module "vue-data-ui" {
                     xAxisLabels?: {
                         color?: string;
                         show?: boolean;
-                        values?: string[];
+                        values?: Array<number | string>;
                         fontSize?: number;
                         showOnlyFirstAndLast?: boolean;
                         yOffset?: number;
@@ -6405,7 +6405,7 @@ declare module "vue-data-ui" {
                         };
                         timeLabels?: {
                             show?: boolean;
-                            values?: string[];
+                            values?: Array<number | string>;
                             datetimeFormatter?: AxisDateFormatter;
                             offsetY?: number;
                             rotation?: number;
@@ -7067,7 +7067,7 @@ declare module "vue-data-ui" {
                         prefix?: string;
                         suffix?: string;
                         rotation?: number;
-                        values?: string[];
+                        values?: Array<number | string>;
                         datetimeFormatter?: AxisDateFormatter;
                         color?: string;
                         fontSize?: number;
