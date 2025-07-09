@@ -78,6 +78,9 @@ const model = ref([
     { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
 
+    { key: 'style.chart.width', def: 512, type: 'number', min: 0, max: 512 },
+    { key: 'style.chart.height', def: 512, type: 'number', min: 0, max: 512 },
+
     { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.chart.padding.right', def: 48, type: 'number', min: 0, max: 100},
     { key: 'style.chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100},

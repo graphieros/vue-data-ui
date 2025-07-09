@@ -251,6 +251,10 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.dataLabels.show = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+
+    // Other ref resets
+    svg.value.height = FINAL_CONFIG.value.style.chart.height;
+    svg.value.width = FINAL_CONFIG.value.style.chart.width;
 }, { deep: true });
 
 const padding = computed(() => {
@@ -287,8 +291,8 @@ const mutableConfig = ref({
 });
 
 const svg = ref({
-    height: 360,
-    width: 512
+    height: FINAL_CONFIG.value.style.chart.height,
+    width: FINAL_CONFIG.value.style.chart.width
 });
 
 const donutThickness = computed(() => {

@@ -3033,6 +3033,8 @@ declare module "vue-data-ui" {
                 backgroundColor?: string;
                 color?: string;
                 padding?: ChartPadding;
+                width?: number;
+                height?: number;
                 layout?: {
                     curvedMarkers?: boolean;
                     labels?: {
@@ -3221,6 +3223,8 @@ declare module "vue-data-ui" {
                 backgroundColor?: string;
                 color?: string;
                 padding?: ChartPadding;
+                width?: number;
+                height?: number;
                 layout?: {
                     labels?: {
                         dataLabels?: {
