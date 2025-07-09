@@ -253,9 +253,12 @@ const config = computed(() => {
                         ...c.style.chart.grid.x,
                         timeLabels: {
                             ...c.style.chart.grid.x.timeLabels,
-                            values: monthValues.value,
+                            // values: monthValues.value,
+                            values: new Array(6).fill(0).map((d, i) => {
+                                return `Some long name\nfor dataset of index ${i}` 
+                            }),
                             datetimeFormatter: {
-                                enable: true
+                                enable: false
                             }
                             // values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG']
                         }
@@ -337,7 +340,7 @@ function selectTimeLabel(data) {
 
     <template #local>
         <LocalVueUiStackbar :dataset="dataset" :config="config" :key="`local_${step}`">
-            <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+            <!-- <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                 <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
                     <text
                         :x="x"
@@ -358,7 +361,7 @@ function selectTimeLabel(data) {
                         {{ content }}
                     </text>
                 </g>
-            </template>
+            </template> -->
         </LocalVueUiStackbar>
     </template>
 

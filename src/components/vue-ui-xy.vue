@@ -1170,7 +1170,9 @@
                         <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                             <template 
                             v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
+                                <!-- SINGLE LINE LABEL -->
                                 <text
+                                    v-if="!label.text.includes('\n')"
                                     data-cy="time-label"
                                     :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                                     :font-size="fontSizes.xAxis"
@@ -1183,6 +1185,27 @@
                                 >
                                     {{ label.text || "" }}
                                 </text>
+
+                                <!-- MULTILINE LABEL (when label includes \n) -->
+                                <text
+                                    v-else
+                                    data-cy="time-label"
+                                    :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
+                                    :font-size="fontSizes.xAxis"
+                                    :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
+                                    :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                    :style="{
+                                        cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
+                                    }"
+                                    v-html="createTSpansFromLineBreaksOnX({
+                                        content: label.text,
+                                        fontSize: fontSizes.xAxis,
+                                        fill: FINAL_CONFIG.chart.grid.labels.xAxisLabels.color,
+                                        x: 0,
+                                        y: 0
+                                    })"
+                                    @click="() => selectTimeLabel(label, i)"
+                                />
                             </template>
                         </g>
                     </template>
@@ -1672,6 +1695,7 @@ import {
     createStraightPath,
     createStar,
     createTSpans,
+    createTSpansFromLineBreaksOnX,
     createUid,
     dataLabel,
     downloadCsv,
@@ -3029,6 +3053,7 @@ export default {
         createSmoothPath,
         createStraightPath,
         createTSpans,
+        createTSpansFromLineBreaksOnX,
         dataLabel,
         downloadCsv,
         error,

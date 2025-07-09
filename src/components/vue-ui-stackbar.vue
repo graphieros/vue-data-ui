@@ -8,8 +8,10 @@ import {
     calculateNiceScaleWithExactExtremes, 
     convertColorToHex, 
     convertCustomPalette, 
-    createCsvContent, 
-    createUid, 
+    createCsvContent,
+    createTSpansFromLineBreaksOnX,
+    createTSpansFromLineBreaksOnY,
+    createUid,
     dataLabel, 
     downloadCsv,
     error, 
@@ -1347,21 +1349,55 @@ defineExpose({
                     </g>
                 </g>
                 <g v-else>
-                    <text
-                        data-cy="time-label"
-                        v-for="(timeLabel, i) in timeLabels"
-                        :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
-                        :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.grid.x.timeLabels.bold ? 'bold': 'normal'"
-                        :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
-                        :transform="`translate(${drawingArea.left + (barSlot * i) + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
-                        :style="{
-                            cursor: 'pointer'
-                        }"
-                        @click="() => selectTimeLabel(timeLabel, i)"
-                    >
-                        {{ timeLabel.text }}
-                    </text>
+                    <g v-for="(timeLabel, i) in timeLabels">
+                        <text
+                            v-if="!timeLabel.text.includes('\n')"
+                            :key="i"
+                            data-cy="time-label"
+                            :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
+                                ? 'start'
+                                : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
+                                ? 'end'
+                                : 'middle'"
+                            :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.grid.x.timeLabels.bold ? 'bold' : 'normal'"
+                            :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
+                            :transform="`translate(${drawingArea.left + barSlot * i + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
+                            style="cursor: pointer"
+                            @click="() => selectTimeLabel(timeLabel, i)"
+                        >
+    
+                            {{ timeLabel.text }}
+                        </text>
+                        <text
+                            v-else
+                            :key="i + '-multi'"
+                            data-cy="time-label"
+                            :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
+                                ? 'start'
+                                : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
+                                ? 'end'
+                                : 'middle'"
+                            :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
+                            :transform="`
+                                translate(
+                                ${drawingArea.left + barSlot * i + barSlot / 2},
+                                ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}
+                                ),
+                                rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})
+                            `"
+                            style="cursor: pointer"
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: timeLabel.text,
+                                fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
+                                x: 0,
+                                y: 0
+                            })"
+                            @click="() => selectTimeLabel(timeLabel, i)"
+                        />
+                    </g>
                 </g>
             </template>
 
@@ -1383,22 +1419,43 @@ defineExpose({
                     </g>
                 </g>
                 <g v-else>
-                    <text
-                        data-cy="time-label"
-                        v-for="(timeLabel, i) in timeLabels"
-                        text-anchor="end"
-                        :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                        :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                        :x="drawingArea.left - 8"
-                        :y="drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
-                        :style="{
-                            cursor: 'pointer'
-                        }"
-                        @click="() => selectTimeLabel(timeLabel, i)"
-                    >
-                        {{ timeLabel.text }}
-                    </text>
+                    <g v-for="(timeLabel, i) in timeLabels">
+                        <text
+                            v-if="!timeLabel.text.includes('\n')"
+                            data-cy="time-label"
+                            text-anchor="end"
+                            :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                            :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                            :x="drawingArea.left - 8"
+                            :y="drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                            :style="{
+                                cursor: 'pointer'
+                            }"
+                            @click="() => selectTimeLabel(timeLabel, i)"
+                        >
+                            {{ timeLabel.text }}
+                        </text>
+                        <text
+                            v-else
+                            data-cy="time-label"
+                            text-anchor="end"
+                            :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                            :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                            :x="drawingArea.left - 8"
+                            :y="drawingArea.top + barSlot * i + barSlot / 2 + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                            style="cursor: pointer"
+                            @click="() => selectTimeLabel(timeLabel, i)"
+                            v-html="createTSpansFromLineBreaksOnY({
+                                content: timeLabel.text,
+                                fontSize: FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.grid.y.axisLabels.color,
+                                x: drawingArea.left - 8,
+                                y: 0
+                            })"
+                        />
+                    </g>
                 </g>
             </template>
 

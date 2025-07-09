@@ -10,9 +10,9 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useAre
 
 const dataset = ref([
     {
-        name: "Asia",
+        name: "Some continent\nwith a long name",
         plots: [
-            { name: "Shanghai", value: 24.9 },
+            { name: "Some Country with\na long name", value: 24.9 },
             { name: "Beijing", value: 21.9 },
             { name: "Delhi", value: 16.8 },
             { name: "Guangzhou", value: 16.1 },

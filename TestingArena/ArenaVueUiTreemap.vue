@@ -14,7 +14,7 @@ const dataset = ref([
         value: 100,
         children: [
             {
-                name: 'Some kind of child',
+                name: 'Some kind of child with a very long name that is way too long',
                 value: 50
             },
             {

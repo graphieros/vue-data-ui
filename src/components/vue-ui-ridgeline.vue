@@ -9,6 +9,7 @@ import {
     createSmoothAreaSegments,
     createSmoothPath,
     createStraightPath,
+    createTSpansFromLineBreaksOnX,
     createUid,
     dataLabel,
     deepEmptyObjectToNull,
@@ -861,11 +862,14 @@ defineExpose({
                         x: xLabel.selectorX,
                         y: drawableArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY
                     }">
-                        <text
-                            v-if="(xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo) ||
+                        <g v-if="(xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo) ||
                                 (xLabel && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && (i === 0 || i === xAxisTrapsAndLabels.length - 1)) ||
                                 (xLabel && selectedX && selectedX.index === i) ||
                                 (xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo && (i % Math.floor(xAxisTrapsAndLabels.length / FINAL_CONFIG.style.chart.xAxis.labels.modulo)) === 0)"
+                        >
+                        <!-- SINGLE LINE -->
+                        <text
+                            v-if="!xLabel.label.includes('\n')"
                             :font-size="FINAL_CONFIG.style.chart.xAxis.labels.fontSize"
                             :fill="FINAL_CONFIG.style.chart.xAxis.labels.color"
                             :font-weight="FINAL_CONFIG.style.chart.xAxis.labels.bold ? 'bold' : 'normal'"
@@ -876,6 +880,27 @@ defineExpose({
                             }">
                             {{ xLabel.label }}
                         </text>
+                        
+                        <!-- MULTILINE -->
+                        <text
+                            v-else
+                            :font-size="FINAL_CONFIG.style.chart.xAxis.labels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.xAxis.labels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.xAxis.labels.bold ? 'bold' : 'normal'"
+                            :transform="`translate(${xLabel.selectorX}, ${drawableArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
+                            :text-anchor="FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle'"
+                            :style="{
+                                opacity: selectedX ? selectedX.index === i ? 1 : 0.2 : 1
+                            }"
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: xLabel.label,
+                                fontSize: FINAL_CONFIG.style.chart.xAxis.labels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.xAxis.labels.color,
+                                x: 0,
+                                y: 0
+                            })"
+                        />
+                        </g>
                     </slot>
                 </template>
             </g>

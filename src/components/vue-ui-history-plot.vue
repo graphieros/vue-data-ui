@@ -8,7 +8,8 @@ import {
     calculateNiceScale,
     convertColorToHex,
     convertCustomPalette, 
-    createCsvContent, 
+    createCsvContent,
+    createTSpansFromLineBreaksOnX,
     createUid, 
     darkenHexColor,
     dataLabel,
@@ -1036,23 +1037,50 @@ defineExpose({
                 />
 
                 <g v-if="FINAL_CONFIG.style.chart.plots.labels.show">
-                    <text
-                        data-cy="datapoint-label"
-                        v-for="plot in ds.plots"
-                        :x="plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX"
-                        :y="plot.y + FINAL_CONFIG.style.chart.plots.labels.offsetY + sizes.plots + sizes.labels"
-                        :font-size="sizes.labels"
-                        :fill="FINAL_CONFIG.style.chart.plots.labels.color"
-                        :font-weight="FINAL_CONFIG.style.chart.plots.labels.bold ? 'bold' : 'normal'"
-                        text-anchor="middle"
-                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
-                        :style="{
-                            opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === plot.id ? 1 : 0.3,
-                            transition: 'opacity 0.2s ease-in-out'
-                        }"
-                    >
-                        {{ plot.label }}
-                    </text>
+                    <g v-for="plot in ds.plots">
+                        <!-- SINGLE LINE -->
+                        <text
+                            v-if="!plot.label.includes('\n')"
+                            data-cy="datapoint-label"
+                            :x="plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX"
+                            :y="plot.y + FINAL_CONFIG.style.chart.plots.labels.offsetY + sizes.plots + sizes.labels"
+                            :font-size="sizes.labels"
+                            :fill="FINAL_CONFIG.style.chart.plots.labels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.plots.labels.bold ? 'bold' : 'normal'"
+                            text-anchor="middle"
+                            :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                            :style="{
+                                opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === plot.id ? 1 : 0.3,
+                                transition: 'opacity 0.2s ease-in-out'
+                            }"
+                        >
+                            {{ plot.label }}
+                        </text>
+
+                        <!-- MULTILINE -->
+                        <text
+                            v-else
+                            data-cy="datapoint-label"
+                            :x="plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX"
+                            :y="plot.y + FINAL_CONFIG.style.chart.plots.labels.offsetY + sizes.plots + sizes.labels"
+                            :font-size="sizes.labels"
+                            :fill="FINAL_CONFIG.style.chart.plots.labels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.plots.labels.bold ? 'bold' : 'normal'"
+                            text-anchor="middle"
+                            :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                            :style="{
+                                opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === plot.id ? 1 : 0.3,
+                                transition: 'opacity 0.2s ease-in-out'
+                            }"
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: plot.label,
+                                fontSize: sizes.labels,
+                                fill: FINAL_CONFIG.style.chart.plots.labels.color,
+                                x: plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX,
+                                y: plot.y + FINAL_CONFIG.style.chart.plots.labels.offsetY + sizes.plots + sizes.labels
+                            })"
+                        />
+                    </g>
                 </g>
 
                 <!-- INDEX LABELS -->

@@ -169,9 +169,12 @@ const config = computed(() => {
                     ...c.style.chart.xAxis,
                     labels: {
                         ...c.style.chart.xAxis.labels,
-                        values: monthValues.value,
+                        // values: monthValues.value,
+                        values: new Array(12).fill(0).map((el,i) => {
+                            return `Some long label\n with index ${i}`
+                        }),
                         datetimeFormatter: {
-                            enable: true,
+                            enable: false,
                         }
                     }
                 }

@@ -10,7 +10,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleSort } = useArena
 
 const dataset = ref([
     {
-        name: "Serie 1",
+        name: "Serie 1 with",
         value: 100.987987,
         children: [
             {

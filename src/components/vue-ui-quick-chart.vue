@@ -12,6 +12,7 @@ import {
     convertCustomPalette,
     createSmoothPath,
     createUid,
+    createTSpansFromLineBreaksOnX,
     dataLabel,
     error,
     functionReturnsString,
@@ -1359,16 +1360,33 @@ defineExpose({
                             :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                             stroke-linecap="round"
                         />
-                        <text
-                            v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))"
-                            data-cy="period-label"
-                            :font-size="FINAL_CONFIG.xyLabelsXFontSize"
-                            :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
-                            :fill="FINAL_CONFIG.color"
-                            :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
-                        >
-                            {{ period }}
-                        </text>
+                        <g v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))">
+                            <text
+                                v-if="!period.includes('\n')"
+                                data-cy="period-label"
+                                :font-size="FINAL_CONFIG.xyLabelsXFontSize"
+                                :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
+                                :fill="FINAL_CONFIG.color"
+                                :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
+                            >
+                                {{ period }}
+                            </text>
+                            <text
+                                v-else
+                                data-cy="period-label"
+                                :font-size="FINAL_CONFIG.xyLabelsXFontSize"
+                                :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
+                                :fill="FINAL_CONFIG.color"
+                                :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
+                                v-html="createTSpansFromLineBreaksOnX({
+                                    content: period,
+                                    fontSize: FINAL_CONFIG.xyLabelsXFontSize,
+                                    fill: FINAL_CONFIG.color,
+                                    x: 0,
+                                    y: 0
+                                })"
+                            />
+                        </g>
                     </template>
                 </g>
                 <g class="plots">
