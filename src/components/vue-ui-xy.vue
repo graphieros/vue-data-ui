@@ -1172,7 +1172,7 @@
                             v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
                                 <!-- SINGLE LINE LABEL -->
                                 <text
-                                    v-if="!label.text.includes('\n')"
+                                    v-if="!String(label.text).includes('\n')"
                                     data-cy="time-label"
                                     :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                                     :font-size="fontSizes.xAxis"
@@ -1198,7 +1198,7 @@
                                         cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
                                     }"
                                     v-html="createTSpansFromLineBreaksOnX({
-                                        content: label.text,
+                                        content: String(label.text),
                                         fontSize: fontSizes.xAxis,
                                         fill: FINAL_CONFIG.chart.grid.labels.xAxisLabels.color,
                                         x: 0,

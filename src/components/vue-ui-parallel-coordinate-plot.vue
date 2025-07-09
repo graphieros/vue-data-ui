@@ -736,7 +736,7 @@ defineExpose({
                 <!-- AXIS NAMES -->
                 <!-- SINGLE LINE -->
                 <text
-                    v-if="!scale.name.includes('\n')"
+                    v-if="!String(scale.name).includes('\n')"
                     data-cy="pcp-axis-label"
                     :x="drawingArea.left + (slot * i) + (slot / 2)"
                     :y="drawingArea.top - 24"
@@ -759,7 +759,7 @@ defineExpose({
                     :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesBold ? 'bold' : ''"
                     text-anchor="middle"
                     v-html="createTSpansFromLineBreaksOnX({
-                        content: scale.name,
+                        content: String(scale.name),
                         fontSize: chartDimensions.axisNameFontSize,
                         fill: FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor,
                         x: drawingArea.left + (slot * i) + (slot / 2),

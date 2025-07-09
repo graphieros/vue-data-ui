@@ -1362,7 +1362,7 @@ defineExpose({
                         />
                         <g v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))">
                             <text
-                                v-if="!period.includes('\n')"
+                                v-if="!String(period).includes('\n')"
                                 data-cy="period-label"
                                 :font-size="FINAL_CONFIG.xyLabelsXFontSize"
                                 :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
@@ -1379,7 +1379,7 @@ defineExpose({
                                 :fill="FINAL_CONFIG.color"
                                 :transform="`translate(${line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)}, ${line.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
                                 v-html="createTSpansFromLineBreaksOnX({
-                                    content: period,
+                                    content: String(period),
                                     fontSize: FINAL_CONFIG.xyLabelsXFontSize,
                                     fill: FINAL_CONFIG.color,
                                     x: 0,

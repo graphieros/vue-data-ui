@@ -1412,7 +1412,7 @@ defineExpose({
                         <g v-for="plot in category.series">
                             <!-- SINGLE LINE -->
                             <text
-                                v-if="!plot.name.includes('\n')"
+                                v-if="!String(plot.name).includes('\n')"
                                 data-cy="plot-label"
                                 :x="plot.x" 
                                 :y="plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius" 
@@ -1431,7 +1431,7 @@ defineExpose({
                                 :font-size="FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1)"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.plotLabels.color"
                                 v-html="createTSpansFromLineBreaksOnX({
-                                    content: plot.name,
+                                    content: String(plot.name),
                                     fontSize: FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1),
                                     fill: FINAL_CONFIG.style.chart.layout.labels.plotLabels.color,
                                     x: plot.x,

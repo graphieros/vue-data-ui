@@ -1351,7 +1351,7 @@ defineExpose({
                 <g v-else>
                     <g v-for="(timeLabel, i) in timeLabels">
                         <text
-                            v-if="!timeLabel.text.includes('\n')"
+                            v-if="!String(timeLabel.text).includes('\n')"
                             :key="i"
                             data-cy="time-label"
                             :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
@@ -1389,7 +1389,7 @@ defineExpose({
                             `"
                             style="cursor: pointer"
                             v-html="createTSpansFromLineBreaksOnX({
-                                content: timeLabel.text,
+                                content: String(timeLabel.text),
                                 fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
                                 fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
                                 x: 0,
@@ -1421,7 +1421,7 @@ defineExpose({
                 <g v-else>
                     <g v-for="(timeLabel, i) in timeLabels">
                         <text
-                            v-if="!timeLabel.text.includes('\n')"
+                            v-if="!String(timeLabel.text).includes('\n')"
                             data-cy="time-label"
                             text-anchor="end"
                             :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
@@ -1448,7 +1448,7 @@ defineExpose({
                             style="cursor: pointer"
                             @click="() => selectTimeLabel(timeLabel, i)"
                             v-html="createTSpansFromLineBreaksOnY({
-                                content: timeLabel.text,
+                                content: String(timeLabel.text),
                                 fontSize: FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize,
                                 fill: FINAL_CONFIG.style.chart.grid.y.axisLabels.color,
                                 x: drawingArea.left - 8,

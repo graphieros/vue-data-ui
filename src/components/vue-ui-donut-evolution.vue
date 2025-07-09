@@ -842,7 +842,7 @@ defineExpose({
                     <g v-if="((FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast) && timeLabels[i] && timeLabels[i].text">
                         <!-- SINGLE LINE -->
                         <text
-                            v-if="!timeLabels[i].text.includes('\n')"
+                            v-if="!String(timeLabels[i].text).includes('\n')"
                             data-cy="axis-x-label"
                             :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
                             :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
@@ -861,7 +861,7 @@ defineExpose({
                             :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
                             :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
                             v-html="createTSpansFromLineBreaksOnX({
-                                content: timeLabels[i].text,
+                                content: String(timeLabels[i].text),
                                 fontSize: FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize,
                                 fill: FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color,
                                 x: 0,

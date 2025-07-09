@@ -869,7 +869,7 @@ defineExpose({
                         >
                         <!-- SINGLE LINE -->
                         <text
-                            v-if="!xLabel.label.includes('\n')"
+                            v-if="!String(xLabel.label).includes('\n')"
                             :font-size="FINAL_CONFIG.style.chart.xAxis.labels.fontSize"
                             :fill="FINAL_CONFIG.style.chart.xAxis.labels.color"
                             :font-weight="FINAL_CONFIG.style.chart.xAxis.labels.bold ? 'bold' : 'normal'"
@@ -880,7 +880,7 @@ defineExpose({
                             }">
                             {{ xLabel.label }}
                         </text>
-                        
+
                         <!-- MULTILINE -->
                         <text
                             v-else
@@ -893,7 +893,7 @@ defineExpose({
                                 opacity: selectedX ? selectedX.index === i ? 1 : 0.2 : 1
                             }"
                             v-html="createTSpansFromLineBreaksOnX({
-                                content: xLabel.label,
+                                content: String(xLabel.label),
                                 fontSize: FINAL_CONFIG.style.chart.xAxis.labels.fontSize,
                                 fill: FINAL_CONFIG.style.chart.xAxis.labels.color,
                                 x: 0,

@@ -1040,7 +1040,7 @@ defineExpose({
                     <g v-for="plot in ds.plots">
                         <!-- SINGLE LINE -->
                         <text
-                            v-if="!plot.label.includes('\n')"
+                            v-if="!String(plot.label).includes('\n')"
                             data-cy="datapoint-label"
                             :x="plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX"
                             :y="plot.y + FINAL_CONFIG.style.chart.plots.labels.offsetY + sizes.plots + sizes.labels"
@@ -1073,7 +1073,7 @@ defineExpose({
                                 transition: 'opacity 0.2s ease-in-out'
                             }"
                             v-html="createTSpansFromLineBreaksOnX({
-                                content: plot.label,
+                                content: String(plot.label),
                                 fontSize: sizes.labels,
                                 fill: FINAL_CONFIG.style.chart.plots.labels.color,
                                 x: plot.x + FINAL_CONFIG.style.chart.plots.labels.offsetX,
