@@ -7,6 +7,7 @@ import {
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
+    createTSpansFromLineBreaksOnX,
     createUid,
     darkenHexColor,
     dataLabel,
@@ -728,17 +729,38 @@ defineExpose({
 
             <!-- X AXIS LABELS -->
             <template v-if="FINAL_CONFIG.style.chart.labels.xAxisLabels.show">
-                <text
-                    data-cy="axis-x-label"
-                    v-for="(label, i) in mutableDataset"
-                    :x="drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2"
-                    :y="drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY"
-                    :font-size="FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.labels.xAxisLabels.color"
-                    text-anchor="middle"
-                >
-                    {{ label.name }}
-                </text>
+                <g v-for="(label, i) in mutableDataset">
+                    <!-- SINGLE LINE -->     
+                    <text
+                        v-if="!String(label.name).includes('\n')"
+                        data-cy="axis-x-label"
+                        :x="drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2"
+                        :y="drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY"
+                        :font-size="FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.labels.xAxisLabels.color"
+                        text-anchor="middle"
+                    >
+                        {{ label.name }}
+                    </text>
+
+                    <!-- MULTILINE -->
+                    <text
+                        v-else
+                        data-cy="axis-x-label"
+                        :x="drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2"
+                        :y="drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY"
+                        :font-size="FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.labels.xAxisLabels.color"
+                        text-anchor="middle"
+                        v-html="createTSpansFromLineBreaksOnX({
+                            content: String(label.name),
+                            fontSize: FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize,
+                            fill: FINAL_CONFIG.style.chart.labels.xAxisLabels.color,
+                            x: drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2,
+                            y: drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY
+                        })"
+                    />
+                </g>
             </template>
 
             <!-- Y AXIS NAME-->

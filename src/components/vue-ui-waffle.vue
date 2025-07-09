@@ -261,7 +261,11 @@ function calculateProportions(numbers) {
     return intParts;
 }
 
+const allDatapointsAreEmpty = ref(false);
+
 function prepareDataset() {
+    allDatapointsAreEmpty.value = props.dataset.flatMap(ds => ds.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0) === 0;
+
     return props.dataset.map((s, i) => {
         return {
             ...s,
@@ -285,13 +289,25 @@ watch(() => props.dataset, (_) => {
 const proportions = computed(() => {
     const numbers = datasetCopy.value
         .filter((serie,i) => !segregated.value.includes(serie.uid))
-        .map((serie, i) => (serie.values || []).reduce((a,b) => a + b, 0));
+        .map((serie, i) => {
+            if (allDatapointsAreEmpty.value) {
+                return 1;
+            } else {
+                return (serie.values || []).reduce((a,b) => a + b, 0)
+            }
+        });
     return calculateProportions(numbers);
 });
 
 const immutableProportions = computed(() => {
     const numbers = datasetCopy.value
-        .map((serie, i) => (serie.values || []).reduce((a,b) => a + b));
+        .map((serie, i) => {
+            if (allDatapointsAreEmpty.value) {
+                return 1;
+            } else {
+                return (serie.values || []).reduce((a,b) => a + b);
+            }
+        });
     return calculateProportions(numbers);
 });
 
@@ -413,6 +429,7 @@ const rafUp = ref(null);
 const rafDown = ref(null);
 
 function segregate(uid) {
+    if (allDatapointsAreEmpty.value) return; // No point in segregating anything in this case
     if (!FINAL_CONFIG.value.useAnimation) {
         if(segregated.value.includes(uid)) {
             segregated.value = segregated.value.filter(s => s !== uid);
@@ -425,6 +442,8 @@ function segregate(uid) {
     const target = datasetCopyReference.value.find(el => el.uid === uid).values.reduce((a, b) => a + b, 0);
     const source = datasetCopy.value.find(el => el.uid === uid).values.reduce((a, b) => a + b, 0);
     let initVal = source;
+
+    if (source === 0 && target === 0) return; // Nothing to segregate
 
     if(segregated.value.includes(uid)) {
         segregated.value = segregated.value.filter(s => s !== uid);
@@ -594,7 +613,7 @@ function useTooltip(index) {
         }
         if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
             const dp = dataLabel({
-                v: selected.value / total.value * 100,
+                v: allDatapointsAreEmpty.value ? 1 / props.dataset.length * 100 : selected.value / total.value * 100,
                 s: '%',
                 r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
             });

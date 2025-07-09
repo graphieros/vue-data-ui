@@ -262,9 +262,12 @@ const config = computed(() => {
         },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
-        xyPeriods: monthValues.value,
+        // xyPeriods: monthValues.value,
+        xyPeriods: new Array(100).fill(0).map((el,i) => {
+            return `Some long label\nfor index ${i}`
+        }),
         datetimeFormatter: {
-            enable: true
+            enable: false
         }
     }
 })

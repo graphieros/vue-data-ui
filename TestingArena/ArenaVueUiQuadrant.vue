@@ -12,7 +12,7 @@ function makeDs(n,m) {
     const arr = [];
     for(let i = 0; i < n; i += 1) {
         arr.push({
-            name: 'Serie',
+            name: 'Serie with a name\n that is way too long',
             x: Math.random() > 0.5 ? Math.random()*m : -Math.random()*m,
             y: Math.random() > 0.5 ? Math.random()*m : -Math.random()*m,
         })

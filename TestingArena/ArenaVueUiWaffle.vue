@@ -11,15 +11,15 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 const dataset = ref([
     {
         name: 'Lorem Ipsum',
-        values: [100.27],
+        values: [1],
     },
     {
         name: 'Dolor Amet',
-        values: [66.3367]
+        values: [1]
     },
     {
         name: 'Dignissimos Ducimus',
-        values: [44.25]
+        values: [2]
     }
 ]);
 

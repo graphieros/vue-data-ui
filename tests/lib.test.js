@@ -36,6 +36,8 @@ import {
     createSpiralPath,
     createStar,
     createTSpans,
+    createTSpansFromLineBreaksOnX,
+    createTSpansFromLineBreaksOnY,
     createWordCloudDatasetFromPlainText,
     checkFormatter,
     darkenHexColor,
@@ -3460,11 +3462,11 @@ describe('getCumulativeAverage', () => {
     const valid = [0, 1, 2, 3, 1];
     const invalid = [0, 1, NaN, undefined, null, Infinity, -Infinity, 2, 3, 1];
     test('returns cumulative average for a complete array of numbers', () => {
-        expect(getCumulativeAverage({values: valid})).toEqual([0, 0.5, 1, 1.5, 1.4]);
+        expect(getCumulativeAverage({ values: valid })).toEqual([0, 0.5, 1, 1.5, 1.4]);
     });
 
     test('returns cumulative average and invalid values, but invalid values ignored in average', () => {
-        expect(getCumulativeAverage({values: invalid})).toEqual([0, 0.5, NaN, undefined, null, Infinity, -Infinity, 1 , 1.5, 1.4]);
+        expect(getCumulativeAverage({ values: invalid })).toEqual([0, 0.5, NaN, undefined, null, Infinity, -Infinity, 1, 1.5, 1.4]);
     });
 
     test('returns cumulative average without invalid values', () => {
@@ -3474,7 +3476,7 @@ describe('getCumulativeAverage', () => {
         })).toEqual([0, 0.5, 1, 1.5, 1.4])
     });
 
-    test ('returns cumulative average with zero values replacing invalid values', () => {
+    test('returns cumulative average with zero values replacing invalid values', () => {
         expect(getCumulativeAverage({
             values: invalid,
             config: { convertInvalidToZero: true }
@@ -3486,11 +3488,11 @@ describe('getCumulativeMedian', () => {
     const valid = [0, 1, 2, 3, 1];
     const invalid = [0, 1, NaN, undefined, null, Infinity, -Infinity, 2, 3, 1];
     test('returns cumulative median for a complete array of numbers', () => {
-        expect(getCumulativeMedian({values: valid})).toEqual([0, 0.5, 1, 1.5, 1]);
+        expect(getCumulativeMedian({ values: valid })).toEqual([0, 0.5, 1, 1.5, 1]);
     });
 
     test('returns cumulative median and invalid values, but invalid values ignored in median', () => {
-        expect(getCumulativeMedian({values: invalid})).toEqual([0, 0.5, NaN, undefined, null, Infinity, -Infinity, 1, 1.5, 1]);
+        expect(getCumulativeMedian({ values: invalid })).toEqual([0, 0.5, NaN, undefined, null, Infinity, -Infinity, 1, 1.5, 1]);
     });
 
     test('returns cumulative median without invalid values', () => {
@@ -3500,10 +3502,160 @@ describe('getCumulativeMedian', () => {
         })).toEqual([0, 0.5, 1, 1.5, 1])
     });
 
-    test ('returns cumulative median with zero values replacing invalid values', () => {
+    test('returns cumulative median with zero values replacing invalid values', () => {
         expect(getCumulativeMedian({
             values: invalid,
             config: { convertInvalidToZero: true }
         })).toEqual([0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0])
     })
 });
+
+describe('createTSpansFromLineBreaksOnX', () => {
+    test('creates a single <tspan> for content without line breaks', () => {
+        const result = createTSpansFromLineBreaksOnX({
+            content: 'Hello World',
+            fontSize: 10,
+            fill: 'red',
+            x: 0,
+            y: 0,
+        });
+        const expected = `<tspan x=\"0\" y=\"0\" fill=\"red\">Hello World</tspan>`;
+        expect(result).toBe(expected);
+    });
+
+    test('creates multiple <tspan> elements split by newline', () => {
+        const result = createTSpansFromLineBreaksOnX({
+            content: 'Line1\nLine2',
+            fontSize: 12,
+            fill: '#00f',
+            x: 5,
+            y: 10,
+        });
+        const lineHeight = 12 * 1.3;
+        const expected = [
+            `<tspan x=\"5\" y=\"10\" fill=\"#00f\">Line1</tspan>`,
+            `<tspan x=\"5\" y=\"${10 + lineHeight}\" fill=\"#00f\">Line2</tspan>`
+        ].join('');
+        expect(result).toBe(expected);
+    });
+
+    test('handles empty content as a single empty <tspan>', () => {
+        const result = createTSpansFromLineBreaksOnX({
+            content: '',
+            fontSize: 8,
+            fill: 'black',
+            x: 1,
+            y: 2,
+        });
+        const expected = `<tspan x=\"1\" y=\"2\" fill=\"black\"></tspan>`;
+        expect(result).toBe(expected);
+    });
+
+    test('handles trailing newline producing an empty <tspan> line', () => {
+        const result = createTSpansFromLineBreaksOnX({
+            content: 'A\nB\n',
+            fontSize: 15,
+            fill: 'green',
+            x: 2,
+            y: 3,
+        });
+        const lineHeight = 15 * 1.3;
+        const expected = [
+            `<tspan x=\"2\" y=\"3\" fill=\"green\">A</tspan>`,
+            `<tspan x=\"2\" y=\"${3 + lineHeight}\" fill=\"green\">B</tspan>`,
+            `<tspan x=\"2\" y=\"${3 + lineHeight * 2}\" fill=\"green\"></tspan>`
+        ].join('');
+        expect(result).toBe(expected);
+    });
+
+    test('handles multiple consecutive newlines correctly', () => {
+        const result = createTSpansFromLineBreaksOnX({
+            content: 'X\n\nY',
+            fontSize: 5,
+            fill: 'blue',
+            x: 0,
+            y: 0,
+        });
+        const lineHeight = 5 * 1.3;
+        const expected = [
+            `<tspan x=\"0\" y=\"0\" fill=\"blue\">X</tspan>`,
+            `<tspan x=\"0\" y=\"${0 + lineHeight}\" fill=\"blue\"></tspan>`,
+            `<tspan x=\"0\" y=\"${0 + lineHeight * 2}\" fill=\"blue\">Y</tspan>`
+        ].join('');
+        expect(result).toBe(expected);
+    });
+})
+
+describe('createTSpansFromLineBreaksOnY', () => {
+    test('single-line content produces one tspan with dy=0', () => {
+        const result = createTSpansFromLineBreaksOnY({
+            content: 'Hello',
+            fontSize: 10,
+            fill: 'red',
+            x: 5,
+        });
+        const expected = `<tspan x=\"5\" dy=\"0\" fill=\"red\">Hello</tspan>`;
+        expect(result).toBe(expected);
+    });
+
+    test('two-line content splits into two tspans with correct dy offsets', () => {
+        const fontSize = 12;
+        const result = createTSpansFromLineBreaksOnY({
+            content: 'Line1\nLine2',
+            fontSize,
+            fill: '#00f',
+            x: 0,
+        });
+        const dy = fontSize * 1.3;
+        const expected = [
+            `<tspan x=\"0\" dy=\"0\" fill=\"#00f\">Line1</tspan>`,
+            `<tspan x=\"0\" dy=\"${dy}\" fill=\"#00f\">Line2</tspan>`,
+        ].join('');
+        expect(result).toBe(expected);
+    });
+
+    test('empty content yields a single empty tspan', () => {
+        const result = createTSpansFromLineBreaksOnY({
+            content: '',
+            fontSize: 8,
+            fill: 'black',
+            x: 2,
+        });
+        const expected = `<tspan x=\"2\" dy=\"0\" fill=\"black\"></tspan>`;
+        expect(result).toBe(expected);
+    });
+
+    test('trailing newline creates an extra empty tspan line', () => {
+        const fontSize = 15;
+        const result = createTSpansFromLineBreaksOnY({
+            content: 'A\nB\n',
+            fontSize,
+            fill: 'green',
+            x: 1,
+        });
+        const dy = fontSize * 1.3;
+        const expected = [
+            `<tspan x=\"1\" dy=\"0\" fill=\"green\">A</tspan>`,
+            `<tspan x=\"1\" dy=\"${dy}\" fill=\"green\">B</tspan>`,
+            `<tspan x=\"1\" dy=\"${dy}\" fill=\"green\"></tspan>`
+        ].join('');
+        expect(result).toBe(expected);
+    });
+
+    test('multiple consecutive newlines produce intermediate empty tspans', () => {
+        const fontSize = 5;
+        const result = createTSpansFromLineBreaksOnY({
+            content: 'X\n\nY',
+            fontSize,
+            fill: 'blue',
+            x: 3,
+        });
+        const dy = fontSize * 1.3;
+        const expected = [
+            `<tspan x=\"3\" dy=\"0\" fill=\"blue\">X</tspan>`,
+            `<tspan x=\"3\" dy=\"${dy}\" fill=\"blue\"></tspan>`,
+            `<tspan x=\"3\" dy=\"${dy}\" fill=\"blue\">Y</tspan>`
+        ].join('');
+        expect(result).toBe(expected);
+    });
+})

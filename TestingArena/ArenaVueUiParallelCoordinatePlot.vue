@@ -166,7 +166,7 @@ const config = computed(() => {
                         ...c.style.chart.yAxis.labels,
                         roundings: [0, 0, 0, 1],
                         suffixes: ['$', '€', '£', '%'],
-                        axisNames: ['Axis 1', 'Axis 2', 'Axis 3', ''],
+                        axisNames: ['Axis 1 with some\nsort of long name', 'Axis 2', 'Axis 3', ''],
                         formatters: [
                             ({value, config}) => {
                                 return `f0 | ${value}`

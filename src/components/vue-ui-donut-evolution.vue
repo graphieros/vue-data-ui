@@ -12,6 +12,7 @@ import {
     convertCustomPalette, 
     createCsvContent, 
     createUid, 
+    createTSpansFromLineBreaksOnX,
     dataLabel,
     deepEmptyObjectToNull,
     downloadCsv,
@@ -838,17 +839,36 @@ defineExpose({
             <!-- X LABELS -->
             <g v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true,}">
                 <g v-for="(_, i) in (slicer.end - slicer.start)">
-                    <text
-                        data-cy="axis-x-label"
-                        v-if="(FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast"
-                        :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
-                        :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
-                        :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
-
-                    >
-                        {{ timeLabels[i] ? timeLabels[i].text  : '' }}
-                    </text>
+                    <g v-if="((FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast) && timeLabels[i] && timeLabels[i].text">
+                        <!-- SINGLE LINE -->
+                        <text
+                            v-if="!String(timeLabels[i].text).includes('\n')"
+                            data-cy="axis-x-label"
+                            :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
+                            :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
+                            :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
+    
+                        >
+                            {{ timeLabels[i].text }}
+                        </text>
+                        <!-- MULTILINE -->
+                        <text
+                            v-else
+                            data-cy="axis-x-label"
+                            :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
+                            :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
+                            :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: String(timeLabels[i].text),
+                                fontSize: FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color,
+                                x: 0,
+                                y: 0
+                            })"
+                        />
+                    </g>
                 </g>
             </g>
             

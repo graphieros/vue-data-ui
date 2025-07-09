@@ -8,6 +8,7 @@ import {
     createCsvContent, 
     createSmoothPath,
     createStraightPath,
+    createTSpansFromLineBreaksOnX,
     createUid, 
     dataLabel, 
     downloadCsv, 
@@ -733,7 +734,9 @@ defineExpose({
                 />
 
                 <!-- AXIS NAMES -->
+                <!-- SINGLE LINE -->
                 <text
+                    v-if="!String(scale.name).includes('\n')"
                     data-cy="pcp-axis-label"
                     :x="drawingArea.left + (slot * i) + (slot / 2)"
                     :y="drawingArea.top - 24"
@@ -744,6 +747,25 @@ defineExpose({
                 >
                     {{ scale.name }}
                 </text>
+
+                <!-- MULTILINE -->
+                <text
+                    v-else
+                    data-cy="pcp-axis-label"
+                    :x="drawingArea.left + (slot * i) + (slot / 2)"
+                    :y="drawingArea.top - 24"
+                    :fill="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor"
+                    :font-size="chartDimensions.axisNameFontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesBold ? 'bold' : ''"
+                    text-anchor="middle"
+                    v-html="createTSpansFromLineBreaksOnX({
+                        content: String(scale.name),
+                        fontSize: chartDimensions.axisNameFontSize,
+                        fill: FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor,
+                        x: drawingArea.left + (slot * i) + (slot / 2),
+                        y: drawingArea.top - 24
+                    })"
+                />
 
 
                 <template v-if="FINAL_CONFIG.style.chart.yAxis.labels.ticks.show">                

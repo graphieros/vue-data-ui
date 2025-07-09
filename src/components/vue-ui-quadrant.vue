@@ -7,6 +7,7 @@ import {
     convertCustomPalette,
     createCsvContent, 
     createUid,
+    createTSpansFromLineBreaksOnX,
     dataLabel,
     downloadCsv,
     error,
@@ -1408,17 +1409,36 @@ defineExpose({
 
                 <g v-if="mutableConfig.plotLabels.show" style="pointer-events: none;">
                     <g v-for="category in drawableDataset">
-                        <text
-                            data-cy="plot-label"
-                            v-for="plot in category.series" 
-                            :x="plot.x" 
-                            :y="plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius" 
-                            text-anchor="middle" 
-                            :font-size="FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1)"
-                            :fill="FINAL_CONFIG.style.chart.layout.labels.plotLabels.color"
-                        >
-                            {{ plot.name }}
-                        </text>
+                        <g v-for="plot in category.series">
+                            <!-- SINGLE LINE -->
+                            <text
+                                v-if="!String(plot.name).includes('\n')"
+                                data-cy="plot-label"
+                                :x="plot.x" 
+                                :y="plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius" 
+                                text-anchor="middle" 
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1)"
+                                :fill="FINAL_CONFIG.style.chart.layout.labels.plotLabels.color"
+                            >
+                                {{ plot.name }}
+                            </text>
+                            <text
+                                v-else
+                                data-cy="plot-label"
+                                :x="plot.x" 
+                                :y="plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius" 
+                                text-anchor="middle" 
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1)"
+                                :fill="FINAL_CONFIG.style.chart.layout.labels.plotLabels.color"
+                                v-html="createTSpansFromLineBreaksOnX({
+                                    content: String(plot.name),
+                                    fontSize: FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1),
+                                    fill: FINAL_CONFIG.style.chart.layout.labels.plotLabels.color,
+                                    x: plot.x,
+                                    y: plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius
+                                })"
+                            />
+                        </g>
                     </g>
                 </g>
             </template>
@@ -1429,7 +1449,7 @@ defineExpose({
                         <foreignObject v-for="plot in category.series" style="overflow: visible;" height="10" width="100" :x="plot.x - 50" :y="plot.y - (FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize)" @mouseover="useTooltip(category, plot, i)"
                             @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
                             @click="selectPlot(category, plot)">
-                            <div :style="`color:${adaptColorToBackground(category.color)};margin: 0 auto; font-size:${FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize}px; text-align:center;background:${category.color}; padding: 2px 4px; border-radius: 12px; height: ${FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize*1.5}px`">
+                            <div :style="`color:${adaptColorToBackground(category.color)};margin: 0 auto; font-size:${FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize}px; text-align:center;background:${category.color}; padding: 2px 4px; border-radius: 12px; height: fit-content;`">
                                 {{  plot.name }}
                             </div>
                         </foreignObject>

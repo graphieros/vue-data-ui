@@ -831,9 +831,12 @@ const config = computed(() => {
                         },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
-                            values: monthValues.value,
+                            // values: monthValues.value,
+                            values: new Array(13).fill(0).map((d,i) => {
+                                return `Some long name\nwith a value ${i}`
+                            }),
                             datetimeFormatter: {
-                                enable: true,
+                                enable: false,
                                 locale: 'en',
                                 useUTC: false,
                                 januaryAsYear: true,

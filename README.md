@@ -1059,6 +1059,23 @@ const merged = mergeConfigs({
 });
 ```
 
+## Multiline data labels
+
+Some components will display labels on mutliple lines when the provided text contains a line break. (example: "I contain\na line break").
+Below is a table of the places where such line breaks can be used:
+
+| Component                   | Label displayed      | Where to use line breaks                               |
+| --------------------------- | -------------------- | ------------------------------------------------------ |
+| VueUiXy                     | Time labels (x axis) | config.chart.grid.labels.xAxisLabels.values            |
+| VueUiDonutEvolution         | Time labels (x axis) | config.style.chart.layout.grid.xAxis.dataLabels.values |
+| VueUiHistoryPlot            | Plot labels          | dataset names                                          |
+| VueUiParallelCoordinatePlot | Axis labels          | config.style.chart.yAxis.labels.axisNames              |
+| VueUiQuadrant               | Plot labels          | dataset names                                          |
+| VueUiQuickChart             | Time labels (x axis) | config.xyPeriods                                       |
+| VueUiRidgeline              | Time labels (x axis) | config.style.chart.xAxis.labels.values                 |
+| VueUiStackbar               | Time labels (x axis) | config.style.chart.grid.x.timeLabels.values            |
+| VueUiStripPlot              | x axis labels        | dataset names                                          |
+
 ## PDF generation
 
 This package requires jspdf as a peer dependency. Please install it in your project if you intend on using the PDF printing feature.

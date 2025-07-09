@@ -12,7 +12,7 @@ const dataset = ref([
     {
         name: 'Series 1',
         values: [
-            { x: 2, y: 0, label: 'T1'},
+            { x: 2, y: 0, label: 'T1 with some sort\nof long name'},
             { x: 18, y: 0.2, label: 'T2'},
             { x: 21, y: 0.8, label: 'T3'},
             { x: 19, y: 1.2, label: 'T4'},
