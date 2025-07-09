@@ -1603,6 +1603,25 @@ export function calcTrend(numbers) {
     return averagePercentageChange;
 }
 
+export function createTSpansFromLineBreaksOnX({ content, fontSize, fill, x, y }) {
+    const lines = content.split('\n');
+    return lines
+        .map((line, idx) =>
+            `<tspan x="${x}" y="${y + idx * (fontSize * 1.3)}" fill="${fill}">${line}</tspan>`
+        )
+        .join('');
+}
+
+export function createTSpansFromLineBreaksOnY({ content, fontSize, fill, x }) {
+    const lines = content.split('\n');
+    return lines
+        .map((line, idx) => {
+            const dy = idx === 0 ? 0 : fontSize * 1.3;
+            return `<tspan x="${x}" dy="${dy}" fill="${fill}">${line}</tspan>`;
+        })
+        .join('');
+}
+
 export function createTSpans({
     content,
     fontSize,
@@ -2622,6 +2641,8 @@ const lib = {
     createStar,
     createStraightPath,
     createTSpans,
+    createTSpansFromLineBreaksOnX,
+    createTSpansFromLineBreaksOnY,
     createUid,
     createWordCloudDatasetFromPlainText,
     darkenHexColor,
@@ -2676,6 +2697,6 @@ const lib = {
     createAreaWithCuts,
     createIndividualAreaWithCuts,
     createSmoothAreaSegments,
-    createIndividualArea
+    createIndividualArea,
 };
 export default lib;
