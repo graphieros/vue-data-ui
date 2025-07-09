@@ -740,6 +740,8 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 padding: PADDING([0,0,0,0]),
+                width: 512,
+                height: 360,
                 layout: {
                     curvedMarkers: false,
                     labels: {
@@ -3225,6 +3227,8 @@ export function useConfig() {
                 useGradient: true,
                 gradientIntensity: 40,
                 padding: PADDING([0,0,0,0]),
+                width: 512,
+                height: 512,
                 layout: {
                     labels: {
                         dataLabels: {

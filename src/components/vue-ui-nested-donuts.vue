@@ -139,11 +139,13 @@ watch(
         tableStep.value += 1;
         legendStep.value += 1;
 
-        mutableConfig.value.dataLabels.show =
-            FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
+        mutableConfig.value.dataLabels.show = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
         mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        mutableConfig.value.showTooltip =
-            FINAL_CONFIG.value.style.chart.tooltip.show;
+        mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+
+        // Other ref resets
+        svg.value.width = FINAL_CONFIG.value.style.chart.width;
+        svg.value.height = FINAL_CONFIG.value.style.chart.height;
     },
     { deep: true }
 );
@@ -357,8 +359,8 @@ const mutableConfig = ref({
 });
 
 const svg = ref({
-    height: 512,
-    width: 512,
+    width: FINAL_CONFIG.value.style.chart.width,
+    height: FINAL_CONFIG.value.style.chart.height,
 });
 
 const emit = defineEmits(["selectLegend", "selectDatapoint"]);
