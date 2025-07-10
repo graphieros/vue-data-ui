@@ -31,6 +31,7 @@ import {
     setOpacity,
     themePalettes,
     XMLNS,
+    checkNaN,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import { useNestedProp } from "../useNestedProp";
@@ -183,17 +184,19 @@ function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
                     const ghostByGroup = [];
                     let cursor = 0;
                     props.dataset.forEach((ds, groupIndex) => {
-                        const realTotal = ds.series.reduce(
+                        const realTotal = checkNaN(ds.series.reduce(
                             (sum, s) =>
-                                sum + sanitizeArray(s.values).reduce((a, b) => a + b, 0),
+                                sum + checkNaN(sanitizeArray(s.values).reduce((a, b) => a + b, 0)),
                             0
-                        );
-                        const animatedTotal = animatedValues.value
+                        ));
+
+                        const animatedTotal = checkNaN(animatedValues.value
                             .slice(cursor, cursor + ds.series.length)
-                            .reduce((a, b) => a + b, 0);
+                            .reduce((a, b) => a + b, 0));
+
                         const ghostValue = realTotal - animatedTotal;
 
-                        if (ghostValue > 0.001) {
+                        if (ghostValue > Number.MIN_VALUE) {
                             ghostByGroup.push({
                                 name: "__ghost__",
                                 arcOf: ds.name,
@@ -629,18 +632,19 @@ const radii = computed(() => {
 
 const donuts = computed(() => {
     return mutableDataset.value.map((ds, i) => {
-        const radius =
-            donutSize.value - (i * donutSize.value) / mutableDataset.value.length;
+        const hasData = Math.abs(ds.series.map(s => s.value).reduce((a, b) => a + b, 0)) > 0;
+        const radius = donutSize.value - (i * donutSize.value) / mutableDataset.value.length;
         const ghost = isFirstLoad.value
             ? ghostSlices.value.find((g) => g.datasetIndex === i)
             : null;
-        const series = [...ds.series, ...(ghost ? [ghost] : [])].map((s) => ({
-            ...s,
-            value: s.value < 0.001 ? 0.001 : s.value,
-        }));
-
+            const series = [...ds.series, ...(ghost ? [ghost] : [])].map((s) => ({
+                ...s,
+                value: s.value < 0.00000000001 ? Number.MIN_VALUE : s.value,
+            }));
+    
         return {
             ...ds,
+            hasData,
             radius,
             donut: makeDonut(
                 { series },
@@ -1181,12 +1185,14 @@ defineExpose({
 
             <!-- NESTED DONUTS -->
             <g v-for="(item, i) in donuts">
-                <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)">
-                    <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
-                        :fill="setOpacity(arc.color, 80)" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
-                        :filter="getBlurFilter(arc, j)" />
-                </g>
+                <template v-if="item.hasData">
+                    <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)">
+                        <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
+                            :fill="setOpacity(arc.color, 80)" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                            :filter="getBlurFilter(arc, j)" />
+                    </g>
+                </template>
             </g>
 
             <g v-if="FINAL_CONFIG.style.chart.useGradient">

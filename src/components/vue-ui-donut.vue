@@ -5,6 +5,7 @@ import {
     calcMarkerOffsetX,
     calcMarkerOffsetY,
     calcNutArrowPath,
+    checkNaN,
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
@@ -310,7 +311,7 @@ const immutableSet = computed(() => {
             return {
                 name: serie.name,
                 color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
-                value: serie.values.reduce((a, b) => a + b, 0),
+                value: checkNaN(serie.values.reduce((a, b) => a + b, 0)),
                 absoluteValues: serie.values,
                 comment: serie.comment || '',
                 patternIndex: i,
@@ -912,7 +913,6 @@ defineExpose({
                     <stop offset="100%" :stop-color="currentDonut[i].color" />
                 </radialGradient>
             </defs>
-
 
             <!-- LABEL CONNECTOR -->
             <defs>
