@@ -287,8 +287,8 @@
                 <!-- HIGHLIGHT AREAS -->
                 <g v-for="oneArea in highlightAreas">
                     <template v-if="oneArea.show">
+                        <!-- HIGHLIGHT AREA FILLED RECT UNITS -->
                         <g v-for="(_, i) in oneArea.span">
-                            <!-- HIGHLIGHT AREA FILLED RECT UNITS -->
                             <rect
                                 data-cy="highlight-area"
                                 :style="{ 
@@ -301,8 +301,9 @@
                                 :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
                                 :fill="setOpacity(oneArea.color, oneArea.opacity)"
                             />
-
-                            <!-- HIGHLIGHT AREA CAPTION -->
+                        </g>
+                        <!-- HIGHLIGHT AREA CAPTION -->
+                        <g v-for="(_, i) in oneArea.span">
                             <foreignObject v-if="oneArea.caption.text && i === 0"
                                 :x="drawingArea.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start) - (oneArea.caption.width === 'auto' ? 0 : oneArea.caption.width / 2 - (drawingArea.width / maxSeries) * oneArea.span / 2)"
                                 :y="drawingArea.top + oneArea.caption.offsetY"
