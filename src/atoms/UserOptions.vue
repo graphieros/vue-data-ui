@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue";
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from "./BaseIcon.vue";
 import img from "../img";
@@ -277,17 +277,19 @@ function toggleFullscreen(state) {
 function fullscreenchanged(_event) {
     if (document.fullscreenElement) {
         isFullscreen.value = true;
+        emit('toggleFullscreen', true);
     } else {
         isFullscreen.value = false;
+        emit('toggleFullscreen', false);
     }
 }
 
 onMounted(() => {
-    document.addEventListener('fullscreenchange', fullscreenchanged)
+    document.addEventListener('fullscreenchange', fullscreenchanged);
 })
 
 onBeforeUnmount(() => {
-    document.removeEventListener('fullscreenchange', fullscreenchanged)
+    document.removeEventListener('fullscreenchange', fullscreenchanged);
 })
 
 const isDesktop = ref(window.innerWidth > 600)
