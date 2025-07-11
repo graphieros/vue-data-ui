@@ -9,31 +9,31 @@ import LocalPattern from "../src/atoms/vue-ui-pattern.vue";
 const dataset = ref([
     {
         name: 'Serie 1',
-        values: [100],
+        values: [1],
         comment: 'This is a comment'
     },
     {
         name: 'Serie 2',
-        values: [50]
+        values: [0]
     },
     {
         name: 'Serie 3',
-        values: [25],
+        values: [0],
         comment: "This is another comment that is quite long to see how it fits on the chart and to see if it's nit overflowing."
     },
-    {
-        name: 'Serie 4',
-        values: [12.5]
-    },
-    {
-        name: 'Serie 5',
-        values: [6.125]
-    },
-    {
-        name: 'Serie 6',
-        values: [25],
-        comment: 'Some other comment'
-    },
+    // {
+    //     name: 'Serie 4',
+    //     values: [12.5]
+    // },
+    // {
+    //     name: 'Serie 5',
+    //     values: [6.125]
+    // },
+    // {
+    //     name: 'Serie 6',
+    //     values: [25],
+    //     comment: 'Some other comment'
+    // },
 ]);
 
 const alternateDataset = ref([

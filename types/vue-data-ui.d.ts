@@ -3107,6 +3107,7 @@ declare module "vue-data-ui" {
                         strokeWidth?: number;
                         useShadow?: boolean;
                         shadowColor?: string;
+                        emptyFill?: string;
                     };
                 };
                 comments?: ChartComments;
@@ -3257,6 +3258,7 @@ declare module "vue-data-ui" {
                         spacingRatio?: number;
                         useShadow?: boolean;
                         shadowColor?: string;
+                        emptyFill?: string;
                     };
                 };
                 legend?: ChartBaseLegend & {
