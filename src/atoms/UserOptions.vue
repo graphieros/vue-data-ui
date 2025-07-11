@@ -255,20 +255,26 @@ function toggleTooltip() {
     }
 }
 
-const _isFullscreen = ref(props.isFullscreen);
+const _isFullscreen = computed({
+    get: () => props.isFullscreen,
+    set: (val) => emit('toggleFullscreen', val)
+});
 
-async function toggleFullscreen() {
+function toggleFullscreen() {
     if (!props.chartElement) return;
-    if (_isFullscreen.value) {
-        document.exitFullscreen();
+
+    const next = !props.isFullscreen;
+    _isFullscreen.value = next;
+
+    if (next) {
+        props.chartElement.requestFullscreen()
     } else {
-        await props.chartElement.requestFullscreen();
+        document.exitFullscreen();
     }
 }
 
 function fullscreenchanged() {
     const flag = !!document.fullscreenElement;
-    _isFullscreen.value = flag;
     emit('toggleFullscreen', flag);
 }
 
