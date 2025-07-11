@@ -23,22 +23,35 @@ export function useResponsive({
     
         if (title) {
             heightTitle = title.getBoundingClientRect().height;
+        } else {
+            heightTitle = 0;
         }
         if (slicer) {
             heightSlicer = slicer.getBoundingClientRect().height;
+        } else {
+            heightSlicer = 0;
         }
         if (legend) {
             heightLegend = legend.getBoundingClientRect().height;
+        } else {
+            heightLegend = 0;
         }
         if (source) {
             heightSource = source.getBoundingClientRect().height;
+        } else {
+            heightSource = 0;
         }
         if (noTitle) {
             heightNoTitle = noTitle.getBoundingClientRect().height;
+        } else {
+            heightNoTitle = 0;
         }
         if (padding) {
             heightPadding = padding.top + padding.bottom;
             widthPadding = padding.right + padding.left;
+        } else {
+            heightPadding = 0;
+            widthPadding = 0;
         }
     
         height = parentHeight 
