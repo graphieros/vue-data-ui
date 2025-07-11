@@ -518,6 +518,26 @@ const currentDonut = computed(() => {
     return d
 });
 
+const hasData = computed(() => {
+    return Math.abs(donutSet.value.map(d => d.value).reduce((a, b) => a + b, 0)) > 0;
+})
+
+const emptySkeleton = computed(() => {
+    return makeDonut({
+        series: [
+            { 
+                value: 1, 
+                color: FINAL_CONFIG.value.style.chart.layout.donut.emptyFill, 
+                name: '_', 
+                seriesIndex: 0, 
+                patternIndex: -1, 
+                ghost: false, 
+                absoluteValues: [1] 
+            },
+        ],
+    }, svg.value.width / 2, svg.value.height / 2, minSize.value, minSize.value, 1.99999, 2, 1, 360, 105.25, donutThickness.value)
+});
+
 const noGhostDonut = computed(() => currentDonut.value.filter(el => !el.ghost))
 
 const polarAreas = computed(() => {
@@ -973,12 +993,18 @@ defineExpose({
             <template v-if="total && FINAL_CONFIG.type === 'classic'">
                 <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                     :d="arc.arcSlice" fill="#FFFFFF" />
-                <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path" :data-cy="`donut-arc-${i}`"
-                    :d="arc.arcSlice" :fill="arc.color"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)" 
-                        
-                />
+
+                    <path 
+                        v-for="(arc, i) in noGhostDonut" 
+                        class="vue-ui-donut-arc-path" 
+                        :data-cy="`donut-arc-${i}`"
+                        :d="arc.arcSlice" 
+                        :fill="arc.color"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" 
+                        :filter="getBlurFilter(i)" 
+                    />
+
                 <g v-if="$slots.pattern">
                     <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
                         :data-cy="`donut-arc-pattern-${arc.patternIndex}`" :d="arc.arcSlice"
@@ -1043,6 +1069,18 @@ defineExpose({
             </template>
 
             <template v-else>
+                <!-- EMPTY SKELETON -->
+                <g v-if="FINAL_CONFIG.type === 'classic' && !hasData">
+                    <path 
+                        v-for="(arc, i) in emptySkeleton" 
+                        class="vue-ui-donut-arc-path" 
+                        :data-cy="`empty-skeleton-${i}`"
+                        :d="arc.arcSlice" 
+                        :fill="arc.color"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" 
+                    />
+                </g>
                 <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize <= 0 ? 10 : minSize" fill="transparent"
                     :stroke="FINAL_CONFIG.style.chart.backgroundColor" />
             </template>

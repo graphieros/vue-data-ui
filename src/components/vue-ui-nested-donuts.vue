@@ -641,11 +641,28 @@ const donuts = computed(() => {
                 ...s,
                 value: s.value < 0.00000000001 ? Number.MIN_VALUE : s.value,
             }));
+
+            const skeleton = makeDonut(
+                { series: [
+                    { name: '_', color: FINAL_CONFIG.value.style.chart.layout.donut.emptyFill, value: 1 }
+                ]},
+                svg.value.width / 2,
+                svg.value.height / 2,
+                radius,
+                radius,
+                1.99999,
+                2,
+                1,
+                360,
+                105.25,
+                donutThickness.value
+            )
     
         return {
             ...ds,
             hasData,
             radius,
+            skeleton,
             donut: makeDonut(
                 { series },
                 svg.value.width / 2,
@@ -1188,9 +1205,16 @@ defineExpose({
                 <template v-if="item.hasData">
                     <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)">
                         <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
-                            :fill="setOpacity(arc.color, 80)" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                             :filter="getBlurFilter(arc, j)" />
+                    </g>
+                </template>
+                <template v-else>
+                    <g v-for="(arc, j) in item.skeleton">
+                        <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
+                            :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" />
                     </g>
                 </template>
             </g>

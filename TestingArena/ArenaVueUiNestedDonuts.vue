@@ -14,15 +14,15 @@ const dataset = ref([
         series: [
             {
                 name: 'Serie 1',
-                values: [50]
+                values: [1]
             },
             {
                 name: 'Serie 2',
-                values: [30]
+                values: [0]
             },
             {
                 name: 'Serie 3',
-                values: [20]
+                values: [0]
             },
         ]
     },
@@ -31,7 +31,7 @@ const dataset = ref([
         series: [
             {
                 name: 'Serie 1',
-                values: [40]
+                values: [0]
             },
             {
                 name: 'Serie 2',

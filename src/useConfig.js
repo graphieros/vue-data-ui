@@ -813,7 +813,8 @@ export function useConfig() {
                         strokeWidth: 55,
                         borderWidth: 1,
                         useShadow: false,
-                        shadowColor: COLOR_BLACK
+                        shadowColor: COLOR_BLACK,
+                        emptyFill: COLOR_GREY_LIGHT
                     }
                 },
                 comments: {
@@ -3260,7 +3261,8 @@ export function useConfig() {
                         borderWidth: 2,
                         spacingRatio: 0.5,
                         useShadow: false,
-                        shadowColor: COLOR_BLACK
+                        shadowColor: COLOR_BLACK,
+                        emptyFill: COLOR_GREY_LIGHT
                     }
                 },
                 legend: {
