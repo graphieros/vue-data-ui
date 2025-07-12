@@ -287,8 +287,8 @@
                 <!-- HIGHLIGHT AREAS -->
                 <g v-for="oneArea in highlightAreas">
                     <template v-if="oneArea.show">
+                        <!-- HIGHLIGHT AREA FILLED RECT UNITS -->
                         <g v-for="(_, i) in oneArea.span">
-                            <!-- HIGHLIGHT AREA FILLED RECT UNITS -->
                             <rect
                                 data-cy="highlight-area"
                                 :style="{ 
@@ -301,8 +301,9 @@
                                 :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
                                 :fill="setOpacity(oneArea.color, oneArea.opacity)"
                             />
-
-                            <!-- HIGHLIGHT AREA CAPTION -->
+                        </g>
+                        <!-- HIGHLIGHT AREA CAPTION -->
+                        <g v-for="(_, i) in oneArea.span">
                             <foreignObject v-if="oneArea.caption.text && i === 0"
                                 :x="drawingArea.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start) - (oneArea.caption.width === 'auto' ? 0 : oneArea.caption.width / 2 - (drawingArea.width / maxSeries) * oneArea.span / 2)"
                                 :y="drawingArea.top + oneArea.caption.offsetY"
@@ -3269,7 +3270,7 @@ export default {
                 // Title height to substract
                 let title = null;
                 let titleHeight = 0;
-                if (this.FINAL_CONFIG.chart.title.show) {
+                if (this.FINAL_CONFIG.chart.title.show && this.$refs.chartTitle) {
                     title = this.$refs.chartTitle;
                     titleHeight = title.getBoundingClientRect().height;
                 }
@@ -3277,7 +3278,7 @@ export default {
                 // Slicer height to substract
                 let slicer = null;
                 let slicerHeight = 0;
-                if (this.FINAL_CONFIG.chart.zoom.show && this.maxX > 6 && this.isDataset) {
+                if (this.FINAL_CONFIG.chart.zoom.show && this.maxX > 6 && this.isDataset && this.$refs.chartSlicer && this.$refs.chartSlicer.$el) {
                     slicer = this.$refs.chartSlicer.$el;
                     slicerHeight = slicer.getBoundingClientRect().height;
                 }
@@ -3285,7 +3286,7 @@ export default {
                 // Legend height to substract
                 let legend = null;
                 let legendHeight = 0
-                if (this.FINAL_CONFIG.chart.legend.show) {
+                if (this.FINAL_CONFIG.chart.legend.show && this.$refs.chartLegend) {
                     legend = this.$refs.chartLegend;
                     legendHeight = legend.getBoundingClientRect().height;
                 }
@@ -3302,27 +3303,54 @@ export default {
                     noTitleHeight = this.$refs.noTitle.getBoundingClientRect().height;
                 }
 
-                this.height = height - titleHeight - legendHeight - slicerHeight - sourceHeight - noTitleHeight;
+                this.height = height 
+                    - titleHeight 
+                    - legendHeight 
+                    - slicerHeight 
+                    - sourceHeight 
+                    - noTitleHeight
+                    - 12;
+
                 this.width = width;
                 this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
                 this.convertSizes();
 
                 const ro = new ResizeObserver((entries) => {
                     for(const entry of entries) {
-                        if (this.$refs.chartTitle) {
+                        if (this.FINAL_CONFIG.chart.title.show && this.$refs.chartTitle) {
                             titleHeight = this.$refs.chartTitle.getBoundingClientRect().height;
+                        } else {
+                            titleHeight = 0;
                         }
                         if (this.$refs.chartSlicer && this.$refs.chartSlicer.$el) {
                             slicerHeight = this.$refs.chartSlicer.$el.getBoundingClientRect().height;
+                        } else {
+                            slicerHeight = 0;
                         }
                         if (this.$refs.chartLegend) {
                             legendHeight = this.$refs.chartLegend.getBoundingClientRect().height;
+                        } else {
+                            legendHeight = 0;
                         }
                         if (this.$refs.source) {
                             sourceHeight = this.$refs.source.getBoundingClientRect().height;
+                        } else {
+                            sourceHeight = 0;
+                        }
+                        if (this.$refs.noTitle) {
+                            noTitleHeight = this.$refs.noTitle.getBoundingClientRect().height;
+                        } else {
+                            noTitleHeight = 0;
                         }
                         requestAnimationFrame(() => {
-                            this.height = entry.contentBoxSize[0].blockSize - titleHeight - legendHeight - slicerHeight - sourceHeight - 24;
+                            this.height = entry.contentRect.height
+                                - titleHeight 
+                                - legendHeight 
+                                - slicerHeight 
+                                - sourceHeight 
+                                - noTitleHeight
+                                - 12
+
                             this.width = entry.contentBoxSize[0].inlineSize;
                             this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
                             this.convertSizes();

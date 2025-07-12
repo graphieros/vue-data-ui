@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue";
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from "./BaseIcon.vue";
 import img from "../img";
@@ -255,39 +255,35 @@ function toggleTooltip() {
     }
 }
 
-const isFullscreen = ref(false);
+const _isFullscreen = computed({
+    get: () => props.isFullscreen,
+    set: (val) => emit('toggleFullscreen', val)
+});
 
-function toggleFullscreen(state) {
-    if (props.callbacks.fullscreen) {
-        props.callbacks.fullscreen();
+function toggleFullscreen() {
+    if (!props.chartElement) return;
+
+    const next = !props.isFullscreen;
+    _isFullscreen.value = next;
+
+    if (next) {
+        props.chartElement.requestFullscreen()
     } else {
-        if(!props.chartElement) return;
-        if(state === "in") {
-            isFullscreen.value = true;
-            props.chartElement.requestFullscreen();
-            emit('toggleFullscreen', true);
-        }else {
-            isFullscreen.value = false;
-            document && document.exitFullscreen();
-            emit('toggleFullscreen', false);
-        }
+        document.exitFullscreen();
     }
 }
 
-function fullscreenchanged(_event) {
-    if (document.fullscreenElement) {
-        isFullscreen.value = true;
-    } else {
-        isFullscreen.value = false;
-    }
+function fullscreenchanged() {
+    const flag = !!document.fullscreenElement;
+    emit('toggleFullscreen', flag);
 }
 
 onMounted(() => {
-    document.addEventListener('fullscreenchange', fullscreenchanged)
+    document.addEventListener('fullscreenchange', fullscreenchanged);
 })
 
 onBeforeUnmount(() => {
-    document.removeEventListener('fullscreenchange', fullscreenchanged)
+    document.removeEventListener('fullscreenchange', fullscreenchanged);
 })
 
 const isDesktop = ref(window.innerWidth > 600)
