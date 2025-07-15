@@ -30,6 +30,7 @@ export function extractAllPaths(obj, current = [], skipArrays = true) {
             }
         }
     }
+
     return paths;
 }
 
@@ -66,6 +67,7 @@ export function setValue(obj, path, value) {
 
 /**
  * Flattens a reactive config object into computed refs for every leaf property.
+ * Throws on any access or set of a non-existent binding key.
  *
  * @template T extends object
  * @param {import('vue').Ref<T>} configRef
@@ -95,5 +97,26 @@ export function useObjectBindings(configRef, options) {
     });
 
     build();
-    return bindings;
+
+    return new Proxy(bindings, {
+        get(target, prop) {
+            if (typeof prop === 'string' && !(prop in target)) {
+                throw new Error(
+                    `Vue Data UI - useObjectBindings: no binding found for key "${prop}"`
+                );
+            }
+            return Reflect.get(target, prop);
+        },
+        set(target, prop, value) {
+            if (typeof prop === 'string' && !(prop in target)) {
+                throw new Error(
+                    `Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}"`
+                );
+            }
+            return Reflect.set(target, prop, value);
+        },
+        has(target, prop) {
+            return Reflect.has(target, prop);
+        },
+    });
 }

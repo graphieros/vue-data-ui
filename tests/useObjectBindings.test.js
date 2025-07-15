@@ -158,3 +158,38 @@ describe('useObjectBindings with optional keys', () => {
         expect(testObj.value.hello).toBe('planets')
     })
 })
+
+describe('useObjectBindings – error handling', () => {
+    test('throws when accessing a non-existent binding', () => {
+        const config = ref({ foo: 'bar' });
+        const bindings = useObjectBindings(config);
+
+        expect(() => {
+            bindings['baz'];
+        }).toThrowError(
+            'Vue Data UI - useObjectBindings: no binding found for key "baz"'
+        );
+    });
+
+    test('throws when setting a non-existent binding', () => {
+        const config = ref({ foo: 'bar' });
+        const bindings = useObjectBindings(config);
+
+        expect(() => {
+            (bindings['baz'] = 'qux');
+        }).toThrowError(
+            'Vue Data UI - useObjectBindings: cannot set unknown binding "baz"'
+        );
+    });
+
+    test('throws when attempting to set .value on a non-existent binding', () => {
+        const config = ref({ foo: 'bar' });
+        const bindings = useObjectBindings(config);
+
+        expect(() => {
+            bindings['baz'].value = 'qux';
+        }).toThrowError(
+            'Vue Data UI - useObjectBindings: no binding found for key "baz"'
+        );
+    });
+});
