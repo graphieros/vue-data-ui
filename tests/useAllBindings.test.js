@@ -1,4 +1,3 @@
-// useAllBindings.spec.js
 import { ref, nextTick } from 'vue';
 import { describe, test, expect } from 'vitest';
 import {
@@ -18,7 +17,6 @@ describe('extractAllPaths', () => {
     test('nested object', () => {
         const obj = { x: { y: { z: 3 } }, w: 4 };
         const paths = extractAllPaths(obj);
-        // Order may vary but both should be present
         expect(paths).toContainEqual(['x', 'y', 'z']);
         expect(paths).toContainEqual(['w']);
         expect(paths.length).toBe(2);
@@ -33,7 +31,6 @@ describe('extractAllPaths', () => {
     test('include arrays when skipArrays=false', () => {
         const obj = { arr: [{ a: 1 }, 2] };
         const paths = extractAllPaths(obj, [], false);
-        // Should include positional and nested paths
         expect(paths).toContainEqual(['arr', '0', 'a']);
         expect(paths).toContainEqual(['arr', '1']);
     });
