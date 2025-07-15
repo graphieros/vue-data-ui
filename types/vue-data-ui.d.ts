@@ -6435,6 +6435,7 @@ declare module "vue-data-ui" {
                             offsetX?: number;
                         };
                         axisLabels?: {
+                            formatter?: Formatter;
                             show?: boolean;
                             color?: string;
                             fontSize?: number;
