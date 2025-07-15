@@ -112,19 +112,19 @@ function createDs(n, m = 100) {
 const dataset = ref([
     {
         name: "A",
-        series: [null, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, null],
+        series: [-200, 0, 200, 0, 200, 0, 200, 0, 200, 0, 200],
         type: "bar",
         dataLabels: false,
     },
     {
         name: "B",
-        series: [null, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, null],
+        series: [-50, 0, 50, 0, 50, 0, 50, 0, 50, 0, 50],
         type: "line",
         dataLabels: false,
     },
     {
         name: "C",
-        series: [null, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, null],
+        series: [-25, 0, 25, 0, 25, 0, 25, 0, 25, 0, 25],
         type: "plot",
         dataLabels: false,
     },
@@ -376,8 +376,8 @@ const model = ref([
     { key: 'useCanvas', def: false, type: 'checkbox' }, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
-    { key: 'chart.backgroundColor', def: 'transparent', type: 'color', label: 'backgroundColor', category: 'general' },
-    { key: 'chart.color', def: '#FFFFFF', type: 'color', label: 'textColor', category: 'general' },
+    { key: 'chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
     { key: 'chart.height', def: 600, type: 'range', min: 300, max: 1000, label: 'height', category: 'general' },
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
     { key: 'chart.zoom.show', def: true, type: 'checkbox', label: 'zoom', category: 'general' },
@@ -445,9 +445,9 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.show', def: true, type: 'checkbox', label: 'showPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.color', def: '#1A1A1A', type: 'color', label: 'textColorPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.values', def: [], type: 'none', label: 'fontSize' },
-    { key: 'chart.grid.labels.xAxisLabels.fontSize', def: 14, type: 'number', min: 6, max: 30, label: 'fontSizePeriodLabels', category: 'grid' },
+    { key: 'chart.grid.labels.xAxisLabels.fontSize', def: 18, type: 'number', min: 6, max: 30, label: 'fontSizePeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.showOnlyFirstAndLast', def: false, type: 'checkbox', label: 'showOnlyFirstAndLast', category: 'grid' },
-    { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 24, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
+    { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 0, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
     { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 24, type: 'number', min: -100, max: 100 },
 
@@ -831,12 +831,12 @@ const config = computed(() => {
                         },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
-                            // values: monthValues.value,
-                            values: new Array(13).fill(0).map((d,i) => {
-                                return `Some long name\nwith a value ${i}`
-                            }),
+                            values: monthValues.value,
+                            // values: new Array(13).fill(0).map((d,i) => {
+                            //     return `Some long name\nwith a value ${i}`
+                            // }),
                             datetimeFormatter: {
-                                enable: false,
+                                enable: true,
                                 locale: 'en',
                                 useUTC: false,
                                 januaryAsYear: true,

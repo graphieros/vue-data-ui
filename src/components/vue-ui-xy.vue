@@ -114,7 +114,7 @@
             width="100%" 
             :viewBox="viewBox" 
             class="vue-ui-xy-svg" 
-            :style="`background: transparent; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`"
+            :style="`overflow: visible; background: transparent; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`"
             :aria-label="chartAriaLabel"
             role="img"
             aria-live="polite"
@@ -158,7 +158,7 @@
                             stroke-width="1" 
                             :x1="drawingArea.left + xPadding" 
                             :x2="drawingArea.left + xPadding" 
-                            :y1="forceValidValue(drawingArea.top)" 
+                            :y1="forceValidValue(drawingArea.top + drawingArea.topOffset)" 
                             :y2="forceValidValue(drawingArea.bottom)" 
                             stroke-linecap="round"
                             :style="{ animation: 'none !important' }"
@@ -215,7 +215,7 @@
                             :key="`grid_vertical_line_${i}`"
                             :x1="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
                             :x2="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
-                            :y1="forceValidValue(drawingArea.top)"
+                            :y1="forceValidValue(drawingArea.top + drawingArea.topOffset)"
                             :y2="forceValidValue(drawingArea.bottom)"
                             stroke-width="0.5"
                             :stroke="FINAL_CONFIG.chart.grid.stroke"
@@ -296,7 +296,7 @@
                                     opacity: (oneArea.from + i >= slicer.start && (oneArea.from + i <= slicer.end -1)) ? 1 : 0
                                 }"
                                 :x="drawingArea.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start)"
-                                :y="drawingArea.top"
+                                :y="drawingArea.top + drawingArea.topOffset"
                                 :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                                 :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
                                 :fill="setOpacity(oneArea.color, oneArea.opacity)"
@@ -306,7 +306,7 @@
                         <g v-for="(_, i) in oneArea.span">
                             <foreignObject v-if="oneArea.caption.text && i === 0"
                                 :x="drawingArea.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start) - (oneArea.caption.width === 'auto' ? 0 : oneArea.caption.width / 2 - (drawingArea.width / maxSeries) * oneArea.span / 2)"
-                                :y="drawingArea.top + oneArea.caption.offsetY"
+                                :y="drawingArea.top + oneArea.caption.offsetY + drawingArea.topOffset"
                                 :style="{
                                     overflow: 'visible',
                                     opacity: (oneArea.to >= slicer.start && oneArea.from < slicer.end) ? 1 : 0
@@ -329,7 +329,7 @@
                         <rect
                             data-cy="highlighter"
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
-                            :y="drawingArea.top"
+                            :y="drawingArea.top + drawingArea.topOffset"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
                             :fill="[selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(i) ? setOpacity(FINAL_CONFIG.chart.highlighter.color, FINAL_CONFIG.chart.highlighter.opacity) : 'transparent'"
@@ -462,7 +462,7 @@
                 />
 
                 <!-- Y LABELS -->
-                <g v-if="FINAL_CONFIG.chart.grid.labels.show">
+                <g v-if="FINAL_CONFIG.chart.grid.labels.show" ref="scaleLabels">
                     <template v-if="mutableConfig.useIndividualScale">
                         <g v-for="el in allScales">
                             <line 
@@ -1111,7 +1111,7 @@
                     <rect 
                         v-for="(trap, i) in allScales"
                         :x="trap.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + xPadding"
-                        :y="drawingArea.top"
+                        :y="drawingArea.top + drawingArea.topOffset"
                         :width="FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                         :fill="selectedScale === trap.groupId ? `url(#individual_scale_gradient_${uniqueId}_${i})` : 'transparent'"
@@ -1122,7 +1122,8 @@
 
                 <!-- AXIS LABELS -->
                 <g>
-                    <text 
+                    <text
+                        ref="yAxisLabel"
                         data-cy="xy-axis-yLabel" 
                         v-if="FINAL_CONFIG.chart.grid.labels.axis.yLabel && !mutableConfig.useIndividualScale" 
                         :font-size="fontSizes.yAxis" 
@@ -1134,6 +1135,7 @@
                         {{ FINAL_CONFIG.chart.grid.labels.axis.yLabel }}
                     </text>
                     <text 
+                        ref="xAxisLabel"
                         data-cy="xy-axis-xLabel"
                         v-if="FINAL_CONFIG.chart.grid.labels.axis.xLabel" 
                         text-anchor="middle"
@@ -1148,7 +1150,7 @@
                 </g>
                 
                 <!-- TIME LABELS -->
-                <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show">
+                <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show" ref="timeLabels">
                     <template v-if="$slots['time-label']">
                         <template v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                             <slot name="time-label" v-bind="{
@@ -1276,7 +1278,7 @@
                         data-cy="tooltip-trap"
                         v-for="(_, i) in maxSeries" :key="`tooltip_trap_${i}`"
                         :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
-                        :y="drawingArea.top"
+                        :y="drawingArea.top + drawingArea.topOffset"
                         :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                         :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
                         fill="transparent"
@@ -1285,7 +1287,6 @@
                         @click="selectX(i)"
                     />
                 </g>
-
 
                 <!-- TIME TAG -->
                 <g v-if="FINAL_CONFIG.chart.timeTag.show && (![null, undefined].includes(selectedSerieIndex) || ![null, undefined].includes(selectedMinimapIndex) )" style="pointer-events:none">
@@ -1857,6 +1858,7 @@ export default {
             svgRef: null,
             tagRefs: {},
             _textMeasurer: null,
+            _drawingAreaOverride: {}
         }
     },
     watch: {
@@ -2623,26 +2625,16 @@ export default {
                 }
             })
         },
-        drawingArea() {
-            function getUniqueScaleLabelsCount(dataset) {
-            const uniqueLabels = new Set();
-                dataset.forEach(item => {
-                    const label = item.scaleLabel || '__noScaleLabel__';
-                    uniqueLabels.add(label);
-                });
-                return uniqueLabels.size;
-                }
-
-            const len = getUniqueScaleLabelsCount(this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)));
-
-            const individualScalesPadding = this.mutableConfig.useIndividualScale && this.FINAL_CONFIG.chart.grid.labels.show ? len * (this.mutableConfig.isStacked ? 0 : this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth) : 0;
-            return {
-                top: this.FINAL_CONFIG.chart.padding.top,
-                right: this.width - this.FINAL_CONFIG.chart.padding.right,
-                bottom: this.height - this.FINAL_CONFIG.chart.padding.bottom,
-                left: this.FINAL_CONFIG.chart.padding.left + individualScalesPadding,
-                height: this.height - (this.FINAL_CONFIG.chart.padding.top + this.FINAL_CONFIG.chart.padding.bottom),
-                width: this.width - (this.FINAL_CONFIG.chart.padding.right + this.FINAL_CONFIG.chart.padding.left + individualScalesPadding)
+        drawingArea: {
+            get() {
+                const base = this.setDrawingArea();
+                return { ...base, ...this._drawingAreaOverride };
+            },
+            set(newVal) {
+                this._drawingAreaOverride = {
+                    ...this._drawingAreaOverride,
+                    ...newVal
+                };
             }
         },
         max(){
@@ -3020,6 +3012,9 @@ export default {
         this.svgRef = this.$refs.svgRef;
         this.prepareChart();
         this.setupSlicer();
+        this.$nextTick(() => {
+            this.adjustChartDimensions();
+        })
 
         document.addEventListener("mousemove", (e) => {
             this.clientPosition = {
@@ -3079,6 +3074,86 @@ export default {
         createIndividualAreaWithCuts,
         createSmoothAreaSegments,
         createIndividualArea,
+        setDrawingArea() {
+            const len = new Set(
+            this.absoluteDataset
+                .filter(s => !this.segregatedSeries.includes(s.id))
+                .map(s => s.scaleLabel || '__noScaleLabel__')
+            ).size;
+
+            const pad = this.mutableConfig.useIndividualScale && this.FINAL_CONFIG.chart.grid.labels.show
+                ? (this.mutableConfig.isStacked ? 0 : len * this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth)
+                : 0;
+
+            const base = {
+                top: 0,
+                topOffset: this.fontSizes.dataLabels / 3,
+                right: this.width,
+                bottom: this.height,
+                left: pad,
+                width: this.width - pad,
+                height: this.height
+            };
+
+            return base;
+        },
+        adjustChartDimensions() {
+            /**
+             * Nuke all paddings
+             * Once all calcs are made
+             * . set drawingArea.left based on axis label bbox
+             * . set drawingArea.top based on yAxis label
+             * . position xAxis label on height - fontSize
+             * . position timeLabels based on height - xAxisLabel bbox h - timeLabels bbox h
+             * . most probably some other type of adjustments on drawingArea.right
+            */
+
+            const scaleLabels = this.$refs.scaleLabels;
+            const timeLabels = this.$refs.timeLabels;
+            const yAxisLabel = this.$refs.yAxisLabel;
+            const xAxisLabel = this.$refs.xAxisLabel;
+
+            let x = 0;
+            let y = 0;
+            let top = 0;
+            let scaleLabelW = 0;
+
+            if (scaleLabels) {
+                x += scaleLabels.getBBox().width;
+                top = this.fontSizes.dataLabels / 3;
+            }
+
+            if (yAxisLabel) {
+                scaleLabelW = yAxisLabel.getBBox().width 
+                x += scaleLabelW;
+
+                // Perhaps at the end
+                yAxisLabel.setAttribute('transform', `translate(0, ${this.drawingArea.top + this.drawingArea.height / 2}) rotate(-90)`)
+            }
+
+            if (timeLabels) {
+                y += timeLabels.getBBox().height;
+            }
+
+            if (xAxisLabel) {
+                xAxisLabel.setAttribute('y', this.height - this.fontSizes.yAxis);
+                y += xAxisLabel.getBBox().height;
+                if (timeLabels) {
+                    xAxisLabel.setAttribute('y',timeLabels.getBBox().y + timeLabels.getBBox().height);
+                }
+            }
+
+            this.drawingArea = {
+                ...this.drawingArea,
+                top,
+                left: x,
+                right: this.width,
+                width: this.width - x,
+                bottom: this.height - y + top,
+                height: this.height - y - top
+            }
+
+        },
         usesSelectTimeLabelEvent() {
             return !!this.$.vnode.props?.onSelectTimeLabel;
         },
@@ -3354,6 +3429,7 @@ export default {
                             this.width = entry.contentBoxSize[0].inlineSize;
                             this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
                             this.convertSizes();
+                            this.$nextTick(this.adjustChartDimensions);
                         })
                     }
                 })
@@ -3374,6 +3450,8 @@ export default {
                 this.plotRadii.plot = this.FINAL_CONFIG.plot.radius;
                 this.plotRadii.line = this.FINAL_CONFIG.line.radius;
             }
+            this.$nextTick(this.adjustChartDimensions);
+
         },
         selectMinimapIndex(minimapIndex) {
             this.selectedMinimapIndex = minimapIndex;
