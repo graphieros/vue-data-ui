@@ -1,4 +1,4 @@
-import { computed, isRef, watchEffect } from 'vue';
+import { computed, isRef, watchEffect } from "vue";
 
 /**
  * Recursively extract all dot-paths to leaf values in an object.
@@ -13,7 +13,7 @@ export function extractAllPaths(obj, current = [], skipArrays = true) {
     /** @type {string[][]} */
     const paths = [];
 
-    if (obj && typeof obj === 'object') {
+    if (obj && typeof obj === "object") {
         if (Array.isArray(obj) && skipArrays) {
             return [];
         }
@@ -23,7 +23,7 @@ export function extractAllPaths(obj, current = [], skipArrays = true) {
                 continue;
             }
             const next = current.concat(key);
-            if (val && typeof val === 'object') {
+            if (val && typeof val === "object") {
                 paths.push(...extractAllPaths(val, next, skipArrays));
             } else {
                 paths.push(next);
@@ -56,7 +56,7 @@ export function setValue(obj, path, value) {
         const key = path[i];
         if (
             !Object.prototype.hasOwnProperty.call(target, key) ||
-            typeof target[key] !== 'object'
+            typeof target[key] !== "object"
         ) {
             target[key] = {};
         }
@@ -75,7 +75,7 @@ export function setValue(obj, path, value) {
  * @returns {Record<string, import('vue').ComputedRef<unknown>>}
  */
 export function useObjectBindings(configRef, options) {
-    const { delimiter = '.', skipArrays = true } = options || {};
+    const { delimiter = ".", skipArrays = true } = options || {};
     const bindings = {};
 
     function build() {
@@ -100,7 +100,7 @@ export function useObjectBindings(configRef, options) {
 
     return new Proxy(bindings, {
         get(target, prop) {
-            if (typeof prop === 'string' && !(prop in target)) {
+            if (typeof prop === "string" && !(prop in target)) {
                 throw new Error(
                     `Vue Data UI - useObjectBindings: no binding found for key "${prop}"`
                 );
@@ -108,10 +108,18 @@ export function useObjectBindings(configRef, options) {
             return Reflect.get(target, prop);
         },
         set(target, prop, value) {
-            if (typeof prop === 'string' && !(prop in target)) {
-                throw new Error(
-                    `Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}"`
-                );
+            if (typeof prop === "string") {
+                if (!(prop in target)) {
+                    throw new Error(
+                        `Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}"`
+                    );
+                }
+                const binding = target[prop];
+                if (isRef(binding)) {
+                    binding.value = value;
+                    return true;
+                }
+                return Reflect.set(target, prop, value);
             }
             return Reflect.set(target, prop, value);
         },
