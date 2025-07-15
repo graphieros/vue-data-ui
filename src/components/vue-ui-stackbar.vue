@@ -1291,12 +1291,19 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
                     text-anchor="end"
                 >
-                    {{ dataLabel({
-                        p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
-                        v: yLabel.value,
-                        s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
-                        r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
-                    }) }}
+                    {{ 
+                        applyDataLabel(
+                            FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
+                            yLabel.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
+                                v: yLabel.value,
+                                s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
+                            }),
+                            { datapoint: yLabel }
+                        )
+                    }}
                 </text>
             </template>
 
@@ -1322,12 +1329,19 @@ defineExpose({
                     :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
                     :transform="`translate(${yLabel.horizontal_x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
                 >
-                    {{ dataLabel({
-                        p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
-                        v: yLabel.value,
-                        s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
-                        r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
-                    }) }}
+                    {{ 
+                        applyDataLabel(
+                            FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
+                            yLabel.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
+                                v: yLabel.value,
+                                s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
+                            }),
+                            { datapoint: yLabel }
+                        )
+                    }}
                 </text>
             </template>
 

@@ -389,6 +389,7 @@ export function useConfig() {
                             offsetX: 0,
                         },
                         axisLabels: {
+                            formatter: null,
                             show: true,
                             color: COLOR_BLACK,
                             fontSize: FONT._14,
