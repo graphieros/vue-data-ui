@@ -1,4 +1,4 @@
-import { computed, isRef, watch, watchEffect } from 'vue';
+import { computed, isRef, watchEffect } from 'vue';
 
 /**
  * Recursively extract all dot-paths to leaf values in an object.
