@@ -1,4 +1,4 @@
-import { computed, isRef, watch } from 'vue';
+import { computed, isRef, watch, watchEffect } from 'vue';
 
 /**
  * Recursively extract all dot-paths to leaf values in an object.
@@ -72,7 +72,7 @@ export function setValue(obj, path, value) {
  * @param {{ delimiter?: string; skipArrays?: boolean }} [options]
  * @returns {Record<string, import('vue').ComputedRef<unknown>>}
  */
-export function useAllBindings(configRef, options) {
+export function useObjectBindings(configRef, options) {
     const { delimiter = '.', skipArrays = true } = options || {};
     const bindings = {};
 
@@ -89,12 +89,10 @@ export function useAllBindings(configRef, options) {
         }
     }
 
-    // Rebuild if the entire configRef.value is replaced
-    watch(
-        () => configRef.value,
-        () => build(),
-        { deep: false }
-    );
+    watchEffect(() => {
+        extractAllPaths(configRef.value, [], skipArrays);
+        build();
+    });
 
     build();
     return bindings;

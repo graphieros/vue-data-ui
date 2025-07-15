@@ -4,8 +4,8 @@ import {
     extractAllPaths,
     getValue,
     setValue,
-    useAllBindings,
-} from '../src/useAllBindigs'
+    useObjectBindings,
+} from '../src/useObjectBindings'
 
 describe('extractAllPaths', () => {
     test('simple flat object', () => {
@@ -72,13 +72,13 @@ describe('setValue', () => {
     });
 });
 
-describe('useAllBindings', () => {
+describe('useObjectBindings', () => {
     test('creates computed refs for each leaf and reflects initial values', () => {
         const config = ref({
             user: { name: 'Alice', age: 30 },
             enabled: true,
         });
-        const bindings = useAllBindings(config);
+        const bindings = useObjectBindings(config);
 
         expect(Object.keys(bindings).sort()).toEqual(['enabled', 'user.age', 'user.name']);
         expect(bindings['user.name'].value).toBe('Alice');
@@ -87,7 +87,7 @@ describe('useAllBindings', () => {
 
     test('updating binding updates the source config', () => {
         const config = ref({ a: { b: 1 } });
-        const bindings = useAllBindings(config);
+        const bindings = useObjectBindings(config);
 
         bindings['a.b'].value = 123;
         expect(config.value.a.b).toBe(123);
@@ -95,7 +95,7 @@ describe('useAllBindings', () => {
 
     test('rebuilds when configRef.value is replaced', async () => {
         const config = ref({ foo: 'bar' });
-        const bindings = useAllBindings(config);
+        const bindings = useObjectBindings(config);
 
         expect(Object.keys(bindings)).toEqual(['foo']);
 
@@ -109,7 +109,7 @@ describe('useAllBindings', () => {
 
     test('respects custom delimiter', () => {
         const config = ref({ x: { y: 5 } });
-        const bindings = useAllBindings(config, { delimiter: '::' });
+        const bindings = useObjectBindings(config, { delimiter: '::' });
 
         expect(Object.keys(bindings)).toContain('x::y');
         expect(bindings['x::y'].value).toBe(5);
@@ -117,7 +117,7 @@ describe('useAllBindings', () => {
 
     test('includes arrays when skipArrays=false', () => {
         const config = ref({ arr: [{ foo: 'bar' }] });
-        const noSkip = useAllBindings(config, { skipArrays: false });
+        const noSkip = useObjectBindings(config, { skipArrays: false });
         const keys = Object.keys(noSkip);
 
         expect(keys).toContain('arr.0.foo');
@@ -126,7 +126,35 @@ describe('useAllBindings', () => {
 
     test('skips arrays by default', () => {
         const config = ref({ arr: [{ foo: 'bar' }] });
-        const defaultBindings = useAllBindings(config);
+        const defaultBindings = useObjectBindings(config);
         expect(Object.keys(defaultBindings)).not.toContain('arr.0.foo');
     });
 });
+
+describe('useObjectBindings with optional keys', () => {
+    test('creates binding for an optional property added after initialization', async () => {
+
+        const testObj = ref({ foo: 'bar' })
+        const bindings = useObjectBindings(testObj)
+
+        expect(Object.keys(bindings)).toContain('foo')
+        expect(Object.keys(bindings)).not.toContain('hello')
+
+        testObj.value.hello = 'world'
+        await nextTick()
+
+        expect(Object.keys(bindings)).toContain('hello')
+        expect(bindings['hello'].value).toBe('world')
+    })
+
+    test('setting the newly added binding updates the source object', async () => {
+
+        const testObj = ref({ foo: 'bar' })
+        const bindings = useObjectBindings(testObj)
+        testObj.value.hello = 'world'
+        await nextTick()
+
+        bindings['hello'].value = 'planets'
+        expect(testObj.value.hello).toBe('planets')
+    })
+})
