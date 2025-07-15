@@ -2929,7 +2929,7 @@ export default {
         },
         annotationsY() {
             const ann = this.FINAL_CONFIG.chart.annotations;
-            if (!Array.isArray(ann) || ann.every(a => !a.show)) return [];
+            if (!ann || !Array.isArray(ann) || ann.every(a => !a.show)) return [];
 
             const visible = ann.filter(a =>
                 a.show &&
@@ -3264,13 +3264,15 @@ export default {
                     mergedConfig.chart.grid.labels.yAxis.groupColor = null;
                 }
 
-                if (this.config && Array.isArray(this.config.chart.annotations) && this.config.chart.annotations.length) {
+                if (this.config && this.config.chart.annotations && Array.isArray(this.config.chart.annotations) && this.config.chart.annotations.length) {
                     mergedConfig.chart.annotations = this.config.chart.annotations.map(annotation => {
                         return useNestedProp({
                             defaultConfig: DEFAULT_CONFIG.chart.annotations[0],
                             userConfig: annotation
                         })
                     })
+                } else {
+                    mergedConfig.chart.annotations = [];
                 }
 
                 // ----------------------------------------------------------------------------
