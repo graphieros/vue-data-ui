@@ -1,11 +1,11 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch, defineAsyncComponent, shallowRef } from "vue";
 import { 
-    calculateNiceScale, 
-    canShowValue, 
+    calculateNiceScale,
     checkNaN, 
     createCsvContent, 
     createUid, 
+    dataLabel, 
     downloadCsv,
     error,
     functionReturnsString,
@@ -27,6 +27,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
+import { useTimeLabels } from "../useTimeLabels";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -116,6 +117,18 @@ function prepareConfig() {
         finalConfig.style.zoom.endIndex = props.config.style.zoom.endIndex;
     } else {
         finalConfig.style.zoom.endIndex = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.layout.grid.yAxis.scale.min')) {
+        finalConfig.style.layout.grid.yAxis.scale.min = props.config.style.layout.grid.yAxis.scale.min;
+    } else {
+        finalConfig.style.layout.grid.yAxis.scale.min = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.layout.grid.yAxis.scale.max')) {
+        finalConfig.style.layout.grid.yAxis.scale.max = props.config.style.layout.grid.yAxis.scale.max;
+    } else {
+        finalConfig.style.layout.grid.yAxis.scale.max = null;
     }
 
     // ----------------------------------------------------------------------------
@@ -258,7 +271,12 @@ const slicer = ref({
 });
 
 const mutableDataset = computed(() => {
-    return props.dataset.slice(slicer.value.start, slicer.value.end);
+    return props.dataset.map((ds, i) => {
+        return {
+            ...ds,
+            absoluteIndex: i
+        }
+    }).slice(slicer.value.start, slicer.value.end);
 });
 
 const datasetBreakdown = computed(() => {
@@ -316,12 +334,13 @@ const datasetBreakdown = computed(() => {
 
     return mutableDataset.value.map(ds => {
         return {
+            absoluteIndex: ds.absoluteIndex,
             period: ds[0],
             open: ds[1],
             high: ds[2],
             low: ds[3],
             last: ds[4],
-            volume: ds[5]
+            volume: ds[5],
         }
     });
 });
@@ -331,9 +350,12 @@ const slot = computed(() => {
 })
 
 const extremes = computed(() => {
+    const max = FINAL_CONFIG.value.style.layout.grid.yAxis.scale.max === null ? Math.max(...datasetBreakdown.value.map(ds => ds.high)) : FINAL_CONFIG.value.style.layout.grid.yAxis.scale.max;
+    const min = FINAL_CONFIG.value.style.layout.grid.yAxis.scale.min === null ? 0 : FINAL_CONFIG.value.style.layout.grid.yAxis.scale.min;
+
     return {
-        max: Math.max(...datasetBreakdown.value.map(ds => ds.high)),
-        min: 0
+        max,
+        min
     }
 });
 
@@ -345,7 +367,7 @@ function convertToPlot(item, index) {
     return {
         ...item,
         x: checkNaN(drawingArea.value.left + (index * slot.value) + (slot.value / 2)),
-        y: checkNaN(drawingArea.value.top + (1 - (item / niceScale.value.max)) * drawingArea.value.height),
+        y: checkNaN(drawingArea.value.top + (1 - ((item - niceScale.value.min) / (niceScale.value.max - niceScale.value.min))) * drawingArea.value.height),
         value: checkNaN(item)
     }
 }
@@ -364,13 +386,14 @@ const drawableDataset = computed(() => {
             low,
             last,
             volume: ds.volume,
-            isBullish
+            isBullish,
+            absoluteIndex: ds.absoluteIndex
         }
     });
 });
 
 function ratioToMax(value) {
-    return checkNaN(value / niceScale.value.max);
+    return checkNaN((value - niceScale.value.min) / (niceScale.value.max - niceScale.value.min));
 }
 
 const yLabels = computed(() => {
@@ -384,6 +407,30 @@ const yLabels = computed(() => {
 
 const xLabels = computed(() => {
     return datasetBreakdown.value.map(ds => ds.period)
+});
+
+const timeLabels = computed(() => {
+    return useTimeLabels({
+        values: props.dataset.map(ds => ds[0]),
+        maxDatapoints: props.dataset.length,
+        formatter: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter,
+        start: slicer.value.start,
+        end: slicer.value.end
+    })
+});
+
+const slicerLabels = computed(() => {
+    if (!FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable) {
+        return {
+            start: props.dataset[slicer.value.start] ? props.dataset[slicer.value.start][0] : props.dataset[0][0],
+            end: props.dataset[slicer.value.end - 1] ? props.dataset[slicer.value.end - 1][0] : props.dataset.at(-1)[0]
+        }
+    } else {
+        return {
+            start: timeLabels.value.find(el => el.absoluteIndex === slicer.value.start).text,
+            end: timeLabels.value.find(el => el.absoluteIndex === slicer.value.end - 1).text
+        }
+    }
 });
 
 const dataTooltipSlot = ref(null);
@@ -417,6 +464,8 @@ function useTooltip(index, datapoint) {
             let html = "";
             const { period, open, high, low, last, volume, isBullish } = drawableDataset.value[index];
             const { period:tr_period, open:tr_open, high:tr_high, low:tr_low, last:tr_last, volume:tr_volume } = FINAL_CONFIG.value.translations;
+
+            const timeLabel = !FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable ? period : timeLabels.value[index].text
     
             html += `<div data-cy="candlestick-tooltip-period"><svg style="margin-right:6px" viewBox="0 0 12 12" height="12" width="12"><rect x="0" y="0" height="12" width="12" rx="${FINAL_CONFIG.value.style.layout.candle.borderRadius*3}" stroke="${FINAL_CONFIG.value.style.layout.candle.stroke}" stroke-width="${FINAL_CONFIG.value.style.layout.candle.strokeWidth}" 
                 fill="${FINAL_CONFIG.value.style.layout.candle.gradient.show 
@@ -425,13 +474,45 @@ function useTooltip(index, datapoint) {
                         : `url(#bearish_gradient_${uid.value})` 
                     : isBullish 
                         ? FINAL_CONFIG.value.style.layout.candle.colors.bullish 
-                        : FINAL_CONFIG.value.style.layout.candle.colors.bearish}"/></svg>${period}</div>`;
+                        : FINAL_CONFIG.value.style.layout.candle.colors.bearish}"/></svg>${timeLabel}</div>`;
             html += `${tr_volume} : <b data-cy="candlestick-tooltip-volume">${ isNaN(volume) ? '-' : Number(volume.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()}</b>`;
             html += `<div style="margin-top:6px;padding-top:6px;border-top:1px solid ${FINAL_CONFIG.value.style.tooltip.borderColor}">`;
-            html += `<div>${tr_open}: <b>${FINAL_CONFIG.value.style.tooltip.prefix} ${isNaN(open.value) ? '-' : Number(open.value.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.style.tooltip.suffix}</b></div>`;
-            html += `<div>${tr_high}: <b>${FINAL_CONFIG.value.style.tooltip.prefix} ${isNaN(high.value) ? '-' : Number(high.value.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.style.tooltip.suffix}</b></div>`;
-            html += `<div>${tr_low}: <b>${FINAL_CONFIG.value.style.tooltip.prefix} ${isNaN(low.value) ? '-' : Number(low.value.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.style.tooltip.suffix}</b></div>`;
-            html += `<div>${tr_last}: <b>${FINAL_CONFIG.value.style.tooltip.prefix} ${isNaN(last.value) ? '-' : Number(last.value.toFixed(FINAL_CONFIG.value.style.tooltip.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.style.tooltip.suffix}</b></div>`;
+                
+            const label_open = dataLabel({
+                p: FINAL_CONFIG.value.style.tooltip.prefix,
+                v: open.value,
+                s: FINAL_CONFIG.value.style.tooltip.suffix,
+                r: FINAL_CONFIG.value.style.tooltip.roundingValue
+            });
+
+            html += `<div>${tr_open}: <b>${label_open}</b></div>`;
+
+            const label_high = dataLabel({
+                p: FINAL_CONFIG.value.style.tooltip.prefix,
+                v: high.value,
+                s: FINAL_CONFIG.value.style.tooltip.suffix,
+                r: FINAL_CONFIG.value.style.tooltip.roundingValue
+            });
+
+            html += `<div>${tr_high}: <b>${label_high}</b></div>`;
+
+            const label_low = dataLabel({
+                p: FINAL_CONFIG.value.style.tooltip.prefix,
+                v: low.value,
+                s: FINAL_CONFIG.value.style.tooltip.suffix,
+                r: FINAL_CONFIG.value.style.tooltip.roundingValue
+            });
+
+            html += `<div>${tr_low}: <b>${label_low}</b></div>`;
+
+            const label_last = dataLabel({
+                p: FINAL_CONFIG.value.style.tooltip.prefix,
+                v: last.value,
+                s: FINAL_CONFIG.value.style.tooltip.suffix,
+                r: FINAL_CONFIG.value.style.tooltip.roundingValue
+            });
+
+            html += `<div>${tr_last}: <b>${label_last}</b></div>`;
             html += `</div>`;
     
             tooltipContent.value = `<div style="text-align:right">${html}</div>`
@@ -486,9 +567,9 @@ function generateCsv(callback=null) {
     nextTick(() => {
         const labels = [FINAL_CONFIG.value.translations.period, FINAL_CONFIG.value.translations.open, FINAL_CONFIG.value.translations.high, FINAL_CONFIG.value.translations.low, FINAL_CONFIG.value.translations.last, FINAL_CONFIG.value.translations.volume];
 
-        const values = drawableDataset.value.map(ds => {
+        const values = drawableDataset.value.map((ds, i) => {
             return [
-                ds.period,
+                !FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable ? ds.period : timeLabels.value[i].text,
                 ds.open.value,
                 ds.high.value,
                 ds.low.value,
@@ -508,14 +589,43 @@ function generateCsv(callback=null) {
 }
 
 const dataTable = computed(() => {
-    const body = drawableDataset.value.map(ds => [
-        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px"><rect x="0" y="0" height="12" width="12" :rx="${FINAL_CONFIG.value.style.layout.candle.borderRadius * 3}" fill="${FINAL_CONFIG.value.style.layout.candle.gradient.show ? ds.isBullish ? `url(#bullish_gradient_${uid.value}` : `url(#bearish_gradient_${uid.value})` : ds.isBullish ? FINAL_CONFIG.value.style.layout.candle.colors.bullish : FINAL_CONFIG.value.style.layout.candle.colors.bearish}"/></svg> ${ds.period}`,
-        `${FINAL_CONFIG.value.table.td.prefix} ${isNaN(ds.open.value) ? '-' : Number(ds.open.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.table.td.suffix}`,
-        `${FINAL_CONFIG.value.table.td.prefix} ${isNaN(ds.high.value) ? '-' : Number(ds.high.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.table.td.suffix}`,
-        `${FINAL_CONFIG.value.table.td.prefix} ${isNaN(ds.low.value) ? '-' : Number(ds.low.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.table.td.suffix}`,
-        `${FINAL_CONFIG.value.table.td.prefix} ${isNaN(ds.last.value) ? '-' : Number(ds.last.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString()} ${FINAL_CONFIG.value.table.td.suffix}`,
-        `${isNaN(ds.volume) ? '-' : ds.volume.toLocaleString()}`,
-    ]);
+    const body = drawableDataset.value.map((ds, i) => {
+        const timeLabel = !FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable ? ds.period : timeLabels.value[i].text;
+
+        const label_open = dataLabel({
+            p: FINAL_CONFIG.value.table.td.prefix,
+            v: ds.open.value,
+            s: FINAL_CONFIG.value.table.td.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
+        });
+        const label_high = dataLabel({
+            p: FINAL_CONFIG.value.table.td.prefix,
+            v: ds.high.value,
+            s: FINAL_CONFIG.value.table.td.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
+        });
+        const label_low = dataLabel({
+            p: FINAL_CONFIG.value.table.td.prefix,
+            v: ds.low.value,
+            s: FINAL_CONFIG.value.table.td.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
+        });
+        const label_last = dataLabel({
+            p: FINAL_CONFIG.value.table.td.prefix,
+            v: ds.last.value,
+            s: FINAL_CONFIG.value.table.td.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
+        });
+
+        return [
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" height="12" width="12" style="margin-right: 6px"><rect x="0" y="0" height="12" width="12" :rx="${FINAL_CONFIG.value.style.layout.candle.borderRadius * 3}" fill="${FINAL_CONFIG.value.style.layout.candle.gradient.show ? ds.isBullish ? `url(#bullish_gradient_${uid.value}` : `url(#bearish_gradient_${uid.value})` : ds.isBullish ? FINAL_CONFIG.value.style.layout.candle.colors.bullish : FINAL_CONFIG.value.style.layout.candle.colors.bearish}"/></svg> ${timeLabel}`,
+            label_open,
+            label_high,
+            label_low,
+            label_last,
+            `${isNaN(ds.volume) ? '-' : ds.volume.toLocaleString()}`,
+        ]
+    });
 
     const config = {
         th: {
@@ -759,12 +869,19 @@ defineExpose({
                         :fill="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.color"
                         :font-weight="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
                     >
-                        {{ FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.prefix }} {{ canShowValue(yLabel.value) ? yLabel.value.toFixed(FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.roundingValue) : '' }} {{ FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.suffix }}
+                        {{ 
+                            dataLabel({
+                                p: FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.prefix,
+                                v: yLabel.value,
+                                s: FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.roundingValue
+                            })
+                        }}
                     </text>
                 </g>
             </g>
             <!-- X LABELS -->
-            <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show">
+            <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show && !FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable">
                 <g v-for="(xLabel, i) in xLabels">
                     <text
                         data-cy="x-label"
@@ -775,6 +892,20 @@ defineExpose({
                         :font-weight="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
                     >
                         {{ xLabel }}
+                    </text>
+                </g>
+            </g>
+            <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show && FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable">
+                <g v-for="(timeLabel, i) in timeLabels">
+                    <text
+                        data-cy="x-label"
+                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + svg.xAxisFontSize * 2 + FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.offsetY}), rotate(${FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation})`"
+                        :text-anchor="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
+                        :font-size="svg.xAxisFontSize"
+                        :fill="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.color"
+                        :font-weight="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
+                    >
+                        {{ timeLabel.text }}
                     </text>
                 </g>
             </g>
@@ -907,8 +1038,8 @@ defineExpose({
                 :borderColor="FINAL_CONFIG.style.backgroundColor"
                 :fontSize="FINAL_CONFIG.style.zoom.fontSize"
                 :useResetSlot="FINAL_CONFIG.style.zoom.useResetSlot"
-                :labelLeft="dataset[slicer.start] ? dataset[slicer.start][0] : dataset[0][0]"
-                :labelRight="dataset[slicer.end-1] ? dataset[slicer.end-1][0] : dataset.at(-1)[0]"
+                :labelLeft="slicerLabels.start"
+                :labelRight="slicerLabels.end"
                 :textColor="FINAL_CONFIG.style.color"
                 :inputColor="FINAL_CONFIG.style.zoom.color"
                 :selectColor="FINAL_CONFIG.style.zoom.highlightColor"

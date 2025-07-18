@@ -2083,10 +2083,15 @@ export function useConfig() {
                             color: COLOR_BLACK,
                             offsetY: 0,
                             bold: false,
-                            rotation: 0
-                        }
+                            rotation: 0,
+                            datetimeFormatter: AXIS_DATE_FORMATTER
+                        },
                     },
                     yAxis: {
+                        scale: {
+                            min: null,
+                            max: null,
+                        },
                         dataLabels: {
                             show: true,
                             fontSize: FONT._12,
@@ -2096,7 +2101,7 @@ export function useConfig() {
                             bold: false,
                             steps: 10,
                             prefix: '',
-                            suffix: ''
+                            suffix: '',
                         }
                     }
                 },
@@ -2130,7 +2135,7 @@ export function useConfig() {
                 ...TOOLTIP,
                 roundingValue: 0,
                 prefix: '',
-                suffix: ''
+                suffix: '',
             }
         },
         translations: {

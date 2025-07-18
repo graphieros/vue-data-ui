@@ -7,23 +7,24 @@ import convertArrayToObject from "./convertModel";
 import VueUiCandlestick from "../src/components/vue-ui-candlestick.vue";
 import { useArena } from "../src/useArena";
 
-const dataset = ref([
-    ["2024-01-01", 56, 120, 40, 110, 1250],
-    ["2024-02-01", 110, 150, 80, 98, 2200],
-    ["2024-03-01", 98, 155, 75, 103, 3500],
-    ["2024-04-01", 103, 115, 102, 102, 999],
-    ["2024-05-01", 102, 135, 72, 85, 3216],
-    ["2024-06-01", 85, 162, 65, 107, 4315],
-    ["2024-07-01", 107, 134, 99, 112, 2561],
-    ["2024-08-01", 112, 125, 112, 120, 669],
-    ["2024-09-01", 120, 113, 76, 89, 2591],
-    ["2024-10-01", 89, 150, 85, 125, 2881],
-    ["2024-11-01", 125, 130, 45, 92, 1972],
-    ["2024-12-01", 92, 120, 35, 75, 3599],
-    ["2024-13-01", 75, 80, 26, 45, 5881],
-    ["2024-14-01", 45, 60, 20, 30, 2881],
-    ["2024-15-01", 30, 120, 10, 105, 2881],
-]);
+const dataset = [
+  // timestamp       | open  | high  | low   | last  | volume
+  [1704067200000, 1200, 2300, 1000, 2100, 1800],
+  [1706745600000, 2100, 2400, 1800, 2000, 2200],
+  [1709251200000, 2000, 2500, 1700, 2150, 2400],
+  [1711929600000, 2150, 2300, 2000, 2050, 1600],
+  [1714521600000, 2050, 2450, 1900, 1950, 2000],
+  [1717200000000, 1950, 2500, 1800, 2300, 2500],
+  [1719792000000, 2300, 2400, 2100, 2250, 1900],
+  [1722470400000, 2250, 2350, 2200, 2300, 1750],
+  [1725148800000, 2300, 2250, 1800, 1850, 2100],
+  [1727740800000, 1850, 2500, 1800, 2450, 2300],
+  [1730419200000, 2450, 2500, 1000, 1250, 1500],
+  [1733011200000, 1250, 2000, 1000, 1350, 1700],
+  [1735689600000, 1350, 2100, 1200, 2000, 1600],
+  [1738368000000, 2000, 2400, 1950, 2300, 1850],
+  [1740787200000, 2300, 2500, 2200, 2400, 2400]
+];
 
 const alternateDataset = ref([
     ["2024-11-01", 125, 130, 45, 92, 1972],
@@ -105,6 +106,9 @@ const model = ref([
     { key: 'style.layout.grid.yAxis.dataLabels.steps', def: 10, type: 'number', min: 2, max: 20},
     { key: 'style.layout.grid.yAxis.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.layout.grid.yAxis.dataLabels.suffix', def: 'S', type: 'text'},
+    { key: 'style.layout.grid.yAxis.scale.min', def: 800, type: 'number', min: 0, max: 10000},
+    { key: 'style.layout.grid.yAxis.scale.max', def: null, type: 'number', min: 0, max: 10000},
+
     { key: 'style.layout.wick.stroke', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.wick.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.5},
     { key: 'style.layout.wick.extremity.shape', def: 'line', type: 'select', options: ['line', 'circle']},
@@ -125,8 +129,8 @@ const model = ref([
     { key: 'style.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
     { key: 'style.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'style.zoom.useResetSlot', def: false, type: 'checkbox'},
-    { key: 'style.zoom.startIndex', def: 2, type: 'number', min: 0, max: 1000},
-    { key: 'style.zoom.endIndex', def: 6, type: 'number', min: 0, max: 1000},
+    { key: 'style.zoom.startIndex', def: null, type: 'number', min: 0, max: 1000},
+    { key: 'style.zoom.endIndex', def: null, type: 'number', min: 0, max: 1000},
     { key: 'style.zoom.enableRangeHandles', def: true, type: 'chexkbox'},
     { key: 'style.zoom.enableSelectionDrag', def: true, type: 'chexkbox'},
 
@@ -205,7 +209,24 @@ const config = computed(() => {
     } else {
         return {
             ...c,
-            theme: currentTheme.value
+            theme: currentTheme.value,
+            style: {
+                ...c.style,
+                layout: {
+                    ...c.style.layout,
+                    grid: {
+                        ...c.style.layout.grid,
+                        xAxis: {
+                            ...c.style.layout.grid.xAxis,
+                            dataLabels: {
+                                datetimeFormatter: {
+                                    enable: true
+                                }
+                            }
+                        },
+                    }
+                }
+            }
         }
     }
 });
@@ -259,7 +280,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
         <template #local>
             <LocalVueUiCandlestick :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
-                <template #optionPdf>
+                <!-- <template #optionPdf>
                     PRINT PDF
                 </template>
                 <template #svg="{ svg }">
@@ -280,13 +301,13 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
                 </template>
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
-                </template>
+                </template> -->
             </LocalVueUiCandlestick>
         </template>
 
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiCandlestick" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template>
@@ -304,13 +325,13 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
                 </template>
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
-                </template>
+                </template> -->
             </LocalVueDataUi>
         </template>
 
         <template #build>
             <VueUiCandlestick :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" ref="build">
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template>
@@ -328,13 +349,13 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
                 </template>
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
-                </template>
+                </template> -->
             </VueUiCandlestick>
         </template>
 
         <template #VDUI-build>
             <VueDataUi component="VueUiCandlestick" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" ref="vduiBuild">
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template>
@@ -352,7 +373,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
                 </template>
                 <template #reset-action="{ reset }">
                     <button @click="reset()">REFRESH</button>
-                </template>
+                </template> -->
             </VueDataUi>
         </template>
 
