@@ -98,11 +98,10 @@ export function useObjectBindings(configRef, options) {
                 prop in target ||
                 prop.startsWith('__v_') // let Vue's private props and symbols through
             ) {
-                return Reflect.get(target, prop)
+                return Reflect.get(target, prop);
             }
-            throw new Error(
-                `Vue Data UI - useObjectBindings: no binding found for key "${prop}"`
-            )
+            console.warn(`Vue Data UI - useObjectBindings: no binding found for key "${prop}"`);
+            return undefined
         },
         set(target, prop, value) {
             if (
@@ -112,9 +111,9 @@ export function useObjectBindings(configRef, options) {
             ) {
                 return Reflect.set(target, prop, value)
             }
-            throw new Error(
-                `Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}"`
-            )
+            console.warn(`Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}"`);
+            target[prop] = value;
+            return true;
         },
     }
 

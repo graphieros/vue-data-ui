@@ -1,5 +1,5 @@
 import { ref, nextTick } from 'vue';
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, beforeEach, vi, afterAll } from 'vitest';
 import {
     extractAllPaths,
     getValue,
@@ -159,37 +159,49 @@ describe('useObjectBindings with optional keys', () => {
     })
 })
 
-describe('useObjectBindings – error handling', () => {
-    test('throws when accessing a non-existent binding', () => {
-        const config = ref({ foo: 'bar' });
-        const bindings = useObjectBindings(config);
+describe('useObjectBindings – error handling (warnings)', () => {
+    const consoleMock = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
 
-        expect(() => {
-            bindings['baz'];
-        }).toThrowError(
-            'Vue Data UI - useObjectBindings: no binding found for key "baz"'
-        );
+    afterAll(() => {
+        consoleMock.mockReset();
     });
 
-    test('throws when setting a non-existent binding', () => {
-        const config = ref({ foo: 'bar' });
-        const bindings = useObjectBindings(config);
+    beforeEach(() => {
+        consoleMock.mockReset();
+    });
 
-        expect(() => {
-            (bindings['baz'] = 'qux');
-        }).toThrowError(
+    test('warns when accessing a non-existent binding', () => {
+        const config = ref({ foo: 'bar' })
+        const bindings = useObjectBindings(config)
+        const result = bindings['baz']
+        expect(result).toBeUndefined()
+        expect(consoleMock).toHaveBeenCalledWith(
+            'Vue Data UI - useObjectBindings: no binding found for key "baz"'
+        )
+    })
+
+    test('warns when setting a non-existent binding via assignment', () => {
+        const config = ref({ foo: 'bar' })
+        const bindings = useObjectBindings(config)
+        bindings['baz'] = 'qux'
+        expect(bindings['baz']).toBe('qux')
+        expect(consoleMock).toHaveBeenCalledWith(
             'Vue Data UI - useObjectBindings: cannot set unknown binding "baz"'
-        );
-    });
+        )
+    })
 
-    test('throws when attempting to set .value on a non-existent binding', () => {
-        const config = ref({ foo: 'bar' });
-        const bindings = useObjectBindings(config);
-
-        expect(() => {
-            bindings['baz'].value = 'qux';
-        }).toThrowError(
+    test('warns when attempting to set .value on a non-existent binding', () => {
+        const config = ref({ foo: 'bar' })
+        const bindings = useObjectBindings(config)
+        let error
+        try {
+            bindings['baz'].value = 'qux'
+        } catch (e) {
+            error = e
+        }
+        expect(error).toBeInstanceOf(TypeError)
+        expect(consoleMock).toHaveBeenCalledWith(
             'Vue Data UI - useObjectBindings: no binding found for key "baz"'
-        );
-    });
-});
+        )
+    })
+})

@@ -144,4 +144,60 @@ describe('useObjectBindings', () => {
             .should('not.be.checked')
         cy.wrap(configRef).its('value.chart.zoom.show').should('be.false')
     })
+
+    it('warns when accessing a non-existent binding', () => {
+        const configRef = ref({ foo: 'bar' })
+
+        const TestComponent = defineComponent({
+            setup() {
+                const bindings = useObjectBindings(configRef)
+                return { bindings }
+            },
+            template: `<div></div>`,
+        })
+
+        cy.window().then((win) => {
+            cy.spy(win.console, 'warn').as('warn')
+        })
+
+        cy.mount(TestComponent)
+            .then(({ wrapper }) => {
+                // force trigger the get trap
+                void wrapper.vm.bindings['baz']
+            })
+            .then(() => {
+                cy.get('@warn').should(
+                    'have.been.calledWith',
+                    'Vue Data UI - useObjectBindings: no binding found for key "baz"'
+                )
+            })
+    })
+
+    it('warns when setting a non-existent binding', () => {
+        const configRef = ref({ foo: 'bar' })
+
+        const TestComponent = defineComponent({
+            setup() {
+                const bindings = useObjectBindings(configRef)
+                return { bindings }
+            },
+            template: `<div></div>`,
+        })
+
+        cy.window().then((win) => {
+            cy.spy(win.console, 'warn').as('warn')
+        })
+
+        cy.mount(TestComponent)
+            .then(({ wrapper }) => {
+                // force trigger the set trap
+                wrapper.vm.bindings['baz'] = 'qux'
+            })
+            .then(() => {
+                cy.get('@warn').should(
+                    'have.been.calledWith',
+                    'Vue Data UI - useObjectBindings: cannot set unknown binding "baz"'
+                )
+            })
+    })
 })
