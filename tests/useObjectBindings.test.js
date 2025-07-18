@@ -176,7 +176,7 @@ describe('useObjectBindings – error handling (warnings)', () => {
         const result = bindings['baz']
         expect(result).to.equal('')
         expect(consoleMock).toHaveBeenCalledWith(
-            'Vue Data UI - useObjectBindings: no binding found for key "baz"'
+            'Vue Data UI - useObjectBindings: no binding found for key "baz". Please verify you are binding to a property path which exists on the object.'
         )
     })
 
@@ -187,7 +187,7 @@ describe('useObjectBindings – error handling (warnings)', () => {
         // Assignment triggers warning and injects a new computed binding
         bindings['baz'] = 'qux'
         expect(consoleMock).toHaveBeenCalledWith(
-            'Vue Data UI - useObjectBindings: cannot set unknown binding "baz"'
+            'Vue Data UI - useObjectBindings: cannot set unknown binding "baz".'
         )
         expect(config.value.baz).toBe('qux')
 
@@ -210,7 +210,7 @@ describe('useObjectBindings – error handling (warnings)', () => {
         }
         expect(error).toBeInstanceOf(TypeError)
         expect(consoleMock).toHaveBeenCalledWith(
-            'Vue Data UI - useObjectBindings: no binding found for key "baz"'
+            'Vue Data UI - useObjectBindings: no binding found for key "baz". Please verify you are binding to a property path which exists on the object.'
         )
     })
 })

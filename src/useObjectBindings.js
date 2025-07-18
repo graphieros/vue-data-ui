@@ -64,8 +64,17 @@ export function setValue(obj, path, value) {
     target[path[path.length - 1]] = value;
 }
 
-function setPropertyByPath(obj, path, value) {
-    const keys = path.split('.');
+/**
+ * Set nested property on an object by a dot-delimited path, creating intermediate
+ * objects as needed. Similar to setValue but accepts a string path.
+ *
+ * @param {object} obj - The object to modify.
+ * @param {string} path - Dot-delimited string path.
+ * @param {*} value - The value to set at the target path.
+ * @param {string} delimiter - The delimiter used to split the path.
+ */
+function setPropertyByPath(obj, path, value, delimiter) {
+    const keys = path.split(delimiter);
     let current = obj;
     for (let i = 0; i < keys.length - 1; i += 1) {
         const key = keys[i];
@@ -86,23 +95,23 @@ function setPropertyByPath(obj, path, value) {
  * @returns {Record<string, import('vue').ComputedRef<unknown>>}
  */
 export function useObjectBindings(configRef, options) {
-    const { delimiter = '.', skipArrays = true } = options || {}
-    const bindings = {}
+    const { delimiter = '.', skipArrays = true } = options || {};
+    const bindings = {};
 
     function build() {
-        Object.keys(bindings).forEach((k) => delete bindings[k])
-        const paths = extractAllPaths(configRef.value, [], skipArrays)
+        Object.keys(bindings).forEach((k) => delete bindings[k]);
+        const paths = extractAllPaths(configRef.value, [], skipArrays);
         for (const path of paths) {
             const key = path.join(delimiter)
             bindings[key] = computed({
                 get: () => getValue(configRef.value, path),
                 set: (val) => setValue(configRef.value, path, val),
-            })
+            });
         }
     }
 
-    watchEffect(build)
-    build()
+    watchEffect(build);
+    build();
 
     const handler = {
         get(target, prop) {
@@ -112,12 +121,14 @@ export function useObjectBindings(configRef, options) {
                     return Reflect.get(target, prop);
                 } else {
                     // prop doesn't exist on target, add it and return
-                    setPropertyByPath(configRef.value, prop, undefined);
+                    setPropertyByPath(configRef.value, prop, undefined, delimiter);
                     bindings[prop] = computed({
                         get: () => getValue(configRef.value, prop),
                         set: (val) => setValue(configRef.value, prop, val)
                     });
-                    console.warn(`Vue Data UI - useObjectBindings: no binding found for key "${prop}"`);
+                    if (!prop.startsWith('__v_')) {
+                        console.warn(`Vue Data UI - useObjectBindings: no binding found for key "${prop}". Please verify you are binding to a property path which exists on the object.`);
+                    }
                     return ''; // Signals to Vue there is something to be tracked, so to hand the computed on the next read
                 }
             }
@@ -129,12 +140,14 @@ export function useObjectBindings(configRef, options) {
                     return Reflect.set(target, prop, value);
                 } else {
                     // prop doesn't exist on target, add it and return
-                    setPropertyByPath(configRef.value, prop, value);
+                    setPropertyByPath(configRef.value, prop, value, delimiter);
                     bindings[prop] = computed({
                         get: () => getValue(configRef.value, prop),
                         set: (val) => setValue(configRef.value, prop, val)
                     });
-                    console.warn(`Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}"`);
+                    if(!prop.startsWith('__v_')) {
+                        console.warn(`Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}".`);
+                    }
                     return true;
                 }
             }
@@ -142,5 +155,5 @@ export function useObjectBindings(configRef, options) {
         }
     };
 
-    return markRaw(new Proxy(bindings, handler))
+    return markRaw(new Proxy(bindings, handler));
 }

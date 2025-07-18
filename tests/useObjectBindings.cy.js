@@ -172,7 +172,7 @@ describe('useObjectBindings', () => {
             .then(() => {
                 cy.get('@warn').should(
                     'have.been.calledWith',
-                    'Vue Data UI - useObjectBindings: no binding found for key "baz"'
+                    'Vue Data UI - useObjectBindings: no binding found for key "baz". Please verify you are binding to a property path which exists on the object.'
                 )
             })
     })
@@ -200,7 +200,7 @@ describe('useObjectBindings', () => {
             .then(() => {
                 cy.get('@warn').should(
                     'have.been.calledWith',
-                    'Vue Data UI - useObjectBindings: cannot set unknown binding "baz"'
+                    'Vue Data UI - useObjectBindings: cannot set unknown binding "baz".'
                 )
             })
     })
