@@ -118,7 +118,7 @@ export function useObjectBindings(configRef, options) {
                         set: (val) => setValue(configRef.value, prop, val)
                     });
                     console.warn(`Vue Data UI - useObjectBindings: no binding found for key "${prop}"`);
-                    return undefined;
+                    return ''; // Signals to Vue there is something to be tracked, so to hand the computed on the next read
                 }
             }
             return true;

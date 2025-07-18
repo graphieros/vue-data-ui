@@ -174,7 +174,7 @@ describe('useObjectBindings – error handling (warnings)', () => {
         const config = ref({ foo: 'bar' })
         const bindings = useObjectBindings(config)
         const result = bindings['baz']
-        expect(result).toBeUndefined()
+        expect(result).to.equal('')
         expect(consoleMock).toHaveBeenCalledWith(
             'Vue Data UI - useObjectBindings: no binding found for key "baz"'
         )
