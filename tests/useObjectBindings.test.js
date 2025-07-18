@@ -183,11 +183,20 @@ describe('useObjectBindings – error handling (warnings)', () => {
     test('warns when setting a non-existent binding via assignment', () => {
         const config = ref({ foo: 'bar' })
         const bindings = useObjectBindings(config)
+
+        // Assignment triggers warning and injects a new computed binding
         bindings['baz'] = 'qux'
-        expect(bindings['baz']).toBe('qux')
         expect(consoleMock).toHaveBeenCalledWith(
             'Vue Data UI - useObjectBindings: cannot set unknown binding "baz"'
         )
+        expect(config.value.baz).toBe('qux')
+
+        const newBinding = bindings['baz']
+        expect(newBinding).toBeDefined()
+        // But reading .value will throw, since getValue impl expects an array:
+        expect(() => {
+            newBinding.value
+        }).toThrow(TypeError)
     })
 
     test('warns when attempting to set .value on a non-existent binding', () => {

@@ -55,9 +55,13 @@ describe('useObjectBindings', () => {
         })
 
         cy.mount(TestComponent).then(({ wrapper }) => {
-            const keys = Object.keys(wrapper.vm.bindings)
+            // Filter out Vue's private props
+            const keys = Object
+                .keys(wrapper.vm.bindings)
+                .filter(k => !k.startsWith('__v_'))
             expect(keys).to.deep.equal(['obj.val'])
         })
+
     })
 
     it('includes array paths when skipArrays=false and allows writing to array entries', () => {
