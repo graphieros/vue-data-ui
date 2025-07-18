@@ -1,4 +1,4 @@
-import { computed, isRef, watchEffect } from "vue";
+import { computed, isRef, markRaw, watch, watchEffect } from 'vue';
 
 /**
  * Recursively extract all dot-paths to leaf values in an object.
@@ -13,7 +13,7 @@ export function extractAllPaths(obj, current = [], skipArrays = true) {
     /** @type {string[][]} */
     const paths = [];
 
-    if (obj && typeof obj === "object") {
+    if (obj && typeof obj === 'object') {
         if (Array.isArray(obj) && skipArrays) {
             return [];
         }
@@ -23,14 +23,13 @@ export function extractAllPaths(obj, current = [], skipArrays = true) {
                 continue;
             }
             const next = current.concat(key);
-            if (val && typeof val === "object") {
+            if (val && typeof val === 'object') {
                 paths.push(...extractAllPaths(val, next, skipArrays));
             } else {
                 paths.push(next);
             }
         }
     }
-
     return paths;
 }
 
@@ -56,7 +55,7 @@ export function setValue(obj, path, value) {
         const key = path[i];
         if (
             !Object.prototype.hasOwnProperty.call(target, key) ||
-            typeof target[key] !== "object"
+            typeof target[key] !== 'object'
         ) {
             target[key] = {};
         }
@@ -67,7 +66,6 @@ export function setValue(obj, path, value) {
 
 /**
  * Flattens a reactive config object into computed refs for every leaf property.
- * Throws on any access or set of a non-existent binding key.
  *
  * @template T extends object
  * @param {import('vue').Ref<T>} configRef
@@ -75,56 +73,50 @@ export function setValue(obj, path, value) {
  * @returns {Record<string, import('vue').ComputedRef<unknown>>}
  */
 export function useObjectBindings(configRef, options) {
-    const { delimiter = ".", skipArrays = true } = options || {};
-    const bindings = {};
+    const { delimiter = '.', skipArrays = true } = options || {}
+    const bindings = {}
 
     function build() {
-        Object.keys(bindings).forEach((k) => delete bindings[k]);
-
-        const paths = extractAllPaths(configRef.value, [], skipArrays);
+        Object.keys(bindings).forEach((k) => delete bindings[k])
+        const paths = extractAllPaths(configRef.value, [], skipArrays)
         for (const path of paths) {
-            const key = path.join(delimiter);
+            const key = path.join(delimiter)
             bindings[key] = computed({
                 get: () => getValue(configRef.value, path),
                 set: (val) => setValue(configRef.value, path, val),
-            });
+            })
         }
     }
 
-    watchEffect(() => {
-        extractAllPaths(configRef.value, [], skipArrays);
-        build();
-    });
+    watchEffect(build)
+    build()
 
-    build();
-
-    return new Proxy(bindings, {
+    const handler = {
         get(target, prop) {
-            if (typeof prop === "string" && !(prop in target)) {
-                throw new Error(
-                    `Vue Data UI - useObjectBindings: no binding found for key "${prop}"`
-                );
+            if (
+                typeof prop !== 'string' ||
+                prop in target ||
+                prop.startsWith('__v_') // let Vue's private props and symbols through
+            ) {
+                return Reflect.get(target, prop)
             }
-            return Reflect.get(target, prop);
+            throw new Error(
+                `Vue Data UI - useObjectBindings: no binding found for key "${prop}"`
+            )
         },
         set(target, prop, value) {
-            if (typeof prop === "string") {
-                if (!(prop in target)) {
-                    throw new Error(
-                        `Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}"`
-                    );
-                }
-                const binding = target[prop];
-                if (isRef(binding)) {
-                    binding.value = value;
-                    return true;
-                }
-                return Reflect.set(target, prop, value);
+            if (
+                typeof prop !== 'string' ||
+                prop in target ||
+                prop.startsWith('__v_')
+            ) {
+                return Reflect.set(target, prop, value)
             }
-            return Reflect.set(target, prop, value);
+            throw new Error(
+                `Vue Data UI - useObjectBindings: cannot set unknown binding "${prop}"`
+            )
         },
-        has(target, prop) {
-            return Reflect.has(target, prop);
-        },
-    });
+    }
+
+    return markRaw(new Proxy(bindings, handler))
 }
