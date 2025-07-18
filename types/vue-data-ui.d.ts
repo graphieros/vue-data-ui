@@ -2200,8 +2200,15 @@ declare module "vue-data-ui" {
                             bold?: boolean;
                             rotation?: number;
                         };
+                        timeLabels?: {
+                            datetimeFormatter?: AxisDateFormatter
+                        };
                     };
                     yAxis?: {
+                        scale?: {
+                            min?: number | null;
+                            max?: number | null;
+                        };
                         dataLabels?: {
                             show?: boolean;
                             fontSize?: number;
