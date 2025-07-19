@@ -456,7 +456,7 @@ export function useConfig() {
                 ...ZOOM,
                 minimap: MINIMAP,
             },
-            padding: PADDING([36, 24, 64, 48]),
+            padding: PADDING([0, 0, 0, 0]),
             highlighter: {
                 color: COLOR_BLACK,
                 opacity: 5,
