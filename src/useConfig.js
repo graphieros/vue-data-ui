@@ -5591,10 +5591,10 @@ export function useConfig() {
                         chart: {
                             ...vue_ui_xy.chart,
                             padding: {
-                                top: 24,
-                                right: 25,
-                                bottom: 24,
-                                left: 64
+                                top: 0,
+                                right: 0,
+                                bottom: 0,
+                                left: 0
                             },
                             tooltip: {
                                 ...vue_ui_xy.chart.tooltip,
