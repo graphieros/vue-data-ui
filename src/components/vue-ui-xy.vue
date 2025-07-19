@@ -3233,7 +3233,7 @@ export default {
                     return mergedConfig
                 }
         },
-        async setViewBox() {
+        setViewBox() {
             const g = this.$refs.G;
             if (!g) return;
 
@@ -3252,8 +3252,9 @@ export default {
                 offsetY += this.$refs.xAxisLabel.getBBox().height + this.fontSizes.yAxis + this.FINAL_CONFIG.chart.grid.labels.axis.xLabelOffsetY;
             }
 
-            await this.$nextTick();
-            await this.$nextTick(() => {
+            this.viewBox = `0 0 ${this.width} ${this.height}`;
+
+            this.$nextTick(() => {
                 const { x, y, width, height } = g.getBBox();
                 this.viewBox = `${x - offsetX} ${y - plotLabels} ${width + offsetX} ${height + plotLabels + offsetY}`;
                 if (this.$refs.scaleLabels) {
@@ -3375,7 +3376,6 @@ export default {
                 this.height = height - substracts
 
                 this.width = width;
-                this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
                 this.convertSizes();
                 this.$nextTick(this.setViewBox);
 
@@ -3421,7 +3421,6 @@ export default {
                                 - 12)
 
                             this.width = Math.max(12, entry.contentBoxSize[0].inlineSize);
-                            this.viewBox = `0 0 ${Math.max(10, this.width)} ${Math.max(10, this.height)}`;
                             this.convertSizes();
                             this.$nextTick(this.setViewBox);
                         })
@@ -3436,7 +3435,6 @@ export default {
             } else {
                 this.height = this.FINAL_CONFIG.chart.height;
                 this.width = this.FINAL_CONFIG.chart.width;
-                this.viewBox = `0 0 ${this.width} ${this.height}`;
                 this.fontSizes.dataLabels = this.FINAL_CONFIG.chart.grid.labels.fontSize;
                 this.fontSizes.yAxis = this.FINAL_CONFIG.chart.grid.labels.axis.fontSize;
                 this.fontSizes.xAxis =  this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize;
