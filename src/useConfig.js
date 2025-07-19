@@ -456,7 +456,7 @@ export function useConfig() {
                 ...ZOOM,
                 minimap: MINIMAP,
             },
-            padding: PADDING([0, 0, 0, 0]),
+            padding: PADDING([36, 24, 64, 48]),
             highlighter: {
                 color: COLOR_BLACK,
                 opacity: 5,
@@ -5591,10 +5591,10 @@ export function useConfig() {
                         chart: {
                             ...vue_ui_xy.chart,
                             padding: {
-                                top: 0,
-                                right: 0,
-                                bottom: 0,
-                                left: 0
+                                top: 24,
+                                right: 25,
+                                bottom: 24,
+                                left: 64
                             },
                             tooltip: {
                                 ...vue_ui_xy.chart.tooltip,
@@ -5605,7 +5605,7 @@ export function useConfig() {
                                 buttons: {
                                     ...vue_ui_xy.chart.userOptions.buttons,
                                     pdf: false,
-                                    fullscreen: false
+                                    fullscreen: false,
                                 }
                             },
                             zoom: {
