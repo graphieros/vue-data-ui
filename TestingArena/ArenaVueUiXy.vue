@@ -388,7 +388,7 @@ const model = ref([
     { key: 'chart.zoom.enableRangeHandles', def: true, type: 'chexkbox' },
     { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox' },
 
-    { key: 'chart.zoom.minimap.show', def: false, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color' },
     { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
@@ -400,10 +400,10 @@ const model = ref([
     { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
 
-    { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
-    { key: 'chart.padding.right', def: 36, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
-    { key: 'chart.padding.bottom', def: 64, type: 'number', min: 0, max: 100, label: 'bottom', category: 'padding' },
-    { key: 'chart.padding.left', def: 48, type: 'number', min: 0, max: 100, label: 'left', category: 'padding' },
+    { key: 'chart.padding.top', def: 0, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
+    { key: 'chart.padding.right', def: 0, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
+    { key: 'chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100, label: 'bottom', category: 'padding' },
+    { key: 'chart.padding.left', def: 0, type: 'number', min: 0, max: 100, label: 'left', category: 'padding' },
 
     { key: 'chart.highlighter.color', def: '#1A1A1A', type: 'color', label: 'highlighterColor', category: 'general' },
     { key: 'chart.highlighter.opacity', def: 5, type: 'range', min: 0, max: 100, label: 'highlighterOpacity', category: 'general' },
@@ -449,14 +449,14 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.showOnlyFirstAndLast', def: false, type: 'checkbox', label: 'showOnlyFirstAndLast', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 0, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
-    { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 24, type: 'number', min: -100, max: 100 },
+    { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 14, type: 'number', min: -100, max: 100 },
 
     { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number' },
 
     { key: 'chart.grid.labels.yAxis.position', def: 'right', type: 'select', options: ['left', 'right'] },
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 10, min: 0, max: 100, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
+    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 24, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 48, min: 0, max: 100, type: 'number' },
@@ -835,6 +835,7 @@ const config = computed(() => {
                             // values: new Array(13).fill(0).map((d,i) => {
                             //     return `Some long name\nwith a value ${i}`
                             // }),
+                            rotation: 0,
                             datetimeFormatter: {
                                 enable: true,
                                 locale: 'en',
