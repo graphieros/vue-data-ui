@@ -3240,9 +3240,6 @@ export default {
             const chart = this.$refs.chart;
 
             chart && chart.classList.add('no-transition');
-
-            const { x, y, width, height } = g.getBBox();
-
             const plotLabels = this.fontSizes.plotLabels;
 
             let offsetX = 0;
@@ -3255,7 +3252,9 @@ export default {
                 offsetY += this.$refs.xAxisLabel.getBBox().height + this.fontSizes.yAxis + this.FINAL_CONFIG.chart.grid.labels.axis.xLabelOffsetY;
             }
 
+            await this.$nextTick();
             await this.$nextTick(() => {
+                const { x, y, width, height } = g.getBBox();
                 this.viewBox = `${x - offsetX} ${y - plotLabels} ${width + offsetX} ${height + plotLabels + offsetY}`;
                 if (this.$refs.scaleLabels) {
                     const { x: s_x, width: s_width } = this.$refs.scaleLabels.getBBox();
