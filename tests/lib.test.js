@@ -399,6 +399,23 @@ describe("convertColorToHex", () => {
         const result = convertColorToHex("hsla(0, 100%, 50%, 0.5)");
         expect(result).toBe("#ff000080");
     });
+
+    test("returns HEX color format from shorthand hex codes (#RGB, #RGBA)", () => {
+        expect(convertColorToHex("#ABC")).toBe("#AABBCCff");
+        expect(convertColorToHex("ABC")).toBe("#AABBCCff");
+        expect(convertColorToHex("#abc")).toBe("#aabbccff");
+        expect(convertColorToHex("abc")).toBe("#aabbccff");
+        expect(convertColorToHex("#ABC8")).toBe("#AABBCC88");
+        expect(convertColorToHex("ABC8")).toBe("#AABBCC88");
+        expect(convertColorToHex("#abc8")).toBe("#aabbcc88");
+        expect(convertColorToHex("abc8")).toBe("#aabbcc88");
+    });
+
+    test("returns null for invalid or empty input", () => {
+        expect(convertColorToHex(null)).toBeNull();
+        expect(convertColorToHex(undefined)).toBeNull();
+        expect(convertColorToHex("not-a-color")).toBeNull();
+    });
 });
 
 describe("shiftHue", () => {

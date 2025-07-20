@@ -5605,6 +5605,7 @@ export function useConfig() {
                                 buttons: {
                                     ...vue_ui_xy.chart.userOptions.buttons,
                                     pdf: false,
+                                    fullscreen: false,
                                 }
                             },
                             zoom: {

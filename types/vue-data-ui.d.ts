@@ -1,5 +1,5 @@
 declare module "vue-data-ui" {
-    import { DefineComponent } from "vue";
+    import { Ref, ComputedRef, DefineComponent } from "vue";
 
     export type VueUiUnknownObj = {
         [key: string]: unknown;
@@ -5235,7 +5235,7 @@ declare module "vue-data-ui" {
         [key: string]: string | number | number[];
     };
 
-    export type VueUiQuickChartDataset = 
+    export type VueUiQuickChartDataset =
         | number[]
         | VueUiQuickChartDatasetObjectItem
         | VueUiQuickChartDatasetObjectItem[];
@@ -7430,9 +7430,9 @@ declare module "vue-data-ui" {
      * - Handles arrays by making their item type DeepPartial
      */
     export type DeepPartial<T> =
-    T extends Function
-    ? T
-    : T extends Array<infer U>
+        T extends Function
+        ? T
+        : T extends Array<infer U>
         ? Array<DeepPartial<U>>
         : T extends object
         ? { [K in keyof T]?: DeepPartial<T[K]> }
@@ -7455,12 +7455,12 @@ declare module "vue-data-ui" {
      * })
      */
     export function mergeConfigs<T extends Record<string, any>>({
-            defaultConfig,
-            userConfig,
-        }: {
-            defaultConfig: T;
-            userConfig: DeepPartial<T>;
-        }
+        defaultConfig,
+        userConfig,
+    }: {
+        defaultConfig: T;
+        userConfig: DeepPartial<T>;
+    }
     ): T;
 
     /**
@@ -7648,4 +7648,93 @@ declare module "vue-data-ui" {
         x,
         y
     }: CreateTSpansArgs) => string;
+
+    export type UseObjectBindingsOptions = {
+        /** Delimiter to join object‑path segments */
+        delimiter?: string;
+        /** If true, array indices will not be traversed */
+        skipArrays?: boolean;
+    };
+
+    /**
+     * Recursively build a union of dot‑delimited paths for an object type,
+     * but skip arrays (we don’t traverse them by default at runtime).
+     */
+    type Paths<T> = T extends object
+        ? T extends any[]
+        ? never
+        : {
+            [K in Extract<keyof T, string>]:
+            // if the property is itself an object, recurse
+            T[K] extends object
+            ? `${K}` | `${K}.${Paths<T[K]>}`
+            : `${K}`;
+        }[Extract<keyof T, string>]
+        : never;
+
+    /**
+     * Given an object type `T` and one of its path strings `P`,
+     * resolve the type at that path.
+     */
+    type PathValue<T, P extends string> =
+        P extends `${infer K}.${infer Rest}`
+        ? K extends keyof T
+        ? PathValue<T[K], Rest>
+        : never
+        : P extends keyof T
+        ? T[P]
+        : never;
+
+    /**
+     * A fully‑typed bindings record: for each valid path `P` in `T`,
+     * `ComputedRef` of the exact `PathValue<T,P>`.
+     */
+    export type TypedBindings<T extends object> = {
+        [P in Paths<T>]: ComputedRef<PathValue<T, P>>;
+    };
+
+    /**
+     * Vue Data UI composable
+     * ---
+     * Flattens a reactive config object into computed refs for every leaf property.
+     * 
+     * @template T extends object
+     * @param configRef  A Vue `Ref<T>` holding your object.
+     * @param options    Optional settings: `delimiter` (default `"."`) and `skipArrays` (default `true`).
+     * @returns         A `TypedBindings<T>` whose keys are every “leaf” path in `T`
+     *                  and whose values are `ComputedRef` of the exact property type.
+     * 
+     * ___
+     * @example
+     * 
+     * ```js
+     *   import { useObjectBindings } from "vue-data-ui";
+     *   import type { Ref, ComputedRef } from "vue";
+     *
+     *   const config = ref({
+     *     customPalette: ["#CCCCCC", "#1A1A1A"],
+     *     style: {
+     *       chart: {
+     *         backgroundColor: "#FFFFFF",
+     *         color: "#1A1A1A",
+     *       },
+     *     },
+     *   });
+     * 
+     *   const bindings = useObjectBindings(config);
+     * ```
+     * 
+     * Then in your template:
+     * ```html
+     *   <template>
+     *     <div>
+     *       <input type="color" v-model="bindings['style.chart.backgroundColor']" />
+     *     </div>
+     *   </template>
+     * ```
+     */
+    export function useObjectBindings<T extends object>(
+        configRef: Ref<T>,
+        options?: UseObjectBindingsOptions
+    ): TypedBindings<T>;
 }

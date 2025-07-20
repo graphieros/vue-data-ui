@@ -1079,3 +1079,46 @@ Below is a table of the places where such line breaks can be used:
 ## PDF generation
 
 This package requires jspdf as a peer dependency. Please install it in your project if you intend on using the PDF printing feature.
+
+## `useObjectBindings`
+
+A composable that **flattens** a reactive object into a set of computed refs—one for each “leaf” property—so you can easily bind to deeply nested values by their string paths.
+
+### Why use it?
+
+- **Automatic reactivity**: Every nested property becomes a `ComputedRef`, with automatic getters/setters that keep your source object in sync.
+- **Flat API surface**: Access or update any nested field by its dot‑delimited path, without writing deep destructuring or `ref` plumbing.
+- **Dynamic path support**: New paths added at runtime are discovered automatically (and proxied), so you never lose reactivity when mutating the structure.
+
+```js
+import { useObjectBindings } from "vue-data-ui";
+import type { Ref, ComputedRef } from "vue";
+
+const config = ref({
+  customPalette: ["#CCCCCC", "#1A1A1A"],
+  style: {
+    chart: {
+      backgroundColor: "#FFFFFF",
+      color: "#1A1A1A",
+    },
+  },
+});
+
+const bindings = useObjectBindings(config);
+// Now `bindings` has computed refs for each leaf path:
+//   bindings["style.chart.backgroundColor"] → ComputedRef<string>
+//   bindings["style.chart.color"] → ComputedRef<string>
+//   bindings["customPalette"] → ComputedRef<boolean>
+//   // by default, arrays are skipped:
+//   // no "customPalette.0", unless you disable skipArrays
+```
+
+You can then use these in your template:
+
+```html
+<template>
+  <div>
+    <input type="color" v-model="bindings['style.chart.backgroundColor']" />
+  </div>
+</template>
+```

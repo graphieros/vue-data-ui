@@ -3,6 +3,7 @@ import getVueDataUiConfig from "./getVueDataUiConfig";
 import getThemeConfig from "./getThemeConfig";
 import { getPalette, createWordCloudDatasetFromPlainText, abbreviate, createTSpans, createStraightPath, createSmoothPath, getCumulativeAverage, getCumulativeMedian } from "./lib";
 import { lightenColor, darkenColor, shiftColorHue, mergeConfigs } from "./exposedLib";
+import { useObjectBindings } from "./useObjectBindings";
 
 export const Arrow = defineAsyncComponent(() => import("./atoms/Arrow.vue"))
 export const VueDataUi = defineAsyncComponent(() => import("./components/vue-data-ui.vue"))
@@ -85,4 +86,5 @@ export {
     lightenColor,
     mergeConfigs,
     shiftColorHue,
+    useObjectBindings
 }

@@ -393,18 +393,24 @@ export const opacity = ["00", "03", "05", "08", "0A", "0D", "0F", "12", "14", "1
 
 export function convertColorToHex(color) {
     const hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
+    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])([a-f\d])?$/i;
     const rgbRegex = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/i;
     const hslRegex = /^hsla?\((\d+),\s*([\d.]+)%,\s*([\d.]+)%(?:,\s*([\d.]+))?\)$/i;
 
-    if ([undefined, null, NaN].includes(color)) {
+    if (color === undefined || color === null || (typeof color === 'number' && isNaN(color))) {
         return null;
     }
 
     color = convertNameColorToHex(color);
 
+
     if (color === 'transparent') {
         return "#FFFFFF00";
     }
+
+    color = color.replace(shorthandRegex, (_, r, g, b, a) => {
+        return `#${r}${r}${g}${g}${b}${b}${a ? a + a : ''}`;
+    });
 
     let match;
     let alpha = 1;
@@ -420,8 +426,8 @@ export function convertColorToHex(color) {
     } else if ((match = color.match(hslRegex))) {
         const [, h, s, l, a] = match;
         alpha = a ? parseFloat(a) : 1;
-        const rgb = hslToRgba(Number(h), Number(s), Number(l));
-        return `#${decimalToHex(rgb[0])}${decimalToHex(rgb[1])}${decimalToHex(rgb[2])}${decimalToHex(Math.round(alpha * 255))}`;
+        const [rr, gg, bb] = hslToRgba(Number(h), Number(s), Number(l));
+        return `#${decimalToHex(rr)}${decimalToHex(gg)}${decimalToHex(bb)}${decimalToHex(Math.round(alpha * 255))}`;
     }
 
     return null;
