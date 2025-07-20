@@ -1,5 +1,5 @@
 declare module "vue-data-ui" {
-    import { Ref, ComputedRef, DefineComponent } from "vue";
+    import { Ref, WritableComputedRef, DefineComponent } from "vue";
 
     export type VueUiUnknownObj = {
         [key: string]: unknown;
@@ -7690,7 +7690,7 @@ declare module "vue-data-ui" {
      * `ComputedRef` of the exact `PathValue<T,P>`.
      */
     export type TypedBindings<T extends object> = {
-        [P in Paths<T>]: ComputedRef<PathValue<T, P>>;
+        [P in Paths<T>]: WritableComputedRef<PathValue<T, P>>;
     };
 
     /**
@@ -7702,14 +7702,13 @@ declare module "vue-data-ui" {
      * @param configRef  A Vue `Ref<T>` holding your object.
      * @param options    Optional settings: `delimiter` (default `"."`) and `skipArrays` (default `true`).
      * @returns         A `TypedBindings<T>` whose keys are every “leaf” path in `T`
-     *                  and whose values are `ComputedRef` of the exact property type.
+     *                  and whose values are `WritableComputedRef` of the exact property type.
      * 
      * ___
      * @example
      * 
      * ```js
      *   import { useObjectBindings } from "vue-data-ui";
-     *   import type { Ref, ComputedRef } from "vue";
      *
      *   const config = ref({
      *     customPalette: ["#CCCCCC", "#1A1A1A"],
