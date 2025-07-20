@@ -86,14 +86,6 @@ function setPropertyByPath(obj, path, value, delimiter) {
     current[keys[keys.length - 1]] = value;
 }
 
-/**
- * Flattens a reactive config object into computed refs for every leaf property.
- *
- * @template T extends object
- * @param {import('vue').Ref<T>} configRef
- * @param {{ delimiter?: string; skipArrays?: boolean }} [options]
- * @returns {Record<string, import('vue').ComputedRef<unknown>>}
- */
 export function useObjectBindings(configRef, options) {
     const { delimiter = '.', skipArrays = true } = options || {};
     const bindings = {};
