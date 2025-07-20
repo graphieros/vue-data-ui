@@ -376,8 +376,8 @@ const model = ref([
     { key: 'useCanvas', def: false, type: 'checkbox' }, // DEPRECATED (removed)
     { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'chart.fontFamily', def: 'inherit', type: 'text', label: 'fontFamily', category: 'general' },
-    { key: 'chart.backgroundColor', def: 'transparent', type: 'color', label: 'backgroundColor', category: 'general' },
-    { key: 'chart.color', def: '#FFFFFF', type: 'color', label: 'textColor', category: 'general' },
+    { key: 'chart.backgroundColor', def: '#FFF', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'chart.color', def: '#111', type: 'color', label: 'textColor', category: 'general' },
     { key: 'chart.height', def: 600, type: 'range', min: 300, max: 1000, label: 'height', category: 'general' },
     { key: 'chart.width', def: 1000, type: 'range', min: 300, max: 2000, label: 'width', category: 'general' },
     { key: 'chart.zoom.show', def: true, type: 'checkbox', label: 'zoom', category: 'general' },
