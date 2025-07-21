@@ -9,7 +9,8 @@ const props = defineProps({
     headerBg: { type: String },
     headerColor: { type: String },
     fullscreenParent: { type: HTMLElement },
-    isFullscreen: { type: Boolean, default: false }
+    isFullscreen: { type: Boolean, default: false },
+    withPadding: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(["close"]);
@@ -219,7 +220,7 @@ onUnmounted(() => {
                     <BaseIcon name="close" :stroke="headerColor"/>
                 </button>
             </div>
-            <div class="modal-body">
+            <div :class="{ 'modal-body': !withPadding, 'modal-body-pad': withPadding}">
                 <slot />
             </div>
             <div class="resize-handle" @mousedown.stop.prevent="initResize" @touchstart.stop.prevent="initResize" />
@@ -270,6 +271,13 @@ onUnmounted(() => {
 
 .modal-body {
     width: 100%;
+    height: 80%;
+    transition: all 0.2s ease-in-out;
+}
+
+.modal-body-pad {
+    padding: 0 12px;
+    width: calc(100% - 24px);
     height: 80%;
     transition: all 0.2s ease-in-out;
 }

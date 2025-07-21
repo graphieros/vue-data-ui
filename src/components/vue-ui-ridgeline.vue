@@ -1065,6 +1065,7 @@ defineExpose({
             :headerColor="FINAL_CONFIG.style.chart.dialog.header.color"
             :isFullscreen="isFullscreen"
             :fullscreenParent="ridgelineChart"
+            withPadding
         >
             <template #title>
                 {{ selectedDatapoint.name }}
