@@ -334,7 +334,9 @@ export function useConfig() {
                     dataLabels: {
                         show: true,
                         hideEmptyValues: false,
+                        hideUnderValue: null,
                         hideEmptyPercentages: false,
+                        hideUnderPercentage: null,
                         adaptColorToBackground: true,
                         color: COLOR_BLACK,
                         fontSize: FONT._14,
@@ -355,6 +357,9 @@ export function useConfig() {
                         showAxis: true,
                         showHorizontalLines: false,
                         axisColor: COLOR_GREY_LIGHT,
+                        linesColor: COLOR_GREY_LIGHT,
+                        linesThickness: 1,
+                        linesStrokeDasharray: 0,
                         axisThickness: 2,
                         axisName: {
                             show: true,
@@ -378,6 +383,9 @@ export function useConfig() {
                     y: {
                         showAxis: true,
                         showVerticalLines: false,
+                        linesColor: COLOR_GREY_LIGHT,
+                        linesThickness: 1,
+                        linesStrokeDasharray: 0,
                         axisColor: COLOR_GREY_LIGHT,
                         axisThickness: 2,
                         axisName: {

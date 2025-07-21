@@ -157,10 +157,30 @@ function prepareConfig() {
         finalConfig.style.chart.zoom.endIndex = null;
     }
 
+    if (props.config && hasDeepProperty(props.config, 'style.chart.bars.dataLabels.hideUnderValue')) {
+        finalConfig.style.chart.bars.dataLabels.hideUnderValue = props.config.style.chart.bars.dataLabels.hideUnderValue;
+    } else {
+        finalConfig.style.chart.bars.dataLabels.hideUnderValue = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'style.chart.bars.dataLabels.hideUnderPercentage')) {
+        finalConfig.style.chart.bars.dataLabels.hideUnderPercentage = props.config.style.chart.bars.dataLabels.hideUnderPercentage;
+    } else {
+        finalConfig.style.chart.bars.dataLabels.hideUnderPercentage = null;
+    }
+
     // ----------------------------------------------------------------------------
 
     return finalConfig;
 }
+
+const canHideSmallValues = computed(() => {
+    return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderValue !== null
+});
+
+const canHideSmallPercentages = computed(() => {
+    return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderPercentage !== null
+})
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
@@ -852,9 +872,15 @@ function selectTimeLabel(label, relativeIndex) {
 
 function isLabelDisplayed(value, proportion) {
     if (FINAL_CONFIG.value.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.value.style.chart.bars.distributed) {
-        return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideEmptyPercentages ? proportion > 0 : true
+        if (!canHideSmallPercentages.value) {
+            return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideEmptyPercentages ? proportion > 0 : true;
+        }
+        return proportion * 100 >= FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderPercentage;
     } else {
-        return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideEmptyValues ? value !== 0 : true
+        if (!canHideSmallValues.value) {
+            return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideEmptyValues ? value !== 0 : true
+        }
+        return Math.abs(value) >= FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderValue
     }
 }
 
@@ -1010,8 +1036,9 @@ defineExpose({
                     :x2="drawingArea.right"
                     :y1="yLabel.y"
                     :y2="yLabel.y"
-                    :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
-                    :stroke-width="1"
+                    :stroke="FINAL_CONFIG.style.chart.grid.x.linesColor"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.x.linesThickness"
+                    :stroke-dasharray="FINAL_CONFIG.style.chart.grid.x.linesStrokeDasharray"
                     stroke-linecap="round"
                 />
             </template>
@@ -1024,8 +1051,9 @@ defineExpose({
                     :x2="drawingArea.right"
                     :y1="drawingArea.top + (barSlot * i)"
                     :y2="drawingArea.top + (barSlot * i)"
-                    :stroke="FINAL_CONFIG.style.chart.grid.y.axisColor"
-                    :stroke-width="1"
+                    :stroke="FINAL_CONFIG.style.chart.grid.x.linesColor"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.x.linesThickness"
+                    :stroke-dasharray="FINAL_CONFIG.style.chart.grid.x.linesStrokeDasharray"
                     stroke-linecap="round"
                 />
             </template>
@@ -1038,22 +1066,24 @@ defineExpose({
                     :x2="drawingArea.left + (barSlot * i)"
                     :y1="drawingArea.top"
                     :y2="drawingArea.bottom"
-                    :stroke="FINAL_CONFIG.style.chart.grid.y.axisColor"
-                    :stroke-width="1"
+                    :stroke="FINAL_CONFIG.style.chart.grid.y.linesColor"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.y.linesThickness"
+                    :stroke-dasharray="FINAL_CONFIG.style.chart.grid.y.linesStrokeDasharray"
                     stroke-linecap="round"
                 />
             </template>
 
             <!-- VERTICAL LINES (horizontal mode) -->
-            <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines && FINAL_CONFIG.orientation === 'horizontal'">
+            <template v-if="FINAL_CONFIG.style.chart.grid.y.showVerticalLines && FINAL_CONFIG.orientation === 'horizontal'">
                 <line
                     v-for="(yLabel, i) in yLabels"
                     :x1="yLabel.horizontal_x"
                     :x2="yLabel.horizontal_x"
                     :y1="drawingArea.top"
                     :y2="drawingArea.bottom"
-                    :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
-                    :stroke-width="1"
+                    :stroke="FINAL_CONFIG.style.chart.grid.y.linesColor"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.y.linesThickness"
+                    :stroke-dasharray="FINAL_CONFIG.style.chart.grid.y.linesStrokeDasharray"
                     stroke-linecap="round"
                 />
             </template>

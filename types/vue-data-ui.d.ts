@@ -6387,7 +6387,9 @@ declare module "vue-data-ui" {
                     dataLabels?: {
                         show?: boolean;
                         hideEmptyValues?: boolean;
+                        hideUnderValue?: number | null;
                         hideEmptyPercentages?: boolean;
+                        hideUnderPercentage?: number | null;
                         adaptColorToBackground?: boolean;
                         color?: string;
                         fontSize?: number;
@@ -6407,6 +6409,9 @@ declare module "vue-data-ui" {
                     x?: {
                         showAxis?: boolean;
                         showHorizontalLines?: boolean;
+                        linesColor?: string;
+                        linesThickness?: number;
+                        linesStrokeDasharray?: number;
                         axisColor?: string;
                         axisThickness?: number;
                         axisName?: {
@@ -6431,6 +6436,9 @@ declare module "vue-data-ui" {
                     y?: {
                         showAxis?: boolean;
                         showVerticalLines?: boolean;
+                        linesColor?: string;
+                        linesThickness?: number;
+                        linesStrokeDasharray?: number;
                         axisColor?: string;
                         axisThickness?: number;
                         axisName?: {
