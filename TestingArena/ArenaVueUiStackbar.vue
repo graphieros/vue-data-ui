@@ -21,15 +21,15 @@ const dataset = computed(() => {
   return [
     {
       name: "Series 1",
-      series: [1, 2, 1, 3, 1, 5],
+      series: [1, 2, 1, 3, 1, 5, 0.1],
     },
     {
       name: "Series 2",
-      series: [0, 2, 3, 2, 1, 2],
+      series: [0, 2, 3, 2, 1, 2, 0.1],
     },
     {
       name: "Series 3",
-      series: [1, 2, 4, 3, 2, 1],
+      series: [1, 2, 4, 3, 2, 1, 0.1],
     },
   ];
 });
@@ -82,7 +82,7 @@ const monthValues = computed(() => {
 const model = ref([
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
 
-    { key: 'orientation', def: 'horizontal', type:'select', options: ['vertical', 'horizontal']},
+    { key: 'orientation', def: 'vertical', type:'select', options: ['vertical', 'horizontal']},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'theme', def: '', type: 'select', options: ['', 'zen', 'hack', 'concrete']},
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
@@ -115,8 +115,8 @@ const model = ref([
     { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.zoom.highlightColor', def: '#5A5A5A', type: 'color'},
     { key: 'style.chart.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
-    { key: 'style.chart.zoom.startIndex', def:1, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.zoom.endIndex', def: 2, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.zoom.startIndex', def:null, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100},
     { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'chexkbox'},
     { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'chexkbox'},
 
@@ -141,7 +141,7 @@ const model = ref([
     
     { key: 'style.chart.bars.gapRatio', def: 0.5, type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'style.chart.bars.distributed', def: false, type: 'checkbox'},
-    { key: 'style.chart.bars.showDistributedPercentage', def: true, type: 'checkbox'},
+    { key: 'style.chart.bars.showDistributedPercentage', def: false, type: 'checkbox'},
     { key: 'style.chart.bars.borderRadius', def: 6, type: 'number', min: 0, max: 12},
     { key: 'style.chart.bars.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
 
@@ -166,12 +166,19 @@ const model = ref([
     { key: 'style.chart.bars.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.bars.dataLabels.suffix', def: 'S', type: 'text'},
 
+    { key: 'style.chart.bars.dataLabels.hideUnderValue', def: 1, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.bars.dataLabels.hideUnderPercentage', def: 50, type: 'number', min: 0, max: 100},
+
     { key: 'style.chart.grid.scale.ticks', def: 10, type: 'select', options: [2, 5, 10, 20]},
     { key: 'style.chart.grid.scale.scaleMin', def: null, type: 'number', min: -1000, max: 1000},
     { key: 'style.chart.grid.scale.scaleMax', def: null, type: 'number', min: -1000, max: 1000},
 
     { key: 'style.chart.grid.x.showAxis', def: true, type: 'checkbox'},
     { key: 'style.chart.grid.x.showHorizontalLines', def: true, type: 'checkbox'},
+    { key: 'style.chart.grid.x.linesColor', def: 'red', type: 'color' },
+    { key: 'style.chart.grid.x.linesThickness', def: 0.5, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.grid.x.linesStrokeDasharray', def: 2, type: 'number', min: 0, max: 12},
+
     { key: 'style.chart.grid.x.axisColor', def: '#E1E5E8', type: 'color'},
     { key: 'style.chart.grid.x.axisThickness', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.grid.x.axisName.show', def: true, type: 'checkbox'},
@@ -189,7 +196,11 @@ const model = ref([
     { key: 'style.chart.grid.x.timeLabels.bold', def: false, type: 'checkbox'},
 
     { key: 'style.chart.grid.y.showAxis', def: true, type: 'checkbox'},
-    { key: 'style.chart.grid.y.showVerticalLines', def: false, type: 'checkbox'},
+    { key: 'style.chart.grid.y.showVerticalLines', def: true, type: 'checkbox'},
+    { key: 'style.chart.grid.y.linesColor', def: '#FF00FF', type: 'color' },
+    { key: 'style.chart.grid.y.linesThickness', def: 0.5, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.grid.y.linesStrokeDasharray', def: 2, type: 'number', min: 0, max: 12},
+
     { key: 'style.chart.grid.y.axisColor', def: '#E1E5E8', type: 'color'},
     { key: 'style.chart.grid.y.axisThickness', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.grid.y.axisName.show', def: true, type: 'checkbox'},
@@ -227,7 +238,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -264,6 +275,7 @@ const config = computed(() => {
                         }
                     },
                     y: {
+                        ...c.style.chart.grid.y,
                         axisLabels: {
                             formatter: ({ value }) => {
                                 return 'BOO' + value
