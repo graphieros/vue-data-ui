@@ -456,7 +456,7 @@ export function useConfig() {
                 ...ZOOM,
                 minimap: MINIMAP,
             },
-            padding: PADDING([36, 24, 64, 48]),
+            padding: PADDING([0, 0, 0, 0]),
             highlighter: {
                 color: COLOR_BLACK,
                 opacity: 5,
@@ -514,7 +514,7 @@ export function useConfig() {
                         yLabel: '',
                         yLabelOffsetX: 0,
                         xLabel: '',
-                        xLabelOffsetY: 14,
+                        xLabelOffsetY: 0,
                         fontSize: FONT._14
                     },
                     zeroLine: {
@@ -5590,12 +5590,6 @@ export function useConfig() {
                         },
                         chart: {
                             ...vue_ui_xy.chart,
-                            padding: {
-                                top: 24,
-                                right: 25,
-                                bottom: 24,
-                                left: 64
-                            },
                             tooltip: {
                                 ...vue_ui_xy.chart.tooltip,
                                 showPercentage: false
