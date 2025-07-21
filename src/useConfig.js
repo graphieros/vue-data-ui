@@ -358,7 +358,7 @@ export function useConfig() {
                         showHorizontalLines: false,
                         axisColor: COLOR_GREY_LIGHT,
                         linesColor: COLOR_GREY_LIGHT,
-                        liensThickness: 1,
+                        linesThickness: 1,
                         linesStrokeDasharray: 0,
                         axisThickness: 2,
                         axisName: {
