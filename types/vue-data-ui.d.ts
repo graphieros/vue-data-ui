@@ -221,9 +221,9 @@ declare module "vue-data-ui" {
             annotator?: null | (() => void);
             csv?: null | ((csvStr?: string) => void);
             fullscreen?: null | (() => void);
-            img?: null | ((base64?: string) => void);
+            img?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string} = {}) => void);
             labels?: null | (() => void);
-            pdf?: null | ((chart?: HTMLElement) => void);
+            pdf?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string} = {}) => void);
             sort?: null | (() => void);
             stack?: null | (() => void);
             table?: null | (() => void);
