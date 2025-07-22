@@ -166,8 +166,8 @@ const model = ref([
     { key: 'style.chart.bars.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.bars.dataLabels.suffix', def: 'S', type: 'text'},
 
-    { key: 'style.chart.bars.dataLabels.hideUnderValue', def: 1, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.bars.dataLabels.hideUnderPercentage', def: 50, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.bars.dataLabels.hideUnderValue', def: null, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.bars.dataLabels.hideUnderPercentage', def: 10, type: 'number', min: 0, max: 100},
 
     { key: 'style.chart.grid.scale.ticks', def: 10, type: 'select', options: [2, 5, 10, 20]},
     { key: 'style.chart.grid.scale.scaleMin', def: null, type: 'number', min: -1000, max: 1000},
