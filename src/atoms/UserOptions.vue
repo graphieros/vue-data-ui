@@ -579,4 +579,9 @@ const isInfo = ref({
         transform: translateY(-50%) scale(1, 1);
     }
 }
-</style>props.callbacks.annotator
+
+.vue-ui-user-options,
+.vue-ui-user-options-drawer {
+    min-width: 36px;
+}
+</style>

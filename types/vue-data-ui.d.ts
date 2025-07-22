@@ -7550,12 +7550,15 @@ declare module "vue-data-ui" {
      * ---
      * Get the default config for a given component
      * ___
+     * @typeParam T - The config type for the component
+     * @param key - Component key in snake_case (e.g. `"vue_ui_xy"`).
+     * @returns The default configuration of type `T`.
      * @example
-     * const defaultConfig = getVueDataUiConfig("vue_ui_xy");
-     *
-     * @param key - The key of the component in snake case (e.g., "vue_ui_xy")
+     * ```ts
+     * const defaultConfig = getVueDataUiConfig<VueUiXyConfig>("vue_ui_xy");
+     * ```
      */
-    export const getVueDataUiConfig: (key: VueDataUiConfigKey) => VueDataUiConfig;
+    export const getVueDataUiConfig: <T>(key: VueDataUiConfigKey) => T;
 
     /**
      * Vue Data UI utility
