@@ -1091,17 +1091,9 @@ A composable that **flattens** a reactive object into a set of refs (one for eac
 - **Dynamic path support**: New paths added at runtime are discovered automatically (and proxied), so you never lose reactivity when mutating the structure.
 
 ```js
-import { useObjectBindings } from "vue-data-ui";
+import { useObjectBindings, getVueDataUiConfig } from "vue-data-ui";
 
-const config = ref({
-  customPalette: ["#CCCCCC", "#1A1A1A"],
-  style: {
-    chart: {
-      backgroundColor: "#FFFFFF",
-      color: "#1A1A1A",
-    },
-  },
-});
+const config = ref(getVueDataUiConfig("vue_ui_donut")); // or your custom config for this component
 
 const bindings = useObjectBindings(config);
 // Now `bindings` has computed refs for each leaf path:
@@ -1117,7 +1109,10 @@ You can then use these in your template:
 ```html
 <template>
   <div>
-    <input type="color" v-model="bindings['style.chart.backgroundColor']" />
+    <input
+      type="color"
+      v-model="bindings['style.chart.backgroundColor'].value"
+    />
   </div>
 </template>
 ```
