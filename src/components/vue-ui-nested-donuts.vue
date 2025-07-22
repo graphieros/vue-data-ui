@@ -1121,6 +1121,7 @@ defineExpose({
             :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="nestedDonutsChart" :position="FINAL_CONFIG.userOptions.position"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator" :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"
             @generateImage="generateImage" @toggleTable="toggleTable" @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip" @toggleAnnotator="toggleAnnotator" :style="{

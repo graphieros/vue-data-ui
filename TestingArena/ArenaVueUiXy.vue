@@ -584,7 +584,7 @@ const model = ref([
     { key: 'chart.userOptions.print.allowTaint', def: true, type: 'checkbox' },
     { key: 'chart.userOptions.print.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'chart.userOptions.print.useCORS', def: true, type: 'checkbox' },
-    { key: 'chart.userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5 },
+    { key: 'chart.userOptions.print.scale', def: 4, type: 'number', min: 1, max: 5 },
     
 ]);
 
@@ -767,14 +767,14 @@ const config = computed(() => {
                 userOptions: {
                     ...c.chart.userOptions,
                     callbacks: {
-                        img: (b64) => {
-                            console.log(b64)
+                        img: ({ domElement, imageUri, base64}) => {
+                            console.log(imageUri)
                         },
                         csv: (xls) => {
                             console.log(xls)
                         },
-                        pdf: (chart) => {
-                            console.log(chart)
+                        pdf: ({ domElement, imageUri, base64}) => {
+                            console.log(imageUri)
                         }
                     },
                     print: {

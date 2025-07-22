@@ -817,7 +817,9 @@ defineExpose({
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="flowChart"
-            :position="FINAL_CONFIG.userOptions.position" :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="FINAL_CONFIG.userOptions.position" 
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :isAnnotation="isAnnotator" :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show &&
                 FINAL_CONFIG.userOptions.buttons.tooltip
                 " :isTooltip="mutableConfig.showTooltip" @toggleTooltip="toggleTooltip" @toggleFullscreen="toggleFullscreen"

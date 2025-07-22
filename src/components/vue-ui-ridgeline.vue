@@ -700,7 +700,9 @@ defineExpose({
             :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasTooltip="false" :callbacks="FINAL_CONFIG.userOptions.callbacks" 
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasLabel="false" :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
+            :hasLabel="false" :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :isFullscreen="isFullscreen"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :chartElement="ridgelineChart" :position="FINAL_CONFIG.userOptions.position" :isTooltip="false"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator" :style="{

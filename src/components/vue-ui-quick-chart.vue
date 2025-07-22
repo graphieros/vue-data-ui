@@ -1045,6 +1045,7 @@ defineExpose({
             :hasAnnotator="FINAL_CONFIG.userOptionsButtons.annotator"
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptionsCallbacks"
+            :printScale="FINAL_CONFIG.userOptionsPrint.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"

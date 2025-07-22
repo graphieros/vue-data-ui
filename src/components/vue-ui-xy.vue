@@ -60,6 +60,7 @@
             :hasAnnotator="FINAL_CONFIG.chart.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.chart.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.chart.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

@@ -582,10 +582,10 @@ You can pass a callback trhough the config, for each button, to override the def
 const config = {
   userOptions: {
     callbacks: {
-      pdf: (chartElement: HTMLElement) => {
+      pdf: ({ chartElement, imageUri, base64 }) => {
         console.log(chartElement);
       },
-      img: (base64: string) => {
+      img: ({ chartElement, imageUri, base64 }) => {
         console.log(base64);
       },
       csv: (csvStr: string) => {

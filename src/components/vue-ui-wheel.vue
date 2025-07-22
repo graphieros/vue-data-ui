@@ -320,6 +320,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :chartElement="wheelChart"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"

@@ -129,13 +129,18 @@ const props = defineProps({
             return {}
         }
     },
+    printScale: {
+        type: Number,
+        default: 2
+    }
 });
 
 const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack', 'toggleTooltip', 'toggleAnimation', 'toggleAnnotator']);
 
-function generatePdf() {
+async function generatePdf() {
     if (props.callbacks.pdf) {
-        props.callbacks.pdf(props.chartElement);
+        const { imageUri, base64} = await img({ domElement: props.chartElement, base64: true, img: true, scale: props.printScale })
+        props.callbacks.pdf({ domElement: props.chartElement, base64, imageUri});
     } else {
         emit('generatePdf');
     }
@@ -147,8 +152,8 @@ function generateCsv() {
 
 async function generateImage() {
     if (props.callbacks.img) {
-        const b64 = await img({ domElement: props.chartElement, base64: true })
-        props.callbacks.img(b64);
+        const { imageUri, base64 } = await img({ domElement: props.chartElement, base64: true, img: true, scale: props.printScale })
+        props.callbacks.img({ domElement: props.chartElement, imageUri, base64 });
     } else {
         emit('generateImage');
     }
