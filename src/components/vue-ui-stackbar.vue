@@ -870,6 +870,10 @@ function selectTimeLabel(label, relativeIndex) {
     });
 }
 
+const maxCurrentValue = computed(() => {
+    return Math.max(...formattedDataset.value.flatMap(ds => ds.series))
+})
+
 function isLabelDisplayed(value, proportion) {
     if (FINAL_CONFIG.value.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.value.style.chart.bars.distributed) {
         if (!canHideSmallPercentages.value) {
@@ -877,6 +881,12 @@ function isLabelDisplayed(value, proportion) {
         }
         return proportion * 100 >= FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderPercentage;
     } else {
+        if (canHideSmallPercentages.value) {
+            if (canHideSmallValues.value) {
+                console.warn('Vue Data UI - VueUiStackbar - You cannot set both dataLabels.hideUnderPercentage and dataLabels.hideUnderValue. Note that dataLabels.hideUnderPercentage takes precedence in this case.')
+            }
+            return value > maxCurrentValue.value * FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderPercentage / 100;
+        }
         if (!canHideSmallValues.value) {
             return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideEmptyValues ? value !== 0 : true
         }
