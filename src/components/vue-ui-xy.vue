@@ -1217,7 +1217,7 @@
                 <g v-if="annotationsY.length && !mutableConfig.isStacked">
                     <g v-for="annotation in annotationsY" :key="annotation.uid">
                         <line 
-                            v-if="annotation.yTop && annotation.show"
+                            v-if="annotation.yTop && annotation.show && isFinite(annotation.yTop)"
                             :x1="annotation.x1"
                             :y1="annotation.yTop"
                             :x2="annotation.x2"
@@ -1229,7 +1229,7 @@
                             :style="{ animation: 'none !important'}"
                         />
                         <line 
-                            v-if="annotation.yBottom && annotation.show"
+                            v-if="annotation.yBottom && annotation.show && isFinite(annotation.yBottom)"
                             :x1="annotation.x1"
                             :y1="annotation.yBottom"
                             :x2="annotation.x2"
@@ -1241,7 +1241,7 @@
                             :style="{ animation: 'none !important'}"
                         />
                         <rect 
-                            v-if="annotation.hasArea && annotation.show"
+                            v-if="annotation.hasArea && annotation.show && isFinite(annotation.yTop) && isFinite(annotation.yBottom)"
                             :y="Math.min(annotation.yTop, annotation.yBottom)"
                             :x="annotation.x1"
                             :width="drawingArea.width"
@@ -1250,13 +1250,13 @@
                             :style="{ animation: 'none !important' }"
                         />
                         <rect
-                            v-if="annotation.config.label.text && annotation.show"
+                            v-if="annotation.config.label.text && annotation.show && isFinite(annotation._box.y)"
                             class="vue-ui-xy-annotation-label-box"
                             v-bind="annotation._box"
                             :style="{ animation: 'none !important', transition: 'none !important'}"
                         />
                         <text
-                            v-if="annotation.config.label.text && annotation.show"
+                            v-if="annotation.config.label.text && annotation.show && isFinite(annotation._text.y)"
                             :id="annotation.id"
                             class="vue-ui-xy-annotation-label"
                             :x="annotation._text.x"
@@ -3547,7 +3547,7 @@ export default {
         },
         calcRectY(plot) {
             if(plot.value >= 0) return plot.y;
-            return this.zero;
+            return [null, undefined, NaN, Infinity, -Infinity].includes(this.zero) ? this.drawingArea.bottom : this.zero;
         },
         calcIndividualRectY(plot) {
             if(plot.value >= 0) return plot.y;
