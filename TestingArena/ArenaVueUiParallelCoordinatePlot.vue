@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiParallelCoordinatePlot from '../src/components/vue-ui-parallel-coordinate-plot.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -197,6 +197,13 @@ function selectLegend(l) {
 function selectDatapoint(dp) {
     console.log(dp)
 }
+
+onMounted(async() => {
+    if (local.value) {
+        const p = await local.value.getImage()
+        console.log(p)
+    }
+})
     
 </script>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiQuadrant from '../src/components/vue-ui-quadrant.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -326,6 +326,13 @@ function selectPlot(plot) {
 function selectSide(side) {
     console.log({ side })
 }
+
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
 
 </script>
 

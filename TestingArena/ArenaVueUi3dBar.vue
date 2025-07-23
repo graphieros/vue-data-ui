@@ -194,6 +194,13 @@ const selectedDataset = ref('stacked')
 
 const dataset = computed(() => datasets.value[selectedDataset.value])
 
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>

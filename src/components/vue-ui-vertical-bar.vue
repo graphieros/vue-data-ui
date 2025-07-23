@@ -31,6 +31,7 @@ import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive m
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
+import img from "../img.js";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
@@ -671,8 +672,24 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!verticalBarChart.value) return;
+    const { width, height } = verticalBarChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img(({ domElement: verticalBarChart.value, base64: true, img: true, scale}))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
 defineExpose({
     getData,
+    getImage,
     recalculateHeight,
     generatePdf,
     generateCsv,
@@ -680,7 +697,8 @@ defineExpose({
     toggleTable,
     toggleSort,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>
@@ -744,6 +762,7 @@ defineExpose({
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

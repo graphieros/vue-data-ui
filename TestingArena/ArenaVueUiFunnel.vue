@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiFunnel from '../src/components/vue-ui-funnel.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -159,6 +159,13 @@ const config = computed(() => {
 
 const step = ref(0);
 
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage();
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>
@@ -184,7 +191,7 @@ const step = ref(0);
         <template #title>VueUiFunnel</template>
 
         <template #local>
-            <LocalVueUiFunnel :dataset="dataset" :config="config">
+            <LocalVueUiFunnel :dataset="dataset" :config="config" ref="local">
                 <template #source>
                     #source
                 </template>

@@ -43,6 +43,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -1068,8 +1069,34 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!nestedDonutsChart.value) return;
+    const { width, height } = nestedDonutsChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img(({ domElement: nestedDonutsChart.value, base64: true, img: true, scale}))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
+const G = ref(null);
+
+function autoSize() {
+    if (!G.value) return;
+    const { x, y, width, height } = G.value.getBBox();
+    if (!svgRef.value) return;
+    svgRef.value.setAttribute('viewBox', `${x} ${y} ${width + Math.min(0, x)} ${height + Math.min(0, y)}`);
+}
+
 defineExpose({
+    autoSize,
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
@@ -1077,6 +1104,7 @@ defineExpose({
     toggleLabels,
     toggleTooltip,
     toggleAnnotator,
+    toggleFullscreen
 });
 </script>
 
@@ -1121,6 +1149,7 @@ defineExpose({
             :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="nestedDonutsChart" :position="FINAL_CONFIG.userOptions.position"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator" :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"
             @generateImage="generateImage" @toggleTable="toggleTable" @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip" @toggleAnnotator="toggleAnnotator" :style="{
@@ -1162,233 +1191,237 @@ defineExpose({
         <svg ref="svgRef" :xmlns="XMLNS" v-if="isDataset" :class="{
             'vue-data-ui-fullscreen--on': isFullscreen,
             'vue-data-ui-fulscreen--off': !isFullscreen,
+            'vue-data-ui-svg': true
         }" :viewBox="`0 0 ${svg.width <= 0 ? 0.001 : svg.width} ${svg.height < 0 ? 0.001 : svg.height
             }`"
             :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};${padding.css}`">
-            <PackageVersion />
 
-            <!-- BACKGROUND SLOT -->
-            <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="svg.width <= 0 ? 0.001 : svg.width"
-                :height="svg.height < 0 ? 0.001 : svg.height" :style="{
-                    pointerEvents: 'none',
-                }">
-                <slot name="chart-background" />
-            </foreignObject>
-
-            <!-- GRADIENTS -->
-            <defs>
-                <radialGradient v-for="(_, i) in gradientSets" :id="`radial_${uid}_${i}`">
-                    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0" />
-                    <stop :offset="`${(1 - donutThickness / radii[i]) * 100}%`" :stop-color="setOpacity('#FFFFFF', 0)"
-                        stop-opacity="0" />
-                    <stop :offset="`${(1 - donutThickness / radii[i] / 2) * 100}%`" stop-color="#FFFFFF"
-                        :stop-opacity="FINAL_CONFIG.style.chart.gradientIntensity / 100" />
-                    <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
-                </radialGradient>
-            </defs>
-
-            <!-- FILTERS -->
-            <defs>
-                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
-                    <feColorMatrix type="saturate" values="0" />
-                </filter>
-
-                <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
-                    <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5"
-                        :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
-                </filter>
-            </defs>
-
-            <!-- NESTED DONUTS -->
-            <g v-for="(item, i) in donuts">
-                <template v-if="item.hasData">
-                    <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)">
-                        <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
-                            :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
-                            :filter="getBlurFilter(arc, j)" />
-                    </g>
-                </template>
-                <template v-else>
-                    <g v-for="(arc, j) in item.skeleton">
-                        <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
-                            :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" />
-                    </g>
-                </template>
-            </g>
-
-            <g v-if="FINAL_CONFIG.style.chart.useGradient">
-                <g v-for="(gradient, i) in gradientSets">
-                    <path data-cy="donut-gradient" :d="gradient.donut.arcSlice" :fill="`url(#radial_${uid}_${i})`"
-                        stroke="transparent" stroke-width="0" />
+            <g ref="G" class="vue-data-ui-g">
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="svg.width <= 0 ? 0.001 : svg.width"
+                    :height="svg.height < 0 ? 0.001 : svg.height" :style="{
+                        pointerEvents: 'none',
+                    }">
+                    <slot name="chart-background" />
+                </foreignObject>
+    
+                <!-- GRADIENTS -->
+                <defs>
+                    <radialGradient v-for="(_, i) in gradientSets" :id="`radial_${uid}_${i}`">
+                        <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0" />
+                        <stop :offset="`${(1 - donutThickness / radii[i]) * 100}%`" :stop-color="setOpacity('#FFFFFF', 0)"
+                            stop-opacity="0" />
+                        <stop :offset="`${(1 - donutThickness / radii[i] / 2) * 100}%`" stop-color="#FFFFFF"
+                            :stop-opacity="FINAL_CONFIG.style.chart.gradientIntensity / 100" />
+                        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+                    </radialGradient>
+                </defs>
+    
+                <!-- FILTERS -->
+                <defs>
+                    <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
+                        <feColorMatrix type="saturate" values="0" />
+                    </filter>
+    
+                    <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
+                        <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5"
+                            :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
+                    </filter>
+                </defs>
+    
+                <!-- NESTED DONUTS -->
+                <g v-for="(item, i) in donuts">
+                    <template v-if="item.hasData">
+                        <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)">
+                            <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
+                                :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                                :filter="getBlurFilter(arc, j)" />
+                        </g>
+                    </template>
+                    <template v-else>
+                        <g v-for="(arc, j) in item.skeleton">
+                            <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
+                                :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" />
+                        </g>
+                    </template>
                 </g>
-            </g>
-
-            <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.showDonutName">
+    
+                <g v-if="FINAL_CONFIG.style.chart.useGradient">
+                    <g v-for="(gradient, i) in gradientSets">
+                        <path data-cy="donut-gradient" :d="gradient.donut.arcSlice" :fill="`url(#radial_${uid}_${i})`"
+                            stroke="transparent" stroke-width="0" />
+                    </g>
+                </g>
+    
+                <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.showDonutName">
+                    <g v-for="(item, i) in donuts">
+                        <g v-for="(arc, j) in item.donut">
+                            <text data-cy="datapoint-name" :class="{ animated: FINAL_CONFIG.useCssAnimation }"
+                                v-if="j === 0 && svg.width && svg.height" :x="svg.width / 2" :y="arc.startY -
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize +
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                        .donutNameOffsetY
+                                    " text-anchor="middle" :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
+                                        " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName
+                        ? 'bold'
+                        : 'normal'
+                        " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color">
+                                {{
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                        .donutNameAbbreviation
+                                        ? abbreviate({
+                                            source: item.name,
+                                            length:
+                                                FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                                    .donutNameMaxAbbreviationSize,
+                                        })
+                                        : item.name
+                                }}
+                            </text>
+                        </g>
+                    </g>
+                </g>
+    
+                <!-- DATALABELS -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
+                    <g v-for="(item, i) in donuts">
+                        <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)" :filter="getBlurFilter(arc, j)">
+                            <text data-cy="datapoint-percentage" :class="{ animated: FINAL_CONFIG.useCssAnimation }" v-show="mutableConfig.dataLabels.show &&
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage
+                                " :opacity="isArcBigEnough(arc) ? 1 : 0" :text-anchor="calcMarkerOffsetX(arc, true).anchor"
+                                :x="calcMarkerOffsetX(
+                                    arc,
+                                    false,
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
+                                ).x || 0
+                                    " :y="calcMarkerOffsetY(
+                        arc,
+                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
+                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
+                    )
+                        " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor
+                        ? arc.color
+                        : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color
+                        " :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
+                        " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldPercentage
+                        ? 'bold'
+                        : 'normal'
+                        ">
+                                {{
+                                    dataLabel({
+                                        v: arc.proportion * 100,
+                                        s: "%",
+                                        r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                            .roundingPercentage,
+                                    })
+                                }}
+                            </text>
+                            <text data-cy="datapoint-value" :class="{ animated: FINAL_CONFIG.useCssAnimation }" v-show="mutableConfig.dataLabels.show &&
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                    .showPercentage &&
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue
+                                " :opacity="isArcBigEnough(arc) ? 1 : 0" :text-anchor="calcMarkerOffsetX(arc, true).anchor"
+                                :x="calcMarkerOffsetX(
+                                    arc,
+                                    false,
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
+                                ).x || 0
+                                    " :y="calcMarkerOffsetY(
+                        arc,
+                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
+                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
+                    ) + FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
+                        " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor
+                        ? arc.color
+                        : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color
+                        " :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
+                        " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue
+                        ? 'bold'
+                        : 'normal'
+                        ">
+                                ({{
+                                    applyDataLabel(
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                        arc.value,
+                                        dataLabel({
+                                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                            v: arc.value,
+                                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                            r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                                .roundingValue,
+                                        }),
+                                        { datapoint: arc, seriesIndex: i, datapointIndex: j }
+                                    )
+                                }})
+                            </text>
+                            <text :class="{ animated: FINAL_CONFIG.useCssAnimation }" v-if="
+                                isArcBigEnough(arc) &&
+                                mutableConfig.dataLabels.show &&
+                                !FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                    .showPercentage &&
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue
+                            " :text-anchor="calcMarkerOffsetX(arc, true).anchor" :x="calcMarkerOffsetX(
+                                arc,
+                                false,
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
+                            ).x || 0
+                                " :y="calcMarkerOffsetY(
+                        arc,
+                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
+                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
+                    )
+                        " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor
+                        ? arc.color
+                        : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color
+                        " :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
+                        " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue
+                        ? 'bold'
+                        : 'normal'
+                        ">
+                                {{
+                                    applyDataLabel(
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                        arc.value,
+                                        dataLabel({
+                                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                            v: arc.value,
+                                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                            r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                                .roundingValue,
+                                        }),
+                                        { datapoint: arc, seriesIndex: i, datapointIndex: j }
+                                    )
+                                }}
+                            </text>
+                        </g>
+                    </g>
+                </g>
+    
+                <!-- TOOLTIP TRAPS -->
                 <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut">
-                        <text data-cy="datapoint-name" :class="{ animated: FINAL_CONFIG.useCssAnimation }"
-                            v-if="j === 0 && svg.width && svg.height" :x="svg.width / 2" :y="arc.startY -
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize +
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                    .donutNameOffsetY
-                                " text-anchor="middle" :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                                    " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName
-                    ? 'bold'
-                    : 'normal'
-                    " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color">
-                            {{
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                    .donutNameAbbreviation
-                                    ? abbreviate({
-                                        source: item.name,
-                                        length:
-                                            FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                                .donutNameMaxAbbreviationSize,
-                                    })
-                                    : item.name
-                            }}
-                        </text>
-                    </g>
-                </g>
-            </g>
-
-            <!-- DATALABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
-                <g v-for="(item, i) in donuts">
-                    <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)" :filter="getBlurFilter(arc, j)">
-                        <text data-cy="datapoint-percentage" :class="{ animated: FINAL_CONFIG.useCssAnimation }" v-show="mutableConfig.dataLabels.show &&
-                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage
-                            " :opacity="isArcBigEnough(arc) ? 1 : 0" :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                            :x="calcMarkerOffsetX(
-                                arc,
-                                false,
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
-                            ).x || 0
-                                " :y="calcMarkerOffsetY(
-                    arc,
-                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
-                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
-                )
-                    " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor
-                    ? arc.color
-                    : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color
-                    " :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                    " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldPercentage
-                    ? 'bold'
-                    : 'normal'
-                    ">
-                            {{
-                                dataLabel({
-                                    v: arc.proportion * 100,
-                                    s: "%",
-                                    r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                        .roundingPercentage,
+                        <path data-cy="tooltip-trap" :d="arc.arcSlice"
+                            :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" @mouseenter="
+                                useTooltip({
+                                    datapoint: arc,
+                                    relativeIndex: i,
+                                    seriesIndex: arc.seriesIndex,
                                 })
-                            }}
-                        </text>
-                        <text data-cy="datapoint-value" :class="{ animated: FINAL_CONFIG.useCssAnimation }" v-show="mutableConfig.dataLabels.show &&
-                            FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                .showPercentage &&
-                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue
-                            " :opacity="isArcBigEnough(arc) ? 1 : 0" :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                            :x="calcMarkerOffsetX(
-                                arc,
-                                false,
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
-                            ).x || 0
-                                " :y="calcMarkerOffsetY(
-                    arc,
-                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
-                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
-                ) + FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                    " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor
-                    ? arc.color
-                    : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color
-                    " :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                    " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue
-                    ? 'bold'
-                    : 'normal'
-                    ">
-                            ({{
-                                applyDataLabel(
-                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                                    arc.value,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
-                                        v: arc.value,
-                                        s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                        r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                            .roundingValue,
-                                    }),
-                                    { datapoint: arc, seriesIndex: i, datapointIndex: j }
-                                )
-                            }})
-                        </text>
-                        <text :class="{ animated: FINAL_CONFIG.useCssAnimation }" v-if="
-                            isArcBigEnough(arc) &&
-                            mutableConfig.dataLabels.show &&
-                            !FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                .showPercentage &&
-                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue
-                        " :text-anchor="calcMarkerOffsetX(arc, true).anchor" :x="calcMarkerOffsetX(
-                            arc,
-                            false,
-                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
-                        ).x || 0
-                            " :y="calcMarkerOffsetY(
-                    arc,
-                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
-                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
-                )
-                    " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor
-                    ? arc.color
-                    : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color
-                    " :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                    " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue
-                    ? 'bold'
-                    : 'normal'
-                    ">
-                            {{
-                                applyDataLabel(
-                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                                    arc.value,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
-                                        v: arc.value,
-                                        s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                        r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                            .roundingValue,
-                                    }),
-                                    { datapoint: arc, seriesIndex: i, datapointIndex: j }
-                                )
-                            }}
-                        </text>
+                                " @click="selectDatapoint({ datapoint: arc, index: j })" @mouseleave="
+                                    isTooltip = false;
+                                selectedDonut = null;
+                                selectedDatapoint = null;
+                                selectedDatapointIndex = null;
+                                " />
                     </g>
                 </g>
+                <slot name="svg" :svg="svg"></slot>
             </g>
-
-            <!-- TOOLTIP TRAPS -->
-            <g v-for="(item, i) in donuts">
-                <g v-for="(arc, j) in item.donut">
-                    <path data-cy="tooltip-trap" :d="arc.arcSlice"
-                        :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" @mouseenter="
-                            useTooltip({
-                                datapoint: arc,
-                                relativeIndex: i,
-                                seriesIndex: arc.seriesIndex,
-                            })
-                            " @click="selectDatapoint({ datapoint: arc, index: j })" @mouseleave="
-                                isTooltip = false;
-                            selectedDonut = null;
-                            selectedDatapoint = null;
-                            selectedDatapointIndex = null;
-                            " />
-                </g>
-            </g>
-            <slot name="svg" :svg="svg"></slot>
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
@@ -1438,8 +1471,9 @@ defineExpose({
                 <template #item="{ legend, index }">
                     <div data-cy="legend-item" @click="segregateDonut(legend)"
                         :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }}:
+                        {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}}
                         {{
+                            !FINAL_CONFIG.style.chart.legend.showValue ? '' : 
                             applyDataLabel(
                                 FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
                                 legend.value,
@@ -1452,18 +1486,18 @@ defineExpose({
                                 { datapoint: legend, seriesIndex: index }
                             )
                         }}
-                        <template v-if="!segregated.includes(legend.id)">
-                            ({{
-                                isNaN(legend.value / legend.total)
+                        {{ 
+                            !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
+                            !segregated.includes(legend.id) 
+                                ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / legend.total)
                                     ? "-"
                                     : dataLabel({
                                         v: (legend.value / legend.total) * 100,
                                         s: "%",
                                         r: FINAL_CONFIG.style.chart.legend.roundingPercentage,
-                                    })
-                            }})
-                        </template>
-                        <template v-else> ( - % ) </template>
+                                    })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                                : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                        }}
                     </div>
                 </template>
             </Legend>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiHeatmap from '../src/components/vue-ui-heatmap.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -239,6 +239,13 @@ const step = ref(0)
 function logCell(cell) {
     console.log(cell)
 }
+
+onMounted(async() => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
 
 </script>
 

@@ -35,6 +35,7 @@ import Legend from "../atoms/Legend.vue";
 import Title from "../atoms/Title.vue";
 import Shape from "../atoms/Shape.vue";
 import { useTimeLabels } from "../useTimeLabels";
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
@@ -644,15 +645,32 @@ function generateCsv(callback=null) {
 
 function getData() {
     return drawableDataset.value;
+}   
+
+async function getImage({ scale = 2} = {}) {
+    if (!ridgelineChart.value) return;
+    const { width, height } = ridgelineChart.value.getBoundingClientRect();
+    const aspectRatio = width / height; 
+    const { imageUri, base64 } = await img(({ domElement: ridgelineChart.value, base64: true, img: true, scale}))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
 }
 
 defineExpose({
     getData,
+    getImage,
     generateImage,
     generatePdf,
     generateCsv,
     toggleAnnotator,
-    toggleTable
+    toggleTable,
+    toggleFullscreen
 });
 
 </script>
@@ -700,7 +718,9 @@ defineExpose({
             :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasTooltip="false" :callbacks="FINAL_CONFIG.userOptions.callbacks" 
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasLabel="false" :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
+            :hasLabel="false" :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :isFullscreen="isFullscreen"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :chartElement="ridgelineChart" :position="FINAL_CONFIG.userOptions.position" :isTooltip="false"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator" :style="{

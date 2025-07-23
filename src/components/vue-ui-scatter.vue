@@ -33,6 +33,7 @@ import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -76,6 +77,7 @@ const noTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
+const segregated = ref([]);
 
 const FINAL_CONFIG = computed({
     get: () => {
@@ -545,8 +547,6 @@ function clearHover() {
     selectedPlot.value = null;
 }
 
-const segregated = ref([]);
-
 function segregate(id) {
     if (segregated.value.includes(id)) {
         segregated.value = segregated.value.filter(el => el !== id);
@@ -642,14 +642,31 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!scatterChart.value) return;
+    const { width, height } = scatterChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img(({ domElement: scatterChart.value, base64: true, img: true, scale }))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>
@@ -713,6 +730,7 @@ defineExpose({
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

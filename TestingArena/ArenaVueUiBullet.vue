@@ -126,6 +126,13 @@ const config = computed(() => {
     }
 })
 
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>

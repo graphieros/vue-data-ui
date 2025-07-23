@@ -231,6 +231,7 @@ defineExpose({
             :chartElement="tableContainer"
             :position="FINAL_CONFIG.userOptions.position"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

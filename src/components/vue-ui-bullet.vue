@@ -14,6 +14,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import img from "../img";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
@@ -356,11 +357,28 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!bulletChart.value) return
+    const { width, height } = bulletChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img(({ domElement: bulletChart.value, base64: true, img: true, scale}))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateImage,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 })
 
 </script>
@@ -429,6 +447,7 @@ defineExpose({
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"

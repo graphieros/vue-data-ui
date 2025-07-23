@@ -36,6 +36,7 @@ import themes from "../themes.json";
 import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import Shape from '../atoms/Shape.vue';
+import img from '../img';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -808,13 +809,30 @@ function generateCsv(callback=null) {
     });
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!chordChart.value) return
+    const { width, height } = chordChart.value.getBoundingClientRect();
+    const aspectRatio = width / height; 
+    const { imageUri, base64 } = await img(({ domElement: chordChart.value, base64: true, img: true, scale }))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
 defineExpose({
     getData,
+    getImage,
     generateCsv,
     generateImage,
     generatePdf,
     toggleAnnotator,
     toggleTable,
+    toggleFullscreen
 });
 
 </script>
@@ -880,6 +898,7 @@ defineExpose({
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" 
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen" 
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv"

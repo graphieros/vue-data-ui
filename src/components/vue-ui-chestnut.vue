@@ -28,6 +28,7 @@ import { useConfig } from "../useConfig";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
+import img from "../img";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -533,13 +534,30 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!chestnutChart.value) return;
+    const { width, height } = chestnutChart.value.getBoundingClientRect();
+    const aspectRatio = width / height; 
+    const { imageUri, base64 } = await img(({ domElement: chestnutChart.value, base64: true, img: true, scale}))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.layout.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>
@@ -590,6 +608,7 @@ defineExpose({
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"

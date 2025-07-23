@@ -32,6 +32,7 @@ import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -509,14 +510,31 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!ringsChart.value) return;
+    const { width, height } = ringsChart.value.getBoundingClientRect();
+    const aspectRatio = width / height; 
+    const { imageUri, base64 } = await img(({ domElement: ringsChart.value, base64: true, img: true, scale}))
+    return { 
+      imageUri, 
+      base64, 
+      title: FINAL_CONFIG.value.style.chart.title.text,
+      width,
+      height,
+      aspectRatio
+    }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>
@@ -594,6 +612,7 @@ defineExpose({
         :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
         :isAnnotation="isAnnotator"
         :callbacks="FINAL_CONFIG.userOptions.callbacks"
+        :printScale="FINAL_CONFIG.userOptions.print.scale"
         @toggleFullscreen="toggleFullscreen"
         @generatePdf="generatePdf"
         @generateCsv="generateCsv"
@@ -793,7 +812,7 @@ defineExpose({
 
         <template #item="{legend, index }">
             <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                {{ legend.name }}: {{ applyDataLabel(
+                {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
                   FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
                   legend.value,
                   dataLabel({
@@ -805,17 +824,16 @@ defineExpose({
                   { datapoint: legend, seriesIndex: index }
                   )
                 }}
-                <span v-if="!segregated.includes(legend.uid)">
-                  ({{ isNaN(legend.value / grandTotal) ? '-' : dataLabel({
+                {{ 
+                  !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
+                  !segregated.includes(legend.uid)
+                    ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / grandTotal) ? '-' : dataLabel({
                     v: legend.value / grandTotal * 100,
                     s: '%',
                     r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                  })
-                  }})
-                </span>
-                <span v-else>
-                    ( - % )
-                </span>
+                  })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                    : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                }}
             </div>
         </template>
       </Legend>

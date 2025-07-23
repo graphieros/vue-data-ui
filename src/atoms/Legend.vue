@@ -76,6 +76,9 @@ function handleClick(legend, i) {
     gap: 6px;
     height: fit-content;
     text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .active {
     cursor: pointer;

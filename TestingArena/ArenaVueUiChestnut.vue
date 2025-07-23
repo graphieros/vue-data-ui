@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiChestnut from '../src/components/vue-ui-chestnut.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -491,6 +491,13 @@ function selectBranch(branch) {
 function selectNut(nut) {
     console.log( { nut })
 }
+
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
 
 </script>
 

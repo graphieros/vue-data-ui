@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiDonut from '../src/components/vue-ui-donut.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -13,12 +13,27 @@ const dataset = ref([
         comment: 'This is a comment'
     },
     {
+        name: 'Serie  lorem ipsum thing',
+        values: [1],
+        comment: 'This is a comment'
+    },
+    {
+        name: 'Serie lorem other thing',
+        values: [1],
+        comment: 'This is a comment'
+    },
+    {
+        name: 'Serie 1',
+        values: [1],
+        comment: 'This is a comment'
+    },
+    {
         name: 'Serie 2',
-        values: [0]
+        values: [1]
     },
     {
         name: 'Serie 3',
-        values: [0],
+        values: [2],
         comment: "This is another comment that is quite long to see how it fits on the chart and to see if it's nit overflowing."
     },
     // {
@@ -154,6 +169,9 @@ const model = ref([
     { key: 'style.chart.legend.bold', def: false, type: 'checkbox', label: 'bold', category: 'legend' },
     { key: 'style.chart.legend.roundingValue', def: 0, type: 'number', min: 0, max: 6, label: ['rounding', 'is', 'value'], category: 'legend' },
     { key: 'style.chart.legend.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'legend' },
+    { key: 'style.chart.legend.showPercentage', def: true, type: 'checkbox'},
+    { key: 'style.chart.legend.showValue', def: true, type: 'checkbox'},
+
     { key: 'style.chart.title.text', def: 'Title', type: 'text', label: 'textContent', category: 'title' },
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'title' },
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 6, max: 48, label: 'fontSize', category: 'title' },
@@ -334,6 +352,13 @@ function toggleLabels() {
     localDonut.value.toggleLabels();
     localVdui.value.toggleLabels();
 }
+
+onMounted(async () => {
+    if (localDonut.value) {
+        const img = await localDonut.value.getImage()
+        console.log(img)
+    }
+})
 
 </script>
 

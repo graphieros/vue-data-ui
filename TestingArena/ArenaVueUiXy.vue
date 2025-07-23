@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiXy from '../src/components/vue-ui-xy.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -584,7 +584,7 @@ const model = ref([
     { key: 'chart.userOptions.print.allowTaint', def: true, type: 'checkbox' },
     { key: 'chart.userOptions.print.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'chart.userOptions.print.useCORS', def: true, type: 'checkbox' },
-    { key: 'chart.userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5 },
+    { key: 'chart.userOptions.print.scale', def: 4, type: 'number', min: 1, max: 5 },
     
 ]);
 
@@ -767,14 +767,14 @@ const config = computed(() => {
                 userOptions: {
                     ...c.chart.userOptions,
                     callbacks: {
-                        img: (b64) => {
-                            console.log(b64)
+                        img: ({ domElement, imageUri, base64}) => {
+                            console.log(imageUri)
                         },
                         csv: (xls) => {
                             console.log(xls)
                         },
-                        pdf: (chart) => {
-                            console.log(chart)
+                        pdf: ({ domElement, imageUri, base64}) => {
+                            console.log(imageUri)
                         }
                     },
                     print: {
@@ -888,6 +888,15 @@ function selectX(selectedX) {
 function selectTimeLabel(data) {
     console.log(data)
 }
+
+onMounted(async () => {
+    if(vduiLocal.value) {
+        const data = await vduiLocal.value.getData()
+        console.log(data)
+        const img = await vduiLocal.value.getImage({ scale: 4 });
+        console.log(img)
+    }
+})
 
 </script>
 
@@ -1028,7 +1037,7 @@ function selectTimeLabel(data) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
+            <LocalVueDataUi  component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
                 <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">

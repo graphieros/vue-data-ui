@@ -26,6 +26,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -767,8 +768,24 @@ const legendConfig = computed(() => ({
     fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? "bold" : "normal",
 }));
 
+async function getImage({ scale = 2} = {}) {
+    if (!flowChart.value) return;
+    const { width, height } = flowChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img(({ domElement: flowChart.value, base64: true, img: true, scale}))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
 defineExpose({
     getData,
+    getImage,
     generateCsv,
     generateImage,
     generatePdf,
@@ -777,6 +794,7 @@ defineExpose({
     toggleTooltip,
     drillCategory,
     unselectNode,
+    toggleFullscreen,
 });
 </script>
 
@@ -817,7 +835,9 @@ defineExpose({
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="flowChart"
-            :position="FINAL_CONFIG.userOptions.position" :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :position="FINAL_CONFIG.userOptions.position" 
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :isAnnotation="isAnnotator" :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show &&
                 FINAL_CONFIG.userOptions.buttons.tooltip
                 " :isTooltip="mutableConfig.showTooltip" @toggleTooltip="toggleTooltip" @toggleFullscreen="toggleFullscreen"

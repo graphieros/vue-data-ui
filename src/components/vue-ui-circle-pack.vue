@@ -28,6 +28,7 @@ import { throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import img from '../img';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -444,13 +445,30 @@ function getData() {
     return formattedDataset.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!circlePackChart.value) return;
+    const { width, height } = circlePackChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img(({ domElement: circlePackChart.value, base64: true, img: true, scale}))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
 defineExpose({
     getData,
+    getImage,
     generateCsv,
     generatePdf,
     generateImage,
     toggleTable,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>
@@ -491,6 +509,7 @@ defineExpose({
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
             :chartElement="circlePackChart" :position="FINAL_CONFIG.userOptions.position" :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
             @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"

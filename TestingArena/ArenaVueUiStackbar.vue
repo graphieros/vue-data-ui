@@ -293,6 +293,14 @@ const step = ref(0);
 function selectTimeLabel(data) {
     console.log(data)
 }
+
+const local = ref(null)
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage();
+        console.log(img)
+    }
+})
     
 </script>
 
@@ -358,7 +366,7 @@ function selectTimeLabel(data) {
     <template #title>VueUiStackbar</template>
 
     <template #local>
-        <LocalVueUiStackbar :dataset="dataset" :config="config" :key="`local_${step}`">
+        <LocalVueUiStackbar :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
             <!-- <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                 <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
                     <text

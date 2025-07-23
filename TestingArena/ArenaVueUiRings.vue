@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiRings from '../src/components/vue-ui-rings.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -100,6 +100,9 @@ const model = ref([
     { key: 'style.chart.legend.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.legend.roundingValue', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.legend.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.legend.showValue', def: true, type: 'checkbox' },
+    { key: 'style.chart.legend.showPercentage', def: false, type: 'checkbox' },
+
     { key: 'style.chart.title.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 48 },
@@ -202,6 +205,13 @@ const config = computed(() => {
 function selectLegend(legend) {
     console.log({legend})
 }
+
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage();
+        console.log(img)
+    }
+})
 
 const step = ref(0)
 

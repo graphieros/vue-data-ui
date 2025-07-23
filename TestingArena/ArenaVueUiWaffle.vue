@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiWaffle from '../src/components/vue-ui-waffle.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -135,7 +135,10 @@ const model = ref([
     { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
     { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' }
+    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
+
+    { key: 'style.chart.legend.showValue', def: true, type: 'checkbox'},
+    { key: 'style.chart.legend.showPercentage', def: false, type: 'checkbox'},
 ])
 
 const testCustomTooltip = ref(false);
@@ -206,6 +209,14 @@ const step = ref(0)
 function selectLegend(legend) {
     console.log({legend})
 }
+
+onMounted(async() => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>

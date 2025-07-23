@@ -9,6 +9,7 @@ import { useChartAccessibility } from '../useChartAccessibility';
 import { usePrinter } from '../usePrinter';
 import geo from "../geoProjections";
 import Shape from '../atoms/Shape.vue';
+import img from '../img.js';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -605,14 +606,31 @@ function getData() {
     return countries.value
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!worldChart.value) return;
+    const { width, height } = worldChart.value.getBoundingClientRect();
+    const aspectRatio = width / height; 
+    const { imageUri, base64 } = await img(({ domElement: worldChart.value, base64: true, img: true, scale }))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 })
 
 </script>
@@ -653,6 +671,7 @@ defineExpose({
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="false" :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
             :chartElement="worldChart" :position="FINAL_CONFIG.userOptions.position"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
             @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"

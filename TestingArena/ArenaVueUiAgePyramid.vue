@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiAgePyramid from '../src/components/vue-ui-age-pyramid.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -203,6 +203,13 @@ function toggleTable() {
     local.value.toggleTable();
     build.value.toggleTable();
 }
+
+onMounted(async () => {
+    if (build.value) {
+        const img = await build.value.getImage();
+        console.log(img)
+    }
+})
 
 </script>
 

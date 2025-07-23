@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiCandlestick from '../src/components/vue-ui-candlestick.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -234,6 +234,13 @@ const config = computed(() => {
 const step = ref(0)
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
+
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage();
+        console.log(img)
+    }
+})
 
 </script>
 

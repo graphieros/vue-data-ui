@@ -25,6 +25,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import img from "../img";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
@@ -467,13 +468,35 @@ function selectDatapoint(cell) {
     emit('selectDatapoint', cell);
 }
 
+function getData() {
+    return mutableDataset.value
+}
+
+async function getImage({ scale = 2} = {}) {
+    if (!heatmapChart.value) return;
+    const { width, height } = heatmapChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img(({ domElement: heatmapChart.value, base64: true, img: true, scale}))
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
 defineExpose({
+    getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>
@@ -536,6 +559,7 @@ defineExpose({
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
