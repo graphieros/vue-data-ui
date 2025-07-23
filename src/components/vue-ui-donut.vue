@@ -823,7 +823,17 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const G = ref(null);
+
+function autoSize() {
+    if (!G.value) return;
+    const { x, y, width, height } = G.value.getBBox();
+    if (!svgRef.value) return;
+    svgRef.value.setAttribute('viewBox', `${x} ${y} ${width + Math.min(0, x)} ${height + Math.min(0, y)}`);
+}
+
 defineExpose({
+    autoSize,
     getData,
     getImage,
     generatePdf,
@@ -916,425 +926,428 @@ defineExpose({
         </UserOptions>
 
         <svg ref="svgRef" :xmlns="XMLNS" v-if="isDataset"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-svg': true }"
             data-cy="donut-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};${padding.css}`">
-            <PackageVersion />
 
-            <!-- BACKGROUND SLOT -->
-            <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="svg.width <= 0 ? 10 : svg.width"
-                :height="svg.height <= 0 ? 10 : svg.height" :style="{
-                    pointerEvents: 'none'
-                }">
-                <slot name="chart-background" />
-            </foreignObject>
-
-            <!-- DEFS -->
-            <defs v-if="FINAL_CONFIG.type === 'classic' && !isNaN(donutThickness / minSize)">
-                <radialGradient :id="`gradient_${uid}`" v-if="FINAL_CONFIG.style.chart.useGradient">
-                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"
-                        stop-opacity="0" />
-                    <stop :offset="`${(1 - (donutThickness / minSize)) * 100}%`" :stop-color="setOpacity('#FFFFFF', 0)"
-                        stop-opacity="0" />
-                    <stop :offset="`${(1 - (donutThickness / minSize / 2)) * 100}%`"
-                        :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.gradientIntensity)" />
-                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"
-                        stop-opacity="0" />
-                </radialGradient>
-            </defs>
-
-            <defs v-if="FINAL_CONFIG.type === 'polar'">
-                <radialGradient v-for="(area, i) in polarAreas" :id="`polar_gradient_${i}_${uid}`"
-                    :cx="(isNaN(area.middlePoint.x / svg.width * 100) ? 0  : area.middlePoint.x / svg.width * 100) + '%'"
-                    :cy="(isNaN(area.middlePoint.y / svg.height * 100) ? 0 : area.middlePoint.y / svg.height * 100) + '%'" r="62%">
-                    <stop offset="0%" :stop-color="shiftHue(currentDonut[i].color, 0.05)"
-                        :stop-opacity="FINAL_CONFIG.style.chart.gradientIntensity / 100" />
-                    <stop offset="100%" :stop-color="currentDonut[i].color" />
-                </radialGradient>
-            </defs>
-
-            <!-- LABEL CONNECTOR -->
-            <defs>
-                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
-                    <feColorMatrix type="saturate" values="0" />
-                </filter>
-
-                <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
-                    <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5"
-                        :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
-                </filter>
-                <filter :id="`drop_shadow_${uid}`" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%"
-                    height="200%">
-                    <feDropShadow dx="0" dy="0" stdDeviation="3" flood-opacity="1"
-                        :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
-                </filter>
-            </defs>
-
-            <template v-if="FINAL_CONFIG.type === 'classic'">
-                <g v-for="(arc, i) in currentDonut.filter(el => !el.ghost)">
-                    <path data-cy="donut-arc" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                        :d="calcNutArrowPath(arc, { x: svg.width / 2, y: svg.height / 2 }, 16, 16, false, false, donutThickness, 12, FINAL_CONFIG.style.chart.layout.curvedMarkers)"
-                        :stroke="arc.color" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="none"
-                        :filter="getBlurFilter(i)" />
-                </g>
-            </template>
-            <template v-if="FINAL_CONFIG.type === 'polar'">
-                <g v-for="(arc, i) in currentDonut.filter(el => !el.ghost)">
-                    <path 
-                        data-cy="polar-datapoint" 
-                        v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                        :d="`M ${offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).x},${offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).y} ${polarAreas[i].middlePoint.x},${polarAreas[i].middlePoint.y}`" 
-                        :stroke="arc.color"
-                        stroke-width="1" 
-                        stroke-linecap="round" 
-                        stroke-linejoin="round" 
-                        fill="none"
-                        :filter="getBlurFilter(i)"
-                        :style="{
-                            transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
-                        }"
-                    />
-                </g>
-            </template>
-
-            <circle data-cy="donut-shadow"
-                v-if="FINAL_CONFIG.type === 'classic' && FINAL_CONFIG.style.chart.layout.donut.useShadow"
-                :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize <= 0 ? 10 : minSize"
-                :fill="FINAL_CONFIG.style.chart.backgroundColor" :filter="`url(#shadow_${uid})`" />
-
-            <g v-if="$slots.pattern">
-                <defs v-for="(arc, i) in dataset" :key="`pattern-${arc.patternIndex}`">
-                    <slot name="pattern" v-bind="{ seriesIndex: i, patternId: `pattern_${uid}_${i}`}" />
+            <g ref="G" class="vue-data-ui-g">
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="svg.width <= 0 ? 10 : svg.width"
+                    :height="svg.height <= 0 ? 10 : svg.height" :style="{
+                        pointerEvents: 'none'
+                    }">
+                    <slot name="chart-background" />
+                </foreignObject>
+    
+                <!-- DEFS -->
+                <defs v-if="FINAL_CONFIG.type === 'classic' && !isNaN(donutThickness / minSize)">
+                    <radialGradient :id="`gradient_${uid}`" v-if="FINAL_CONFIG.style.chart.useGradient">
+                        <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"
+                            stop-opacity="0" />
+                        <stop :offset="`${(1 - (donutThickness / minSize)) * 100}%`" :stop-color="setOpacity('#FFFFFF', 0)"
+                            stop-opacity="0" />
+                        <stop :offset="`${(1 - (donutThickness / minSize / 2)) * 100}%`"
+                            :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.gradientIntensity)" />
+                        <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"
+                            stop-opacity="0" />
+                    </radialGradient>
                 </defs>
-            </g>
-            
-            <template v-if="total && FINAL_CONFIG.type === 'classic'">
-                <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    :d="arc.arcSlice" fill="#FFFFFF" />
-
-                    <path 
-                        v-for="(arc, i) in noGhostDonut" 
-                        class="vue-ui-donut-arc-path" 
-                        :data-cy="`donut-arc-${i}`"
-                        :d="arc.arcSlice" 
-                        :fill="arc.color"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" 
-                        :filter="getBlurFilter(i)" 
-                    />
-
-                <g v-if="$slots.pattern">
-                    <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
-                        :data-cy="`donut-arc-pattern-${arc.patternIndex}`" :d="arc.arcSlice"
-                        :fill="`url(#${arc.pattern})`"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)" />
-                </g>
-            </template>
-
-            <template v-if="total && FINAL_CONFIG.type === 'polar'">
-                <g v-if="currentDonut.length > 1">
-                    <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :d="polarAreas[i].path" fill="#FFFFFF" 
-                        :style="{
-                            transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
-                        }"
-                    />
-                    <g v-if="FINAL_CONFIG.style.chart.layout.donut.useShadow">
-                        <path data-cy="polar-shadow" v-for="(_arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
-                            :d="polarAreas[i].path" :fill="'transparent'"
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
-                            :filter="`url(#drop_shadow_${uid})`" 
-                            :style="{
-                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
-                            }"
-                        />
+    
+                <defs v-if="FINAL_CONFIG.type === 'polar'">
+                    <radialGradient v-for="(area, i) in polarAreas" :id="`polar_gradient_${i}_${uid}`"
+                        :cx="(isNaN(area.middlePoint.x / svg.width * 100) ? 0  : area.middlePoint.x / svg.width * 100) + '%'"
+                        :cy="(isNaN(area.middlePoint.y / svg.height * 100) ? 0 : area.middlePoint.y / svg.height * 100) + '%'" r="62%">
+                        <stop offset="0%" :stop-color="shiftHue(currentDonut[i].color, 0.05)"
+                            :stop-opacity="FINAL_CONFIG.style.chart.gradientIntensity / 100" />
+                        <stop offset="100%" :stop-color="currentDonut[i].color" />
+                    </radialGradient>
+                </defs>
+    
+                <!-- LABEL CONNECTOR -->
+                <defs>
+                    <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" :stdDeviation="2" :id="`blur_std_${uid}`" />
+                        <feColorMatrix type="saturate" values="0" />
+                    </filter>
+    
+                    <filter :id="`shadow_${uid}`" color-interpolation-filters="sRGB">
+                        <feDropShadow dx="0" dy="0" stdDeviation="10" flood-opacity="0.5"
+                            :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
+                    </filter>
+                    <filter :id="`drop_shadow_${uid}`" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%"
+                        height="200%">
+                        <feDropShadow dx="0" dy="0" stdDeviation="3" flood-opacity="1"
+                            :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
+                    </filter>
+                </defs>
+    
+                <template v-if="FINAL_CONFIG.type === 'classic'">
+                    <g v-for="(arc, i) in currentDonut.filter(el => !el.ghost)">
+                        <path data-cy="donut-arc" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                            :d="calcNutArrowPath(arc, { x: svg.width / 2, y: svg.height / 2 }, 16, 16, false, false, donutThickness, 12, FINAL_CONFIG.style.chart.layout.curvedMarkers)"
+                            :stroke="arc.color" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" fill="none"
+                            :filter="getBlurFilter(i)" />
                     </g>
-
-                    <g v-if="$slots.pattern">
-                        <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
-                            :data-cy="`polar-arc-${arc.patternIndex}`" :d="polarAreas[i].path"
-                            :fill="`url(#${arc.pattern})`"
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                </template>
+                <template v-if="FINAL_CONFIG.type === 'polar'">
+                    <g v-for="(arc, i) in currentDonut.filter(el => !el.ghost)">
+                        <path 
+                            data-cy="polar-datapoint" 
+                            v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                            :d="`M ${offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).x},${offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).y} ${polarAreas[i].middlePoint.x},${polarAreas[i].middlePoint.y}`" 
+                            :stroke="arc.color"
+                            stroke-width="1" 
+                            stroke-linecap="round" 
+                            stroke-linejoin="round" 
+                            fill="none"
                             :filter="getBlurFilter(i)"
                             :style="{
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
+                            }"
+                        />
+                    </g>
+                </template>
+    
+                <circle data-cy="donut-shadow"
+                    v-if="FINAL_CONFIG.type === 'classic' && FINAL_CONFIG.style.chart.layout.donut.useShadow"
+                    :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize <= 0 ? 10 : minSize"
+                    :fill="FINAL_CONFIG.style.chart.backgroundColor" :filter="`url(#shadow_${uid})`" />
+    
+                <g v-if="$slots.pattern">
+                    <defs v-for="(arc, i) in dataset" :key="`pattern-${arc.patternIndex}`">
+                        <slot name="pattern" v-bind="{ seriesIndex: i, patternId: `pattern_${uid}_${i}`}" />
+                    </defs>
+                </g>
+                
+                <template v-if="total && FINAL_CONFIG.type === 'classic'">
+                    <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :d="arc.arcSlice" fill="#FFFFFF" />
+    
+                        <path 
+                            v-for="(arc, i) in noGhostDonut" 
+                            class="vue-ui-donut-arc-path" 
+                            :data-cy="`donut-arc-${i}`"
+                            :d="arc.arcSlice" 
+                            :fill="arc.color"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" 
+                            :filter="getBlurFilter(i)" 
+                        />
+    
+                    <g v-if="$slots.pattern">
+                        <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
+                            :data-cy="`donut-arc-pattern-${arc.patternIndex}`" :d="arc.arcSlice"
+                            :fill="`url(#${arc.pattern})`"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)" />
+                    </g>
+                </template>
+    
+                <template v-if="total && FINAL_CONFIG.type === 'polar'">
+                    <g v-if="currentDonut.length > 1">
+                        <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :d="polarAreas[i].path" fill="#FFFFFF" 
+                            :style="{
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                            }"
+                        />
+                        <g v-if="FINAL_CONFIG.style.chart.layout.donut.useShadow">
+                            <path data-cy="polar-shadow" v-for="(_arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
+                                :d="polarAreas[i].path" :fill="'transparent'"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                                :filter="`url(#drop_shadow_${uid})`" 
+                                :style="{
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                }"
+                            />
+                        </g>
+    
+                        <g v-if="$slots.pattern">
+                            <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
+                                :data-cy="`polar-arc-${arc.patternIndex}`" :d="polarAreas[i].path"
+                                :fill="`url(#${arc.pattern})`"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
+                                :filter="getBlurFilter(i)"
+                                :style="{
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                }"
+                            />
+                        </g>
+                        <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path" :data-cy="`donut-arc-${i}`"
+                            :d="polarAreas[i].path"
+                            :fill="FINAL_CONFIG.style.chart.useGradient ? `url(#polar_gradient_${i}_${uid})` : arc.color"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)"
+                            :style="{
                                 transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
                             }"
                         />
                     </g>
-                    <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path" :data-cy="`donut-arc-${i}`"
-                        :d="polarAreas[i].path"
-                        :fill="FINAL_CONFIG.style.chart.useGradient ? `url(#polar_gradient_${i}_${uid})` : arc.color"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)"
-                        :style="{
-                            transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
-                        }"
-                    />
-                </g>
-                <g v-else>
-                    <circle v-if="$slots.pattern" :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize"
-                        :fill="`url(#pattern_${uid}_${currentDonut[0].patternIndex})`"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" />
-                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize"
-                        :fill="FINAL_CONFIG.style.chart.useGradient ? `url(#polar_gradient_${0}_${uid})` : currentDonut[0].color"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" />
-                </g>
-            </template>
-
-            <template v-else>
-                <!-- EMPTY SKELETON -->
-                <g v-if="FINAL_CONFIG.type === 'classic' && !hasData">
-                    <path 
-                        v-for="(arc, i) in emptySkeleton" 
-                        class="vue-ui-donut-arc-path" 
-                        :data-cy="`empty-skeleton-${i}`"
-                        :d="arc.arcSlice" 
-                        :fill="arc.color"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" 
-                    />
-                </g>
-                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize <= 0 ? 10 : minSize" fill="transparent"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor" />
-            </template>
-
-            <!-- HOLLOW -->
-            <circle data-cy="donut-gradient-hollow"
-                v-if="FINAL_CONFIG.style.chart.useGradient && FINAL_CONFIG.type === 'classic'" :cx="svg.width / 2"
-                :cy="svg.height / 2" :r="/* This might require adjustments */minSize <= 0 ? 10 : minSize"
-                :fill="`url(#gradient_${uid})`"
-            />
-
-            <!-- TOOLTIP TRAPS -->
-            <template v-if="total">
-                <g v-if="currentDonut.length > 1 || FINAL_CONFIG.type === 'classic'">
-                    <path data-cy="tooltip-trap" v-for="(arc, i) in currentDonut.filter(el => !el.ghost)"
-                        :d="FINAL_CONFIG.type === 'classic' ? arc.arcSlice : polarAreas[i].path"
-                        :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" @mouseenter="useTooltip({
-                            datapoint: arc,
-                            relativeIndex: i,
-                            seriesIndex: arc.seriesIndex,
-                            show: true
-                        })" @mouseleave="isTooltip = false; selectedSerie = null" @click="selectDatapoint(arc, i)" />
-                </g>
-                <g v-else>
-                    <circle data-cy="tooltip-trap" :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize"
-                        :fill="'transparent'" @mouseenter="useTooltip({
-                            datapoint: currentDonut[0],
-                            relativeIndex: 0,
-                            seriesIndex: currentDonut[0].seriesIndex,
-                            show: true
-                        })" @mouseleave="isTooltip = false; selectedSerie = null"
-                        @click="selectDatapoint(currentDonut[0], i)" />
-                </g>
-            </template>
-
-            <!-- HOLLOW LABELS (Classic donut only )-->
-            <template v-if="FINAL_CONFIG.type === 'classic'">
-                <text data-cy="hollow-total-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
-                    text-anchor="middle" :x="svg.width / 2"
-                    :y="svg.height / 2 - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.offsetY"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize"
-                    :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.bold ? 'bold' : ''}`">
-                    {{ FINAL_CONFIG.style.chart.layout.labels.hollow.total.text }}
-                </text>
-                <text data-cy="hollow-total-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
-                    text-anchor="middle" :x="svg.width / 2"
-                    :y="svg.height / 2 + FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.offsetY"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.fontSize"
-                    :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.bold ? 'bold' : ''}`">
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.formatter,
-                        total,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix,
-                            v: total,
-                            s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
-                        }))
-                    }}
-                </text>
-
-                <text data-cy="hollow-average-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
-                    text-anchor="middle" :x="svg.width / 2"
-                    :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.offsetY"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize"
-                    :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.bold ? 'bold' : ''}`">
-                    {{ FINAL_CONFIG.style.chart.layout.labels.hollow.average.text }}
-                </text>
-                <text data-cy="hollow-average-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
-                    text-anchor="middle" :x="svg.width / 2"
-                    :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize + FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.offsetY"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.fontSize"
-                    :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.bold ? 'bold' : ''}`">
-                    {{ isAnimating || isFirstLoad ? '--' : applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.formatter,
-                        average,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
-                            v: average,
-                            s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
-                            r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
-                        }))
-                    }}
-                </text>
-            </template>
-
-            <!-- DATALABELS -->
-            <g v-for="(arc, i) in noGhostDonut.filter(el => !el.ghost)" :filter="getBlurFilter(i)"
-                :class="{ 'animated': FINAL_CONFIG.useCssAnimation }">
-                <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useLabelSlots">
-                    <foreignObject
-                        :x="calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - 120 : calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - 60 : calcMarkerOffsetX(arc).x"
-                        :y="calcMarkerOffsetY(arc) - (isSafari ? 20 : 0)" width="120" height="60"
-                        style="overflow: visible;">
-                        <div>
-                            <slot name="dataLabel" v-bind="{
-                                datapoint: arc,
-                                isBlur: !FINAL_CONFIG.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i,
-                                isSafari: isSafari,
-                                isVisible: isArcBigEnough(arc) && mutableConfig.dataLabels.show,
-                                textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor,
-                                flexAlign: calcMarkerOffsetX(arc, true, 16).anchor,
-                                percentage: displayArcPercentage(arc, noGhostDonut),
-                            }" />
-                        </div>
-                    </foreignObject>
-                </g>
-
-                <g v-else>
-                    <template v-if="FINAL_CONFIG.type === 'classic'">
-                        <circle data-cy="donut-label-marker" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                            :cx="calcMarkerOffsetX(arc).x" :cy="calcMarkerOffsetY(arc) - 3.5" :fill="arc.color"
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="1" :r="3"
-                            :filter="!FINAL_CONFIG.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? `` : `url(#blur_${uid})`"
-                            @click="selectDatapoint(arc, i)" />
-                    </template>
-                    <template v-if="FINAL_CONFIG.type === 'polar'">
-                        <circle data-cy="polar-label-marker" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                            :cx="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
-                            :cy="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).y"
-                            :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="1"
-                            :r="3"
-                            :filter="!FINAL_CONFIG.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? `` : `url(#blur_${uid})`"
-                            @click="selectDatapoint(arc, i)" 
-                            :style="{
-                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
-                            }"
+                    <g v-else>
+                        <circle v-if="$slots.pattern" :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize"
+                            :fill="`url(#pattern_${uid}_${currentDonut[0].patternIndex})`"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" />
+                        <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize"
+                            :fill="FINAL_CONFIG.style.chart.useGradient ? `url(#polar_gradient_${0}_${uid})` : currentDonut[0].color"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" />
+                    </g>
+                </template>
+    
+                <template v-else>
+                    <!-- EMPTY SKELETON -->
+                    <g v-if="FINAL_CONFIG.type === 'classic' && !hasData">
+                        <path 
+                            v-for="(arc, i) in emptySkeleton" 
+                            class="vue-ui-donut-arc-path" 
+                            :data-cy="`empty-skeleton-${i}`"
+                            :d="arc.arcSlice" 
+                            :fill="arc.color"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" 
                         />
-                    </template>
-                    <template v-if="FINAL_CONFIG.type === 'classic'">
-                        <text data-cy="donut-label-value" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                            :text-anchor="calcMarkerOffsetX(arc, true, 12).anchor"
-                            :x="calcMarkerOffsetX(arc, true, 12).x" :y="calcMarkerOffsetY(arc)"
-                            :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold' : ''}`"
-                            @click="selectDatapoint(arc, i)">
-                            {{ displayArcPercentage(arc, noGhostDonut) }} {{
-                                FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${applyDataLabel(
-                                    FINAL_CONFIG.style.chart.layout.labels.value.formatter,
-                                    arc.value,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
-                                        v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                        r: FINAL_CONFIG.style.chart.layout.labels.value.rounding
-                                    }),
-                                    { datapoint: arc }
-                                )})` : '' }}
-                        </text>
-                        <text data-cy="donut-label-name"
-                            v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
-                            :text-anchor="calcMarkerOffsetX(arc).anchor" :x="calcMarkerOffsetX(arc, true, 12).x"
-                            :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize"
-                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold' : ''}`"
-                            @click="selectDatapoint(arc, i)">
-                            {{ arc.name }}
-                        </text>
-                    </template>
-                    <template v-if="FINAL_CONFIG.type === 'polar'">
-                        <text data-cy="polar-label-value" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
-                            :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
-                            :x="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
-                            :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y"
-                            :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                    </g>
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize <= 0 ? 10 : minSize" fill="transparent"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor" />
+                </template>
+    
+                <!-- HOLLOW -->
+                <circle data-cy="donut-gradient-hollow"
+                    v-if="FINAL_CONFIG.style.chart.useGradient && FINAL_CONFIG.type === 'classic'" :cx="svg.width / 2"
+                    :cy="svg.height / 2" :r="/* This might require adjustments */minSize <= 0 ? 10 : minSize"
+                    :fill="`url(#gradient_${uid})`"
+                />
+    
+                <!-- TOOLTIP TRAPS -->
+                <template v-if="total">
+                    <g v-if="currentDonut.length > 1 || FINAL_CONFIG.type === 'classic'">
+                        <path data-cy="tooltip-trap" v-for="(arc, i) in currentDonut.filter(el => !el.ghost)"
+                            :d="FINAL_CONFIG.type === 'classic' ? arc.arcSlice : polarAreas[i].path"
+                            :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" @mouseenter="useTooltip({
+                                datapoint: arc,
+                                relativeIndex: i,
+                                seriesIndex: arc.seriesIndex,
+                                show: true
+                            })" @mouseleave="isTooltip = false; selectedSerie = null" @click="selectDatapoint(arc, i)" />
+                    </g>
+                    <g v-else>
+                        <circle data-cy="tooltip-trap" :cx="svg.width / 2" :cy="svg.height / 2" :r="minSize"
+                            :fill="'transparent'" @mouseenter="useTooltip({
+                                datapoint: currentDonut[0],
+                                relativeIndex: 0,
+                                seriesIndex: currentDonut[0].seriesIndex,
+                                show: true
+                            })" @mouseleave="isTooltip = false; selectedSerie = null"
+                            @click="selectDatapoint(currentDonut[0], i)" />
+                    </g>
+                </template>
+    
+                <!-- HOLLOW LABELS (Classic donut only )-->
+                <template v-if="FINAL_CONFIG.type === 'classic'">
+                    <text data-cy="hollow-total-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
+                        text-anchor="middle" :x="svg.width / 2"
+                        :y="svg.height / 2 - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.offsetY"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.bold ? 'bold' : ''}`">
+                        {{ FINAL_CONFIG.style.chart.layout.labels.hollow.total.text }}
+                    </text>
+                    <text data-cy="hollow-total-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
+                        text-anchor="middle" :x="svg.width / 2"
+                        :y="svg.height / 2 + FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.offsetY"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.bold ? 'bold' : ''}`">
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.formatter,
+                            total,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix,
+                                v: total,
+                                s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
+                            }))
+                        }}
+                    </text>
+    
+                    <text data-cy="hollow-average-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
+                        text-anchor="middle" :x="svg.width / 2"
+                        :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.offsetY"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.bold ? 'bold' : ''}`">
+                        {{ FINAL_CONFIG.style.chart.layout.labels.hollow.average.text }}
+                    </text>
+                    <text data-cy="hollow-average-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
+                        text-anchor="middle" :x="svg.width / 2"
+                        :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize + FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.offsetY"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.bold ? 'bold' : ''}`">
+                        {{ isAnimating || isFirstLoad ? '--' : applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.formatter,
+                            average,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
+                                v: average,
+                                s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
+                            }))
+                        }}
+                    </text>
+                </template>
+    
+                <!-- DATALABELS -->
+                <g v-for="(arc, i) in noGhostDonut.filter(el => !el.ghost)" :filter="getBlurFilter(i)"
+                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }">
+                    <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useLabelSlots">
+                        <foreignObject
+                            :x="calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - 120 : calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - 60 : calcMarkerOffsetX(arc).x"
+                            :y="calcMarkerOffsetY(arc) - (isSafari ? 20 : 0)" width="120" height="60"
+                            style="overflow: visible;">
+                            <div>
+                                <slot name="dataLabel" v-bind="{
+                                    datapoint: arc,
+                                    isBlur: !FINAL_CONFIG.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i,
+                                    isSafari: isSafari,
+                                    isVisible: isArcBigEnough(arc) && mutableConfig.dataLabels.show,
+                                    textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor,
+                                    flexAlign: calcMarkerOffsetX(arc, true, 16).anchor,
+                                    percentage: displayArcPercentage(arc, noGhostDonut),
+                                }" />
+                            </div>
+                        </foreignObject>
+                    </g>
+    
+                    <g v-else>
+                        <template v-if="FINAL_CONFIG.type === 'classic'">
+                            <circle data-cy="donut-label-marker" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                                :cx="calcMarkerOffsetX(arc).x" :cy="calcMarkerOffsetY(arc) - 3.5" :fill="arc.color"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="1" :r="3"
+                                :filter="!FINAL_CONFIG.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? `` : `url(#blur_${uid})`"
+                                @click="selectDatapoint(arc, i)" />
+                        </template>
+                        <template v-if="FINAL_CONFIG.type === 'polar'">
+                            <circle data-cy="polar-label-marker" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                                :cx="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
+                                :cy="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 24, centerX: svg.width / 2, centerY: svg.height / 2 }).y"
+                                :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="1"
+                                :r="3"
+                                :filter="!FINAL_CONFIG.useBlurOnHover || [null, undefined].includes(selectedSerie) || selectedSerie === i ? `` : `url(#blur_${uid})`"
+                                @click="selectDatapoint(arc, i)" 
+                                :style="{
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                }"
+                            />
+                        </template>
+                        <template v-if="FINAL_CONFIG.type === 'classic'">
+                            <text data-cy="donut-label-value" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                                :text-anchor="calcMarkerOffsetX(arc, true, 12).anchor"
+                                :x="calcMarkerOffsetX(arc, true, 12).x" :y="calcMarkerOffsetY(arc)"
+                                :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold' : ''}`"
+                                @click="selectDatapoint(arc, i)">
+                                {{ displayArcPercentage(arc, noGhostDonut) }} {{
+                                    FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${applyDataLabel(
+                                        FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                                        arc.value,
+                                        dataLabel({
+                                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                            v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                            r: FINAL_CONFIG.style.chart.layout.labels.value.rounding
+                                        }),
+                                        { datapoint: arc }
+                                    )})` : '' }}
+                            </text>
+                            <text data-cy="donut-label-name"
+                                v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
+                                :text-anchor="calcMarkerOffsetX(arc).anchor" :x="calcMarkerOffsetX(arc, true, 12).x"
+                                :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize"
+                                :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold' : ''}`"
+                                @click="selectDatapoint(arc, i)">
+                                {{ arc.name }}
+                            </text>
+                        </template>
+                        <template v-if="FINAL_CONFIG.type === 'polar'">
+                            <text data-cy="polar-label-value" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                                :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
+                                :x="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
+                                :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y"
+                                :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :style="{
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
+                                    fontWeight: FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold': 'normal'
+                                }"
+                                @click="selectDatapoint(arc, i)">
+                                {{ displayArcPercentage(arc, noGhostDonut) }} {{
+                                    FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${applyDataLabel(
+                                        FINAL_CONFIG.style.chart.layout.labels.value.formatter,
+                                        arc.value,
+                                        dataLabel({
+                                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                            v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                            r: FINAL_CONFIG.style.chart.layout.labels.value.rounding
+                                        }),
+                                        { datapoint: arc }
+                                    )})` : '' }}
+                            </text>
+                            <text data-cy="polar-label-name"
+                                v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
+                                :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
+                                :x="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
+                                :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize"
+                                :style="{
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
+                                    fontWeight: FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold': 'normal'
+                                }"
+                                @click="selectDatapoint(arc, i)">
+                                {{ arc.name }}
+                            </text>
+                        </template>
+                    </g>
+    
+                    <g v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.comments.show && arc.comment">
+                        <foreignObject v-if="isArcBigEnough(arc) && FINAL_CONFIG.type === 'classic'"
+                            :x="FINAL_CONFIG.style.chart.comments.offsetX + (calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - FINAL_CONFIG.style.chart.comments.width : calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - (FINAL_CONFIG.style.chart.comments.width / 2) : calcMarkerOffsetX(arc).x)"
+                            :y="calcMarkerOffsetY(arc) + 24 + FINAL_CONFIG.style.chart.comments.offsetY"
+                            :width="FINAL_CONFIG.style.chart.comments.width" height="200"
+                            style="overflow: visible; pointer-events: none">
+                            <div>
+                                <slot name="plot-comment"
+                                    :plot="{ ...arc, textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor, flexAlign: calcMarkerOffsetX(arc, true, 16).anchor, isFirstLoad }" />
+                            </div>
+                        </foreignObject>
+                        <foreignObject v-if="isArcBigEnough(arc) && FINAL_CONFIG.type === 'polar'"
+                            :x="FINAL_CONFIG.style.chart.comments.offsetX + (getPolarAnchor(polarAreas[i].middlePoint) === 'end' ? offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x - FINAL_CONFIG.style.chart.comments.width : getPolarAnchor(polarAreas[i].middlePoint) === 'middle' ? offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x - (FINAL_CONFIG.style.chart.comments.width / 2) : offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x)"
+                            :y="getPolarCommentY(polarAreas[i]) + FINAL_CONFIG.style.chart.comments.offsetY"
+                            :width="FINAL_CONFIG.style.chart.comments.width" height="200"
                             :style="{
-                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
-                                fontWeight: FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold': 'normal'
-                            }"
-                            @click="selectDatapoint(arc, i)">
-                            {{ displayArcPercentage(arc, noGhostDonut) }} {{
-                                FINAL_CONFIG.style.chart.layout.labels.value.show ? `(${applyDataLabel(
-                                    FINAL_CONFIG.style.chart.layout.labels.value.formatter,
-                                    arc.value,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
-                                        v: arc.value, s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                        r: FINAL_CONFIG.style.chart.layout.labels.value.rounding
-                                    }),
-                                    { datapoint: arc }
-                                )})` : '' }}
-                        </text>
-                        <text data-cy="polar-label-name"
-                            v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
-                            :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
-                            :x="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
-                            :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize"
-                            :style="{
-                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
-                                fontWeight: FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold': 'normal'
-                            }"
-                            @click="selectDatapoint(arc, i)">
-                            {{ arc.name }}
-                        </text>
-                    </template>
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
+                                    overflow: 'visible',
+                                    pointerEvents: 'none'
+                                }"
+                            >
+                            <div>
+                                <slot name="plot-comment"
+                                    :plot="{ ...arc, textAlign: getPolarAnchor(polarAreas[i].middlePoint), flexAlign: getPolarAnchor(polarAreas[i].middlePoint), isFirstLoad }" />
+                            </div>
+                        </foreignObject>
+    
+                    </g>
+    
                 </g>
-
-                <g v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.comments.show && arc.comment">
-                    <foreignObject v-if="isArcBigEnough(arc) && FINAL_CONFIG.type === 'classic'"
-                        :x="FINAL_CONFIG.style.chart.comments.offsetX + (calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - FINAL_CONFIG.style.chart.comments.width : calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - (FINAL_CONFIG.style.chart.comments.width / 2) : calcMarkerOffsetX(arc).x)"
-                        :y="calcMarkerOffsetY(arc) + 24 + FINAL_CONFIG.style.chart.comments.offsetY"
-                        :width="FINAL_CONFIG.style.chart.comments.width" height="200"
-                        style="overflow: visible; pointer-events: none">
-                        <div>
-                            <slot name="plot-comment"
-                                :plot="{ ...arc, textAlign: calcMarkerOffsetX(arc, true, 16, true).anchor, flexAlign: calcMarkerOffsetX(arc, true, 16).anchor, isFirstLoad }" />
-                        </div>
-                    </foreignObject>
-                    <foreignObject v-if="isArcBigEnough(arc) && FINAL_CONFIG.type === 'polar'"
-                        :x="FINAL_CONFIG.style.chart.comments.offsetX + (getPolarAnchor(polarAreas[i].middlePoint) === 'end' ? offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x - FINAL_CONFIG.style.chart.comments.width : getPolarAnchor(polarAreas[i].middlePoint) === 'middle' ? offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x - (FINAL_CONFIG.style.chart.comments.width / 2) : offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x)"
-                        :y="getPolarCommentY(polarAreas[i]) + FINAL_CONFIG.style.chart.comments.offsetY"
-                        :width="FINAL_CONFIG.style.chart.comments.width" height="200"
-                        :style="{
-                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
-                                overflow: 'visible',
-                                pointerEvents: 'none'
-                            }"
-                        >
-                        <div>
-                            <slot name="plot-comment"
-                                :plot="{ ...arc, textAlign: getPolarAnchor(polarAreas[i].middlePoint), flexAlign: getPolarAnchor(polarAreas[i].middlePoint), isFirstLoad }" />
-                        </div>
-                    </foreignObject>
-
-                </g>
-
+                <slot name="svg" :svg="svg" />
             </g>
-            <slot name="svg" :svg="svg" />
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">

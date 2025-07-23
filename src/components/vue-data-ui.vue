@@ -210,6 +210,7 @@ const toggleAnnotator = ref(() => null);
 const selectNode = ref(() => null);
 const selectGroup = ref(() => null);
 const selectRibbon = ref(() => null);
+const autoSize = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -301,6 +302,9 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.selectRibbon) {
             selectRibbon.value = newRef.selectRibbon;
         }
+        if (newRef.autoSize) {
+            autoSize.value = newRef.autoSize;
+        }
     }
 })
 
@@ -333,7 +337,8 @@ const getEventHandlers = () => {
         'toggleAnnotator',
         'selectNode',
         'selectGroup',
-        'selectRibbon'
+        'selectRibbon',
+        'autoSize'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -381,6 +386,7 @@ defineExpose({
         }
         return enqueue('getImage', [{ scale }]);
     },
+    autoSize,
     generatePdf,
     generateCsv,
     generateImage,

@@ -13,6 +13,21 @@ const dataset = ref([
         comment: 'This is a comment'
     },
     {
+        name: 'Serie  lorem ipsum thing',
+        values: [1],
+        comment: 'This is a comment'
+    },
+    {
+        name: 'Serie lorem other thing',
+        values: [1],
+        comment: 'This is a comment'
+    },
+    {
+        name: 'Serie 1',
+        values: [1],
+        comment: 'This is a comment'
+    },
+    {
         name: 'Serie 2',
         values: [1]
     },

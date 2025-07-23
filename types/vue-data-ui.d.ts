@@ -3482,6 +3482,7 @@ declare module "vue-data-ui" {
         toggleLabels(): void
         toggleTable(): void
         toggleTooltip(): void
+        autoSize():void
     }
 
     export const VueUiDonut: DefineComponent<
@@ -3676,6 +3677,7 @@ declare module "vue-data-ui" {
         toggleLabels(): void
         toggleTable(): void
         toggleTooltip(): void
+        autoSize():void
     }
 
     export const VueUiNestedDonuts: DefineComponent<
