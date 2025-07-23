@@ -535,9 +535,18 @@ function toggleAnnotator() {
 }
 
 async function getImage({ scale = 2} = {}) {
-    if (!chestnutChart.value) return
+    if (!chestnutChart.value) return;
+    const { width, height } = chestnutChart.value.getBoundingClientRect();
+    const aspectRatio = width / height; 
     const { imageUri, base64 } = await img(({ domElement: chestnutChart.value, base64: true, img: true, scale}))
-    return { imageUri, base64 }
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.layout.title.text,
+        width,
+        height,
+        aspectRatio
+    }
 }
 
 defineExpose({

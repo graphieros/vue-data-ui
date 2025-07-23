@@ -449,9 +449,18 @@ function toggleAnnotator() {
 }
 
 async function getImage({ scale = 2} = {}) {
-    if (!dumbbellChart.value) return
+    if (!dumbbellChart.value) return;
+    const { width, height } = dumbbellChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
     const { imageUri, base64 } = await img(({ domElement: dumbbellChart.value, base64: true, img: true, scale }))
-    return { imageUri, base64 }
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
 }
 
 defineExpose({

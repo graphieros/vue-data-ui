@@ -183,6 +183,14 @@ const config = computed(() => {
     }
 });
 
+const local = ref(null)
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage();
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>
@@ -206,7 +214,7 @@ const config = computed(() => {
         <template #title>VueUiRidgeline</template>
 
         <template #local>
-            <LocalVueUiRidgeLine :dataset="dataset" :config="config">
+            <LocalVueUiRidgeLine :dataset="dataset" :config="config" ref="local">
                 <!-- <template #pattern="{ seriesIndex, patternId }">
                     <pattern v-if="seriesIndex === 0" :id="patternId" width="70" height="8" patternTransform="scale(2)"
                     patternUnits="userSpaceOnUse" opacity="0.5">

@@ -135,7 +135,10 @@ const model = ref([
     { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
     { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' }
+    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
+
+    { key: 'style.chart.legend.showValue', def: true, type: 'checkbox'},
+    { key: 'style.chart.legend.showPercentage', def: false, type: 'checkbox'},
 ])
 
 const testCustomTooltip = ref(false);

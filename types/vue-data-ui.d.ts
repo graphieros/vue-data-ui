@@ -347,6 +347,15 @@ declare module "vue-data-ui" {
         plots?: TPlot;
     };
 
+    export type GetImagePromise = Promise<{
+        imageUri: string;
+        base64: string;
+        title: string;
+        width: number;
+        height: number;
+        aspectRatio: number;
+    }>
+
     export type VueUiTreemapDatasetItem = {
         name: string;
         value: number;
@@ -400,6 +409,8 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    showValue?: boolean;
+                    showPercentage?: boolean;
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -457,10 +468,7 @@ declare module "vue-data-ui" {
 
     export type VueUiTreemapExpose = {
         getData(): Promise<Array<VueUiTreemapDatapoint>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -554,6 +562,8 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    showValue?: boolean;
+                    showPercentage?: boolean;
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -613,10 +623,7 @@ declare module "vue-data-ui" {
             color: string,
             value: number
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -886,10 +893,7 @@ declare module "vue-data-ui" {
 
     export type VueUiMoleculeExpose = {
         getData(): Promise<Array<VueUiMoleculeDatapoint>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -1012,10 +1016,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUi3dBarExpose = {
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -1120,10 +1121,7 @@ declare module "vue-data-ui" {
             proportion: number
             value: number
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -1396,6 +1394,8 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     roundingPercentage?: number;
                     roundingValue?: number;
+                    showValue?: boolean;
+                    showPercentage?: boolean;
                 };
             };
         };
@@ -1429,10 +1429,7 @@ declare module "vue-data-ui" {
             uid: string
             values: Array<number | null>
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -1498,10 +1495,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiTiremarksExpose = {
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
         toggleAnnotator(): void
@@ -1569,10 +1563,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiWheelExpose = {
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
         toggleAnnotator(): void
@@ -1621,6 +1612,8 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    showValue?: boolean;
+                    showPercentage?: boolean;
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -1681,10 +1674,7 @@ declare module "vue-data-ui" {
             absoluteValues: number[]
             percentage: number
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -1948,10 +1938,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiThermometerExpose = {
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
         toggleAnnotator(): void
@@ -2022,10 +2009,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiRelationCircleExpose = {
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateImage(): void
         toggleAnnotator(): void
@@ -2367,10 +2351,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiAgePyramidExpose = {
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -2513,10 +2494,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiCandlestickExpose = {
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -2743,10 +2721,7 @@ declare module "vue-data-ui" {
 
     export type VueUiScatterExpose = {
         getData(): Promise<Array<VueUiScatterSeries>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -2906,10 +2881,7 @@ declare module "vue-data-ui" {
             }>
             values: Array<string | number>
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -3296,10 +3268,7 @@ declare module "vue-data-ui" {
 
     export type VueUiXyExpose = {
         getData(): Promise<Array<{ values: Array<number | null>, color: string, name: string, type: string }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -3425,6 +3394,8 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    showPercentage?: boolean;
+                    showValue?: boolean;
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -3502,10 +3473,7 @@ declare module "vue-data-ui" {
 
     export type VueUiDonutExpose = {
         getData(): Promise<Array<{ name: string, color: string, value: number | null }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -3594,6 +3562,8 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    showValue?: boolean;
+                    showPercentage?: boolean;
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -3697,10 +3667,7 @@ declare module "vue-data-ui" {
             }>
             total: number
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -3786,6 +3753,8 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    showValue?: boolean;
+                    showPercentage?: boolean;
                 };
             };
         };
@@ -3841,10 +3810,7 @@ declare module "vue-data-ui" {
             value: number
             proportion: number
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -4003,10 +3969,7 @@ declare module "vue-data-ui" {
             color: string
             proportion: number
         }>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -4199,10 +4162,7 @@ declare module "vue-data-ui" {
                 sideName: string
             }>
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -4326,10 +4286,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiGaugeExpose = {
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
         toggleAnnotator(): void
@@ -4545,10 +4502,7 @@ declare module "vue-data-ui" {
             total: number
             type: string
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -4701,10 +4655,7 @@ declare module "vue-data-ui" {
             targetPercentage: number
             value: number
         } & Record<string, any>>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -4879,10 +4830,7 @@ declare module "vue-data-ui" {
 
     export type VueUiVerticalBarExpose = {
         getData(): Promise<Array<VueUiVerticalBarDatasetItem & Record<string, any>>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         recalculateHeight(): void,
         generateCsv(): void
         generateImage(): void
@@ -5758,10 +5706,7 @@ declare module "vue-data-ui" {
         | VueUiQuickChartDatasetObjectItem[];
 
     export type VueUiQuickChartExpose = {
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
         toggleAnnotator(): void
@@ -6016,10 +5961,7 @@ declare module "vue-data-ui" {
                 x: number
             }>
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -6152,10 +6094,7 @@ declare module "vue-data-ui" {
             name: string
             start: number
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -6262,10 +6201,7 @@ declare module "vue-data-ui" {
             x: number
             y: number
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -6455,10 +6391,7 @@ declare module "vue-data-ui" {
 
     export type VueUiXyCanvasExpose = {
         getData(): Promise<Array<VueUiXyCanvasDatasetItem & Record<string, any>>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -6619,10 +6552,7 @@ declare module "vue-data-ui" {
                 value: number
             }>
         }>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generatePdf(): void
         generateImage(): void
@@ -6777,10 +6707,7 @@ declare module "vue-data-ui" {
 
     export type VueUiParallelCoordinatePlotExpose = {
         getData(): Promise<Array<VueUiParallelCoordinatePlotDatasetItem & Record<string, any>>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generatePdf(): void
         generateImage(): void
@@ -7177,10 +7104,7 @@ declare module "vue-data-ui" {
             x: number[],
             y: number[],
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -7292,10 +7216,7 @@ declare module "vue-data-ui" {
                 width: number
             }
         }>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
         toggleAnnotator(): void
@@ -7404,10 +7325,7 @@ declare module "vue-data-ui" {
             name: string
             value: string
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -7621,10 +7539,7 @@ declare module "vue-data-ui" {
                 label: string
             }>
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -7735,10 +7650,7 @@ declare module "vue-data-ui" {
             x: number
             y: number
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -7832,10 +7744,7 @@ declare module "vue-data-ui" {
 
     export type VueUiWorldExpose = {
         getData(): Promise<Array<Record<string, any>>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
@@ -8005,10 +7914,7 @@ declare module "vue-data-ui" {
             name: string
             uid: string
         }>>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
@@ -8118,10 +8024,7 @@ declare module "vue-data-ui" {
                 proportion: number
             } & Record<string, any>>
         }>
-        getImage(options?: { scale?: number }): Promise<{
-            imageUri: string
-            base64: string
-        }>
+        getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
         generateImage(): void

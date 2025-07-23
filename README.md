@@ -1141,7 +1141,8 @@ const componentRef = ref(null);
 
 onMounted(async () => {
   if (componentRef) {
-    const { imgUri, base64 } = await componentRef.value.getImage({ scale: 2 }); // optional scale, defaults to 2, increase for better image quality
+    const { imgUri, base64, title, width, height, aspectRatio } =
+      await componentRef.value.getImage({ scale: 2 }); // optional scale, defaults to 2, increase for better image quality
     console.log(imageUri);
   }
 });

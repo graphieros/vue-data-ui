@@ -3601,8 +3601,17 @@ export default {
         },
         async getImage({ scale = 2} = {}) {
             if (!this.$refs.chart) return
+            const { width, height } = this.$refs.chart.getBoundingClientRect();
+            const aspectRatio = width / height;
             const { imageUri, base64 } = await img(({ domElement: this.$refs.chart, base64: true, img: true, scale}))
-            return { imageUri, base64 }
+            return { 
+                imageUri, 
+                base64, 
+                title: this.FINAL_CONFIG.chart.title.text,
+                width,
+                height,
+                aspectRatio
+            }
         },
         segregate(legendItem){
             if(this.segregatedSeries.includes(legendItem.id)) {

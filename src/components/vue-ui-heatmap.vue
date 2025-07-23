@@ -473,9 +473,18 @@ function getData() {
 }
 
 async function getImage({ scale = 2} = {}) {
-    if (!heatmapChart.value) return
+    if (!heatmapChart.value) return;
+    const { width, height } = heatmapChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
     const { imageUri, base64 } = await img(({ domElement: heatmapChart.value, base64: true, img: true, scale}))
-    return { imageUri, base64 }
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.title.text,
+        width,
+        height,
+        aspectRatio
+    }
 }
 
 defineExpose({

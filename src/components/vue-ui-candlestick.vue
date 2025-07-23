@@ -674,9 +674,18 @@ function toggleAnnotator() {
 }
 
 async function getImage({ scale = 2} = {}) {
-    if (!candlestickChart.value) return
+    if (!candlestickChart.value) return;
+    const { width, height } = candlestickChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
     const { imageUri, base64 } = await img(({ domElement: candlestickChart.value, base64: true, img: true, scale}))
-    return { imageUri, base64 }
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.title.text,
+        width,
+        height,
+        aspectRatio
+    }
 }
 
 defineExpose({

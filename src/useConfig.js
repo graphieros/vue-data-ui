@@ -836,7 +836,9 @@ export function useConfig() {
                 legend: {
                     ...LEGEND,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
+                    showPercentage: true,
+                    showValue: true
                 },
                 tooltip: {
                     ...TOOLTIP,
@@ -902,7 +904,9 @@ export function useConfig() {
                 legend: {
                     ...LEGEND,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
+                    showValue: true,
+                    showPercentage: true
                 },
                 title: TITLE,
                 tooltip: {
@@ -985,7 +989,9 @@ export function useConfig() {
                 legend: {
                     ...LEGEND,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
+                    showValue: true,
+                    showPercentage: true
                 }
             }
         },
@@ -2899,7 +2905,9 @@ export function useConfig() {
                 legend: {
                     ...LEGEND,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
+                    showValue: true,
+                    showPercentage: true
                 },
                 title: TITLE,
                 tooltip: {
@@ -3059,7 +3067,9 @@ export function useConfig() {
                 legend: {
                     ...LEGEND,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
+                    showValue: true,
+                    showPercentage: true
                 }
             }
         },
@@ -3282,7 +3292,9 @@ export function useConfig() {
                 legend: {
                     ...LEGEND,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
+                    showValue: true,
+                    showPercentage: true
                 },
                 title: TITLE,
                 tooltip: {
@@ -3348,7 +3360,9 @@ export function useConfig() {
                 legend: {
                     ...LEGEND,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
+                    showValue: true,
+                    showPercentage: true
                 },
                 title: TITLE,
                 tooltip: {

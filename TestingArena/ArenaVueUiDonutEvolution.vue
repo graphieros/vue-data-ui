@@ -111,6 +111,9 @@ const model = ref([
     { key: 'style.chart.legend.fontSize', def: 16, type: 'number', min: 8, max: 48},
     { key: 'style.chart.legend.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.legend.roundingValue', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.legend.showValue', def: true, type: 'chexkbox'},
+    { key: 'style.chart.legend.showPercentage', def: false, type: 'chexkbox'},
+
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.columnNames.period', def: 'Period', type: 'text'},

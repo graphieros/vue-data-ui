@@ -188,6 +188,9 @@ const model = ref([
     { key: 'style.chart.legend.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.legend.roundingValue', def: 1, type: 'number', min: 0, max: 12},
     { key: 'style.chart.legend.roundingPercentage', def: 1, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.legend.showValue', def: true, type: 'checkbox'},
+    { key: 'style.chart.legend.showPercentage', def: false, type: 'checkbox'},
+
     { key: 'style.chart.title.text', def: "Lorem ipsum dolor sic amet", type: "text"},
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 48},

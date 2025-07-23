@@ -811,8 +811,17 @@ function generateCsv(callback=null) {
 
 async function getImage({ scale = 2} = {}) {
     if (!chordChart.value) return
+    const { width, height } = chordChart.value.getBoundingClientRect();
+    const aspectRatio = width / height; 
     const { imageUri, base64 } = await img(({ domElement: chordChart.value, base64: true, img: true, scale }))
-    return { imageUri, base64 }
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
 }
 
 defineExpose({

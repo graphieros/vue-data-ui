@@ -810,8 +810,17 @@ function toggleAnnotator() {
 
 async function getImage({ scale = 2} = {}) {
     if (!donutChart.value) return
+    const { width, height } = donutChart.value.getBoundingClientRect()
+    const aspectRatio = width / height
     const { imageUri, base64 } = await img(({ domElement: donutChart.value, base64: true, img: true, scale}))
-    return { imageUri, base64 }
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text, 
+        width, 
+        height, 
+        aspectRatio 
+    }
 }
 
 defineExpose({
@@ -1354,7 +1363,7 @@ defineExpose({
                 <template #item="{ legend, index }">
                     <div data-cy="legend-item" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`"
                         @click="legend.segregate()">
-                        {{ legend.name }}: {{ applyDataLabel(
+                        {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
                             FINAL_CONFIG.style.chart.layout.labels.value.formatter,
                             legend.value,
                             dataLabel({
@@ -1369,20 +1378,19 @@ defineExpose({
                             }
                         )
                         }}
-                        <span v-if="!segregated.includes(index)" style="font-variant-numeric: tabular-nums;">
-                            ({{ isNaN(legend.value / total) ? '-' : applyDataLabel(
+                        {{ 
+                            !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
+                            !segregated.includes(index) 
+                                ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / total) ? '-' : applyDataLabel(
                                 FINAL_CONFIG.style.chart.layout.labels.percentage.formatter,
                                 legendPercentage(legend),
                                 dataLabel({
                                     v: legendPercentage(legend),
                                     s: '%',
                                     r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                                }))
-                            }})
-                        </span>
-                        <span v-else>
-                            ( {{ dashLabel(legend.proportion * 100) }} % )
-                        </span>
+                                }))}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                                : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${dashLabel(legend.proportion * 100)}%${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                        }}
                     </div>
                 </template>
             </Legend>

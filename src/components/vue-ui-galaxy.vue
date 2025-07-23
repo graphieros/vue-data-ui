@@ -441,9 +441,18 @@ function toggleAnnotator() {
 }
 
 async function getImage({ scale = 2} = {}) {
-    if (!galaxyChart.value) return
+    if (!galaxyChart.value) return;
+    const { width, height } = galaxyChart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
     const { imageUri, base64 } = await img(({ domElement: galaxyChart.value, base64: true, img: true, scale}))
-    return { imageUri, base64 }
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.style.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
 }
 
 defineExpose({
@@ -671,7 +680,7 @@ defineExpose({
         >
             <template #item="{ legend, index }">
                 <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }}: {{ applyDataLabel(
+                    {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
                         FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
                         legend.value,
                         dataLabel({
@@ -683,16 +692,16 @@ defineExpose({
                         { datapoint: legend, seriesIndex: index }
                         )
                     }}
-                    <span v-if="!segregated.includes(legend.id)">
-                        ({{ isNaN(legend.value / total) ? '-' : dataLabel({
+                    {{ 
+                        !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
+                        !segregated.includes(legend.id)
+                            ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / total) ? '-' : dataLabel({
                             v: legend.value / total * 100,
                             s: '%',
                             r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                        })}})
-                    </span>
-                    <span v-else>
-                        ( - % )
-                    </span>
+                        })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                            : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                    }}
                 </div>
             </template>
         </Legend>
