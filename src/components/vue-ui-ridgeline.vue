@@ -35,6 +35,7 @@ import Legend from "../atoms/Legend.vue";
 import Title from "../atoms/Title.vue";
 import Shape from "../atoms/Shape.vue";
 import { useTimeLabels } from "../useTimeLabels";
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
@@ -644,15 +645,23 @@ function generateCsv(callback=null) {
 
 function getData() {
     return drawableDataset.value;
+}   
+
+async function getImage({ scale = 2} = {}) {
+    if (!ridgelineChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: ridgelineChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
 }
 
 defineExpose({
     getData,
+    getImage,
     generateImage,
     generatePdf,
     generateCsv,
     toggleAnnotator,
-    toggleTable
+    toggleTable,
+    toggleFullscreen
 });
 
 </script>

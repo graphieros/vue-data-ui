@@ -28,6 +28,7 @@ import { throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import img from '../img';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -444,13 +445,21 @@ function getData() {
     return formattedDataset.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!circlePackChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: circlePackChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generateCsv,
     generatePdf,
     generateImage,
     toggleTable,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>

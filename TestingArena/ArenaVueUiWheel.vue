@@ -122,6 +122,15 @@ const config = computed(() => {
 
 const step = ref(0)
 
+const local = ref(null)
+
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>
@@ -161,7 +170,7 @@ const step = ref(0)
         <template #title>VueUiWheel</template>
         
         <template #local>
-            <LocalVueUiWheel :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
+            <LocalVueUiWheel :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>

@@ -9,6 +9,7 @@ import { useChartAccessibility } from '../useChartAccessibility';
 import { usePrinter } from '../usePrinter';
 import geo from "../geoProjections";
 import Shape from '../atoms/Shape.vue';
+import img from '../img.js';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -605,14 +606,22 @@ function getData() {
     return countries.value
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!worldChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: worldChart.value, base64: true, img: true, scale }))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 })
 
 </script>

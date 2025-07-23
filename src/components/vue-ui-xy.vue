@@ -2,7 +2,7 @@
 <template>
     <div :id="`vue-ui-xy_${uniqueId}`" :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="chart" :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper 
-            v-if="FINAL_CONFIG.chart.userOptions.buttons.annotator"
+            v-if="FINAL_CONFIG.chart.userOptions.buttons.annotator && svgRef"
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.chart.backgroundColor"
             :color="FINAL_CONFIG.chart.color"
@@ -1733,6 +1733,7 @@ import { defineAsyncComponent } from 'vue';
 import Slicer from '../atoms/Slicer.vue';
 import Title from '../atoms/Title.vue';
 import Shape from '../atoms/Shape.vue';
+import img from '../img.js';
 
 const sliderId = createUid();
 
@@ -3597,7 +3598,12 @@ export default {
                     type: s.type
                 }
             });
-        },  
+        },
+        async getImage({ scale = 2} = {}) {
+            if (!this.$refs.chart) return
+            const { imageUri, base64 } = await img(({ domElement: this.$refs.chart, base64: true, img: true, scale}))
+            return { imageUri, base64 }
+        },
         segregate(legendItem){
             if(this.segregatedSeries.includes(legendItem.id)) {
                 this.segregatedSeries = this.segregatedSeries.filter(id => id !== legendItem.id);

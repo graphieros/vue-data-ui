@@ -32,6 +32,7 @@ import BaseIcon from '../atoms/BaseIcon.vue';
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import Legend from "../atoms/Legend.vue";
+import img from '../img';
 
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
@@ -632,14 +633,22 @@ function deactivateHomeIcon() {
     activeCrumbIndex.value = null
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!treemapChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: treemapChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generateCsv,
     generateImage,
     generatePdf,
     toggleTable,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 })
 
 </script>

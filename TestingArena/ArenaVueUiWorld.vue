@@ -274,7 +274,13 @@ const config = computed(() => {
     }
 });
 
-
+const local = ref(null)
+onMounted(async() => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
 
 </script>
 
@@ -286,7 +292,7 @@ const config = computed(() => {
         <template #title>VueUiWorld</template>
         
         <template #local>
-            <LocalVueUiWorld :dataset="dataset" :config="config">
+            <LocalVueUiWorld :dataset="dataset" :config="config" ref="local">
                 <template #pattern="{ datapoint, patternId }">
                 <pattern :id="patternId" width="70" height="8" patternTransform="scale(2)"
                     patternUnits="userSpaceOnUse" opacity="0.5">

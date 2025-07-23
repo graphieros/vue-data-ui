@@ -25,6 +25,7 @@ import { useConfig } from "../useConfig";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -439,14 +440,22 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!galaxyChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: galaxyChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>

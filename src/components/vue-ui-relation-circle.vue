@@ -23,6 +23,7 @@ import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import img from "../img.js";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
@@ -459,10 +460,18 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!relationCircleChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: relationCircleChart.value, base64: true, img: true, scale }))
+    return { imageUri, base64 }
+}
+
 defineExpose({
+    getImage,
     generatePdf,
     generateImage,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 })
 
 </script>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiXy from '../src/components/vue-ui-xy.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -888,6 +888,15 @@ function selectTimeLabel(data) {
     console.log(data)
 }
 
+onMounted(async () => {
+    if(vduiLocal.value) {
+        const data = await vduiLocal.value.getData()
+        console.log(data)
+        const img = await vduiLocal.value.getImage({ scale: 4 });
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>
@@ -1027,7 +1036,7 @@ function selectTimeLabel(data) {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
+            <LocalVueDataUi  component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
                 <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">

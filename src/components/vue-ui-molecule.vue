@@ -24,6 +24,7 @@ import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import usePanZoom from "../usePanZoom";
 import themes from "../themes.json";
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -463,15 +464,23 @@ function selectNode(node) {
     emit('selectNode', node)
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!moleculeChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: moleculeChart.value, base64: true, img: true, scale }))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleLabels,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>

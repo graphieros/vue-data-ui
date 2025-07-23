@@ -31,6 +31,7 @@ import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive m
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
+import img from "../img.js";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
@@ -671,8 +672,15 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!verticalBarChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: verticalBarChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     recalculateHeight,
     generatePdf,
     generateCsv,
@@ -680,7 +688,8 @@ defineExpose({
     toggleTable,
     toggleSort,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>

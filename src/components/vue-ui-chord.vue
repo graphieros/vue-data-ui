@@ -36,6 +36,7 @@ import themes from "../themes.json";
 import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import Shape from '../atoms/Shape.vue';
+import img from '../img';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -808,13 +809,21 @@ function generateCsv(callback=null) {
     });
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!chordChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: chordChart.value, base64: true, img: true, scale }))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generateCsv,
     generateImage,
     generatePdf,
     toggleAnnotator,
     toggleTable,
+    toggleFullscreen
 });
 
 </script>

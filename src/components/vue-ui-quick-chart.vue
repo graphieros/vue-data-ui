@@ -35,6 +35,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Slicer from "../atoms/Slicer.vue";
 import { useTimeLabels } from "../useTimeLabels";
+import img from "../img";
 
 //xyPeriodFormatter
 
@@ -989,11 +990,19 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!quickChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: quickChart.value, base64: true, img: true, scale }))
+    return { imageUri, base64 }
+}
+
 defineExpose({
+    getImage,
     generatePdf,
     generateImage,
     toggleTooltip,
     toggleAnnotator,
+    toggleFullscreen,
 })
 
 </script>

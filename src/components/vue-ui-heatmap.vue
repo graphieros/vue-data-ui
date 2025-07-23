@@ -25,6 +25,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import img from "../img";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
@@ -467,13 +468,26 @@ function selectDatapoint(cell) {
     emit('selectDatapoint', cell);
 }
 
+function getData() {
+    return mutableDataset.value
+}
+
+async function getImage({ scale = 2} = {}) {
+    if (!heatmapChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: heatmapChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
+    getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>

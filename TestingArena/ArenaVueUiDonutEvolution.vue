@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiDonutEvolution from '../src/components/vue-ui-donut-evolution.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -188,6 +188,13 @@ function selectLegend(legend) {
 }
 
 const step = ref(0)
+
+onMounted(async() => {
+    if (vduiLocal.value) {
+        const img = await vduiLocal.value.getImage();
+        console.log(img)
+    }
+})
 
 </script>
 

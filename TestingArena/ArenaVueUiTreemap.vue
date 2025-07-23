@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiTreemap from '../src/components/vue-ui-treemap.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -293,6 +293,14 @@ function selectLegend(legend) {
 function selectDatapoint(datapoint) {
     console.log({ datapoint })
 }
+
+onMounted(async() => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>

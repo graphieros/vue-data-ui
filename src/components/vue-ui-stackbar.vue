@@ -39,6 +39,7 @@ import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import { useTimeLabels } from "../useTimeLabels";
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -894,15 +895,23 @@ function isLabelDisplayed(value, proportion) {
     }
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!stackbarChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: stackbarChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleLabels,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 })
 
 </script>

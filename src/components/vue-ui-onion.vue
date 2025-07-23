@@ -26,6 +26,7 @@ import { useChartAccessibility } from "../useChartAccessibility.js";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import img from "../img.js";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -507,14 +508,22 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!onionChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: onionChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>

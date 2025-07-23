@@ -33,6 +33,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -695,14 +696,22 @@ function getData() {
     return drawableDataset.value
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!historyPlotChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: historyPlotChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
+    toggleFullscreen
 })
 
 </script>

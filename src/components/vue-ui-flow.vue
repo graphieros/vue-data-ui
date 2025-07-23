@@ -26,6 +26,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -767,8 +768,15 @@ const legendConfig = computed(() => ({
     fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? "bold" : "normal",
 }));
 
+async function getImage({ scale = 2} = {}) {
+    if (!flowChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: flowChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generateCsv,
     generateImage,
     generatePdf,
@@ -777,6 +785,7 @@ defineExpose({
     toggleTooltip,
     drillCategory,
     unselectNode,
+    toggleFullscreen,
 });
 </script>
 

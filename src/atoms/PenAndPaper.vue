@@ -6,7 +6,7 @@ import { dataLabel, lightenHexColor } from "../lib";
 
 const props = defineProps({
     svgRef: {
-        type: [Object, null],
+        type: [Object, null, undefined],
         required: true
     },
     color: {

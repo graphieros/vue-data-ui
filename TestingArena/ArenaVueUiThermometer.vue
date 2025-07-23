@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiThermometer from '../src/components/vue-ui-thermometer.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -124,6 +124,15 @@ const config = computed(() => {
 
 const step = ref(0);
 
+const local = ref(null)
+
+onMounted(async () => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>
@@ -141,7 +150,7 @@ const step = ref(0);
         <template #title>VueUiThermometer</template>
 
         <template #local>
-            <LocalVueUiThermometer :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
+            <LocalVueUiThermometer :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
                 <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
                 </template>

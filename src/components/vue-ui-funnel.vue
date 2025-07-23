@@ -24,6 +24,7 @@ import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -429,13 +430,21 @@ function getData() {
     return formattedDataset.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!funnelChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: funnelChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen,
 });
 
 </script>

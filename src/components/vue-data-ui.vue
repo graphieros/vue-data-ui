@@ -219,7 +219,7 @@ onMounted(() => {
 
 
 watch(currentComponentRef, async (newRef) => {
-    if(newRef) {
+    if (newRef) {
         if (newRef.generatePdf) {
             generatePdf.value = newRef.generatePdf;
         }
@@ -342,20 +342,45 @@ const getEventHandlers = () => {
     return handlers;
 };
 
-const QUEUE_GET_DATA = shallowReactive([]);
+const QUEUE = shallowReactive([])
 
-watch([QUEUE_GET_DATA, currentComponentRef], () => {
-    if (!currentComponentRef.value) return;
-    while (QUEUE_GET_DATA.length) {
-        const [methodName, ...args] = QUEUE_GET_DATA.shift();
-        if (typeof currentComponentRef.value[methodName] === 'function') {
-            currentComponentRef.value[methodName](...args)
+function enqueue(method, args) {
+    return new Promise((resolve, reject) => {
+        QUEUE.push({ method, args, resolve, reject })
+    });
+}
+
+watch(currentComponentRef, (comp) => {
+    if (!comp) return
+    while (QUEUE.length) {
+        const { method, args, resolve, reject } = QUEUE.shift()
+        const fn = comp[method]
+        if (typeof fn === 'function') {
+            Promise.resolve()
+                .then(() => fn(...args))
+                .then(resolve)
+                .catch(reject)
+        }
+        else {
+            reject(new Error(`Method ${method} not found on ${props.component}`));
         }
     }
-})
+});
 
 defineExpose({
-    getData: (...args) => currentComponentRef.value && typeof currentComponentRef.value.getData === 'function' ? currentComponentRef.value.getData() : QUEUE_GET_DATA.push(['getData', ...args]),
+    getData(...args) {
+        if (currentComponentRef.value?.getData) {
+            return currentComponentRef.value.getData(...args);
+        }
+        return enqueue('getData', args);
+    },
+    getImage(options = {}) {
+        const { scale = 2 } = options
+        if (currentComponentRef.value?.getImage) {
+            return currentComponentRef.value.getImage({ scale });
+        }
+        return enqueue('getImage', [{ scale }]);
+    },
     generatePdf,
     generateCsv,
     generateImage,
@@ -405,29 +430,21 @@ const notSupported = computed(() => {
 </script>
 
 <template>
-    <div 
-        v-if="isError" 
-        :style="{
-            width:'100%',
-            display: 'flex',
-            gap:'6px',
-            alignItems: 'center',
-            color: notSupported.status === 'notSupported' ? '#FF9000' : '#FF0000'
-        }">
+    <div v-if="isError" :style="{
+        width: '100%',
+        display: 'flex',
+        gap: '6px',
+        alignItems: 'center',
+        color: notSupported.status === 'notSupported' ? '#FF9000' : '#FF0000'
+    }">
         <div style="width:36px">
             <BaseIcon name="moodFlat" v-if="notSupported.status === 'unknown'" stroke="#FF0000" />
             <BaseIcon name="circleExclamation" v-if="notSupported.status === 'notSupported'" stroke="#FF9000" />
         </div>
-        {{ notSupported.message}}
+        {{ notSupported.message }}
     </div>
 
-    <component
-        :is="currentComponent"
-        ref="currentComponentRef"
-        v-else
-        v-bind="relevantProps"
-        v-on="getEventHandlers()"
-    >
+    <component :is="currentComponent" ref="currentComponentRef" v-else v-bind="relevantProps" v-on="getEventHandlers()">
         <template v-for="(_slotContent, slotName) in $slots" v-slot:[slotName]="slotProps">
             <slot :name="slotName" v-bind="slotProps"></slot>
         </template>

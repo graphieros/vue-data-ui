@@ -246,6 +246,13 @@ function selectDatapoint(dp) {
   console.log(dp)
 }
 
+onMounted(async() => {
+  if (local.value) {
+    const img = await local.value.getImage()
+    console.log(img)
+  }
+})
+
 </script>
 
 <template>

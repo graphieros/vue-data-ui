@@ -28,6 +28,7 @@ import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import { useTimeLabels } from "../useTimeLabels";
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -672,13 +673,21 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!candlestickChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: candlestickChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>

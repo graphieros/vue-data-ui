@@ -38,6 +38,7 @@ import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
@@ -619,13 +620,21 @@ function createDonutDatasetForDialog(ds) {
     dialog.value && dialog.value.open();
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!donutEvolutionChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: donutEvolutionChart.value, base64: true, img: true, scale}))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generatePdf,
     generateCsv,
     generateImage,
     toggleTable,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>

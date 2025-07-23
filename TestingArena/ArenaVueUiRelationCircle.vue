@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiRelationCircle from '../src/components/vue-ui-relation-circle.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -157,6 +157,15 @@ const config = computed(() => {
 
 const step = ref(0)
 
+const local = ref(null)
+
+onMounted(async() => {
+    if (local.value) {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
+
 </script>
 
 <template>
@@ -195,7 +204,7 @@ const step = ref(0)
         <template #title>VueUiRelationCircle</template>
 
         <template #local>
-            <LocalVueUiRelationCircle :dataset="dataset" :config="config" :key="`local_${step}`">
+            <LocalVueUiRelationCircle :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>

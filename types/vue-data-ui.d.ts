@@ -455,10 +455,28 @@ declare module "vue-data-ui" {
         value?: string;
     };
 
-    export const VueUiTreemap: DefineComponent<{
-        config?: VueUiTreemapConfig;
-        dataset: VueUiTreemapDatasetItem[];
-    }>;
+    export type VueUiTreemapExpose = {
+        getData(): Promise<Array<VueUiTreemapDatapoint>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleTable(): void
+        toggleTooltip(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiTreemap: DefineComponent<
+        {
+            config?: VueUiTreemapConfig;
+            dataset: VueUiTreemapDatasetItem[];
+        },
+        VueUiTreemapExpose
+    >;
 
     export type VueUiKpiConfig = {
         animationFrames?: number;
@@ -589,10 +607,32 @@ declare module "vue-data-ui" {
         value: number;
     };
 
-    export const VueUiGalaxy: DefineComponent<{
-        config?: VueUiGalaxyConfig;
-        dataset: VueUiGalaxyDatasetItem[];
-    }>;
+    export type VueUiGalaxyExpose = {
+        getData(): Promise<Array<{
+            name: string,
+            color: string,
+            value: number
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleTable(): void
+        toggleTooltip(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiGalaxy: DefineComponent<
+        {
+            config?: VueUiGalaxyConfig;
+            dataset: VueUiGalaxyDatasetItem[];
+        },
+        VueUiGalaxyExpose
+    >;
 
     export type VueUiSparkgaugeDataset = {
         value: number;
@@ -844,10 +884,29 @@ declare module "vue-data-ui" {
         uid: string;
     };
 
-    export const VueUiMolecule: DefineComponent<{
-        dataset: VueUiMoleculeDatasetNode[];
-        config?: VueUiMoleculeConfig;
-    }>;
+    export type VueUiMoleculeExpose = {
+        getData(): Promise<Array<VueUiMoleculeDatapoint>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleTooltip(): void
+        toggleLabels(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiMolecule: DefineComponent<
+        {
+            dataset: VueUiMoleculeDatasetNode[];
+            config?: VueUiMoleculeConfig;
+        },
+        VueUiMoleculeExpose
+    >;
 
     export type VueUiDigitsConfig = {
         backgroundColor?: string;
@@ -952,10 +1011,26 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUi3dBar: DefineComponent<{
-        config?: VueUi3dBarConfig;
-        dataset: VueUi3dBarDataset;
-    }>;
+    export type VueUi3dBarExpose = {
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUi3dBar: DefineComponent<
+        {
+            config?: VueUi3dBarConfig;
+            dataset: VueUi3dBarDataset;
+        },
+        VueUi3dBarExpose
+    >;
 
     export type VueUiMoodRadarDataset = {
         "1": number;
@@ -1037,10 +1112,33 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
     };
 
-    export const VueUiMoodRadar: DefineComponent<{
-        dataset: VueUiMoodRadarDataset;
-        config?: VueUiMoodRadarConfig;
-    }>;
+    export type VueUiMoodRadarExpose = {
+        getData(): Promise<Array<{
+            color: string
+            index: number
+            key: string
+            proportion: number
+            value: number
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiMoodRadar: DefineComponent<
+        {
+            dataset: VueUiMoodRadarDataset;
+            config?: VueUiMoodRadarConfig;
+        },
+        VueUiMoodRadarExpose
+    >;
 
     export type VueUiIconName =
         | "accordion"
@@ -1323,10 +1421,33 @@ declare module "vue-data-ui" {
         color?: string;
     };
 
-    export const VueUiDonutEvolution: DefineComponent<{
-        config?: VueUiDonutEvolutionConfig;
-        dataset: VueUiDonutEvolutionDatasetItem[];
-    }>;
+    export type VueUiDonutEvolutionExpose = {
+        getData(): Promise<Array<{
+            color: string
+            length: number
+            name: string
+            uid: string
+            values: Array<number | null>
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleTable(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiDonutEvolution: DefineComponent<
+        {
+            config?: VueUiDonutEvolutionConfig;
+            dataset: VueUiDonutEvolutionDatasetItem[];
+        },
+        VueUiDonutEvolutionExpose
+    >;
 
     export type VueUiTiremarksConfig = {
         theme?: Theme;
@@ -1376,10 +1497,24 @@ declare module "vue-data-ui" {
         percentage: number;
     };
 
-    export const VueUiTiremarks: DefineComponent<{
-        config?: VueUiTiremarksConfig;
-        dataset: VueUiTiremarksDataset;
-    }>;
+    export type VueUiTiremarksExpose = {
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiTiremarks: DefineComponent<
+        {
+            config?: VueUiTiremarksConfig;
+            dataset: VueUiTiremarksDataset;
+        },
+        VueUiTiremarksExpose
+    >;
 
     export type VueUiWheelConfig = {
         responsive?: boolean;
@@ -1433,10 +1568,24 @@ declare module "vue-data-ui" {
         percentage: number;
     };
 
-    export const VueUiWheel: DefineComponent<{
-        dataset: VueUiWheelDataset;
-        config?: VueUiWheelConfig;
-    }>;
+    export type VueUiWheelExpose = {
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiWheel: DefineComponent<
+        {
+            dataset: VueUiWheelDataset;
+            config?: VueUiWheelConfig;
+        },
+        VueUiWheelExpose
+    >;
 
     export type VueUiRingsConfig = {
         responsive?: boolean;
@@ -1524,10 +1673,34 @@ declare module "vue-data-ui" {
         values: number[];
     };
 
-    export const VueUiRings: DefineComponent<{
-        config?: VueUiRingsConfig;
-        dataset: VueUiRingsDatasetItem[];
-    }>;
+    export type VueUiRingsExpose = {
+        getData(): Promise<Array<{
+            name: string
+            color: string
+            value: number
+            absoluteValues: number[]
+            percentage: number
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleTable(): void
+        toggleTooltip(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiRings: DefineComponent<
+        {
+            config?: VueUiRingsConfig;
+            dataset: VueUiRingsDatasetItem[];
+        },
+        VueUiRingsExpose
+    >;
 
     export type VueUiSparkHistogramConfig = {
         theme?: Theme;
@@ -1774,10 +1947,24 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiThermometer: DefineComponent<{
-        config?: VueUiThermometerConfig;
-        dataset: VueUiThermometerDataset;
-    }>;
+    export type VueUiThermometerExpose = {
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiThermometer: DefineComponent<
+        {
+            config?: VueUiThermometerConfig;
+            dataset: VueUiThermometerDataset;
+        },
+        VueUiThermometerExpose
+    >;
 
     export type VueUiRelationCircleConfig = {
         responsive?: boolean;
@@ -1834,10 +2021,24 @@ declare module "vue-data-ui" {
         color?: string;
     };
 
-    export const VueUiRelationCircle: DefineComponent<{
-        config?: VueUiRelationCircleConfig;
-        dataset: VueUiRelationCircleDatasetItem[];
-    }>;
+    export type VueUiRelationCircleExpose = {
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateImage(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiRelationCircle: DefineComponent<
+        {
+            config?: VueUiRelationCircleConfig;
+            dataset: VueUiRelationCircleDatasetItem[];
+        },
+        VueUiRelationCircleExpose
+    >;
 
     export type VueUiAnnotatorConfig = {
         style?: {
@@ -2165,10 +2366,27 @@ declare module "vue-data-ui" {
         segment: string;
     };
 
-    export const VueUiAgePyramid: DefineComponent<{
-        config?: VueUiAgePyramidConfig;
-        dataset: VueUiAgePyramidDataset;
-    }>;
+    export type VueUiAgePyramidExpose = {
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleTooltip(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiAgePyramid: DefineComponent<
+        {
+            config?: VueUiAgePyramidConfig;
+            dataset: VueUiAgePyramidDataset;
+        },
+        VueUiAgePyramidExpose
+    >;
 
     export type VueUiCandlestickConfig = {
         responsive?: boolean;
@@ -2294,10 +2512,27 @@ declare module "vue-data-ui" {
         volume: number;
     };
 
-    export const VueUiCandlestick: DefineComponent<{
-        config?: VueUiCandlestickConfig;
-        dataset: Array<Array<string | number>>;
-    }>;
+    export type VueUiCandlestickExpose = {
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleTooltip(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiCandlestick: DefineComponent<
+        {
+            config?: VueUiCandlestickConfig;
+            dataset: Array<Array<string | number>>;
+        },
+        VueUiCandlestickExpose
+    >;
 
     export type VueUiScatterDatasetValueItem = {
         name: string;
@@ -2506,10 +2741,28 @@ declare module "vue-data-ui" {
         values: Array<{ x: number; y: number; name: string }>;
     };
 
-    export const VueUiScatter: DefineComponent<{
-        config?: VueUiScatterConfig;
-        dataset: VueUiScatterDatasetItem[];
-    }>;
+    export type VueUiScatterExpose = {
+        getData(): Promise<Array<VueUiScatterSeries>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleTooltip(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiScatter: DefineComponent<
+        {
+            config?: VueUiScatterConfig;
+            dataset: VueUiScatterDatasetItem[];
+        },
+        VueUiScatterExpose
+    >;
 
     export type VueUiHeatmapConfig = {
         theme?: Theme;
@@ -2639,10 +2892,40 @@ declare module "vue-data-ui" {
         values: number[];
     };
 
-    export const VueUiHeatmap: DefineComponent<{
-        config?: VueUiHeatmapConfig;
-        dataset: VueUiHeatmapDatasetItem[];
-    }>;
+    export type VueUiHeatmapExpose = {
+        getData(): Promise<Array<{
+            name: string
+            temperatures: Array<{
+                color: string
+                id: string
+                ratio: number
+                side: 'up' | 'down'
+                value: number
+                xAxisName: number | string
+                yAxisName: number | string
+            }>
+            values: Array<string | number>
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleTooltip(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiHeatmap: DefineComponent<
+        {
+            config?: VueUiHeatmapConfig;
+            dataset: VueUiHeatmapDatasetItem[];
+        },
+        VueUiHeatmapExpose
+    >;
 
     export type VueUiXyHighlightArea = {
         show?: boolean;
@@ -3011,10 +3294,30 @@ declare module "vue-data-ui" {
         value: number;
     };
 
-    export const VueUiXy: DefineComponent<{
-        config?: VueUiXyConfig;
-        dataset: VueUiXyDatasetItem[];
-    }>;
+    export type VueUiXyExpose = {
+        getData(): Promise<Array<{ values: Array<number | null>, color: string, name: string, type: string }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+        toggleLabels(): void
+        toggleStack(): void
+        toggleTable(): void
+        toggleTooltip(): void
+    }
+
+    export const VueUiXy: DefineComponent<
+        {
+            config?: VueUiXyConfig;
+            dataset: VueUiXyDatasetItem[];
+        },
+        VueUiXyExpose
+    >;
 
     export type VueUiDonutConfig = {
         type?: "classic" | "polar";
@@ -3197,10 +3500,29 @@ declare module "vue-data-ui" {
         absoluteValues: number[];
     };
 
-    export const VueUiDonut: DefineComponent<{
-        config?: VueUiDonutConfig;
-        dataset: VueUiDonutDatasetItem[];
-    }>;
+    export type VueUiDonutExpose = {
+        getData(): Promise<Array<{ name: string, color: string, value: number | null }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+        toggleLabels(): void
+        toggleTable(): void
+        toggleTooltip(): void
+    }
+
+    export const VueUiDonut: DefineComponent<
+        {
+            config?: VueUiDonutConfig;
+            dataset: VueUiDonutDatasetItem[];
+        },
+        VueUiDonutExpose
+    >;
 
     export type VueUiNestedDonutsDatasetItem = {
         name: string;
@@ -3357,10 +3679,45 @@ declare module "vue-data-ui" {
         value: number;
     };
 
-    export const VueUiNestedDonuts: DefineComponent<{
-        config?: VueUiNestedDonutsConfig;
-        dataset: VueUiNestedDonutsDatasetItem[];
-    }>;
+    export type VueUiNestedDonutsExpose = {
+        getData(): Promise<Array<{
+            datasetIndex: number
+            id: string
+            name: string
+            series: Array<{
+                absoluteValues: number[]
+                arcOf: string
+                arcOfId: string
+                color: string
+                datasetIndex: number
+                id: string
+                name: string
+                seriesIndex: number
+                value: 0
+            }>
+            total: number
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+        toggleLabels(): void
+        toggleTable(): void
+        toggleTooltip(): void
+    }
+
+    export const VueUiNestedDonuts: DefineComponent<
+        {
+            config?: VueUiNestedDonutsConfig;
+            dataset: VueUiNestedDonutsDatasetItem[];
+        },
+        VueUiNestedDonutsExpose
+    >;
 
     export type VueUiWaffleConfig = {
         responsive?: boolean;
@@ -3477,10 +3834,33 @@ declare module "vue-data-ui" {
         values: number[];
     };
 
-    export const VueUiWaffle: DefineComponent<{
-        config?: VueUiWaffleConfig;
-        dataset: VueUiWaffleDatasetItem[];
-    }>;
+    export type VueUiWaffleExpose = {
+        getData(): Promise<Array<{
+            name: string
+            color: string,
+            value: number
+            proportion: number
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+        toggleTable(): void
+        toggleTooltip(): void
+    }
+
+    export const VueUiWaffle: DefineComponent<
+        {
+            config?: VueUiWaffleConfig;
+            dataset: VueUiWaffleDatasetItem[];
+        },
+        VueUiWaffleExpose
+    >;
 
     export type VueUiRadarConfig = {
         responsive?: boolean;
@@ -3617,10 +3997,32 @@ declare module "vue-data-ui" {
         series: VueUiRadarDatasetSerieItem[];
     };
 
-    export const VueUiRadar: DefineComponent<{
-        config?: VueUiRadarConfig;
-        dataset: VueUiRadarDataset;
-    }>;
+    export type VueUiRadarExpose = {
+        getData(): Promise<{
+            name: string
+            color: string
+            proportion: number
+        }>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleTooltip(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiRadar: DefineComponent<
+        {
+            config?: VueUiRadarConfig;
+            dataset: VueUiRadarDataset;
+        },
+        VueUiRadarExpose
+    >;
 
     export type VueUiQuadrantDatasetSerieItem = {
         name: string;
@@ -3784,10 +4186,40 @@ declare module "vue-data-ui" {
         shape: Shape;
     };
 
-    export const VueUiQuadrant: DefineComponent<{
-        dataset: VueUiQuadrantDatasetItem[];
-        config?: VueUiQuadrantConfig;
-    }>;
+    export type VueUiQuadrantExpose = {
+        getData(): Promise<Array<{
+            color: string
+            name: string
+            shape: string
+            series: Array<{
+                name: string
+                x: number
+                y: number
+                quadrantSide: string
+                sideName: string
+            }>
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleLabels(): void
+        toggleTooltip(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiQuadrant: DefineComponent<
+        {
+            dataset: VueUiQuadrantDatasetItem[];
+            config?: VueUiQuadrantConfig;
+        },
+        VueUiQuadrantExpose
+    >;
 
     export type VueUiGaugeDatasetSerieItem = {
         from: number;
@@ -3893,10 +4325,24 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiGauge: DefineComponent<{
-        config?: VueUiGaugeConfig;
-        dataset: VueUiGaugeDataset;
-    }>;
+    export type VueUiGaugeExpose = {
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiGauge: DefineComponent<
+        {
+            config?: VueUiGaugeConfig;
+            dataset: VueUiGaugeDataset;
+        },
+        VueUiGaugeExpose
+    >;
 
     export type VueUiChestnutDatasetBranchBreakdown = {
         name: string;
@@ -4089,10 +4535,35 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiChestnut: DefineComponent<{
-        config?: VueUiChestnutConfig;
-        dataset: VueUiChestnutDatasetRoot[];
-    }>;
+    export type VueUiChestnutExpose = {
+        getData(): Promise<Array<{
+            branches: Array<VueUiChesnutDatasetBranch & Record<string, any>>
+            color: string
+            id: string
+            name: string
+            rootIndex: number
+            total: number
+            type: string
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiChestnut: DefineComponent<
+        {
+            config?: VueUiChestnutConfig;
+            dataset: VueUiChestnutDatasetRoot[];
+        },
+        VueUiChestnutExpose
+    >;
 
     export type VueUiOnionDatasetItem = {
         name: string;
@@ -4220,10 +4691,36 @@ declare module "vue-data-ui" {
         value: number;
     };
 
-    export const VueUiOnion: DefineComponent<{
-        config?: VueUiOnionConfig;
-        dataset: VueUiOnionDatasetItem[];
-    }>;
+    export type VueUiOnionExpose = {
+        getData(): Promise<Array<{
+            absoluteIndex: number
+            color: string
+            id: string
+            percentage: number
+            radius: number
+            targetPercentage: number
+            value: number
+        } & Record<string, any>>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleTooltip(): void
+        toggleTable(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiOnion: DefineComponent<
+        {
+            config?: VueUiOnionConfig;
+            dataset: VueUiOnionDatasetItem[];
+        },
+        VueUiOnionExpose
+    >;
 
     export type VueUiVerticalBarDatasetChild = {
         name: string;
@@ -4380,10 +4877,30 @@ declare module "vue-data-ui" {
         value: number;
     };
 
-    export const VueUiVerticalBar: DefineComponent<{
-        config?: VueUiVerticalBarConfig;
-        dataset: VueUiVerticalBarDatasetItem[];
-    }>;
+    export type VueUiVerticalBarExpose = {
+        getData(): Promise<Array<VueUiVerticalBarDatasetItem & Record<string, any>>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        recalculateHeight(): void,
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleTable(): void
+        toggleSort(): void
+        toggleAnnotator(): void
+        toggleTooltip(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiVerticalBar: DefineComponent<
+        {
+            config?: VueUiVerticalBarConfig;
+            dataset: VueUiVerticalBarDatasetItem[];
+        },
+        VueUiVerticalBarExpose
+    >;
 
     export type VueUiSparklineDatasetItem = {
         period: string;
@@ -5240,10 +5757,25 @@ declare module "vue-data-ui" {
         | VueUiQuickChartDatasetObjectItem
         | VueUiQuickChartDatasetObjectItem[];
 
-    export const VueUiQuickChart: DefineComponent<{
-        config?: VueUiQuickChartConfig;
-        dataset: VueUiQuickChartDataset;
-    }>;
+    export type VueUiQuickChartExpose = {
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+        toggleTooltip(): void
+    }
+
+    export const VueUiQuickChart: DefineComponent<
+        {
+            config?: VueUiQuickChartConfig;
+            dataset: VueUiQuickChartDataset;
+        },
+        VueUiQuickChartExpose
+    >;
 
     export type VueUiCursorConfig = {
         bubbleEffect?: boolean;
@@ -5469,11 +6001,42 @@ declare module "vue-data-ui" {
         name: string;
         plots: VueUiStripPlotDatasetItem[];
     };
+    
+    export type VueUiStripPlotExpose = {
+        getData(): Promise<Array<{
+            color: string
+            id: string
+            name: string
+            plots: Array<{
+                color: string
+                id: string
+                name: string
+                parentId: string
+                value: number
+                x: number
+            }>
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleTooltip(): void
+        toggleLabels(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
 
-    export const VueUiStripPlot: DefineComponent<{
-        config?: VueUiStripPlotConfig;
-        dataset: VueUiStripPlotDataset[];
-    }>;
+    export const VueUiStripPlot: DefineComponent<
+        {
+            config?: VueUiStripPlotConfig;
+            dataset: VueUiStripPlotDataset[];
+        },
+        VueUiStripPlotExpose
+    >;
 
     export type VueUiDumbbellConfigLabel = {
         color?: string;
@@ -5582,10 +6145,32 @@ declare module "vue-data-ui" {
         end: number;
     };
 
-    export const VueUiDumbbell: DefineComponent<{
-        config?: VueUiDumbbellConfig;
-        dataset: VueUiDumbbellDataset[];
-    }>;
+    export type VueUiDumbbellExpose = {
+        getData(): Promise<Array<{
+            end: number
+            id: string
+            name: string
+            start: number
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiDumbbell: DefineComponent<
+        {
+            config?: VueUiDumbbellConfig;
+            dataset: VueUiDumbbellDataset[];
+        },
+        VueUiDumbbellExpose
+    >;
 
     export type VueUiWordCloudDatasetItem = {
         name: string;
@@ -5660,10 +6245,43 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiWordCloud: DefineComponent<{
-        config?: VueUiWordCloudConfig;
-        dataset: VueUiWordCloudDatasetItem[] | string;
-    }>;
+    export type VueUiWordCloudExpose = {
+        getData(): Promise<Array<{
+            angle: number
+            color: string
+            fontSize: number
+            height: number
+            id: string
+            maxX: number
+            maxY: number
+            minX: number
+            minY: number
+            name: string
+            value: number
+            width: number
+            x: number
+            y: number
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleTooltip(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiWordCloud: DefineComponent<
+        {
+            config?: VueUiWordCloudConfig;
+            dataset: VueUiWordCloudDatasetItem[] | string;
+        },
+        VueUiWordCloudExpose
+    >;
 
     export type VueUiXyCanvasDatasetItem = {
         name: string;
@@ -5835,10 +6453,30 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiXyCanvas: DefineComponent<{
-        dataset: VueUiXyCanvasDatasetItem[];
-        config?: VueUiXyCanvasConfig;
-    }>;
+    export type VueUiXyCanvasExpose = {
+        getData(): Promise<Array<VueUiXyCanvasDatasetItem & Record<string, any>>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleLabels(): void
+        toggleStack(): void
+        toggleTooltip(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiXyCanvas: DefineComponent<
+        {
+            dataset: VueUiXyCanvasDatasetItem[];
+            config?: VueUiXyCanvasConfig;
+        },
+        VueUiXyCanvasExpose
+    >;
 
     export type VueUiFlowDatasetItem = [string, string, number];
 
@@ -5959,10 +6597,50 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiFlow: DefineComponent<{
-        dataset: VueUiFlowDatasetItem[];
-        config?: VueUiFlowConfig;
-    }>;
+    export type VueUiFlowExpose = {
+        getData(): Promise<{
+            nodes: Array<{
+                name: string,
+                absoluteY: number
+                color: string
+                height: number
+                i: number
+                value: number
+                x: number,
+                y: number
+            }>
+            links: Array<{
+                id: string
+                path: string
+                source: string
+                sourceColor: string
+                target: string
+                targetColor: string
+                value: number
+            }>
+        }>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generatePdf(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleLabels(): void
+        toggleTooltip(): void
+        unselectNode(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiFlow: DefineComponent<
+        {
+            dataset: VueUiFlowDatasetItem[];
+            config?: VueUiFlowConfig;
+        },
+        VueUiFlowExpose
+    >;
 
     export type VueUiParallelCoordinatePlotDatasetSerieItem = {
         name: string;
@@ -6097,10 +6775,30 @@ declare module "vue-data-ui" {
         }>;
     };
 
-    export const VueUiParallelCoordinatePlot: DefineComponent<{
-        config?: VueUiParallelCoordinatePlotConfig;
-        dataset: VueUiParallelCoordinatePlotDatasetItem[];
-    }>;
+    export type VueUiParallelCoordinatePlotExpose = {
+        getData(): Promise<Array<VueUiParallelCoordinatePlotDatasetItem & Record<string, any>>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generatePdf(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleLabels(): void
+        toggleSort(): void
+        toggleTooltip(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiParallelCoordinatePlot: DefineComponent<
+        {
+            config?: VueUiParallelCoordinatePlotConfig;
+            dataset: VueUiParallelCoordinatePlotDatasetItem[];
+        },
+        VueUiParallelCoordinatePlotExpose
+    >;
 
     export type VueUiTimerConfig = {
         type?: "stopwatch";
@@ -6463,10 +7161,43 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiStackbar: DefineComponent<{
-        config?: VueUiStackbarConfig;
-        dataset: VueUiStackbarDatasetItem[];
-    }>;
+    export type VueUiStackbarExpose = {
+        getData(): Promise<Array<{
+            absoluteIndex: number
+            color: string
+            height: number[],
+            horizontal_width: number[],
+            horizontal_x: number[],
+            horizontal_y: number[],
+            id: string
+            name: string
+            proportions: number[],
+            series: number[],
+            signedSeries: number[],
+            x: number[],
+            y: number[],
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleTable(): void
+        toggleLabels(): void
+        toggleTooltip(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiStackbar: DefineComponent<
+        {
+            config?: VueUiStackbarConfig;
+            dataset: VueUiStackbarDatasetItem[];
+        },
+        VueUiStackbarExpose
+    >;
 
     export type VueUiBulletSegment = {
         name: string;
@@ -6545,10 +7276,39 @@ declare module "vue-data-ui" {
         }
     };
 
-    export const VueUiBullet: DefineComponent<{
-        config?: VueUiBulletConfig;
-        dataset: VueUiBulletDataset;
-    }>;
+    export type VueUiBulletExpose = {
+        getData(): Promise<{
+            chunks: Array<Record<string, any>>
+            scale: Record<string, any>
+            target: {
+                x: number
+            }
+            ticks: Array<{
+                value: number
+                x: number
+                y: number
+            }>
+            value: {
+                width: number
+            }
+        }>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiBullet: DefineComponent<
+        {
+            config?: VueUiBulletConfig;
+            dataset: VueUiBulletDataset;
+        },
+        VueUiBulletExpose
+    >;
 
     export type VueUiFunnelDatasetItem = {
         name: string;
@@ -6638,10 +7398,31 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiFunnel: DefineComponent<{
-        dataset: VueUiFunnelDatasetItem[];
-        config?: VueUiFunnelConfig;
-    }>;
+    export type VueUiFunnelExpose = {
+        getData(): Promise<Array<{ 
+            color: string
+            name: string
+            value: string
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleTable(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiFunnel: DefineComponent<
+        {
+            dataset: VueUiFunnelDatasetItem[];
+            config?: VueUiFunnelConfig;
+        },
+        VueUiFunnelExpose
+    >;
 
     export type VueUiHistoryPlotDatasetItem = {
         name: string;
@@ -6818,10 +7599,48 @@ declare module "vue-data-ui" {
         seriesIndex: number;
     };
 
-    export const VueUiHistoryPlot: DefineComponent<{
-        config?: VueUiHistoryPlotConfig;
-        dataset: VueUiHistoryPlotDatasetItem[];
-    }>;
+    export type VueUiHistoryPlotExpose = {
+        getData(): Promise<Array<{
+            color: string
+            name: string
+            path: string
+            plots: Array<{
+                color: string
+                id: string
+                label: string
+                seriesName: string
+                valueX: number
+                valueY: number
+                x: number
+                y: number
+            }>
+            seriesIndex: number
+            values: Array<{
+                x: number
+                y: number
+                label: string
+            }>
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleTooltip(): void
+        toggleTable(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiHistoryPlot: DefineComponent<
+        {
+            config?: VueUiHistoryPlotConfig;
+            dataset: VueUiHistoryPlotDatasetItem[];
+        },
+        VueUiHistoryPlotExpose
+    >;
 
     export type VueUiCirclePackDatasetItem = {
         name: string;
@@ -6906,10 +7725,35 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiCirclePack: DefineComponent<{
-        config?: VueUiCirclePackConfig;
-        dataset: VueUiCirclePackDatasetItem[];
-    }>;
+    export type VueUiCirclePackExpose = {
+        getData(): Promise<Array<{
+            color: string
+            id: string
+            name: string
+            r: number
+            value: number
+            x: number
+            y: number
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiCirclePack: DefineComponent<
+        {
+            config?: VueUiCirclePackConfig;
+            dataset: VueUiCirclePackDatasetItem[];
+        },
+        VueUiCirclePackExpose
+    >;
 
     export type VueUiWorldConfig = {
         userOptions?: ChartUserOptions;
@@ -6986,10 +7830,28 @@ declare module "vue-data-ui" {
         }
     }
 
-    export const VueUiWorld: DefineComponent<{
-        config?: VueUiWorldConfig;
-        dataset?: VueUiWorldDataset
-    }>
+    export type VueUiWorldExpose = {
+        getData(): Promise<Array<Record<string, any>>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleTooltip(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiWorld: DefineComponent<
+        {
+            config?: VueUiWorldConfig;
+            dataset?: VueUiWorldDataset
+        },
+        VueUiWorldExpose
+    >
 
     export type VueUiRidgelineDatapoint = {
         name: string;
@@ -7113,10 +7975,55 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiRidgeline: DefineComponent<{
-        config?: VueUiRidgelineConfig;
-        dataset: VueUiRidgelineDatasetItem[]
-    }>
+    export type VueUiRidgelineExpose = {
+        getData(): Promise<Array<{
+            datapoints: Array<{
+                color: string
+                id: string
+                name: string
+                pathLength: number
+                plots: Array<{
+                    isMaxPoint: boolean
+                    value: number
+                    x: number
+                    y: number
+                    zero: number
+                }>
+                smoothPath: string
+                smoothPathRidge: string
+                straightPath: string
+                straightPathRidge: string
+                uid: string
+                values: Array<number | null>
+                zeroPath: string
+            }>
+            label: {
+                x: number
+                y: number
+            }
+            labelLen: number
+            name: string
+            uid: string
+        }>>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleTable(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiRidgeline: DefineComponent<
+        {
+            config?: VueUiRidgelineConfig;
+            dataset: VueUiRidgelineDatasetItem[]
+        },
+        VueUiRidgelineExpose
+    >
 
     export type VueUiChordDataset = {
         matrix: number[][];
@@ -7197,10 +8104,39 @@ declare module "vue-data-ui" {
         };
     };
 
-    export const VueUiChord: DefineComponent<{
-        config?: VueUiChordConfig;
-        dataset: VueUiChordDataset
-    }>
+    export type VueUiChordExpose = {
+        getData(): Promise<{
+            chords: Array<{
+                id: string
+                source: Record<string, any>
+                target: Record<string, any>
+            }>
+            groups: Array<{
+                color: string
+                index: number
+                name: string
+                proportion: number
+            } & Record<string, any>>
+        }>
+        getImage(options?: { scale?: number }): Promise<{
+            imageUri: string
+            base64: string
+        }>
+        generatePdf(): void
+        generateCsv(): void
+        generateImage(): void
+        toggleTable(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiChord: DefineComponent<
+        {
+            config?: VueUiChordConfig;
+            dataset: VueUiChordDataset
+        },
+        VueUiChordExpose
+    >
 
     export type VueDataUiConfig =
         | VueUi3dBarConfig

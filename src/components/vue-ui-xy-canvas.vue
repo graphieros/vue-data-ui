@@ -53,6 +53,7 @@ import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import { useTimeLabels } from "../useTimeLabels";
+import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -1549,8 +1550,15 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
+async function getImage({ scale = 2} = {}) {
+    if (!xy.value) return
+    const { imageUri, base64 } = await img(({ domElement: xy.value, base64: true, img: true, scale }))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generateCsv,
     generatePdf,
     generateImage,
@@ -1558,7 +1566,8 @@ defineExpose({
     toggleLabels,
     toggleStack,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 </script>

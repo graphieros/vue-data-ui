@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiWordCloud from '../src/components/vue-ui-word-cloud.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -106,6 +106,13 @@ const config = computed(() => {
 });
 
 const step = ref(0)
+
+onMounted(async () => {
+    if (local.value)  {
+        const img = await local.value.getImage()
+        console.log(img)
+    }
+})
 
 </script>
 

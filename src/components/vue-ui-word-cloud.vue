@@ -24,6 +24,7 @@ import { positionWords } from '../wordcloud';
 import usePanZoom from '../usePanZoom';
 import themes from "../themes.json";
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import img from '../img';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -363,14 +364,22 @@ const { viewBox, resetZoom, isZoom } = usePanZoom(svgRef, {
     height: svg.value.height <= 0 ? 10 : svg.value.height,
 }, 1, active)
 
+async function getImage({ scale = 2} = {}) {
+    if (!wordCloudChart.value) return
+    const { imageUri, base64 } = await img(({ domElement: wordCloudChart.value, base64: true, img: true, scale }))
+    return { imageUri, base64 }
+}
+
 defineExpose({
     getData,
+    getImage,
     generateCsv,
     generatePdf,
     generateImage,
     toggleTable,
     toggleTooltip,
-    toggleAnnotator
+    toggleAnnotator,
+    toggleFullscreen
 });
 
 const selectedWord = ref(null);
