@@ -700,7 +700,7 @@ async function getImage({ scale = 2} = {}) {
     if (!historyPlotChart.value) return;
     const { width, height } = historyPlotChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img(({ domElement: historyPlotChart.value, base64: true, img: true, scale}))
+    const { imageUri, base64 } = await img({ domElement: historyPlotChart.value, base64: true, img: true, scale})
     return { 
         imageUri, 
         base64, 

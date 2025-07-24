@@ -3603,7 +3603,7 @@ export default {
             if (!this.$refs.chart) return
             const { width, height } = this.$refs.chart.getBoundingClientRect();
             const aspectRatio = width / height;
-            const { imageUri, base64 } = await img(({ domElement: this.$refs.chart, base64: true, img: true, scale}))
+            const { imageUri, base64 } = await img({ domElement: this.$refs.chart, base64: true, img: true, scale})
             return { 
                 imageUri, 
                 base64, 

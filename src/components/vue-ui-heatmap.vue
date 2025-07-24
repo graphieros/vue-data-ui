@@ -476,7 +476,7 @@ async function getImage({ scale = 2} = {}) {
     if (!heatmapChart.value) return;
     const { width, height } = heatmapChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img(({ domElement: heatmapChart.value, base64: true, img: true, scale}))
+    const { imageUri, base64 } = await img({ domElement: heatmapChart.value, base64: true, img: true, scale})
     return { 
         imageUri, 
         base64, 
