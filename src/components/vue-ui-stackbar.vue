@@ -946,6 +946,7 @@ defineExpose({
 
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">
             <Title
+                :key="`title_${titleStep}`"
                 :config="{
                     title: {
                         cy: 'stackbar-title',
