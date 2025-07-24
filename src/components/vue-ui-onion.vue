@@ -512,7 +512,7 @@ async function getImage({ scale = 2} = {}) {
     if (!onionChart.value) return;
     const { width, height } = onionChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img(({ domElement: onionChart.value, base64: true, img: true, scale}))
+    const { imageUri, base64 } = await img({ domElement: onionChart.value, base64: true, img: true, scale})
     return { 
         imageUri, 
         base64, 

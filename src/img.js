@@ -2,6 +2,29 @@ import { domToPng } from "./dom-to-png";
 
 export default async function img({ domElement, fileName, format = 'png', scale = 2, base64 = false, img = false }) {
   if (!domElement) return Promise.reject('No element provided');
+  
+  const isSafari = typeof navigator !== 'undefined' &&
+  /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  if (isSafari) {
+    // Warming up in Safari, because it never works on the first try
+    try {
+      await domToPng({ container: domElement, scale });
+      await domToPng({ container: domElement, scale });
+      await domToPng({ container: domElement, scale });
+      await domToPng({ container: domElement, scale });
+      if (base64) {
+        await domToPng({ container: domElement, scale, base64 });
+        await domToPng({ container: domElement, scale, base64 });
+        await domToPng({ container: domElement, scale, base64 });
+        await domToPng({ container: domElement, scale, base64 });
+      }
+    } catch (_) {
+      // ignore any errors during warm‑up
+    }
+  }
 
   if (base64 && img) {
     try {
@@ -13,7 +36,7 @@ export default async function img({ domElement, fileName, format = 'png', scale 
       });
       return { imageUri: p, base64: b64 }
     } catch(err) {
-      console.error("Error generating imgae information for the chart", err);
+      console.error("Error generating image information for the chart", err);
     }
   } else if (base64) {
     try {

@@ -994,7 +994,7 @@ async function getImage({ scale = 2} = {}) {
     if (!quickChart.value) return;
     const { width, height } = quickChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img(({ domElement: quickChart.value, base64: true, img: true, scale }))
+    const { imageUri, base64 } = await img({ domElement: quickChart.value, base64: true, img: true, scale })
     return { 
         imageUri, 
         base64, 

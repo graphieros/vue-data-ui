@@ -444,7 +444,7 @@ async function getImage({ scale = 2} = {}) {
     if (!galaxyChart.value) return;
     const { width, height } = galaxyChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img(({ domElement: galaxyChart.value, base64: true, img: true, scale}))
+    const { imageUri, base64 } = await img({ domElement: galaxyChart.value, base64: true, img: true, scale})
     return { 
         imageUri, 
         base64, 

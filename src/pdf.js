@@ -1,7 +1,10 @@
-import { domToPng } from "./dom-to-png"; 
+import { domToPng } from "./dom-to-png";
 
 export default async function pdf({ domElement, fileName, scale = 2, options = {} }) {
     if (!domElement) return Promise.reject("No domElement provided");
+
+    const isSafari = typeof navigator !== 'undefined' &&
+        /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
     let JsPDF;
 
@@ -15,6 +18,18 @@ export default async function pdf({ domElement, fileName, scale = 2, options = {
         width: 595.28,
         height: 841.89,
     };
+
+    if (isSafari) {
+        // Warming up in Safari, because it never works on the first try
+        try {
+            await domToPng({ container: domElement, scale });
+            await domToPng({ container: domElement, scale });
+            await domToPng({ container: domElement, scale });
+            await domToPng({ container: domElement, scale });
+        } catch (_) {
+            // ignore any errors during warm‑up
+        }
+    }
 
     const imgData = await domToPng({ container: domElement, scale });
     return await new Promise((resolve, reject) => {

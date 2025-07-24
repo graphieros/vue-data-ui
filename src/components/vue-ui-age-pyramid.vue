@@ -460,7 +460,7 @@ async function getImage({ scale = 2} = {}) {
     if (!agePyramid.value) return
     const { width, height } = agePyramid.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img(({ domElement: agePyramid.value, base64: true, img: true, scale}))
+    const { imageUri, base64 } = await img({ domElement: agePyramid.value, base64: true, img: true, scale})
     return { 
         imageUri, 
         base64, 

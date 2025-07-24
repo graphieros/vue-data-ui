@@ -637,7 +637,7 @@ async function getImage({ scale = 2} = {}) {
     if (!treemapChart.value) return;
     const { width, height } = treemapChart.value.getBoundingClientRect();
     const aspectRatio = width / height; 
-    const { imageUri, base64 } = await img(({ domElement: treemapChart.value, base64: true, img: true, scale}))
+    const { imageUri, base64 } = await img({ domElement: treemapChart.value, base64: true, img: true, scale})
     return { 
         imageUri, 
         base64, 

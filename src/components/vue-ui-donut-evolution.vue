@@ -624,7 +624,7 @@ async function getImage({ scale = 2} = {}) {
     if (!donutEvolutionChart.value) return;
     const { width, height } = donutEvolutionChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img(({ domElement: donutEvolutionChart.value, base64: true, img: true, scale}))
+    const { imageUri, base64 } = await img({ domElement: donutEvolutionChart.value, base64: true, img: true, scale})
     return { 
         imageUri, 
         base64, 

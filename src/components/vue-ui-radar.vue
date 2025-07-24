@@ -599,7 +599,7 @@ async function getImage({ scale = 2} = {}) {
     if (!radarChart.value) return;
     const { width, height } = radarChart.value.getBoundingClientRect();
     const aspectRatio = width / height; 
-    const { imageUri, base64 } = await img(({ domElement: radarChart.value, base64: true, img: true, scale }))
+    const { imageUri, base64 } = await img({ domElement: radarChart.value, base64: true, img: true, scale })
     return { 
         imageUri, 
         base64, 

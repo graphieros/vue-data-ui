@@ -515,7 +515,7 @@ async function getImage({ scale = 2} = {}) {
     if (!stripPlotChart.value) return;
     const { width, height } = stripPlotChart.value.getBoundingClientRect();
     const aspectRatio = width / height;
-    const { imageUri, base64 } = await img(({ domElement: stripPlotChart.value, base64: true, img: true, scale }))
+    const { imageUri, base64 } = await img({ domElement: stripPlotChart.value, base64: true, img: true, scale })
     return { 
         imageUri, 
         base64, 
