@@ -357,6 +357,8 @@ function toggleProps() {
 // ]);
 
 const model = ref([
+    { key: 'autoSize', def: true, type: 'checkbox'}, // v3 opt-in
+
     { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA'] },
     { key: 'responsive', def: false, type: 'checkbox' },
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
@@ -449,7 +451,7 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.showOnlyFirstAndLast', def: false, type: 'checkbox', label: 'showOnlyFirstAndLast', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 24, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
-    { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 24, type: 'number', min: -100, max: 100 },
+    { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 0, type: 'number', min: -100, max: 100 },
 
     { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number' },
