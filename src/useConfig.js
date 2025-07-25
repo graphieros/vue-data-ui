@@ -414,6 +414,7 @@ export function useConfig() {
     const vue_ui_xy = {
         theme: '',
         responsive: false,
+        autoSize: false, // v3 opt-in
         responsiveProportionalSizing: true,
         customPalette: [],
         useCssAnimation: true,

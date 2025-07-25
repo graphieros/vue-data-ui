@@ -357,6 +357,8 @@ function toggleProps() {
 // ]);
 
 const model = ref([
+    { key: 'autoSize', def: true, type: 'checkbox'}, // v3 opt-in
+
     { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA'] },
     { key: 'responsive', def: false, type: 'checkbox' },
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},

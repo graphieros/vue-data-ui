@@ -2953,6 +2953,7 @@ declare module "vue-data-ui" {
 
     export type VueUiXyConfig = {
         responsive?: boolean;
+        autoSize?: boolean; // v3 opt-in
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];

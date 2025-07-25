@@ -112,15 +112,16 @@
             v-if="isDataset" 
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
             data-cy="xy-svg" 
+            :width="isAutoSize ? undefined : '100%'" 
             :viewBox="viewBox" 
-            class="vue-ui-xy-svg" 
+            class="vue-ui-xy-svg vue-data-ui-svg" 
             :style="`background: transparent; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`"
             :aria-label="chartAriaLabel"
             role="img"
             aria-live="polite"
             preserveAspectRatio="xMidYMid"
         >
-            <g ref="G">
+            <g ref="G" class="vue-data-ui-g">
                 <PackageVersion />
     
                 <!-- BACKGROUND SLOT -->
@@ -502,7 +503,7 @@
                                 </template>
                                 <text 
                                     v-for="(yLabel, j) in el.yLabels"
-                                    :x="el.x - fontSizes.dataLabels / 2 + xPadding + FINAL_CONFIG.chart.grid.labels.yAxis.scaleValueOffsetX" 
+                                    :x="isAutoSize ? el.x - fontSizes.dataLabels / 2 + xPadding + FINAL_CONFIG.chart.grid.labels.yAxis.scaleValueOffsetX : el.x - 5 + xPadding + FINAL_CONFIG.chart.grid.labels.yAxis.scaleValueOffsetX" 
                                     :y="forceValidValue(yLabel.y) + fontSizes.dataLabels / 3" 
                                     :font-size="fontSizes.dataLabels" 
                                     text-anchor="end"
@@ -1130,6 +1131,7 @@
                             v-if="FINAL_CONFIG.chart.grid.labels.axis.yLabel && !mutableConfig.useIndividualScale" 
                             :font-size="fontSizes.yAxis" 
                             :fill="FINAL_CONFIG.chart.grid.labels.color"
+                            :transform="isAutoSize ? undefined : `translate(${fontSizes.yAxis + FINAL_CONFIG.chart.grid.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                             text-anchor="middle" 
                             style="transition: none"
                         >
@@ -1140,7 +1142,8 @@
                             data-cy="xy-axis-xLabel"
                             v-if="FINAL_CONFIG.chart.grid.labels.axis.xLabel" 
                             text-anchor="middle"
-                            :x="(viewBoxParts.width / 2) - Math.abs(viewBoxParts.x)"
+                            :x="isAutoSize ? (viewBoxParts.width / 2) - Math.abs(viewBoxParts.x) : width / 2"
+                            :y="isAutoSize ? undefined : drawingArea.bottom + fontSizes.yAxis + (fontSizes.xAxis * 1.3) + FINAL_CONFIG.chart.grid.labels.axis.xLabelOffsetY"
                             :font-size="fontSizes.yAxis"
                             :fill="FINAL_CONFIG.chart.grid.labels.color"
                         >
@@ -1155,10 +1158,10 @@
                             <template v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                                 <slot name="time-label" v-bind="{
                                     x: drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2),
-                                    y: drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset,
+                                    y: isAutoSize ? drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset : drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset,
                                     fontSize: fontSizes.xAxis,
                                     fill: FINAL_CONFIG.chart.grid.labels.xAxisLabels.color,
-                                    transform: `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`,
+                                    transform: isAutoSize ? `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})` : `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`,
                                     absoluteIndex: label.absoluteIndex,
                                     content: label.text,
                                     textAnchor: FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle',
@@ -1180,7 +1183,7 @@
                                         :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                                         :font-size="fontSizes.xAxis"
                                         :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                                        :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                        :transform="isAutoSize ? `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})` : `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                         :style="{
                                             cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
                                         }"
@@ -1196,7 +1199,7 @@
                                         :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                                         :font-size="fontSizes.xAxis"
                                         :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                                        :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                        :transform="isAutoSize ? `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`  : `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                         :style="{
                                             cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
                                         }"
@@ -1861,13 +1864,19 @@ export default {
             svgRef: null,
             tagRefs: {},
             _textMeasurer: null,
+            /******************************************************************************************/
+            /*                                      V3 autosize data                                  */
+            /******************************************************************************************/
             remainingHeight: 0,
-            svgAspectRatio: 1,
+            svgAspectRatio: 1
+            /******************************************************************************************/
         }
     },
     watch: {
         'mutableConfig.isStacked': {
             async handler(_) {
+                if (!this.isAutoSize) return;
+                // Autosize again to fit scale labels change
                 await this.$nextTick();
                 this.setViewBox();
                 this.forceResizeObserver();
@@ -1910,10 +1919,17 @@ export default {
         }
     },
     computed: {
+        /******************************************************************************************/
+        /*                                  V3 autosize computed                                  */
+        /******************************************************************************************/
+        isAutoSize() {
+            return this.FINAL_CONFIG.autoSize;
+        },
         viewBoxParts() {
             const [x, y, w, h] = this.viewBox.split(' ').map(Number);
             return { x, y, width: w, height: h };
         },
+        /******************************************************************************************/
         locale() {
             return this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.formatter.locale;
         },
@@ -2000,6 +2016,14 @@ export default {
 
             const len = source.flatMap(el => el).length;
             return source.flatMap((el,i) => {
+
+                let x = 0;
+                if (this.isAutoSize) {
+                    x = this.mutableConfig.isStacked ? this.drawingArea.left : this.drawingArea.left - (i * (this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + this.fontSizes.dataLabels * 2));
+                } else {
+                    x = this.mutableConfig.isStacked ? this.drawingArea.left : (this.drawingArea.left / len) * (i+1);
+                }
+
                 return {
                     unique: el.unique,
                     id: el.id,
@@ -2010,7 +2034,7 @@ export default {
                     scale: el.scale,
                     yOffset: el.yOffset,
                     individualHeight: el.individualHeight,
-                    x: this.mutableConfig.isStacked ? this.drawingArea.left : this.drawingArea.left - (i * (this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + this.fontSizes.dataLabels * 2)),
+                    x,
                     yLabels: el.scaleYLabels || el.scale.ticks.map(t => {
                         return {
                             y: t >= 0 ? el.zero - (el.individualHeight * (t / el.max)) : el.zero + (el.individualHeight * Math.abs(t) / el.max),
@@ -2654,12 +2678,12 @@ export default {
 
             const individualScalesPadding = this.mutableConfig.useIndividualScale && this.FINAL_CONFIG.chart.grid.labels.show ? len * (this.mutableConfig.isStacked ? 0 : this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth) : 0;
             return {
-                top: 0,
-                right: this.width,
-                bottom: this.height,
-                left: individualScalesPadding,
-                height: this.height,
-                width: this.width - individualScalesPadding
+                top: this.isAutoSize ? 0 : this.FINAL_CONFIG.chart.padding.top,
+                right: this.isAutoSize ? this.width : this.width - this.FINAL_CONFIG.chart.padding.right,
+                bottom: this.isAutoSize ? this.height : this.height - this.FINAL_CONFIG.chart.padding.bottom,
+                left: this.isAutoSize ? individualScalesPadding : this.FINAL_CONFIG.chart.padding.left + individualScalesPadding,
+                height: this.isAutoSize ? this.height : this.height - (this.FINAL_CONFIG.chart.padding.top + this.FINAL_CONFIG.chart.padding.bottom),
+                width: this.isAutoSize ? this.width - individualScalesPadding :this.width - (this.FINAL_CONFIG.chart.padding.right + this.FINAL_CONFIG.chart.padding.left + individualScalesPadding)
             }
         },
         max(){
@@ -3096,6 +3120,9 @@ export default {
         createIndividualAreaWithCuts,
         createSmoothAreaSegments,
         createIndividualArea,
+        /******************************************************************************************/
+        /*                                  V3 autosize methods                                   */
+        /******************************************************************************************/
         forceResizeObserver() {
             if (!this.FINAL_CONFIG.responsive) return;
             const chart = this.$refs.chart;
@@ -3115,11 +3142,11 @@ export default {
             const g = this.$refs.G;
             if (!g) return;
             const {x, y, width, height } = g.getBBox();
-            this.setYAxisLabel();
             this.setXAxisLabel();
             await this.$nextTick();
+            this.setYAxisLabel();
             const newBB = g.getBBox();
-            this.viewBox = `${newBB.x - this.FINAL_CONFIG.chart.padding.left} ${newBB.y - this.fontSizes.plotLabels - this.FINAL_CONFIG.chart.padding.top} ${newBB.width + this.FINAL_CONFIG.chart.padding.left + this.FINAL_CONFIG.chart.padding.right} ${newBB.height + this.fontSizes.plotLabels + this.FINAL_CONFIG.chart.padding.top + this.FINAL_CONFIG.chart.padding.bottom}`;
+            this.viewBox = `${newBB.x} ${newBB.y - this.fontSizes.plotLabels} ${newBB.width + this.FINAL_CONFIG.chart.padding.left} ${newBB.height + this.fontSizes.plotLabels + this.FINAL_CONFIG.chart.padding.top}`;
             await this.$nextTick();
             this.$refs.chart.classList.remove('no-transition');
         },
@@ -3142,6 +3169,7 @@ export default {
 
             xAxisLabel.setAttribute('y', y + (this.fontSizes.xAxis * 1.3) + this.FINAL_CONFIG.chart.grid.labels.axis.xLabelOffsetY);
         },
+        /******************************************************************************************/
         usesSelectTimeLabelEvent() {
             return !!this.$.vnode.props?.onSelectTimeLabel;
         },
@@ -3263,6 +3291,30 @@ export default {
                     mergedConfig.chart.annotations = [];
                 }
 
+                // v3 autoSize chart.padding override
+                if (this.config && this.config.autoSize) {
+
+                    if (this.config.chart.padding.top) {
+                        console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.top, set a 0 value to remove this warning')
+                    }
+                    if (this.config.chart.padding.right) {
+                        console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.right, set a 0 value to remove this warning')
+                    }
+                    if (this.config.chart.padding.bottom) {
+                        console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.bottom, set a 0 value to remove this warning')
+                    }
+                    if (this.config.chart.padding.left) {
+                        console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.left, set a 0 value to remove this warning')
+                    }
+
+                    mergedConfig.chart.padding = {
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 0,
+                    }
+                }
+
                 // ----------------------------------------------------------------------------
 
                 if (mergedConfig.theme) {
@@ -3320,6 +3372,8 @@ export default {
                 useIndividualScale: this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale
             }
 
+            const additionalPad = this.isAutoSize ? 0 : 12;
+
             if (this.FINAL_CONFIG.responsive) {
                 const chart = this.$refs.chart;
                 // Parent container (must have fixed height or max-height. Setting 100% will result in infinite height growth which looks aweful on top of being useless)
@@ -3374,9 +3428,14 @@ export default {
                     - slicerHeight 
                     - sourceHeight 
                     - noTitleHeight
+                    - additionalPad;
 
                 this.width = width;
-                this.setViewBox(0, 0, Math.max(10, this.width), Math.max(10, this.height));
+                if (this.isAutoSize) {
+                    this.setViewBox();
+                } else {
+                    this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
+                }
                 this.convertSizes();
 
                 const ro = new ResizeObserver((entries) => {
@@ -3406,7 +3465,10 @@ export default {
                         } else {
                             noTitleHeight = 0;
                         }
-                        this.$refs.chart.classList.add('no-transition');
+                        if (this.isAutoSize) {
+                            // Transitions hinder the first viewbox measurements
+                            this.$refs.chart.classList.add('no-transition');
+                        }
                         requestAnimationFrame(() => {
                             this.height = entry.contentRect.height
                                 - titleHeight 
@@ -3414,13 +3476,18 @@ export default {
                                 - slicerHeight 
                                 - sourceHeight 
                                 - noTitleHeight
-                                - 48
-                            
-                            this.remainingHeight = entry.contentRect.height - this.height;
-                            this.width = entry.contentBoxSize[0].inlineSize;
-                            this.svgAspectRatio = this.width / this.remainingHeight;
+                                - (this.isAutoSize ? 48 : additionalPad); // FIXME: this magic 48 should be understood
 
-                            this.setViewBox(0, 0, Math.max(10, this.width), Math.max(10, this.height));
+                            if (this.isAutoSize) {
+                                this.remainingHeight = entry.contentRect.height - this.height;
+                                this.width = entry.contentBoxSize[0].inlineSize;
+                                this.svgAspectRatio = this.width / this.remainingHeight;
+                                this.setViewBox();
+                            } else {
+                                this.width = entry.contentBoxSize[0].inlineSize;
+                                this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
+                            }
+
                             this.convertSizes();
                         })
                     }
@@ -3434,13 +3501,17 @@ export default {
             } else {
                 this.height = this.FINAL_CONFIG.chart.height;
                 this.width = this.FINAL_CONFIG.chart.width;
-                this.setViewBox(0, 0, Math.max(10, this.width), Math.max(10, this.height));
                 this.fontSizes.dataLabels = this.FINAL_CONFIG.chart.grid.labels.fontSize;
                 this.fontSizes.yAxis = this.FINAL_CONFIG.chart.grid.labels.axis.fontSize;
                 this.fontSizes.xAxis =  this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize;
                 this.fontSizes.plotLabels = this.FINAL_CONFIG.chart.labels.fontSize;
                 this.plotRadii.plot = this.FINAL_CONFIG.plot.radius;
                 this.plotRadii.line = this.FINAL_CONFIG.line.radius;
+                if (this.isAutoSize) {
+                    this.setViewBox();
+                } else {
+                    this.viewBox = `0 0 ${this.width} ${this.height}`;
+                }
             }
         },
         selectMinimapIndex(minimapIndex) {
