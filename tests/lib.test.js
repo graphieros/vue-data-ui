@@ -3679,133 +3679,6 @@ describe('createTSpansFromLineBreaksOnY', () => {
     });
 })
 
-
-describe('autoFontSize', () => {
-    /**
-     * Helper to mock a text element whose bounding‐box
-     * depends on the current el.style.fontSize, and a
-     * container with a fixed getBoundingClientRect().
-     */
-    function makeAutoFontSizeMocks({
-        containerRect = { left: 0, top: 0, right: 100, bottom: 100 },
-        elementRects = {},
-    }) {
-        const el = {
-            style: { fontSize: '', opacity: '' },
-            getBoundingClientRect() {
-                const size = parseInt(this.style.fontSize, 10) || 0
-                const r = elementRects[size]
-                if (!r) throw new Error(`no elementRect for fontSize ${size}`)
-                return r
-            },
-        };
-
-        const containerEl = {
-            getBoundingClientRect() {
-                return containerRect;
-            },
-        }
-
-        return { el, containerEl };
-    }
-
-    test('returns 0 if el, containerEl, or currentFontSize missing', () => {
-        expect(autoFontSize({ el: null, containerEl: {}, currentFontSize: 10 })).toBe(0);
-        expect(autoFontSize({ el: {}, containerEl: null, currentFontSize: 10 })).toBe(0);
-        expect(autoFontSize({ el: {}, containerEl: {}, currentFontSize: 0 })).toBe(0);
-    });
-
-    test('fits at full size → no shrink', () => {
-        const { el, containerEl } = makeAutoFontSizeMocks({
-            containerRect: { left: 0, top: 0, right: 200, bottom: 50 },
-            elementRects: {
-                14: { left: 10, top: 5, right: 150, bottom: 30 },
-            },
-        });
-
-        const result = autoFontSize({
-            el,
-            containerEl,
-            currentFontSize: 14,
-            minFontSize: 6,
-            attempts: 10,
-        });
-
-        expect(result).toBe(14);
-        expect(el.style.fontSize).toBe(14);
-        expect(el.style.opacity).toBe('1');
-    });
-
-    test('shrinks down until fits', () => {
-        const { el, containerEl } = makeAutoFontSizeMocks({
-            containerRect: { left: 0, top: 0, right: 100, bottom: 100 },
-            elementRects: {
-                14: { left: 0, top: 0, right: 120, bottom: 10 },
-                13: { left: 0, top: 0, right: 110, bottom: 10 },
-                12: { left: 5, top: 5, right: 95, bottom: 15 },
-            },
-        });
-
-        const result = autoFontSize({
-            el,
-            containerEl,
-            currentFontSize: 14,
-            minFontSize: 8,
-            attempts: 10,
-        });
-
-        expect(result).toBe(12);
-        expect(el.style.fontSize).toBe(12);
-        expect(el.style.opacity).toBe('1');
-    });
-
-    test('stops at minFontSize and remains visible even if still overflowing', () => {
-        // simulate overflow at every size down to minFontSize (6)
-        const rects = {};
-        for (let size = 10; size >= 6; size--) {
-            rects[size] = { left: 0, top: 0, right: size * 20, bottom: 10 }
-        }
-
-        const { el, containerEl } = makeAutoFontSizeMocks({
-            containerRect: { left: 0, top: 0, right: 100, bottom: 100 },
-            elementRects: rects,
-        });
-
-        const result = autoFontSize({
-            el,
-            containerEl,
-            currentFontSize: 10,
-            minFontSize: 6,
-            attempts: 5,
-        });
-
-        expect(result).toBe(6);
-        expect(el.style.fontSize).toBe(6);
-        expect(el.style.opacity).toBe('1');
-    })
-
-    test('normalizes inverted container rects', () => {
-        const containerRect = { left: 200, top: 200, right: 50, bottom: 50 };
-        const elementRects = {
-            15: { left: 60, top: 60, right: 180, bottom: 100 },
-        };
-
-        const { el, containerEl } = makeAutoFontSizeMocks({ containerRect, elementRects });
-
-        const result = autoFontSize({
-            el,
-            containerEl,
-            currentFontSize: 15,
-            minFontSize: 6,
-            attempts: 3,
-        });
-
-        expect(result).toBe(15);
-        expect(el.style.fontSize).toBe(15);
-        expect(el.style.opacity).toBe('1');
-    });
-});
-
 describe('observeClassPresenceIn', () => {
     // Stub MutationObserver so we control when it fires
     class FakeMutationObserver {
@@ -3935,3 +3808,91 @@ describe('observeClassPresenceIn', () => {
         expect(() => observer.disconnect()).not.toThrow();
     });
 });
+
+describe('autoFontSize', () => {
+    function makeMocks({
+        bounds = { x: 0, y: 0, width: 100, height: 100 },
+        elementBBoxes = {},
+        ctm = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
+    }) {
+        const el = {
+            style: { fontSize: '', opacity: '' },
+            getBBox() {
+                const size = parseInt(this.style.fontSize, 10) || 0
+                const box = elementBBoxes[size]
+                if (!box) throw new Error(`no bbox for fontSize ${size}`)
+                return box
+            },
+            getCTM() { return ctm },
+        }
+        return { el, bounds }
+    }
+
+    test('returns 0 if el, bounds, or currentFontSize missing', () => {
+        expect(autoFontSize({ el: null, bounds: {}, currentFontSize: 10 })).toBe(0)
+        expect(autoFontSize({ el: {}, bounds: null, currentFontSize: 10 })).toBe(0)
+        expect(autoFontSize({ el: {}, bounds: {}, currentFontSize: 0 })).toBe(0)
+    })
+
+    test('fits at full size → no shrink', () => {
+        const { el, bounds } = makeMocks({
+            bounds: { x: 0, y: 0, width: 200, height: 50 },
+            elementBBoxes: {
+                14: { x: 10, y: 5, width: 140, height: 25 },
+            },
+        })
+
+        const result = autoFontSize({
+            el, bounds,
+            currentFontSize: 14,
+            minFontSize: 6,
+            attempts: 10,
+            padding: 0,
+        })
+
+        expect(result).toBe(14)
+        expect(parseInt(el.style.fontSize, 10)).toBe(14)
+    })
+
+    test('shrinks down until fits', () => {
+        const { el, bounds } = makeMocks({
+            bounds: { x: 0, y: 0, width: 100, height: 100 },
+            elementBBoxes: {
+                14: { x: 0, y: 0, width: 120, height: 10 },
+                13: { x: 0, y: 0, width: 110, height: 10 },
+                12: { x: 5, y: 5, width: 90, height: 10 },
+            },
+        })
+
+        const result = autoFontSize({
+            el, bounds,
+            currentFontSize: 14,
+            minFontSize: 8,
+            attempts: 10,
+            padding: 0,
+        })
+
+        expect(result).toBe(12)
+        expect(parseInt(el.style.fontSize, 10)).toBe(12)
+    })
+
+    test('hides completely if it never fits (even at minFontSize)', () => {
+        // overflow at every size, including at minFontSize=6
+        const bboxes = {}
+        for (let s = 10; s >= 6; s--) {
+            bboxes[s] = { x: 0, y: 0, width: s * 20, height: 10 }
+        }
+        const { el, bounds } = makeMocks({ bounds: { x: 0, y: 0, width: 100, height: 100 }, elementBBoxes: bboxes })
+
+        const result = autoFontSize({
+            el, bounds,
+            currentFontSize: 10,
+            minFontSize: 6,
+            attempts: 10,
+            padding: 0,
+        })
+
+        expect(result).toBe(0)
+        expect(parseInt(el.style.fontSize, 10)).toBe(0)
+    })
+})
