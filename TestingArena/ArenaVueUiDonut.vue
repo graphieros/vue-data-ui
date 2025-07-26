@@ -8,24 +8,24 @@ import LocalPattern from "../src/atoms/vue-ui-pattern.vue";
 
 const dataset = ref([
     {
-        name: 'Serie 1',
+        name: 'Serie 1 with a huge label that overflows',
         values: [1],
-        comment: 'This is a comment'
+        // comment: 'This is a comment'
     },
     {
-        name: 'Serie  lorem ipsum thing',
+        name: 'Serie 2 with a huge label that overflows',
         values: [1],
-        comment: 'This is a comment'
+        // comment: 'This is a comment'
     },
     {
-        name: 'Serie lorem other thing',
+        name: 'Serie 3 with a huge\nlabel that overflows',
         values: [1],
-        comment: 'This is a comment'
+        // comment: 'This is a comment'
     },
     {
-        name: 'Serie 1',
+        name: 'Serie 4 with a huge label that overflows',
         values: [1],
-        comment: 'This is a comment'
+        // comment: 'This is a comment'
     },
     {
         name: 'Serie 2',
@@ -34,7 +34,7 @@ const dataset = ref([
     {
         name: 'Serie 3',
         values: [2],
-        comment: "This is another comment that is quite long to see how it fits on the chart and to see if it's nit overflowing."
+        // comment: "This is another comment that is quite long to see how it fits on the chart and to see if it's nit overflowing."
     },
     // {
     //     name: 'Serie 4',
@@ -81,9 +81,13 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'autoSize', def: true, type: 'checkbox'},
+    { key: 'startAnimation.show', def: false, type: 'checkbox'},
+    { key: 'pie', def: true, type: 'checkbox'},
+
     { key: 'type', def: 'classic', type: 'select', options: ['classic', 'polar']},
     { key: 'style.chart.width', def: 512, type: 'number', min: 0, max: 512 },
-    { key: 'style.chart.height', def: 512, type: 'number', min: 0, max: 512 },
+    { key: 'style.chart.height', def: 360, type: 'number', min: 0, max: 512 },
 
     { key: 'serieToggleAnimation.show', def: true, type: 'checkbox'},
     { key: 'serieToggleAnimation.durationMs', def: 500, type: 'number', min: 0, max: 5000, step: 100},
@@ -104,12 +108,12 @@ const model = ref([
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
 
-    { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
+    { key: 'useCssAnimation', def: false, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'useBlurOnHover', def: true, type: 'checkbox', label: "useBlurOnHover", category: 'general' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text', label: "fontFamily", category: 'general' },
     { key: 'style.chart.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'general' },
     { key: 'style.chart.gradientIntensity', def: 40, min: 0, max: 100, type: 'range', label: 'gradientIntensity', category: 'general' },
-    { key: 'style.chart.backgroundColor', def: 'transparent', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
 
     { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100},
@@ -125,12 +129,17 @@ const model = ref([
     { key: 'style.chart.layout.labels.dataLabels.suffix', def: '', type: 'text', label: 'suffix', category: 'labels' },
     { key: 'style.chart.layout.labels.value.show', def: true, type: 'checkbox', label: 'showValue', category: 'labels' },
     { key: 'style.chart.layout.labels.value.rounding', def: 0, type: 'number', min: 0, max: 6, label: 'valueRounding', category: 'labels' },
+
     { key: 'style.chart.layout.labels.percentage.color', def: '#1A1A1A', type: 'color', label: 'colorPercentage', category: 'labels' },
     { key: 'style.chart.layout.labels.percentage.bold', def: true, type: 'checkbox', label: 'bold', category: 'labels' },
-    { key: 'style.chart.layout.labels.percentage.fontSize', def: 18, min: 6, max: 48, type: 'number', label: 'fontSize', category: 'labels' },
+    { key: 'style.chart.layout.labels.percentage.fontSize', def: 14, min: 6, max: 48, type: 'number', label: 'fontSize', category: 'labels' },
+    { key: 'style.chart.layout.labels.percentage.minFontSize', def: 6, min: 6, max: 48, type: 'number', label: 'fontSize', category: 'labels' },
+
     { key: 'style.chart.layout.labels.name.color', def: '#1A1A1A', type: 'color', label: 'colorName', category: 'labels' },
     { key: 'style.chart.layout.labels.name.bold', def: false, type: 'checkbox', label: 'bold', category: 'labels' },
     { key: 'style.chart.layout.labels.name.fontSize', def: 14, type: 'number', min: 6, max: 36, label: 'fontSize', category: 'labels' },
+    { key: 'style.chart.layout.labels.name.minFontSize', def: 6, type: 'number', min: 6, max: 36, label: 'fontSize', category: 'labels' },
+
     { key: 'style.chart.layout.labels.hollow.show', def: true, type: 'checkbox', label: ['hollow', 'is', 'show'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.total.show', def: true, type: 'checkbox', label: ['hollow', 'total', 'is', 'show'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.total.bold', def: false, type: 'checkbox', label: ['hollow', 'total', 'is', 'bold'], category: 'labels' },
@@ -243,7 +252,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -266,57 +275,57 @@ const config = computed(() => {
     } else {
         return {
             ...c,
-            style: {
-                ...c.style,
-                chart: {
-                    ...c.style.chart,
-                    layout: {
-                        ...c.style.chart.layout,
-                        labels: {
-                            ...c.style.chart.layout.labels,
-                            hollow: {
-                                ...c.style.chart.layout.labels.hollow,
-                                total: {
-                                    ...c.style.chart.layout.labels.hollow.total,
-                                    value: {
-                                        ...c.style.chart.layout.labels.hollow.total.value,
-                                        // formatter: ({value}) => {
-                                        //     return `f  - ${value}`
-                                        // }
-                                    }
-                                },
-                                average: {
-                                    ...c.style.chart.layout.labels.hollow.average,
-                                    value: {
-                                        ...c.style.chart.layout.labels.hollow.average.value,
-                                        // formatter: ({value}) => {
-                                        //     return `f  - ${value}`
-                                        // }
-                                    }
-                                },
-                            },
-                            value: {
-                                ...c.style.chart.layout.labels.value,
-                                // formatter: ({value, config}) => {
+            // style: {
+            //     ...c.style,
+            //     chart: {
+            //         ...c.style.chart,
+            //         layout: {
+            //             ...c.style.chart.layout,
+            //             labels: {
+            //                 ...c.style.chart.layout.labels,
+            //                 hollow: {
+            //                     ...c.style.chart.layout.labels.hollow,
+            //                     total: {
+            //                         ...c.style.chart.layout.labels.hollow.total,
+            //                         value: {
+            //                             ...c.style.chart.layout.labels.hollow.total.value,
+            //                             // formatter: ({value}) => {
+            //                             //     return `f  - ${value}`
+            //                             // }
+            //                         }
+            //                     },
+            //                     average: {
+            //                         ...c.style.chart.layout.labels.hollow.average,
+            //                         value: {
+            //                             ...c.style.chart.layout.labels.hollow.average.value,
+            //                             // formatter: ({value}) => {
+            //                             //     return `f  - ${value}`
+            //                             // }
+            //                         }
+            //                     },
+            //                 },
+            //                 value: {
+            //                     ...c.style.chart.layout.labels.value,
+            //                     // formatter: ({value, config}) => {
 
-                                //     return `f  - ${value}`
-                                // }
-                            },
-                            percentage: {
-                                // formatter: ({value}) => {
-                                //     return `f - ${value}`
-                                // }
-                            },
-                            dataLabels: {
-                                ...c.style.chart.layout.labels.dataLabels,
-                                // formatter: ({value}) => {
-                                //     return `f - ${value}`
-                                // }
-                            }
-                        }
-                    },
-                }
-            },
+            //                     //     return `f  - ${value}`
+            //                     // }
+            //                 },
+            //                 percentage: {
+            //                     // formatter: ({value}) => {
+            //                     //     return `f - ${value}`
+            //                     // }
+            //                 },
+            //                 dataLabels: {
+            //                     ...c.style.chart.layout.labels.dataLabels,
+            //                     // formatter: ({value}) => {
+            //                     //     return `f - ${value}`
+            //                     // }
+            //                 }
+            //             }
+            //         },
+            //     }
+            // },
             theme: currentTheme.value,
             // customPalette: ['#6376DD', "#DD3322", "#66DDAA"]
         }

@@ -2,6 +2,7 @@
 import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount, useSlots, defineAsyncComponent, shallowRef } from "vue";
 import {
     applyDataLabel,
+    autoFontSize,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
     calcNutArrowPath,
@@ -85,8 +86,80 @@ const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
 
-onMounted(() => {
+const labels_value_fontSize = computed({
+    get: () => FINAL_CONFIG.value.style.chart.layout.labels.percentage.fontSize,
+    set: v => v
+});
+const labels_name_fontSize = computed({
+    get: () => FINAL_CONFIG.value.style.chart.layout.labels.name.fontSize,
+    set: v => v
+});
+
+let rafScheduled = false
+
+const resizeAndReflow = () => {
+    if (!FINAL_CONFIG.value.autoSize || rafScheduled) return;
+    rafScheduled = true;
+
+    requestAnimationFrame(() => {
+        rafScheduled = false;
+
+        const cfg = FINAL_CONFIG.value;
+        const container = G.value;
+        const svg = svgRef.value;
+        if (!cfg.autoSize || !container || !svg) return;
+
+        const [x, y, w, h] = svg
+            .getAttribute('viewBox')
+            .split(' ')
+            .map(Number)
+
+        const bounds = { x, y, width: w, height: h };
+
+        const labelTypes = [
+            {
+                selector: '.vue-data-ui-datalabel-value',
+                baseSize: cfg.style.chart.layout.labels.percentage.fontSize,
+                minSize:  cfg.style.chart.layout.labels.percentage.minFontSize,
+                sizeRef:  labels_value_fontSize,
+            },
+            {
+                selector: '.vue-data-ui-datalabel-name',
+                baseSize: cfg.style.chart.layout.labels.name.fontSize,
+                minSize:  cfg.style.chart.layout.labels.name.minFontSize,
+                sizeRef:  labels_name_fontSize,
+            },
+        ];
+
+        // Early bail
+        const totalMatches = labelTypes
+            .map(lt => container.querySelectorAll(lt.selector).length)
+            .reduce((a, b) => a + b, 0);
+
+        if (totalMatches === 0) return;
+
+
+        labelTypes.forEach(({ selector, baseSize, minSize, sizeRef }) => {
+            container
+                .querySelectorAll(selector)
+                .forEach(el => {
+                    const final = autoFontSize({
+                        el,
+                        bounds,
+                        currentFontSize: baseSize,
+                        minFontSize: minSize,
+                        attempts: 200,
+                        padding: 1
+                    });
+                    sizeRef.value = final;
+                });
+            });
+    });
+}
+
+onMounted( async() => {
     prepareChart();
+    requestAnimationFrame(resizeAndReflow);
 });
 
 onBeforeUnmount(() => {
@@ -135,6 +208,7 @@ function prepareChart() {
             requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height;
+                resizeAndReflow()
             })
         });
 
@@ -205,11 +279,13 @@ function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
                     animatedValues.value = [...animatedValues.value];
                     if (p < 1) {
                         requestAnimationFrame(animate);
+                        requestAnimationFrame(resizeAndReflow)
                     } else {
                         animatedValues.value[i] = target;
                         animatedValues.value = [...animatedValues.value];
                         completed += 1;
                         if (completed === N) resolve();
+                        requestAnimationFrame(resizeAndReflow)
                     }
                 }
                 requestAnimationFrame(animate);
@@ -298,10 +374,13 @@ const svg = ref({
 });
 
 const donutThickness = computed(() => {
+    if (FINAL_CONFIG.value.pie) {
+        return minSize.value;
+    }
     const baseRatio = FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth / 512;
     const resultSize = Math.min(svg.value.width, svg.value.height) * baseRatio;
     const adjusted = resultSize > minSize.value ? minSize.value : resultSize;
-    return Math.max(adjusted, 3);
+    return Math.max(adjusted, 12 * (1 + baseRatio));
 });
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
@@ -325,7 +404,10 @@ const immutableSet = computed(() => {
 
 const mutableSet = shallowRef(immutableSet.value)
 
-watch(() => immutableSet.value, (val) => mutableSet.value = val)
+watch(() => immutableSet.value, (val) => {
+    mutableSet.value = val;
+    requestAnimationFrame(resizeAndReflow);
+})
 
 function getData() {
     return immutableSet.value.map(ds => {
@@ -382,6 +464,8 @@ function segregate(index) {
                     mutableSet.value = mutableSet.value.map((ds, i) =>
                         index === i ? { ...ds, value: val } : ds
                     );
+                    
+                    requestAnimationFrame(resizeAndReflow);
                 },
                 onDone: () => {
                     setFinalUpState();
@@ -413,6 +497,7 @@ function segregate(index) {
                     mutableSet.value = mutableSet.value.map((ds, i) =>
                         index === i ? { ...ds, value: val } : ds
                     );
+                    requestAnimationFrame(resizeAndReflow);
                 },
                 onDone: () => {
                     setFinalDownState();
@@ -1202,8 +1287,12 @@ defineExpose({
                 </template>
     
                 <!-- DATALABELS -->
-                <g v-for="(arc, i) in noGhostDonut.filter(el => !el.ghost)" :filter="getBlurFilter(i)"
-                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }">
+                <g 
+                    v-for="(arc, i) in noGhostDonut.filter(el => !el.ghost)" 
+                    :filter="getBlurFilter(i)"
+                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
+                    :key="arc.seriesIndex"
+                >
                     <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useLabelSlots">
                         <foreignObject
                             :x="calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - 120 : calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - 60 : calcMarkerOffsetX(arc).x"
@@ -1245,11 +1334,14 @@ defineExpose({
                             />
                         </template>
                         <template v-if="FINAL_CONFIG.type === 'classic'">
-                            <text data-cy="donut-label-value" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                            <text 
+                                data-cy="donut-label-value" 
+                                v-show="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                                class="vue-data-ui-datalabel-value"
                                 :text-anchor="calcMarkerOffsetX(arc, true, 12).anchor"
                                 :x="calcMarkerOffsetX(arc, true, 12).x" :y="calcMarkerOffsetY(arc)"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize + 'px'"
                                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold' : ''}`"
                                 @click="selectDatapoint(arc, i)">
                                 {{ displayArcPercentage(arc, noGhostDonut) }} {{
@@ -1264,12 +1356,14 @@ defineExpose({
                                         { datapoint: arc }
                                     )})` : '' }}
                             </text>
-                            <text data-cy="donut-label-name"
-                                v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
+                            <text 
+                                data-cy="donut-label-name"
+                                v-show="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
+                                class="vue-data-ui-datalabel-name"
                                 :text-anchor="calcMarkerOffsetX(arc).anchor" :x="calcMarkerOffsetX(arc, true, 12).x"
-                                :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :y="calcMarkerOffsetY(arc) + labels_name_fontSize"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize"
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize + 'px'"
                                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold' : ''}`"
                                 @click="selectDatapoint(arc, i)">
                                 {{ arc.name }}

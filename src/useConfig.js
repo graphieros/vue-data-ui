@@ -13,6 +13,8 @@ export function useConfig() {
     const COLOR_YELLOW = '#FFD055'
 
     const FONT = {
+        _6: 6,
+        _8: 8,
         _10: 10,
         _12: 12,
         _14: 14,
@@ -23,6 +25,8 @@ export function useConfig() {
         _32: 32,
         _48: 48
     }
+
+    const MIN_FONT_SIZE = FONT._6;
 
     // -------------------------
     // COMBOS TO APPLY
@@ -414,10 +418,10 @@ export function useConfig() {
     const vue_ui_xy = {
         theme: '',
         responsive: false,
-        autoSize: false, // v3 opt-in
+        autoSize: true, // false = v2
         responsiveProportionalSizing: true,
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         downsample: LTTB,
         chart: {
             fontFamily: 'inherit',
@@ -700,16 +704,18 @@ export function useConfig() {
 
     const vue_ui_donut = {
         type: 'classic',
+        pie: false, // v3
+        autoSize: true, // false = v2
         responsive: false,
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         serieToggleAnimation: {
             show: true,
             durationMs: 500,
         },
         startAnimation: {
-            show: true,
+            show: false, // v3 (v2 = true)
             durationMs: 1000,
             staggerMs: 50
         },
@@ -771,13 +777,15 @@ export function useConfig() {
                             color: COLOR_BLACK,
                             bold: true,
                             fontSize: FONT._18,
+                            minFontSize: MIN_FONT_SIZE, // v3
                             rounding: 0,
                             formatter: null
                         },
                         name: {
                             color: COLOR_BLACK,
                             bold: false,
-                            fontSize: FONT._14
+                            fontSize: FONT._14,
+                            minFontSize: MIN_FONT_SIZE, // v3
                         },
                         hollow: {
                             show: true,
@@ -820,7 +828,7 @@ export function useConfig() {
                         }
                     },
                     donut: {
-                        strokeWidth: 55,
+                        strokeWidth: 64, // v3 (v2 = 55)
                         borderWidth: 1,
                         useShadow: false,
                         shadowColor: COLOR_BLACK,

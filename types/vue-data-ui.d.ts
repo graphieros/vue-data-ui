@@ -3291,6 +3291,7 @@ declare module "vue-data-ui" {
 
     export type VueUiDonutConfig = {
         type?: "classic" | "polar";
+        pie?: boolean;
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -3334,6 +3335,7 @@ declare module "vue-data-ui" {
                             color?: string;
                             bold?: boolean;
                             fontSize?: number;
+                            minFontSize?: number;
                             rounding?: number;
                             formatter?: Formatter;
                         };
@@ -3341,6 +3343,7 @@ declare module "vue-data-ui" {
                             color?: string;
                             bold?: boolean;
                             fontSize?: number;
+                            minFontSize?: number;
                         };
                         hollow?: {
                             show?: boolean;
