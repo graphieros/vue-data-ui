@@ -13,6 +13,7 @@ import {
     addVector,
     applyDataLabel,
     assignStackRatios,
+    autoFontSize,
     calcLinearProgression,
     calcMedian,
     calcPercentageTrend,
@@ -66,6 +67,7 @@ import {
     matrixTimes,
     niceNum,
     objectIsEmpty,
+    observeClassPresenceIn,
     placeHTMLElementAtSVGCoordinates,
     rotateMatrix,
     sanitizeArray,
@@ -3676,3 +3678,260 @@ describe('createTSpansFromLineBreaksOnY', () => {
         expect(result).toBe(expected);
     });
 })
+
+
+describe('autoFontSize', () => {
+    /**
+     * Helper to mock a text element whose bounding‐box
+     * depends on the current el.style.fontSize, and a
+     * container with a fixed getBoundingClientRect().
+     */
+    function makeAutoFontSizeMocks({
+        containerRect = { left: 0, top: 0, right: 100, bottom: 100 },
+        elementRects = {},
+    }) {
+        const el = {
+            style: { fontSize: '', opacity: '' },
+            getBoundingClientRect() {
+                const size = parseInt(this.style.fontSize, 10) || 0
+                const r = elementRects[size]
+                if (!r) throw new Error(`no elementRect for fontSize ${size}`)
+                return r
+            },
+        };
+
+        const containerEl = {
+            getBoundingClientRect() {
+                return containerRect;
+            },
+        }
+
+        return { el, containerEl };
+    }
+
+    test('returns 0 if el, containerEl, or currentFontSize missing', () => {
+        expect(autoFontSize({ el: null, containerEl: {}, currentFontSize: 10 })).toBe(0);
+        expect(autoFontSize({ el: {}, containerEl: null, currentFontSize: 10 })).toBe(0);
+        expect(autoFontSize({ el: {}, containerEl: {}, currentFontSize: 0 })).toBe(0);
+    });
+
+    test('fits at full size → no shrink', () => {
+        const { el, containerEl } = makeAutoFontSizeMocks({
+            containerRect: { left: 0, top: 0, right: 200, bottom: 50 },
+            elementRects: {
+                14: { left: 10, top: 5, right: 150, bottom: 30 },
+            },
+        });
+
+        const result = autoFontSize({
+            el,
+            containerEl,
+            currentFontSize: 14,
+            minFontSize: 6,
+            attempts: 10,
+        });
+
+        expect(result).toBe(14);
+        expect(el.style.fontSize).toBe(14);
+        expect(el.style.opacity).toBe('1');
+    });
+
+    test('shrinks down until fits', () => {
+        const { el, containerEl } = makeAutoFontSizeMocks({
+            containerRect: { left: 0, top: 0, right: 100, bottom: 100 },
+            elementRects: {
+                14: { left: 0, top: 0, right: 120, bottom: 10 },
+                13: { left: 0, top: 0, right: 110, bottom: 10 },
+                12: { left: 5, top: 5, right: 95, bottom: 15 },
+            },
+        });
+
+        const result = autoFontSize({
+            el,
+            containerEl,
+            currentFontSize: 14,
+            minFontSize: 8,
+            attempts: 10,
+        });
+
+        expect(result).toBe(12);
+        expect(el.style.fontSize).toBe(12);
+        expect(el.style.opacity).toBe('1');
+    });
+
+    test('stops at minFontSize and remains visible even if still overflowing', () => {
+        // simulate overflow at every size down to minFontSize (6)
+        const rects = {};
+        for (let size = 10; size >= 6; size--) {
+            rects[size] = { left: 0, top: 0, right: size * 20, bottom: 10 }
+        }
+
+        const { el, containerEl } = makeAutoFontSizeMocks({
+            containerRect: { left: 0, top: 0, right: 100, bottom: 100 },
+            elementRects: rects,
+        });
+
+        const result = autoFontSize({
+            el,
+            containerEl,
+            currentFontSize: 10,
+            minFontSize: 6,
+            attempts: 5,
+        });
+
+        expect(result).toBe(6);
+        expect(el.style.fontSize).toBe(6);
+        expect(el.style.opacity).toBe('1');
+    })
+
+    test('normalizes inverted container rects', () => {
+        const containerRect = { left: 200, top: 200, right: 50, bottom: 50 };
+        const elementRects = {
+            15: { left: 60, top: 60, right: 180, bottom: 100 },
+        };
+
+        const { el, containerEl } = makeAutoFontSizeMocks({ containerRect, elementRects });
+
+        const result = autoFontSize({
+            el,
+            containerEl,
+            currentFontSize: 15,
+            minFontSize: 6,
+            attempts: 3,
+        });
+
+        expect(result).toBe(15);
+        expect(el.style.fontSize).toBe(15);
+        expect(el.style.opacity).toBe('1');
+    });
+});
+
+describe('observeClassPresenceIn', () => {
+    // Stub MutationObserver so we control when it fires
+    class FakeMutationObserver {
+        constructor(cb) {
+            this.cb = cb
+            this.options = null
+            this.target = null
+        }
+        observe(target, options) {
+            this.target = target
+            this.options = options
+        }
+        disconnect() {
+            this.disconnected = true
+        }
+        // Simulate DOM mutations
+        simulate(mutations) {
+            this.cb(mutations)
+        }
+    }
+
+    let OldMO;
+    beforeEach(() => {
+        OldMO = global.MutationObserver;
+        global.MutationObserver = FakeMutationObserver;
+    })
+    afterEach(() => {
+        global.MutationObserver = OldMO;
+    })
+
+    // --- Fake container that can toggle “does it have .foo?” ---
+    function makeContainer(initialCount = 0) {
+        let count = initialCount;
+        return {
+            querySelectorAll(selector) {
+                // always just return an array of length `count`
+                return new Array(count).fill({ selector });
+            },
+            __setCount(n) { count = n },
+        }
+    }
+
+    test('logs error if cssClass is invalid', () => {
+        const spy = vi.spyOn(console, 'error').mockImplementation(() => { });
+        const c = makeContainer();
+        observeClassPresenceIn(c, '', () => { });
+        expect(spy).toHaveBeenCalledWith(
+            'Vue Data UI - observeClassPresenceIn: cssClass must be a non-empty string'
+        );
+        observeClassPresenceIn(c, '   ', () => { });
+        expect(spy).toHaveBeenCalledWith(
+            'Vue Data UI - observeClassPresenceIn: cssClass must be a non-empty string'
+        );
+        spy.mockRestore();
+    });
+
+    test('logs error if onNodesPresent is not a function', () => {
+        const spy = vi.spyOn(console, 'error').mockImplementation(() => { });
+        const c = makeContainer();
+        observeClassPresenceIn(c, 'foo', null);
+        expect(spy).toHaveBeenCalledWith(
+            'Vue Data UI - observeClassPresenceIn: onNodesPresent must be a function'
+        );
+        observeClassPresenceIn(c, 'foo', {});
+        expect(spy).toHaveBeenCalledWith(
+            'Vue Data UI - observeClassPresenceIn: onNodesPresent must be a function'
+        );
+        spy.mockRestore();
+    });
+
+    test('calls callback immediately if initial count > 0', () => {
+        const container = makeContainer(2);
+        const spy = vi.fn();
+        observeClassPresenceIn(container, 'foo', spy);
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not call callback initially if count = 0', () => {
+        const container = makeContainer(0);
+        const spy = vi.fn();
+        observeClassPresenceIn(container, 'foo', spy);
+        expect(spy).not.toHaveBeenCalled();
+    });
+
+    test('invokes callback only when elements first appear', () => {
+        const container = makeContainer(0);
+        const spy = vi.fn();
+        const observer = observeClassPresenceIn(container, 'foo', spy);
+
+        // Simulate adding the first node
+        container.__setCount(1);
+        observer.simulate([{ addedNodes: [{}], removedNodes: [] }]);
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        // Simulate adding more (still > 0): no extra call
+        container.__setCount(2);
+        observer.simulate([{ addedNodes: [{}], removedNodes: [] }]);
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('calls again after removal then re-add', () => {
+        const container = makeContainer(0);
+        const spy = vi.fn();
+        const observer = observeClassPresenceIn(container, 'foo', spy);
+
+        // Add
+        container.__setCount(1);
+        observer.simulate([{ addedNodes: [{}], removedNodes: [] }]);
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        // Remove
+        container.__setCount(0);
+        observer.simulate([{ addedNodes: [], removedNodes: [{}] }]);
+        // No call on remove
+
+        // Re-add
+        container.__setCount(1);
+        observer.simulate([{ addedNodes: [{}], removedNodes: [] }]);
+        expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    test('observer.disconnect() exists and works', () => {
+        const container = makeContainer(0);
+        const spy = vi.fn();
+        const observer = observeClassPresenceIn(container, 'foo', spy);
+        expect(typeof observer.disconnect).toBe('function');
+        expect(() => observer.disconnect()).not.toThrow();
+    });
+});

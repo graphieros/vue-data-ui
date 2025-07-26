@@ -2611,6 +2611,118 @@ export function getCumulativeMedian({ values, config = {} }) {
     return medians;
 }
 
+/**
+ * Auto size font size of svg element
+ */
+export function autoFontSize({
+    el,
+    containerEl,
+    currentFontSize,
+    minFontSize = 6,
+    attempts = 200,
+}) {
+    if (!el || !containerEl || !currentFontSize) return 0;
+
+    let fontSize = currentFontSize;
+
+    el.style.fontSize = fontSize;
+    el.style.opacity = '1';
+
+    const cr = containerEl.getBoundingClientRect();
+    const cLeft = Math.min(cr.left, cr.right);
+    const cRight = Math.max(cr.left, cr.right);
+    const cTop = Math.min(cr.top, cr.bottom);
+    const cBottom = Math.max(cr.top, cr.bottom);
+
+    let er = el.getBoundingClientRect();
+
+    if (
+        er.left >= cLeft &&
+        er.top >= cTop &&
+        er.right <= cRight &&
+        er.bottom <= cBottom
+    ) {
+        return fontSize;
+    }
+
+    el.style.opacity = '0';
+    let tries = attempts;
+
+    while (tries-- > 0 && fontSize > minFontSize) {
+        fontSize--;
+        el.style.fontSize = fontSize;
+        er = el.getBoundingClientRect();
+        if (
+            er.left >= cLeft &&
+            er.top >= cTop &&
+            er.right <= cRight &&
+            er.bottom <= cBottom
+        ) {
+            break;
+        }
+    }
+    if (fontSize < minFontSize) {
+        fontSize = 0;
+        el.style.fontSize = 0;
+    }
+    el.style.opacity = fontSize === 0 ? '0' : '1';
+    return fontSize;
+}
+
+/**
+ * Starts observing for nodes with a given CSS class inside a specific container
+ * and fires callback whenever at least one such node is present.
+ *
+ * @param {HTMLElement} container       container element to observe
+ * @param {string} cssClass            class name without the leading dot
+ * @param {() => void} onNodesPresent  function to call when matching elements appear
+ * @returns {MutationObserver}         the observer instance (so you can disconnect it later)
+ */
+export function observeClassPresenceIn(container, cssClass, onNodesPresent) {
+    if (typeof cssClass !== 'string' || !cssClass.trim()) {
+        console.error('Vue Data UI - observeClassPresenceIn: cssClass must be a non-empty string');
+    }
+    if (typeof onNodesPresent !== 'function') {
+        console.error('Vue Data UI - observeClassPresenceIn: onNodesPresent must be a function');
+    }
+
+    const selector = `.${cssClass}`;
+    let hasSeen = false;
+
+    // Check the container for matching elements and trigger callback once per transition 0 → >0
+    function checkAndTrigger() {
+        const nodes = container.querySelectorAll(selector);
+        if (nodes.length > 0) {
+            if (!hasSeen) {
+                hasSeen = true;
+                onNodesPresent();
+            }
+        } else {
+            hasSeen = false;
+        }
+    }
+
+    // Observe the container for additions/removals anywhere in its subtree
+    const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            if (m.addedNodes.length || m.removedNodes.length) {
+                checkAndTrigger();
+                break;
+            }
+        }
+    });
+
+    observer.observe(container, {
+        childList: true,
+        subtree: true,
+    });
+
+    // Initial check in case elements are already present
+    checkAndTrigger();
+
+    return observer;
+}
+
 
 const lib = {
     XMLNS,
@@ -2619,6 +2731,7 @@ const lib = {
     addVector,
     applyDataLabel,
     assignStackRatios,
+    autoFontSize,
     calcLinearProgression,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
@@ -2683,6 +2796,7 @@ const lib = {
     matrixTimes,
     mergePointsByProximity,
     objectIsEmpty,
+    observeClassPresenceIn,
     opacity,
     palette,
     placeHTMLElementAtSVGCoordinates,
