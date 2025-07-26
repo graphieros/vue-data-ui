@@ -23,7 +23,7 @@ const dataset = ref([
         // comment: 'This is a comment'
     },
     {
-        name: 'Serie 4 with a huge label that overflows',
+        name: 'Serie 4 with a huge\nlabel that overflows',
         values: [1],
         // comment: 'This is a comment'
     },
@@ -83,7 +83,7 @@ function alterDataset() {
 const model = ref([
     { key: 'autoSize', def: true, type: 'checkbox'},
     { key: 'startAnimation.show', def: false, type: 'checkbox'},
-    { key: 'pie', def: true, type: 'checkbox'},
+    { key: 'pie', def: false, type: 'checkbox'},
 
     { key: 'type', def: 'classic', type: 'select', options: ['classic', 'polar']},
     { key: 'style.chart.width', def: 512, type: 'number', min: 0, max: 512 },
@@ -133,12 +133,12 @@ const model = ref([
     { key: 'style.chart.layout.labels.percentage.color', def: '#1A1A1A', type: 'color', label: 'colorPercentage', category: 'labels' },
     { key: 'style.chart.layout.labels.percentage.bold', def: true, type: 'checkbox', label: 'bold', category: 'labels' },
     { key: 'style.chart.layout.labels.percentage.fontSize', def: 14, min: 6, max: 48, type: 'number', label: 'fontSize', category: 'labels' },
-    { key: 'style.chart.layout.labels.percentage.minFontSize', def: 6, min: 6, max: 48, type: 'number', label: 'fontSize', category: 'labels' },
+    { key: 'style.chart.layout.labels.percentage.minFontSize', def: 8, min: 6, max: 48, type: 'number', label: 'fontSize', category: 'labels' },
 
     { key: 'style.chart.layout.labels.name.color', def: '#1A1A1A', type: 'color', label: 'colorName', category: 'labels' },
     { key: 'style.chart.layout.labels.name.bold', def: false, type: 'checkbox', label: 'bold', category: 'labels' },
     { key: 'style.chart.layout.labels.name.fontSize', def: 14, type: 'number', min: 6, max: 36, label: 'fontSize', category: 'labels' },
-    { key: 'style.chart.layout.labels.name.minFontSize', def: 6, type: 'number', min: 6, max: 36, label: 'fontSize', category: 'labels' },
+    { key: 'style.chart.layout.labels.name.minFontSize', def: 8, type: 'number', min: 6, max: 36, label: 'fontSize', category: 'labels' },
 
     { key: 'style.chart.layout.labels.hollow.show', def: true, type: 'checkbox', label: ['hollow', 'is', 'show'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.total.show', def: true, type: 'checkbox', label: ['hollow', 'total', 'is', 'show'], category: 'labels' },
@@ -366,6 +366,7 @@ onMounted(async () => {
     if (localDonut.value) {
         const img = await localDonut.value.getImage()
         console.log(img)
+        // localDonut.value.autoSize()
     }
 })
 

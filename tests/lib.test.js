@@ -73,6 +73,7 @@ import {
     sanitizeArray,
     setOpacity,
     shiftHue,
+    setOpacityIfWithinBBox,
     sumByAttribute,
     translateSize,
     treeShake,
@@ -3907,5 +3908,78 @@ describe('autoFontSize', () => {
         // it never fits, but we stop at the minimum rather than hide
         expect(result).toBe(6);
         expect(parseInt(el.style.fontSize, 10)).toBe(6);
+    });
+});
+
+describe('setOpacityIfWithinBBox', () => {
+    function mockBBox({ x, y, width, height }) {
+        return { x, y, width, height };
+    }
+
+    function createMockElement(bbox) {
+        return {
+            getBBox: () => bbox,
+            style: { opacity: '' },
+        };
+    }
+
+    test('does nothing if el is missing', () => {
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 100, height: 100 }));
+        expect(() => setOpacityIfWithinBBox({ el: null, container })).not.toThrow();
+    });
+
+    test('does nothing if container is missing', () => {
+        const el = createMockElement(mockBBox({ x: 10, y: 10, width: 10, height: 10 }));
+        expect(() => setOpacityIfWithinBBox({ el, container: null })).not.toThrow();
+    });
+
+    test('sets opacity to 1 if el is fully inside container (no padding)', () => {
+        const el = createMockElement(mockBBox({ x: 10, y: 10, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 100, height: 100 }));
+        setOpacityIfWithinBBox({ el, container, padding: 0 });
+        expect(el.style.opacity).toBe('1');
+    });
+
+    test('sets opacity to 0 if el overflows left edge', () => {
+        const el = createMockElement(mockBBox({ x: 0, y: 10, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 5, y: 0, width: 100, height: 100 }));
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('sets opacity to 0 if el overflows top edge', () => {
+        const el = createMockElement(mockBBox({ x: 10, y: 0, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 5, width: 100, height: 100 }));
+
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('sets opacity to 0 if el overflows right edge', () => {
+        const el = createMockElement(mockBBox({ x: 95, y: 10, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 100, height: 100 }));
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('sets opacity to 0 if el overflows bottom edge', () => {
+        const el = createMockElement(mockBBox({ x: 10, y: 95, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 100, height: 100 }));
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('respects custom padding', () => {
+        const el = createMockElement(mockBBox({ x: 5, y: 5, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 20, height: 20 }));
+        setOpacityIfWithinBBox({ el, container, padding: 6 });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('defaults to padding = 1', () => {
+        const el = createMockElement(mockBBox({ x: 1, y: 1, width: 18, height: 18 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 20, height: 20 }));
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('1');
     });
 });

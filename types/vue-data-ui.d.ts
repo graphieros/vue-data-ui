@@ -8505,60 +8505,15 @@ declare module "vue-data-ui" {
         y
     }: CreateTSpansArgs) => string;
 
-    export type UseObjectBindingsOptions = {
-        /** Delimiter to join object‑path segments */
-        delimiter?: string;
-        /** If true, array indices will not be traversed */
-        skipArrays?: boolean;
-    };
-
-    /**
-     * Recursively build a union of dot‑delimited paths for an object type,
-     * but skip arrays (we don’t traverse them by default at runtime).
-     */
-    type Paths<T> = T extends object
-        ? T extends any[]
-        ? never
-        : {
-            [K in Extract<keyof T, string>]:
-            // if the property is itself an object, recurse
-            T[K] extends object
-            ? `${K}` | `${K}.${Paths<T[K]>}`
-            : `${K}`;
-        }[Extract<keyof T, string>]
-        : never;
-
-    /**
-     * Given an object type `T` and one of its path strings `P`,
-     * resolve the type at that path.
-     */
-    type PathValue<T, P extends string> =
-        P extends `${infer K}.${infer Rest}`
-        ? K extends keyof T
-        ? PathValue<T[K], Rest>
-        : never
-        : P extends keyof T
-        ? T[P]
-        : never;
-
-    /**
-     * A fully‑typed bindings record: for each valid path `P` in `T`,
-     * `ComputedRef` of the exact `PathValue<T,P>`.
-     */
-    export type TypedBindings<T extends object> = {
-        [P in Paths<T>]: WritableComputedRef<PathValue<T, P>>;
-    };
-
     /**
      * Vue Data UI composable
      * ---
      * Flattens a reactive config object into computed refs for every leaf property.
      * 
      * @template T extends object
-     * @param configRef  A Vue `Ref<T>` holding your object.
+     * @param configRef  A Vue `Ref` holding your object.
      * @param options    Optional settings: `delimiter` (default `"."`) and `skipArrays` (default `true`).
-     * @returns         A `TypedBindings<T>` whose keys are every “leaf” path in `T`
-     *                  and whose values are `WritableComputedRef` of the exact property type.
+     * @returns         An object with flatten config as refs
      * 
      * ___
      * @example
@@ -8588,8 +8543,11 @@ declare module "vue-data-ui" {
      *   </template>
      * ```
      */
-    export function useObjectBindings<T extends object>(
-        configRef: Ref<T>,
-        options?: UseObjectBindingsOptions
-    ): TypedBindings<T>;
+    export function useObjectBindings(
+        configRef: Ref<Record<string, any>>,
+        options?: {
+            delimiter?: string
+            skipArrays?: boolean
+        }
+    ): Record<string, Ref<any>>;
 }

@@ -2611,6 +2611,23 @@ export function getCumulativeMedian({ values, config = {} }) {
     return medians;
 }
 
+export function setOpacityIfWithinBBox({
+    el,
+    container,
+    padding = 1
+}) {
+    if (!el || !container) return;
+
+    let elBB = el.getBBox();
+    let contBB = container.getBBox();
+
+    if (elBB.x < contBB.x + padding || elBB.y < contBB.y + padding || (elBB.x + elBB.width) > (contBB.x + contBB.width - padding) || (elBB.y + elBB.height) > (contBB.y + contBB.height - padding)) {
+        el.style.opacity = '0'
+    } else {
+        el.style.opacity = '1'
+    }
+}
+
 export function autoFontSize({
     el,
     bounds,
@@ -2801,6 +2818,7 @@ const lib = {
     setOpacity,
     shiftHue,
     slugify,
+    setOpacityIfWithinBBox,
     sumByAttribute,
     sumSeries,
     themePalettes,

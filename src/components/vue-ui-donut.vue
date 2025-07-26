@@ -11,6 +11,7 @@ import {
     convertCustomPalette,
     createCsvContent,
     createPolarAreas,
+    createTSpansFromLineBreaksOnY,
     createUid,
     dataLabel,
     downloadCsv,
@@ -24,6 +25,7 @@ import {
     palette,
     setOpacity,
     shiftHue,
+    setOpacityIfWithinBBox,
     themePalettes,
     XMLNS
 } from '../lib';
@@ -76,6 +78,10 @@ const isDataset = computed({
 })
 
 const donutChart = shallowRef(null);
+const G = ref(null);
+const G_hollow = ref(null);
+const circle_hollow = ref(null);
+
 const chartTitle = shallowRef(null);
 const chartLegend = shallowRef(null);
 const resizeObserver = shallowRef(null);
@@ -138,7 +144,6 @@ const resizeAndReflow = () => {
 
         if (totalMatches === 0) return;
 
-
         labelTypes.forEach(({ selector, baseSize, minSize, sizeRef }) => {
             container
                 .querySelectorAll(selector)
@@ -154,6 +159,13 @@ const resizeAndReflow = () => {
                     sizeRef.value = final;
                 });
             });
+        
+        if (FINAL_CONFIG.value.autoSize && G_hollow.value && circle_hollow.value) {
+            setOpacityIfWithinBBox({
+                el: G_hollow.value,
+                container: circle_hollow.value,
+            });
+        }
     });
 }
 
@@ -202,7 +214,7 @@ function prepareChart() {
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
-                padding: padding.value
+                padding: FINAL_CONFIG.value.autoSize ? undefined : padding.value
             });
 
             requestAnimationFrame(() => {
@@ -464,7 +476,6 @@ function segregate(index) {
                     mutableSet.value = mutableSet.value.map((ds, i) =>
                         index === i ? { ...ds, value: val } : ds
                     );
-                    
                     requestAnimationFrame(resizeAndReflow);
                 },
                 onDone: () => {
@@ -478,6 +489,7 @@ function segregate(index) {
             doAnimUp();
         } else {
             setFinalUpState();
+            requestAnimationFrame(resizeAndReflow);
         }
     } else if (segregated.value.length < immutableSet.value.length - 1) {
         function setFinalDownState() {
@@ -501,6 +513,7 @@ function segregate(index) {
                 },
                 onDone: () => {
                     setFinalDownState();
+                    requestAnimationFrame(resizeAndReflow);
                     isAnimating.value = false;
                 }
             });
@@ -596,7 +609,7 @@ const legendConfig = computed(() => {
 
 const minSize = computed(() => {
     const val = Math.min(svg.value.width / 3, svg.value.height / 3);
-    return val < 55 ? 55 : val;
+    return val < 12 ? 12 : val;
 })
 
 const currentDonut = computed(() => {
@@ -908,8 +921,6 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
-const G = ref(null);
-
 function autoSize() {
     if (!G.value) return;
     const { x, y, width, height } = G.value.getBBox();
@@ -1135,7 +1146,7 @@ defineExpose({
                         <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                             :d="polarAreas[i].path" fill="#FFFFFF" 
                             :style="{
-                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
                             }"
                         />
                         <g v-if="FINAL_CONFIG.style.chart.layout.donut.useShadow">
@@ -1145,7 +1156,8 @@ defineExpose({
                                 :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                                 :filter="`url(#drop_shadow_${uid})`" 
                                 :style="{
-                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
+
                                 }"
                             />
                         </g>
@@ -1158,7 +1170,7 @@ defineExpose({
                                 :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                                 :filter="getBlurFilter(i)"
                                 :style="{
-                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,transformOrigin: 'center'
                                 }"
                             />
                         </g>
@@ -1168,7 +1180,7 @@ defineExpose({
                             :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)"
                             :style="{
-                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
                             }"
                         />
                     </g>
@@ -1207,7 +1219,17 @@ defineExpose({
                     :cy="svg.height / 2" :r="/* This might require adjustments */minSize <= 0 ? 10 : minSize"
                     :fill="`url(#gradient_${uid})`"
                 />
-    
+
+                <!-- V3 used for hollow content overflow detection -->
+                <circle 
+                    ref="circle_hollow"
+                    :style="{ pointerEvents: 'none'}"
+                    fill="none"
+                    :cx="svg.width / 2"
+                    :cy="svg.height / 2"
+                    :r="Math.max(0.1, donutThickness * 1.7)"
+                />
+
                 <!-- TOOLTIP TRAPS -->
                 <template v-if="total">
                     <g v-if="currentDonut.length > 1 || FINAL_CONFIG.type === 'classic'">
@@ -1234,56 +1256,58 @@ defineExpose({
     
                 <!-- HOLLOW LABELS (Classic donut only )-->
                 <template v-if="FINAL_CONFIG.type === 'classic'">
-                    <text data-cy="hollow-total-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
-                        text-anchor="middle" :x="svg.width / 2"
-                        :y="svg.height / 2 - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.bold ? 'bold' : ''}`">
-                        {{ FINAL_CONFIG.style.chart.layout.labels.hollow.total.text }}
-                    </text>
-                    <text data-cy="hollow-total-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
-                        text-anchor="middle" :x="svg.width / 2"
-                        :y="svg.height / 2 + FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.bold ? 'bold' : ''}`">
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.formatter,
-                            total,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix,
-                                v: total,
-                                s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
-                            }))
-                        }}
-                    </text>
-    
-                    <text data-cy="hollow-average-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
-                        text-anchor="middle" :x="svg.width / 2"
-                        :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.bold ? 'bold' : ''}`">
-                        {{ FINAL_CONFIG.style.chart.layout.labels.hollow.average.text }}
-                    </text>
-                    <text data-cy="hollow-average-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
-                        text-anchor="middle" :x="svg.width / 2"
-                        :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize + FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.bold ? 'bold' : ''}`">
-                        {{ isAnimating || isFirstLoad ? '--' : applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.formatter,
-                            average,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
-                                v: average,
-                                s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
-                            }))
-                        }}
-                    </text>
+                    <g ref="G_hollow" class="vue-data-ui-donut-hollow-labels">
+                        <text data-cy="hollow-total-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
+                            text-anchor="middle" :x="svg.width / 2"
+                            :y="svg.height / 2 - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.offsetY"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.bold ? 'bold' : ''}`">
+                            {{ FINAL_CONFIG.style.chart.layout.labels.hollow.total.text }}
+                        </text>
+                        <text data-cy="hollow-total-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
+                            text-anchor="middle" :x="svg.width / 2"
+                            :y="svg.height / 2 + FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.offsetY"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.bold ? 'bold' : ''}`">
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.formatter,
+                                total,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix,
+                                    v: total,
+                                    s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
+                                }))
+                            }}
+                        </text>
+        
+                        <text data-cy="hollow-average-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
+                            text-anchor="middle" :x="svg.width / 2"
+                            :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.offsetY"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.bold ? 'bold' : ''}`">
+                            {{ FINAL_CONFIG.style.chart.layout.labels.hollow.average.text }}
+                        </text>
+                        <text data-cy="hollow-average-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
+                            text-anchor="middle" :x="svg.width / 2"
+                            :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize + FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.offsetY"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.bold ? 'bold' : ''}`">
+                            {{ isAnimating || isFirstLoad ? '--' : applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.formatter,
+                                average,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
+                                    v: average,
+                                    s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
+                                }))
+                            }}
+                        </text>
+                    </g>
                 </template>
     
                 <!-- DATALABELS -->
@@ -1341,7 +1365,7 @@ defineExpose({
                                 :text-anchor="calcMarkerOffsetX(arc, true, 12).anchor"
                                 :x="calcMarkerOffsetX(arc, true, 12).x" :y="calcMarkerOffsetY(arc)"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize + 'px'"
+                                :font-size="labels_value_fontSize + 'px'"
                                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold' : ''}`"
                                 @click="selectDatapoint(arc, i)">
                                 {{ displayArcPercentage(arc, noGhostDonut) }} {{
@@ -1361,21 +1385,30 @@ defineExpose({
                                 v-show="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
                                 class="vue-data-ui-datalabel-name"
                                 :text-anchor="calcMarkerOffsetX(arc).anchor" :x="calcMarkerOffsetX(arc, true, 12).x"
-                                :y="calcMarkerOffsetY(arc) + labels_name_fontSize"
+                                :y="calcMarkerOffsetY(arc) + labels_name_fontSize * 1.2"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize + 'px'"
+                                :font-size="labels_name_fontSize + 'px'"
                                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold' : ''}`"
-                                @click="selectDatapoint(arc, i)">
-                                {{ arc.name }}
-                            </text>
+                                @click="selectDatapoint(arc, i)"
+                                v-html="createTSpansFromLineBreaksOnY({
+                                    content: arc.name,
+                                    fontSize: labels_name_fontSize,
+                                    fill:FINAL_CONFIG.style.chart.layout.labels.name.color,
+                                    x: calcMarkerOffsetX(arc, true, 12).x,
+                                    y: calcMarkerOffsetY(arc) + labels_name_fontSize
+                                })"
+                            />
                         </template>
                         <template v-if="FINAL_CONFIG.type === 'polar'">
-                            <text data-cy="polar-label-value" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                            <text 
+                                data-cy="polar-label-value"
+                                class="vue-data-ui-datalabel-value"
+                                v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                                 :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
                                 :x="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
                                 :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :font-size="labels_value_fontSize"
                                 :style="{
                                     transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
                                     fontWeight: FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold': 'normal'
@@ -1393,20 +1426,28 @@ defineExpose({
                                         { datapoint: arc }
                                     )})` : '' }}
                             </text>
-                            <text data-cy="polar-label-name"
+                            <text 
+                                data-cy="polar-label-name"
+                                class="vue-data-ui-datalabel-name"
                                 v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
                                 :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
                                 :x="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
-                                :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + labels_name_fontSize * 1.2"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize"
+                                :font-size="labels_name_fontSize"
                                 :style="{
                                     transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
                                     fontWeight: FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold': 'normal'
                                 }"
-                                @click="selectDatapoint(arc, i)">
-                                {{ arc.name }}
-                            </text>
+                                @click="selectDatapoint(arc, i)"
+                                v-html="createTSpansFromLineBreaksOnY({
+                                    content: arc.name,
+                                    fontSize: labels_value_fontSize,
+                                    fill:FINAL_CONFIG.style.chart.layout.labels.name.color,
+                                    x: offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x,
+                                    y: offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + labels_name_fontSize * 1.2
+                                })"    
+                            />
                         </template>
                     </g>
     
