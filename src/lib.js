@@ -2611,39 +2611,18 @@ export function getCumulativeMedian({ values, config = {} }) {
     return medians;
 }
 
-/**
- * Auto size font size of svg element
- */
-function transformPoint(x, y, m) {
-    return { x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f };
-}
-
-function getTransformedBBox(el) {
-    const b = el.getBBox();
-    const m = el.getCTM();
-    const p1 = transformPoint(b.x, b.y, m);
-    const p2 = transformPoint(b.x + b.width, b.y, m);
-    const p3 = transformPoint(b.x, b.y + b.height, m);
-    const p4 = transformPoint(b.x + b.width, b.y + b.height, m);
-    const xs = [p1.x, p2.x, p3.x, p4.x], ys = [p1.y, p2.y, p3.y, p4.y];
-    return {
-        left: Math.min(...xs),
-        right: Math.max(...xs),
-        top: Math.min(...ys),
-        bottom: Math.max(...ys)
-    };
-}
-
 export function autoFontSize({
     el,
     bounds,
     currentFontSize,
     minFontSize = 6,
     attempts = 200,
-    padding = 0
+    padding = 1
 }) {
-    if (!el || !bounds || !currentFontSize) return 0;
+    if (!el || !currentFontSize) return 0;
+
     let fontSize = currentFontSize;
+
     el.style.fontSize = fontSize;
 
     const { x, y, width: W, height: H } = bounds;
@@ -2652,31 +2631,37 @@ export function autoFontSize({
     const cRight = x + W - padding;
     const cBottom = y + H - padding;
 
-    // first try
-    let er = getTransformedBBox(el);
-    if (
-        er.left >= cLeft &&
-        er.top >= cTop &&
-        er.right <= cRight &&
-        er.bottom <= cBottom
-    ) return fontSize;
+    let er = el.getBBox();
 
-    // then shrink
-    let tries = attempts;
-    while (--tries >= 0 && fontSize > minFontSize) {
-        fontSize--;
-        el.style.fontSize = fontSize;
-        er = getTransformedBBox(el);
-        if (
-            er.left >= cLeft &&
-            er.top >= cTop &&
-            er.right <= cRight &&
-            er.bottom <= cBottom
-        ) return fontSize;
+    if (
+        er.x >= cLeft + padding &&
+        er.y >= cTop + padding &&
+        er.x + er.width  <= cRight - padding &&
+        er.y + er.height <= cBottom - padding
+    ) {
+        return fontSize;
     }
 
-    el.style.fontSize = 0;
-    return 0;
+    let tries = attempts;
+
+    while (tries-- > 0 && fontSize > minFontSize) {
+        fontSize--;
+        el.style.fontSize = fontSize;
+        er = el.getBBox();
+        if (
+            er.x >= cLeft + padding &&
+            er.y >= cTop + padding &&
+            er.x + er.width  <= cRight - padding &&
+            er.y + er.height <= cBottom - padding
+        ) {
+            break;
+        }
+    }
+    if (fontSize < minFontSize) {
+        fontSize = 0;
+        el.style.fontSize = 0;
+    }
+    return fontSize;
 }
 
 /**

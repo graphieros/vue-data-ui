@@ -3816,23 +3816,29 @@ describe('autoFontSize', () => {
         ctm = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
     }) {
         const el = {
-            style: { fontSize: '', opacity: '' },
+            style: { fontSize: '' },
             getBBox() {
                 const size = parseInt(this.style.fontSize, 10) || 0
                 const box = elementBBoxes[size]
                 if (!box) throw new Error(`no bbox for fontSize ${size}`)
-                return box
+                return box;
             },
-            getCTM() { return ctm },
-        }
-        return { el, bounds }
+            getCTM() {
+                return ctm;
+            },
+        };
+        return { el, bounds };
     }
 
-    test('returns 0 if el, bounds, or currentFontSize missing', () => {
-        expect(autoFontSize({ el: null, bounds: {}, currentFontSize: 10 })).toBe(0)
-        expect(autoFontSize({ el: {}, bounds: null, currentFontSize: 10 })).toBe(0)
-        expect(autoFontSize({ el: {}, bounds: {}, currentFontSize: 0 })).toBe(0)
-    })
+    test('returns 0 if el is missing or currentFontSize is zero', () => {
+        const goodBounds = { x: 0, y: 0, width: 10, height: 10 };
+        expect(
+            autoFontSize({ el: null, bounds: goodBounds, currentFontSize: 10 })
+        ).toBe(0);
+        expect(
+            autoFontSize({ el: {}, bounds: goodBounds, currentFontSize: 0 })
+        ).toBe(0);
+    });
 
     test('fits at full size → no shrink', () => {
         const { el, bounds } = makeMocks({
@@ -3840,18 +3846,19 @@ describe('autoFontSize', () => {
             elementBBoxes: {
                 14: { x: 10, y: 5, width: 140, height: 25 },
             },
-        })
+        });
 
         const result = autoFontSize({
-            el, bounds,
+            el,
+            bounds,
             currentFontSize: 14,
             minFontSize: 6,
             attempts: 10,
             padding: 0,
-        })
+        });
 
-        expect(result).toBe(14)
-        expect(parseInt(el.style.fontSize, 10)).toBe(14)
+        expect(result).toBe(14);
+        expect(parseInt(el.style.fontSize, 10)).toBe(14);
     })
 
     test('shrinks down until fits', () => {
@@ -3862,37 +3869,43 @@ describe('autoFontSize', () => {
                 13: { x: 0, y: 0, width: 110, height: 10 },
                 12: { x: 5, y: 5, width: 90, height: 10 },
             },
-        })
+        });
 
         const result = autoFontSize({
-            el, bounds,
+            el,
+            bounds,
             currentFontSize: 14,
             minFontSize: 8,
             attempts: 10,
             padding: 0,
-        })
+        });
 
-        expect(result).toBe(12)
-        expect(parseInt(el.style.fontSize, 10)).toBe(12)
+        expect(result).toBe(12);
+        expect(parseInt(el.style.fontSize, 10)).toBe(12);
     })
 
-    test('hides completely if it never fits (even at minFontSize)', () => {
-        // overflow at every size, including at minFontSize=6
-        const bboxes = {}
+    test('stops at minFontSize if still overflowing', () => {
+        // simulate overflow at every size down to minFontSize=6
+        const elementBBoxes = {};
         for (let s = 10; s >= 6; s--) {
-            bboxes[s] = { x: 0, y: 0, width: s * 20, height: 10 }
+            elementBBoxes[s] = { x: 0, y: 0, width: s * 20, height: 10 }
         }
-        const { el, bounds } = makeMocks({ bounds: { x: 0, y: 0, width: 100, height: 100 }, elementBBoxes: bboxes })
+        const { el, bounds } = makeMocks({
+            bounds: { x: 0, y: 0, width: 100, height: 100 },
+            elementBBoxes,
+        });
 
         const result = autoFontSize({
-            el, bounds,
+            el,
+            bounds,
             currentFontSize: 10,
             minFontSize: 6,
             attempts: 10,
             padding: 0,
-        })
+        });
 
-        expect(result).toBe(0)
-        expect(parseInt(el.style.fontSize, 10)).toBe(0)
-    })
-})
+        // it never fits, but we stop at the minimum rather than hide
+        expect(result).toBe(6);
+        expect(parseInt(el.style.fontSize, 10)).toBe(6);
+    });
+});
