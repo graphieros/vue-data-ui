@@ -297,12 +297,12 @@ const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
     skeletonDataset: [
         {
             name: '',
-            values: [1],
+            values: [3],
             color: '#BABABA',
         },
         {
             name: '',
-            values: [1],
+            values: [2],
             color: '#AAAAAA',
         },
         {

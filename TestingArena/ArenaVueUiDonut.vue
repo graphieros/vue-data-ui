@@ -6,7 +6,42 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import LocalPattern from "../src/atoms/vue-ui-pattern.vue";
 
-const dataset = ref([]);
+// const dataset = ref([
+//     {
+//         name: 'A',
+//         values: [3]
+//     },
+//     {
+//         name: 'A',
+//         values: [2]
+//     },
+//     {
+//         name: 'A',
+//         values: [1]
+//     },
+// ]);
+
+// Test mutating loading state from outside
+const dataset = ref([])
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: 'A',
+                values: [3]
+            },
+            {
+                name: 'A',
+                values: [2]
+            },
+            {
+                name: 'A',
+                values: [1]
+            },
+        ]
+    }, 2000)
+})
 
 const alternateDataset = ref([
     { name: 'Alt 1', values: [20]},
@@ -328,28 +363,6 @@ onMounted(async () => {
     }
 })
 
-
-// Test mutating loading state from outside
-onMounted(() => {
-    dataset.value = undefined;
-    setTimeout(() => {
-        dataset.value = [
-            {
-                name: 'A',
-                values: [1]
-            },
-            {
-                name: 'A',
-                values: [1]
-            },
-            {
-                name: 'A',
-                values: [1]
-            },
-        ]
-    }, 2000)
-})
-
 </script>
 
 <template>
@@ -370,7 +383,7 @@ onMounted(() => {
     <button @click="addDatapoint">ADD DATAPOINT</button>
 
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiDonut :key="`responsive_${step}`" :dataset="dataset" :config="{
+        <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="{
             ...config,
             responsive: true
         }">
@@ -395,7 +408,7 @@ onMounted(() => {
                 Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
             </div>
         </template>
-    </LocalVueUiDonut>
+    </LocalVueDataUi>
     </div>
 
     <Box comp="VueUiDonut" :dataset="dataset">
