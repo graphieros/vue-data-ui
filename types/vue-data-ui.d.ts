@@ -3291,6 +3291,7 @@ declare module "vue-data-ui" {
 
     export type VueUiDonutConfig = {
         type?: "classic" | "polar";
+        loading?: boolean;
         pie?: boolean;
         responsive?: boolean;
         theme?: Theme;

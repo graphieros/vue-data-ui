@@ -704,6 +704,7 @@ export function useConfig() {
 
     const vue_ui_donut = {
         type: 'classic',
+        loading: false, // v3
         pie: false, // v3
         autoSize: true, // false = v2
         responsive: false,

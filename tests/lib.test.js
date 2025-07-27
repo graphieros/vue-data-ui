@@ -262,7 +262,9 @@ describe("treeShake", () => {
             key3: {
                 subkey: {
                     subsubkey: "subsubkey",
-                    withNull: null
+                    withNull: null,
+                    bool1: true,
+                    bool0: false
                 },
             },
         };
@@ -281,7 +283,9 @@ describe("treeShake", () => {
             key3: {
                 subkey: {
                     subsubkey: "test",
-                    withNull: null
+                    withNull: null,
+                    bool1: true,
+                    bool0: false
                 },
             },
         };
@@ -295,7 +299,9 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "subsubkey",
-                        withNull: null
+                        withNull: null,
+                        bool1: true,
+                        bool0: false
                     },
                 },
             }
@@ -310,7 +316,9 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "subsubkey",
-                        withNull: null
+                        withNull: null,
+                        bool1: true,
+                        bool0: false
                     },
                 },
             }
@@ -325,7 +333,9 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "subsubkey",
-                        withNull: null
+                        withNull: null,
+                        bool1: true,
+                        bool0: false
                     },
                 },
             }
@@ -340,7 +350,9 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "test",
-                        withNull: null
+                        withNull: null,
+                        bool1: true,
+                        bool0: false
                     },
                 },
             }

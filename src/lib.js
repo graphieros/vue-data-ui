@@ -2735,7 +2735,6 @@ export function observeClassPresenceIn(container, cssClass, onNodesPresent) {
     return observer;
 }
 
-
 const lib = {
     XMLNS,
     abbreviate,

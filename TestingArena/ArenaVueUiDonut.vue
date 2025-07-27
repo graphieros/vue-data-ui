@@ -6,50 +6,7 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import LocalPattern from "../src/atoms/vue-ui-pattern.vue";
 
-const dataset = ref([
-    {
-        name: 'Serie 1 with a huge label that overflows',
-        values: [1],
-        // comment: 'This is a comment'
-    },
-    {
-        name: 'Serie 2 with a huge label that overflows',
-        values: [1],
-        // comment: 'This is a comment'
-    },
-    {
-        name: 'Serie 3 with a huge\nlabel that overflows',
-        values: [1],
-        // comment: 'This is a comment'
-    },
-    {
-        name: 'Serie 4 with a huge\nlabel that overflows',
-        values: [1],
-        // comment: 'This is a comment'
-    },
-    {
-        name: 'Serie 2',
-        values: [1]
-    },
-    {
-        name: 'Serie 3',
-        values: [2],
-        // comment: "This is another comment that is quite long to see how it fits on the chart and to see if it's nit overflowing."
-    },
-    // {
-    //     name: 'Serie 4',
-    //     values: [12.5]
-    // },
-    // {
-    //     name: 'Serie 5',
-    //     values: [6.125]
-    // },
-    // {
-    //     name: 'Serie 6',
-    //     values: [25],
-    //     comment: 'Some other comment'
-    // },
-]);
+const dataset = ref([]);
 
 const alternateDataset = ref([
     { name: 'Alt 1', values: [20]},
@@ -84,6 +41,7 @@ const model = ref([
     { key: 'autoSize', def: true, type: 'checkbox'},
     { key: 'startAnimation.show', def: false, type: 'checkbox'},
     { key: 'pie', def: false, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
 
     { key: 'type', def: 'classic', type: 'select', options: ['classic', 'polar']},
     { key: 'style.chart.width', def: 512, type: 'number', min: 0, max: 512 },
@@ -111,7 +69,7 @@ const model = ref([
     { key: 'useCssAnimation', def: false, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'useBlurOnHover', def: true, type: 'checkbox', label: "useBlurOnHover", category: 'general' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text', label: "fontFamily", category: 'general' },
-    { key: 'style.chart.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'general' },
+    { key: 'style.chart.useGradient', def: false, type: 'checkbox', label: 'useGradient', category: 'general' },
     { key: 'style.chart.gradientIntensity', def: 40, min: 0, max: 100, type: 'range', label: 'gradientIntensity', category: 'general' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
@@ -169,7 +127,7 @@ const model = ref([
     { key: 'style.chart.layout.labels.hollow.average.value.rounding', def: 0, type: 'number', min: 0, max: 6, label: ['hollow', 'average', 'value', 'is', 'rounding'], category: 'labels' },
     { key: 'style.chart.layout.donut.strokeWidth', def: 64, type: 'range', min: 3, max: 130, label: 'thickness', category: 'donut' },
     { key: 'style.chart.layout.donut.borderWidth', def: 1, type: 'range', min: 0, max: 36, label: ['border', 'is', 'thickness'], category: 'donut' },
-    { key: 'style.chart.layout.donut.useShadow', def: true,  type: 'checkbox' },
+    { key: 'style.chart.layout.donut.useShadow', def: false,  type: 'checkbox' },
     { key: 'style.chart.layout.donut.shadowColor', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.legend.show', def: true, type: 'checkbox', label: 'show', category: 'legend' },
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF20', type: 'color', label: 'backgroundColor', category: 'legend' },
@@ -370,6 +328,28 @@ onMounted(async () => {
     }
 })
 
+
+// Test mutating loading state from outside
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: 'A',
+                values: [1]
+            },
+            {
+                name: 'A',
+                values: [1]
+            },
+            {
+                name: 'A',
+                values: [1]
+            },
+        ]
+    }, 2000)
+})
+
 </script>
 
 <template>
@@ -422,15 +402,17 @@ onMounted(async () => {
         <template #title>VueUiDonut</template>
 
         <template #local>
-            <LocalVueUiDonut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localDonut">
-                <template #pattern="{ seriesIndex, patternId }">
+            <LocalVueUiDonut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : {
+                ...config,
+            }" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localDonut">
+                <!-- <template #pattern="{ seriesIndex, patternId }">
                     <VueUiPattern v-if="seriesIndex === 0" name="squares" :id="patternId"/>
                     <VueUiPattern v-if="seriesIndex === 1" name="hexagon-grid" :id="patternId" :scale="0.4" :strokeWidth="2"/>
                     <VueUiPattern v-if="seriesIndex === 2" name="hexagon-diamond" :id="patternId"/>
                     <VueUiPattern v-if="seriesIndex === 3" name="scales" :id="patternId"/>
                     <VueUiPattern v-if="seriesIndex === 4" name="zig-zag" :id="patternId" :scale="0.2" :strokeWidth="8"/>
                     <VueUiPattern v-if="seriesIndex === 5" name="redrum" :id="patternId" :scale="0.5" :strokeWidth="5"/>
-                </template>
+                </template> -->
 
                 <template #optionPdf>
                     PRINT PDF
@@ -450,21 +432,21 @@ onMounted(async () => {
                 <template template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                     <button @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">FULLSCREEN</button>
                 </template>
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
                 <template #dataLabel="{ datapoint, isBlur, isVisible, isSafari, textAlign, flexAlign, percentage }">
                     <div :style="`background:${datapoint.color}`">
                         {{ datapoint.name }} : {{ percentage }}
                     </div>
                 </template>
-                <template #legend="{ legend }">
+                <!-- <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
-                </template>
+                </template> -->
                 <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #BEFORE {{ series.name }}
                 </template>
@@ -480,7 +462,7 @@ onMounted(async () => {
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiDonut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localVdui">
+            <LocalVueDataUi component="VueUiDonut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localVdui">
                 <template #pattern="{ seriesIndex, patternId }">
                     <VueUiPattern v-if="seriesIndex === 0" name="squares" :id="patternId"/>
                     <VueUiPattern v-if="seriesIndex === 1" name="hexagon-grid" :id="patternId" :scale="0.4" :strokeWidth="2"/>
