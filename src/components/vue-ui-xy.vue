@@ -1692,9 +1692,7 @@ import {
     calculateNiceScale,
     calculateNiceScaleWithExactExtremes,
     checkNaN, 
-    closestDecimal,
     convertColorToHex, 
-    convertConfigColors,
     convertCustomPalette,
     createCsvContent,
     createPolygonPath,
@@ -1712,29 +1710,25 @@ import {
     isFunction,
     isSafeValue,
     largestTriangleThreeBucketsArray,
-    opacity, 
     palette,
     placeXYTag,
     setOpacity,
     shiftHue, 
-    treeShake,
     error,
     objectIsEmpty,
     themePalettes,
     translateSize,
     createSmoothPathWithCuts,
     createStraightPathWithCuts,
-    createAreaWithCuts,
     createIndividualAreaWithCuts,
     createSmoothAreaSegments,
     createIndividualArea
 } from '../lib';
 import themes from "../themes.json";
 import { useConfig } from '../useConfig';
-import { useMouse } from '../useMouse';
 import { useNestedProp } from '../useNestedProp';
 import { useTimeLabels } from '../useTimeLabels.js';
-import { computed, defineAsyncComponent, defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue';
+import { computed, defineAsyncComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue';
 import Slicer from '../atoms/Slicer.vue';
 import Title from '../atoms/Title.vue';
 import Shape from '../atoms/Shape.vue';
@@ -1766,7 +1760,7 @@ const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 
-const emits = defineEmits(['selectTimeLabel', 'selectX', 'selectLegend']);
+const emit = defineEmits(['selectTimeLabel', 'selectX', 'selectLegend']);
 const SLOTS = useSlots();
 const instance = getCurrentInstance();
 const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
