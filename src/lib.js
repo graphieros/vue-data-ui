@@ -1,32 +1,36 @@
 import errors from "./errors.json";
 
-export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult = 2, arcAmpl = 1.45, degrees = 360, rotation = 105.25, size = 0) {
-    let { series } = item;
-    if (!series || item.base === 0)
-        return {
-            ...series,
-            proportion: 0,
-            ratio: 0,
-            path: "",
-            startX: 0,
-            startY: 0,
-            endX: 0,
-            center: {},
-        };
-    const sum = [...series]
-        .map((serie) => {
-            return serie.value
-        })
-        .reduce((a, b) => a + b, 0);
+export function makeDonut(
+    item,
+    cx,
+    cy,
+    rx,
+    ry,
+    piProportion = 1.99999,
+    piMult = 2,
+    arcAmpl = 1.45,
+    degrees = 360,
+    rotation = 105.25,
+    size = 0
+) {
+    const { series } = item;
+    if (!series || series.length === 0) {
+        return [];
+    }
+
+    const sum = series.reduce((total, s) => total + s.value, 0);
 
     const ratios = [];
     let acc = 0;
-    for (let i = 0; i < series.length; i += 1) {
-        const val = Math.min(series[i].value - 0.0001, sum);
-        let proportion = val / sum;
-        const ratio = proportion * (Math.PI * piProportion); // (Math.PI * 2) fails to display a donut with only one value > 0 as it goes full circle again
-        // midProportion & midRatio are used to find the midpoint of the arc to display markers
-        const midProportion = val / 2 / sum;
+
+    for (let i = 0; i < series.length; i++) {
+        const rawVal = series[i].value;
+        const isSingle = series.length === 1;
+
+        // Force 360° when single datapoint
+        const proportion = isSingle ? 1 : sum > 0 ? rawVal / sum : 0;
+        const ratio = proportion * (Math.PI * piProportion);
+        const midProportion = isSingle ? 0.5 : sum > 0 ? (rawVal / 2) / sum : 0.5;
         const midRatio = midProportion * (Math.PI * piMult);
         const { startX, startY, endX, endY, path } = createArc(
             [cx, cy],
@@ -36,7 +40,6 @@ export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult =
             degrees,
             piMult
         );
-
         const inner = createArc(
             [cx, cy],
             [rx - size, ry - size],
@@ -46,7 +49,14 @@ export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult =
             piMult,
             true
         );
-
+        const center = createArc(
+            [cx, cy],
+            [rx * arcAmpl, ry * arcAmpl],
+            [acc, midRatio],
+            rotation,
+            degrees,
+            piMult
+        );
         ratios.push({
             arcSlice: `${path} L ${inner.startX} ${inner.startY} ${inner.path} L ${startX} ${startY}`,
             cx: checkNaN(cx),
@@ -54,7 +64,7 @@ export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult =
             ...series[i],
             proportion: checkNaN(proportion),
             ratio: checkNaN(ratio),
-            path: path.replaceAll('NaN', '0'),
+            path: path.replaceAll("NaN", "0"),
             startX: checkNaN(startX),
             startY: checkNaN(startY),
             endX: checkNaN(endX),
@@ -64,17 +74,10 @@ export function makeDonut(item, cx, cy, rx, ry, piProportion = 1.99999, piMult =
                 y: inner.startY,
             },
             firstSeparator: {
-                x: Number(inner.path.split(' ').at(-2)),
-                y: Number(inner.path.split(' ').at(-1))
+                x: Number(inner.path.split(" ").at(-2)),
+                y: Number(inner.path.split(" ").at(-1)),
             },
-            center: createArc(
-                [cx, cy],
-                [rx * arcAmpl, ry * arcAmpl],
-                [acc, midRatio],
-                rotation,
-                degrees,
-                piMult
-            ), // center of the arc, to display the marker. rx & ry are larger to be displayed with a slight offset
+            center,
         });
         acc += ratio;
     }

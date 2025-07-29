@@ -120,6 +120,16 @@ function prepareChart() {
                 })
             })
         })
+        props.dataset.forEach((ds, i) => {
+            if (!ds.name || ds.name === '') {
+                error({
+                    componentName: 'VueUiDonut',
+                    type: 'datasetAttributeEmpty',
+                    property: 'name',
+                    index: i
+                })
+            }
+        })
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -648,7 +658,6 @@ function handleDatapointLeave({ datapoint, seriesIndex }) {
 }
 
 function useTooltip({ datapoint, relativeIndex, seriesIndex, show = false }) {
-    console.log(datapoint)
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
     }
@@ -1172,7 +1181,7 @@ defineExpose({
                     <g v-if="currentDonut.length > 1 || FINAL_CONFIG.type === 'classic'">
                         <path data-cy="tooltip-trap" v-for="(arc, i) in currentDonut.filter(el => !el.ghost)"
                             :d="FINAL_CONFIG.type === 'classic' ? arc.arcSlice : polarAreas[i].path"
-                            :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" @mouseenter="useTooltip({
+                            :fill="selectedSerie === i ? FINAL_CONFIG.style.chart.layout.donut.selectedColor : 'transparent'" @mouseenter="useTooltip({
                                 datapoint: arc,
                                 relativeIndex: i,
                                 seriesIndex: arc.seriesIndex,

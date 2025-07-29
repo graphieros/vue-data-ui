@@ -829,7 +829,8 @@ export function useConfig() {
                         borderWidth: 1,
                         useShadow: false,
                         shadowColor: COLOR_BLACK,
-                        emptyFill: COLOR_GREY_LIGHT
+                        emptyFill: COLOR_GREY_LIGHT,
+                        selectedColor: '#0000001A'
                     }
                 },
                 comments: {
