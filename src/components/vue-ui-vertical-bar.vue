@@ -11,6 +11,7 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
+    hasDeepProperty,
     isFunction,
     objectIsEmpty,
     palette,
@@ -96,8 +97,10 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
+    let finalConfig = {};
+
     if (mergedConfig.theme) {
-        return {
+        finalConfig =  {
             ...useNestedProp({
                 userConfig: themes.vue_ui_vertical_bar[mergedConfig.theme] || props.config,
                 defaultConfig: mergedConfig
@@ -105,8 +108,31 @@ function prepareConfig() {
             customPalette: themePalettes[mergedConfig.theme] || palette
         }
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointEnter')) {
+        finalConfig.events.datapointEnter = props.config.events.datapointEnter;
+    } else {
+        finalConfig.events.datapointEnter = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointLeave')) {
+        finalConfig.events.datapointLeave = props.config.events.datapointLeave;
+    } else {
+        finalConfig.events.datapointLeave = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointClick')) {
+        finalConfig.events.datapointClick = props.config.events.datapointClick;
+    } else {
+        finalConfig.events.datapointClick = null;
+    }
+
+    // ----------------------------------------------------------------------------
+    return finalConfig;
 }
 
 watch(() => props.config, (_newCfg) => {
@@ -450,7 +476,26 @@ const selectedBarId = ref(null);
 
 const dataTooltipSlot = ref(null);
 
+function selectDatapoint({ datapoint, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
+    }
+}
+
+function handleDatapointLeave({ datapoint, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
+    }
+    hoveredBar.value = null;
+    isTooltip.value = false;
+    selectedBarId.value = null;
+}
+
 function useTooltip(bar, seriesIndex) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datpoint: bar, seriesIndex });
+    }
+
     dataTooltipSlot.value = {
         datapoint: bar,
         seriesIndex,
@@ -1010,7 +1055,8 @@ defineExpose({
                     :height="barHeight + barGap <= 0 ? 0.0001 : barHeight + barGap"
                     :fill="selectedBarId === serie.id ? setOpacity(FINAL_CONFIG.style.chart.layout.highlighter.color, FINAL_CONFIG.style.chart.layout.highlighter.opacity) : 'transparent'"
                     @mouseenter="useTooltip(serie, i)"
-                    @mouseleave="hoveredBar = null; isTooltip = false; selectedBarId = null"
+                    @mouseleave="handleDatapointLeave({ datapoint: serie, seriesIndex: i })"
+                    @click="selectDatapoint({ datapoint: serie, seriesIndex: i })"
                 />
             </g>
             <slot name="svg" :svg="svg"/>

@@ -703,6 +703,11 @@ export function useConfig() {
         theme: '',
         customPalette: [],
         useCssAnimation: true,
+        events: {
+            datapointEnter: null,
+            datapointLeave: null,
+            datapointClick: null
+        },
         serieToggleAnimation: {
             show: true,
             durationMs: 500,
@@ -1694,6 +1699,11 @@ export function useConfig() {
         theme: '',
         customPalette: [],
         useCssAnimation: true,
+        events: {
+            datapointEnter: null,
+            datapointLeave: null,
+            datapointClick: null
+        },
         style: {
             fontFamily: 'inherit',
             chart: {
