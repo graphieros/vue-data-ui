@@ -714,6 +714,7 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }) {
     selectedDonut.value = datapoint.arcOfId;
     selectedDatapoint.value = datapoint.id;
     selectedDatapointIndex.value = seriesIndex;
+    selectedSerie.value = datapoint.id
 
     dataTooltipSlot.value = {
         datapoint,
@@ -1237,7 +1238,8 @@ defineExpose({
                     <template v-if="item.hasData">
                         <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)">
                             <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
-                                :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :fill="arc.color" 
+                                :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                                 :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                                 :filter="getBlurFilter(arc, j)" />
                         </g>
@@ -1245,7 +1247,7 @@ defineExpose({
                     <template v-else>
                         <g v-for="(arc, j) in item.skeleton">
                             <path data-cy="datapoint-arc" class="vue-ui-donut-arc-path" :d="arc.arcSlice"
-                                :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :fill="arc.color" :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                                 :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" />
                         </g>
                     </template>
@@ -1406,7 +1408,7 @@ defineExpose({
                 <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut">
                         <path data-cy="tooltip-trap" :d="arc.arcSlice"
-                            :fill="selectedSerie === i ? 'rgba(0,0,0,0.1)' : 'transparent'" @mouseenter="
+                            :fill="selectedSerie === arc.id ? FINAL_CONFIG.style.chart.layout.donut.selectedColor : 'transparent'" @mouseenter="
                                 useTooltip({
                                     datapoint: arc,
                                     relativeIndex: i,
@@ -1417,6 +1419,7 @@ defineExpose({
                                 selectedDonut = null;
                                 selectedDatapoint = null;
                                 selectedDatapointIndex = null;
+                                selectedSerie = null
                                 " />
                     </g>
                 </g>

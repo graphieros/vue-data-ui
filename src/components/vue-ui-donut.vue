@@ -1084,7 +1084,7 @@ defineExpose({
                             :data-cy="`donut-arc-${i}`"
                             :d="arc.arcSlice" 
                             :fill="arc.color"
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" 
                             :filter="getBlurFilter(i)" 
                         />
@@ -1093,14 +1093,14 @@ defineExpose({
                         <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
                             :data-cy="`donut-arc-pattern-${arc.patternIndex}`" :d="arc.arcSlice"
                             :fill="`url(#${arc.pattern})`"
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)" />
                     </g>
                 </template>
     
                 <template v-if="total && FINAL_CONFIG.type === 'polar'">
                     <g v-if="currentDonut.length > 1">
-                        <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                             :d="polarAreas[i].path" fill="#FFFFFF" 
                             :style="{
                                 transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
@@ -1109,7 +1109,7 @@ defineExpose({
                         <g v-if="FINAL_CONFIG.style.chart.layout.donut.useShadow">
                             <path data-cy="polar-shadow" v-for="(_arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
                                 :d="polarAreas[i].path" :fill="'transparent'"
-                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                                 :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                                 :filter="`url(#drop_shadow_${uid})`" 
                                 :style="{
@@ -1122,7 +1122,7 @@ defineExpose({
                             <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path"
                                 :data-cy="`polar-arc-${arc.patternIndex}`" :d="polarAreas[i].path"
                                 :fill="`url(#${arc.pattern})`"
-                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                                 :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                                 :filter="getBlurFilter(i)"
                                 :style="{
@@ -1133,7 +1133,7 @@ defineExpose({
                         <path v-for="(arc, i) in noGhostDonut" class="vue-ui-donut-arc-path" :data-cy="`donut-arc-${i}`"
                             :d="polarAreas[i].path"
                             :fill="FINAL_CONFIG.style.chart.useGradient ? `url(#polar_gradient_${i}_${uid})` : arc.color"
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)"
                             :style="{
                                 transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
