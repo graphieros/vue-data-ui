@@ -41,7 +41,7 @@ function handleClick(legend, i) {
         :style="`background:${config.backgroundColor};font-size:${config.fontSize}px;color:${config.color};padding-bottom:${config.paddingBottom}px;padding-top:${config.paddingTop || 12}px;font-weight:${config.fontWeight}`"
     >
         <slot name="legendTitle" :titleSet="legendSet"></slot>
-        <div v-for="(legend, i) in legendSet" :class="{ 'vue-data-ui-legend-item': true, 'active': clickable }">
+        <div v-for="(legend, i) in legendSet" :key="`legend_${i}`" :class="{ 'vue-data-ui-legend-item': true, 'active': clickable }">
             <svg @click="handleClick(legend, i)" v-if="legend.shape" :height="config.fontSize" :width="config.fontSize" viewBox="0 0 60 60" :style="`overflow: visible;opacity:${legend.opacity}`">
                 <Shape
                     :shape="legend.shape"

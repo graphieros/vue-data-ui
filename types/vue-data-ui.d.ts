@@ -3392,6 +3392,7 @@ declare module "vue-data-ui" {
                         useShadow?: boolean;
                         shadowColor?: string;
                         emptyFill?: string;
+                        selectedColor?: string;
                     };
                 };
                 comments?: ChartComments;
