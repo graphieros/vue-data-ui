@@ -1181,6 +1181,7 @@ defineExpose({
                     <g v-if="currentDonut.length > 1 || FINAL_CONFIG.type === 'classic'">
                         <path data-cy="tooltip-trap" v-for="(arc, i) in currentDonut.filter(el => !el.ghost)"
                             :d="FINAL_CONFIG.type === 'classic' ? arc.arcSlice : polarAreas[i].path"
+                            :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                             :fill="selectedSerie === i ? FINAL_CONFIG.style.chart.layout.donut.selectedColor : 'transparent'" @mouseenter="useTooltip({
                                 datapoint: arc,
                                 relativeIndex: i,
