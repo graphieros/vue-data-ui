@@ -1153,7 +1153,7 @@
                     </g>
                     
                     <!-- TIME LABELS -->
-                    <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show" ref="timeLabels">
+                    <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show" ref="timeLabelsEls">
                         <template v-if="$slots['time-label']">
                             <template v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                                 <slot name="time-label" v-bind="{
@@ -1682,7 +1682,7 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { 
     abbreviate,
     adaptColorToBackground,
@@ -1734,48 +1734,126 @@ import { useConfig } from '../useConfig';
 import { useMouse } from '../useMouse';
 import { useNestedProp } from '../useNestedProp';
 import { useTimeLabels } from '../useTimeLabels.js';
-import { defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent, defineComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue';
 import Slicer from '../atoms/Slicer.vue';
 import Title from '../atoms/Title.vue';
 import Shape from '../atoms/Shape.vue';
 import img from '../img.js';
+import { usePrinter } from '../usePrinter.js';
 
-const sliderId = createUid();
-
-export default {
-    name: "vue-ui-xy",
-    props: {
-        config: {
-            type: Object,
-            default() {
-                return {}
-            }
-        },
-        dataset: {
-            type: Array,
-            default() {
-                return []
-            }
+const props = defineProps({
+    config: {
+        type: Object,
+        default() {
+            return {}
         }
     },
-    components: {
-        Slicer, // Must be ready in responsive mode
-        Title, // Must be ready in responsive mode
-        Shape,
-        DataTable: defineAsyncComponent(() => import('../atoms/DataTable.vue')),
-        Tooltip: defineAsyncComponent(() => import('../atoms/Tooltip.vue')),
-        UserOptions: defineAsyncComponent(() => import('../atoms/UserOptions.vue')),
-        BaseIcon: defineAsyncComponent(() => import('../atoms/BaseIcon.vue')),
-        TableSparkline: defineAsyncComponent(() => import('./vue-ui-table-sparkline.vue')),
-        Skeleton: defineAsyncComponent(() => import('./vue-ui-skeleton.vue')),
-        Accordion: defineAsyncComponent(() => import('./vue-ui-accordion.vue')),
-        PackageVersion: defineAsyncComponent(() => import('../atoms/PackageVersion.vue')),
-        PenAndPaper: defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'))
+    dataset: {
+        type: Array,
+        default() {
+            return []
+        }
+    }
+});
+
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const TableSparkline = defineAsyncComponent(() => import('./vue-ui-table-sparkline.vue'));
+const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+
+const emits = defineEmits(['selectTimeLabel', 'selectX', 'selectLegend']);
+const SLOTS = useSlots();
+const instance = getCurrentInstance();
+const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
+
+const chart = ref(null);
+const chartTitle = ref(null);
+const chartSlicer = ref(null);
+const chartLegend = ref(null);
+const source = ref(null);
+const noTitle = ref(null);
+const G = ref(null);
+const xAxisLabel = ref(null);
+const yAxisLabel = ref(null);
+const timeLabelsEls = ref(null);
+
+const resizeObserver = ref(null);
+const observedEl = ref(null);
+const slicerStep = ref(0);
+const selectedScale = ref(null);
+const useSafeValues = ref(true);
+const height = ref(600);
+const width = ref(1000);
+const viewBox = ref('0 0 1000 600');
+const clientPosition = ref({ x: 0, y: 0 });
+const icons = ref({ line: 'line', bar: 'bar', plot: 'plot' });
+const isAnnotator = ref(false);
+const isFullscreen = ref(false);
+const isTooltip = ref(false);
+const selectedSerieIndex = ref(null);
+const selectedRowIndex = ref(null);
+const segregatedSeries = ref([]);
+const uniqueId = ref(createUid());
+const step = ref(0);
+const tableStep = ref(0);
+const titleStep = ref(0);
+const showSparklineTable = ref(true);
+const segregateStep = ref(0);
+const selectedMinimapIndex = ref(null);
+const showUserOptionsOnChartHover = ref(false);
+const keepUserOptionState = ref(true);
+const userOptionsVisible = ref(true);
+const svgRef = ref(null);
+const tagRefs = ref({});
+const textMeasurer = ref(null);
+const remainingHeight = ref(0); // v3
+const svgAspectRatio = ref(1); // v3
+
+const svg = computed(() => {
+    return {
+        height: height.value,
+        width: width.value
+    }
+});
+
+const lttbThreshold = props.config.downsample ? props.config.downsample.threshold ? props.config.downsample.threshold : 500 : 500
+
+const maxX = computed({
+    get: () => {
+        return Math.max(...props.dataset.map(datapoint => largestTriangleThreeBucketsArray({data: datapoint.series, threshold: lttbThreshold}).length));
     },
-    data(){
-        this.dataset.forEach((ds, i) => {
+    set: (v) => v
+});
+
+const slicer = ref({ start: 0, end: maxX.value });
+
+const mutableConfig = ref({
+    dataLabels: { show: true },
+    showTooltip: true,
+    showTable: false,
+    isStacked: false,
+    useIndividualScale: false
+});
+
+const fontSizes = ref({
+    xAxis: 18,
+    yAxis: 12,
+    dataLabels: 20,
+    plotLabels: 10
+});
+
+const plotRadii = ref({ plot: 3, line: 3 });
+
+onMounted(() => {
+    if (props.dataset.length) {
+        props.dataset.forEach((ds, i) => {
             if([null, undefined].includes(ds.series)) {
-                this.error({
+                error({
                     componentName: 'VueUiXy',
                     type: 'datasetSerieAttribute',
                     property: 'series (number[])',
@@ -1783,2061 +1861,1940 @@ export default {
                 })
             }
         })
+    }
+});
 
-        const lttbThreshold = this.config.downsample ? this.config.downsample.threshold ? this.config.downsample.threshold : 500 : 500
+function prepareConfig() {
+    if(!Object.keys(props.config || {}).length) {
+        return DEFAULT_CONFIG
+    }
 
-        const maxX = Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data: datapoint.series, threshold: lttbThreshold}).length));
-        const slicer = {
+    const mergedConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: DEFAULT_CONFIG
+    });
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'chart.highlightArea')) {
+        if (!Array.isArray(props.config.chart.highlightArea)) {
+            mergedConfig.chart.highlightArea = [props.config.chart.highlightArea] // FIXME: should be sanitized using useNestedPropToo
+        } else {
+            mergedConfig.chart.highlightArea = props.config.chart.highlightArea;
+        }
+    }
+    
+    if (props.config && hasDeepProperty(props.config, 'chart.grid.labels.yAxis.scaleMin')) {
+        mergedConfig.chart.grid.labels.yAxis.scaleMin = props.config.chart.grid.labels.yAxis.scaleMin;
+    } else {
+        mergedConfig.chart.grid.labels.yAxis.scaleMin = null;
+    }
+    
+    if (props.config && hasDeepProperty(props.config, 'chart.grid.labels.yAxis.scaleMax')) {
+        mergedConfig.chart.grid.labels.yAxis.scaleMax = props.config.chart.grid.labels.yAxis.scaleMax;
+    } else {
+        mergedConfig.chart.grid.labels.yAxis.scaleMax = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'chart.zoom.startIndex')) {
+        mergedConfig.chart.zoom.startIndex = props.config.chart.zoom.startIndex;
+    } else {
+        mergedConfig.chart.zoom.startIndex = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'chart.zoom.endIndex')) {
+        mergedConfig.chart.zoom.endIndex = props.config.chart.zoom.endIndex;
+    } else {
+        mergedConfig.chart.zoom.endIndex = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config,  'chart.grid.labels.yAxis.groupColor')) {
+        mergedConfig.chart.grid.labels.yAxis.groupColor = props.config.chart.grid.labels.yAxis.groupColor;
+    } else {
+        mergedConfig.chart.grid.labels.yAxis.groupColor = null;
+    }
+
+    if (props.config && props.config.chart.annotations && Array.isArray(props.config.chart.annotations) && props.config.chart.annotations.length) {
+        mergedConfig.chart.annotations = props.config.chart.annotations.map(annotation => {
+            return useNestedProp({
+                defaultConfig: DEFAULT_CONFIG.chart.annotations[0],
+                userConfig: annotation
+            })
+        })
+    } else {
+        mergedConfig.chart.annotations = [];
+    }
+
+    // v3 autoSize chart.padding override
+    if (props.config && props.config.autoSize) {
+
+        if (props.config.chart.padding.top) {
+            console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.top, set a 0 value to remove this warning')
+        }
+        if (props.config.chart.padding.right) {
+            console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.right, set a 0 value to remove this warning')
+        }
+        if (props.config.chart.padding.bottom) {
+            console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.bottom, set a 0 value to remove this warning')
+        }
+        if (props.config.chart.padding.left) {
+            console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.left, set a 0 value to remove this warning')
+        }
+
+        mergedConfig.chart.padding = {
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+        }
+    }
+
+    // ----------------------------------------------------------------------------
+
+    if (mergedConfig.theme) {
+        return {
+            ...useNestedProp({
+                userConfig: themes.vue_ui_xy[mergedConfig.theme] || props.config,
+                defaultConfig: mergedConfig
+            }),
+            customPalette: themePalettes[mergedConfig.theme] || props.palette
+        }
+    } else {
+        return mergedConfig
+    }
+}
+
+const isDataset = computed(() => !!props.dataset && props.dataset.length);
+
+const FINAL_CONFIG = computed({
+    get: () => {
+        return prepareConfig();
+    },
+    set: (newCfg) => {
+        return newCfg;
+    },
+});
+
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-xy_${uniqueId.value}`,
+    fileName: FINAL_CONFIG.value.chart.title.text || 'vue-ui-xy',
+    options: FINAL_CONFIG.value.chart.userOptions.print
+});
+
+
+
+const isAutoSize = computed(() => FINAL_CONFIG.value.autoSize);
+const viewBoxParts = computed(() => {
+    const [x, y, w, h] = viewBox.value.split(' ').map(Number);
+    return { x, y, width: w, height: h };
+});
+
+const customPalette = computed(() => {
+    return convertCustomPalette(FINAL_CONFIG.value.customPalette);
+});
+
+const max = computed(() => {
+    if (FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax) {
+        return FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax
+    }
+    return Math.max(...safeDataset.value.filter(s => !segregatedSeries.value.includes(s.id)).map(datapoint => Math.max(...datapoint.series)));
+});
+
+const min = computed(() => {
+    if (FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin !== null) {
+        return FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin
+    }
+    const _min = Math.min(...safeDataset.value.filter(s => !segregatedSeries.value.includes(s.id)).map(datapoint => Math.min(...datapoint.series)));
+    if(_min > 0) return 0;
+    return _min;
+})
+
+const niceScale = computed(() => {
+    return FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(min.value, max.value < 0 ? 0 : max.value, FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps) : calculateNiceScaleWithExactExtremes(min.value, max.value < 0 ? 0 : max.value, FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps)
+});
+
+const relativeZero = computed(() => {
+    if (![null, undefined].includes(FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin)) {
+        return -niceScale.value.min
+    }
+
+    if(niceScale.value.min >= 0) return 0;
+    return Math.abs(niceScale.value.min);
+});
+
+const safeDataset = computed(() => {
+    if(!useSafeValues.value) return props.dataset;
+
+    return props.dataset.map((datapoint, i) => {
+        const LTTD = largestTriangleThreeBucketsArray({
+            data: datapoint.series,
+            threshold: FINAL_CONFIG.value.downsample.threshold
+        })
+        const id = `uniqueId_${i}`;
+        return {
+            ...datapoint,
+            slotAbsoluteIndex: i,
+            series: LTTD.map(d => {
+                return isSafeValue(d) ? d : null
+            }).slice(slicer.value.start, slicer.value.end),
+            color: convertColorToHex(datapoint.color ? datapoint.color : customPalette.value[i] ? customPalette.value[i] : palette[i]),
+            id,
+            scaleLabel: datapoint.scaleLabel || id
+
+        }
+    });
+});
+
+const absoluteDataset = computed(() => {
+    return safeDataset.value.map((datapoint, i) => {
+        return {
+            absoluteIndex: i,
+            ...datapoint,
+            series: datapoint.series.map(plot => plot + relativeZero.value),
+            absoluteValues: datapoint.series,
+            segregate: () => segregate(datapoint),
+            isSegregated: segregatedSeries.value.includes(datapoint.id)
+        }
+    })
+});
+
+const relativeDataset = computed(() => {
+    return safeDataset.value.map((datapoint, i) => {
+        return {
+            ...datapoint,
+            series: datapoint.series.map(plot => plot + relativeZero.value),
+            absoluteValues: datapoint.series,
+        }
+    }).filter(s => !segregatedSeries.value.includes(s.id));
+})
+
+const drawingArea = computed(() => {
+    function getUniqueScaleLabelsCount(dataset) {
+    const uniqueLabels = new Set();
+        dataset.forEach(item => {
+            const label = item.scaleLabel || '__noScaleLabel__';
+            uniqueLabels.add(label);
+        });
+        return uniqueLabels.size;
+        }
+
+    const len = getUniqueScaleLabelsCount(absoluteDataset.value.filter(s => !segregatedSeries.value.includes(s.id)));
+
+    const individualScalesPadding = mutableConfig.value.useIndividualScale && FINAL_CONFIG.value.chart.grid.labels.show ? len * (mutableConfig.value.isStacked ? 0 : FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth) : 0;
+    return {
+        top: isAutoSize.value ? 0 : FINAL_CONFIG.value.chart.padding.top,
+        right: isAutoSize.value ? width.value : width.value - FINAL_CONFIG.value.chart.padding.right,
+        bottom: isAutoSize.value ? height.value : height.value - FINAL_CONFIG.value.chart.padding.bottom,
+        left: isAutoSize.value ? individualScalesPadding : FINAL_CONFIG.value.chart.padding.left + individualScalesPadding,
+        height: isAutoSize.value ? height.value : height.value - (FINAL_CONFIG.value.chart.padding.top + FINAL_CONFIG.value.chart.padding.bottom),
+        width: isAutoSize.value ? width.value - individualScalesPadding :width.value - (FINAL_CONFIG.value.chart.padding.right + FINAL_CONFIG.value.chart.padding.left + individualScalesPadding)
+    }
+});
+
+function usesSelectTimeLabelEvent() {
+    return !!instance?.vnode.props?.onSelectTimeLabel
+}
+
+function getTextMeasurer(fontSize, fontFamily, fontWeight) {
+    if (!textMeasurer.value) {
+        const canvas = document.createElement('canvas')
+        textMeasurer.value = canvas.getContext('2d')
+    }
+    textMeasurer.value.font = 
+        `${fontWeight || 'normal'} ${fontSize}px ${fontFamily || 'sans-serif'}`
+    return textMeasurer.value
+}
+
+function hideTags() {
+    const tags = chart.value.querySelectorAll('.vue-ui-xy-tag')
+    if (tags.length) {
+        Array.from(tags).forEach(tag => tag.style.opacity = '0')
+    }
+}
+
+function setTagRef(i, j, el, position, type) {
+    if (el) tagRefs.value[`${i}_${j}_${position}_${type}`] = el;
+}
+
+function setUserOptionsVisibility(state = false) {
+    if (!showUserOptionsOnChartHover.value) return;
+    userOptionsVisible.value = state
+}
+
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
+const timeLabels = computed(() => {
+    const _max = Math.max(...props.dataset.map(datapoint => largestTriangleThreeBucketsArray({data:datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold}).length));
+
+    return useTimeLabels({
+        values: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values,
+        maxDatapoints: _max,
+        formatter: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter,
+        start: slicer.value.start,
+        end: slicer.value.end
+    });
+});
+
+function selectTimeLabel(label, relativeIndex) {
+    const datapoint = relativeDataset.value.map(datapoint => {
+        return {
+            shape: datapoint.shape || null,
+            name: datapoint.name,
+            color: datapoint.color,
+            type: datapoint.type,
+            value: datapoint.absoluteValues.find((_s,i) => i === relativeIndex),
+            comments: datapoint.comments || [],
+            prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+            suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+        }
+    })
+    emit('selectTimeLabel', {
+        datapoint,
+        absoluteIndex: label.absoluteIndex,
+        label: label.text
+    })
+}
+
+const maxSeries = computed(() => slicer.value.end - slicer.value.start);
+
+function getHighlightAreaPosition(area) {
+    const x = drawingArea.value.left + (drawingArea.value.width / maxSeries.value) * (area.from - slicer.value.start);
+    const _width = (drawingArea.value.width / (slicer.value.end - slicer.value.start)) * area.span < 0 ? 0.00001 : (drawingArea.value.width / (slicer.value.end - slicer.value.start)) * area.span
+    return {
+        x: x < drawingArea.value.left ? drawingArea.value.left : x,
+        width: _width
+    }
+}
+
+async function setXAxisLabel() {
+    if (!xAxisLabel.value) return;
+    await nextTick();
+    let y = drawingArea.value.bottom;
+    if (timeLabelsEls.value) {
+        y += timeLabelsEls.value.getBBox().height
+    }
+    xAxisLabel.value.setAttribute('y', y + (fontSizes.value.xAxis * 1.3) + FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY);
+}
+
+async function setYAxisLabel() {
+    if (!yAxisLabel.value) return;
+    await nextTick();
+    yAxisLabel.value.setAttribute('transform', `translate(${viewBoxParts.value.x + FINAL_CONFIG.value.chart.grid.labels.axis.yLabelOffsetX + fontSizes.value.yAxis}, ${drawingArea.value.top + drawingArea.value.height /  2}) rotate(-90)`)
+}
+
+async function setViewBox() {
+    await nextTick();
+    const g = G.value;
+    if (!g) return;
+    const {x, y, width, height } = g.getBBox();
+    setXAxisLabel();
+    await nextTick();
+    setYAxisLabel();
+    const newBB = g.getBBox();
+    viewBox.value = `${newBB.x} ${newBB.y - fontSizes.value.plotLabels} ${newBB.width + FINAL_CONFIG.value.chart.padding.left} ${newBB.height + fontSizes.value.plotLabels + FINAL_CONFIG.value.chart.padding.top}`;
+    await nextTick();
+    chart.value.classList.remove('no-transition');
+}
+
+function forceResizeObserver() {
+    if (!FINAL_CONFIG.value.responsive) return;
+    if (chart.value) {
+        const parent = chart.value.parentNode;
+        if (parent) {
+            const initW = parent.getBoundingClientRect().width;
+            parent.style.width = initW - 0.1 + 'px';
+            setTimeout(() => {
+                parent.style.width = initW + 'px';
+            }, 0);
+        }
+    }
+}
+
+function selectMinimapIndex(i) {
+    selectedMinimapIndex.value = i;
+}
+
+function toggleStack() {
+    mutableConfig.value.isStacked = !mutableConfig.value.isStacked
+    if (!mutableConfig.value.isStacked) {
+        mutableConfig.value.useIndividualScale = FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale;
+    } else {
+        mutableConfig.value.useIndividualScale = true
+    }
+}
+
+function checkAutoScaleError(datapoint) {
+    if (datapoint.autoScaling) {
+        if (!FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale) {
+            console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.useIndividualScale is set to true`)
+        }
+        if (!FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked) {
+            console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.stacked is set to true`)
+        }
+    }
+}
+
+function createArea(_plots, _zero) {
+    if(!_plots[0]) return [-10,-10, '', -10, -10];
+    const start = { x: _plots[0].x, y: _zero };
+    const end = { x: _plots.at(-1).x, y: _zero };
+    const path = [];
+    _plots.forEach(plot => {
+        path.push(`${plot.x},${plot.y} `);
+    });
+    return [ start.x, start.y, ...path, end.x, end.y].toString();
+}
+
+function fillArray(len, src) {
+    let res = Array(len).fill(0);
+    for (let i = 0; i  < src.length && i < len; i += 1) {
+        res[i] = src[i];
+    }
+    return res;
+}
+
+function validSlicerEnd(v) {
+    const _max = Math.max(...this.dataset.map(datapoint => largestTriangleThreeBucketsArray({data:datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold}).length));
+    if (v > _max) {
+        return _max;
+    }
+    if (v < 0 || (FINAL_CONFIG.value.chart.zoom.startIndex !== null && v < FINAL_CONFIG.value.chart.zoom.startIndex)) {
+        if (FINAL_CONFIG.value.chart.zoom.startIndex !== null) {
+            return FINAL_CONFIG.value.chart.zoom.startIndex + 1
+        } else {
+            return 1
+        }
+    }
+    return v;
+}
+
+async function setupSlicer() {
+    if ((FINAL_CONFIG.value.chart.zoom.startIndex !== null || FINAL_CONFIG.value.chart.zoom.endIndex !== null) && chartSlicer.value) {
+        if (FINAL_CONFIG.value.chart.zoom.startIndex !== null) {
+            await nextTick();
+            await nextTick();
+            chartSlicer.value.setStartValue(FINAL_CONFIG.value.chart.zoom.startIndex);
+        }
+        if (FINAL_CONFIG.value.chart.zoom.endIndex !== null) {
+            await nextTick();
+            await nextTick();
+            chartSlicer.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.chart.zoom.endIndex + 1));
+        }
+    } else {
+        slicer.value = {
             start: 0,
-            end: maxX,
+            end: Math.max(...props.dataset.map(datapoint => largestTriangleThreeBucketsArray({ data:datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold}).length))
+        };
+        slicerStep.value += 1;
+    }
+}
+
+function refreshSlicer() {
+    setupSlicer();
+}
+
+function canShowValue(v) {
+    return ![null, undefined, NaN, Infinity, -Infinity].includes(v);
+}
+
+const absoluteMax = computed(() => niceScale.value.max + relativeZero.value);
+
+function ratioToMax(v) {
+    return v / (canShowValue(absoluteMax.value) ? absoluteMax.value : 1);
+}
+
+const zero = computed(() => {
+    if (isNaN(ratioToMax(relativeZero.value))) {
+        return drawingArea.value.bottom;
+    } else {
+        return drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(relativeZero.value));
+    }
+});
+
+function calcRectHeight(plot) {
+    const zeroForPositiveValuesOnly = ![null, undefined].includes(FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin) && FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin > 0 && min.value >= 0 ? drawingArea.value.bottom : zero.value;
+
+    if(plot.value >= 0) {
+        return checkNaN(zeroForPositiveValuesOnly - plot.y <= 0 ? 0.00001 : zeroForPositiveValuesOnly - plot.y);
+    } else {
+        return checkNaN(plot.y - zero.value <= 0 ? 0.00001 : plot.y - zero.value);
+    }
+}
+
+function calcIndividualHeight(plot) {
+    if(plot.value >= 0) {
+        return checkNaN(plot.zeroPosition - plot.y <= 0 ? 0.00001 : plot.zeroPosition - plot.y)
+    } else {
+        return checkNaN(plot.y - plot.zeroPosition <= 0 ? 0.00001 : plot.zeroPosition - plot.y)
+    }
+}
+
+const slot = computed(() => {
+    return {
+        bar: drawingArea.value.width / maxSeries.value / safeDataset.value.filter(serie => serie.type === 'bar').filter(s => !segregatedSeries.value.includes(s.id)).length,
+        plot: drawingArea.value.width / maxSeries.value,
+        line: drawingArea.value.width / maxSeries.value,
+    }
+})
+
+function calcRectWidth() {
+    if(mutableConfig.value.useIndividualScale && mutableConfig.value.isStacked) {
+        return slot.value.line - ((drawingArea.value.width / maxSeries.value) * 0.1);
+    }
+    return slot.value.bar;
+}
+
+function calcRectX(plot) {
+    if (mutableConfig.value.useIndividualScale && mutableConfig.value.isStacked) {
+        return plot.x + ((drawingArea.value.width / maxSeries.value) * 0.05)
+    }
+    return plot.x + (slot.value.bar / 2);
+}
+
+function calcRectY(plot) {
+    if(plot.value >= 0) return plot.y;
+    return [null, undefined, NaN, Infinity, -Infinity].includes(zero.value) ? drawingArea.bottom.value : zero.value;
+}
+
+function calcIndividualRectY(plot) {
+    if(plot.value >= 0) return plot.y;
+    return [null, undefined, NaN, Infinity, -Infinity].includes(plot.zeroPosition) ? 0 : plot.zeroPosition;
+}
+
+function findClosestValue(val, arr) {
+    let closest = arr[0];
+    let minDifference = Math.abs(val - arr[0]);
+    for (let i = 1; i < arr.length; i += 1) {
+        const difference = Math.abs(val - arr[i]);
+        if (difference < minDifference && arr[i] < val) {
+            closest = arr[i];
+            minDifference = difference;
+        }
+    }
+    return closest;
+}
+
+function selectX(index) {
+    emit('selectX', 
+        {
+            dataset: relativeDataset.value.map(s => {
+                return {
+                    name: s.name,
+                    value: [null, undefined, NaN].includes(s.absoluteValues[index]) ? null : s.absoluteValues[index],
+                    color: s.color,
+                    type: s.type
+                }
+            }),
+            index,
+            indexLabel: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values[index]
+        }
+    );
+}
+
+function getData() {
+    return absoluteDataset.value.map(s => {
+        return {
+            values: s.absoluteValues,
+            color: s.color,
+            name: s.name,
+            type: s.type
+        }
+    });
+}
+
+async function getImage({ scale = 2} = {}) {
+    if (!chart.value) return
+    const { width, height } = chart.value.getBoundingClientRect();
+    const aspectRatio = width / height;
+    const { imageUri, base64 } = await img({ domElement: chart.value, base64: true, img: true, scale})
+    return { 
+        imageUri, 
+        base64, 
+        title: FINAL_CONFIG.value.chart.title.text,
+        width,
+        height,
+        aspectRatio
+    }
+}
+
+function segregate(legendItem){
+    if(segregatedSeries.value.includes(legendItem.id)) {
+        segregatedSeries.value = segregatedSeries.value.filter(id => id !== legendItem.id);
+    }else {
+        if(segregatedSeries.value.length + 1 === safeDataset.value.length) return;
+        segregatedSeries.value.push(legendItem.id);
+    }
+    emit('selectLegend', relativeDataset.value.map(s => {
+        return {
+            name: s.name,
+            values: s.absoluteValues,
+            color: s.color,
+            type: s.type
+        }
+    }));
+    segregateStep.value += 1;
+}
+
+const locale = computed(() => {
+    return FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.formatter.locale
+});
+
+const chartAriaLabel = computed(() => {
+    const titleText = FINAL_CONFIG.value.chart.title.text || 'Chart visualization';
+    const subtitleText = FINAL_CONFIG.value.chart.title.subtitle.text || '';
+    return `${titleText}. ${subtitleText}`;
+});
+
+const optimize = computed(() => {
+    return {
+        linePlot: maxSeries.value > FINAL_CONFIG.value.line.dot.hideAboveMaxSerieLength
+    }
+});
+
+const hasOptionsNoTitle = computed(() => {
+    return FINAL_CONFIG.value.chart.userOptions.show && (!FINAL_CONFIG.value.chart.title.show || !FINAL_CONFIG.value.chart.title.text);
+});
+
+const backgroundColor = computed(() => FINAL_CONFIG.value.chart.backgroundColor);
+const slicerColor = computed(() => FINAL_CONFIG.value.chart.zoom.color);
+
+const hasHighlightArea = computed(() => {
+    if (Array.isArray(FINAL_CONFIG.value.chart.highlightArea)) {
+        return FINAL_CONFIG.value.chart.highlightArea.some(area => area.show)
+    }
+    return FINAL_CONFIG.value.chart.highlightArea && FINAL_CONFIG.value.chart.highlightArea.show;
+});
+
+const highlightAreas = computed(() => {
+    if (Array.isArray(FINAL_CONFIG.value.chart.highlightArea)) {
+        return FINAL_CONFIG.value.chart.highlightArea.map(area => {
+            return {
+                ...area,
+                span: area.from === area.to ? 1 : area.to < area.from ? 0 : area.to - area.from + 1
+            }
+        })
+    }
+    const area = FINAL_CONFIG.value.chart.highlightArea;
+    return [ {...area, span: area.from === area.to ? 1 : area.to < area.from ? 0 : area.to - area.from + 1} ];
+});
+
+const datasetWithIds = computed(() => {
+    if(!useSafeValues.value) return props.dataset;
+    return props.dataset.map((datapoint, i) => {
+        return {
+            ...datapoint,
+            series: largestTriangleThreeBucketsArray({
+                data: datapoint.series,
+                threshold: FINAL_CONFIG.value.downsample.threshold
+            }),
+            id: `uniqueId_${i}`
+        }
+    });
+});
+
+const tableSparklineDataset = computed(() => {
+    return relativeDataset.value.map(ds => {
+        const source = ds.absoluteValues.map(s => [undefined, null].includes(s) ? 0 : s);
+        return {
+            id: ds.id,
+            name: ds.name,
+            color: ds.color,
+            values: fillArray(maxSeries.value, source)
+        }
+    });
+});
+
+const tableSparklineConfig = computed(() => {
+    return {
+        responsiveBreakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+        roundingValues: FINAL_CONFIG.value.table.rounding,
+        showAverage: false,
+        showMedian: false,
+        showTotal: false,
+        fontFamily: FINAL_CONFIG.value.chart.fontFamily,
+        prefix: FINAL_CONFIG.value.chart.labels.prefix,
+        suffix: FINAL_CONFIG.value.chart.labels.suffix,
+        colNames: timeLabels.value.map(tl => tl.text),
+        thead: {
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
+        },
+        tbody: {
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
+        },
+        userOptions: {
+            show: false
+        }
+    }
+});
+
+const activeSeriesLength = computed(() => absoluteDataset.value.length);
+
+const xPadding = computed(() => {
+    return FINAL_CONFIG.value.chart.grid.position === 'middle' ? 0 : drawingArea.value.width / maxSeries.value / 2;
+});
+
+const activeSeriesWithStackRatios = computed(() => {
+    return assignStackRatios(absoluteDataset.value.filter(ds => !segregatedSeries.value.includes(ds.id)));
+});
+
+const scaleGroups = computed(() => {
+    const grouped = Object.groupBy(activeSeriesWithStackRatios.value, item => item.scaleLabel);
+    const result = {};
+    for (const [group, items] of Object.entries(grouped)) {
+        const allValues = items.flatMap(item => item.absoluteValues);
+        result[group] = {
+            min: Math.min(...allValues) || 0,
+            max: Math.max(...allValues) || 1,
+            groupId: `scale_group_${createUid()}`
+        };
+    }
+    return result;
+});
+
+const barSlot = computed(() => {
+    const len = safeDataset.value.filter(serie => serie.type === 'bar').filter(s => !segregatedSeries.value.includes(s.id)).length
+    return (drawingArea.value.width) / maxSeries.value / len - (barPeriodGap.value * len)
+});
+
+const barPeriodGap = computed(() => slot.value.line * FINAL_CONFIG.value.bar.periodGap);
+
+const minimap = computed(() => {
+    if(!FINAL_CONFIG.value.chart.zoom.minimap.show) return [];
+    const _source = datasetWithIds.value.filter(ds => !segregatedSeries.value.includes(ds.id));
+    const maxIndex = Math.max(..._source.map(datapoint => datapoint.series.length));
+
+    const sumAllSeries = [];
+    for (let i = 0; i < maxIndex; i += 1) {
+        sumAllSeries.push(_source.map(ds => ds.series[i] || 0).reduce((a, b) => (a || 0) + (b || 0), 0))
+    }
+    const _min = Math.min(...sumAllSeries);
+    return sumAllSeries.map(dp => dp + (_min < 0 ? Math.abs(_min) : 0)) // positivized
+});
+
+const selectedSeries = computed(() => {
+    return relativeDataset.value.map(datapoint => {
+        return {
+            slotAbsoluteIndex: datapoint.slotAbsoluteIndex,
+            shape: datapoint.shape || null,
+            name: datapoint.name,
+            color: datapoint.color,
+            type: datapoint.type,
+            value: datapoint.absoluteValues.find((_s,i) => i === selectedSerieIndex.value),
+            comments: datapoint.comments || [],
+            prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+            suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+        }
+    });
+});
+
+const yLabels = computed(() => {
+    return niceScale.value.ticks.map(t => {
+        return {
+            y: t >= 0 ? zero.value - (drawingArea.value.height * ratioToMax(t)) : zero.value + (drawingArea.value.height * ratioToMax(Math.abs(t))),
+            value: t,
+            prefix: FINAL_CONFIG.value.chart.labels.prefix,
+            suffix: FINAL_CONFIG.value.chart.labels.suffix,
+        }
+    });
+});
+
+const annotationsY = computed(() => {
+    const ann = FINAL_CONFIG.value.chart.annotations;
+    if (!ann || !Array.isArray(ann) || ann.every(a => !a.show)) return [];
+
+    const visible = ann.filter(a =>
+        a.show &&
+        (a.yAxis.yTop != null || a.yAxis.yBottom != null)
+    );
+
+    if (!visible.length) return [];
+
+    const { left, right } = drawingArea.value;
+    const zeroY = zero.value;
+    const _height = drawingArea.value.height;
+    const _min = niceScale.value.min;
+    const _max = niceScale.value.max;
+    const range = _max - _min;
+
+    const toY = v => {
+        const ratio = (v - 0) / range;
+        return zeroY - (ratio * _height);
+    };
+
+    return visible.map(annotation => {
+        const { yAxis: { yTop: rawTop, yBottom: rawBottom, label } } = annotation;
+        const hasArea = rawTop != null && rawBottom != null && rawTop !== rawBottom;
+
+        const yTop = rawTop == null ? null : toY(rawTop);
+        const yBottom = rawBottom == null ? null : toY(rawBottom);
+
+        const ctx = getTextMeasurer(label.fontSize);
+        ctx.font = `${label.fontSize}px sans-serif`;
+        const textWidth  = ctx.measureText(label.text).width;
+        const textHeight = label.fontSize;
+
+        const xText = (label.position === 'start' ? left + label.padding.left : right - label.padding.right) + label.offsetX;
+
+        const baselineY = (yTop != null && yBottom != null)
+            ? Math.min(yTop, yBottom)
+            : (yTop != null ? yTop : yBottom);
+
+        const yText = baselineY - (label.fontSize / 3) + label.offsetY - label.padding.top;
+
+        let rectX;
+        if (label.textAnchor === 'middle') {
+            rectX = xText - (textWidth / 2) - label.padding.left;
+        } else if (label.textAnchor === 'end') {
+            rectX = xText - textWidth - label.padding.right;
+        } else {
+            rectX = xText - label.padding.left;
+        }
+
+        const rectY = yText - (textHeight * 0.75) - label.padding.top;
+        const show = ![yTop, yBottom, rectY].includes(NaN);
+
+        return {
+            show,
+            id: `annotation_y_${createUid()}`,
+            hasArea,
+            areaHeight: hasArea ? Math.abs(yTop - yBottom) : 0,
+            yTop,
+            yBottom,
+            config: annotation.yAxis,
+            x1: left,
+            x2: right,
+            _text: { x: xText, y: yText },
+            _box: {
+                x: rectX,
+                y: rectY,
+                width:  textWidth + label.padding.left + label.padding.right,
+                height: textHeight + label.padding.top + label.padding.bottom,
+                fill:   label.backgroundColor,
+                stroke: label.border.stroke,
+                rx:     label.border.rx,
+                ry:     label.border.ry,
+                strokeWidth: label.border.strokeWidth
+            }
+        };
+    });
+});
+
+/******************************************************************************************/
+/                                 DATAPOINTS COMPUTING                                     /
+/******************************************************************************************/
+
+const barSet = computed(() => {
+    const stackSeries = activeSeriesWithStackRatios.value
+        .filter(s => ['bar','line','plot'].includes(s.type));
+    const totalSeries = stackSeries.length;
+    const gap = FINAL_CONFIG.value.chart.grid.labels.yAxis.gap;
+    const stacked = mutableConfig.value.isStacked;
+    const totalGap = stacked ? gap * (totalSeries - 1) : 0
+    const usableHeight = drawingArea.value.height - totalGap;
+
+    return stackSeries.filter(s => s.type === 'bar').map((datapoint, i) => {
+        checkAutoScaleError(datapoint);
+        const _min = scaleGroups.value[datapoint.scaleLabel].min;
+        const _max = scaleGroups.value[datapoint.scaleLabel].max;
+        const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
+            return (v - _min) / (_max - _min)
+        });
+
+        const autoScale = {
+            ratios: autoScaledRatios,
+            valueMin: _min,
+            valueMax: _max < 0 ? 0 : _max,
+        }
+
+        const individualExtremes = {
+            max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
+            min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues.filter(v => ![undefined,null].includes(v))) > 0 ? 0 : Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)))
+        };
+        const scaleSteps = datapoint.scaleSteps || FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps;
+
+        const corrector = 1.0000001;
+
+        const individualScale = FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
+        
+        const autoScaleSteps = FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
+
+        const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
+        const autoScaleZero = 0;
+
+        const individualMax = individualScale.max + individualZero;
+        const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
+
+        const origIdx = datapoint.stackIndex;
+        const flippedIdx = totalSeries - 1 - origIdx;
+        const flippedLowerRatio  = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
+        const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
+        const individualHeight = stacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
+
+        const zeroPosition = drawingArea.value.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
+        const autoScaleZeroPosition = drawingArea.value.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+
+        const barLen = absoluteDataset.value.filter(ds => ds.type === 'bar').filter(s => !segregatedSeries.value.includes(s.id)).length;
+
+        const plots = datapoint.series.map((plot, j) => {
+            const yRatio = mutableConfig.value.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : ratioToMax(plot)
+            const x = mutableConfig.value.useIndividualScale && mutableConfig.value.isStacked 
+                ? drawingArea.value.left + (drawingArea.value.width / maxSeries.value * j) 
+                : drawingArea.value.left
+                    + (slot.value.bar * i)
+                    + (slot.value.bar * j * barLen)
+                    - (barSlot.value / 2)
+                    - (i * barPeriodGap.value)
+
+
+            return {
+                yOffset: checkNaN(yOffset),
+                individualHeight: checkNaN(individualHeight),
+                x: checkNaN(x),
+                y: drawingArea.value.bottom - yOffset - (individualHeight * yRatio),
+                value: datapoint.absoluteValues[j],
+                zeroPosition: checkNaN(zeroPosition),
+                individualMax: checkNaN(individualMax),
+                comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
+            }
+        });
+
+        const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(v => {
+            if(autoScaleSteps.min >= 0) {
+                return (v - Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
+            } else {
+                return (v + Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
+            }
+        })
+
+        const autoScalePlots = datapoint.series.map((_, j) => {
+            const x = mutableConfig.value.useIndividualScale && mutableConfig.value.isStacked 
+                ? drawingArea.value.left + (drawingArea.value.width / maxSeries.value * j) 
+                : (drawingArea.value.left - slot.value.bar/2 + slot.value.bar * i) + (slot.value.bar * j * absoluteDataset.value.filter(ds => ds.type === 'bar').filter(s => !segregatedSeries.value.includes(s.id)).length);
+            return {
+                yOffset: checkNaN(yOffset),
+                individualHeight: checkNaN(individualHeight),
+                x: checkNaN(x),
+                y: checkNaN(drawingArea.value.bottom - checkNaN(yOffset) - ((checkNaN(individualHeight) * autoScaleRatiosToNiceScale[j]) || 0)),
+                value: datapoint.absoluteValues[j],
+                zeroPosition: checkNaN(zeroPosition),
+                individualMax: checkNaN(individualMax),
+                comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
+            }
+        });
+
+        const scaleYLabels = individualScale.ticks.map(t => {
+            return {
+                y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
+                value: t,
+                prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+                suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+                datapoint
+            }
+        });
+
+        const autoScaleYLabels = autoScaleSteps.ticks.map(t => {
+            const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
+            return {
+                y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
+                value: t,
+                prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+                suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+                datapoint
+            }
+        });
+
+        scaleGroups.value[datapoint.scaleLabel].name = datapoint.name;
+        scaleGroups.value[datapoint.scaleLabel].groupName = datapoint.scaleLabel;
+        scaleGroups.value[datapoint.scaleLabel].groupColor = FINAL_CONFIG.value.chart.grid.labels.yAxis.groupColor || datapoint.color;
+        scaleGroups.value[datapoint.scaleLabel].color = datapoint.color;
+        scaleGroups.value[datapoint.scaleLabel].scaleYLabels = datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
+        scaleGroups.value[datapoint.scaleLabel].zeroPosition = datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
+        scaleGroups.value[datapoint.scaleLabel].individualMax = datapoint.autoScaling ? autoScaleMax : individualMax;
+        scaleGroups.value[datapoint.scaleLabel].scaleLabel = datapoint.scaleLabel;
+        scaleGroups.value[datapoint.scaleLabel].id = datapoint.id;
+        scaleGroups.value[datapoint.scaleLabel].yOffset = yOffset;
+        scaleGroups.value[datapoint.scaleLabel].individualHeight = individualHeight;
+        scaleGroups.value[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
+        scaleGroups.value[datapoint.scaleLabel].unique = activeSeriesWithStackRatios.value.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
+
+        return {
+            ...datapoint,
+            yOffset,
+            autoScaleYLabels,
+            individualHeight,
+            scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
+            individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
+            individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+            zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
+            plots: datapoint.autoScaling ? autoScalePlots: plots,
+            groupId: scaleGroups.value[datapoint.scaleLabel].groupId
+        }
+    })
+});
+
+const lineSet = computed(() => {
+    const stackSeries   = activeSeriesWithStackRatios.value
+        .filter(s => ['bar','line','plot'].includes(s.type));
+    const totalSeries = stackSeries.length;
+    const gap = FINAL_CONFIG.value.chart.grid.labels.yAxis.gap;
+    const stacked = mutableConfig.value.isStacked;
+    const totalGap = stacked ? gap * (totalSeries - 1) : 0
+    const usableHeight = drawingArea.value.height - totalGap;
+
+    return stackSeries.filter(s => s.type === 'line').map((datapoint, i) => {
+        checkAutoScaleError(datapoint);
+
+        const _min = scaleGroups.value[datapoint.scaleLabel].min;
+        const _max = scaleGroups.value[datapoint.scaleLabel].max;
+        const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
+            return (v - _min) / (_max - _min)
+        });
+        const autoScale = {
+            ratios: autoScaledRatios,
+            valueMin: _min,
+            valueMax: _max,
+        }
+
+        const individualExtremes = {
+            max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
+            min: datapoint.scaleMin || (Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues))
+        };
+
+        const scaleSteps = datapoint.scaleSteps || FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps
+
+        const corrector = 1.0000001;
+
+        const individualScale = FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
+        
+        const autoScaleSteps = FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
+
+        const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min));
+        const autoScaleZero = 0;
+
+        const individualMax = individualScale.max + Math.abs(individualZero);
+        const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
+
+        const origIdx = datapoint.stackIndex;
+        const flippedIdx = totalSeries - 1 - origIdx;
+        const flippedLowerRatio  = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
+        const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
+        const individualHeight = stacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
+        
+        const zeroPosition = drawingArea.value.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
+
+        const autoScaleZeroPosition = drawingArea.value.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+
+        const plots = datapoint.series.map((plot, j) => {
+            const yRatio = mutableConfig.value.useIndividualScale 
+                ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) 
+                : ratioToMax(plot)
+
+            return {
+                x: checkNaN((drawingArea.value.left + (slot.value.line/2)) + (slot.value.line * j)),
+                y: checkNaN(drawingArea.value.bottom - yOffset - (individualHeight * yRatio)),
+                value: datapoint.absoluteValues[j],
+                comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
+            }
+        });
+
+        const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(v => {
+            if(autoScaleSteps.min >= 0) {
+                return (v - Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max - Math.abs(autoScaleSteps.min));
+            } else {
+                return (v + Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max + Math.abs(autoScaleSteps.min));
+            }
+        });
+
+        const autoScalePlots = datapoint.series.map((_, j) => {
+            if(![undefined, null].includes(datapoint.absoluteValues[j])) {
+                return {
+                    x: checkNaN((drawingArea.value.left + (slot.value.line/2)) + (slot.value.line * j)),
+                    y: checkNaN(drawingArea.value.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
+                    value: datapoint.absoluteValues[j],
+                    comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
+                }
+            } else {
+                return {
+                    x: checkNaN((drawingArea.value.left + (slot.value.line/2)) + (slot.value.line * j)),
+                    y: zeroPosition,
+                    value: datapoint.absoluteValues[j],
+                    comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
+                }
+            }
+        });
+
+        const curve = FINAL_CONFIG.value.line.cutNullValues 
+            ? createSmoothPathWithCuts(plots) 
+            : createSmoothPath(plots.filter(p => p.value !== null));
+
+        const autoScaleCurve = FINAL_CONFIG.value.line.cutNullValues 
+            ? createSmoothPathWithCuts(autoScalePlots) 
+            : createSmoothPath(autoScalePlots.filter(p => p.value !== null));
+
+        const straight = FINAL_CONFIG.value.line.cutNullValues 
+            ? createStraightPathWithCuts(plots) 
+            : createStraightPath(plots.filter(p => p.value !== null));
+
+        const autoScaleStraight = FINAL_CONFIG.value.line.cutNullValues 
+            ? createStraightPathWithCuts(autoScalePlots) 
+            : createStraightPath(autoScalePlots.filter(p => p.value !== null));
+
+        const scaleYLabels = individualScale.ticks.map(t => {
+            return {
+                y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
+                value: t,
+                prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+                suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+                datapoint
+            }
+        });
+
+        const autoScaleYLabels = autoScaleSteps.ticks.map(t => {
+            const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
+            return {
+                y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
+                value: t,
+                prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+                suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+                datapoint
+            }
+        });
+
+        scaleGroups.value[datapoint.scaleLabel].name = datapoint.name;
+        scaleGroups.value[datapoint.scaleLabel].groupName = datapoint.scaleLabel;
+        scaleGroups.value[datapoint.scaleLabel].groupColor = FINAL_CONFIG.value.chart.grid.labels.yAxis.groupColor || datapoint.color;
+        scaleGroups.value[datapoint.scaleLabel].color = datapoint.color;
+        scaleGroups.value[datapoint.scaleLabel].scaleYLabels = datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
+        scaleGroups.value[datapoint.scaleLabel].zeroPosition = datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
+        scaleGroups.value[datapoint.scaleLabel].individualMax = datapoint.autoScaling ? autoScaleMax : individualMax;
+        scaleGroups.value[datapoint.scaleLabel].scaleLabel = datapoint.scaleLabel;
+        scaleGroups.value[datapoint.scaleLabel].id = datapoint.id;
+        scaleGroups.value[datapoint.scaleLabel].yOffset = yOffset;
+        scaleGroups.value[datapoint.scaleLabel].individualHeight = individualHeight;
+        scaleGroups.value[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
+        scaleGroups.value[datapoint.scaleLabel].unique = activeSeriesWithStackRatios.value.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1 
+
+        const areaZeroPosition = mutableConfig.value.useIndividualScale ? datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition : zero.value;
+        const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : scaleYLabels.at(-1).y || 0, drawingArea.value.top), areaZeroPosition);
+
+        return {
+            ...datapoint,
+            yOffset,
+            autoScaleYLabels,
+            individualHeight,
+            scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
+            individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
+            individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+            zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
+            curve: datapoint.autoScaling ? autoScaleCurve : curve,
+            plots: datapoint.autoScaling ? autoScalePlots : plots,
+            area: !datapoint.useArea 
+                ? '' 
+                : mutableConfig.value.useIndividualScale 
+                    ? FINAL_CONFIG.value.line.cutNullValues 
+                        ? createIndividualAreaWithCuts(datapoint.autoScaling
+                                ? autoScalePlots
+                                : plots,
+                                adustedAreaZeroPosition,
+                            )
+                        : createIndividualArea(datapoint.autoScaling 
+                            ? autoScalePlots.filter(p => p.value !== null)
+                            : plots.filter(p => p.value !== null),
+                            adustedAreaZeroPosition) 
+                    :  createIndividualArea(plots.filter(p => p.value !== null), adustedAreaZeroPosition),
+            curveAreas: !datapoint.useArea
+                ? [] 
+                :createSmoothAreaSegments(
+                    datapoint.autoScaling 
+                        ? FINAL_CONFIG.value.line.cutNullValues 
+                            ? autoScalePlots
+                            : autoScalePlots.filter(p => p.value !== null)
+                        : FINAL_CONFIG.value.line.cutNullValues 
+                            ? plots
+                            : plots.filter(p => p.value !== null),
+                            adustedAreaZeroPosition,
+                    FINAL_CONFIG.value.line.cutNullValues),
+            straight: datapoint.autoScaling ? autoScaleStraight : straight,
+            groupId: scaleGroups.value[datapoint.scaleLabel].groupId
+        }
+    });
+});
+
+const plotSet = computed(() => {
+    const stackSeries = activeSeriesWithStackRatios.value.filter(s => ['bar','line','plot'].includes(s.type));
+    const totalSeries = stackSeries.length;
+    const gap = FINAL_CONFIG.value.chart.grid.labels.yAxis.gap;
+    const stacked = mutableConfig.value.isStacked;
+    const totalGap = stacked ? gap * (totalSeries - 1) : 0;
+    const usableHeight = drawingArea.value.height - totalGap;
+
+    return stackSeries.filter(s => s.type === 'plot').map((datapoint) => {
+        checkAutoScaleError(datapoint);
+        const _min = scaleGroups.value[datapoint.scaleLabel].min;
+        const _max = scaleGroups.value[datapoint.scaleLabel].max;
+        const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
+            return (v - _min) / (_max - _min)
+        });
+
+        const autoScale = {
+            ratios: autoScaledRatios,
+            valueMin: _min,
+            valueMax: _max,
+        }
+
+        const individualExtremes = {
+            max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
+            min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
+        };
+
+        const scaleSteps = datapoint.scaleSteps || FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps;
+
+        const corrector = 1.0000001;
+
+        const individualScale = calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
+        
+        const autoScaleSteps = calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
+
+        const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
+        const autoScaleZero = 0;
+
+        const individualMax = individualScale.max + individualZero;
+        const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
+        
+        const origIdx = datapoint.stackIndex;
+        const flippedIdx = totalSeries - 1 - origIdx;
+        const flippedLowerRatio  = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
+        const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
+        const individualHeight = stacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
+
+        const zeroPosition = drawingArea.value.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
+        const autoScaleZeroPosition = drawingArea.value.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+
+        const plots = datapoint.series.map((plot, j) => {
+            const yRatio = mutableConfig.value.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : ratioToMax(plot)
+            return {
+                x: checkNaN((drawingArea.value.left + (slot.value.plot / 2)) + (slot.value.plot * j)),
+                y: checkNaN(drawingArea.value.bottom - yOffset - (individualHeight * yRatio)),
+                value: datapoint.absoluteValues[j],
+                comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
+            }
+        });
+
+        const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(v => {
+            if(autoScaleSteps.min >= 0) {
+                return (v - Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
+            } else {
+                return (v + Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
+            }
+        });
+
+        const autoScalePlots = datapoint.series.map((_, j) => {
+            return {
+                x: checkNaN((drawingArea.value.left + (slot.value.plot / 2)) + (slot.value.plot * j)),
+                y: checkNaN(drawingArea.value.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
+                value: datapoint.absoluteValues[j],
+                comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
+            }
+        });
+
+        const scaleYLabels = individualScale.ticks.map(t => {
+            return {
+                y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
+                value: t,
+                prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+                suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+                datapoint,
+            }
+        });
+
+        const autoScaleYLabels = autoScaleSteps.ticks.map(t => {
+            const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
+            return {
+                y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
+                value: t,
+                prefix: datapoint.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+                suffix: datapoint.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+                datapoint
+            }
+        });
+
+        scaleGroups.value[datapoint.scaleLabel].name = datapoint.name;
+        scaleGroups.value[datapoint.scaleLabel].groupName = datapoint.scaleLabel;
+        scaleGroups.value[datapoint.scaleLabel].groupColor = FINAL_CONFIG.value.chart.grid.labels.yAxis.groupColor || datapoint.color;
+        scaleGroups.value[datapoint.scaleLabel].color = datapoint.color;
+        scaleGroups.value[datapoint.scaleLabel].scaleYLabels = datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
+        scaleGroups.value[datapoint.scaleLabel].zeroPosition = datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
+        scaleGroups.value[datapoint.scaleLabel].individualMax = datapoint.autoScaling ? autoScaleMax : individualMax;
+        scaleGroups.value[datapoint.scaleLabel].scaleLabel = datapoint.scaleLabel;
+        scaleGroups.value[datapoint.scaleLabel].id = datapoint.id;
+        scaleGroups.value[datapoint.scaleLabel].yOffset = yOffset;
+        scaleGroups.value[datapoint.scaleLabel].individualHeight = individualHeight;
+        scaleGroups.value[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
+        scaleGroups.value[datapoint.scaleLabel].unique = activeSeriesWithStackRatios.value.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
+
+        return {
+            ...datapoint,
+            yOffset,
+            autoScaleYLabels,
+            individualHeight,
+            scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
+            individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
+            individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
+            zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
+            plots: datapoint.autoScaling ? autoScalePlots : plots,
+            groupId: scaleGroups.value[datapoint.scaleLabel].groupId
+        }
+    });
+});
+
+const allScales = computed(() => {
+    const lines = lineSet.value.map(l => {
+        return {
+            name: l.name,
+            color: l.color,
+            scale: l.individualScale,
+            scaleYLabels: l.scaleYLabels,
+            zero: l.zeroPosition,
+            max: l.individualMax,
+            scaleLabel: l.scaleLabel || "",
+            id: l.id,
+            yOffset: l.yOffset || 0,
+            individualHeight: l.individualHeight || drawingArea.value.height,
+            autoScaleYLabels: l.autoScaleYLabels
+        }
+    });
+    const bars = barSet.value.map(b => {
+        return {
+            name: b.name,
+            color: b.color,
+            scale: b.individualScale,
+            scaleYLabels: b.scaleYLabels,
+            zero: b.zeroPosition,
+            max: b.individualMax,
+            scaleLabel: b.scaleLabel || "",
+            id: b.id,
+            yOffset: b.yOffset || 0,
+            individualHeight: b.individualHeight || drawingArea.value.height
+        }
+    });
+    const plots = plotSet.value.map(p => {
+        return {
+            name: p.name,
+            color: p.color,
+            scale: p.individualScale,
+            scaleYLabels: p.scaleYLabels, // FIX
+            zero: p.zeroPosition,
+            max: p.individualMax,
+            scaleLabel: p.scaleLabel || "",
+            id: p.id,
+            yOffset: p.yOffset || 0,
+            individualHeight: p.individualHeight || drawingArea.value.height
+        }
+    });
+
+    const _source = (mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked) ? Object.values(scaleGroups.value) : [...lines, ...bars, ...plots];
+
+    const len = _source.flatMap(el => el).length;
+    return _source.flatMap((el,i) => {
+
+        let x = 0;
+        if (isAutoSize.value) {
+            x = mutableConfig.value.isStacked ? drawingArea.value.left : drawingArea.value.left - (i * (FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth + fontSizes.value.dataLabels * 2));
+        } else {
+            x = mutableConfig.value.isStacked ? drawingArea.value.left : (drawingArea.value.left / len) * (i + 1);
         }
 
         return {
-            resizeObserver: null,
-            observedEl: null,
-            themePalettes,
-            themes,
-            slicerStep: 0,
-            selectedScale: null,
-            CTX: null,
-            CANVAS: null,
-            opacity,
-            useSafeValues: true,
-            palette,
-            height: 600,
-            width: 1000,
-            viewBox: `0 0 1000 600`,
-            clientPosition: {
-                x:0,
-                y:0,
-            },
-            canvasClientPosition: {
-                x: 0,
-                y: 0,
-            },
-            icons: {
-                line: "line",
-                bar: "bar",
-                plot: "plot"
-            },
-            isAnnotator: false,
-            isFullscreen: false,
-            isPrinting: false,
-            isImaging: false,
-            isTooltip: false,
-            mutableConfig: {
-                dataLabels: {
-                    show: true,
-                },
-                showTooltip: true,
-                showTable: false,
-                isStacked: false,
-                useIndividualScale: false
-            },
-            selectedSerieIndex: null,
-            selectedRowIndex: null,
-            segregatedSeries: [],
-            uniqueId: createUid(),
-            step: 0,
-            tableStep: 0,
-            titleStep: 0,
-            slicer,
-            __to__: null,
-            maxX,
-            showSparklineTable: true,
-            segregateStep: 0,
-            sliderId,
-            fontSizes: {
-                xAxis: 18,
-                yAxis: 12,
-                dataLabels: 20,
-                plotLabels: 10
-            },
-            plotRadii: {
-                plot: 3,
-                line: 3
-            },
-            selectedMinimapIndex: null,
-            showUserOptionsOnChartHover: false,
-            keepUserOptionState: true,
-            userOptionsVisible: true,
-            svgRef: null,
-            tagRefs: {},
-            _textMeasurer: null,
-            /******************************************************************************************/
-            /*                                      V3 autosize data                                  */
-            /******************************************************************************************/
-            remainingHeight: 0,
-            svgAspectRatio: 1
-            /******************************************************************************************/
+            unique: el.unique,
+            id: el.id,
+            groupId: el.groupId,
+            scaleLabel: el.scaleLabel,
+            name: (mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked) ? el.unique ? el.name : el.groupName : el.name,
+            color: (mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked) ? el.unique ? el.color : el.groupColor : el.color,
+            scale: el.scale,
+            yOffset: el.yOffset,
+            individualHeight: el.individualHeight,
+            x,
+            yLabels: el.scaleYLabels || el.scale.ticks.map(t => {
+                return {
+                    y: t >= 0 ? el.zero - (el.individualHeight * (t / el.max)) : el.zero + (el.individualHeight * Math.abs(t) / el.max),
+                    value: t
+                }
+            })
         }
-    },
-    watch: {
-        'mutableConfig.isStacked': {
-            async handler(_) {
-                if (!this.isAutoSize) return;
-                // Autosize again to fit scale labels change
-                await this.$nextTick();
-                this.setViewBox();
-                this.forceResizeObserver();
-            }
-        },
-        dataset: {
-            handler(_newDs, _oldDs) {
-                this.maxX = Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({
-                    data: datapoint.series,
-                    threshold: this.FINAL_CONFIG.downsample.threshold
-                }).length));
-                this.slicer = {
-                    start: 0,
-                    end: this.maxX
-                }
-                this.slicerStep += 1;
-                this.segregateStep += 1;
-            },
-            deep: true
-        },
-        config: {
-            handler(_newCfg, _oldCfg) {
-                this.FINAL_CONFIG = this.prepareConfig();
-                this.prepareChart();
-                this.titleStep += 1;
-                this.tableStep += 1;
-
-                // Reset mutable config
-                this.mutableConfig = {
-                    dataLabels: {
-                        show: true,
-                    },
-                    showTooltip: this.FINAL_CONFIG.chart.tooltip.show === true,
-                    showTable: this.FINAL_CONFIG.showTable === true,
-                    isStacked: this.FINAL_CONFIG.chart.grid.labels.yAxis.stacked,
-                    useIndividualScale: this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale
-                }
-            },
-            deep: true
-        }
-    },
-    computed: {
-        /******************************************************************************************/
-        /*                                  V3 autosize computed                                  */
-        /******************************************************************************************/
-        isAutoSize() {
-            return this.FINAL_CONFIG.autoSize;
-        },
-        viewBoxParts() {
-            const [x, y, w, h] = this.viewBox.split(' ').map(Number);
-            return { x, y, width: w, height: h };
-        },
-        /******************************************************************************************/
-        locale() {
-            return this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.formatter.locale;
-        },
-        chartAriaLabel() {
-            const titleText = this.FINAL_CONFIG.chart.title.text || 'Chart visualization';
-            const subtitleText = this.FINAL_CONFIG.chart.title.subtitle.text || '';
-            return `${titleText}. ${subtitleText}`;
-        },
-        optimize() {
-            return {
-                linePlot: this.maxSeries > this.FINAL_CONFIG.line.dot.hideAboveMaxSerieLength
-            };
-        },
-        hasOptionsNoTitle() {
-            return this.FINAL_CONFIG.chart.userOptions.show && (!this.FINAL_CONFIG.chart.title.show || !this.FINAL_CONFIG.chart.title.text);
-        },
-        minimap() {
-            if(!this.FINAL_CONFIG.chart.zoom.minimap.show) return [];
-            const source = this.datasetWithIds.filter(ds => !this.segregatedSeries.includes(ds.id));
-            const maxIndex = Math.max(...source.map(datapoint => datapoint.series.length));
-
-            const sumAllSeries = [];
-            for (let i = 0; i < maxIndex; i += 1) {
-                sumAllSeries.push(source.map(ds => ds.series[i] || 0).reduce((a, b) => (a || 0) + (b || 0), 0))
-            }
-            const min = Math.min(...sumAllSeries);
-            return sumAllSeries.map(dp => dp + (min < 0 ? Math.abs(min) : 0)) // positivized
-        },
-        customPalette() {
-            return this.convertCustomPalette(this.FINAL_CONFIG.customPalette);
-        },
-        backgroundColor() {
-            return this.FINAL_CONFIG.chart.backgroundColor;
-        },  
-        slicerColor() {
-            return this.FINAL_CONFIG.chart.zoom.color;
-        },
-        allScales() {
-            const lines = this.lineSet.map(l => {
-                return {
-                    name: l.name,
-                    color: l.color,
-                    scale: l.individualScale,
-                    scaleYLabels: l.scaleYLabels,
-                    zero: l.zeroPosition,
-                    max: l.individualMax,
-                    scaleLabel: l.scaleLabel || "",
-                    id: l.id,
-                    yOffset: l.yOffset || 0,
-                    individualHeight: l.individualHeight || this.drawingArea.height,
-                    autoScaleYLabels: l.autoScaleYLabels
-                }
-            });
-            const bars = this.barSet.map(b => {
-                return {
-                    name: b.name,
-                    color: b.color,
-                    scale: b.individualScale,
-                    scaleYLabels: b.scaleYLabels,
-                    zero: b.zeroPosition,
-                    max: b.individualMax,
-                    scaleLabel: b.scaleLabel || "",
-                    id: b.id,
-                    yOffset: b.yOffset || 0,
-                    individualHeight: b.individualHeight || this.drawingArea.height
-                }
-            });
-            const plots = this.plotSet.map(p => {
-                return {
-                    name: p.name,
-                    color: p.color,
-                    scale: p.individualScale,
-                    scaleYLabels: p.scaleYLabels, // FIX
-                    zero: p.zeroPosition,
-                    max: p.individualMax,
-                    scaleLabel: p.scaleLabel || "",
-                    id: p.id,
-                    yOffset: p.yOffset || 0,
-                    individualHeight: p.individualHeight || this.drawingArea.height
-                }
-            });
-
-            const source = (this.mutableConfig.useIndividualScale && !this.mutableConfig.isStacked) ? Object.values(this.scaleGroups) : [...lines, ...bars, ...plots];
-
-            const len = source.flatMap(el => el).length;
-            return source.flatMap((el,i) => {
-
-                let x = 0;
-                if (this.isAutoSize) {
-                    x = this.mutableConfig.isStacked ? this.drawingArea.left : this.drawingArea.left - (i * (this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + this.fontSizes.dataLabels * 2));
-                } else {
-                    x = this.mutableConfig.isStacked ? this.drawingArea.left : (this.drawingArea.left / len) * (i+1);
-                }
-
-                return {
-                    unique: el.unique,
-                    id: el.id,
-                    groupId: el.groupId,
-                    scaleLabel: el.scaleLabel,
-                    name: (this.mutableConfig.useIndividualScale && !this.mutableConfig.isStacked) ? el.unique ? el.name : el.groupName : el.name,
-                    color: (this.mutableConfig.useIndividualScale && !this.mutableConfig.isStacked) ? el.unique ? el.color : el.groupColor : el.color,
-                    scale: el.scale,
-                    yOffset: el.yOffset,
-                    individualHeight: el.individualHeight,
-                    x,
-                    yLabels: el.scaleYLabels || el.scale.ticks.map(t => {
-                        return {
-                            y: t >= 0 ? el.zero - (el.individualHeight * (t / el.max)) : el.zero + (el.individualHeight * Math.abs(t) / el.max),
-                            value: t
-                        }
-                    })
-                }
-            })
-        },
-        isDataset() {
-            return !!this.dataset && this.dataset.length;
-        },
-        chartFont() {
-            const wrapper = document.getElementById(`vue-ui-xy_${this.uniqueId}`);
-            return window.getComputedStyle(wrapper, null).getPropertyValue("font-family");
-        },
-        FINAL_CONFIG: {
-            get: function() {
-                return this.prepareConfig();
-            },
-            set: function (newCfg) {
-                return newCfg;
-            }
-        },
-        hasHighlightArea() {
-            if (Array.isArray(this.FINAL_CONFIG.chart.highlightArea)) {
-                return this.FINAL_CONFIG.chart.highlightArea.some(area => area.show)
-            }
-            return this.FINAL_CONFIG.chart.highlightArea && this.FINAL_CONFIG.chart.highlightArea.show;
-        },
-        highlightAreas() {
-            if (Array.isArray(this.FINAL_CONFIG.chart.highlightArea)) {
-                return this.FINAL_CONFIG.chart.highlightArea.map(area => {
-                    return {
-                        ...area,
-                        span: area.from === area.to ? 1 : area.to < area.from ? 0 : area.to - area.from + 1
-                    }
-                })
-            }
-            const area = this.FINAL_CONFIG.chart.highlightArea;
-            return [ {...area, span: area.from === area.to ? 1 : area.to < area.from ? 0 : area.to - area.from + 1} ];
-        },
-        xPadding() {
-            return this.FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : this.drawingArea.width / this.maxSeries / 2
-        },
-        relativeZero() {
-            if (![null, undefined].includes(this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin)) {
-                return -this.niceScale.min
-            }
-
-            if(this.niceScale.min >= 0) return 0;
-            return Math.abs(this.niceScale.min);
-        },
-        absoluteMax() {
-            return this.niceScale.max + this.relativeZero;
-        },
-        datasetWithIds() {
-            if(!this.useSafeValues) return this.dataset;
-            return this.dataset.map((datapoint, i) => {
-                return {
-                    ...datapoint,
-                    series: this.largestTriangleThreeBucketsArray({
-                        data: datapoint.series,
-                        threshold: this.FINAL_CONFIG.downsample.threshold
-                    }),
-                    id: `uniqueId_${i}`
-                }
-            });
-        },
-        safeDataset(){
-            if(!this.useSafeValues) return this.dataset;
-
-            return this.dataset.map((datapoint, i) => {
-                const LTTD = this.largestTriangleThreeBucketsArray({
-                    data: datapoint.series,
-                    threshold: this.FINAL_CONFIG.downsample.threshold
-                })
-                const id = `uniqueId_${i}`;
-                return {
-                    ...datapoint,
-                    slotAbsoluteIndex: i,
-                    series: LTTD.map(d => {
-                        return this.isSafeValue(d) ? d : null
-                    }).slice(this.slicer.start, this.slicer.end),
-                    color: this.convertColorToHex(datapoint.color ? datapoint.color : this.customPalette[i] ? this.customPalette[i] : this.palette[i]),
-                    id,
-                    scaleLabel: datapoint.scaleLabel || id
-
-                }
-            });
-        },
-        relativeDataset() {
-            return this.safeDataset.map((datapoint, i) => {
-                return {
-                    ...datapoint,
-                    series: datapoint.series.map(plot => plot + this.relativeZero),
-                    absoluteValues: datapoint.series,
-                }
-            }).filter(s => !this.segregatedSeries.includes(s.id));
-        },
-        tableSparklineDataset() {
-            return this.relativeDataset.map(ds => {
-                const source = ds.absoluteValues.map(s => [undefined, null].includes(s) ? 0 : s);
-                return {
-                    id: ds.id,
-                    name: ds.name,
-                    color: ds.color,
-                    values: this.fillArray(this.maxSeries, source)
-                }
-            })
-        },
-        tableSparklineConfig() {
-            return {
-                responsiveBreakpoint: this.FINAL_CONFIG.table.responsiveBreakpoint,
-                roundingValues: this.FINAL_CONFIG.table.rounding,
-                showAverage: false,
-                showMedian: false,
-                showTotal: false,
-                fontFamily: this.FINAL_CONFIG.chart.fontFamily,
-                prefix: this.FINAL_CONFIG.chart.labels.prefix,
-                suffix: this.FINAL_CONFIG.chart.labels.suffix,
-                colNames: this.timeLabels.map(tl => tl.text),
-                thead: {
-                    backgroundColor: this.FINAL_CONFIG.table.th.backgroundColor,
-                    color: this.FINAL_CONFIG.table.th.color,
-                    outline: this.FINAL_CONFIG.table.th.outline
-                },
-                tbody: {
-                    backgroundColor: this.FINAL_CONFIG.table.td.backgroundColor,
-                    color: this.FINAL_CONFIG.table.td.color,
-                    outline: this.FINAL_CONFIG.table.td.outline
-                },
-                userOptions: {
-                    show: false
-                }
-            }
-        },
-        absoluteDataset() {
-            return this.safeDataset.map((datapoint, i) => {
-                return {
-                    absoluteIndex: i,
-                    ...datapoint,
-                    series: datapoint.series.map(plot => plot + this.relativeZero),
-                    absoluteValues: datapoint.series,
-                    segregate: () => this.segregate(datapoint),
-                    isSegregated: this.segregatedSeries.includes(datapoint.id)
-                }
-            })
-        },
-        activeSeriesLength() {
-            return this.absoluteDataset.length
-        },
-        activeSeriesWithStackRatios() {
-            return this.assignStackRatios(this.absoluteDataset.filter(ds => !this.segregatedSeries.includes(ds.id)))
-        },
-        scaleGroups() {
-            const grouped = Object.groupBy(this.activeSeriesWithStackRatios, item => item.scaleLabel);
-            const result = {};
-            for (const [group, items] of Object.entries(grouped)) {
-                const allValues = items.flatMap(item => item.absoluteValues);
-                result[group] = {
-                    min: Math.min(...allValues) || 0,
-                    max: Math.max(...allValues) || 1,
-                    groupId: `scale_group_${this.createUid()}`
-                };
-            }
-            return result;
-        },
-        barSet() {
-            const stackSeries   = this.activeSeriesWithStackRatios
-                .filter(s => ['bar','line','plot'].includes(s.type));
-            const totalSeries = stackSeries.length;
-            const gap = this.FINAL_CONFIG.chart.grid.labels.yAxis.gap;
-            const stacked = this.mutableConfig.isStacked;
-            const totalGap = stacked ? gap * (totalSeries - 1) : 0
-            const usableHeight = this.drawingArea.height - totalGap;
-
-            return stackSeries.filter(s => s.type === 'bar').map((datapoint, i) => {
-                this.checkAutoScaleError(datapoint);
-                const min = this.scaleGroups[datapoint.scaleLabel].min;
-                const max = this.scaleGroups[datapoint.scaleLabel].max;
-                const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
-                    return (v - min) / (max - min)
-                });
-
-                const autoScale = {
-                    ratios: autoScaledRatios,
-                    valueMin: min,
-                    valueMax: max < 0 ? 0 : max,
-                }
-
-                const individualExtremes = {
-                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
-                    min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues.filter(v => ![undefined,null].includes(v))) > 0 ? 0 : Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)))
-                };
-                const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps;
-
-                const corrector = 1.0000001;
-
-                const individualScale = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
-                
-                const autoScaleSteps = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
-
-                const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
-                const autoScaleZero = 0;
-
-                const individualMax = individualScale.max + individualZero;
-                const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
-
-                const origIdx = datapoint.stackIndex;
-                const flippedIdx = totalSeries - 1 - origIdx;
-                const flippedLowerRatio  = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
-                const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
-                const individualHeight = stacked ? usableHeight * datapoint.stackRatio : this.drawingArea.height;
-
-                const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
-                const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
-
-                const barLen = this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length;
-
-                const plots = datapoint.series.map((plot, j) => {
-                    const yRatio = this.mutableConfig.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : this.ratioToMax(plot)
-                    const x = this.mutableConfig.useIndividualScale && this.mutableConfig.isStacked 
-                        ? this.drawingArea.left + (this.drawingArea.width / this.maxSeries * j) 
-                        : this.drawingArea.left
-                            + (this.slot.bar * i)
-                            + (this.slot.bar * j * barLen)
-                            - (this.barSlot / 2)
-                            - (i * this.barPeriodGap)
-
-
-                    return {
-                        yOffset: this.checkNaN(yOffset),
-                        individualHeight: this.checkNaN(individualHeight),
-                        x: this.checkNaN(x),
-                        y: this.drawingArea.bottom - yOffset - (individualHeight * yRatio),
-                        value: datapoint.absoluteValues[j],
-                        zeroPosition: this.checkNaN(zeroPosition),
-                        individualMax: this.checkNaN(individualMax),
-                        comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
-                    }
-                });
-
-                const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(v => {
-                    if(autoScaleSteps.min >= 0) {
-                        return (v - Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
-                    } else {
-                        return (v + Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
-                    }
-                })
-
-                const autoScalePlots = datapoint.series.map((_, j) => {
-                    const x = this.mutableConfig.useIndividualScale && this.mutableConfig.isStacked 
-                        ? this.drawingArea.left + (this.drawingArea.width / this.maxSeries * j) 
-                        : (this.drawingArea.left - this.slot.bar/2 + this.slot.bar * i) + (this.slot.bar * j * this.absoluteDataset.filter(ds => ds.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length);
-                    return {
-                        yOffset: this.checkNaN(yOffset),
-                        individualHeight: this.checkNaN(individualHeight),
-                        x: this.checkNaN(x),
-                        y: this.checkNaN(this.drawingArea.bottom - this.checkNaN(yOffset) - ((this.checkNaN(individualHeight) * autoScaleRatiosToNiceScale[j]) || 0)),
-                        value: datapoint.absoluteValues[j],
-                        zeroPosition: this.checkNaN(zeroPosition),
-                        individualMax: this.checkNaN(individualMax),
-                        comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
-                    }
-                });
-
-                const scaleYLabels = individualScale.ticks.map(t => {
-                    return {
-                        y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
-                        value: t,
-                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
-                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
-                        datapoint
-                    }
-                })
-
-                const autoScaleYLabels = autoScaleSteps.ticks.map(t => {
-                    const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
-                    return {
-                        y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
-                        value: t,
-                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
-                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
-                        datapoint
-                    }
-                });
-
-                this.scaleGroups[datapoint.scaleLabel].name = datapoint.name;
-                this.scaleGroups[datapoint.scaleLabel].groupName = datapoint.scaleLabel;
-                this.scaleGroups[datapoint.scaleLabel].groupColor = this.FINAL_CONFIG.chart.grid.labels.yAxis.groupColor || datapoint.color;
-                this.scaleGroups[datapoint.scaleLabel].color = datapoint.color;
-                this.scaleGroups[datapoint.scaleLabel].scaleYLabels = datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
-                this.scaleGroups[datapoint.scaleLabel].zeroPosition = datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
-                this.scaleGroups[datapoint.scaleLabel].individualMax = datapoint.autoScaling ? autoScaleMax : individualMax;
-                this.scaleGroups[datapoint.scaleLabel].scaleLabel = datapoint.scaleLabel;
-                this.scaleGroups[datapoint.scaleLabel].id = datapoint.id;
-                this.scaleGroups[datapoint.scaleLabel].yOffset = yOffset;
-                this.scaleGroups[datapoint.scaleLabel].individualHeight = individualHeight;
-                this.scaleGroups[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
-                this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
-
-                return {
-                    ...datapoint,
-                    yOffset,
-                    autoScaleYLabels,
-                    individualHeight,
-                    scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
-                    individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
-                    individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
-                    zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
-                    plots: datapoint.autoScaling ? autoScalePlots: plots,
-                    groupId: this.scaleGroups[datapoint.scaleLabel].groupId
-                }
-            })
-        },
-        lineSet() {
-            const stackSeries   = this.activeSeriesWithStackRatios
-                .filter(s => ['bar','line','plot'].includes(s.type));
-            const totalSeries = stackSeries.length;
-            const gap = this.FINAL_CONFIG.chart.grid.labels.yAxis.gap;
-            const stacked = this.mutableConfig.isStacked;
-            const totalGap = stacked ? gap * (totalSeries - 1) : 0
-            const usableHeight = this.drawingArea.height - totalGap;
-
-            return stackSeries.filter(s => s.type === 'line').map((datapoint, i) => {
-                this.checkAutoScaleError(datapoint);
-
-                const min = this.scaleGroups[datapoint.scaleLabel].min;
-                const max = this.scaleGroups[datapoint.scaleLabel].max;
-                const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
-                    return (v - min) / (max - min)
-                });
-                const autoScale = {
-                    ratios: autoScaledRatios,
-                    valueMin: min,
-                    valueMax: max,
-                }
-
-                const individualExtremes = {
-                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
-                    min: datapoint.scaleMin || (Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues))
-                };
-
-                const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps
-
-                const corrector = 1.0000001;
-
-                const individualScale = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
-                
-                const autoScaleSteps = this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
-
-                const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min));
-                const autoScaleZero = 0;
-
-                const individualMax = individualScale.max + Math.abs(individualZero);
-                const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
-
-                const origIdx = datapoint.stackIndex;
-                const flippedIdx = totalSeries - 1 - origIdx;
-                const flippedLowerRatio  = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
-                const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
-                const individualHeight = stacked ? usableHeight * datapoint.stackRatio : this.drawingArea.height;
-                
-                const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
-
-                const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
-
-                const plots = datapoint.series.map((plot, j) => {
-                    const yRatio = this.mutableConfig.useIndividualScale 
-                        ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) 
-                        : this.ratioToMax(plot)
-
-                    return {
-                        x: this.checkNaN((this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j)),
-                        y: this.checkNaN(this.drawingArea.bottom - yOffset - (individualHeight * yRatio)),
-                        value: datapoint.absoluteValues[j],
-                        comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
-                    }
-                });
-
-                const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(v => {
-                    if(autoScaleSteps.min >= 0) {
-                        return (v - Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
-                    } else {
-                        return (v + Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
-                    }
-                })
-
-                const autoScalePlots = datapoint.series.map((plot, j) => {
-                    if(![undefined, null].includes(datapoint.absoluteValues[j])) {
-                        return {
-                            x: this.checkNaN((this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j)),
-                            y: this.checkNaN(this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
-                            value: datapoint.absoluteValues[j],
-                            comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
-                        }
-                    } else {
-                        return {
-                            x: this.checkNaN((this.drawingArea.left + (this.slot.line/2)) + (this.slot.line * j)),
-                            y: zeroPosition,
-                            value: datapoint.absoluteValues[j],
-                            comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
-                        }
-                    }
-                })
-
-                const curve = this.FINAL_CONFIG.line.cutNullValues 
-                    ? this.createSmoothPathWithCuts(plots) 
-                    : this.createSmoothPath(plots.filter(p => p.value !== null));
-
-                const autoScaleCurve = this.FINAL_CONFIG.line.cutNullValues 
-                    ? this.createSmoothPathWithCuts(autoScalePlots) 
-                    : this.createSmoothPath(autoScalePlots.filter(p => p.value !== null));
-
-                const straight = this.FINAL_CONFIG.line.cutNullValues 
-                    ? this.createStraightPathWithCuts(plots) 
-                    : this.createStraightPath(plots.filter(p => p.value !== null));
-
-                const autoScaleStraight = this.FINAL_CONFIG.line.cutNullValues 
-                    ? this.createStraightPathWithCuts(autoScalePlots) 
-                    : this.createStraightPath(autoScalePlots.filter(p => p.value !== null));
-
-                const scaleYLabels = individualScale.ticks.map(t => {
-                    return {
-                        y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
-                        value: t,
-                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
-                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
-                        datapoint
-                    }
-                })
-
-                const autoScaleYLabels = autoScaleSteps.ticks.map(t => {
-                    const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
-                    return {
-                        y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
-                        value: t,
-                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
-                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
-                        datapoint
-                    }
-                });
-
-                this.scaleGroups[datapoint.scaleLabel].name = datapoint.name;
-                this.scaleGroups[datapoint.scaleLabel].groupName = datapoint.scaleLabel;
-                this.scaleGroups[datapoint.scaleLabel].groupColor = this.FINAL_CONFIG.chart.grid.labels.yAxis.groupColor || datapoint.color;
-                this.scaleGroups[datapoint.scaleLabel].color = datapoint.color;
-                this.scaleGroups[datapoint.scaleLabel].scaleYLabels = datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
-                this.scaleGroups[datapoint.scaleLabel].zeroPosition = datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
-                this.scaleGroups[datapoint.scaleLabel].individualMax = datapoint.autoScaling ? autoScaleMax : individualMax;
-                this.scaleGroups[datapoint.scaleLabel].scaleLabel = datapoint.scaleLabel;
-                this.scaleGroups[datapoint.scaleLabel].id = datapoint.id;
-                this.scaleGroups[datapoint.scaleLabel].yOffset = yOffset;
-                this.scaleGroups[datapoint.scaleLabel].individualHeight = individualHeight;
-                this.scaleGroups[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
-                this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1 
-
-                const areaZeroPosition = this.mutableConfig.useIndividualScale ? datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition : this.zero;
-                const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : scaleYLabels.at(-1).y || 0, this.drawingArea.top), areaZeroPosition);
-
-                return {
-                    ...datapoint,
-                    yOffset,
-                    autoScaleYLabels,
-                    individualHeight,
-                    scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
-                    individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
-                    individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
-                    zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
-                    curve: datapoint.autoScaling ? autoScaleCurve : curve,
-                    plots: datapoint.autoScaling ? autoScalePlots : plots,
-                    area: !datapoint.useArea 
-                        ? '' 
-                        : this.mutableConfig.useIndividualScale 
-                            ? this.FINAL_CONFIG.line.cutNullValues 
-                                ? this.createIndividualAreaWithCuts(datapoint.autoScaling
-                                        ? autoScalePlots
-                                        : plots,
-                                        adustedAreaZeroPosition,
-                                    )
-                                : this.createIndividualArea(datapoint.autoScaling 
-                                    ? autoScalePlots.filter(p => p.value !== null)
-                                    : plots.filter(p => p.value !== null),
-                                    adustedAreaZeroPosition) 
-                            :  this.createIndividualArea(plots.filter(p => p.value !== null), adustedAreaZeroPosition),
-                    curveAreas: !datapoint.useArea
-                        ? [] 
-                        :createSmoothAreaSegments(
-                            datapoint.autoScaling 
-                                ? this.FINAL_CONFIG.line.cutNullValues 
-                                    ? autoScalePlots
-                                    : autoScalePlots.filter(p => p.value !== null)
-                                : this.FINAL_CONFIG.line.cutNullValues 
-                                    ? plots
-                                    : plots.filter(p => p.value !== null),
-                                    adustedAreaZeroPosition,
-                            this.FINAL_CONFIG.line.cutNullValues),
-                    straight: datapoint.autoScaling ? autoScaleStraight : straight,
-                    groupId: this.scaleGroups[datapoint.scaleLabel].groupId
-                }
-            });
-        },
-        plotSet() {
-            const stackSeries = this.activeSeriesWithStackRatios.filter(s => ['bar','line','plot'].includes(s.type));
-            const totalSeries = stackSeries.length;
-            const gap = this.FINAL_CONFIG.chart.grid.labels.yAxis.gap;
-            const stacked = this.mutableConfig.isStacked;
-            const totalGap = stacked ? gap * (totalSeries - 1) : 0;
-            const usableHeight = this.drawingArea.height - totalGap;
-
-            return stackSeries.filter(s => s.type === 'plot').map((datapoint) => {
-                this.checkAutoScaleError(datapoint);
-                const min = this.scaleGroups[datapoint.scaleLabel].min;
-                const max = this.scaleGroups[datapoint.scaleLabel].max;
-                const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
-                    return (v - min) / (max - min)
-                });
-
-                const autoScale = {
-                    ratios: autoScaledRatios,
-                    valueMin: min,
-                    valueMax: max,
-                }
-
-                const individualExtremes = {
-                    max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
-                    min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
-                };
-
-                const scaleSteps = datapoint.scaleSteps || this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps;
-
-                const corrector = 1.0000001;
-
-                const individualScale = this.calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
-                
-                const autoScaleSteps = this.calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
-
-                const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
-                const autoScaleZero = 0;
-
-                const individualMax = individualScale.max + individualZero;
-                const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
-                
-                const origIdx = datapoint.stackIndex;
-                const flippedIdx = totalSeries - 1 - origIdx;
-                const flippedLowerRatio  = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
-                const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
-                const individualHeight = stacked ? usableHeight * datapoint.stackRatio : this.drawingArea.height;
-
-                const zeroPosition = this.drawingArea.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
-                const autoScaleZeroPosition = this.drawingArea.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
-
-                const plots = datapoint.series.map((plot, j) => {
-                    const yRatio = this.mutableConfig.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : this.ratioToMax(plot)
-                    return {
-                        x: this.checkNaN((this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j)),
-                        y: this.checkNaN(this.drawingArea.bottom - yOffset - (individualHeight * yRatio)),
-                        value: datapoint.absoluteValues[j],
-                        comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
-                    }
-                })
-
-                const autoScaleRatiosToNiceScale = datapoint.absoluteValues.map(v => {
-                    if(autoScaleSteps.min >= 0) {
-                        return (v - Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max - Math.abs(autoScaleSteps.min))
-                    } else {
-                        return (v + Math.abs(autoScaleSteps.min)) / (autoScaleSteps.max + Math.abs(autoScaleSteps.min))
-                    }
-                })
-
-                const autoScalePlots = datapoint.series.map((plot, j) => {
-                    return {
-                        x: this.checkNaN((this.drawingArea.left + (this.slot.plot / 2)) + (this.slot.plot * j)),
-                        y: this.checkNaN(this.drawingArea.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
-                        value: datapoint.absoluteValues[j],
-                        comment: datapoint.comments ? datapoint.comments.slice(this.slicer.start, this.slicer.end)[j] || '' : ''
-                    }
-                })
-
-                const scaleYLabels = individualScale.ticks.map(t => {
-                    return {
-                        y: t >= 0 ? zeroPosition - (individualHeight * (t / individualMax)) : zeroPosition + (individualHeight * Math.abs(t) / individualMax),
-                        value: t,
-                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
-                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
-                        datapoint,
-                    }
-                })
-
-                const autoScaleYLabels = autoScaleSteps.ticks.map(t => {
-                    const v = (t - autoScaleSteps.min) / (autoScaleSteps.max - autoScaleSteps.min);
-                    return {
-                        y: t >= 0 ? autoScaleZeroPosition - (individualHeight * v) : autoScaleZeroPosition + (individualHeight * v),
-                        value: t,
-                        prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
-                        suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
-                        datapoint
-                    }
-                });
-
-                this.scaleGroups[datapoint.scaleLabel].name = datapoint.name;
-                this.scaleGroups[datapoint.scaleLabel].groupName = datapoint.scaleLabel;
-                this.scaleGroups[datapoint.scaleLabel].groupColor = this.FINAL_CONFIG.chart.grid.labels.yAxis.groupColor || datapoint.color;
-                this.scaleGroups[datapoint.scaleLabel].color = datapoint.color;
-                this.scaleGroups[datapoint.scaleLabel].scaleYLabels = datapoint.autoScaling ? autoScaleYLabels : scaleYLabels;
-                this.scaleGroups[datapoint.scaleLabel].zeroPosition = datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition;
-                this.scaleGroups[datapoint.scaleLabel].individualMax = datapoint.autoScaling ? autoScaleMax : individualMax;
-                this.scaleGroups[datapoint.scaleLabel].scaleLabel = datapoint.scaleLabel;
-                this.scaleGroups[datapoint.scaleLabel].id = datapoint.id;
-                this.scaleGroups[datapoint.scaleLabel].yOffset = yOffset;
-                this.scaleGroups[datapoint.scaleLabel].individualHeight = individualHeight;
-                this.scaleGroups[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
-                this.scaleGroups[datapoint.scaleLabel].unique = this.activeSeriesWithStackRatios.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
-
-                return {
-                    ...datapoint,
-                    yOffset,
-                    autoScaleYLabels,
-                    individualHeight,
-                    scaleYLabels: datapoint.autoScaling ? autoScaleYLabels : scaleYLabels,
-                    individualScale: datapoint.autoScaling ? autoScaleSteps : individualScale,
-                    individualMax: datapoint.autoScaling ? autoScaleMax : individualMax,
-                    zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
-                    plots: datapoint.autoScaling ? autoScalePlots : plots,
-                    groupId: this.scaleGroups[datapoint.scaleLabel].groupId
-                }
-            })
-        },
-        drawingArea() {
-            function getUniqueScaleLabelsCount(dataset) {
-            const uniqueLabels = new Set();
-                dataset.forEach(item => {
-                    const label = item.scaleLabel || '__noScaleLabel__';
-                    uniqueLabels.add(label);
-                });
-                return uniqueLabels.size;
-                }
-
-            const len = getUniqueScaleLabelsCount(this.absoluteDataset.filter(s => !this.segregatedSeries.includes(s.id)));
-
-            const individualScalesPadding = this.mutableConfig.useIndividualScale && this.FINAL_CONFIG.chart.grid.labels.show ? len * (this.mutableConfig.isStacked ? 0 : this.FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth) : 0;
-            return {
-                top: this.isAutoSize ? 0 : this.FINAL_CONFIG.chart.padding.top,
-                right: this.isAutoSize ? this.width : this.width - this.FINAL_CONFIG.chart.padding.right,
-                bottom: this.isAutoSize ? this.height : this.height - this.FINAL_CONFIG.chart.padding.bottom,
-                left: this.isAutoSize ? individualScalesPadding : this.FINAL_CONFIG.chart.padding.left + individualScalesPadding,
-                height: this.isAutoSize ? this.height : this.height - (this.FINAL_CONFIG.chart.padding.top + this.FINAL_CONFIG.chart.padding.bottom),
-                width: this.isAutoSize ? this.width - individualScalesPadding :this.width - (this.FINAL_CONFIG.chart.padding.right + this.FINAL_CONFIG.chart.padding.left + individualScalesPadding)
-            }
-        },
-        max(){
-            if (this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax) {
-                return this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax
-            }
-            return Math.max(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => Math.max(...datapoint.series)));
-        },
-        min() {
-            if (this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin !== null) {
-                return this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin
-            }
-            const min = Math.min(...this.safeDataset.filter(s => !this.segregatedSeries.includes(s.id)).map(datapoint => Math.min(...datapoint.series)));
-            if(min > 0) return 0;
-            return min;
-        },
-        niceScale() {
-            return this.FINAL_CONFIG.chart.grid.labels.yAxis.useNiceScale ? this.calculateNiceScale(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps) : this.calculateNiceScaleWithExactExtremes(this.min, this.max < 0 ? 0 : this.max, this.FINAL_CONFIG.chart.grid.labels.yAxis.commonScaleSteps)
-        },
-        maxSeries(){
-            return this.slicer.end - this.slicer.start;
-        },
-        timeLabels() {
-            const max = Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data:datapoint.series, threshold: this.FINAL_CONFIG.downsample.threshold}).length));
-
-            return useTimeLabels({
-                values: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values,
-                maxDatapoints: max,
-                formatter: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter,
-                start: this.slicer.start,
-                end: this.slicer.end
-            });
-        },
-        slot() {
-            return {
-                bar: this.drawingArea.width / this.maxSeries / this.safeDataset.filter(serie => serie.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length,
-                plot: this.drawingArea.width / this.maxSeries,
-                line: this.drawingArea.width / this.maxSeries,
-            }
-        },   
-        barSlot() {
-            const len = this.safeDataset.filter(serie => serie.type === 'bar').filter(s => !this.segregatedSeries.includes(s.id)).length
-            return (this.drawingArea.width) / this.maxSeries / len - (this.barPeriodGap * len)
-        },
-        barPeriodGap() {
-            return this.slot.line * this.FINAL_CONFIG.bar.periodGap;
-        },
-        maxSlot(){
-            return Math.max(...Object.values(this.slot).filter(e => e !== Infinity))
-        },
-        table() {
-            if(this.safeDataset.length === 0) return { head: [], body: [], config: {}, columnNames: []};
-
-            const head = this.relativeDataset.map(s => {
-                return {
-                    label: s.name,
-                    color: s.color,
-                    type: s.type
-                }
-            })
-
-            const body = [];
-
-            this.timeLabels.forEach((t, i) => {
-                const row = [t.text];
-                this.relativeDataset.forEach(s => {
-                    row.push(this.canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(this.FINAL_CONFIG.table.rounding)) : '')
-                });
-                body.push(row);
-            })
-
-            return { head, body};
-        },
-        dataTable() {
-            const showSum = this.FINAL_CONFIG.table.showSum;
-            let head = [''].concat(this.relativeDataset.map(ds => ds.name))
-
-            if(showSum) {
-                head = head.concat(` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`)
-            }
-
-            let body = [];
-            for(let i = 0; i < this.maxSeries; i += 1) {
-                const sum = this.relativeDataset.map(ds => {
-                    return ds.absoluteValues[i] ?? 0
-                }).reduce((a, b) => a + b, 0)
-
-                body.push([
-                    this.timeLabels[i].text ?? '-']
-                    .concat(this.relativeDataset
-                        .map(ds => {
-                            return this.applyDataLabel(
-                                ds.type === 'line' ? this.FINAL_CONFIG.line.labels.formatter :
-                                ds.type === 'bar' ? this.FINAL_CONFIG.bar.labels.formatter :
-                                this.FINAL_CONFIG.plot.labels.formatter,
-                                ds.absoluteValues[i] ?? 0,
-                                this.dataLabel({
-                                    p: ds.prefix || this.FINAL_CONFIG.chart.labels.prefix,
-                                    v: ds.absoluteValues[i] ?? 0,
-                                    s: ds.suffix || this.FINAL_CONFIG.chart.labels.suffix,
-                                    r: this.FINAL_CONFIG.table.rounding
-                                })
-                            )}
-                        ))
-                    .concat(showSum ? (sum ?? 0).toFixed(this.FINAL_CONFIG.table.rounding) : [])
-                )
-            }
-
-            const config = {
-                th: {
-                    backgroundColor: this.FINAL_CONFIG.table.th.backgroundColor,
-                    color: this.FINAL_CONFIG.table.th.color,
-                    outline: this.FINAL_CONFIG.table.th.outline
-                },
-                td: {
-                    backgroundColor: this.FINAL_CONFIG.table.td.backgroundColor,
-                    color: this.FINAL_CONFIG.table.td.color,
-                    outline: this.FINAL_CONFIG.table.td.outline
-                },
-                breakpoint: this.FINAL_CONFIG.table.responsiveBreakpoint
-            }
-            const colNames = [this.FINAL_CONFIG.table.columnNames.period].concat(this.relativeDataset.map(ds => ds.name)).concat(this.FINAL_CONFIG.table.columnNames.total)
-
-            return { head, body, config, colNames}
-        },
-        dataTooltipSlot() {
-            return {
-                datapoint: this.selectedSeries,
-                seriesIndex: this.selectedSerieIndex,
-                series: this.absoluteDataset,
-                bars: this.barSet,
-                lines: this.lineSet,
-                plots: this.plotSet,
-                config: this.FINAL_CONFIG 
-            }
-        },
-        selectedSeries() {
-            return this.relativeDataset.map(datapoint => {
-                return {
-                    slotAbsoluteIndex: datapoint.slotAbsoluteIndex,
-                    shape: datapoint.shape || null,
-                    name: datapoint.name,
-                    color: datapoint.color,
-                    type: datapoint.type,
-                    value: datapoint.absoluteValues.find((_s,i) => i === this.selectedSerieIndex),
-                    comments: datapoint.comments || [],
-                    prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
-                    suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
-                }
-            });
-        },  
-        tooltipContent() {            
-            let html = "";
-            
-            let sum = this.selectedSeries.map(s => s.value).filter(s => this.isSafeValue(s) && s !== null).reduce((a,b) => Math.abs(a) + Math.abs(b), 0);
-            
-            const time = this.timeLabels[this.selectedSerieIndex];
-            const customFormat = this.FINAL_CONFIG.chart.tooltip.customFormat;
-
-            if(this.isFunction(customFormat) && this.functionReturnsString(() => customFormat({
-                seriesIndex: this.selectedSerieIndex,
-                datapoint: this.selectedSeries,
-                series: this.absoluteDataset,
-                bars: this.barSet,
-                lines: this.lineSet,
-                plots: this.plotSet,
-                config: this.FINAL_CONFIG
-            }))) {
-                return customFormat({
-                    seriesIndex: this.selectedSerieIndex,
-                    datapoint: this.selectedSeries,
-                    series: this.absoluteDataset,
-                    bars: this.barSet,
-                    lines: this.lineSet,
-                    plots: this.plotSet,
-                    config: this.FINAL_CONFIG
-                })
-            } else {
-                if(time && time.text && this.FINAL_CONFIG.chart.tooltip.showTimeLabel) {
-                    html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${this.FINAL_CONFIG.chart.tooltip.borderColor}; width:100%">${time.text}</div>`;
-                }
-                this.selectedSeries.forEach(s => {
-                    if(this.isSafeValue(s.value)) {
-                        let shape = '';
-                        let insideShape = '';
-                        switch (this.icons[s.type]) {
-                            case 'bar':
-                                shape = `<svg viewBox="0 0 40 40" height="14" width="14">${this.$slots.pattern ? `<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${s.color}" />`: ''}<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${this.$slots.pattern ? `url(#pattern_${this.uniqueId}_${s.slotAbsoluteIndex}` : s.color}" /></svg>`;
-                                break;
-                            
-                            case 'line':
-                                if(!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
-                                    insideShape = `<circle cx="10" cy="8" r="4" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="0.5" fill="${s.color}" />`
-                                } else if(s.shape === 'triangle') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
-                                } else if(s.shape === 'square') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
-                                } else if(s.shape === 'diamond') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
-                                } else if(s.shape === 'pentagon') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
-                                } else if(s.shape === 'hexagon') {
-                                    insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
-                                } else if(s.shape === 'star') {
-                                    insideShape = `<polygon stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="0.5" fill="${s.color}" points="${createStar({ plot: { x: 10, y: 8 }, radius: 4})}" />`
-                                }
-                                shape = `<svg viewBox="0 0 20 12" height="14" width="20"><rect rx="1.5" x="0" y="6.5" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="0.5" height="3" width="20" fill="${s.color}" />${insideShape}</svg>`;
-                                break;
+    });
+});
+
+/******************************************************************************************/
+
+const dataTooltipSlot = computed(() => {
+    return {
+        datapoint: selectedSeries.value,
+        seriesIndex: selectedSerieIndex.value,
+        series: absoluteDataset.value,
+        bars: barSet.value,
+        lines: lineSet.value,
+        plots: plotSet.value,
+        config: FINAL_CONFIG.value 
+    }
+});
+
+const tooltipContent = computed(() => {
+    let html = "";
     
-                            case 'plot':
-                                if (!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" /></svg>`;
-                                    break;
-                                }
-                                if(s.shape === 'star') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5})}" /></svg>`;
-                                    break;
-                                }
-                                if(s.shape === 'triangle') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                    break;
-                                }
-                                if(s.shape === 'square') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                    break;
-                                }
-                                if(s.shape === 'diamond') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                    break;
-                                }
-                                if(s.shape === 'pentagon') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                    break;
-                                }
-                                if(s.shape === 'hexagon') {
-                                    shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${this.FINAL_CONFIG.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
-                                    break;
-                                }
-                            default:
-                                break;
-                        }
-                        html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${this.FINAL_CONFIG.chart.tooltip.showValue ? 
-                                this.applyDataLabel(
-                                    s.type === 'line' ? this.FINAL_CONFIG.line.labels.formatter :
-                                    s.type === 'bar' ? this.FINAL_CONFIG.bar.labels.formatter :
-                                    this.FINAL_CONFIG.plot.labels.formatter,
-                                    s.value,
-                                    this.dataLabel({
-                                        p: s.prefix, 
-                                        v: s.value, 
-                                        s: s.suffix, 
-                                        r: this.FINAL_CONFIG.chart.tooltip.roundingValue,
-                                    }),
-                                    { datapoint: s }
-                                ) : ''}</b> ${this.FINAL_CONFIG.chart.tooltip.showPercentage ? `(${dataLabel({
-                                    v: this.checkNaN(Math.abs(s.value) / sum * 100),
-                                    s: '%',
-                                    r: this.FINAL_CONFIG.chart.tooltip.roundingPercentage
-                                })})` : ''}</div>`;
+    let sum = selectedSeries.value.map(s => s.value).filter(s => isSafeValue(s) && s !== null).reduce((a,b) => Math.abs(a) + Math.abs(b), 0);
+    
+    const time = timeLabels.value[selectedSerieIndex.value];
+    const customFormat = FINAL_CONFIG.value.chart.tooltip.customFormat;
 
-                        if (this.FINAL_CONFIG.chart.comments.showInTooltip && s.comments.length && s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]) {
-                            html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${s.comments.slice(this.slicer.start, this.slicer.end)[this.selectedSerieIndex]}</div>`
+    if(isFunction(customFormat) && functionReturnsString(() => customFormat({
+        seriesIndex: selectedSerieIndex.value,
+        datapoint: selectedSeries.value,
+        series: absoluteDataset.value,
+        bars: barSet.value,
+        lines: lineSet.value,
+        plots: plotSet.value,
+        config: FINAL_CONFIG.value
+    }))) {
+        return customFormat({
+            seriesIndex: selectedSerieIndex.value,
+            datapoint: selectedSeries.value,
+            series: absoluteDataset.value,
+            bars: barSet.value,
+            lines: lineSet.value,
+            plots: plotSet.value,
+            config: FINAL_CONFIG.value
+        })
+    } else {
+        if(time && time.text && FINAL_CONFIG.value.chart.tooltip.showTimeLabel) {
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.chart.tooltip.borderColor}; width:100%">${time.text}</div>`;
+        }
+        selectedSeries.value.forEach(s => {
+            if(isSafeValue(s.value)) {
+                let shape = '';
+                let insideShape = '';
+                switch (icons.value[s.type]) {
+                    case 'bar':
+                        shape = `<svg viewBox="0 0 40 40" height="14" width="14">${SLOTS.pattern ? `<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${s.color}" />`: ''}<rect x="0" y="0" rx="1" stroke="none" height="40" width="40" fill="${SLOTS.pattern ? `url(#pattern_${uniqueId.value}_${s.slotAbsoluteIndex}` : s.color}" /></svg>`;
+                        break;
+                    
+                    case 'line':
+                        if(!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
+                            insideShape = `<circle cx="10" cy="8" r="4" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" fill="${s.color}" />`
+                        } else if(s.shape === 'triangle') {
+                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
+                        } else if(s.shape === 'square') {
+                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
+                        } else if(s.shape === 'diamond') {
+                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
+                        } else if(s.shape === 'pentagon') {
+                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
+                        } else if(s.shape === 'hexagon') {
+                            insideShape = `<path d="${createPolygonPath({ plot: { x: 10, y: 8}, radius: 4, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" />`
+                        } else if(s.shape === 'star') {
+                            insideShape = `<polygon stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" fill="${s.color}" points="${createStar({ plot: { x: 10, y: 8 }, radius: 4})}" />`
                         }
+                        shape = `<svg viewBox="0 0 20 12" height="14" width="20"><rect rx="1.5" x="0" y="6.5" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="0.5" height="3" width="20" fill="${s.color}" />${insideShape}</svg>`;
+                        break;
 
-                    }
-                });
-                return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums;color:${this.FINAL_CONFIG.chart.tooltip.color}">${html}</div>`;
-            }            
-        },
-        svg() {
-            return {
-                height: this.height,
-                width: this.width
-            }
-        },
-        yLabels() {
-            return this.niceScale.ticks.map(t => {
-                return {
-                    y: t >= 0 ? this.zero - (this.drawingArea.height * this.ratioToMax(t)) : this.zero + (this.drawingArea.height * this.ratioToMax(Math.abs(t))),
-                    value: t,
-                    prefix: this.FINAL_CONFIG.chart.labels.prefix,
-                    suffix: this.FINAL_CONFIG.chart.labels.suffix,
+                    case 'plot':
+                        if (!s.shape || !['star', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon'].includes(s.shape)) {
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><circle cx="6" cy="6" r="6" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" /></svg>`;
+                            break;
+                        }
+                        if(s.shape === 'star') {
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><polygon stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" fill="${s.color}" points="${createStar({ plot: { x: 6, y: 6 }, radius: 5})}" /></svg>`;
+                            break;
+                        }
+                        if(s.shape === 'triangle') {
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 3, rotation: 0.52}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                            break;
+                        }
+                        if(s.shape === 'square') {
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 6, sides: 4, rotation: 0.8}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                            break;
+                        }
+                        if(s.shape === 'diamond') {
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 4, rotation: 0}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                            break;
+                        }
+                        if(s.shape === 'pentagon') {
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 5, rotation: 0.95}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                            break;
+                        }
+                        if(s.shape === 'hexagon') {
+                            shape = `<svg viewBox="0 0 12 12" height="14" width="14"><path d="${createPolygonPath({ plot: { x: 6, y: 6}, radius: 5, sides: 6, rotation: 0}).path}" fill="${s.color}" stroke="${FINAL_CONFIG.value.chart.tooltip.backgroundColor}" stroke-width="1" /></svg>`;
+                            break;
+                        }
+                    default:
+                        break;
                 }
-            })
-        },
-        zero(){
-            if (isNaN(this.ratioToMax(this.relativeZero))) {
-                return this.drawingArea.bottom;
-            } else {
-                return this.drawingArea.bottom - (this.drawingArea.height * this.ratioToMax(this.relativeZero));
-            }
-        },
-        annotationsY() {
-            const ann = this.FINAL_CONFIG.chart.annotations;
-            if (!ann || !Array.isArray(ann) || ann.every(a => !a.show)) return [];
+                html += `<div style="display:flex;flex-direction:row; align-items:center;gap:3px;"><div style="width:20px">${shape}</div> ${s.name}: <b>${FINAL_CONFIG.value.chart.tooltip.showValue ? 
+                        applyDataLabel(
+                            s.type === 'line' ? FINAL_CONFIG.value.line.labels.formatter :
+                            s.type === 'bar' ? FINAL_CONFIG.value.bar.labels.formatter :
+                            FINAL_CONFIG.value.plot.labels.formatter,
+                            s.value,
+                            dataLabel({
+                                p: s.prefix, 
+                                v: s.value, 
+                                s: s.suffix, 
+                                r: FINAL_CONFIG.value.chart.tooltip.roundingValue,
+                            }),
+                            { datapoint: s }
+                        ) : ''}</b> ${FINAL_CONFIG.value.chart.tooltip.showPercentage ? `(${dataLabel({
+                            v: checkNaN(Math.abs(s.value) / sum * 100),
+                            s: '%',
+                            r: FINAL_CONFIG.value.chart.tooltip.roundingPercentage
+                        })})` : ''}</div>`;
 
-            const visible = ann.filter(a =>
-                a.show &&
-                (a.yAxis.yTop != null || a.yAxis.yBottom != null)
-            );
-
-            if (!visible.length) return [];
-
-            const { left, right } = this.drawingArea;
-            const zeroY = this.zero;
-            const height = this.drawingArea.height;
-            const min = this.niceScale.min;
-            const max = this.niceScale.max;
-            const range = max - min;
-
-            const toY = v => {
-                const ratio = (v - 0) / range;
-                return zeroY - (ratio * height);
-            };
-
-            return visible.map(annotation => {
-                const { yAxis: { yTop: rawTop, yBottom: rawBottom, label } } = annotation;
-                const hasArea = rawTop != null && rawBottom != null && rawTop !== rawBottom;
-
-                const yTop = rawTop == null ? null : toY(rawTop);
-                const yBottom = rawBottom == null ? null : toY(rawBottom);
-
-                const ctx = this.getTextMeasurer(label.fontSize);
-                ctx.font = `${label.fontSize}px sans-serif`;
-                const textWidth  = ctx.measureText(label.text).width;
-                const textHeight = label.fontSize;
-
-                const xText = (label.position === 'start' ? left + label.padding.left : right - label.padding.right) + label.offsetX;
-
-                const baselineY = (yTop != null && yBottom != null)
-                    ? Math.min(yTop, yBottom)
-                    : (yTop != null ? yTop : yBottom);
-
-                const yText = baselineY - (label.fontSize / 3) + label.offsetY - label.padding.top;
-
-                let rectX;
-                if (label.textAnchor === 'middle') {
-                    rectX = xText - (textWidth / 2) - label.padding.left;
-                } else if (label.textAnchor === 'end') {
-                    rectX = xText - textWidth - label.padding.right;
-                } else {
-                    rectX = xText - label.padding.left;
+                if (FINAL_CONFIG.value.chart.comments.showInTooltip && s.comments.length && s.comments.slice(slicer.value.start, slicer.value.end)[selectedSerieIndex.value]) {
+                    html += `<div class="vue-data-ui-tooltip-comment" style="background:${s.color}20; padding: 6px; margin-bottom: 6px; border-left: 1px solid ${s.color}">${s.comments.slice(slicer.value.start, slicer.value.end)[selectedSerieIndex.value]}</div>`
                 }
 
-                const rectY = yText - (textHeight * 0.75) - label.padding.top;
-                const show = ![yTop, yBottom, rectY].includes(NaN);
-
-                return {
-                    show,
-                    id: `annotation_y_${this.createUid()}`,
-                    hasArea,
-                    areaHeight: hasArea ? Math.abs(yTop - yBottom) : 0,
-                    yTop,
-                    yBottom,
-                    config: annotation.yAxis,
-                    x1: left,
-                    x2: right,
-                    _text: { x: xText, y: yText },
-                    _box: {
-                        x: rectX,
-                        y: rectY,
-                        width:  textWidth + label.padding.left + label.padding.right,
-                        height: textHeight + label.padding.top + label.padding.bottom,
-                        fill:   label.backgroundColor,
-                        stroke: label.border.stroke,
-                        rx:     label.border.rx,
-                        ry:     label.border.ry,
-                        strokeWidth: label.border.strokeWidth
-                    }
-                };
-            });
-        },
-    },
-    mounted() {
-        this.svgRef = this.$refs.svgRef;
-        this.prepareChart();
-        this.setupSlicer();
-
-        document.addEventListener("mousemove", (e) => {
-            this.clientPosition = {
-                x: e.clientX,
-                y: e.clientY
             }
         });
-        
-        document.addEventListener('scroll', this.hideTags);
-    },
-    beforeUnmount() {
-        document.removeEventListener('scroll', this.hideTags);
-        if (this.resizeObserver) {
-            this.resizeObserver.unobserve(this.observedEl);
-            this.resizeObserver.disconnect();
+        return `<div style="border-radius:4px;padding:12px;font-variant-numeric: tabular-nums;color:${FINAL_CONFIG.value.chart.tooltip.color}">${html}</div>`;
+    }      
+});
+
+const table = computed(() => {
+    if(safeDataset.value.length === 0) return { head: [], body: [], config: {}, columnNames: []};
+    const head = relativeDataset.value.map(s => {
+        return {
+            label: s.name,
+            color: s.color,
+            type: s.type
         }
-    },
-    methods: {
-        abbreviate,
-        adaptColorToBackground,
-        applyDataLabel,
-        assignStackRatios,
-        calcLinearProgression,
-        calculateNiceScale,
-        calculateNiceScaleWithExactExtremes,
-        checkNaN,
-        closestDecimal,
-        convertColorToHex,
-        convertConfigColors,
-        convertCustomPalette,
-        createCsvContent,
-        createSmoothPath,
-        createStraightPath,
-        createTSpans,
-        createTSpansFromLineBreaksOnX,
-        dataLabel,
-        downloadCsv,
-        error,
-        forceValidValue,
-        functionReturnsString,
-        hasDeepProperty,
-        isFunction,
-        isSafeValue,
-        largestTriangleThreeBucketsArray,
-        objectIsEmpty,
-        setOpacity,
-        shiftHue,
-        translateSize,
-        treeShake,
-        useMouse,
-        useNestedProp,
-        createUid,
-        placeXYTag,
-        createSmoothPathWithCuts,
-        createStraightPathWithCuts,
-        createAreaWithCuts,
-        createIndividualAreaWithCuts,
-        createSmoothAreaSegments,
-        createIndividualArea,
-        /******************************************************************************************/
-        /*                                  V3 autosize methods                                   */
-        /******************************************************************************************/
-        forceResizeObserver() {
-            if (!this.FINAL_CONFIG.responsive) return;
-            const chart = this.$refs.chart;
-            if (chart) {
-                const parent = chart.parentNode;
-                if (parent) {
-                    const initW = parent.getBoundingClientRect().width;
-                    parent.style.width = initW - 0.1 + 'px';
-                    setTimeout(() => {
-                        parent.style.width = initW + 'px';
-                    }, 0);
-                }
-            }
-        },
-        async setViewBox() {
-            await this.$nextTick();
-            const g = this.$refs.G;
-            if (!g) return;
-            const {x, y, width, height } = g.getBBox();
-            this.setXAxisLabel();
-            await this.$nextTick();
-            this.setYAxisLabel();
-            const newBB = g.getBBox();
-            this.viewBox = `${newBB.x} ${newBB.y - this.fontSizes.plotLabels} ${newBB.width + this.FINAL_CONFIG.chart.padding.left} ${newBB.height + this.fontSizes.plotLabels + this.FINAL_CONFIG.chart.padding.top}`;
-            await this.$nextTick();
-            this.$refs.chart.classList.remove('no-transition');
-        },
-        async setYAxisLabel() {
-            const yAxisLabel = this.$refs.yAxisLabel;
-            if (!yAxisLabel) return;
-            await this.$nextTick();
+    });
+    const body = [];
+    timeLabels.value.forEach((t, i) => {
+        const row = [t.text];
+        relativeDataset.value.forEach(s => {
+            row.push(canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(FINAL_CONFIG.value.table.rounding)) : '')
+        });
+        body.push(row);
+    });
+    return { head, body};
+});
 
-            yAxisLabel.setAttribute('transform', `translate(${this.viewBoxParts.x + this.FINAL_CONFIG.chart.grid.labels.axis.yLabelOffsetX + this.fontSizes.yAxis}, ${this.drawingArea.top + this.drawingArea.height /  2}) rotate(-90)`)
-        },
-        async setXAxisLabel() {
-            const xAxisLabel = this.$refs.xAxisLabel;
-            if (!xAxisLabel) return;
-            await this.$nextTick();
-            const timeLabels = this.$refs.timeLabels;
-            let y = this.drawingArea.bottom;
-            if (timeLabels) {
-                y += timeLabels.getBBox().height
-            }
+const dataTable = computed(() => {
+    const showSum = FINAL_CONFIG.value.table.showSum;
+    let head = [''].concat(relativeDataset.value.map(ds => ds.name))
 
-            xAxisLabel.setAttribute('y', y + (this.fontSizes.xAxis * 1.3) + this.FINAL_CONFIG.chart.grid.labels.axis.xLabelOffsetY);
-        },
-        /******************************************************************************************/
-        usesSelectTimeLabelEvent() {
-            return !!this.$.vnode.props?.onSelectTimeLabel;
-        },
-        getTextMeasurer(fontSize, fontFamily, fontWeight) {
-            if (!this._textMeasurer) {
-                const canvas = document.createElement('canvas')
-                this._textMeasurer = canvas.getContext('2d')
-            }
-            this._textMeasurer.font = 
-                `${fontWeight || 'normal'} ${fontSize}px ${fontFamily || 'sans-serif'}`
-            return this._textMeasurer
-        },
-        hideTags() {
-            const tags = document.querySelectorAll('.vue-ui-xy-tag')
-            if (tags.length) {
-                Array.from(tags).forEach(tag => tag.style.opacity = '0')
-            }
-        },
-        setTagRef(i, j, el, position, type) {
-            if (el) this.tagRefs[`${i}_${j}_${position}_${type}`] = el;
-        },
-        setUserOptionsVisibility(state = false) {
-            if (!this.showUserOptionsOnChartHover) return;
-            this.userOptionsVisible = state
-        },
-        toggleAnnotator() {
-            this.isAnnotator = !this.isAnnotator;
-        },
-        selectTimeLabel(label, relativeIndex) {
-            const datapoint = this.relativeDataset.map(datapoint => {
-                return {
-                    shape: datapoint.shape || null,
-                    name: datapoint.name,
-                    color: datapoint.color,
-                    type: datapoint.type,
-                    value: datapoint.absoluteValues.find((_s,i) => i === relativeIndex),
-                    comments: datapoint.comments || [],
-                    prefix: datapoint.prefix || this.FINAL_CONFIG.chart.labels.prefix,
-                    suffix: datapoint.suffix || this.FINAL_CONFIG.chart.labels.suffix,
-                }
-            })
-            this.$emit('selectTimeLabel', {
-                datapoint,
-                absoluteIndex: label.absoluteIndex,
-                label: label.text
-            })
-        },
-        getHighlightAreaPosition(area) {
-            const x = this.drawingArea.left + (this.drawingArea.width / this.maxSeries) * (area.from - this.slicer.start);
+    if(showSum) {
+        head = head.concat(` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`)
+    }
 
-            const width = (this.drawingArea.width / (this.slicer.end - this.slicer.start)) * area.span < 0 ? 0.00001 : (this.drawingArea.width / (this.slicer.end - this.slicer.start)) * area.span
+    let body = [];
+    for(let i = 0; i < maxSeries.value; i += 1) {
+        const sum = relativeDataset.value.map(ds => {
+            return ds.absoluteValues[i] ?? 0
+        }).reduce((a, b) => a + b, 0)
 
-
-            return {
-                x: x < this.drawingArea.left ? this.drawingArea.left : x,
-                width: width
-            }
-        },
-        prepareConfig() {
-            const DEFAULT_CONFIG = useConfig().vue_ui_xy;
-
-                if(!Object.keys(this.config || {}).length) {
-                    return DEFAULT_CONFIG
-                }
-
-                const mergedConfig = this.useNestedProp({
-                    userConfig: this.config,
-                    defaultConfig: DEFAULT_CONFIG
-                });
-
-                // ------------------------------ OVERRIDES -----------------------------------
-
-                if (this.config && this.hasDeepProperty(this.config, 'chart.highlightArea')) {
-                    if (!Array.isArray(this.config.chart.highlightArea)) {
-                        mergedConfig.chart.highlightArea = [this.config.chart.highlightArea] // FIXME: should be sanitized using useNestedPropToo
-                    } else {
-                        mergedConfig.chart.highlightArea = this.config.chart.highlightArea;
-                    }
-                }
-                
-                if (this.config && this.hasDeepProperty(this.config, 'chart.grid.labels.yAxis.scaleMin')) {
-                    mergedConfig.chart.grid.labels.yAxis.scaleMin = this.config.chart.grid.labels.yAxis.scaleMin;
-                } else {
-                    mergedConfig.chart.grid.labels.yAxis.scaleMin = null;
-                }
-                
-                if (this.config && this.hasDeepProperty(this.config, 'chart.grid.labels.yAxis.scaleMax')) {
-                    mergedConfig.chart.grid.labels.yAxis.scaleMax = this.config.chart.grid.labels.yAxis.scaleMax;
-                } else {
-                    mergedConfig.chart.grid.labels.yAxis.scaleMax = null;
-                }
-
-                if (this.config && this.hasDeepProperty(this.config, 'chart.zoom.startIndex')) {
-                    mergedConfig.chart.zoom.startIndex = this.config.chart.zoom.startIndex;
-                } else {
-                    mergedConfig.chart.zoom.startIndex = null;
-                }
-
-                if (this.config && this.hasDeepProperty(this.config, 'chart.zoom.endIndex')) {
-                    mergedConfig.chart.zoom.endIndex = this.config.chart.zoom.endIndex;
-                } else {
-                    mergedConfig.chart.zoom.endIndex = null;
-                }
-
-                if (this.config && this.hasDeepProperty(this.config,  'chart.grid.labels.yAxis.groupColor')) {
-                    mergedConfig.chart.grid.labels.yAxis.groupColor = this.config.chart.grid.labels.yAxis.groupColor;
-                } else {
-                    mergedConfig.chart.grid.labels.yAxis.groupColor = null;
-                }
-
-                if (this.config && this.config.chart.annotations && Array.isArray(this.config.chart.annotations) && this.config.chart.annotations.length) {
-                    mergedConfig.chart.annotations = this.config.chart.annotations.map(annotation => {
-                        return useNestedProp({
-                            defaultConfig: DEFAULT_CONFIG.chart.annotations[0],
-                            userConfig: annotation
+        body.push([
+            timeLabels.value[i].text ?? '-']
+            .concat(relativeDataset.value
+                .map(ds => {
+                    return applyDataLabel(
+                        ds.type === 'line' ? FINAL_CONFIG.value.line.labels.formatter :
+                        ds.type === 'bar' ? FINAL_CONFIG.value.bar.labels.formatter :
+                        FINAL_CONFIG.value.plot.labels.formatter,
+                        ds.absoluteValues[i] ?? 0,
+                        dataLabel({
+                            p: ds.prefix || FINAL_CONFIG.value.chart.labels.prefix,
+                            v: ds.absoluteValues[i] ?? 0,
+                            s: ds.suffix || FINAL_CONFIG.value.chart.labels.suffix,
+                            r: FINAL_CONFIG.value.table.rounding
                         })
-                    })
-                } else {
-                    mergedConfig.chart.annotations = [];
-                }
+                    )}
+                ))
+            .concat(showSum ? (sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding) : [])
+        )
+    }
+    const config = {
+        th: {
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            outline: FINAL_CONFIG.value.table.th.outline
+        },
+        td: {
+            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+            color: FINAL_CONFIG.value.table.td.color,
+            outline: FINAL_CONFIG.value.table.td.outline
+        },
+        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
+    }
+    const colNames = [FINAL_CONFIG.value.table.columnNames.period].concat(relativeDataset.value.map(ds => ds.name)).concat(FINAL_CONFIG.value.table.columnNames.total)
 
-                // v3 autoSize chart.padding override
-                if (this.config && this.config.autoSize) {
+    return { head, body, config, colNames };
+});
 
-                    if (this.config.chart.padding.top) {
-                        console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.top, set a 0 value to remove this warning')
-                    }
-                    if (this.config.chart.padding.right) {
-                        console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.right, set a 0 value to remove this warning')
-                    }
-                    if (this.config.chart.padding.bottom) {
-                        console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.bottom, set a 0 value to remove this warning')
-                    }
-                    if (this.config.chart.padding.left) {
-                        console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.left, set a 0 value to remove this warning')
-                    }
-
-                    mergedConfig.chart.padding = {
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        left: 0,
-                    }
-                }
-
-                // ----------------------------------------------------------------------------
-
-                if (mergedConfig.theme) {
-                    return {
-                        ...useNestedProp({
-                            userConfig: this.themes.vue_ui_xy[mergedConfig.theme] || this.config,
-                            defaultConfig: mergedConfig
-                        }),
-                        customPalette: this.themePalettes[mergedConfig.theme] || this.palette
-                    }
-                } else {
-                    return mergedConfig
-                }
-        },
-        prepareChart() {
-            if(this.objectIsEmpty(this.dataset)) {
-                this.error({
-                    componentName: 'VueUiXy',
-                    type: 'dataset'
-                })
-            } else {
-                this.dataset.forEach((ds, i) => {
-                    if([null, undefined].includes(ds.name)) {
-                        this.error({
-                            componentName: 'VueUiXy',
-                            type: 'datasetSerieAttribute',
-                            property: 'name (string)',
-                            index: i
-                        })
-                    }
-                })
-            }
-
-            if(this.FINAL_CONFIG.showWarnings) {
-                this.dataset.forEach((datapoint) => {
-                    datapoint.series.forEach((s, j) => {
-                        if(!this.isSafeValue(s)) {
-                            console.warn(`VueUiXy has detected an unsafe value in your dataset:\n-----> The serie '${datapoint.name}' contains the value '${s}' at index ${j}.\n'${s}' was converted to null to allow the chart to display.`)
-                        }
-                    });
-                });
-            }
-
-            this.showUserOptionsOnChartHover = this.FINAL_CONFIG.chart.userOptions.showOnChartHover;
-            this.keepUserOptionState = this.FINAL_CONFIG.chart.userOptions.keepStateOnChartLeave;
-            this.userOptionsVisible = !this.FINAL_CONFIG.chart.userOptions.showOnChartHover;
-
-            this.mutableConfig = {
-                dataLabels: {
-                    show: true,
-                },
-                showTooltip: this.FINAL_CONFIG.chart.tooltip.show === true,
-                showTable: this.FINAL_CONFIG.showTable === true,
-                isStacked: this.FINAL_CONFIG.chart.grid.labels.yAxis.stacked,
-                useIndividualScale: this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale
-            }
-
-            const additionalPad = this.isAutoSize ? 0 : 12;
-
-            if (this.FINAL_CONFIG.responsive) {
-                const chart = this.$refs.chart;
-                // Parent container (must have fixed height or max-height. Setting 100% will result in infinite height growth which looks aweful on top of being useless)
-                const parent = chart.parentNode;
-
-                if (this.resizeObserver) {
-                    this.resizeObserver.unobserve(this.observedEl);
-                    this.resizeObserver.disconnect();
-                }
-
-                const { height, width } = parent.getBoundingClientRect();
-
-                // Title height to substract
-                let title = null;
-                let titleHeight = 0;
-                if (this.FINAL_CONFIG.chart.title.show && this.$refs.chartTitle) {
-                    title = this.$refs.chartTitle;
-                    titleHeight = title.getBoundingClientRect().height;
-                }
-
-                // Slicer height to substract
-                let slicer = null;
-                let slicerHeight = 0;
-                if (this.FINAL_CONFIG.chart.zoom.show && this.maxX > 6 && this.isDataset && this.$refs.chartSlicer && this.$refs.chartSlicer.$el) {
-                    slicer = this.$refs.chartSlicer.$el;
-                    slicerHeight = slicer.getBoundingClientRect().height;
-                }
-
-                // Legend height to substract
-                let legend = null;
-                let legendHeight = 0
-                if (this.FINAL_CONFIG.chart.legend.show && this.$refs.chartLegend) {
-                    legend = this.$refs.chartLegend;
-                    legendHeight = legend.getBoundingClientRect().height;
-                }
-
-                // Source height to substract
-                let sourceHeight = 0;
-                if (this.$refs.source) {
-                    sourceHeight = this.$refs.source.getBoundingClientRect().height;
-                }
-
-                // NoTitle height to substract
-                let noTitleHeight = 0;
-                if (this.$refs.noTitle) {
-                    noTitleHeight = this.$refs.noTitle.getBoundingClientRect().height;
-                }
-
-                this.height = height 
-                    - titleHeight 
-                    - legendHeight 
-                    - slicerHeight 
-                    - sourceHeight 
-                    - noTitleHeight
-                    - additionalPad;
-
-                this.width = width;
-                if (this.isAutoSize) {
-                    this.setViewBox();
-                } else {
-                    this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
-                }
-                this.convertSizes();
-
-                const ro = new ResizeObserver((entries) => {
-                    for(const entry of entries) {
-                        if (this.FINAL_CONFIG.chart.title.show && this.$refs.chartTitle) {
-                            titleHeight = this.$refs.chartTitle.getBoundingClientRect().height;
-                        } else {
-                            titleHeight = 0;
-                        }
-                        if (this.$refs.chartSlicer && this.$refs.chartSlicer.$el) {
-                            slicerHeight = this.$refs.chartSlicer.$el.getBoundingClientRect().height;
-                        } else {
-                            slicerHeight = 0;
-                        }
-                        if (this.$refs.chartLegend) {
-                            legendHeight = this.$refs.chartLegend.getBoundingClientRect().height;
-                        } else {
-                            legendHeight = 0;
-                        }
-                        if (this.$refs.source) {
-                            sourceHeight = this.$refs.source.getBoundingClientRect().height;
-                        } else {
-                            sourceHeight = 0;
-                        }
-                        if (this.$refs.noTitle) {
-                            noTitleHeight = this.$refs.noTitle.getBoundingClientRect().height;
-                        } else {
-                            noTitleHeight = 0;
-                        }
-                        if (this.isAutoSize) {
-                            // Transitions hinder the first viewbox measurements
-                            this.$refs.chart.classList.add('no-transition');
-                        }
-                        requestAnimationFrame(() => {
-                            this.height = entry.contentRect.height
-                                - titleHeight 
-                                - legendHeight 
-                                - slicerHeight 
-                                - sourceHeight 
-                                - noTitleHeight
-                                - (this.isAutoSize ? 48 : additionalPad); // FIXME: this magic 48 should be understood
-
-                            if (this.isAutoSize) {
-                                this.remainingHeight = entry.contentRect.height - this.height;
-                                this.width = entry.contentBoxSize[0].inlineSize;
-                                this.svgAspectRatio = this.width / this.remainingHeight;
-                                this.setViewBox();
-                            } else {
-                                this.width = entry.contentBoxSize[0].inlineSize;
-                                this.viewBox = `0 0 ${this.width < 0 ? 10 : this.width} ${this.height < 0 ? 10 : this.height}`;
-                            }
-
-                            this.convertSizes();
-                        })
-                    }
-                })
-
-                this.resizeObserver = ro;
-                this.observedEl = parent;
-
-                ro.observe(parent);
-
-            } else {
-                this.height = this.FINAL_CONFIG.chart.height;
-                this.width = this.FINAL_CONFIG.chart.width;
-                this.fontSizes.dataLabels = this.FINAL_CONFIG.chart.grid.labels.fontSize;
-                this.fontSizes.yAxis = this.FINAL_CONFIG.chart.grid.labels.axis.fontSize;
-                this.fontSizes.xAxis =  this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize;
-                this.fontSizes.plotLabels = this.FINAL_CONFIG.chart.labels.fontSize;
-                this.plotRadii.plot = this.FINAL_CONFIG.plot.radius;
-                this.plotRadii.line = this.FINAL_CONFIG.line.radius;
-                if (this.isAutoSize) {
-                    this.setViewBox();
-                } else {
-                    this.viewBox = `0 0 ${this.width} ${this.height}`;
-                }
-            }
-        },
-        selectMinimapIndex(minimapIndex) {
-            this.selectedMinimapIndex = minimapIndex;
-        },
-        convertSizes() {
-            if (!this.FINAL_CONFIG.responsiveProportionalSizing) {
-                this.fontSizes.dataLabels = this.FINAL_CONFIG.chart.grid.labels.fontSize;
-                this.fontSizes.yAxis = this.FINAL_CONFIG.chart.grid.labels.axis.fontSize;
-                this.fontSizes.xAxis =  this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize;
-                this.fontSizes.plotLabels = this.FINAL_CONFIG.chart.labels.fontSize;
-                this.plotRadii.plot = this.FINAL_CONFIG.plot.radius;
-                this.plotRadii.line = this.FINAL_CONFIG.line.radius;
-                return;
-            }
-            // Adaptative sizes in responsive mode
-            this.fontSizes.dataLabels = this.translateSize({
-                relator: this.height,
-                adjuster: 400,
-                source: this.FINAL_CONFIG.chart.grid.labels.fontSize,
-                threshold: 10,
-                fallback: 10
-            });
-            this.fontSizes.yAxis = this.translateSize({
-                relator: this.width,
-                adjuster: 1000,
-                source: this.FINAL_CONFIG.chart.grid.labels.axis.fontSize,
-                threshold: 10,
-                fallback: 10
-            });
-            this.fontSizes.xAxis = this.translateSize({
-                relator: this.width,
-                adjuster: 1000,
-                source: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.fontSize,
-                threshold: 10,
-                fallback: 10
-            });
-            this.fontSizes.plotLabels = this.translateSize({
-                relator: this.width,
-                adjuster: 800,
-                source: this.FINAL_CONFIG.chart.labels.fontSize,
-                threshold: 10,
-                fallback: 10
-            });
-            this.plotRadii.plot = this.translateSize({
-                relator: this.width,
-                adjuster: 800,
-                source: this.FINAL_CONFIG.plot.radius,
-                threshold: 1,
-                fallback: 1
-            });
-            this.plotRadii.line = this.translateSize({
-                relator: this.width,
-                adjuster: 800,
-                source: this.FINAL_CONFIG.line.radius,
-                threshold: 1,
-                fallback: 1
-            })
-        },
-        toggleStack() {
-            this.mutableConfig.isStacked = !this.mutableConfig.isStacked
-            if (!this.mutableConfig.isStacked) {
-                this.mutableConfig.useIndividualScale = this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale;
-            } else {
-                this.mutableConfig.useIndividualScale = true
-            }
-        },
-        toggleTable() {
-            this.mutableConfig.showTable = !this.mutableConfig.showTable;
-        },
-        toggleLabels() {
-            this.mutableConfig.dataLabels.show = !this.mutableConfig.dataLabels.show;
-        },
-        toggleTooltip() {
-            this.mutableConfig.showTooltip = !this.mutableConfig.showTooltip;
-        },
-        checkAutoScaleError(datapoint) {
-            if (datapoint.autoScaling) {
-                if (!this.FINAL_CONFIG.chart.grid.labels.yAxis.useIndividualScale) {
-                    console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.useIndividualScale is set to true`)
-                }
-                if (!this.FINAL_CONFIG.chart.grid.labels.yAxis.stacked) {
-                    console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.stacked is set to true`)
-                }
-            }
-        },
-        createArea(plots, zero) {
-            if(!plots[0]) return [-10,-10, '', -10, -10];
-            const start = { x: plots[0].x, y: zero };
-            const end = { x: plots.at(-1).x, y: zero };
-            const path = [];
-            plots.forEach(plot => {
-                path.push(`${plot.x},${plot.y} `);
-            });
-            return [ start.x, start.y, ...path, end.x, end.y].toString();
-        },
-        createStar,
-        createPolygonPath,
-        fillArray(len, source) {
-            let res = Array(len).fill(0);
-            for (let i = 0; i  < source.length && i < len; i += 1) {
-                res[i] = source[i];
-            }
-            return res;
-        },
-        async setupSlicer() {
-            if ((this.FINAL_CONFIG.chart.zoom.startIndex !== null || this.FINAL_CONFIG.chart.zoom.endIndex !== null) && this.$refs.chartSlicer) {
-                if (this.FINAL_CONFIG.chart.zoom.startIndex !== null) {
-                    await this.$nextTick();
-                    await this.$nextTick();
-                    this.$refs.chartSlicer.setStartValue(this.FINAL_CONFIG.chart.zoom.startIndex);
-                }
-                if (this.FINAL_CONFIG.chart.zoom.endIndex !== null) {
-                    await this.$nextTick();
-                    await this.$nextTick();
-                    this.$refs.chartSlicer.setEndValue(this.validSlicerEnd(this.FINAL_CONFIG.chart.zoom.endIndex + 1));
-                }
-            } else {
-                this.slicer = {
-                    start: 0,
-                    end: Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data:datapoint.series, threshold: this.FINAL_CONFIG.downsample.threshold}).length))
-                };
-                this.slicerStep += 1;
-            }
-        },
-        refreshSlicer() {
-            this.setupSlicer();
-        },
-        validSlicerEnd(v) {
-            const max = Math.max(...this.dataset.map(datapoint => this.largestTriangleThreeBucketsArray({data:datapoint.series, threshold: this.FINAL_CONFIG.downsample.threshold}).length));
-            if (v > max) {
-                return max;
-            }
-            if (v < 0 || (this.FINAL_CONFIG.chart.zoom.startIndex !== null && v < this.FINAL_CONFIG.chart.zoom.startIndex)) {
-                if (this.FINAL_CONFIG.chart.zoom.startIndex !== null) {
-                    return this.FINAL_CONFIG.chart.zoom.startIndex + 1
-                } else {
-                    return 1
-                }
-            }
-            return v
-        },
-        calcRectHeight(plot) {
-            const zeroForPositiveValuesOnly = ![null, undefined].includes(this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin) && this.FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin > 0 && this.min >= 0 ? this.drawingArea.bottom : this.zero;
-
-            if(plot.value >= 0) {
-                return this.checkNaN(zeroForPositiveValuesOnly - plot.y <= 0 ? 0.00001 : zeroForPositiveValuesOnly - plot.y);
-            } else {
-                return this.checkNaN(plot.y - this.zero <= 0 ? 0.00001 : plot.y - this.zero);
-            }
-        },
-        calcIndividualHeight(plot) {
-            if(plot.value >= 0) {
-                return this.checkNaN(plot.zeroPosition - plot.y <= 0 ? 0.00001 : plot.zeroPosition - plot.y)
-            } else {
-                return this.checkNaN(plot.y - plot.zeroPosition <= 0 ? 0.00001 : plot.zeroPosition - plot.y)
-            }
-        },
-        calcRectWidth() {
-            if(this.mutableConfig.useIndividualScale && this.mutableConfig.isStacked) {
-                return this.slot.line - ((this.drawingArea.width / this.maxSeries) * 0.1);
-            }
-            return this.slot.bar;
-        },
-        calcRectX(plot) {
-            if (this.mutableConfig.useIndividualScale && this.mutableConfig.isStacked) {
-                return plot.x + ((this.drawingArea.width / this.maxSeries) * 0.05)
-            }
-            return plot.x + (this.slot.bar / 2);
-        },
-        calcRectY(plot) {
-            if(plot.value >= 0) return plot.y;
-            return [null, undefined, NaN, Infinity, -Infinity].includes(this.zero) ? this.drawingArea.bottom : this.zero;
-        },
-        calcIndividualRectY(plot) {
-            if(plot.value >= 0) return plot.y;
-            return [null, undefined, NaN, Infinity, -Infinity].includes(plot.zeroPosition) ? 0 : plot.zeroPosition;
-        },  
-        canShowValue(value) {
-            return ![null, undefined, NaN, Infinity, -Infinity].includes(value);
-        },
-        findClosestValue(val, arr) {
-            let closest = arr[0];
-            let minDifference = Math.abs(val - arr[0]);
-            for (let i = 1; i < arr.length; i += 1) {
-                const difference = Math.abs(val - arr[i]);
-                if (difference < minDifference && arr[i] < val) {
-                    closest = arr[i];
-                    minDifference = difference;
-                }
-            }
-            return closest;
-        },
-        ratioToMax(value) {
-            return value / (this.canShowValue(this.absoluteMax) ? this.absoluteMax : 1);
-        },
-        selectX(index) {
-            this.$emit('selectX', 
-                {
-                    dataset: this.relativeDataset.map(s => {
-                        return {
-                            name: s.name,
-                            value: [null, undefined, NaN].includes(s.absoluteValues[index]) ? null : s.absoluteValues[index],
-                            color: s.color,
-                            type: s.type
-                        }
-                    }),
-                    index,
-                    indexLabel: this.FINAL_CONFIG.chart.grid.labels.xAxisLabels.values[index]
-                }
-            );
-        },
-        getData(){
-            return this.absoluteDataset.map(s => {
-                return {
-                    values: s.absoluteValues,
-                    color: s.color,
-                    name: s.name,
-                    type: s.type
-                }
-            });
-        },
-        async getImage({ scale = 2} = {}) {
-            if (!this.$refs.chart) return
-            const { width, height } = this.$refs.chart.getBoundingClientRect();
-            const aspectRatio = width / height;
-            const { imageUri, base64 } = await img({ domElement: this.$refs.chart, base64: true, img: true, scale})
-            return { 
-                imageUri, 
-                base64, 
-                title: this.FINAL_CONFIG.chart.title.text,
-                width,
-                height,
-                aspectRatio
-            }
-        },
-        segregate(legendItem){
-            if(this.segregatedSeries.includes(legendItem.id)) {
-                this.segregatedSeries = this.segregatedSeries.filter(id => id !== legendItem.id);
-            }else {
-                if(this.segregatedSeries.length + 1 === this.safeDataset.length) return;
-                this.segregatedSeries.push(legendItem.id);
-            }
-            this.$emit('selectLegend', this.relativeDataset.map(s => {
-                return {
-                    name: s.name,
-                    values: s.absoluteValues,
-                    color: s.color,
-                    type: s.type
-                }
-            }));
-            this.segregateStep += 1;
-        },
-        toggleTooltipVisibility(show, selectedIndex = null) {
-            this.isTooltip = show;
-            if(show) {
-                this.selectedSerieIndex = selectedIndex;
-            }else{
-                this.selectedSerieIndex = null;
-            }
-        },
-        toggleFullscreen(state) {
-            this.isFullscreen = state;
-            this.step += 1;
-        },
-        showSpinnerPdf() {
-            this.isPrinting = true;
-        },
-        async generatePdf() {
-            this.showSpinnerPdf();
-            clearTimeout(this.__to__);
-            this.isPrinting = true; // Set isPrinting to true before starting
-
-            this.__to__ = setTimeout(async () => {
-            try {
-                const { default: pdf } = await import('../pdf.js');
-                await pdf({
-                    domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
-                    fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy',
-                    options: this.FINAL_CONFIG.chart.userOptions.print
-                });
-                } catch (error) {
-                    console.error('Error generating PDF:', error);
-                } finally {
-                    this.isPrinting = false;
-                }
-            }, 100);
-        },
-        generateCsv(callback=null) {
-            const title = [[this.FINAL_CONFIG.chart.title.text], [this.FINAL_CONFIG.chart.title.subtitle.text], [""]];
-            const head = ["",...this.table.head.map(h => h.label)]
-            const body = this.table.body
-            const table = title.concat([head]).concat(body);
-            const csvContent = this.createCsvContent(table);
-            if(!callback) {
-                this.downloadCsv({ csvContent, title: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy'});
-            } else {
-                callback(csvContent);
-            }
-            
-        },
-        showSpinnerImage() {
-            this.isImaging = true;
-        },
-        async generateImage() {
-            this.showSpinnerImage();
-            clearTimeout(this.__to__);
-            this.isImaging = true;
-            this.__to__ = setTimeout(async () => {
-            try {
-                    const { default: img } = await import('../img.js');
-                    await img({
-                        domElement: document.getElementById(`vue-ui-xy_${this.uniqueId}`),
-                        fileName: this.FINAL_CONFIG.chart.title.text || 'vue-ui-xy',
-                        format: 'png',
-                        options: this.FINAL_CONFIG.chart.userOptions.print
-                    });
-                } catch (error) {
-                    console.error('Error generating image:', error);
-                } finally {
-                    this.isImaging = false;
-                }
-            }, 100);
-        },
+function generateCsv(callback=null) {
+    const title = [[FINAL_CONFIG.value.chart.title.text], [FINAL_CONFIG.value.chart.title.subtitle.text], [""]];
+    const head = ["",...table.value.head.map(h => h.label)]
+    const body = table.value.body
+    const table = title.concat([head]).concat(body);
+    const csvContent = createCsvContent(table);
+    if(!callback) {
+        downloadCsv({ csvContent, title: FINAL_CONFIG.value.chart.title.text || 'vue-ui-xy'});
+    } else {
+        callback(csvContent);
     }
 }
+
+function toggleTooltipVisibility(show, selectedIndex = null) {
+    isTooltip.value = show;
+    if(show) {
+        selectedSerieIndex.value = selectedIndex;
+    }else{
+        selectedSerieIndex.value = null;
+    }
+}
+
+function showSpinnerPdf() {
+    isPrinting.value = true;
+}
+
+function showSpinnerImage() {
+    isImaging.value = true;
+}
+
+function toggleTable() {
+    mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function toggleLabels() {
+    mutableConfig.value.dataLabels.show = !mutableConfig.value.dataLabels.show;
+}
+
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
+}
+
+function toggleFullscreen(state) {
+    isFullscreen.value = state;
+    step.value += 1;
+}
+
+function convertSizes() {
+    if (!FINAL_CONFIG.value.responsiveProportionalSizing) {
+        fontSizes.value.dataLabels = FINAL_CONFIG.value.chart.grid.labels.fontSize;
+        fontSizes.value.yAxis = FINAL_CONFIG.value.chart.grid.labels.axis.fontSize;
+        fontSizes.value.xAxis =  FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.fontSize;
+        fontSizes.value.plotLabels = FINAL_CONFIG.value.chart.labels.fontSize;
+        plotRadii.value.plot = FINAL_CONFIG.value.plot.radius;
+        plotRadii.value.line = FINAL_CONFIG.value.line.radius;
+        return;
+    }
+    // Adaptative sizes in responsive mode
+    fontSizes.value.dataLabels = translateSize({
+        relator: height.value,
+        adjuster: 400,
+        source: FINAL_CONFIG.value.chart.grid.labels.fontSize,
+        threshold: 10,
+        fallback: 10
+    });
+    fontSizes.value.yAxis = translateSize({
+        relator: width.value,
+        adjuster: 1000,
+        source: FINAL_CONFIG.value.chart.grid.labels.axis.fontSize,
+        threshold: 10,
+        fallback: 10
+    });
+    fontSizes.value.xAxis = translateSize({
+        relator: width.value,
+        adjuster: 1000,
+        source: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.fontSize,
+        threshold: 10,
+        fallback: 10
+    });
+    fontSizes.value.plotLabels = translateSize({
+        relator: width.value,
+        adjuster: 800,
+        source: FINAL_CONFIG.value.chart.labels.fontSize,
+        threshold: 10,
+        fallback: 10
+    });
+    plotRadii.value.plot = translateSize({
+        relator: width.value,
+        adjuster: 800,
+        source: FINAL_CONFIG.value.plot.radius,
+        threshold: 1,
+        fallback: 1
+    });
+    plotRadii.value.line = translateSize({
+        relator: width.value,
+        adjuster: 800,
+        source: FINAL_CONFIG.value.line.radius,
+        threshold: 1,
+        fallback: 1
+    })
+}
+
+function prepareChart() {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiXy',
+            type: 'dataset'
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            if([null, undefined].includes(ds.name)) {
+                error({
+                    componentName: 'VueUiXy',
+                    type: 'datasetSerieAttribute',
+                    property: 'name (string)',
+                    index: i
+                })
+            }
+        })
+    }
+
+    if(FINAL_CONFIG.value.showWarnings) {
+        props.dataset.forEach((datapoint) => {
+            datapoint.series.forEach((s, j) => {
+                if(!isSafeValue(s)) {
+                    console.warn(`VueUiXy has detected an unsafe value in your dataset:\n-----> The serie '${datapoint.name}' contains the value '${s}' at index ${j}.\n'${s}' was converted to null to allow the chart to display.`)
+                }
+            });
+        });
+    }
+
+    showUserOptionsOnChartHover.value = FINAL_CONFIG.value.chart.userOptions.showOnChartHover;
+    keepUserOptionState.value = FINAL_CONFIG.value.chart.userOptions.keepStateOnChartLeave;
+    userOptionsVisible.value = !FINAL_CONFIG.value.chart.userOptions.showOnChartHover;
+
+    mutableConfig.value = {
+        dataLabels: {
+            show: true,
+        },
+        showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
+        showTable: FINAL_CONFIG.value.showTable === true,
+        isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
+        useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
+    }
+
+    const additionalPad = isAutoSize.value ? 0 : 12;
+
+    if (FINAL_CONFIG.value.responsive) {
+        const _chart = chart.value;
+        // Parent container (must have fixed height or max-height. Setting 100% will result in infinite height growth which looks aweful on top of being useless)
+        const parent = _chart.parentNode;
+
+        if (resizeObserver.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+            resizeObserver.value.disconnect();
+        }
+
+        const { height: _height, width: _width } = parent.getBoundingClientRect();
+
+        // Title height to substract
+        let title = null;
+        let titleHeight = 0;
+        if (FINAL_CONFIG.value.chart.title.show && chartTitle.value) {
+            title = chartTitle.value;
+            titleHeight = title.getBoundingClientRect().height;
+        }
+
+        // Slicer height to substract
+        let slicer = null;
+        let slicerHeight = 0;
+        if (FINAL_CONFIG.value.chart.zoom.show && maxX.value > 6 && isDataset.value && chartSlicer.value && chartSlicer.value.$el) {
+            slicer = chartSlicer.value.$el;
+            slicerHeight = slicer.getBoundingClientRect().height;
+        }
+
+        // Legend height to substract
+        let legend = null;
+        let legendHeight = 0
+        if (FINAL_CONFIG.value.chart.legend.show && chartLegend.value) {
+            legend = chartLegend.value;
+            legendHeight = legend.getBoundingClientRect().height;
+        }
+
+        // Source height to substract
+        let sourceHeight = 0;
+        if (source.value) {
+            sourceHeight = source.value.getBoundingClientRect().height;
+        }
+
+        // NoTitle height to substract
+        let noTitleHeight = 0;
+        if (noTitle.value) {
+            noTitleHeight = noTitle.value.getBoundingClientRect().height;
+        }
+
+        height.value = _height
+            - titleHeight 
+            - legendHeight 
+            - slicerHeight 
+            - sourceHeight 
+            - noTitleHeight
+            - additionalPad;
+
+        width.value = _width;
+        if (isAutoSize.value) {
+            setViewBox();
+        } else {
+            viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
+        }
+        convertSizes();
+
+        const ro = new ResizeObserver((entries) => {
+            for(const entry of entries) {
+                if (FINAL_CONFIG.value.chart.title.show && chartTitle.value) {
+                    titleHeight = chartTitle.value.getBoundingClientRect().height;
+                } else {
+                    titleHeight = 0;
+                }
+                if (chartSlicer.value && chartSlicer.value.$el) {
+                    slicerHeight = chartSlicer.value.$el.getBoundingClientRect().height;
+                } else {
+                    slicerHeight = 0;
+                }
+                if (chartLegend.value) {
+                    legendHeight = chartLegend.value.getBoundingClientRect().height;
+                } else {
+                    legendHeight = 0;
+                }
+                if (source.value) {
+                    sourceHeight = source.value.getBoundingClientRect().height;
+                } else {
+                    sourceHeight = 0;
+                }
+                if (noTitle.value) {
+                    noTitleHeight = noTitle.value.getBoundingClientRect().height;
+                } else {
+                    noTitleHeight = 0;
+                }
+                if (isAutoSize.value) {
+                    // Transitions hinder the first viewbox measurements
+                    chart.value.classList.add('no-transition');
+                }
+                requestAnimationFrame(() => {
+                    height.value = entry.contentRect.height
+                        - titleHeight 
+                        - legendHeight 
+                        - slicerHeight 
+                        - sourceHeight 
+                        - noTitleHeight
+                        - (isAutoSize.value ? 48 : additionalPad); // FIXME: this magic 48 should be understood
+
+                    if (isAutoSize.value) {
+                        remainingHeight.value = entry.contentRect.height - height.value;
+                        width.value = entry.contentBoxSize[0].inlineSize;
+                        svgAspectRatio.value = width.value / remainingHeight.value;
+                        setViewBox();
+                    } else {
+                        width.value = entry.contentBoxSize[0].inlineSize;
+                        viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
+                    }
+
+                    convertSizes();
+                })
+            }
+        })
+
+        resizeObserver.value = ro;
+        observedEl.value = parent;
+
+        ro.observe(parent);
+
+    } else {
+        height.value = FINAL_CONFIG.value.chart.height;
+        width.value = FINAL_CONFIG.value.chart.width;
+        fontSizes.value.dataLabels = FINAL_CONFIG.value.chart.grid.labels.fontSize;
+        fontSizes.value.yAxis = FINAL_CONFIG.value.chart.grid.labels.axis.fontSize;
+        fontSizes.value.xAxis =  FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.fontSize;
+        fontSizes.value.plotLabels = FINAL_CONFIG.value.chart.labels.fontSize;
+        plotRadii.value.plot = FINAL_CONFIG.value.plot.radius;
+        plotRadii.value.line = FINAL_CONFIG.value.line.radius;
+        if (isAutoSize.value) {
+            setViewBox();
+        } else {
+            viewBox.value = `0 0 ${width.value} ${height.value}`;
+        }
+    }
+}
+
+onMounted(() => {
+    prepareChart();
+    setupSlicer();
+    document.addEventListener("mousemove", (e) => {
+        clientPosition.value = {
+            x: e.clientX,
+            y: e.clientY
+        }
+    });
+    document.addEventListener('scroll', hideTags);
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('scroll', hideTags);
+    if (resizeObserver.value) {
+        resizeObserver.value.unobserve(observedEl.value);
+        resizeObserver.value.disconnect();
+    }
+});
+
+watch(() => mutableConfig.value.isStacked, async () => {
+    if (!isAutoSize.value) return;
+    await nextTick();
+    setViewBox();
+    forceResizeObserver();
+});
+
+watch(() => props.dataset, (_) => {
+    maxX.value = Math.max(...props.dataset.map(datapoint => largestTriangleThreeBucketsArray({
+            data: datapoint.series,
+            threshold: FINAL_CONFIG.value.downsample.threshold
+        }).length));
+        slicer.value = {
+            start: 0,
+            end: maxX.value
+        }
+        slicerStep.value += 1;
+        segregateStep.value += 1;
+}, { deep: true });
+
+watch(() => props.config, (_) => {
+    FINAL_CONFIG.value = prepareConfig();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+
+    // Reset mutable config
+    mutableConfig.value = {
+        dataLabels: {
+            show: true,
+        },
+        showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
+        showTable: FINAL_CONFIG.value.showTable === true,
+        isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
+        useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
+    }
+}, { deep: true });
+
+defineExpose({
+    getData,
+    getImage,
+    generatePdf,
+    generateImage,
+    generateCsv,
+    toggleStack,
+    toggleTable,
+    toggleLabels,
+    toggleTooltip,
+    toggleAnnotator,
+    toggleFullscreen
+});
 </script>
 
 <style scoped lang="scss">
