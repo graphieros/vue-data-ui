@@ -3299,6 +3299,11 @@ declare module "vue-data-ui" {
         customPalette?: string[];
         useBlurOnHover?: boolean;
         useCssAnimation?: boolean;
+        events?: {
+            datapointEnter?: null | ((data: any) => void),
+            datapointLeave?: null | ((data: any) => void),
+            datapointClick?: null | ((data: any) => void)
+        },
         serieToggleAnimation?: {
             show?: boolean;
             durationMs?: number;
@@ -4698,6 +4703,11 @@ declare module "vue-data-ui" {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        events?: {
+            datapointEnter?: null | ((data: any) => void),
+            datapointLeave?: null | ((data: any) => void),
+            datapointClick?: null | ((data: any) => void)
+        },
         style?: {
             fontFamily?: string;
             chart?: {

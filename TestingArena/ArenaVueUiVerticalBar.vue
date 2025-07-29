@@ -245,6 +245,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointClick: (c) => {
+                    console.log({c})
+                },
+                datapointEnter: (e) => {
+                    console.log({e})
+                },
+                datapointLeave: (l) => {
+                    console.log({l})
+                }
+            },
             style: {
                 ...c.style,
                 chart: {
