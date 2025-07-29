@@ -419,6 +419,7 @@ export function useConfig() {
         theme: '',
         responsive: false,
         autoSize: true, // false = v2
+        loading: false, // v3
         responsiveProportionalSizing: true,
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)

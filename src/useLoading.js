@@ -27,5 +27,5 @@ export function useLoading({
         FINAL_CONFIG.value = loading.value ? skeletonConfig : prepareConfig();
     });
 
-    return { loading, FINAL_DATASET, manualLoading, skeletonDataset };
+    return { loading, FINAL_DATASET, manualLoading, skeletonDataset, skeletonConfig };
 }

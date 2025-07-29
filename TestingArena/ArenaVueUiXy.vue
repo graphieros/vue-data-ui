@@ -121,6 +121,7 @@ const dataset = ref([
         series: [null, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, null],
         type: "line",
         dataLabels: false,
+        shape: 'square'
     },
     {
         name: "C",
@@ -458,7 +459,7 @@ const model = ref([
 
     { key: 'chart.grid.labels.yAxis.position', def: 'right', type: 'select', options: ['left', 'right'] },
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 10, min: 0, max: 100, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
+    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 24, min: 0, max: 200, type: 'number' },
     { key: 'chart.grid.labels.yAxis.labelWidth', def: 48, min: 0, max: 100, type: 'number' },
@@ -768,17 +769,17 @@ const config = computed(() => {
                 },
                 userOptions: {
                     ...c.chart.userOptions,
-                    callbacks: {
-                        img: ({ domElement, imageUri, base64}) => {
-                            console.log(imageUri)
-                        },
-                        csv: (xls) => {
-                            console.log(xls)
-                        },
-                        pdf: ({ domElement, imageUri, base64}) => {
-                            console.log(imageUri)
-                        }
-                    },
+                    // callbacks: {
+                    //     img: ({ domElement, imageUri, base64}) => {
+                    //         console.log(imageUri)
+                    //     },
+                    //     csv: (xls) => {
+                    //         console.log(xls)
+                    //     },
+                    //     pdf: ({ domElement, imageUri, base64}) => {
+                    //         console.log(imageUri)
+                    //     }
+                    // },
                     print: {
                         ...c.chart.userOptions.print,
                         // onclone: (doc) => {
