@@ -841,7 +841,9 @@ export function useConfig() {
                         useShadow: false,
                         shadowColor: COLOR_BLACK,
                         emptyFill: COLOR_GREY_LIGHT,
-                        selectedColor: '#0000001A'
+                        selectedColor: '#0000001A',
+                        borderColorAuto: true,
+                        borderColor: '#CCCCCC'
                     }
                 },
                 comments: {
@@ -3309,7 +3311,10 @@ export function useConfig() {
                         spacingRatio: 0.5,
                         useShadow: false,
                         shadowColor: COLOR_BLACK,
-                        emptyFill: COLOR_GREY_LIGHT
+                        emptyFill: COLOR_GREY_LIGHT,
+                        selectedColor: '#0000001A',
+                        borderColorAuto: true,
+                        borderColor: '#CCCCCC'
                     }
                 },
                 legend: {
