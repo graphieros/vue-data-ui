@@ -1958,7 +1958,14 @@ function prepareConfig() {
     }
 }
 
-const isDataset = computed(() => !!props.dataset && props.dataset.length);
+const isDataset = computed({
+    get() {
+        return !!props.dataset && props.dataset.length;
+    },
+    set(bool) {
+        return bool;
+    }
+});
 
 const FINAL_CONFIG = computed({
     get: () => {
