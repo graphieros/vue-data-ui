@@ -37,7 +37,7 @@
         <UserOptions
             ref="defails"
             :key="`user_options_${step}`"
-            v-if="FINAL_CONFIG.chart.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
+            v-if="FINAL_CONFIG.chart.userOptions.show && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.chart.backgroundColor"
             :color="FINAL_CONFIG.chart.color"
             :isPrinting="isPrinting"
@@ -108,8 +108,7 @@
         
         <svg  
             ref="svgRef"
-            xmlns="http://www.w3.org/2000/svg" 
-            v-if="isDataset" 
+            xmlns="http://www.w3.org/2000/svg"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
             data-cy="xy-svg" 
             :width="isAutoSize ? undefined : '100%'" 
@@ -358,6 +357,7 @@
                                     :fill="FINAL_CONFIG.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})`: `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                                     :stroke="FINAL_CONFIG.bar.border.useSerieColor ? serie.color : FINAL_CONFIG.bar.border.stroke"
                                     :stroke-width="FINAL_CONFIG.bar.border.strokeWidth"
+                                    :style="`${loading ? 'transition:none !important' : ''}`"
                                 />
                                 <rect
                                     data-cy="datapoint-bar"
@@ -1510,25 +1510,6 @@
             </template>
         </template>
 
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'line',
-                style: {
-                    backgroundColor: FINAL_CONFIG.chart.backgroundColor,
-                    line: {
-                        axis: {
-                            color: FINAL_CONFIG.chart.grid.stroke,
-                        },
-                        path: {
-                            color: FINAL_CONFIG.chart.grid.stroke,
-                            strokeWidth: 0.5
-                        }
-                    }
-                }
-            }"
-        />
-
         <Slicer
             ref="chartSlicer"
             v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
@@ -1679,6 +1660,9 @@
                 </div>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading"/>
     </div>
 </template>
 
@@ -1722,18 +1706,21 @@ import {
     createStraightPathWithCuts,
     createIndividualAreaWithCuts,
     createSmoothAreaSegments,
-    createIndividualArea
+    createIndividualArea,
+    treeShake
 } from '../lib';
 import themes from "../themes.json";
 import { useConfig } from '../useConfig';
 import { useNestedProp } from '../useNestedProp';
 import { useTimeLabels } from '../useTimeLabels.js';
-import { computed, defineAsyncComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, useSlots, watch } from 'vue';
+import { computed, defineAsyncComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, toRefs, useSlots, watch } from 'vue';
 import Slicer from '../atoms/Slicer.vue';
 import Title from '../atoms/Title.vue';
 import Shape from '../atoms/Shape.vue';
 import img from '../img.js';
 import { usePrinter } from '../usePrinter.js';
+import { useLoading } from '../useLoading.js';
+import BaseScanner from '../atoms/BaseScanner.vue';
 
 const props = defineProps({
     config: {
@@ -1755,7 +1742,6 @@ const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const TableSparkline = defineAsyncComponent(() => import('./vue-ui-table-sparkline.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
@@ -1815,16 +1801,7 @@ const svg = computed(() => {
     }
 });
 
-const lttbThreshold = props.config.downsample ? props.config.downsample.threshold ? props.config.downsample.threshold : 500 : 500
-
-const maxX = computed({
-    get: () => {
-        return Math.max(...props.dataset.map(datapoint => largestTriangleThreeBucketsArray({data: datapoint.series, threshold: lttbThreshold}).length));
-    },
-    set: (v) => v
-});
-
-const slicer = ref({ start: 0, end: maxX.value });
+const lttbThreshold = props.config.downsample ? props.config.downsample.threshold ? props.config.downsample.threshold : 500 : 500;
 
 const mutableConfig = ref({
     dataLabels: { show: true },
@@ -1967,22 +1944,109 @@ const isDataset = computed({
     }
 });
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await setupSlicer();
+            if (FINAL_CONFIG.value.autoSize) {
+                setViewBox();
+                forceResizeObserver();
+            }
+        })
     },
-    set: (newCfg) => {
-        return newCfg;
-    },
+    skeletonDataset: [
+        {
+            name: '',
+            series: [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 134],
+            type: 'line',
+            smooth: true,
+            color: '#BABABA'
+        },
+        {
+            name: '',
+            series: [0, 0.5, 1, 1.5, 2.5, 4, 6.5, 10.5, 17, 27.5, 44.5, 67],
+            type: 'bar',
+            color: '#CACACA'
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            autoSize: false,
+            useCssAnimation: false,
+            showTable: false,
+            chart: {
+                annotations: [],
+                highlightArea: [],
+                backgroundColor: '#999999',
+                grid: {
+                    stroke: '#6A6A6A',
+                    labels: { 
+                        show: false,
+                            axis: {
+                            yLabel: '',
+                            xLabel: ''
+                        },
+                        xAxisLabels: { show: false },
+                        yAxis: {
+                            commonScaleSteps: 10,
+                            useNiceScale: true,
+                            stacked: false,
+                            scaleMin: 0,
+                            scaleMax: 134
+                        },
+                        zeroLine: { show: true }
+                    },
+                },
+                legend: {show: false },
+                padding: {
+                    top:12,
+                    bottom: 24,
+                    left: 24,
+                    right: 24
+                },
+                userOptions: { show: false },
+                zoom: { show: false }
+            },
+            bar: {
+                serieName: { show: false },
+                labels: { show: false },
+                border: {
+                    useSerieColor: false,
+                    stroke: '#999999'
+                }
+            },
+            line: {
+                dot: {
+                    useSerieColor: false,
+                    fill: '#8A8A8A'
+                },
+                labels: { show: false }
+            }
+        }
+    })
 });
+
+const maxX = computed({
+    get: () => {
+        return Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({data: datapoint.series, threshold: lttbThreshold}).length));
+    },
+    set: (v) => v
+});
+
+const slicer = ref({ start: 0, end: maxX.value });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-xy_${uniqueId.value}`,
     fileName: FINAL_CONFIG.value.chart.title.text || 'vue-ui-xy',
     options: FINAL_CONFIG.value.chart.userOptions.print
 });
-
-
 
 const isAutoSize = computed(() => FINAL_CONFIG.value.autoSize);
 const viewBoxParts = computed(() => {
@@ -2024,9 +2088,9 @@ const relativeZero = computed(() => {
 });
 
 const safeDataset = computed(() => {
-    if(!useSafeValues.value) return props.dataset;
+    if(!useSafeValues.value) return FINAL_DATASET.value;
 
-    return props.dataset.map((datapoint, i) => {
+    return FINAL_DATASET.value.map((datapoint, i) => {
         const LTTD = largestTriangleThreeBucketsArray({
             data: datapoint.series,
             threshold: FINAL_CONFIG.value.downsample.threshold
@@ -2127,7 +2191,7 @@ function toggleAnnotator() {
 }
 
 const timeLabels = computed(() => {
-    const _max = Math.max(...props.dataset.map(datapoint => largestTriangleThreeBucketsArray({data:datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold}).length));
+    const _max = Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({data:datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold}).length));
 
     return useTimeLabels({
         values: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values,
@@ -2159,15 +2223,6 @@ function selectTimeLabel(label, relativeIndex) {
 }
 
 const maxSeries = computed(() => slicer.value.end - slicer.value.start);
-
-function getHighlightAreaPosition(area) {
-    const x = drawingArea.value.left + (drawingArea.value.width / maxSeries.value) * (area.from - slicer.value.start);
-    const _width = (drawingArea.value.width / (slicer.value.end - slicer.value.start)) * area.span < 0 ? 0.00001 : (drawingArea.value.width / (slicer.value.end - slicer.value.start)) * area.span
-    return {
-        x: x < drawingArea.value.left ? drawingArea.value.left : x,
-        width: _width
-    }
-}
 
 async function setXAxisLabel() {
     if (!xAxisLabel.value) return;
@@ -2237,17 +2292,6 @@ function checkAutoScaleError(datapoint) {
     }
 }
 
-function createArea(_plots, _zero) {
-    if(!_plots[0]) return [-10,-10, '', -10, -10];
-    const start = { x: _plots[0].x, y: _zero };
-    const end = { x: _plots.at(-1).x, y: _zero };
-    const path = [];
-    _plots.forEach(plot => {
-        path.push(`${plot.x},${plot.y} `);
-    });
-    return [ start.x, start.y, ...path, end.x, end.y].toString();
-}
-
 function fillArray(len, src) {
     let res = Array(len).fill(0);
     for (let i = 0; i  < src.length && i < len; i += 1) {
@@ -2286,7 +2330,7 @@ async function setupSlicer() {
     } else {
         slicer.value = {
             start: 0,
-            end: Math.max(...props.dataset.map(datapoint => largestTriangleThreeBucketsArray({ data:datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold}).length))
+            end: Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({ data:datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold}).length))
         };
         slicerStep.value += 1;
     }
@@ -2364,19 +2408,6 @@ function calcIndividualRectY(plot) {
     return [null, undefined, NaN, Infinity, -Infinity].includes(plot.zeroPosition) ? 0 : plot.zeroPosition;
 }
 
-function findClosestValue(val, arr) {
-    let closest = arr[0];
-    let minDifference = Math.abs(val - arr[0]);
-    for (let i = 1; i < arr.length; i += 1) {
-        const difference = Math.abs(val - arr[i]);
-        if (difference < minDifference && arr[i] < val) {
-            closest = arr[i];
-            minDifference = difference;
-        }
-    }
-    return closest;
-}
-
 function selectX(index) {
     emit('selectX', 
         {
@@ -2438,10 +2469,6 @@ function segregate(legendItem){
     segregateStep.value += 1;
 }
 
-const locale = computed(() => {
-    return FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.formatter.locale
-});
-
 const chartAriaLabel = computed(() => {
     const titleText = FINAL_CONFIG.value.chart.title.text || 'Chart visualization';
     const subtitleText = FINAL_CONFIG.value.chart.title.subtitle.text || '';
@@ -2458,16 +2485,6 @@ const hasOptionsNoTitle = computed(() => {
     return FINAL_CONFIG.value.chart.userOptions.show && (!FINAL_CONFIG.value.chart.title.show || !FINAL_CONFIG.value.chart.title.text);
 });
 
-const backgroundColor = computed(() => FINAL_CONFIG.value.chart.backgroundColor);
-const slicerColor = computed(() => FINAL_CONFIG.value.chart.zoom.color);
-
-const hasHighlightArea = computed(() => {
-    if (Array.isArray(FINAL_CONFIG.value.chart.highlightArea)) {
-        return FINAL_CONFIG.value.chart.highlightArea.some(area => area.show)
-    }
-    return FINAL_CONFIG.value.chart.highlightArea && FINAL_CONFIG.value.chart.highlightArea.show;
-});
-
 const highlightAreas = computed(() => {
     if (Array.isArray(FINAL_CONFIG.value.chart.highlightArea)) {
         return FINAL_CONFIG.value.chart.highlightArea.map(area => {
@@ -2482,8 +2499,8 @@ const highlightAreas = computed(() => {
 });
 
 const datasetWithIds = computed(() => {
-    if(!useSafeValues.value) return props.dataset;
-    return props.dataset.map((datapoint, i) => {
+    if(!useSafeValues.value) return FINAL_DATASET.value;
+    return FINAL_DATASET.value.map((datapoint, i) => {
         return {
             ...datapoint,
             series: largestTriangleThreeBucketsArray({
@@ -2533,8 +2550,6 @@ const tableSparklineConfig = computed(() => {
         }
     }
 });
-
-const activeSeriesLength = computed(() => absoluteDataset.value.length);
 
 const xPadding = computed(() => {
     return FINAL_CONFIG.value.chart.grid.position === 'middle' ? 0 : drawingArea.value.width / maxSeries.value / 2;
@@ -3459,14 +3474,6 @@ function toggleTooltipVisibility(show, selectedIndex = null) {
     }
 }
 
-function showSpinnerPdf() {
-    isPrinting.value = true;
-}
-
-function showSpinnerImage() {
-    isImaging.value = true;
-}
-
 function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
 }
@@ -3544,7 +3551,8 @@ function prepareChart() {
         error({
             componentName: 'VueUiXy',
             type: 'dataset'
-        })
+        });
+        manualLoading.value = true; // v3
     } else {
         props.dataset.forEach((ds, i) => {
             if([null, undefined].includes(ds.name)) {
@@ -3553,7 +3561,8 @@ function prepareChart() {
                     type: 'datasetSerieAttribute',
                     property: 'name (string)',
                     index: i
-                })
+                });
+                manualLoading.value = true; // v3
             }
         })
     }
@@ -3566,6 +3575,11 @@ function prepareChart() {
                 }
             });
         });
+    }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     showUserOptionsOnChartHover.value = FINAL_CONFIG.value.chart.userOptions.showOnChartHover;
@@ -3753,7 +3767,10 @@ watch(() => mutableConfig.value.isStacked, async () => {
 });
 
 watch(() => props.dataset, (_) => {
-    maxX.value = Math.max(...props.dataset.map(datapoint => largestTriangleThreeBucketsArray({
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
+    maxX.value = Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({
             data: datapoint.series,
             threshold: FINAL_CONFIG.value.downsample.threshold
         }).length));
@@ -3766,7 +3783,9 @@ watch(() => props.dataset, (_) => {
 }, { deep: true });
 
 watch(() => props.config, (_) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     prepareChart();
     titleStep.value += 1;
     tableStep.value += 1;
@@ -3782,6 +3801,19 @@ watch(() => props.config, (_) => {
         useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
     }
 }, { deep: true });
+
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        dataLabels: {
+            show: true,
+        },
+        showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
+        showTable: FINAL_CONFIG.value.showTable === true,
+        isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
+        useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
+    }
+}, { immediate: true });
 
 defineExpose({
     getData,

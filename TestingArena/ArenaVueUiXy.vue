@@ -109,7 +109,12 @@ function createDs(n, m = 100) {
 //     },
 // ])
 
-const dataset = ref([
+const dataset = ref(undefined)
+
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
     {
         name: "A",
         series: [null, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, null],
@@ -129,55 +134,9 @@ const dataset = ref([
         type: "plot",
         dataLabels: false,
     },
-    // {
-    //     name: "A",
-    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "B",
-    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "A",
-    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "B",
-    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "A",
-    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "B",
-    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "A",
-    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "B",
-    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-])
+]
+    }, 2000)
+})
 
 // const dataset = ref([
 // {
@@ -363,6 +322,7 @@ const model = ref([
     { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA'] },
     { key: 'responsive', def: false, type: 'checkbox' },
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox' },
 
     { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox' },

@@ -6,7 +6,8 @@ export function useLoading({
     skeletonDataset,
     skeletonConfig,
     FINAL_CONFIG,
-    prepareConfig
+    prepareConfig,
+    callback = null
 }) {
     const manualLoading = ref(false);
 
@@ -25,6 +26,7 @@ export function useLoading({
     watchEffect(() => {
         FINAL_DATASET.value = loading.value ? skeletonDataset : unref(dataset);
         FINAL_CONFIG.value = loading.value ? skeletonConfig : prepareConfig();
+        callback && callback();
     });
 
     return { loading, FINAL_DATASET, manualLoading, skeletonDataset, skeletonConfig };
