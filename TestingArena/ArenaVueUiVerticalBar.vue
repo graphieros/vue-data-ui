@@ -15,7 +15,7 @@ const dataset = ref([
         children: [
             {
                 name: "serie 1 child 1",
-                value: 80
+                value: 120000
             },
             {
                 name: "serie 1 child 2",
@@ -101,6 +101,7 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'autoSize', def: true, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -118,7 +119,7 @@ const model = ref([
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
-    { key: 'useCssAnimation', def: true, type: 'checkbox'},
+    { key: 'useCssAnimation', def: false, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
@@ -380,7 +381,7 @@ onMounted(async () => {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiVerticalBar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
+            <LocalVueDataUi component="VueUiHorizontalBar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectLegend="selectLegend" ref="vduiLocal">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -406,7 +407,7 @@ onMounted(async () => {
         </template>
 
         <template #build>
-            <VueUiVerticalBar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
+            <VueUiHorizontalBar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
@@ -428,11 +429,11 @@ onMounted(async () => {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
-            </VueUiVerticalBar>
+            </VueUiHorizontalBar>
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiVerticalBar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
+            <VueDataUi component="VueUiHorizontalBar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectLegend="selectLegend" ref="vduiBuild">
                 <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>

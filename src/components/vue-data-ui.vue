@@ -49,7 +49,8 @@ const components = {
     VueUiThermometer: defineAsyncComponent(() => import('./vue-ui-thermometer.vue')),
     VueUiTiremarks: defineAsyncComponent(() => import('./vue-ui-tiremarks.vue')),
     VueUiTreemap: defineAsyncComponent(() => import('./vue-ui-treemap.vue')),
-    VueUiVerticalBar: defineAsyncComponent(() => import('./vue-ui-vertical-bar.vue')),
+    VueUiVerticalBar: defineAsyncComponent(() => import('./vue-ui-vertical-bar.vue')), // delete in v4
+    VueUiHorizontalBar: defineAsyncComponent(() => import('./vue-ui-vertical-bar.vue')), // v3 renaming
     VueUiWaffle: defineAsyncComponent(() => import('./vue-ui-waffle.vue')),
     VueUiWheel: defineAsyncComponent(() => import('./vue-ui-wheel.vue')),
     VueUiXy: defineAsyncComponent(() => import('./vue-ui-xy.vue')),
@@ -114,7 +115,8 @@ const componentProps = {
     VueUiThermometer: ['config', 'dataset'],
     VueUiTiremarks: ['config', 'dataset'],
     VueUiTreemap: ['config', 'dataset'],
-    VueUiVerticalBar: ['config', 'dataset'],
+    VueUiVerticalBar: ['config', 'dataset'], // delete in v4
+    VueUiHorizontalBar: ['config', 'dataset'], // v3 renaming
     VueUiWaffle: ['config', 'dataset'],
     VueUiWheel: ['config', 'dataset'],
     VueUiXy: ['config', 'dataset'],

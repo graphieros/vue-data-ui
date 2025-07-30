@@ -39,6 +39,7 @@ declare module "vue-data-ui" {
         | VueUiThermometerDataset
         | VueUiTiremarksDataset
         | VueUiVerticalBarDatasetItem[]
+        | VueUiHorizontalBarDatasetItem[]
         | VueUiWaffleDatasetItem[]
         | VueUiWheelDataset
         | VueUiXyDatasetItem[]
@@ -95,6 +96,7 @@ declare module "vue-data-ui" {
         | VueUiThermometerConfig
         | VueUiTiremarksConfig
         | VueUiVerticalBarConfig
+        | VueUiHorizontalBarConfig
         | VueUiWaffleConfig
         | VueUiWheelConfig
         | VueUiXyConfig
@@ -4705,14 +4707,20 @@ declare module "vue-data-ui" {
         value: number;
     };
 
+    export type VueUiHorizontalBarDatasetChild = VueUiVerticalBarDatasetChild; // v3 renaming
+
     export type VueUiVerticalBarDatasetItem = {
         name: string;
         value: number;
         color?: string;
-        children?: VueUiVerticalBarDatasetChild[];
+        children?: VueUiVerticalBarDatasetChild[] | VueUiHorizontalBarDatasetChild[];
     };
 
-    export type VueUiVerticalBarEvent = null | (({ datapoint, seriesIndex }: { datapoint: VueUiVerticalBarDatapoint; seriesIndex: number }) => void);
+    export type VueUiHorizontalBarDatasetItem = VueUiVerticalBarDatasetItem // v3 renaming
+
+    export type VueUiVerticalBarEvent = null | (({ datapoint, seriesIndex }: { datapoint: VueUiVerticalBarDatapoint | VueUiHorizontalBarDatapoint; seriesIndex: number }) => void);
+
+    export type VueUiHorizontalBarEvent = VueUiVerticalBarEvent; // v3 renaming
 
     export type VueUiVerticalBarConfig = {
         responsive?: boolean;
@@ -4720,9 +4728,9 @@ declare module "vue-data-ui" {
         customPalette?: string[];
         useCssAnimation?: boolean;
         events?: {
-            datapointEnter?: VueUiVerticalBarEvent;
-            datapointLeave?: VueUiVerticalBarEvent;
-            datapointClick?: VueUiVerticalBarEvent;
+            datapointEnter?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
+            datapointLeave?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
+            datapointClick?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
         };
         style?: {
             fontFamily?: string;
@@ -4805,9 +4813,9 @@ declare module "vue-data-ui" {
                     | null
                     | ((
                         params: VueUiTooltipParams<
-                            VueUiVerticalBarDatapoint,
-                            VueUiVerticalBarSerie[],
-                            VueUiVerticalBarConfig
+                            VueUiVerticalBarDatapoint | VueUiHorizontalBarDatapoint,
+                            VueUiVerticalBarSerie[] | VueUiHorizontalBarSerie[],
+                            VueUiVerticalBarConfig | VueUiHorizontalBarConfig
                         >
                     ) => string);
                 };
@@ -4834,6 +4842,8 @@ declare module "vue-data-ui" {
         };
     };
 
+    export type VueUiHorizontalBarConfig = VueUiVerticalBarConfig; // v3 renaming;
+
     export type VueUiVerticalBarDatapoint = {
         children?: Array<any>;
         childIndex?: number;
@@ -4850,8 +4860,10 @@ declare module "vue-data-ui" {
         value: number;
     };
 
+    export type VueUiHorizontalBarDatapoint = VueUiVerticalBarDatapoint; // v3 renaming
+
     export type VueUiVerticalBarSerie = {
-        children: VueUiVerticalBarDatapoint[];
+        children: VueUiVerticalBarDatapoint[] | VueUiHorizontalBarDatapoint[];
         color: string;
         hasChildren: boolean;
         is: string;
@@ -4862,8 +4874,10 @@ declare module "vue-data-ui" {
         value: number;
     };
 
+    export type VueUiHorizontalBarSerie = VueUiVerticalBarSerie; // v3 renaming
+
     export type VueUiVerticalBarExpose = {
-        getData(): Promise<Array<VueUiVerticalBarDatasetItem & Record<string, any>>>
+        getData(): Promise<Array<VueUiVerticalBarDatasetItem & Record<string, any>>> | Promise<Array<VueUiHorizontalBarDatasetItem & Record<string, any>>>
         getImage(options?: { scale?: number }): GetImagePromise
         recalculateHeight(): void,
         generateCsv(): void
@@ -4876,12 +4890,25 @@ declare module "vue-data-ui" {
         toggleFullscreen(): void
     }
 
+    export type VueUiHorizontalBarExpose = VueUiVerticalBarExpose; // v3 renaming
+
     export const VueUiVerticalBar: DefineComponent<
         {
             config?: VueUiVerticalBarConfig;
             dataset: VueUiVerticalBarDatasetItem[];
         },
         VueUiVerticalBarExpose
+    >;
+
+    /**
+     * Renamed from the v2 VueUiVerticalBar
+     */
+    export const VueUiHorizontalBar: DefineComponent<
+        {
+            config?: VueUiHorizontalBarConfig;
+            dataset: VueUiHorizontalBarDatasetItem[];
+        },
+        VueUiHorizontalBarExpose
     >;
 
     export type VueUiSparklineDatasetItem = {
@@ -8108,6 +8135,7 @@ declare module "vue-data-ui" {
         | VueUiThermometerConfig
         | VueUiTiremarksConfig
         | VueUiVerticalBarConfig
+        | VueUiHorizontalBarConfig
         | VueUiWaffleConfig
         | VueUiWheelConfig
         | VueUiXyConfig
@@ -8171,6 +8199,7 @@ declare module "vue-data-ui" {
         | "vue_ui_thermometer"
         | "vue_ui_tiremarks"
         | "vue_ui_vertical_bar"
+        | "vue_ui_horizontal_bar"
         | "vue_ui_waffle"
         | "vue_ui_wheel"
         | "vue_ui_xy"

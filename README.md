@@ -53,7 +53,7 @@ Available components
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
 - [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
 - [VueUiTreemap](https://vue-data-ui.graphieros.com/docs#vue-ui-treemap)
-- [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar)
+- [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar) // Renamed as VueUiHorizontalBar in v3
 - [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
 - [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
 - [VueUiWordCloud](https://vue-data-ui.graphieros.com/docs#vue-ui-word-cloud)

@@ -1712,6 +1712,7 @@ export function useConfig() {
     }
 
     const vue_ui_vertical_bar = {
+        autoSize: true,
         responsive: false,
         theme: '',
         customPalette: [],
