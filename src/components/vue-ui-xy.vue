@@ -228,7 +228,7 @@
                         <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show">
                             <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                                 <template 
-                                    v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
+                                    v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
                                         <line
                                             data-cy="axis-x-tick"
                                             v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showCrosshairs"
@@ -1168,14 +1168,14 @@
                                     show: (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
                                         (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
                                         (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                        (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
+                                        (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
                                 }" />
                             </template>
                         </template>
                         <template v-else>
                             <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                                 <template 
-                                v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((this.slicer.end - this.slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
+                                v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
                                     <!-- SINGLE LINE LABEL -->
                                     <text
                                         v-if="!String(label.text).includes('\n')"
@@ -2247,7 +2247,7 @@ async function setViewBox() {
     await nextTick();
     const g = G.value;
     if (!g) return;
-    const {x, y, width, height } = g.getBBox();
+    viewBox.value = `0 0 ${FINAL_CONFIG.value.chart.width} ${FINAL_CONFIG.value.chart.height}`;
     setXAxisLabel();
     await nextTick();
     setYAxisLabel();
@@ -2305,7 +2305,7 @@ function fillArray(len, src) {
 }
 
 function validSlicerEnd(v) {
-    const _max = Math.max(...this.dataset.map(datapoint => largestTriangleThreeBucketsArray({data:datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold}).length));
+    const _max = Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({data:datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold}).length));
     if (v > _max) {
         return _max;
     }
@@ -2492,13 +2492,17 @@ const hasOptionsNoTitle = computed(() => {
 const highlightAreas = computed(() => {
     if (Array.isArray(FINAL_CONFIG.value.chart.highlightArea)) {
         return FINAL_CONFIG.value.chart.highlightArea.map(area => {
+            const areaTo = Math.min(area.to, maxX.value - 1)
             return {
                 ...area,
-                span: area.from === area.to ? 1 : area.to < area.from ? 0 : area.to - area.from + 1
+                span: area.from === areaTo ? 1 : areaTo < area.from ? 0 : areaTo - area.from + 1
             }
         })
     }
-    const area = FINAL_CONFIG.value.chart.highlightArea;
+    const area = {
+        ...FINAL_CONFIG.value.chart.highlightArea,
+        to: Math.min(FINAL_CONFIG.value.chart.highlightArea.to, maxX.value - 1)
+    };
     return [ {...area, span: area.from === area.to ? 1 : area.to < area.from ? 0 : area.to - area.from + 1} ];
 });
 
@@ -3773,6 +3777,38 @@ watch(() => mutableConfig.value.isStacked, async () => {
     setViewBox();
     forceResizeObserver();
 });
+
+
+// Force reflow when component is mounted in a hidden div
+let ro
+
+async function initSizing() {
+    await nextTick()
+    setViewBox()
+    forceResizeObserver()
+    ro.disconnect()
+}
+
+onMounted(() => {
+    if (!chart.value) return
+
+    ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+        const { width, height } = entry.contentRect
+        if (width > 0 && height > 0) {
+            initSizing()
+            break
+        }
+        }
+    });
+
+    ro.observe(chart.value.parentElement)
+});
+
+onBeforeUnmount(() => {
+    ro?.disconnect()
+});
+
 
 watch(() => props.dataset, (_) => {
     if (Array.isArray(_) && _.length > 0) {
