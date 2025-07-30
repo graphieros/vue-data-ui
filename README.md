@@ -133,7 +133,7 @@ Or you can import just what you need in your files:
 <script setup>import {(VueUiRadar, VueUiXy)} from "vue-data-ui";</script>
 ```
 
-Since v.2.0.38, you can also use the "VueDataUi" universal component, just specifying which component you are using. You can of course use the slots provided, if the target component has them.
+You can also use the "VueDataUi" universal component, just specifying which component you are using. You can of course use the slots provided, if the target component has them.
 
 ```js
 <script setup>
@@ -168,6 +168,21 @@ Note that the following utility components are not supported by the universal Vu
 ## Typescript
 
 Types are available in the 'vue-data-ui.d.ts' file under the types directory of the package.
+
+## Vue Data UI version2 -> version3 migration
+
+Vue Data UI v3 is easy to migrate to:
+
+- If a component has new v3 features, it contains the `config.autoSize` attribute, set to `true` by default
+- To restore v2 behavior set config.autoSize to `false`
+
+### Version 3 features
+
+- `config.autoSize` (default: true) set to true, sets up the chart layout automatically, hides or shows some data labels when they can be
+
+- `config.loading` (default: false) toggle loading state manually, to display a beautiful skeleton loader which uses the same chart component and shares layout features derived from your config. This skeleton loader is also triggered automatically if the provided dataset is undefined.
+
+- `config.debug` (default: false) set to true to show warning messages during development, turn off for production.
 
 ## Nuxt
 
