@@ -1828,7 +1828,8 @@ onMounted(() => {
                     componentName: 'VueUiXy',
                     type: 'datasetSerieAttribute',
                     property: 'series (number[])',
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
             }
         })
@@ -1899,17 +1900,19 @@ function prepareConfig() {
     // v3 autoSize chart.padding override
     if (props.config && props.config.autoSize) {
 
-        if (props.config.chart.padding.top) {
-            console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.top, set a 0 value to remove this warning')
-        }
-        if (props.config.chart.padding.right) {
-            console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.right, set a 0 value to remove this warning')
-        }
-        if (props.config.chart.padding.bottom) {
-            console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.bottom, set a 0 value to remove this warning')
-        }
-        if (props.config.chart.padding.left) {
-            console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.left, set a 0 value to remove this warning')
+        if (props.config && !!props.config.debug) {
+            if (props.config.chart.padding.top) {
+                console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.top, set a 0 value to remove this warning')
+            }
+            if (props.config.chart.padding.right) {
+                console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.right, set a 0 value to remove this warning')
+            }
+            if (props.config.chart.padding.bottom) {
+                console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.bottom, set a 0 value to remove this warning')
+            }
+            if (props.config.chart.padding.left) {
+                console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.left, set a 0 value to remove this warning')
+            }
         }
 
         mergedConfig.chart.padding = {
@@ -2282,6 +2285,7 @@ function toggleStack() {
 }
 
 function checkAutoScaleError(datapoint) {
+    if (!debug.value) return;
     if (datapoint.autoScaling) {
         if (!FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale) {
             console.warn(`VueUiXy (datapoint: ${datapoint.name}) : autoScaling only works when config.chart.grid.labels.yAxis.useIndividualScale is set to true`)
@@ -3546,11 +3550,14 @@ function convertSizes() {
     })
 }
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiXy',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         });
         manualLoading.value = true; // v3
     } else {
@@ -3560,14 +3567,15 @@ function prepareChart() {
                     componentName: 'VueUiXy',
                     type: 'datasetSerieAttribute',
                     property: 'name (string)',
-                    index: i
+                    index: i,
+                    debug: debug.value
                 });
                 manualLoading.value = true; // v3
             }
         })
     }
 
-    if(FINAL_CONFIG.value.showWarnings) {
+    if(debug.value) {
         props.dataset.forEach((datapoint) => {
             datapoint.series.forEach((s, j) => {
                 if(!isSafeValue(s)) {

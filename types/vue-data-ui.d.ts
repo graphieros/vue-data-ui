@@ -2952,6 +2952,7 @@ declare module "vue-data-ui" {
     }
 
     export type VueUiXyConfig = {
+        debug?: boolean;
         responsive?: boolean;
         autoSize?: boolean; // v3 opt-in
         loading?: boolean; // v3
@@ -3291,6 +3292,7 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiDonutConfig = {
+        debug?: boolean;
         type?: "classic" | "polar";
         loading?: boolean;
         pie?: boolean;

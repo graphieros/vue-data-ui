@@ -1320,7 +1320,8 @@ export function objectIsEmpty(obj) {
     return Object.keys(obj).length === 0
 }
 
-export function error({ componentName, type, property = '', index = '', key = '', warn = true }) {
+export function error({ componentName, type, property = '', index = '', key = '', warn = true, debug = true }) {
+    if (!debug) return;
     const message = `\n> ${errors[type].replace('#COMP#', componentName).replace('#ATTR#', property).replace('#INDX#', index).replace('#KEY#', key)}\n`;
     if (warn) {
         console.warn(message)

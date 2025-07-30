@@ -416,6 +416,7 @@ export function useConfig() {
 
     // NOTE: Any update to this config will be reflected in VueUiRidgeline, which uses VueUiXy in its dialog.
     const vue_ui_xy = {
+        debug: false, // v3
         theme: '',
         responsive: false,
         autoSize: true, // false = v2
@@ -704,6 +705,7 @@ export function useConfig() {
     }
 
     const vue_ui_donut = {
+        debug: false, // v3
         type: 'classic',
         loading: false, // v3
         pie: false, // v3

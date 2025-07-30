@@ -73,6 +73,7 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
     { key: 'autoSize', def: true, type: 'checkbox'},
     { key: 'startAnimation.show', def: false, type: 'checkbox'},
     { key: 'pie', def: false, type: 'checkbox'},

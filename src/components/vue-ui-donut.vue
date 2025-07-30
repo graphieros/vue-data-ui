@@ -200,11 +200,14 @@ onBeforeUnmount(() => {
     }
 });
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiDonut',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         });
         isDataset.value = false;
         manualLoading.value = true; // v3
@@ -220,7 +223,8 @@ function prepareChart() {
                     componentName: 'VueUiDonut',
                     type: 'datasetSerieAttribute',
                     property: attr,
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
             })
         })
@@ -230,7 +234,8 @@ function prepareChart() {
                     componentName: 'VueUiDonut',
                     type: 'datasetAttributeEmpty',
                     property: 'name',
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
             }
         })
