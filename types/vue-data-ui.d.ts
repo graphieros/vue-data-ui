@@ -3515,6 +3515,9 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiNestedDonutsConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        autoSize?: boolean; // v3
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];

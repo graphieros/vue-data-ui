@@ -3247,17 +3247,20 @@ export function useConfig() {
     }
 
     const vue_ui_nested_donuts = {
+        debug: false, // v3
+        loading: false, // v3
+        autoSize: true, // v3 (false = v2)
         responsive: false,
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         useBlurOnHover: true,
         serieToggleAnimation: {
             show: true,
             durationMs: 500,
         },
         startAnimation: {
-            show: true,
+            show: false, // v3 (v2 = false)
             durationMs: 1000,
             staggerMs: 50
         },
