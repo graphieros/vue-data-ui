@@ -3288,6 +3288,8 @@ declare module "vue-data-ui" {
         VueUiXyExpose
     >;
 
+    export type VueUiDonutEvent = null | (({datapoint, seriesIndex }: { datapoint: VueUiDonutDatapoint; seriesIndex: number }) => void);
+
     export type VueUiDonutConfig = {
         type?: "classic" | "polar";
         responsive?: boolean;
@@ -3296,10 +3298,10 @@ declare module "vue-data-ui" {
         useBlurOnHover?: boolean;
         useCssAnimation?: boolean;
         events?: {
-            datapointEnter?: null | ((data: any) => void),
-            datapointLeave?: null | ((data: any) => void),
-            datapointClick?: null | ((data: any) => void)
-        },
+            datapointEnter?: VueUiDonutEvent;
+            datapointLeave?: VueUiDonutEvent;
+            datapointClick?: VueUiDonutEvent;
+        };
         serieToggleAnimation?: {
             show?: boolean;
             durationMs?: number;
@@ -4698,16 +4700,18 @@ declare module "vue-data-ui" {
         children?: VueUiVerticalBarDatasetChild[];
     };
 
+    export type VueUiVerticalBarEvent = null | (({ datapoint, seriesIndex }: { datapoint: VueUiVerticalBarDatapoint; seriesIndex: number }) => void);
+
     export type VueUiVerticalBarConfig = {
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         events?: {
-            datapointEnter?: null | ((data: any) => void),
-            datapointLeave?: null | ((data: any) => void),
-            datapointClick?: null | ((data: any) => void)
-        },
+            datapointEnter?: VueUiVerticalBarEvent;
+            datapointLeave?: VueUiVerticalBarEvent;
+            datapointClick?: VueUiVerticalBarEvent;
+        };
         style?: {
             fontFamily?: string;
             chart?: {
