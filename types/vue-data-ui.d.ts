@@ -3298,6 +3298,7 @@ declare module "vue-data-ui" {
         type?: "classic" | "polar";
         loading?: boolean;
         pie?: boolean;
+        autoSize?: boolean;
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
