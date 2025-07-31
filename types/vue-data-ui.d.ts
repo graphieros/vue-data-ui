@@ -4723,6 +4723,9 @@ declare module "vue-data-ui" {
     export type VueUiHorizontalBarEvent = VueUiVerticalBarEvent; // v3 renaming
 
     export type VueUiVerticalBarConfig = {
+        debug?: boolean;
+        loading?: boolean;
+        autoSize?: boolean;
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];

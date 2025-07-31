@@ -8,7 +8,11 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleSort } = useArena()
 
-const dataset = ref([
+const dataset = ref([])
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value =[
     {
         name: "Serie 1 with",
         value: 100.987987,
@@ -53,7 +57,9 @@ const dataset = ref([
             },
         ]
     }
-]);
+]
+    }, 2000)
+})
 
 const alternateDataset = ref([
     {
@@ -101,6 +107,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'autoSize', def: true, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef, nextTick } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef, nextTick, toRefs } from "vue";
 import {
     applyDataLabel,
     checkNaN,
@@ -18,6 +18,7 @@ import {
     setOpacity,
     shiftHue,
     themePalettes,
+    treeShake,
     XMLNS,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
@@ -33,11 +34,12 @@ import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import img from "../img.js";
+import { useLoading } from "../useLoading.js";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
@@ -59,9 +61,14 @@ const props = defineProps({
     }
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
-})
+const isDataset = computed({
+    get() {
+        return !!props.dataset && props.dataset.length;
+    },
+    set(bool) {
+        return bool;
+    }
+});
 
 const uid = ref(createUid());
 const details = ref(null);
@@ -81,13 +88,77 @@ const G = ref(null);
 
 const emit = defineEmits(['selectLegend']);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const skeletonSet = computed(() => {
+    const base = [
+        { name: '', value: 3, color: '#d9d9d9' },
+        { name: '', value: 2, color: '#d9d9d9' },
+        { name: '', value: 1, color: '#d9d9d9' },
+        { name: '', value: 6, color: '#d9d9d9' },
+        { name: '', value: 5, color: '#d9d9d9' },
+        { name: '', value: 4, color: '#d9d9d9' },
+    ]
+    return base;
+})
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            recalculateHeight();
+            await autoSize();
+        })
     },
-    set: (newCfg) => {
-        return newCfg
-    }
+    skeletonDataset: skeletonSet.value,
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            useCssAnimation: false,
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#999999',
+                    layout: {
+                        bars: {
+                            offsetX: 110,
+                            dataLabels: {
+                                color: 'transparent',
+                                value: {
+                                    prefix: '',
+                                    suffix: '',
+                                    formatter: null
+                                }
+                            },
+                            nameLabels: {
+                                color: 'transparent'
+                            }
+                        },
+                        separators: {
+                            color: '#7A7A7A'
+                        }
+                    },
+                    legend: {
+                        show: true,
+                        backgroundColor: '#999999',
+                        color: 'transparent',
+                        prefix: '',
+                        suffix: '',
+                        formatter: null
+                    },
+                    title: {
+                        color: '#1A1A1A',
+                        subtitle: {
+                            color: '#5A5A5A'
+                        }
+                    }
+                }
+            }
+        }
+    })
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -137,7 +208,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -151,7 +224,12 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
-watch(() => props.dataset, recalculateHeight, { deep: true });
+watch(() => props.dataset, (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+        manualLoading.value = false;
+    }
+    recalculateHeight();
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-vertical-bar_${uid.value}`,
@@ -227,17 +305,21 @@ async function autoSize() {
     ].join(' ')
 }
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
 const remainingHeight = ref(0);
 
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiVerticalBar',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         });
+        isDataset.value = false;
+        manualLoading.value = true; // v3
     }
 
-    barCount.value = props.dataset.flatMap(serie => {
+    barCount.value = FINAL_DATASET.value.flatMap(serie => {
         if(serie.children && serie.children.length > 0) {
             return serie.children.length;
         } else {
@@ -245,6 +327,11 @@ function prepareChart() {
         }
     }).reduce((a, b) => a + b, 0);
     observeTable();
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
+    }
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
@@ -291,6 +378,7 @@ onBeforeUnmount(() => {
 });
 
 function observeTable() {
+    if (loading.value) return;
     const observer = new ResizeObserver((entries) => {
         entries.forEach(entry => {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
@@ -312,12 +400,13 @@ const isSortDown = computed(() => {
 
 const immutableDataset = computed(() => {
 
-    props.dataset.forEach((ds, i) => {
+    FINAL_DATASET.value.forEach((ds, i) => {
         if (!ds.value && !ds.children) {
             error({
                 componentName: 'VueUiVerticalBar',
                 type: 'datasetAttributeEmpty',
-                property: `value (index ${i})`
+                property: `value (index ${i})`,
+                debug: debug.value
             })
         }
         if (ds.children) {
@@ -325,7 +414,8 @@ const immutableDataset = computed(() => {
                 error({
                     componentName: 'VueUiVerticalBar',
                     type: 'datasetAttributeEmpty',
-                    property: `children (index ${i})`
+                    property: `children (index ${i})`,
+                    debug: debug.value
                 })
             } else {
                 ds.children.forEach((child, j) => {
@@ -335,7 +425,8 @@ const immutableDataset = computed(() => {
                             type: 'datasetSerieAttribute',
                             property: `name`,
                             key: 'children',
-                            index: j
+                            index: j,
+                            debug: debug.value
                         })
                     }
                 })
@@ -343,7 +434,7 @@ const immutableDataset = computed(() => {
         }
     })
 
-    return props.dataset
+    return FINAL_DATASET.value
         .map((serie, i) => {
             const id = `vertical_parent_${i}_${uid.value}`;
             const hasChildren = serie.children && serie.children.length > 0;
@@ -956,7 +1047,6 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS" 
-            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="viewBox"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
@@ -1136,22 +1226,6 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'verticalBar',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    verticalBar: {
-                        axis: {
-                            color: '#CCCCCC'
-                        },
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
-
         <!-- LEGEND AS DIV : BOTTOM -->
         <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show && FINAL_CONFIG.style.chart.legend.position === 'bottom'">
             <Legend
@@ -1307,6 +1381,9 @@ defineExpose({
                 </div>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading"/>
     </div>
 </template>
 

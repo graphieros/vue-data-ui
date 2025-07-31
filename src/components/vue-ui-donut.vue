@@ -217,8 +217,6 @@ function prepareChart() {
                 datasetObject: ds,
                 requiredAttributes: ['name', 'values']
             }).forEach(attr => {
-                isDataset.value = false;
-                manualLoading.value = true; // v3
                 error({
                     componentName: 'VueUiDonut',
                     type: 'datasetSerieAttribute',
@@ -226,6 +224,8 @@ function prepareChart() {
                     index: i,
                     debug: debug.value
                 })
+                isDataset.value = false;
+                manualLoading.value = true; // v3
             })
         })
         props.dataset.forEach((ds, i) => {
@@ -358,6 +358,7 @@ const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
         defaultConfig: FINAL_CONFIG.value,
         userConfig: {
             useCssAnimation: false,
+            table: { show: false },
             startAnimation: {
                 show: false
             },

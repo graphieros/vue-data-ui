@@ -1712,7 +1712,9 @@ export function useConfig() {
     }
 
     const vue_ui_vertical_bar = {
-        autoSize: true,
+        bebug: false, // v3
+        loading: false, // v3
+        autoSize: true, // v3
         responsive: false,
         theme: '',
         customPalette: [],
@@ -1744,7 +1746,7 @@ export function useConfig() {
                         dataLabels: {
                             color: COLOR_BLACK,
                             bold: true,
-                            fontSize: FONT._14,
+                            fontSize: FONT._14, // v3 increased
                             value: {
                                 show: true,
                                 roundingValue: 0,
@@ -1762,14 +1764,14 @@ export function useConfig() {
                             show: true,
                             color: COLOR_BLACK,
                             bold: false,
-                            fontSize: FONT._14,
+                            fontSize: FONT._14, // v3 increased
                             offsetX: 0
                         },
                         parentLabels: {
                             show: true,
                             color: COLOR_BLACK,
                             bold: false,
-                            fontSize: FONT._14,
+                            fontSize: FONT._14, // v3 increased
                             offsetX: 0
                         }
                     },

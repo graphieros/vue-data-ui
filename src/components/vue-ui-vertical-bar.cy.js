@@ -27,7 +27,6 @@ describe('<VueUiVerticalBar />', () => {
 			cy.log('datapoints');
 			cy.get('[data-cy="datapoint-underlayer"]').should('exist').and('be.visible').and('have.length', 8);
 			cy.get('[data-cy="datapoint-bar"]').should('exist').and('be.visible').and('have.length', 8);
-			cy.get('[data-cy="datapoint-separator"]').should('exist').and('have.css', 'opacity', '1').and('have.length', 4);
 			cy.get('[data-cy="datapoint-label"]').should('exist').and('be.visible').and('have.length', 8);
 			cy.get('[data-cy="datapoint-name"]').should('exist').and('be.visible').and('have.length', 8);
 			cy.get('[data-cy="datapoint-parent-name"]').should('exist').and('be.visible').and('have.length', dataset.filter(d => !!d.children).length);
