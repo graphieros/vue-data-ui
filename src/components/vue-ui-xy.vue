@@ -3031,7 +3031,9 @@ const lineSet = computed(() => {
                             ? autoScalePlots.filter(p => p.value !== null)
                             : plots.filter(p => p.value !== null),
                             adustedAreaZeroPosition) 
-                    :  createIndividualArea(plots.filter(p => p.value !== null), adustedAreaZeroPosition),
+                    :  FINAL_CONFIG.value.line.cutNullValues 
+                        ? createIndividualAreaWithCuts(plots, adustedAreaZeroPosition)
+                        : createIndividualArea(plots.filter(p => p.value !== null), adustedAreaZeroPosition),
             curveAreas: !datapoint.useArea
                 ? [] 
                 :createSmoothAreaSegments(
