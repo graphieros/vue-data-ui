@@ -1836,6 +1836,8 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_horizontal_bar = vue_ui_vertical_bar;
+
     const vue_ui_heatmap = {
         theme: '',
         style: {
@@ -5837,7 +5839,8 @@ export function useConfig() {
         vue_ui_tiremarks,
         vue_ui_chestnut,
         vue_ui_onion,
-        vue_ui_vertical_bar,
+        vue_ui_vertical_bar, // deprecate in v4
+        vue_ui_horizontal_bar, // v3
         vue_ui_heatmap,
         vue_ui_scatter,
         vue_ui_candlestick,
