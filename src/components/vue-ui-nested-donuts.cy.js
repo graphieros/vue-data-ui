@@ -35,9 +35,7 @@ describe('<VueUiNestedDonuts />', () => {
 
             cy.log('abbreviated names');
             cy.get('[data-cy="datapoint-name"]').should('exist').and('be.visible').each((label, i) => {
-                cy.wrap(label).contains(abbreviate({
-                    source: dataset[i].name,
-                }));
+                cy.wrap(label).contains(dataset[i].name);
             });
 
             cy.log('data labels');
