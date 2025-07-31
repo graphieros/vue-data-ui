@@ -3310,7 +3310,8 @@ export function useConfig() {
                             roundingPercentage: 0,
                             showDonutName: true,
                             boldDonutName: true,
-                            donutNameAbbreviation: true,
+                            curvedDonutName: true, // v3
+                            donutNameAbbreviation: false, // v2 = true
                             donutNameMaxAbbreviationSize: 3,
                             donutNameOffsetY: 0,
                             formatter: null

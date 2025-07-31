@@ -3568,6 +3568,7 @@ declare module "vue-data-ui" {
                             useSerieColor?: boolean;
                             showDonutName?: boolean;
                             boldDonutName?: boolean;
+                            curvedDonutName?: boolean;
                             donutNameAbbreviation?: boolean;
                             donutNameOffsetY?: number;
                             donutNameMaxAbbreviationSize?: number;

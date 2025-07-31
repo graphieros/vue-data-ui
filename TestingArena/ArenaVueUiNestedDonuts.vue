@@ -10,7 +10,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useAre
 
 const dataset = ref([
     {
-        name: "Group 1",
+        name: "Group 1 is too long",
         series: [
             {
                 name: 'Serie 1',
@@ -103,9 +103,10 @@ const model = ref([
     { key: 'style.chart.layout.labels.dataLabels.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.layout.labels.dataLabels.showDonutName', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.dataLabels.boldDonutName', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.labels.dataLabels.donutNameAbbreviation', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.dataLabels.donutNameAbbreviation', def: false, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.dataLabels.curvedDonutName', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.dataLabels.donutNameMaxAbbreviationSize', def: 3, type: 'number', min: 1, max: 12},
-    { key: 'style.chart.layout.labels.dataLabels.donutNameOffsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.layout.labels.dataLabels.donutNameOffsetY', def: -6, type: 'number', min: -100, max: 100},
     { key: 'style.chart.layout.donut.strokeWidth', def: 200, type: 'number', min: 50, max: 400},
     { key: 'style.chart.layout.donut.borderWidth', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.layout.donut.useShadow', def: true, type: 'checkbox' },

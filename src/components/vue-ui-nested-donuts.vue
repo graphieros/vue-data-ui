@@ -658,12 +658,18 @@ const donuts = computed(() => {
                 105.25,
                 donutThickness.value
             )
+
+            const fullCirclePath = `M ${svg.value.width/2},${(svg.value.height/2) + radius}
+            a ${radius},${radius} 0 1,1 0,${-2 * radius}
+            a ${radius},${radius} 0 1,1 0,${2 * radius}`;
+
     
         return {
             ...ds,
             hasData,
             radius,
             skeleton,
+            fullCirclePath,
             donut: makeDonut(
                 { series },
                 svg.value.width / 2,
@@ -1232,7 +1238,18 @@ defineExpose({
                             :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
                     </filter>
                 </defs>
-    
+
+                <!-- CURVED PATHS -->
+                <defs>
+                    <path
+                        v-for="(item, i) in donuts"
+                        :key="`path-full-${i}`"
+                        :id="`path-full-${i}-${uid}`"
+                        :d="item.fullCirclePath"
+                        fill="none"
+                    />
+                </defs>
+
                 <!-- NESTED DONUTS -->
                 <g v-for="(item, i) in donuts">
                     <template v-if="item.hasData">
@@ -1261,32 +1278,70 @@ defineExpose({
                 </g>
     
                 <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.showDonutName">
-                    <g v-for="(item, i) in donuts">
-                        <g v-for="(arc, j) in item.donut">
-                            <text data-cy="datapoint-name" :class="{ animated: FINAL_CONFIG.useCssAnimation }"
-                                v-if="j === 0 && svg.width && svg.height" :x="svg.width / 2" :y="arc.startY -
-                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize +
-                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                        .donutNameOffsetY
-                                    " text-anchor="middle" :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                                        " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName
-                        ? 'bold'
-                        : 'normal'
-                        " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color">
-                                {{
-                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                        .donutNameAbbreviation
-                                        ? abbreviate({
-                                            source: item.name,
-                                            length:
+                    <template v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.curvedDonutName">
+                        <g v-for="(item, i) in donuts">
+                            <g v-for="(arc, j) in item.donut">
+                                <text 
+                                    data-cy="datapoint-name" 
+                                    :class="{ animated: FINAL_CONFIG.useCssAnimation }"
+                                    v-if="j === 0 && svg.width && svg.height" 
+                                    text-anchor="middle" 
+                                    :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName ? 'bold' : 'normal'" 
+                                    :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
+                                    :dy="FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameOffsetY"
+                                >
+                                    <textPath
+                                        :href="`#path-full-${i}-${uid}`"
+                                        startOffset="50%"
+                                        text-anchor="middle"
+                                        method="align"
+                                        spacing="auto"
+                                        side="right"
+                                    >
+                                        {{
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameAbbreviation
+                                            ? abbreviate({
+                                                source: item.name,
+                                                length:
                                                 FINAL_CONFIG.style.chart.layout.labels.dataLabels
                                                     .donutNameMaxAbbreviationSize,
-                                        })
-                                        : item.name
-                                }}
-                            </text>
+                                            })
+                                            : item.name
+                                        }}
+                                    </textPath>
+                                </text>
+                            </g>
                         </g>
-                    </g>
+                    </template>
+                    <template v-else>
+                        <g v-for="(item, i) in donuts">
+                            <g v-for="(arc, j) in item.donut">
+                                <text 
+                                    data-cy="datapoint-name" 
+                                    :class="{ animated: FINAL_CONFIG.useCssAnimation }"
+                                    v-if="j === 0 && svg.width && svg.height" 
+                                    :x="svg.width / 2" :y="arc.startY - FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameOffsetY" 
+                                    text-anchor="middle" 
+                                    :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" 
+                                    :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName
+                            ? 'bold'
+                            : 'normal'
+                            " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color">
+                                    {{
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                            .donutNameAbbreviation
+                                            ? abbreviate({
+                                                source: item.name,
+                                                length:
+                                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                                        .donutNameMaxAbbreviationSize,
+                                            })
+                                            : item.name
+                                    }}
+                                </text>
+                            </g>
+                        </g>
+                    </template>
                 </g>
     
                 <!-- DATALABELS -->
