@@ -23,14 +23,17 @@ export function useDateTime({
     // VALIDATION & PARSING
 
     function isValidDate(date) {
-        if (typeof date === 'number') return false;
+        if (typeof date === 'number') return true;
         return !isNaN(parseDate(date));
     }
 
     function getTimeStamp(dateStr) {
-        if (!Date.parse(dateStr)) return dateStr;
+        const parsed = Date.parse(dateStr);
+        if (isNaN(parsed)) {
+            return dateStr;
+        }
         if (!useUTC) {
-            return new Date(dateStr).getTime();
+            return parsed;
         }
         const stripped = String(dateStr).replace(/([+-]\d{2}:\d{2}|Z)$/, '');
         return Date.parse(stripped + 'Z');
