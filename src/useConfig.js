@@ -1744,7 +1744,7 @@ export function useConfig() {
                         dataLabels: {
                             color: COLOR_BLACK,
                             bold: true,
-                            fontSize: FONT._12,
+                            fontSize: FONT._14,
                             value: {
                                 show: true,
                                 roundingValue: 0,
@@ -1762,14 +1762,14 @@ export function useConfig() {
                             show: true,
                             color: COLOR_BLACK,
                             bold: false,
-                            fontSize: FONT._10,
+                            fontSize: FONT._14,
                             offsetX: 0
                         },
                         parentLabels: {
                             show: true,
                             color: COLOR_BLACK,
                             bold: false,
-                            fontSize: FONT._10,
+                            fontSize: FONT._14,
                             offsetX: 0
                         }
                     },
@@ -1778,9 +1778,10 @@ export function useConfig() {
                         opacity: 5
                     },
                     separators: {
-                        show: true,
+                        show: false,
                         color: COLOR_GREY_LIGHT,
-                        strokeWidth: 1
+                        strokeWidth: 1,
+                        fullWidth: true,
                     }
                 },
                 title: TITLE,

@@ -4791,6 +4791,7 @@ declare module "vue-data-ui" {
                         show?: boolean;
                         color?: string;
                         strokeWidth?: number;
+                        fullWidth?: boolean;
                     };
                 };
                 title?: ChartTitle;

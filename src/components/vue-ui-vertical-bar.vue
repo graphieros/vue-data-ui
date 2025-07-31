@@ -211,21 +211,23 @@ async function autoSize() {
             const texts = pl.querySelectorAll('text')
             Array.from(texts).forEach(async(t)=> {
                 t.setAttribute('x', 0);
-                t.setAttribute('x', checkNaN(-maxW - (maxC / 4)));
+                t.setAttribute('x', checkNaN(-maxW - (maxC)));
             })
         })
     }
 
     await nextTick();
     const bb = G.value.getBBox()
-
+    const offX = FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.offsetX;
     viewBox.value = [
-        bb.x,
+        bb.x + (-offX),
         0,
-        bb.width + 12,
+        bb.width + (offX * 2),
         drawableArea.value.fullHeight
     ].join(' ')
 }
+
+const remainingHeight = ref(0);
 
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
@@ -254,9 +256,12 @@ function prepareChart() {
                 noTitle: noTitle.value
             });
 
+            remainingHeight.value = height / 3;
+
             requestAnimationFrame(async () => {
                 baseWidth.value = width;
-                barHeight.value = height / barCount.value - (barGap.value * 2)
+                const totalGap = barGap.value * (barCount.value - 1);
+                barHeight.value = (height - totalGap) / barCount.value;
                 await nextTick();
                 autoSize();
             });
@@ -807,7 +812,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'} ${FINAL_CONFIG.responsive && FINAL_CONFIG.autoSize ? 'vue-ui-vertical-bar-autosize' : ''}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`margin-top:${FINAL_CONFIG.responsive && FINAL_CONFIG.autoSize ? `${remainingHeight / 2}px` : '0'}; font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? FINAL_CONFIG.autoSize ? `height:calc(100% - ${remainingHeight}px` : 'height: 100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -962,10 +967,10 @@ defineExpose({
                 <!-- BACKGROUND SLOT -->
                 <foreignObject 
                     v-if="$slots['chart-background']"
-                    :x="0"
+                    :x="viewBoxParts.x"
                     :y="0"
-                    :width="svg.width <= 0 ? 10 : svg.width"
-                    :height="drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight"
+                    :width="viewBoxParts.width"
+                    :height="viewBoxParts.height"
                     :style="{
                         pointerEvents: 'none'
                     }"
@@ -1033,7 +1038,7 @@ defineExpose({
                         data-cy="datapoint-separator"
                         v-if="(!serie.isChild || serie.isLastChild) && FINAL_CONFIG.style.chart.layout.separators.show && i !== bars.length -1"
                         :x1="viewBoxParts.x"
-                        :x2="drawableArea.left"
+                        :x2="FINAL_CONFIG.style.chart.layout.separators.fullWidth ? (viewBoxParts.width - Math.abs(viewBoxParts.x)): drawableArea.left"
                         :y1="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
                         :y2="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
                         :stroke="FINAL_CONFIG.style.chart.layout.separators.color"
