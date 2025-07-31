@@ -92,15 +92,15 @@ const FINAL_CONFIG = ref(prepareConfig());
 
 const skeletonSet = computed(() => {
     const base = [
-        { name: '', value: 3, color: '#d9d9d9' },
-        { name: '', value: 2, color: '#d9d9d9' },
-        { name: '', value: 1, color: '#d9d9d9' },
         { name: '', value: 6, color: '#d9d9d9' },
         { name: '', value: 5, color: '#d9d9d9' },
         { name: '', value: 4, color: '#d9d9d9' },
+        { name: '', value: 3, color: '#d9d9d9' },
+        { name: '', value: 2, color: '#d9d9d9' },
+        { name: '', value: 1, color: '#d9d9d9' },
     ]
     return base;
-})
+});
 
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),

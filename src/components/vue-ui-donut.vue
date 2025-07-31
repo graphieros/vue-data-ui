@@ -191,6 +191,27 @@ onMounted( async() => {
     requestAnimationFrame(resizeAndReflow);
 });
 
+let ro
+onMounted(() => {
+    if (!donutChart.value) return;
+
+    ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+        const { width, height } = entry.contentRect
+        if (width > 0 && height > 0) {
+            resizeAndReflow();
+            break
+        }
+        }
+    });
+
+    ro.observe(donutChart.value.parentElement)
+});
+
+onBeforeUnmount(() => {
+    ro?.disconnect()
+});
+
 onBeforeUnmount(() => {
     if (resizeObserver.value) {
         if (observedEl.value) {
