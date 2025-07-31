@@ -386,7 +386,7 @@ const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
             userOptions: { show: false },
             style: {
                 chart: {
-                    backgroundColor: '#999999',
+                    backgroundColor: '#99999930',
                     layout: {
                         labels: {
                             dataLabels: { show: false },
@@ -398,7 +398,7 @@ const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
                         }
                     },
                     legend: {
-                        backgroundColor: '#999999',
+                        backgroundColor: 'transparent',
                         showValue: false,
                         showPercentage: false
                     },

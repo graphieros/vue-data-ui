@@ -1987,7 +1987,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
             chart: {
                 annotations: [],
                 highlightArea: [],
-                backgroundColor: '#999999',
+                backgroundColor: '#99999930',
                 grid: {
                     stroke: '#6A6A6A',
                     labels: { 
