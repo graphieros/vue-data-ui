@@ -305,6 +305,24 @@ async function autoSize() {
     ].join(' ')
 }
 
+let ro;
+onMounted(() => {
+    if (!verticalBarChart.value) return;
+    ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+        const { width, height } = entry.contentRect
+        if (width > 0 && height > 0) {
+                Promise.resolve().then(async () => {
+                    recalculateHeight();
+                    await autoSize();
+                });
+                break;
+            }
+        }
+    });
+    ro.observe(verticalBarChart.value.parentElement)
+})
+
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 const remainingHeight = ref(0);
 
