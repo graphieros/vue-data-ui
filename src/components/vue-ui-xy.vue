@@ -3005,7 +3005,7 @@ const lineSet = computed(() => {
         scaleGroups.value[datapoint.scaleLabel].unique = activeSeriesWithStackRatios.value.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1 
 
         const areaZeroPosition = mutableConfig.value.useIndividualScale ? datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition : zero.value;
-        const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : scaleYLabels.at(-1).y || 0, drawingArea.value.top), areaZeroPosition);
+        const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : (scaleYLabels.at(-1) ? scaleYLabels.at(-1).y : 0), drawingArea.value.top), areaZeroPosition);
 
         return {
             ...datapoint,
