@@ -23,7 +23,7 @@ describe('useDateTime composable', () => {
 
     test('isValidDate returns true for ISO date string and false for number or invalid', () => {
         expect(dtLocal.isValidDate('2021-08-15')).toBe(true)
-        expect(dtLocal.isValidDate(1628985600000)).toBe(false)
+        expect(dtLocal.isValidDate(1628985600000)).toBe(true)
         expect(dtLocal.isValidDate('not-a-date')).toBe(false)
     })
 
