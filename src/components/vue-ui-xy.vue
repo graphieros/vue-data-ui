@@ -228,7 +228,7 @@
                         <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show">
                             <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                                 <template 
-                                    v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
+                                    v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0)) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo)">
                                         <line
                                             data-cy="axis-x-tick"
                                             v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showCrosshairs"
@@ -1168,14 +1168,14 @@
                                     show: (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
                                         (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || 
                                         (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                        (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
+                                        (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0)) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo)
                                 }" />
                             </template>
                         </template>
                         <template v-else>
                             <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                                 <template 
-                                v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
+                                v-if="(label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0)) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo)">
                                     <!-- SINGLE LINE LABEL -->
                                     <text
                                         v-if="!String(label.text).includes('\n')"
@@ -3278,6 +3278,7 @@ const tooltipContent = computed(() => {
     const customFormat = FINAL_CONFIG.value.chart.tooltip.customFormat;
 
     if(isFunction(customFormat) && functionReturnsString(() => customFormat({
+        absoluteIndex: selectedSerieIndex.value + slicer.value.start,
         seriesIndex: selectedSerieIndex.value,
         datapoint: selectedSeries.value,
         series: absoluteDataset.value,
@@ -3287,6 +3288,7 @@ const tooltipContent = computed(() => {
         config: FINAL_CONFIG.value
     }))) {
         return customFormat({
+            absoluteIndex: selectedSerieIndex.value + slicer.value.start,
             seriesIndex: selectedSerieIndex.value,
             datapoint: selectedSeries.value,
             series: absoluteDataset.value,
