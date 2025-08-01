@@ -3871,16 +3871,20 @@ watch(() => props.dataset, (_) => {
     if (Array.isArray(_) && _.length > 0) {
         manualLoading.value = false;
     }
-    maxX.value = Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({
+        maxX.value = Math.max(...FINAL_DATASET.value.map(datapoint =>                        largestTriangleThreeBucketsArray({
             data: datapoint.series,
             threshold: FINAL_CONFIG.value.downsample.threshold
         }).length));
+
         slicer.value = {
             start: 0,
             end: maxX.value
-        }
+        };
+
         slicerStep.value += 1;
         segregateStep.value += 1;
+        initSizing();
+
 }, { deep: true });
 
 watch(() => props.config, (_) => {
