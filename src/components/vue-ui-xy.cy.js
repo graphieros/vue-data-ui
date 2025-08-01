@@ -41,7 +41,7 @@ describe("<VueUiXy />", () => {
 			cy.get('[data-cy="xy-grid-vertical-line"]')
 				.should("exist")
 				.and("have.css", "opacity", "1")
-				.and("have.length", 21);
+				.and("have.length", 1);
 
 			cy.log("frame");
 			cy.get('[data-cy="frame"]').should("exist").and("be.visible");

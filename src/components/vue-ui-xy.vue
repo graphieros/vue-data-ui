@@ -211,38 +211,24 @@
                             </g>
                         </template>
                         <g v-if="FINAL_CONFIG.chart.grid.showVerticalLines">
-                            <line
+                            <path
                                 data-cy="xy-grid-vertical-line"
-                                v-for="(_, i) in maxSeries + ( FINAL_CONFIG.chart.grid.position === 'middle' ? 1 : 0)" 
-                                :key="`grid_vertical_line_${i}`"
-                                :x1="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
-                                :x2="(drawingArea.width / maxSeries) * i + drawingArea.left + xPadding"
-                                :y1="forceValidValue(drawingArea.top)"
-                                :y2="forceValidValue(drawingArea.bottom)"
-                                stroke-width="0.5"
+                                :d="gridVerticalLines"
+                                :stroke-width="0.5"
                                 :stroke="FINAL_CONFIG.chart.grid.stroke"
-                                :style="{ animation: 'none !important' }"
+                                stroke-linecap="round"
+                                :style="{ animation: 'none !important'}"
                             />
                         </g>
     
                         <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show">
-                            <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
-                                <template 
-                                    v-if="(label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length -1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
-                                        <line
-                                            data-cy="axis-x-tick"
-                                            v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showCrosshairs"
-                                            :y1="FINAL_CONFIG.chart.grid.labels.xAxis.crosshairsAlwaysAtZero ? zero - (zero === drawingArea.bottom ? 0 : FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize / 2) :  drawingArea.bottom"
-                                            :y2="FINAL_CONFIG.chart.grid.labels.xAxis.crosshairsAlwaysAtZero ? zero + (FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize / (zero === drawingArea.bottom ? 1 : 2)) : drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxis.crosshairSize"
-                                            :x1="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
-                                            :x2="drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)"
-                                            :stroke="FINAL_CONFIG.chart.grid.stroke"
-                                            :stroke-width="1"
-                                            stroke-linecap="round"
-                                            :style="{ animation: 'none !important'}"
-                                        />
-                                </template>
-                            </g>
+                            <path 
+                                :d="crosshairsX"
+                                :stroke="FINAL_CONFIG.chart.grid.stroke"
+                                :stroke-width="1"
+                                stroke-linecap="round"
+                                :style="{ animation: 'none !important'}"
+                            />
                         </g>
                     </g>
     
@@ -2158,6 +2144,69 @@ const drawingArea = computed(() => {
         width: isAutoSize.value ? width.value - individualScalesPadding :width.value - (FINAL_CONFIG.value.chart.padding.right + FINAL_CONFIG.value.chart.padding.left + individualScalesPadding)
     }
 });
+
+const gridVerticalLines = computed(() => {
+    const extra = FINAL_CONFIG.value.chart.grid.position === 'middle' ? 1 : 0
+    const count = maxSeries.value + extra
+
+    const topY = forceValidValue(drawingArea.value.top)
+    const bottomY = forceValidValue(drawingArea.value.bottom)
+
+    return Array.from({ length: count })
+    .map((_, i) => {
+        const x = (drawingArea.value.width / maxSeries.value) * i + drawingArea.value.left + xPadding.value
+        return `M${x},${topY} L${x},${bottomY}`
+    })
+    .join(' ')
+});
+
+const crosshairsX = computed(() => {
+    if (!FINAL_CONFIG.value.chart.grid.labels.xAxis.showCrosshairs) {
+        return '';
+    }
+
+    const {
+        showOnlyAtModulo,
+        showOnlyFirstAndLast,
+        modulo
+    } = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels
+
+    const interval = Math.floor((slicer.value.end - slicer.value.start) / modulo)
+
+    return timeLabels.value
+        .map((label, i) => {
+            if (!label) return null
+
+            const cond1 = showOnlyAtModulo && maxSeries.value <= modulo
+            const cond2 = !showOnlyFirstAndLast && !showOnlyAtModulo
+            const cond3 = showOnlyFirstAndLast && !showOnlyAtModulo && (i === 0 || i === timeLabels.value.length - 1)
+            const cond4 = showOnlyFirstAndLast && !showOnlyAtModulo && selectedSerieIndex.value === i
+            const cond5 = !showOnlyFirstAndLast && showOnlyAtModulo && (i % interval === 0)
+
+            if (!(cond1 || cond2 || cond3 || cond4 || cond5)) {
+                return null
+            }
+
+            const segmentWidth = drawingArea.value.width / maxSeries.value
+            const x = drawingArea.value.left + segmentWidth * i + segmentWidth / 2
+
+            const size = FINAL_CONFIG.value.chart.grid.labels.xAxis.crosshairSize
+            const alwaysAtZero = FINAL_CONFIG.value.chart.grid.labels.xAxis.crosshairsAlwaysAtZero
+
+            const y1 = alwaysAtZero
+                ? zero.value - (zero.value === drawingArea.value.bottom ? 0 : size / 2)
+                : drawingArea.value.bottom
+
+            const y2 = alwaysAtZero
+                ? zero.value + (size / (zero.value === drawingArea.value.bottom ? 1 : 2))
+                : drawingArea.value.bottom + size
+
+            return `M${x},${y1} L${x},${y2}`
+        })
+        .filter(seg => seg !== null)
+        .join(' ')
+})
+
 
 function usesSelectTimeLabelEvent() {
     return !!instance?.vnode.props?.onSelectTimeLabel
