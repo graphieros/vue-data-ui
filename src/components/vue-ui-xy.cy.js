@@ -18,6 +18,8 @@ describe("<VueUiXy />", () => {
 				subtitle: true,
 				slicer: true,
 				tooltipCallback: () => {
+					cy.get('.vue-ui-xy').trigger('mouseenter', { force: true });
+					cy.wait(300)
 					cy.get('[data-cy="tooltip-trap"]')
 						.first()
 						.trigger("mouseenter", { force: true });
