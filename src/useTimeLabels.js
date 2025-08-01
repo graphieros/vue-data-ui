@@ -5,8 +5,8 @@ import locales from "./locales/locales.json";
  * @param {Array<string|number>} values
  * @param {number} maxDatapoints
  * @param {{ enable:boolean, useUTC:boolean, locale:string, januaryAsYear:boolean, options:Record<string,string> }} formatter
- * @param {number} start  // index de début (inclus)
- * @param {number} end    // index de fin (exclus)
+ * @param {number} start  // start index (provided by Slicer)
+ * @param {number} end    // end index (provided by Slicer)
  */
 export function useTimeLabels({
     values,

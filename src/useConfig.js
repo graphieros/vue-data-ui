@@ -3256,7 +3256,7 @@ export function useConfig() {
     const vue_ui_nested_donuts = {
         debug: false, // v3
         loading: false, // v3
-        autoSize: true, // v3 (false = v2)
+        autoSize: true, // v3 (false = v2), unused on this component for now
         responsive: false,
         theme: '',
         customPalette: [],

@@ -8,7 +8,11 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
-const dataset = ref([
+const dataset = ref([])
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
     {
         name: "Group 1 is too long",
         series: [
@@ -43,7 +47,9 @@ const dataset = ref([
             },
         ]
     },
-])
+]
+    }, 2000)
+})
 
 function addDatapoint() {
     dataset.value[0].series.push({
@@ -53,6 +59,7 @@ function addDatapoint() {
 }
 
 const model = ref([
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -65,12 +72,14 @@ const model = ref([
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
 
+    { key: 'startAnimation.show', def: true, type: 'checkbox'},
+
     { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
     { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
-    { key: 'useCssAnimation', def: true, type: 'checkbox'},
+    { key: 'useCssAnimation', def: false, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.useGradient', def: true, type: 'checkbox'},

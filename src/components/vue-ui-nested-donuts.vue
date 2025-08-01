@@ -8,6 +8,7 @@ import {
     onBeforeUnmount,
     defineAsyncComponent,
     shallowRef,
+    toRefs,
 } from "vue";
 import {
     abbreviate,
@@ -32,6 +33,7 @@ import {
     themePalettes,
     XMLNS,
     checkNaN,
+    treeShake,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import { useNestedProp } from "../useNestedProp";
@@ -44,6 +46,8 @@ import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import img from "../img";
+import { useLoading } from "../useLoading";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -70,8 +74,13 @@ const props = defineProps({
     },
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
+const isDataset = computed({
+    get() {
+        return !!props.dataset && props.dataset.length;
+    },
+    set(bool) {
+        return bool;
+    }
 });
 
 const uid = ref(createUid());
@@ -97,14 +106,66 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const loaderDs = {
+    name: '',
+    series: [
+        {
+            name: '',
+            values: [3],
+            color: '#BABABA',
+        },
+        {
+            name: '',
+            values: [2],
+            color: '#AAAAAA',
+        },
+        {
+            name: '',
+            values: [1],
+            color: '#CACACA',
+        },
+    ]
+}
+
+const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async() => {
+            await triggerAnim();
+        });
     },
-    set: (newCfg) => {
-        return newCfg;
-    },
-});
+    skeletonDataset: [loaderDs, loaderDs],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            useCssAnimation: false,
+            table: { show: false },
+            startAnimation: { show: false },
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        labels: {
+                            dataLabels: { show: false },
+                        }
+                    },
+                    legend: { backgroundColor: 'transparent', showValue: false, showPercentage: false },
+                    title: {
+                        color: '#1A1A1A',
+                        subtitle: {
+                            color: '#5A5A5A'
+                        }
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
@@ -134,7 +195,9 @@ function prepareConfig() {
 watch(
     () => props.config,
     (_newCfg) => {
-        FINAL_CONFIG.value = prepareConfig();
+        if (!loading.value) {
+            FINAL_CONFIG.value = prepareConfig();
+        }
         userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
         prepareChart();
         titleStep.value += 1;
@@ -232,11 +295,9 @@ function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
     });
 }
 
-onMounted(async () => {
-    prepareChart();
-
+async function triggerAnim() {
     if (FINAL_CONFIG.value.startAnimation?.show) {
-        const seriesList = props.dataset.flatMap((d) => d.series);
+        const seriesList = FINAL_DATASET.value.flatMap((d) => d.series);
         const finalValues = seriesList.map((s) =>
             sanitizeArray(s.values).reduce((a, b) => a + b, 0)
         );
@@ -244,7 +305,7 @@ onMounted(async () => {
         animatedValues.value = finalValues.map(() => 0);
         isFirstLoad.value = true;
 
-        ghostSlices.value = props.dataset.map((ds, i) => {
+        ghostSlices.value = FINAL_DATASET.value.map((ds, i) => {
             const total = ds.series.reduce(
                 (sum, s) => sum + sanitizeArray(s.values).reduce((a, b) => a + b, 0),
                 0
@@ -277,21 +338,29 @@ onMounted(async () => {
     } else {
         isFirstLoad.value = false;
     }
+}
+
+onMounted(async () => {
+    prepareChart();
+    await triggerAnim();
 });
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-onMounted(() => {
-    prepareChart();
-});
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: "VueUiNestedDonuts",
             type: "dataset",
+            debug: debug.value
         });
+        isDataset.value = false;
+        manualLoading.value = true; // v3
+    } else {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -362,6 +431,17 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        dataLabels: {
+            show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show,
+        },
+            showTable: FINAL_CONFIG.value.table.show,
+            showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    };
+}, { immediate: true });
+
 const svg = ref({
     width: FINAL_CONFIG.value.style.chart.width,
     height: FINAL_CONFIG.value.style.chart.height,
@@ -400,13 +480,15 @@ function animateValue({
 const segregated = ref([]);
 
 const immutableDataset = computed(() => {
-    props.dataset.forEach((ds, i) => {
+    const l = loading.value;
+    FINAL_DATASET.value.forEach((ds, i) => {
         if ([null, undefined].includes(ds.name)) {
             error({
                 componentName: "VueUiNestedDonuts",
                 type: "datasetSerieAttribute",
                 property: "name",
                 index: i,
+                debug: debug.value
             });
         }
         if ([null, undefined].includes(ds.series)) {
@@ -415,6 +497,7 @@ const immutableDataset = computed(() => {
                 type: "datasetSerieAttribute",
                 property: "series",
                 index: i,
+                debug: debug.value
             });
         } else {
             if (ds.series.length === 0) {
@@ -422,6 +505,7 @@ const immutableDataset = computed(() => {
                     componentName: "VueUiNestedDonuts",
                     type: "datasetAttributeEmpty",
                     property: `series at index ${i}`,
+                    debug: debug.value
                 });
             } else {
                 ds.series.forEach((serie, j) => {
@@ -432,6 +516,7 @@ const immutableDataset = computed(() => {
                             property: "name",
                             index: j,
                             key: "serie",
+                            debug: debug.value
                         });
                     }
                     if ([null, undefined].includes(serie.values)) {
@@ -441,6 +526,7 @@ const immutableDataset = computed(() => {
                             property: "values",
                             index: j,
                             key: "serie",
+                            debug: debug.value
                         });
                     }
                 });
@@ -450,7 +536,7 @@ const immutableDataset = computed(() => {
 
     let animatedCounter = 0;
 
-    return props.dataset.map((ds, i) => {
+    return FINAL_DATASET.value.map((ds, i) => {
         return {
             ...ds,
             total: ds.series
@@ -482,6 +568,13 @@ const immutableDataset = computed(() => {
         };
     });
 });
+
+// v3 - Stop skeleton loader when props.dataset becomes valid
+watch(() => props.dataset, (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+        manualLoading.value = false;
+    }
+}, { immediate: true });
 
 const donutSize = computed(() => {
     return (
@@ -901,18 +994,18 @@ const legendSets = computed(() => {
         const total = isFirstLoad.value
             ? visibleSeries
                 .map((s) => {
-                    const indexInOriginal = props.dataset[i].series.findIndex(
+                    const indexInOriginal = FINAL_DATASET.value[i].series.findIndex(
                         (orig) => orig.name === s.name
                     );
                     return sanitizeArray(
-                        props.dataset[i].series[indexInOriginal].values
+                        FINAL_DATASET.value[i].series[indexInOriginal].values
                     ).reduce((a, b) => a + b, 0);
                 })
                 .reduce((a, b) => a + b, 0)
             : visibleSeries.map((s) => s.value).reduce((a, b) => a + b, 0);
 
         return ds.series.map((s, j) => {
-            const rawValue = sanitizeArray(props.dataset[i].series[j].values).reduce(
+            const rawValue = sanitizeArray(FINAL_DATASET.value[i].series[j].values).reduce(
                 (a, b) => a + b,
                 0
             );
@@ -1195,7 +1288,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg ref="svgRef" :xmlns="XMLNS" v-if="isDataset" :class="{
+        <svg ref="svgRef" :xmlns="XMLNS" :class="{
             'vue-data-ui-fullscreen--on': isFullscreen,
             'vue-data-ui-fulscreen--off': !isFullscreen,
             'vue-data-ui-svg': true
@@ -1486,16 +1579,6 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
 
-        <Skeleton v-if="!isDataset" :config="{
-            type: 'donut',
-            style: {
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                donut: {
-                    color: '#CCCCCC',
-                },
-            },
-        }" />
-
         <!-- TOOLTIP -->
         <Tooltip :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
@@ -1597,6 +1680,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading"/>
     </div>
 </template>
 
