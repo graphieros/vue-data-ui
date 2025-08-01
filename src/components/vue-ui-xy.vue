@@ -326,7 +326,7 @@
                     </g>
     
                     <!-- HIGHLIGHTERS -->
-                    <g>
+                    <g v-if="userHovers">
                         <g v-for="(_, i) in maxSeries" :key="`tooltip_trap_highlighter_${i}`">
                             <rect
                                 data-cy="highlighter"
@@ -1276,7 +1276,7 @@
                     </g>
     
                     <!-- TOOLTIP TRAPS -->
-                    <g>
+                    <g v-if="userHovers">
                         <rect
                             data-cy="tooltip-trap"
                             v-for="(_, i) in maxSeries" :key="`tooltip_trap_${i}`"
@@ -2184,7 +2184,11 @@ function setTagRef(i, j, el, position, type) {
     if (el) tagRefs.value[`${i}_${j}_${position}_${type}`] = el;
 }
 
-function setUserOptionsVisibility(state = false) {
+const userHovers = ref(false);
+
+async function setUserOptionsVisibility(state = false) {
+    await nextTick();
+    userHovers.value = state;
     if (!showUserOptionsOnChartHover.value) return;
     userOptionsVisible.value = state
 }
