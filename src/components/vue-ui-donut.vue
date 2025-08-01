@@ -788,9 +788,11 @@ const legendConfig = computed(() => {
 })
 
 const minSize = computed(() => {
-    const val = Math.min(svg.value.width / 3, svg.value.height / 3);
-    return val < 12 ? 12 : val;
-})
+    const ratio = FINAL_CONFIG.value.style.chart.layout.donut.radiusRatio;
+    const clampedRatio = Math.max(0.1, Math.min(0.50001, ratio));
+    const val = Math.min(svg.value.width * clampedRatio, svg.value.height * clampedRatio);
+    return Math.max(12, val);
+});
 
 const currentDonut = computed(() => {
     const d = makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, minSize.value, minSize.value, 1.99999, 2, 1, 360, 105.25, donutThickness.value);

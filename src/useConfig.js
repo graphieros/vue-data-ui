@@ -838,6 +838,7 @@ export function useConfig() {
                         }
                     },
                     donut: {
+                        radiusRatio: 0.3, // v3 (clamped between 0.1 and 0.5)
                         strokeWidth: 64, // v3 (v2 = 55)
                         borderWidth: 1,
                         useShadow: false,

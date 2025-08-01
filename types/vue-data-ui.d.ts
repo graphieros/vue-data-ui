@@ -3576,6 +3576,7 @@ declare module "vue-data-ui" {
                         };
                     };
                     donut?: {
+                        radiusRatio?: number;
                         strokeWidth?: number;
                         borderWidth?: number;
                         spacingRatio?: number;

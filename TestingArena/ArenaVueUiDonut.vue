@@ -28,7 +28,7 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = [
             {
-                name: 'A',
+                name: 'A with a long name',
                 values: [3]
             },
             {
@@ -161,11 +161,13 @@ const model = ref([
     { key: 'style.chart.layout.labels.hollow.average.value.suffix', def: '', type: 'text', label: ['hollow', 'average', 'value', 'is', 'suffix'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.average.value.offsetY', def: 0, type: 'number', min: -100, max: 100, label: ['hollow', 'average', 'value', 'is', 'offsetY'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.average.value.rounding', def: 0, type: 'number', min: 0, max: 6, label: ['hollow', 'average', 'value', 'is', 'rounding'], category: 'labels' },
+
     { key: 'style.chart.layout.donut.strokeWidth', def: 64, type: 'range', min: 3, max: 130, label: 'thickness', category: 'donut' },
     { key: 'style.chart.layout.donut.borderWidth', def: 1, type: 'range', min: 0, max: 36, label: ['border', 'is', 'thickness'], category: 'donut' },
     { key: 'style.chart.layout.donut.useShadow', def: false,  type: 'checkbox' },
     { key: 'style.chart.layout.donut.shadowColor', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.layout.donut.selectedColor', def: '#0000001A', type: 'color'},
+    { key: 'style.chart.layout.donut.radiusRatio', def: 0.5, type: 'number', min: 0.1, max: 0.5, step: 0.01},
 
     { key: 'style.chart.legend.show', def: true, type: 'checkbox', label: 'show', category: 'legend' },
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF20', type: 'color', label: 'backgroundColor', category: 'legend' },
