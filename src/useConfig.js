@@ -557,7 +557,8 @@ export function useConfig() {
                         scaleMax: null, // idem
                         groupColor: null, // force yAxis labels color
                         scaleLabelOffsetX: 0,
-                        scaleValueOffsetX: 0
+                        scaleValueOffsetX: 0,
+                        rounding: 1,
                     },
                     xAxisLabels: {
                         color: COLOR_BLACK,

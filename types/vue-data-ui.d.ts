@@ -3035,6 +3035,7 @@ declare module "vue-data-ui" {
                         groupColor?: string | null;
                         scaleLabelOffsetX?: number;
                         scaleValueOffsetX?: number;
+                        rounding?: number;
                     };
                     xAxis?: {
                         showBaseline?: boolean;
@@ -8543,7 +8544,7 @@ declare module "vue-data-ui" {
      * // Values < 1 use minimal decimals
      * formatSmallValue({ value: 0.9 }); // "0.9"
      * formatSmallValue({ value: 0.0042 }); // "0.0042"
-     * formatSmallValue({ value: 0.0042000 }); // "0.0042"
+     * formatSmallValue({ value: 0.00420001 }); // "0.0042"
      *
      * // Retain trailing zeros
      * formatSmallValue({ value: 0.9, removeTrailingZero: false }); // "0.90"

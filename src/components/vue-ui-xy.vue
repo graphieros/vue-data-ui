@@ -114,7 +114,11 @@
             :width="isAutoSize ? undefined : '100%'" 
             :viewBox="viewBox" 
             class="vue-ui-xy-svg vue-data-ui-svg" 
-            :style="`background: transparent; color:${FINAL_CONFIG.chart.color}; font-family:${FINAL_CONFIG.chart.fontFamily}`"
+            :style="{
+                background: 'transparent',
+                color: FINAL_CONFIG.chart.color,
+                fontFamily: FINAL_CONFIG.chart.fontFamily,
+            }"
             :aria-label="chartAriaLabel"
             role="img"
             aria-live="polite"
@@ -503,7 +507,7 @@
                                                 p: yLabel.prefix, 
                                                 v: yLabel.value, 
                                                 s: yLabel.suffix, 
-                                                r: 1,
+                                                r: FINAL_CONFIG.chart.grid.labels.yAxis.rounding,
                                             }),
                                             { datapoint: yLabel.datapoint, seriesIndex: j }
                                         )
@@ -541,7 +545,7 @@
                                             p: yLabel.prefix, 
                                             v: yLabel.value, 
                                             s: yLabel.suffix, 
-                                            r: 1,
+                                            r: FINAL_CONFIG.chart.grid.labels.yAxis.rounding,
                                         })) : '' 
                                     }}
                                 </text>
@@ -1135,7 +1139,6 @@
                         >
                             {{ FINAL_CONFIG.chart.grid.labels.axis.xLabel }}
                         </text>
-    
                     </g>
                     
                     <!-- TIME LABELS -->
@@ -1747,6 +1750,7 @@ const G = ref(null);
 const xAxisLabel = ref(null);
 const yAxisLabel = ref(null);
 const timeLabelsEls = ref(null);
+const scaleLabels = ref(null);
 
 const resizeObserver = ref(null);
 const observedEl = ref(null);
@@ -2293,7 +2297,13 @@ async function setXAxisLabel() {
 async function setYAxisLabel() {
     if (!yAxisLabel.value) return;
     await nextTick();
-    yAxisLabel.value.setAttribute('transform', `translate(${viewBoxParts.value.x + FINAL_CONFIG.value.chart.grid.labels.axis.yLabelOffsetX + fontSizes.value.yAxis}, ${drawingArea.value.top + drawingArea.value.height /  2}) rotate(-90)`)
+    let x = 0;
+    if (scaleLabels.value) {
+        x = scaleLabels.value.getBBox().x;
+    } else {
+        x = viewBoxParts.value.x
+    }
+    yAxisLabel.value.setAttribute('transform', `translate(${x + FINAL_CONFIG.value.chart.grid.labels.axis.yLabelOffsetX - fontSizes.value.yAxis}, ${drawingArea.value.top + drawingArea.value.height /  2}) rotate(-90)`)
 }
 
 async function setViewBox() {
@@ -2304,6 +2314,7 @@ async function setViewBox() {
     setXAxisLabel();
     await nextTick();
     setYAxisLabel();
+    await nextTick();
     const newBB = g.getBBox();
     viewBox.value = `${newBB.x} ${newBB.y - fontSizes.value.plotLabels} ${newBB.width + FINAL_CONFIG.value.chart.padding.left} ${newBB.height + fontSizes.value.plotLabels + FINAL_CONFIG.value.chart.padding.top}`;
     await nextTick();
