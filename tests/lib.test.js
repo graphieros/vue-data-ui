@@ -46,6 +46,7 @@ import {
     degreesToRadians,
     error,
     forceValidValue,
+    formatSmallValue,
     functionReturnsString,
     generateSpiralCoordinates,
     getCloserPoint,
@@ -3995,3 +3996,63 @@ describe('setOpacityIfWithinBBox', () => {
         expect(el.style.opacity).toBe('1');
     });
 });
+
+describe('formatSmallValue()', () => {
+    test('returns "0" for zero values', () => {
+        expect(formatSmallValue({ value: 0 })).toBe('0')
+        expect(formatSmallValue({ value: 0, maxDecimals: 2 })).toBe('0')
+        const fb0 = vi.fn((v) => `X${v}`)
+        expect(formatSmallValue({ value: 0, fallbackFormatter: fb0 })).toBe('0')
+        expect(fb0).not.toHaveBeenCalled()
+    })
+
+    test('values ≥ 1 without fallbackFormatter are stringified', () => {
+        expect(formatSmallValue({ value: 1 })).toBe('1')
+        expect(formatSmallValue({ value: 1.61803 })).toBe('1.618')
+        expect(formatSmallValue({ value: 1.6181 })).toBe('1.6181')
+        expect(formatSmallValue({ value: 1.6181, maxDecimals: 2 })).toBe('1.62')
+        expect(formatSmallValue({ value: -99 })).toBe('-99')
+    })
+
+    test('values ≥ 1 use fallbackFormatter when provided', () => {
+        const fb1 = vi.fn((v) => `P${v.toFixed(1)}S`)
+        expect(formatSmallValue({ value: 1.618, fallbackFormatter: fb1 })).toBe('P1.6S')
+        expect(fb1).toHaveBeenCalledTimes(1)
+        expect(fb1).toHaveBeenCalledWith(1.618)
+    })
+
+    test('small positive values < 1 are formatted to the right number of decimals', () => {
+        expect(formatSmallValue({ value: 0.5 })).toBe('0.5')
+        expect(formatSmallValue({ value: 0.0123 })).toBe('0.012')
+        expect(formatSmallValue({ value: 0.0000123 })).toBe('0')
+    })
+
+    test('small negative values < 1 keep their sign and correct decimals', () => {
+        expect(formatSmallValue({ value: -0.05 })).toBe('-0.05')
+    })
+
+    test('respects custom maxDecimals for very small values', () => {
+        expect(formatSmallValue({ value: 0.00000123 })).toBe('0')
+        expect(formatSmallValue({ value: 0.00000123, maxDecimals: 2 })).toBe('0')
+        expect(formatSmallValue({ value: 0.00000123, maxDecimals: 6 })).toBe('0.000001')
+    })
+
+    test('fallbackFormatter is ignored for small values < 1', () => {
+        const fb2 = vi.fn((v) => 'SHOULD_NOT_BE_USED')
+        expect(formatSmallValue({ value: 0.1234, fallbackFormatter: fb2 })).toBe('0.12')
+        expect(fb2).not.toHaveBeenCalled()
+    })
+
+    test('exact boundary values (1 and -1) behave like ≥1 cases', () => {
+        expect(formatSmallValue({ value: 1 })).toBe('1')
+        expect(formatSmallValue({ value: -1 })).toBe('-1')
+        const fb3 = vi.fn((v) => `P${v}S`)
+        expect(formatSmallValue({ value: 1, fallbackFormatter: fb3 })).toBe('P1S')
+        expect(fb3).toHaveBeenCalledTimes(1)
+    })
+
+    test('preserves trailing zeros when removeTrailingZero is false for small values', () => {
+        expect(formatSmallValue({ value: 0.5, removeTrailingZero: false })).toBe('0.50')
+        expect(formatSmallValue({ value: 0.0000123, removeTrailingZero: false })).toBe('0.0000')
+    })
+})

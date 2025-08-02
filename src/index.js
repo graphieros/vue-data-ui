@@ -1,7 +1,17 @@
 import { defineAsyncComponent } from "vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
 import getThemeConfig from "./getThemeConfig";
-import { getPalette, createWordCloudDatasetFromPlainText, abbreviate, createTSpans, createStraightPath, createSmoothPath, getCumulativeAverage, getCumulativeMedian } from "./lib";
+import { 
+    abbreviate, 
+    createSmoothPath, 
+    createStraightPath, 
+    createTSpans, 
+    createWordCloudDatasetFromPlainText,
+    formatSmallValue,
+    getCumulativeAverage, 
+    getCumulativeMedian,
+    getPalette,
+} from "./lib";
 import { lightenColor, darkenColor, shiftColorHue, mergeConfigs } from "./exposedLib";
 import { useObjectBindings } from "./useObjectBindings";
 
@@ -79,6 +89,7 @@ export {
     createTSpans,
     createWordCloudDatasetFromPlainText,
     darkenColor,
+    formatSmallValue,
     getCumulativeAverage,
     getCumulativeMedian,
     getPalette,

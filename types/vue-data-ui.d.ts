@@ -8521,6 +8521,55 @@ declare module "vue-data-ui" {
      * @returns The shifted color in hexadecimal format.
      */
     export const shiftColorHue: (color: string, strength: number) => string;
+    
+    export type FormatSmallValueArgs = {
+        value: number;
+        maxDecimals?: number;
+        fallbackFormatter?: (value: number) => string;
+        removeTrailingZero?: boolean
+    }
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Formats numeric values with a controlled number of decimal places,
+     * applying maxDecimals for all values when no fallbackFormatter is given,
+     * or calling the fallbackFormatter for values ≥ 1 if provided.
+     * ___
+     * @example
+     * // Zero value
+     * formatSmallValue({ value: 0 }); // "0"
+     *
+     * // Values < 1 use minimal decimals
+     * formatSmallValue({ value: 0.9 }); // "0.9"
+     * formatSmallValue({ value: 0.0042 }); // "0.0042"
+     * formatSmallValue({ value: 0.0042000 }); // "0.0042"
+     *
+     * // Retain trailing zeros
+     * formatSmallValue({ value: 0.9, removeTrailingZero: false }); // "0.90"
+     *
+     * // Values ≥ 1 without fallback apply maxDecimals
+     * formatSmallValue({ value: 1.61803, maxDecimals: 3 }); // "1.618"
+     *
+     * // Values ≥ 1 with fallbackFormatter
+     * formatSmallValue({ value: 2.5, fallbackFormatter: v => v.toFixed(1) }); // "2.5"
+     *
+     * // Negative values
+     * formatSmallValue({ value: -0.056 }); // "-0.056"
+     * 
+     * @param {FormatSmallValueArgs} options - Configuration object for formatting.
+     * @param {number} options.value                 - The numeric value to format.
+     * @param {number} [options.maxDecimals=4]       - Maximum decimal places to use.
+     * @param {(value: number) => string} [options.fallbackFormatter] - Formatter for values ≥ 1.
+     * @param {boolean} [options.removeTrailingZero=true] - Whether to strip unnecessary trailing zeros.
+     * @returns {string} The formatted number as a string.
+     */
+    export const formatSmallValue: ({
+        value,
+        maxDecimals,
+        fallbackFormatter,
+        removeTrailingZero
+    }: FormatSmallValueArgs) => string
 
     export type CreateTSpansArgs = {
         content: string;

@@ -2657,7 +2657,7 @@ export function autoFontSize({
     if (
         er.x >= cLeft + padding &&
         er.y >= cTop + padding &&
-        er.x + er.width  <= cRight - padding &&
+        er.x + er.width <= cRight - padding &&
         er.y + er.height <= cBottom - padding
     ) {
         return fontSize;
@@ -2672,7 +2672,7 @@ export function autoFontSize({
         if (
             er.x >= cLeft + padding &&
             er.y >= cTop + padding &&
-            er.x + er.width  <= cRight - padding &&
+            er.x + er.width <= cRight - padding &&
             er.y + er.height <= cBottom - padding
         ) {
             break;
@@ -2739,6 +2739,54 @@ export function observeClassPresenceIn(container, cssClass, onNodesPresent) {
     return observer;
 }
 
+/**
+ * Formats numeric values with a controlled number of decimal places,
+ * applying maxDecimals for all values when no fallbackFormatter is given,
+ * or calling the fallbackFormatter for values ≥ 1 if provided.
+ *
+ * @param {Object}   options
+ * @param {number}   options.value The numeric value to format.
+ * @param {number}   [options.maxDecimals=4] Max number of decimal places.
+ * @param {Function} [options.fallbackFormatter] Callback for values ≥ 1; receives the raw value and must return a string
+ * @param {boolean}  [options.removeTrailingZero=true] Whether to strip unnecessary trailing zeros.
+ * @returns {string}  The formatted number as a string.
+ */
+export function formatSmallValue({
+    value,
+    maxDecimals = 4,
+    fallbackFormatter,
+    removeTrailingZero = true,
+}) {
+    if (value === 0) {
+        return '0';
+    }
+
+    const abs = Math.abs(value);
+
+    if (abs >= 1 && typeof fallbackFormatter === 'function') {
+        const fb = fallbackFormatter(value);
+        return String(fb);
+    }
+
+    let decimals;
+    if (abs < 1) {
+        const exp = Math.floor(Math.log10(abs));
+        decimals = Math.min(Math.max(1 - exp, 1), maxDecimals);
+    } else {
+        decimals = maxDecimals;
+    }
+
+    let str = value.toFixed(decimals);
+
+    if (removeTrailingZero) {
+        str = str
+            .replace(/(\.\d*?[1-9])0+$/, '$1')   // drop zeros after last non-zero
+            .replace(/\.0+$/, '');               // drop ".0"
+    }
+
+    return str;
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -2789,6 +2837,7 @@ const lib = {
     emptyObjectToNull,
     error,
     forceValidValue,
+    formatSmallValue,
     functionReturnsString,
     generateSpiralCoordinates,
     getCloserPoint,
