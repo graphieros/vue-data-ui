@@ -45,7 +45,8 @@ import themes from "../themes.json";
 import { useConfig } from '../useConfig';
 import { useNestedProp } from '../useNestedProp';
 import { useTimeLabels } from '../useTimeLabels.js';
-import { computed, defineAsyncComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, toRefs, useSlots, watch, watchEffect } from 'vue';
+import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
+import { computed, defineAsyncComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, toRefs, useSlots, watch } from 'vue';
 import Slicer from '../atoms/Slicer.vue';
 import Title from '../atoms/Title.vue';
 import Shape from '../atoms/Shape.vue';
@@ -2190,88 +2191,17 @@ watch(() => mutableConfig.value.isStacked, async () => {
     forceResizeObserver();
 });
 
-function debounce(fn, delay) {
-    let timeout;
-    return (...args) => {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => fn(...args), delay);
-    };
-}
-
-function parseTranslate(transformStr) {
-    const match = /translate\(\s*([^\s,]+)\s*,\s*([^\s,]+)\s*\)/.exec(transformStr);
-    if (!match) {
-        return { x: 0, y: 0 };
-    }
-    return {
-        x: parseFloat(match[1]),
-        y: parseFloat(match[2])
-    };
-}
-
-async function detectTimeLabelCollision() {
-    await nextTick();
-    const container = timeLabelsEls.value;
-    if (!container) return;
-
-    const texts = Array.from(container.querySelectorAll('.vue-data-ui-time-label'));
-    if (texts.length < 2) return;
-
-    const textCoordinates = texts.map(t => {
-        return {
-            ...parseTranslate(t.getAttribute('transform')),
-            width: t.getBBox().width
-        }
-    })
-
-    const boxes = texts.map(t => t.getBBox());
-    let collision = false;
-
-    if (boxes.length > 2) {
-        for (let i = 0; i < textCoordinates.length && !collision; i += 1) {
-            for (let j = i + 1; j < textCoordinates.length; j += 1) {
-                const a = textCoordinates[i];
-                const b = textCoordinates[j];
-                if (!(a.x + a.width < b.x || b.x + b.width < a.x)) {
-                    collision = true;
-                    break;
-                }
-            }
-        }
-    }
-
-    const cfg = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels;
-    if (collision) {
-        if (!cfg.rotation) {
-            cfg.rotation = -30.0001;
-            if (isAutoSize.value) {
-                setViewBox();
-                forceResizeObserver();
-            }
-        }
-    } else {
-        if (cfg.rotation = -30.0001) {
-            cfg.rotation = 0;
-        }
-    }
-}
-
-const debouncedDetect = debounce(detectTimeLabelCollision, 200);
-
-watch([
-        () => timeLabels.value,
-        () => FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.rotation,
-        () => slicer.value.start,
-        () => slicer.value.end
-    ], async (newVals, oldVals) => {
-        if (!FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.autoRotate) return;
-        const slicerChanged = newVals[2] !== oldVals[2] || newVals[3] !== oldVals[3];
-        if (slicerChanged) {
-            debouncedDetect();
-        } else {
-            await detectTimeLabelCollision();
-        }
-}, { immediate: true });
+useTimeLabelCollision({
+    timeLabelsEls,
+    timeLabels,
+    slicer,
+    configRef: FINAL_CONFIG,
+    rotationPath: ['chart', 'grid', 'labels', 'xAxisLabels', 'rotation'],
+    autoRotatePath: ['chart', 'grid', 'labels', 'xAxisLabels', 'autoRotate'],
+    isAutoSize,
+    setViewBox,
+    forceResizeObserver
+});
 
 // Force reflow when component is mounted in a hidden div
 let ro
