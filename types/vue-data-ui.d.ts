@@ -3054,6 +3054,7 @@ declare module "vue-data-ui" {
                         showOnlyAtModulo?: boolean;
                         modulo?: number;
                         datetimeFormatter?: AxisDateFormatter;
+                        autoRotate?: boolean;
                     };
                 };
             };

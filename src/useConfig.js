@@ -570,7 +570,8 @@ export function useConfig() {
                         showOnlyAtModulo: false,
                         modulo: 12,
                         yOffset: 24,
-                        rotation: 0
+                        rotation: 0,
+                        autoRotate: true
                     }
                 }
             },

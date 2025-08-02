@@ -418,6 +418,7 @@ const model = ref([
 
     { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number' },
+    { key: 'chart.grid.labels.xAxisLabels.autoRotate', def: true, type: 'checkbox' },
 
     { key: 'chart.grid.labels.yAxis.position', def: 'right', type: 'select', options: ['left', 'right'] },
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 10, min: 0, max: 100, type: 'number' },
@@ -800,9 +801,9 @@ const config = computed(() => {
                             // values: new Array(13).fill(0).map((d,i) => {
                             //     return `Some long name\nwith a value ${i}`
                             // }),
-                            rotation: -30,
+                            // rotation: -30,
                             datetimeFormatter: {
-                                enable: true,
+                                enable: false,
                                 locale: 'en',
                                 useUTC: false,
                                 januaryAsYear: true,
@@ -1005,7 +1006,7 @@ onMounted(async () => {
             <LocalVueDataUi  component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
-                <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <!-- <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                     <g @click="() => selectTimeLabel({ x, y, fontSize, absoluteIndex })">
                         <text :x="x" :y="y" :font-size="fontSize" :text-anchor="textAnchor" :fill="fill">
                             {{ content }}
@@ -1015,7 +1016,7 @@ onMounted(async () => {
                             {{ content }}
                         </text>
                     </g>
-                </template>
+                </template> -->
 
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
