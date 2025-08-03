@@ -331,7 +331,11 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     right: 24
                 },
                 userOptions: { show: false },
-                zoom: { show: false }
+                zoom: { 
+                    show: false,
+                    startIndex: null,
+                    endIndex: null
+                }
             },
             bar: {
                 serieName: { show: false },
@@ -497,7 +501,6 @@ const timeLabelsY = computed(() => {
         let tlH = 0;
         if (timeLabelsEls.value) {
             tlH = timeLabelsHeight.value;
-            console.log(tlH)
         }
         return h + tlH + fontSizes.value.xAxis;
 });
@@ -684,21 +687,6 @@ function selectTimeLabel(label, relativeIndex) {
 }
 
 const maxSeries = computed(() => slicer.value.end - slicer.value.start);
-
-
-function forceResizeObserver() {
-    if (!FINAL_CONFIG.value.responsive) return;
-    if (chart.value) {
-        const parent = chart.value.parentNode;
-        if (parent) {
-            const initW = parent.getBoundingClientRect().width;
-            parent.style.width = initW - 0.1 + 'px';
-            setTimeout(() => {
-                parent.style.width = initW + 'px';
-            }, 0);
-        }
-    }
-}
 
 function selectMinimapIndex(i) {
     selectedMinimapIndex.value = i;
