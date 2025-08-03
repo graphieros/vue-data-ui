@@ -268,6 +268,8 @@ export function useConfig() {
     }
 
     const vue_ui_stackbar = {
+        loading: false, // v3
+        debug: false, // v3
         theme: '',
         responsive: false,
         customPalette: [],
@@ -379,6 +381,7 @@ export function useConfig() {
                             datetimeFormatter: AXIS_DATE_FORMATTER,
                             offsetY: 0,
                             rotation: 0,
+                            autoRotate: true,
                             fontSize: FONT._14,
                             color: COLOR_BLACK,
                             bold: false

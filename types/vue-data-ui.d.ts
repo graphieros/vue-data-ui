@@ -7122,6 +7122,7 @@ declare module "vue-data-ui" {
                             datetimeFormatter?: AxisDateFormatter;
                             offsetY?: number;
                             rotation?: number;
+                            autoRotate?: boolean;
                             fontSize?: number;
                             color?: string;
                             bold?: boolean;
