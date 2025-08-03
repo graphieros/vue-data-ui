@@ -9,7 +9,8 @@ export function useTimeLabelCollision({
     autoRotatePath,
     isAutoSize,
     setViewBox,
-    forceResizeObserver
+    forceResizeObserver,
+    callback
 }) {
 
     function getNestedProp(obj, path) {
@@ -65,12 +66,14 @@ export function useTimeLabelCollision({
 
         if (collision && !currentRotation) {
             setNestedProp(configRef.value, rotationPath, -30.0001);
-            if (isAutoSize.value) {
+            callback && callback({ collision })
+            if (isAutoSize.value && setViewBox && forceResizeObserver) {
                 setViewBox();
                 forceResizeObserver();
             }
         } else if (!collision && currentRotation === -30.0001) {
             setNestedProp(configRef.value, rotationPath, 0);
+            callback && callback({ collision })
         }
     }
 

@@ -74,7 +74,7 @@ export function useConfig() {
     }
 
     const LTTB = {
-        threshold: 500,
+        threshold: 1095, // v2 = 500
     }
 
     const TITLE = {
@@ -419,7 +419,6 @@ export function useConfig() {
         debug: false, // v3
         theme: '',
         responsive: false,
-        autoSize: true, // false = v2
         loading: false, // v3
         responsiveProportionalSizing: true,
         customPalette: [],
@@ -551,7 +550,7 @@ export function useConfig() {
                         useNiceScale: false,
                         stacked: false,
                         gap: 12,
-                        labelWidth: 40,
+                        labelWidth: 64,
                         formatter: null,
                         scaleMin: null, // Overrides auto scaling
                         scaleMax: null, // idem
@@ -559,6 +558,7 @@ export function useConfig() {
                         scaleLabelOffsetX: 0,
                         scaleValueOffsetX: 0,
                         rounding: 1,
+                        serieNameFormatter: null // v3, for individual scale & stacked modes
                     },
                     xAxisLabels: {
                         color: COLOR_BLACK,

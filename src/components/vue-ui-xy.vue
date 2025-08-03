@@ -46,7 +46,7 @@ import { useConfig } from '../useConfig';
 import { useNestedProp } from '../useNestedProp';
 import { useTimeLabels } from '../useTimeLabels.js';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
-import { computed, defineAsyncComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, toRefs, useSlots, watch } from 'vue';
+import { computed, defineAsyncComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, toRefs, useSlots, watch, watchEffect } from 'vue';
 import Slicer from '../atoms/Slicer.vue';
 import Title from '../atoms/Title.vue';
 import Shape from '../atoms/Shape.vue';
@@ -54,6 +54,7 @@ import img from '../img.js';
 import { usePrinter } from '../usePrinter.js';
 import { useLoading } from '../useLoading.js';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import { throttle } from '../canvas-lib.js';
 
 const props = defineProps({
     config: {
@@ -125,8 +126,6 @@ const userOptionsVisible = ref(true);
 const svgRef = ref(null);
 const tagRefs = ref({});
 const textMeasurer = ref(null);
-const remainingHeight = ref(0); // v3
-const svgAspectRatio = ref(1); // v3
 
 const svg = computed(() => {
     return {
@@ -231,30 +230,19 @@ function prepareConfig() {
         mergedConfig.chart.annotations = [];
     }
 
-    // v3 autoSize chart.padding override
-    if (props.config && props.config.autoSize) {
-
-        if (props.config && !!props.config.debug) {
-            if (props.config.chart.padding.top) {
-                console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.top, set a 0 value to remove this warning')
-            }
-            if (props.config.chart.padding.right) {
-                console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.right, set a 0 value to remove this warning')
-            }
-            if (props.config.chart.padding.bottom) {
-                console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.bottom, set a 0 value to remove this warning')
-            }
-            if (props.config.chart.padding.left) {
-                console.warn('Vue Data UI - VueUiXy - autoSize mode ignores chart.padding.left, set a 0 value to remove this warning')
+    if (props.config && hasDeepProperty(props.config, 'chart.grid.position')) {
+        if (props.config.chart.grid.position === 'start' && props.dataset.length && props.dataset.some(el => el.type === 'bar')) {
+            mergedConfig.chart.grid.position = 'middle';
+            if (hasDeepProperty(props.config, 'debug')) {
+                console.warn('Vue Data UI - VueUiXy - config.chart.grid.position was overriden to `middle` because your dataset contains a bar')
             }
         }
+    }
 
-        mergedConfig.chart.padding = {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-        }
+    if (props.config && hasDeepProperty(props.config, 'chart.grid.labels.yAxis.serieNameFormatter')) {
+        mergedConfig.chart.grid.labels.yAxis.serieNameFormatter = props.config.chart.grid.labels.yAxis.serieNameFormatter;
+    } else {
+        mergedConfig.chart.grid.labels.yAxis.serieNameFormatter = null;
     }
 
     // ----------------------------------------------------------------------------
@@ -291,10 +279,6 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     callback: () => {
         Promise.resolve().then(async () => {
             await setupSlicer();
-            if (FINAL_CONFIG.value.autoSize) {
-                setViewBox();
-                forceResizeObserver();
-            }
         })
     },
     skeletonDataset: [
@@ -315,7 +299,6 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
         userConfig: {
-            autoSize: false,
             useCssAnimation: false,
             showTable: false,
             chart: {
@@ -334,7 +317,6 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                         yAxis: {
                             commonScaleSteps: 10,
                             useNiceScale: true,
-                            stacked: false,
                             scaleMin: 0,
                             scaleMax: 134
                         },
@@ -385,11 +367,7 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     options: FINAL_CONFIG.value.chart.userOptions.print
 });
 
-const isAutoSize = computed(() => FINAL_CONFIG.value.autoSize);
-const viewBoxParts = computed(() => {
-    const [x, y, w, h] = viewBox.value.split(' ').map(Number);
-    return { x, y, width: w, height: h };
-});
+const isAutoSize = ref(false);
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
@@ -470,26 +448,105 @@ const relativeDataset = computed(() => {
     }).filter(s => !segregatedSeries.value.includes(s.id));
 })
 
-const drawingArea = computed(() => {
-    function getUniqueScaleLabelsCount(dataset) {
-        const uniqueLabels = new Set();
-        dataset.forEach(item => {
-            const label = item.scaleLabel || '__noScaleLabel__';
-            uniqueLabels.add(label);
-        });
-        return uniqueLabels.size;
+function getScaleLabelX() {
+    let base = FINAL_CONFIG.value.chart.grid.labels.axis.yLabelOffsetX
+    if (scaleLabels.value) {
+        const texts = Array.from(scaleLabels.value.querySelectorAll('text'))
+        base = texts.reduce((max, t) => {
+        const w = t.getComputedTextLength()
+        return w > max ? w : max
+        }, 0)
     }
 
-    const len = getUniqueScaleLabelsCount(absoluteDataset.value.filter(s => !segregatedSeries.value.includes(s.id)));
+    const yAxisLabelW = yAxisLabel.value
+        ? yAxisLabel.value.getBoundingClientRect().width
+        : 0
 
-    const individualScalesPadding = mutableConfig.value.useIndividualScale && FINAL_CONFIG.value.chart.grid.labels.show ? len * (mutableConfig.value.isStacked ? 0 : FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth) : 0;
+    const crosshair = FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize
+    return base + yAxisLabelW + crosshair
+}
+
+
+const timeLabelsHeight = ref(0);
+
+const updateHeight = throttle((h) => {
+    timeLabelsHeight.value = h
+}, 100)
+
+// Track time label height to update drawing area when they rotate
+watchEffect((onInvalidate) => {
+    const el = timeLabelsEls.value
+    if (!el) return
+
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height)
+    })
+    observer.observe(el)
+    onInvalidate(() => observer.disconnect())
+})
+
+onBeforeUnmount(() => {
+    timeLabelsHeight.value = 0
+})
+
+const timeLabelsY = computed(() => {
+    let h = 0;
+        if (xAxisLabel.value) {
+            h = xAxisLabel.value.getBBox().height;
+        }
+        let tlH = 0;
+        if (timeLabelsEls.value) {
+            tlH = timeLabelsHeight.value;
+            console.log(tlH)
+        }
+        return h + tlH + fontSizes.value.xAxis;
+});
+
+const useProgression = computed(() => {
+    return FINAL_DATASET.value.some(el => el.useProgression)
+});
+
+const drawingArea = computed(() => {
+    let _scaleLabelX = 0;
+    const individualOffsetX = 36;
+
+    if (FINAL_CONFIG.value.chart.grid.labels.show) {
+        if (mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked) {
+            _scaleLabelX = (FINAL_DATASET.value.length - segregatedSeries.value.length) * (FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth + individualOffsetX)
+        } else if(mutableConfig.value.useIndividualScale && mutableConfig.value.isStacked) {
+            _scaleLabelX = FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth + individualOffsetX
+        }
+        else {
+            _scaleLabelX = getScaleLabelX();
+        }
+    }
+
+    const topOffset = FINAL_CONFIG.value.chart.labels.fontSize * 1.1;
+
+    const progressionLabelOffsetX = useProgression.value ? 24 : 6;
+
+    if (timeLabelsEls.value) {
+        const x = timeLabelsEls.value.getBBox().x
+        if (x < 0) {
+            _scaleLabelX += Math.abs(x)
+        }
+    }
+
+    const _width = width.value - _scaleLabelX - FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize - progressionLabelOffsetX - FINAL_CONFIG.value.chart.padding.left - FINAL_CONFIG.value.chart.padding.right;
+
+    const xPadding = FINAL_CONFIG.value.chart.grid.position === 'middle' ? 0 : _width / maxSeries.value / 2;
+
+
+
     return {
-        top: isAutoSize.value ? 0 : FINAL_CONFIG.value.chart.padding.top,
-        right: isAutoSize.value ? width.value : width.value - FINAL_CONFIG.value.chart.padding.right,
-        bottom: isAutoSize.value ? height.value : height.value - FINAL_CONFIG.value.chart.padding.bottom,
-        left: isAutoSize.value ? individualScalesPadding : FINAL_CONFIG.value.chart.padding.left + individualScalesPadding,
-        height: isAutoSize.value ? height.value : height.value - (FINAL_CONFIG.value.chart.padding.top + FINAL_CONFIG.value.chart.padding.bottom),
-        width: isAutoSize.value ? width.value - individualScalesPadding : width.value - (FINAL_CONFIG.value.chart.padding.right + FINAL_CONFIG.value.chart.padding.left + individualScalesPadding)
+        top: FINAL_CONFIG.value.chart.padding.top + topOffset,
+        right: width.value - progressionLabelOffsetX - FINAL_CONFIG.value.chart.padding.right,
+        bottom: height.value - timeLabelsY.value - FINAL_CONFIG.value.chart.padding.bottom - FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY,
+        left: _scaleLabelX + FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize - xPadding + FINAL_CONFIG.value.chart.padding.left,
+        height: height.value - timeLabelsY.value - FINAL_CONFIG.value.chart.padding.top -FINAL_CONFIG.value.chart.padding.bottom - topOffset - FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY,
+        width: _width,
+        scaleLabelX: _scaleLabelX,
+        individualOffsetX
     }
 });
 
@@ -628,42 +685,6 @@ function selectTimeLabel(label, relativeIndex) {
 
 const maxSeries = computed(() => slicer.value.end - slicer.value.start);
 
-async function setXAxisLabel() {
-    if (!xAxisLabel.value) return;
-    await nextTick();
-    let y = drawingArea.value.bottom;
-    if (timeLabelsEls.value) {
-        y += timeLabelsEls.value.getBBox().height
-    }
-    xAxisLabel.value.setAttribute('y', y + (fontSizes.value.xAxis * 1.3) + FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY);
-}
-
-async function setYAxisLabel() {
-    if (!yAxisLabel.value) return;
-    await nextTick();
-    let x = 0;
-    if (scaleLabels.value) {
-        x = scaleLabels.value.getBBox().x;
-    } else {
-        x = viewBoxParts.value.x
-    }
-    yAxisLabel.value.setAttribute('transform', `translate(${x + FINAL_CONFIG.value.chart.grid.labels.axis.yLabelOffsetX - fontSizes.value.yAxis}, ${drawingArea.value.top + drawingArea.value.height / 2}) rotate(-90)`)
-}
-
-async function setViewBox() {
-    await nextTick();
-    const g = G.value;
-    if (!g) return;
-    viewBox.value = `0 0 ${FINAL_CONFIG.value.chart.width} ${FINAL_CONFIG.value.chart.height}`;
-    setXAxisLabel();
-    await nextTick();
-    setYAxisLabel();
-    await nextTick();
-    const newBB = g.getBBox();
-    viewBox.value = `${newBB.x} ${newBB.y - fontSizes.value.plotLabels} ${newBB.width + FINAL_CONFIG.value.chart.padding.left} ${newBB.height + fontSizes.value.plotLabels + FINAL_CONFIG.value.chart.padding.top}`;
-    await nextTick();
-    chart.value.classList.remove('no-transition');
-}
 
 function forceResizeObserver() {
     if (!FINAL_CONFIG.value.responsive) return;
@@ -1635,21 +1656,25 @@ const allScales = computed(() => {
     const _source = (mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked) ? Object.values(scaleGroups.value) : [...lines, ...bars, ...plots];
 
     const len = _source.flatMap(el => el).length;
+
     return _source.flatMap((el, i) => {
 
         let x = 0;
-        if (isAutoSize.value) {
-            x = mutableConfig.value.isStacked ? drawingArea.value.left : drawingArea.value.left - (i * (FINAL_CONFIG.value.chart.grid.labels.yAxis.labelWidth + fontSizes.value.dataLabels * 2));
-        } else {
-            x = mutableConfig.value.isStacked ? drawingArea.value.left : (drawingArea.value.left / len) * (i + 1);
-        }
+        x = mutableConfig.value.isStacked ? drawingArea.value.left : drawingArea.value.left / len * (i + 1);
+
+        const name = (mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked) ? el.unique ? el.name : el.groupName : el.name
 
         return {
             unique: el.unique,
             id: el.id,
             groupId: el.groupId,
             scaleLabel: el.scaleLabel,
-            name: (mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked) ? el.unique ? el.name : el.groupName : el.name,
+            name: applyDataLabel(
+                FINAL_CONFIG.value.chart.grid.labels.yAxis.serieNameFormatter,
+                name,
+                name,
+                el
+            ),
             color: (mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked) ? el.unique ? el.color : el.groupColor : el.color,
             scale: el.scale,
             yOffset: el.yOffset,
@@ -2021,7 +2046,7 @@ function prepareChart() {
         useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
     }
 
-    const additionalPad = isAutoSize.value ? 0 : 12;
+    const additionalPad = 12;
 
     if (FINAL_CONFIG.value.responsive) {
         const _chart = chart.value;
@@ -2080,11 +2105,7 @@ function prepareChart() {
             - additionalPad;
 
         width.value = _width;
-        if (isAutoSize.value) {
-            setViewBox();
-        } else {
-            viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
-        }
+        viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
         convertSizes();
 
         const ro = new ResizeObserver((entries) => {
@@ -2114,10 +2135,7 @@ function prepareChart() {
                 } else {
                     noTitleHeight = 0;
                 }
-                if (isAutoSize.value) {
-                    // Transitions hinder the first viewbox measurements
-                    chart.value.classList.add('no-transition');
-                }
+
                 requestAnimationFrame(() => {
                     height.value = entry.contentRect.height
                         - titleHeight
@@ -2125,18 +2143,10 @@ function prepareChart() {
                         - slicerHeight
                         - sourceHeight
                         - noTitleHeight
-                        - (isAutoSize.value ? 48 : additionalPad); // FIXME: this magic 48 should be understood
+                        - additionalPad;
 
-                    if (isAutoSize.value) {
-                        remainingHeight.value = entry.contentRect.height - height.value;
-                        width.value = entry.contentBoxSize[0].inlineSize;
-                        svgAspectRatio.value = width.value / remainingHeight.value;
-                        setViewBox();
-                    } else {
-                        width.value = entry.contentBoxSize[0].inlineSize;
-                        viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
-                    }
-
+                    width.value = entry.contentBoxSize[0].inlineSize;
+                    viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
                     convertSizes();
                 })
             }
@@ -2156,11 +2166,7 @@ function prepareChart() {
         fontSizes.value.plotLabels = FINAL_CONFIG.value.chart.labels.fontSize;
         plotRadii.value.plot = FINAL_CONFIG.value.plot.radius;
         plotRadii.value.line = FINAL_CONFIG.value.line.radius;
-        if (isAutoSize.value) {
-            setViewBox();
-        } else {
-            viewBox.value = `0 0 ${width.value} ${height.value}`;
-        }
+        viewBox.value = `0 0 ${width.value} ${height.value}`;
     }
 }
 
@@ -2184,13 +2190,6 @@ onBeforeUnmount(() => {
     }
 });
 
-watch(() => mutableConfig.value.isStacked, async () => {
-    if (!isAutoSize.value) return;
-    await nextTick();
-    setViewBox();
-    forceResizeObserver();
-});
-
 useTimeLabelCollision({
     timeLabelsEls,
     timeLabels,
@@ -2199,40 +2198,9 @@ useTimeLabelCollision({
     rotationPath: ['chart', 'grid', 'labels', 'xAxisLabels', 'rotation'],
     autoRotatePath: ['chart', 'grid', 'labels', 'xAxisLabels', 'autoRotate'],
     isAutoSize,
-    setViewBox,
-    forceResizeObserver
 });
 
 // Force reflow when component is mounted in a hidden div
-let ro
-
-async function initSizing() {
-    await nextTick()
-    setViewBox()
-    forceResizeObserver()
-    ro.disconnect()
-}
-
-onMounted(() => {
-    if (!chart.value) return
-
-    ro = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-            const { width, height } = entry.contentRect
-            if (width > 0 && height > 0) {
-                initSizing()
-                break
-            }
-        }
-    });
-
-    ro.observe(chart.value.parentElement)
-});
-
-onBeforeUnmount(() => {
-    ro?.disconnect()
-});
-
 
 watch(() => props.dataset, (_) => {
     if (Array.isArray(_) && _.length > 0) {
@@ -2250,7 +2218,6 @@ watch(() => props.dataset, (_) => {
 
     slicerStep.value += 1;
     segregateStep.value += 1;
-    initSizing();
 
 }, { deep: true });
 
@@ -2385,7 +2352,7 @@ defineExpose({
 
         <svg ref="svgRef" xmlns="http://www.w3.org/2000/svg"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            data-cy="xy-svg" :width="isAutoSize ? undefined : '100%'" :viewBox="viewBox"
+            data-cy="xy-svg" :width="'100%'" :viewBox="viewBox"
             class="vue-ui-xy-svg vue-data-ui-svg" :style="{
                 background: 'transparent',
                 color: FINAL_CONFIG.chart.color,
@@ -2407,11 +2374,18 @@ defineExpose({
                 <g v-if="maxSeries > 0">
                     <!-- GRID -->
                     <g class="vue-ui-xy-grid">
-                        <line v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showBaseline" data-cy="xy-grid-line-x"
-                            :stroke="FINAL_CONFIG.chart.grid.stroke" stroke-width="1" :x1="drawingArea.left + xPadding"
-                            :x2="drawingArea.right - xPadding" :y1="forceValidValue(drawingArea.bottom)"
-                            :y2="forceValidValue(drawingArea.bottom)" stroke-linecap="round"
-                            :style="{ animation: 'none !important' }" />
+                        <line 
+                            v-if="FINAL_CONFIG.chart.grid.labels.xAxis.showBaseline" 
+                            data-cy="xy-grid-line-x"
+                            :stroke="FINAL_CONFIG.chart.grid.stroke" 
+                            stroke-width="1" 
+                            :x1="drawingArea.left + xPadding"
+                            :x2="drawingArea.right - xPadding" 
+                            :y1="forceValidValue(drawingArea.bottom)"
+                            :y2="forceValidValue(drawingArea.bottom)" 
+                            stroke-linecap="round"
+                            :style="{ animation: 'none !important' }" 
+                        />
                         <template v-if="!mutableConfig.useIndividualScale">
                             <line v-if="FINAL_CONFIG.chart.grid.labels.yAxis.showBaseline" data-cy="xy-grid-line-y"
                                 :stroke="FINAL_CONFIG.chart.grid.stroke" stroke-width="1"
@@ -2420,7 +2394,7 @@ defineExpose({
                                 stroke-linecap="round" :style="{ animation: 'none !important' }" />
                             <g v-if="FINAL_CONFIG.chart.grid.showHorizontalLines">
                                 <line data-cy="xy-grid-horizontal-line" v-for="l in yLabels"
-                                    :x1="drawingArea.left + xPadding" :x2="drawingArea.right - xPadding"
+                                    :x1="drawingArea.left + xPadding" :x2="drawingArea.right"
                                     :y1="forceValidValue(l.y)" :y2="forceValidValue(l.y)"
                                     :stroke="FINAL_CONFIG.chart.grid.stroke" :stroke-width="0.5" stroke-linecap="round"
                                     :style="{ animation: 'none !important' }" />
@@ -2639,7 +2613,7 @@ defineExpose({
                     <g v-if="FINAL_CONFIG.chart.grid.labels.show" ref="scaleLabels">
                         <template v-if="mutableConfig.useIndividualScale">
                             <g v-for="el in allScales">
-                                <line :x1="el.x + xPadding" :x2="el.x + xPadding"
+                                <line :x1="el.x + xPadding - drawingArea.individualOffsetX" :x2="el.x + xPadding - drawingArea.individualOffsetX"
                                     :y1="mutableConfig.isStacked ? forceValidValue((drawingArea.bottom - el.yOffset - el.individualHeight)) : forceValidValue(drawingArea.top)"
                                     :y2="mutableConfig.isStacked ? forceValidValue((drawingArea.bottom - el.yOffset)) : forceValidValue(drawingArea.bottom)"
                                     :stroke="el.color" :stroke-width="FINAL_CONFIG.chart.grid.stroke"
@@ -2648,20 +2622,25 @@ defineExpose({
                             </g>
                             <g v-for="el in allScales"
                                 :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out`">
-                                <text :fill="el.color" :font-size="fontSizes.dataLabels" text-anchor="middle"
-                                    :transform="`translate(${el.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + 5 + xPadding + FINAL_CONFIG.chart.grid.labels.yAxis.scaleLabelOffsetX}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`">
+                                <text 
+                                    :fill="el.color" 
+                                    :font-size="fontSizes.dataLabels * 0.8" 
+                                    text-anchor="middle"
+                                    :transform="`translate(${el.x - ((fontSizes.dataLabels * 0.8) / 2) + xPadding}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`">
                                     {{ el.name }} {{ el.scaleLabel && el.unique && el.scaleLabel !== el.id ? `-
                                     ${el.scaleLabel}` : '' }}
                                 </text>
                                 <template v-for="(yLabel, j) in el.yLabels">
-                                    <line v-if="FINAL_CONFIG.chart.grid.labels.yAxis.showCrosshairs"
-                                        :x1="el.x + 3 + xPadding - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
-                                        :x2="el.x + xPadding" :y1="forceValidValue(yLabel.y)"
+                                    <line 
+                                        v-if="FINAL_CONFIG.chart.grid.labels.yAxis.showCrosshairs"
+                                        :x1="el.x + 3 + xPadding - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize - drawingArea.individualOffsetX"
+                                        :x2="el.x + xPadding - drawingArea.individualOffsetX" 
+                                        :y1="forceValidValue(yLabel.y)"
                                         :y2="forceValidValue(yLabel.y)" :stroke="el.color" :stroke-width="1"
                                         stroke-linecap="round" :style="{ animation: 'none !important' }" />
                                 </template>
                                 <text v-for="(yLabel, j) in el.yLabels"
-                                    :x="isAutoSize ? el.x - fontSizes.dataLabels / 2 + xPadding + FINAL_CONFIG.chart.grid.labels.yAxis.scaleValueOffsetX : el.x - 5 + xPadding + FINAL_CONFIG.chart.grid.labels.yAxis.scaleValueOffsetX"
+                                    :x="el.x - 5 + xPadding - drawingArea.individualOffsetX"
                                     :y="forceValidValue(yLabel.y) + fontSizes.dataLabels / 3"
                                     :font-size="fontSizes.dataLabels" text-anchor="end" :fill="el.color">
                                     {{
@@ -2684,14 +2663,14 @@ defineExpose({
                             <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
                                 <line data-cy="axis-y-tick"
                                     v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max && FINAL_CONFIG.chart.grid.labels.yAxis.showCrosshairs"
-                                    :x1="drawingArea.left + xPadding"
-                                    :x2="drawingArea.left - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize + xPadding"
+                                    :x1="drawingArea.left"
+                                    :x2="drawingArea.left - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
                                     :y1="forceValidValue(yLabel.y)" :y2="forceValidValue(yLabel.y)"
                                     :stroke="FINAL_CONFIG.chart.grid.stroke" stroke-width="1" stroke-linecap="round"
                                     :style="{ animation: 'none !important' }" />
                                 <text data-cy="axis-y-label"
                                     v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
-                                    :x="drawingArea.left - 7 + xPadding"
+                                    :x="drawingArea.scaleLabelX + FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
                                     :y="checkNaN(yLabel.y + fontSizes.dataLabels / 3)" :font-size="fontSizes.dataLabels"
                                     text-anchor="end" :fill="FINAL_CONFIG.chart.grid.labels.color">
                                     {{ canShowValue(yLabel.value) ? applyDataLabel(
@@ -3131,8 +3110,9 @@ defineExpose({
                             </linearGradient>
                         </defs>
                         <rect v-for="(trap, i) in allScales"
-                            :x="trap.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + xPadding"
-                            :y="drawingArea.top" :width="FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth"
+                            :x="trap.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + xPadding - drawingArea.individualOffsetX"
+                            :y="drawingArea.top" 
+                            :width="FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + drawingArea.individualOffsetX"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :fill="selectedScale === trap.groupId ? `url(#individual_scale_gradient_${uniqueId}_${i})` : 'transparent'"
                             @mouseenter="selectedScale = trap.groupId" @mouseleave="selectedScale = null" />
@@ -3143,14 +3123,14 @@ defineExpose({
                         <text ref="yAxisLabel" data-cy="xy-axis-yLabel"
                             v-if="FINAL_CONFIG.chart.grid.labels.axis.yLabel && !mutableConfig.useIndividualScale"
                             :font-size="fontSizes.yAxis" :fill="FINAL_CONFIG.chart.grid.labels.color"
-                            :transform="isAutoSize ? undefined : `translate(${fontSizes.yAxis + FINAL_CONFIG.chart.grid.labels.axis.yLabelOffsetX}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                            :transform="`translate(${FINAL_CONFIG.chart.grid.labels.axis.fontSize}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
                             text-anchor="middle" style="transition: none">
                             {{ FINAL_CONFIG.chart.grid.labels.axis.yLabel }}
                         </text>
                         <text ref="xAxisLabel" data-cy="xy-axis-xLabel"
                             v-if="FINAL_CONFIG.chart.grid.labels.axis.xLabel" text-anchor="middle"
-                            :x="isAutoSize ? (viewBoxParts.width / 2) - Math.abs(viewBoxParts.x) : width / 2"
-                            :y="isAutoSize ? undefined : drawingArea.bottom + fontSizes.yAxis + (fontSizes.xAxis * 1.3) + FINAL_CONFIG.chart.grid.labels.axis.xLabelOffsetY"
+                            :x="width / 2"
+                            :y="height - 3"
                             :font-size="fontSizes.yAxis" :fill="FINAL_CONFIG.chart.grid.labels.color">
                             {{ FINAL_CONFIG.chart.grid.labels.axis.xLabel }}
                         </text>
@@ -3162,10 +3142,10 @@ defineExpose({
                             <template v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                                 <slot name="time-label" v-bind="{
                                     x: drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2),
-                                    y: isAutoSize ? drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset : drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset,
+                                    y: drawingArea.bottom,
                                     fontSize: fontSizes.xAxis,
                                     fill: FINAL_CONFIG.chart.grid.labels.xAxisLabels.color,
-                                    transform: isAutoSize ? `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})` : `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`,
+                                    transform: `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`,
                                     absoluteIndex: label.absoluteIndex,
                                     content: label.text,
                                     textAnchor: FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle',
@@ -3186,7 +3166,7 @@ defineExpose({
                                         :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                                         :font-size="fontSizes.xAxis"
                                         :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                                        :transform="isAutoSize ? `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})` : `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                        :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                         :style="{
                                             cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
                                         }" @click="() => selectTimeLabel(label, i)">
@@ -3198,7 +3178,7 @@ defineExpose({
                                         :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                                         :font-size="fontSizes.xAxis"
                                         :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                                        :transform="isAutoSize ? `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})` : `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                        :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                         :style="{
                                             cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
                                         }" v-html="createTSpansFromLineBreaksOnX({

@@ -117,20 +117,21 @@ onMounted(() => {
         dataset.value = [
     {
         name: "A",
-        series: [null, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, null],
+        series: [60, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, 120],
         type: "bar",
         dataLabels: false,
     },
     {
         name: "B",
-        series: [null, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, null],
+        series: [60, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, 87],
         type: "line",
         dataLabels: false,
-        shape: 'square'
+        shape: 'triangle',
+        useProgression: false
     },
     {
         name: "C",
-        series: [null, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, null],
+        series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
         type: "plot",
         dataLabels: false,
     },
@@ -318,7 +319,7 @@ function toggleProps() {
 
 const model = ref([
     { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'autoSize', def: true, type: 'checkbox'}, // v3 opt-in
+    { key: 'autoSize', def: false, type: 'checkbox'}, // v3 opt-in
 
     { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA'] },
     { key: 'responsive', def: false, type: 'checkbox' },
@@ -393,6 +394,7 @@ const model = ref([
     { key: 'chart.grid.showVerticalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
     { key: 'chart.grid.showHorizontalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
 
+    { key: 'chart.grid.position', def: 'middle', type: 'select', options: ['middle', 'start']},
     { key: 'chart.grid.frame.show', def: false, type: 'checkbox' },
     { key: 'chart.grid.frame.stroke', def: '#1A1A1A', type: 'color' },
     { key: 'chart.grid.frame.strokeWidth', def: 4, type: 'number', min: 0, max: 12 },
@@ -409,7 +411,7 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.show', def: true, type: 'checkbox', label: 'showPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.color', def: '#1A1A1A', type: 'color', label: 'textColorPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.values', def: [], type: 'none', label: 'fontSize' },
-    { key: 'chart.grid.labels.xAxisLabels.fontSize', def: 14, type: 'number', min: 6, max: 30, label: 'fontSizePeriodLabels', category: 'grid' },
+    { key: 'chart.grid.labels.xAxisLabels.fontSize', def: 16, type: 'number', min: 6, max: 30, label: 'fontSizePeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.showOnlyFirstAndLast', def: false, type: 'checkbox', label: 'showOnlyFirstAndLast', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 24, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
@@ -422,10 +424,10 @@ const model = ref([
 
     { key: 'chart.grid.labels.yAxis.position', def: 'right', type: 'select', options: ['left', 'right'] },
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 10, min: 0, max: 100, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
-    { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
+    { key: 'chart.grid.labels.yAxis.useIndividualScale', def: true, type: "checkbox" },
+    { key: 'chart.grid.labels.yAxis.stacked', def: true, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 24, min: 0, max: 200, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.labelWidth', def: 48, min: 0, max: 100, type: 'number' },
+    { key: 'chart.grid.labels.yAxis.labelWidth', def: 64, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.showBaseline', def: true, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.scaleMin', def: null, type: 'number', min: -1000, max: 1000 },
     { key: 'chart.grid.labels.yAxis.scaleMax', def: null, type: 'number', min: -1000, max: 1000 },
@@ -685,7 +687,7 @@ const config = computed(() => {
                 // Attempt a scale groups
                 annotations: [
                     {
-                        show: true,
+                        show: false,
                         yAxis: {
                             yTop: 125,
                             yBottom: 70,
@@ -791,6 +793,9 @@ const config = computed(() => {
                         ...c.chart.grid.labels,
                         yAxis: {
                             ...c.chart.grid.labels.yAxis,
+                            serieNameFormatter: ({ value, config }) => {
+                                return value + '-TEST'
+                            }
                             // formatter: ({value}) => {
                             //     return `f - ${value}`
                             // }

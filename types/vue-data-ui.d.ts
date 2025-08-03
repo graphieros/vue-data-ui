@@ -2956,7 +2956,6 @@ declare module "vue-data-ui" {
     export type VueUiXyConfig = {
         debug?: boolean;
         responsive?: boolean;
-        autoSize?: boolean; // v3 opt-in
         loading?: boolean; // v3
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
@@ -3036,6 +3035,7 @@ declare module "vue-data-ui" {
                         scaleLabelOffsetX?: number;
                         scaleValueOffsetX?: number;
                         rounding?: number;
+                        serieNameFormatter?: Formatter;
                     };
                     xAxis?: {
                         showBaseline?: boolean;
