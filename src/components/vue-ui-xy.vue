@@ -453,17 +453,17 @@ const relativeDataset = computed(() => {
 })
 
 function getScaleLabelX() {
-    let base = FINAL_CONFIG.value.chart.grid.labels.axis.yLabelOffsetX
+    let base = 0;
     if (scaleLabels.value) {
         const texts = Array.from(scaleLabels.value.querySelectorAll('text'))
         base = texts.reduce((max, t) => {
         const w = t.getComputedTextLength()
-        return w > max ? w : max
+        return( w > max ? w : max) + FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleValueOffsetX
         }, 0)
     }
 
     const yAxisLabelW = yAxisLabel.value
-        ? yAxisLabel.value.getBoundingClientRect().width
+        ? yAxisLabel.value.getBoundingClientRect().width + FINAL_CONFIG.value.chart.grid.labels.axis.yLabelOffsetX + fontSizes.value.yAxis
         : 0
 
     const crosshair = FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize
@@ -576,8 +576,10 @@ const crosshairsX = computed(() => {
     const {
         showOnlyAtModulo,
         showOnlyFirstAndLast,
-        modulo
+        modulo: _modulo
     } = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels
+
+    const modulo = timeLabels.value.length ? Math.min(_modulo, [...new Set(timeLabels.value.map(t => t.text))]) : _modulo;
 
     const interval = Math.floor((slicer.value.end - slicer.value.start) / modulo)
 
@@ -664,6 +666,12 @@ const timeLabels = computed(() => {
         start: slicer.value.start,
         end: slicer.value.end
     });
+});
+
+const modulo = computed(() => {
+    const m = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.modulo;
+    if (!timeLabels.value.length) return m;
+    return Math.min(m, [...new Set(timeLabels.value.map(t => t.text))].length);
 });
 
 function selectTimeLabel(label, relativeIndex) {
@@ -2658,7 +2666,7 @@ defineExpose({
                                     :style="{ animation: 'none !important' }" />
                                 <text data-cy="axis-y-label"
                                     v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
-                                    :x="drawingArea.scaleLabelX + FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
+                                    :x="drawingArea.scaleLabelX - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
                                     :y="checkNaN(yLabel.y + fontSizes.dataLabels / 3)" :font-size="fontSizes.dataLabels"
                                     text-anchor="end" :fill="FINAL_CONFIG.chart.grid.labels.color">
                                     {{ canShowValue(yLabel.value) ? applyDataLabel(
@@ -3137,17 +3145,17 @@ defineExpose({
                                     absoluteIndex: label.absoluteIndex,
                                     content: label.text,
                                     textAnchor: FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle',
-                                    show: (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
+                                    show: (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= modulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
                                         (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length - 1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
                                         (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                        (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))
+                                        (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0))
                                 }" />
                             </template>
                         </template>
                         <template v-else>
                             <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
                                 <template
-                                    v-if="(label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length - 1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.chart.grid.labels.xAxisLabels.modulo) === 0))">
+                                    v-if="(label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= modulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length - 1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0))">
                                     <!-- SINGLE LINE LABEL -->
                                     <text v-if="!String(label.text).includes('\n')" class="vue-data-ui-time-label"
                                         data-cy="time-label"
