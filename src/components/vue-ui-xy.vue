@@ -1898,8 +1898,8 @@ function generateCsv(callback = null) {
     const title = [[FINAL_CONFIG.value.chart.title.text], [FINAL_CONFIG.value.chart.title.subtitle.text], [""]];
     const head = ["", ...table.value.head.map(h => h.label)]
     const body = table.value.body
-    const table = title.concat([head]).concat(body);
-    const csvContent = createCsvContent(table);
+    const _table = title.concat([head]).concat(body);
+    const csvContent = createCsvContent(_table);
     if (!callback) {
         downloadCsv({ csvContent, title: FINAL_CONFIG.value.chart.title.text || 'vue-ui-xy' });
     } else {
