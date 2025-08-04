@@ -4,27 +4,29 @@ import LocalVueUiCandlestick from '../src/components/vue-ui-candlestick.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-import VueUiCandlestick from "../src/components/vue-ui-candlestick.vue";
 import { useArena } from "../src/useArena";
 
-const dataset = [
-  // timestamp       | open  | high  | low   | last  | volume
-  [1704067200000, 1200, 2300, 1000, 2100, 1800],
-  [1706745600000, 2100, 2400, 1800, 2000, 2200],
-  [1709251200000, 2000, 2500, 1700, 2150, 2400],
-  [1711929600000, 2150, 2300, 2000, 2050, 1600],
-  [1714521600000, 2050, 2450, 1900, 1950, 2000],
-  [1717200000000, 1950, 2500, 1800, 2300, 2500],
-  [1719792000000, 2300, 2400, 2100, 2250, 1900],
-  [1722470400000, 2250, 2350, 2200, 2300, 1750],
-  [1725148800000, 2300, 2250, 1800, 1850, 2100],
-  [1727740800000, 1850, 2500, 1800, 2450, 2300],
-  [1730419200000, 2450, 2500, 1000, 1250, 1500],
-  [1733011200000, 1250, 2000, 1000, 1350, 1700],
-  [1735689600000, 1350, 2100, 1200, 2000, 1600],
-  [1738368000000, 2000, 2400, 1950, 2300, 1850],
-  [1740787200000, 2300, 2500, 2200, 2400, 2400]
-];
+const dataset = ref([]);
+
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
+            [1704067200000, 10, 20, 2, 10, 30],
+            [1706745600000, 10, 30, 5, 20, 50],
+            [1709251200000, 20, 50, 10, 30, 80],
+            [1711929600000, 30, 80, 20, 50, 130],
+            [1714521600000, 50, 130, 30, 100, 210],
+            [1717200000000, 80, 210, 50, 150, 340],
+            [1719792000000, 130, 340, 80, 280, 550],
+            [1722470400000, 210, 550, 130, 50, 890],
+            [1725148800000, 340, 890, 210, 750, 1440],
+            [1727740800000, 550, 1440, 340, 1230, 2330],
+            [1730419200000, 890, 2330, 550, 1950, 3770],
+            [1733011200000, 1440, 3770, 890, 3200, 5100]
+        ]
+    }, 2000)
+})
 
 const alternateDataset = ref([
     ["2024-11-01", 125, 130, 45, 92, 1972],
@@ -60,6 +62,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'loading', def: true, type: 'checkbox'},
+    { key: 'debug', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
@@ -83,10 +87,10 @@ const model = ref([
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.height', def: 316, type: 'number', min: 100, max: 1000},
     { key: 'style.width', def: 512, type: 'number', min: 100, max: 1000},
-    { key: 'style.layout.padding.top', def: 36, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.right', def: 48, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.bottom', def: 36, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.left', def: 48, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.top', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.right', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.left', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.layout.selector.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.selector.opacity', def: 10, type: 'range', min: 0, max: 100},
     { key: 'style.layout.grid.show', def: true, type: 'checkbox'},
@@ -98,6 +102,8 @@ const model = ref([
     { key: 'style.layout.grid.xAxis.dataLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.layout.grid.xAxis.dataLabels.bold', def: false, type: 'checkbox'},
     { key: 'style.layout.grid.xAxis.dataLabels.rotation', def: -20, type: 'number', min: -360, max: 360},
+    { key: 'style.layout.grid.xAxis.dataLabels.autoRotate', def: true, type: 'checkbox'},
+
     { key: 'style.layout.grid.yAxis.dataLabels.show', def: true, type: 'checkbox'},
     { key: 'style.layout.grid.yAxis.dataLabels.fontSize', def: 10, type: 'number', min: 4, max: 12},
     { key: 'style.layout.grid.yAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
@@ -106,7 +112,7 @@ const model = ref([
     { key: 'style.layout.grid.yAxis.dataLabels.steps', def: 10, type: 'number', min: 2, max: 20},
     { key: 'style.layout.grid.yAxis.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.layout.grid.yAxis.dataLabels.suffix', def: 'S', type: 'text'},
-    { key: 'style.layout.grid.yAxis.scale.min', def: 800, type: 'number', min: 0, max: 10000},
+    { key: 'style.layout.grid.yAxis.scale.min', def: null, type: 'number', min: 0, max: 10000},
     { key: 'style.layout.grid.yAxis.scale.max', def: null, type: 'number', min: 0, max: 10000},
 
     { key: 'style.layout.wick.stroke', def: '#1A1A1A', type: 'color'},
@@ -186,7 +192,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -286,7 +292,7 @@ onMounted(async () => {
         <template #title>VueUiCandlestick</template>
 
         <template #local>
-            <LocalVueUiCandlestick :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
+            <LocalVueUiCandlestick :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
                 <!-- <template #optionPdf>
                     PRINT PDF
                 </template>

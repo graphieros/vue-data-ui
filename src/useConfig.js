@@ -2109,6 +2109,8 @@ export function useConfig() {
     }
 
     const vue_ui_candlestick = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
         responsiveProportionalSizing: true,
         theme: '',
@@ -2120,7 +2122,7 @@ export function useConfig() {
             height: 316,
             width: 512,
             layout: {
-                padding: PADDING([36, 48, 36, 48]),
+                padding: PADDING([0, 0, 0, 0]),
                 selector: {
                     color: COLOR_GREY_LIGHT,
                     opacity: 10
@@ -2137,6 +2139,7 @@ export function useConfig() {
                             offsetY: 0,
                             bold: false,
                             rotation: 0,
+                            autoRotate: true, // v3
                             datetimeFormatter: AXIS_DATE_FORMATTER
                         },
                     },

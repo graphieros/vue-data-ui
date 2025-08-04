@@ -2372,6 +2372,8 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiCandlestickConfig = {
+        debug?: boolean;
+        loading?: boolean;
         responsive?: boolean;
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
@@ -2400,6 +2402,7 @@ declare module "vue-data-ui" {
                             offsetY?: number;
                             bold?: boolean;
                             rotation?: number;
+                            autoRotate?: boolean;
                         };
                         timeLabels?: {
                             datetimeFormatter?: AxisDateFormatter
