@@ -269,11 +269,11 @@ onMounted(async () => {
 
 async function autoSize() {
     viewBox.value = `0 0 ${svg.value.width} ${drawableArea.value.fullHeight}`
-    if (!FINAL_CONFIG.value.autoSize) return;
+    if (!FINAL_CONFIG.value.autoSize || !G.value) return;
     const parentLabels = G.value.querySelectorAll('.vue-ui-horizontal-bar-parent-label');
     const childrenLabels = G.value.querySelectorAll('.vue-ui-horizontal-bar-child-label');
 
-    if (parentLabels.length) {
+    if (!!parentLabels && parentLabels.length) {
         const maxW = Math.max(...Array.from(parentLabels).flatMap(pl => {
             const texts = pl.querySelectorAll('text')
             if (!texts.length) return 0

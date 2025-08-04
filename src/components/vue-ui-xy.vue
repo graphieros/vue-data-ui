@@ -2763,17 +2763,17 @@ defineExpose({
                         <g v-if="serie.useArea && serie.plots.length > 1">
                             <template v-if="serie.smooth">
                                 <template v-for="(d, segIndex) in serie.curveAreas" :key="segIndex">
-                                    <path :d="d"
+                                    <path v-if="d" :d="d"
                                         :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" />
-                                    <path v-if="$slots.pattern" :d="d"
+                                    <path v-if="$slots.pattern && d" :d="d"
                                         :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" />
                                 </template>
                             </template>
                             <template v-else>
                                 <template v-for="(d, segIndex) in serie.area.split(';')" :key="segIndex">
-                                    <path data-cy="datapoint-line-area-straight" :d="`M${d}Z`"
+                                    <path v-if="d" data-cy="datapoint-line-area-straight" :d="`M${d}Z`"
                                         :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" />
-                                    <path v-if="$slots.pattern" :d="`M${d}Z`"
+                                    <path v-if="$slots.pattern && d" :d="`M${d}Z`"
                                         :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" />
                                 </template>
                             </template>
