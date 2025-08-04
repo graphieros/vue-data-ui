@@ -1,12 +1,14 @@
 import { useDateTime } from "./useDateTime";
 import locales from "./locales/locales.json";
 
+const SECONDS_IN_DAY = 24 * 60 * 60;
+
 /**
  * @param {Array<string|number>} values
  * @param {number} maxDatapoints
  * @param {{ enable:boolean, useUTC:boolean, locale:string, januaryAsYear:boolean, options:Record<string,string> }} formatter
- * @param {number} start  // index de début (inclus)
- * @param {number} end    // index de fin (exclus)
+ * @param {number} start  // start index (provided by Slicer)
+ * @param {number} end    // end index (provided by Slicer)
  */
 export function useTimeLabels({
     values,
@@ -15,90 +17,113 @@ export function useTimeLabels({
     start: sliceStart,
     end: sliceEnd
 }) {
-    const raw = values;
     const out = [];
-
     if (!xl.enable) {
-        for (let i = sliceStart; i < sliceEnd; i += 1) {
-            out.push({ text: raw[i] ?? String(i), absoluteIndex: i });
+        for (let i = sliceStart; i < sliceEnd; i++) {
+            out.push({ text: String(values[i] ?? i), absoluteIndex: i });
         }
         return out;
     }
 
-    const windowValues = raw.slice(sliceStart, sliceEnd);
-
+    const window = values.slice(sliceStart, sliceEnd);
+    if (window.length === 0) return [];
+    const minX = window[0], maxX = window[window.length - 1];
     const dt = useDateTime({
         useUTC: xl.useUTC,
-        min: windowValues[0],
-        max: windowValues[windowValues.length - 1],
+        min: minX,
+        max: maxX,
         locale: locales[xl.locale],
         januaryAsYear: xl.januaryAsYear,
     });
 
-    const ws = new Date(windowValues[0]);
-    const we = new Date(windowValues[windowValues.length - 1]);
-    const getMonthFn = xl.useUTC ? "getUTCMonth" : "getMonth";
-    const getYearFn = xl.useUTC ? "getUTCFullYear" : "getFullYear";
-    const monthsDiff =
-        (we[getYearFn]() - ws[getYearFn]()) * 12 +
-        (we[getMonthFn]() - ws[getMonthFn]());
+    const rangeMS = maxX - minX;
+    const daysDiff = rangeMS / (1000 * SECONDS_IN_DAY);
+    const hoursDiff = daysDiff * 24;
+    const minutesDiff = hoursDiff * 60;
+    const secondsDiff = minutesDiff * 60;
 
-    const u = dt.getTimeUnitsfromTimestamp(
-        windowValues[0],
-        windowValues[windowValues.length - 1]
-    );
+    let tickInterval;
+    switch (true) {
+        case (daysDiff / 365) > 5:
+            tickInterval = 'years';
+            break;
+        case daysDiff > 800:
+            tickInterval = 'half_year';
+            break;
+        case daysDiff > 180:
+            tickInterval = 'months';
+            break;
+        case daysDiff > 90:
+            tickInterval = 'months_fortnight';
+            break;
+        case daysDiff > 60:
+            tickInterval = 'months_days';
+            break;
+        case daysDiff > 30:
+            tickInterval = 'week_days';
+            break;
+        case daysDiff > 2:
+            tickInterval = 'days';
+            break;
+        case hoursDiff > 2.4:
+            tickInterval = 'hours';
+            break;
+        case minutesDiff > 15:
+            tickInterval = 'minutes_fives';
+            break;
+        case minutesDiff > 5:
+            tickInterval = 'minutes';
+            break;
+        case minutesDiff > 1:
+            tickInterval = 'seconds_tens';
+            break;
+        case secondsDiff > 20:
+            tickInterval = 'seconds_fives';
+            break;
+        default:
+            tickInterval = 'seconds';
+            break;
+    }
 
-    let xUnit = "second";
-    if (u.minMinute !== u.maxMinute) xUnit = "minute";
-    else if (u.minHour !== u.maxHour) xUnit = "hour";
-    else if (u.minDate !== u.maxDate) xUnit = "day";
-    else if (monthsDiff >= 1) xUnit = "month";
+    let xUnit;
+    if (tickInterval === 'years') xUnit = 'year';
+    else if (['half_year', 'months', 'months_fortnight', 'months_days', 'week_days'].includes(tickInterval)) xUnit = 'month';
+    else if (tickInterval === 'days') xUnit = 'day';
+    else if (tickInterval === 'hours') xUnit = 'hour';
+    else if (['minutes_fives', 'minutes'].includes(tickInterval)) xUnit = 'minute';
+    else xUnit = 'second';
 
-    const fmt = xl.options[xUnit];
+    const fmt = xl.options[xUnit] ?? xl.options.hour;
     const yearFmt = xl.options.year;
     const monthFmt = xl.options.month;
     const dayFmt = xl.options.day;
 
-    windowValues.forEach((ts, idx) => {
+    window.forEach((ts, idx) => {
         const d = new Date(ts);
-        const hours = xl.useUTC ? d.getUTCHours() : d.getHours();
-        const minutes = xl.useUTC ? d.getUTCMinutes() : d.getMinutes();
-
         let text;
-        if (idx === 0) {
-            if (xUnit === "month" && (hours === 0 && minutes === 0) && ((xl.useUTC ? d.getUTCDate() : d.getDate()) === 1)) {
-                text = dt.formatDate(d, monthFmt);
-            } else if (hours === 0 && minutes === 0) {
-                text = dt.formatDate(d, dayFmt);
-            } else {
-                text = dt.formatDate(d, fmt);
+        switch (xUnit) {
+            case 'year':
+                text = dt.formatDate(d, yearFmt);
+                break;
+            case 'month': {
+                const m = xl.useUTC ? d.getUTCMonth() : d.getMonth();
+                text = (xl.januaryAsYear && m === 0) ? dt.formatDate(d, yearFmt) : dt.formatDate(d, monthFmt);
+                break;
             }
-        } else {
-            const prev = new Date(windowValues[idx - 1]);
-            const prevY = xl.useUTC ? prev.getUTCFullYear() : prev.getFullYear();
-            const prevM = xl.useUTC ? prev.getUTCMonth() : prev.getMonth();
-            const prevD = xl.useUTC ? prev.getUTCDate() : prev.getDate();
-            const currY = xl.useUTC ? d.getUTCFullYear() : d.getFullYear();
-            const currM = xl.useUTC ? d.getUTCMonth() : d.getMonth();
-            const currD = xl.useUTC ? d.getUTCDate() : d.getDate();
-
-            if (currY !== prevY) {
-                text = dt.formatDate(d, yearFmt);
-            } else if (currM !== prevM) {
-                text = xUnit === "month"
-                    ? dt.formatDate(d, monthFmt)
-                    : dt.formatDate(d, dayFmt);
-            } else if (currD !== prevD) {
+            case 'day':
                 text = dt.formatDate(d, dayFmt);
-            } else if (hours === 0 && minutes === 0) {
-                text = dt.formatDate(d, dayFmt);
-            } else if (xl.januaryAsYear && xUnit === "month" && currM === 0) {
-                text = dt.formatDate(d, yearFmt);
-            } else {
-                text = dt.formatDate(d, fmt);
+                break;
+            default: {
+                // For hour/minute/second: show day label if exact midnight
+                const H = xl.useUTC ? d.getUTCHours() : d.getHours();
+                const M = xl.useUTC ? d.getUTCMinutes() : d.getMinutes();
+                if (H === 0 && M === 0) {
+                    text = dt.formatDate(d, dayFmt);
+                } else {
+                    text = dt.formatDate(d, fmt);
+                }
             }
         }
-
         out.push({ text, absoluteIndex: sliceStart + idx });
     });
 
