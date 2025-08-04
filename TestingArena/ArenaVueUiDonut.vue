@@ -167,7 +167,7 @@ const model = ref([
     { key: 'style.chart.layout.donut.useShadow', def: false,  type: 'checkbox' },
     { key: 'style.chart.layout.donut.shadowColor', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.layout.donut.selectedColor', def: '#0000001A', type: 'color'},
-    { key: 'style.chart.layout.donut.radiusRatio', def: 0.5, type: 'number', min: 0.1, max: 0.5, step: 0.01},
+    { key: 'style.chart.layout.donut.radiusRatio', def: 0.3, type: 'number', min: 0.1, max: 0.5, step: 0.01},
 
     { key: 'style.chart.legend.show', def: true, type: 'checkbox', label: 'show', category: 'legend' },
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF20', type: 'color', label: 'backgroundColor', category: 'legend' },
@@ -450,10 +450,6 @@ onMounted(async () => {
                 <template template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                     <button @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">FULLSCREEN</button>
                 </template>
-                <!-- <template #svg="{ svg }">
-                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
-                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
-                </template> -->
                 <template #dataLabel="{ datapoint, isBlur, isVisible, isSafari, textAlign, flexAlign, percentage }">
                     <div :style="`background:${datapoint.color}`">
                         {{ datapoint.name }} : {{ percentage }}
@@ -465,12 +461,18 @@ onMounted(async () => {
                         {{ legend }}
                     </div>
                 </template> -->
+
+                <!-- <template #hollow="{ total, average, dataset }">
+                    <button>Total: {{ total }}</button>
+                </template> -->
+                
                 <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #BEFORE {{ series.name }}
                 </template>
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+
                 <template #watermark="{ isPrinting }">
                     <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                         WATERMARK

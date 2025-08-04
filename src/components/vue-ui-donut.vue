@@ -1785,6 +1785,12 @@ defineExpose({
             <slot name="source" />
         </div>
 
+        <div v-if="$slots.hollow" class="vue-ui-donut-hollow">
+            <slot name="hollow" v-bind="{
+                total, average, dataset: immutableSet
+            }"/>
+        </div>
+
         <!-- TOOLTIP -->
         <Tooltip :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
@@ -1911,5 +1917,12 @@ defineExpose({
 
 .vue-data-ui-donut-hollow-labels {
     pointer-events: none;
+}
+
+.vue-ui-donut-hollow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
 }
 </style>
