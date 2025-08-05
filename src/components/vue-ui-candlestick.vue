@@ -87,6 +87,11 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await setupSlicer();
+        })
+    },
     skeletonDataset: [
         [1704067200000, 10, 20, 2, 10, 30],
         [1706745600000, 10, 30, 5, 20, 50],

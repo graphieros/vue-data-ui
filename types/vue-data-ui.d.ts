@@ -1309,6 +1309,8 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiDonutEvolutionConfig = {
+        debug?: boolean;
+        loading?: boolean;
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -1346,6 +1348,14 @@ declare module "vue-data-ui" {
                         stroke?: string;
                         strokeWidth?: number;
                         showVerticalLines?: boolean;
+                        axis?: { // v3
+                            yLabel?: string; // v3
+                            yLabelOffsetX?: number; // v3
+                            xLabel?: string; // v3
+                            xLabelOffsetY?: number; // v3
+                            fontSize?: number; // v3
+                            color?: string; // v3
+                        };
                         yAxis?: {
                             dataLabels?: {
                                 show?: boolean;
@@ -1366,6 +1376,7 @@ declare module "vue-data-ui" {
                                 showOnlyFirstAndLast?: boolean;
                                 color?: string;
                                 rotation?: number;
+                                autoRotate?: boolean;
                                 offsetY?: number;
                             };
                         };

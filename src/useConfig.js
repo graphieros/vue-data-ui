@@ -2987,6 +2987,8 @@ export function useConfig() {
     }
 
     const vue_ui_donut_evolution = {
+        debug: false,
+        loading: false,
         theme: '',
         customPalette: [],
         style: {
@@ -3054,12 +3056,20 @@ export function useConfig() {
                 layout: {
                     height: 316,
                     width: 512,
-                    padding: PADDING([24, 48, 24, 48]),
+                    padding: PADDING([5, 10, 5, 10]),
                     grid: {
                         show: true,
                         stroke: COLOR_GREY_LIGHT,
                         strokeWidth: 0.7,
                         showVerticalLines: true,
+                        axis: {
+                            yLabel: '',
+                            yLabelOffsetX: 0,
+                            xLabel: '',
+                            xLabelOffsetY: 0,
+                            fontSize: FONT._14,
+                            color: COLOR_BLACK,
+                        },
                         yAxis: {
                             dataLabels: {
                                 show: true,
@@ -3080,6 +3090,7 @@ export function useConfig() {
                                 showOnlyFirstAndLast: false,
                                 color: COLOR_BLACK,
                                 rotation: 0,
+                                autoRotate: true,
                                 offsetY: 0
                             }
                         }
