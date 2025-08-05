@@ -579,8 +579,7 @@ const crosshairsX = computed(() => {
         modulo: _modulo
     } = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels
 
-    const modulo = timeLabels.value.length ? Math.min(_modulo, [...new Set(timeLabels.value.map(t => t.text))]) : _modulo;
-
+    const modulo = timeLabels.value.length ? Math.min(_modulo, [...new Set(timeLabels.value.map(t => t.text))].length) : _modulo;
     const interval = Math.floor((slicer.value.end - slicer.value.start) / modulo)
 
     return timeLabels.value
