@@ -2987,8 +2987,9 @@ export function useConfig() {
     }
 
     const vue_ui_donut_evolution = {
-        debug: false,
-        loading: false,
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         customPalette: [],
         style: {

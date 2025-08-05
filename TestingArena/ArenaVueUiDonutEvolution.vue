@@ -15,7 +15,7 @@ onMounted(() => {
         dataset.value = [
             {
                 name: "Serie 1",
-                values: [55.123425162, 34, 21, 13, 8, 5, 8, 13, 21, 34, 55 ],
+                values: [55.123425162, 34, 21, 13, 8, 5, 8, 13, 21, 34, 55, 26, 27, 28, 29, 29, 29, 31 ],
             },
             {
                 name: "Serie 2",
@@ -147,8 +147,8 @@ const model = ref([
     { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.zoom.highlightColor', def: "#1A1A1A", type: 'color' },
     { key: 'style.chart.zoom.useResetSlot', def: false, type: 'checkbox'},
-    { key: 'style.chart.zoom.startIndex', def: 2, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.zoom.endIndex', def: 6, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100},
     { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
 ]);
@@ -225,6 +225,15 @@ onMounted(async() => {
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiDonutEvolution component="VueUiDonut" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }">
+    </LocalVueUiDonutEvolution>
+    </div>
+
     <Box comp="VueUiDonutEvolution" :dataset="dataset">
         <template #title>VueUiDonutEvolution</template>
 

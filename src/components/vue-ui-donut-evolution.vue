@@ -1,6 +1,6 @@
 
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent, watchEffect, onBeforeUnmount, toRefs } from "vue";
+import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent, watchEffect, onBeforeUnmount, toRefs, shallowRef } from "vue";
 import {
     applyDataLabel,
     calcMarkerOffsetX, 
@@ -44,6 +44,7 @@ import img from "../img";
 import { throttle } from "../canvas-lib";
 import { useLoading } from "../useLoading.js";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import { useResponsive } from "../useResponsive.js";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
@@ -69,6 +70,38 @@ const props = defineProps({
         }
     },
 });
+
+const uid = ref(createUid());
+const segregated = ref([]);
+const hoveredIndex = ref(null);
+const hoveredDatapoint = ref(null);
+const isFixed = ref(false);
+const fixedDatapoint = ref(null);
+const donutEvolutionChart = ref(null);
+const noTitle = ref(null);
+const step = ref(0);
+const slicerStep = ref(0);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
+const scaleLabels = ref(null);
+const timeLabelsEls = ref(null);
+const xAxisLabel = ref(null);
+const yAxisLabel = ref(null);
+
+const chartTitle = ref(null);
+const chartLegend = ref(null);
+const source = ref(null);
+const slicerComponent = ref(null);
+const chartSlicer = ref(null);
+
+const isLoaded = ref(false);
+
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
+const to = ref(null)
+
+const emit = defineEmits(['selectLegend']);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -113,28 +146,45 @@ function prepareChart() {
         manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
+    setTimeout(() => {
+        isLoaded.value = true;
+    }, 10);
+
     setupSlicer();
+
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            isLoaded.value = false;
+            const { width, height } = useResponsive({
+                chart: donutEvolutionChart.value,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxX.value > 1 ? chartSlicer.value : null,
+                source: source.value
+            });
+
+            requestAnimationFrame(() => {
+                defaultSizes.value.width = width;
+                defaultSizes.value.height = height - 12;
+                clearTimeout(to.value);
+                to.value = setTimeout(() => {
+                    isLoaded.value = true;
+                },10)
+            });
+        });
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        observedEl.value = donutEvolutionChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
+    }
 }
-
-const uid = ref(createUid());
-const segregated = ref([]);
-const hoveredIndex = ref(null);
-const hoveredDatapoint = ref(null);
-const isFixed = ref(false);
-const fixedDatapoint = ref(null);
-const donutEvolutionChart = ref(null);
-const noTitle = ref(null);
-const step = ref(0);
-const slicerStep = ref(0);
-const titleStep = ref(0);
-const tableStep = ref(0);
-const legendStep = ref(0);
-const scaleLabels = ref(null);
-const timeLabelsEls = ref(null);
-const xAxisLabel = ref(null);
-const yAxisLabel = ref(null);
-
-const emit = defineEmits(['selectLegend']);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -206,7 +256,12 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
             }
         }
     })
-})
+});
+
+const defaultSizes = ref({
+    width: FINAL_CONFIG.value.style.chart.layout.width,
+    height: FINAL_CONFIG.value.style.chart.layout.height
+});
 
 const maxX = computed(() => {
     return Math.max(...FINAL_DATASET.value.map(ds => ds.values.length))
@@ -221,19 +276,19 @@ function refreshSlicer() {
     setupSlicer();
 }
 
-const slicerComponent = ref(null);
-
 async function setupSlicer() {
-    if ((FINAL_CONFIG.value.style.chart.zoom.startIndex !== null || FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) && slicerComponent.value) {
-        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.style.chart.zoom.startIndex);
+    await nextTick();
+    await nextTick();
+
+    const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
+    const comp = slicerComponent.value;
+
+    if ((startIndex != null || endIndex != null) && comp) {
+        if (startIndex != null) {
+        comp.setStartValue(startIndex);
         }
-        if (FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.style.chart.zoom.endIndex + 1));
+        if (endIndex != null) {
+        comp.setEndValue(validSlicerEnd(endIndex + 1));
         }
     } else {
         slicer.value = {
@@ -414,8 +469,8 @@ const svg = computed(() => {
 
     const topOffset = FINAL_CONFIG.value.style.chart.layout.dataLabels.fontSize * 3;
 
-    const absoluteHeight = FINAL_CONFIG.value.style.chart.layout.height;
-    const absoluteWidth = FINAL_CONFIG.value.style.chart.layout.width;
+    const absoluteWidth = defaultSizes.value.width;
+    const absoluteHeight = defaultSizes.value.height;
     const left = padding.value.left + _scaleLabelX;
     const right = absoluteWidth - padding.value.right;
     const width = absoluteWidth - left - padding.value.right;
@@ -430,10 +485,10 @@ const svg = computed(() => {
         bottom,
         absoluteHeight,
         absoluteWidth,
-        centerX: left + (width / 2),
-        centerY: top + (height / 2),
-        height,
-        width,
+        centerX: left + (Math.max(10, width) / 2),
+        centerY: top + (Math.max(10, height) / 2),
+        width: Math.max(10, width),
+        height: Math.max(10, height),
     }
 });
 
@@ -520,7 +575,7 @@ const drawableDataset = computed(() => {
     const maxScale = arr.length === 1 ? maxSubtotal * 2 : maxSubtotal;
     
     return arr.map((a, i) => {
-        const radiusReference = (slit.value / 2) * 0.7;
+        const radiusReference = Math.min(svg.value.width / 24, (slit.value / 2) * 0.7);
         const radius = radiusReference > svg.value.width / 16 ? svg.value.width / 16 : radiusReference;
         const activeRadius = hoveredIndex.value === a.index ? svg.value.width / 16 : radius;
         const hoverRadius = arr.length > 4 ? radiusReference * 2 : radiusReference * 2 > (slit.value / 2 * 0.7) ? slit.value / 2 * 0.7 : radiusReference * 2
@@ -843,7 +898,7 @@ defineExpose({
             :style="`height:36px; width: 100%;background:transparent`"
         />
 
-        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`" @mouseleave="leave">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`" @mouseleave="leave">
             <!-- TITLE AS DIV -->
             <Title
                 :key="`title_${titleStep}`"
@@ -1235,72 +1290,76 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <Slicer
-            ref="slicerComponent"
-            v-if="maxLength > 1 && FINAL_CONFIG.style.chart.zoom.show"
-            :key="`slicer_${slicerStep}`"
-            :background="FINAL_CONFIG.style.chart.zoom.color"
-            :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
-            :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-            :labelLeft="timeLabels[0] ? timeLabels[0].text : ''"
-            :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''"
-            :textColor="FINAL_CONFIG.style.chart.color"
-            :inputColor="FINAL_CONFIG.style.chart.zoom.color"
-            :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
-            :max="maxLength"
-            :min="0"
-            :valueStart="slicer.start"
-            :valueEnd="slicer.end"
-            v-model:start="slicer.start"
-            v-model:end="slicer.end"
-            :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
-            :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxLength"
-            :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
-            :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
-            @reset="refreshSlicer"
-        >
-            <template #reset-action="{ reset }">
-                <slot name="reset-action" v-bind="{ reset }"/>
-            </template>
-        </Slicer>
+        <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-dom-to-png-ignore>
+            <Slicer
+                ref="slicerComponent"
+                v-if="maxLength > 1 && FINAL_CONFIG.style.chart.zoom.show"
+                :key="`slicer_${slicerStep}`"
+                :background="FINAL_CONFIG.style.chart.zoom.color"
+                :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
+                :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
+                :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
+                :labelLeft="timeLabels[0] ? timeLabels[0].text : ''"
+                :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''"
+                :textColor="FINAL_CONFIG.style.chart.color"
+                :inputColor="FINAL_CONFIG.style.chart.zoom.color"
+                :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
+                :max="maxLength"
+                :min="0"
+                :valueStart="slicer.start"
+                :valueEnd="slicer.end"
+                v-model:start="slicer.start"
+                v-model:end="slicer.end"
+                :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
+                :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxLength"
+                :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
+                :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
+                @reset="refreshSlicer"
+            >
+                <template #reset-action="{ reset }">
+                    <slot name="reset-action" v-bind="{ reset }"/>
+                </template>
+            </Slicer>
+        </div>
 
-        <Legend
-            v-if="FINAL_CONFIG.style.chart.legend.show"
-            :key="`legend_${legendStep}`"
-            :legendSet="legendSet"
-            :config="legendConfig"
-            @clickMarker="({legend}) => segregate(legend.uid)"
-        >
-            <template #item="{legend, index}">
-                <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                    {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.dataLabels.formatter,
-                        legend.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.dataLabels.prefix,
-                            v: legend.value,
-                            s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
-                            r: FINAL_CONFIG.style.chart.legend.roundingValue
-                        }),
-                        { datapoint: legend, seriesIndex: index }
-                        ) 
-                    }}
-                    {{ 
-                        !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
-                        !segregated.includes(legend.uid)
-                            ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / grandTotal) ? '-' : dataLabel({
-                            v: legend.value / grandTotal * 100,
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                        })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                            : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                    }}
-                </div>
-            </template>
-        </Legend>
-
-        <slot name="legend" v-bind:legend="legendSet"></slot>
+        <div ref="chartLegend">
+            <Legend
+                v-if="FINAL_CONFIG.style.chart.legend.show"
+                :key="`legend_${legendStep}`"
+                :legendSet="legendSet"
+                :config="legendConfig"
+                @clickMarker="({legend}) => segregate(legend.uid)"
+            >
+                <template #item="{legend, index}">
+                    <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                        {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.dataLabels.formatter,
+                            legend.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.dataLabels.prefix,
+                                v: legend.value,
+                                s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                            }),
+                            { datapoint: legend, seriesIndex: index }
+                            ) 
+                        }}
+                        {{ 
+                            !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
+                            !segregated.includes(legend.uid)
+                                ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / grandTotal) ? '-' : dataLabel({
+                                v: legend.value / grandTotal * 100,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                            })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                                : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                        }}
+                    </div>
+                </template>
+            </Legend>
+    
+            <slot name="legend" v-bind:legend="legendSet"></slot>
+        </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />

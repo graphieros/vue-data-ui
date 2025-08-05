@@ -1309,8 +1309,9 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiDonutEvolutionConfig = {
-        debug?: boolean;
-        loading?: boolean;
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // V3
         theme?: Theme;
         customPalette?: string[];
         style?: {
