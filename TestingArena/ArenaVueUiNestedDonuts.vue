@@ -205,6 +205,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log({ datapoint, seriesIndex })
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log({ datapoint, seriesIndex })
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log({ datapoint, seriesIndex })
+                },
+            },
             style: {
                 ...c.style,
                 chart: {

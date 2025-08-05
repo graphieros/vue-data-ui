@@ -3544,6 +3544,11 @@ declare module "vue-data-ui" {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        events?: {
+            datapointEnter?: VueUiDonutEvent;
+            datapointLeave?: VueUiDonutEvent;
+            datapointClick?: VueUiDonutEvent;
+        };
         serieToggleAnimation?: {
             show?: boolean;
             durationMs?: number;

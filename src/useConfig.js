@@ -720,10 +720,10 @@ export function useConfig() {
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
         useCssAnimation: true,
-        events: {
-            datapointEnter: null,
-            datapointLeave: null,
-            datapointClick: null
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
         },
         serieToggleAnimation: {
             show: true,
@@ -3282,6 +3282,11 @@ export function useConfig() {
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
         useBlurOnHover: true,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         serieToggleAnimation: {
             show: true,
             durationMs: 500,

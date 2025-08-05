@@ -34,6 +34,7 @@ import {
     XMLNS,
     checkNaN,
     treeShake,
+    hasDeepProperty,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import { useNestedProp } from "../useNestedProp";
@@ -178,8 +179,11 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG,
     });
+
+    let finalConfig = {};
+
     if (mergedConfig.theme) {
-        return {
+        finalConfig = {
             ...useNestedProp({
                 userConfig:
                     themes.vue_ui_nested_donuts[mergedConfig.theme] || props.config,
@@ -188,8 +192,32 @@ function prepareConfig() {
             customPalette: themePalettes[mergedConfig.theme] || palette,
         };
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointEnter')) {
+        finalConfig.events.datapointEnter = props.config.events.datapointEnter;
+    } else {
+        finalConfig.events.datapointEnter = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointLeave')) {
+        finalConfig.events.datapointLeave = props.config.events.datapointLeave;
+    } else {
+        finalConfig.events.datapointLeave = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointClick')) {
+        finalConfig.events.datapointClick = props.config.events.datapointClick;
+    } else {
+        finalConfig.events.datapointClick = null;
+    }
+
+    // ----------------------------------------------------------------------------
+
+    return finalConfig;
 }
 
 watch(
@@ -449,7 +477,10 @@ const svg = ref({
 
 const emit = defineEmits(["selectLegend", "selectDatapoint"]);
 
-function selectDatapoint({ datapoint, index }) {
+function selectDatapoint({ datapoint, index, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
+    }
     emit("selectDatapoint", { datapoint, index });
 }
 
@@ -809,7 +840,22 @@ const selectedDatapoint = ref(null);
 const selectedDatapointIndex = ref(null);
 const dataTooltipSlot = ref(null);
 
+function handleDatapointLeave({ datapoint, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex })
+    }
+    isTooltip.value = false;
+    selectedDonut.value = null;
+    selectedSerie.value = null;
+    selectedDatapoint.value = null;
+    selectedDatapointIndex.value = null;
+}
+
 function useTooltip({ datapoint, _relativeIndex, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex })
+    }
+
     selectedDonut.value = datapoint.arcOfId;
     selectedDatapoint.value = datapoint.id;
     selectedDatapointIndex.value = seriesIndex;
@@ -1555,20 +1601,18 @@ defineExpose({
                 <!-- TOOLTIP TRAPS -->
                 <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut">
-                        <path data-cy="tooltip-trap" :d="arc.arcSlice"
-                            :fill="selectedSerie === arc.id ? FINAL_CONFIG.style.chart.layout.donut.selectedColor : 'transparent'" @mouseenter="
-                                useTooltip({
-                                    datapoint: arc,
-                                    relativeIndex: i,
-                                    seriesIndex: arc.seriesIndex,
-                                })
-                                " @click="selectDatapoint({ datapoint: arc, index: j })" @mouseleave="
-                                    isTooltip = false;
-                                selectedDonut = null;
-                                selectedDatapoint = null;
-                                selectedDatapointIndex = null;
-                                selectedSerie = null
-                                " />
+                        <path 
+                            data-cy="tooltip-trap" 
+                            :d="arc.arcSlice"
+                            :fill="selectedSerie === arc.id ? FINAL_CONFIG.style.chart.layout.donut.selectedColor : 'transparent'" 
+                            @mouseenter="useTooltip({
+                                datapoint: arc,
+                                relativeIndex: i,
+                                seriesIndex: arc.seriesIndex,
+                            })" 
+                            @click="selectDatapoint({ datapoint: arc, index: j, seriesIndex: arc.seriesIndex })" 
+                            @mouseleave="handleDatapointLeave({ datapoint: arc, seriesIndex: arc.seriesIndex })" 
+                        />
                     </g>
                 </g>
                 <slot name="svg" :svg="svg"></slot>
