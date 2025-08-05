@@ -662,22 +662,22 @@ function refreshSlicer() {
 const slicerComponent = ref(null);
 
 async function setupSlicer() {
-    if ((FINAL_CONFIG.value.style.zoom.startIndex !== null || FINAL_CONFIG.value.style.zoom.endIndex !== null) && slicerComponent.value) {
-        if (FINAL_CONFIG.value.style.zoom.startIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.style.zoom.startIndex);
+    await nextTick();
+    await nextTick();
+
+    const { startIndex, endIndex } = FINAL_CONFIG.value.style.zoom;
+    const comp = slicerComponent.value;
+    const max   = len.value;
+
+    if ((startIndex != null || endIndex != null) && comp) {
+        if (startIndex != null) {
+        comp.setStartValue(startIndex);
         }
-        if (FINAL_CONFIG.value.style.zoom.endIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.style.zoom.endIndex + 1));
+        if (endIndex != null) {
+        comp.setEndValue(validSlicerEnd(endIndex + 1));
         }
     } else {
-        slicer.value = {
-            start: 0,
-            end: len.value
-        };
+        slicer.value = { start: 0, end: max };
         slicerStep.value += 1;
     }
 }

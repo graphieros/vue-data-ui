@@ -721,7 +721,7 @@ function checkAutoScaleError(datapoint) {
 }
 
 function fillArray(len, src) {
-    let res = Array(len).fill(0);
+    let res = Array(Math.abs(len)).fill(0);
     for (let i = 0; i < src.length && i < len; i += 1) {
         res[i] = src[i];
     }
@@ -744,22 +744,30 @@ function validSlicerEnd(v) {
 }
 
 async function setupSlicer() {
-    if ((FINAL_CONFIG.value.chart.zoom.startIndex !== null || FINAL_CONFIG.value.chart.zoom.endIndex !== null) && chartSlicer.value) {
-        if (FINAL_CONFIG.value.chart.zoom.startIndex !== null) {
-            await nextTick();
-            await nextTick();
-            chartSlicer.value.setStartValue(FINAL_CONFIG.value.chart.zoom.startIndex);
+    await nextTick();
+    await nextTick();
+
+    const { startIndex, endIndex } = FINAL_CONFIG.value.chart.zoom;
+    const comp = chartSlicer.value;
+
+    const max = Math.max(
+        ...FINAL_DATASET.value.map(dp =>
+        largestTriangleThreeBucketsArray({
+            data: dp.series,
+            threshold: FINAL_CONFIG.value.downsample.threshold
+        }).length
+        )
+    );
+
+    if ((startIndex != null || endIndex != null) && comp) {
+        if (startIndex != null) {
+        comp.setStartValue(startIndex);
         }
-        if (FINAL_CONFIG.value.chart.zoom.endIndex !== null) {
-            await nextTick();
-            await nextTick();
-            chartSlicer.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.chart.zoom.endIndex + 1));
+        if (endIndex != null) {
+        comp.setEndValue(validSlicerEnd(endIndex + 1));
         }
     } else {
-        slicer.value = {
-            start: 0,
-            end: Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold }).length))
-        };
+        slicer.value = { start: 0, end: max };
         slicerStep.value += 1;
     }
 }
@@ -3438,7 +3446,7 @@ defineExpose({
         <Slicer ref="chartSlicer" v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
             :key="`slicer_${slicerStep}`" :background="FINAL_CONFIG.chart.zoom.color"
             :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
-            :labelLeft="timeLabels[0].text" :labelRight="timeLabels.at(-1).text" :textColor="FINAL_CONFIG.chart.color"
+            :labelLeft="timeLabels[0]? timeLabels[0].text : ''" :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" :textColor="FINAL_CONFIG.chart.color"
             :inputColor="FINAL_CONFIG.chart.zoom.color" :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
             :borderColor="FINAL_CONFIG.chart.backgroundColor" :minimap="minimap"
             :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"

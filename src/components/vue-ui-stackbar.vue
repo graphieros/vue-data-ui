@@ -560,22 +560,22 @@ function refreshSlicer() {
 }
 
 async function setupSlicer() {
-    if ((FINAL_CONFIG.value.style.chart.zoom.startIndex !== null || FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) && slicerComponent.value) {
-        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.style.chart.zoom.startIndex);
+    await nextTick();
+    await nextTick();
+
+    const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
+    const comp = slicerComponent.value;
+    const maxLength = Math.max(...FINAL_DATASET.value.map(ds => ds.series.length));
+
+    if ((startIndex != null || endIndex != null) && comp) {
+        if (startIndex != null) {
+        comp.setStartValue(startIndex);
         }
-        if (FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.style.chart.zoom.endIndex + 1));
+        if (endIndex != null) {
+        comp.setEndValue(validSlicerEnd(endIndex + 1));
         }
     } else {
-        slicer.value = {
-            start: 0,
-            end: Math.max(...FINAL_DATASET.value.map(ds => ds.series.length))
-        };
+        slicer.value = { start: 0, end: maxLength };
         slicerStep.value += 1;
     }
 }

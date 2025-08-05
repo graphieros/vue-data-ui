@@ -545,21 +545,23 @@ function refreshSlicer() {
 const slicerComponent = ref(null);
 
 async function setupSlicer() {
-    if ((FINAL_CONFIG.value.zoomStartIndex !== null || FINAL_CONFIG.value.zoomEndIndex !== null) && slicerComponent.value) {
-        if (FINAL_CONFIG.value.zoomStartIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.zoomStartIndex);
+    await nextTick();
+    await nextTick();
+
+    const { zoomStartIndex, zoomEndIndex } = FINAL_CONFIG.value;
+    const comp = slicerComponent.value;
+
+    if ((zoomStartIndex != null || zoomEndIndex != null) && comp) {
+        if (zoomStartIndex != null) {
+        comp.setStartValue(zoomStartIndex);
         }
-        if (FINAL_CONFIG.value.zoomEndIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.zoomEndIndex + 1));
+        if (zoomEndIndex != null) {
+        comp.setEndValue(validSlicerEnd(zoomEndIndex + 1));
         }
     } else {
         slicer.value = {
-            start: 0,
-            end: formattedDataset.value.maxSeriesLength
+        start: 0,
+        end: formattedDataset.value.maxSeriesLength
         };
         slicerStep.value += 1;
     }
