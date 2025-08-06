@@ -622,6 +622,8 @@ const monthValues = computed(() => {
     return arr
 })
 
+const selectedIndex = ref(null);
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     if (testCustomTooltip.value) {
@@ -646,6 +648,19 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex })
+                    selectedIndex.value = seriesIndex
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex })
+                    selectedIndex.value = null;
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex })
+                }
+            },
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
             theme: currentTheme.value,
             line: {
@@ -960,8 +975,12 @@ onMounted(async () => {
         <template #title>VueUiXy</template>
 
         <template #local>
-            <LocalVueUiXy :dataset="isPropsToggled ? alternateDataset : dataset"
-                :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend"
+            <LocalVueUiXy 
+                :dataset="isPropsToggled ? alternateDataset : dataset"
+                :config="isPropsToggled ? alternateConfig : config"
+                :selectedXIndex="selectedIndex"
+                :key="`local_${step}`" 
+                @selectLegend="selectLegend"
                 @selectX="selectX" ref="local">
                 <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
@@ -1010,6 +1029,7 @@ onMounted(async () => {
         <template #VDUI-local>
             <LocalVueDataUi  component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
+                :selectedXIndex="selectedIndex"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
                 <!-- <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                     <g @click="() => selectTimeLabel({ x, y, fontSize, absoluteIndex })">

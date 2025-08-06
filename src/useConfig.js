@@ -423,6 +423,11 @@ export function useConfig() {
         theme: '',
         responsive: false,
         loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         responsiveProportionalSizing: true,
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)

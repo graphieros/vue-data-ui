@@ -68,6 +68,10 @@ const props = defineProps({
         default() {
             return []
         }
+    },
+    selectedXIndex: {
+        type: Number,
+        default: undefined
     }
 });
 
@@ -110,7 +114,6 @@ const icons = ref({ line: 'line', bar: 'bar', plot: 'plot' });
 const isAnnotator = ref(false);
 const isFullscreen = ref(false);
 const isTooltip = ref(false);
-const selectedSerieIndex = ref(null);
 const selectedRowIndex = ref(null);
 const segregatedSeries = ref([]);
 const uniqueId = ref(createUid());
@@ -126,6 +129,8 @@ const userOptionsVisible = ref(true);
 const svgRef = ref(null);
 const tagRefs = ref({});
 const textMeasurer = ref(null);
+
+const selectedSerieIndex = ref(null);
 
 const svg = computed(() => {
     return {
@@ -243,6 +248,26 @@ function prepareConfig() {
         mergedConfig.chart.grid.labels.yAxis.serieNameFormatter = props.config.chart.grid.labels.yAxis.serieNameFormatter;
     } else {
         mergedConfig.chart.grid.labels.yAxis.serieNameFormatter = null;
+    }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointEnter')) {
+        mergedConfig.events.datapointEnter = props.config.events.datapointEnter;
+    } else {
+        mergedConfig.events.datapointEnter = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointLeave')) {
+        mergedConfig.events.datapointLeave = props.config.events.datapointLeave;
+    } else {
+        mergedConfig.events.datapointLeave = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointClick')) {
+        mergedConfig.events.datapointClick = props.config.events.datapointClick;
+    } else {
+        mergedConfig.events.datapointClick = null;
     }
 
     // ----------------------------------------------------------------------------
@@ -364,6 +389,20 @@ const maxX = computed({
 });
 
 const slicer = ref({ start: 0, end: maxX.value });
+
+watch(() => props.selectedXIndex, (v) => {
+    if ([null, undefined].includes(props.selectedXIndex)) {
+        selectedSerieIndex.value = null;
+        return;
+    }
+
+    const targetIndex = v - slicer.value.start;
+    if (targetIndex < 0 || v >= slicer.value.end) {
+        selectedSerieIndex.value = null;
+    } else {
+        selectedSerieIndex.value = targetIndex ?? null;
+    }
+}, { immediate: true })
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-xy_${uniqueId.value}`,
@@ -845,20 +884,26 @@ function calcIndividualRectY(plot) {
 }
 
 function selectX(index) {
+    const datapoint = relativeDataset.value.map(s => {
+        return {
+            name: s.name,
+            value: [null, undefined, NaN].includes(s.absoluteValues[index]) ? null : s.absoluteValues[index],
+            color: s.color,
+            type: s.type
+        }
+    });
+
     emit('selectX',
         {
-            dataset: relativeDataset.value.map(s => {
-                return {
-                    name: s.name,
-                    value: [null, undefined, NaN].includes(s.absoluteValues[index]) ? null : s.absoluteValues[index],
-                    color: s.color,
-                    type: s.type
-                }
-            }),
+            dataset: datapoint,
             index,
             indexLabel: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values[index]
         }
     );
+
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index + slicer.value.start })
+    }
 }
 
 function getData() {
@@ -1916,10 +1961,26 @@ function generateCsv(callback = null) {
 
 function toggleTooltipVisibility(show, selectedIndex = null) {
     isTooltip.value = show;
+
+    const datapoint = relativeDataset.value.map(s => {
+        return {
+            name: s.name,
+            value: [null, undefined, NaN].includes(s.absoluteValues[selectedIndex]) ? null : s.absoluteValues[selectedIndex],
+            color: s.color,
+            type: s.type
+        }
+    })
+
     if (show) {
         selectedSerieIndex.value = selectedIndex;
+        if (FINAL_CONFIG.value.events.datapointEnter) {
+            FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: selectedIndex + slicer.value.start })
+        }
     } else {
         selectedSerieIndex.value = null;
+        if (FINAL_CONFIG.value.events.datapointLeave) {
+            FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: selectedIndex + slicer.value.start })
+        }
     }
 }
 
@@ -3236,8 +3297,10 @@ defineExpose({
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * i" :y="drawingArea.top"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
-                            fill="transparent" @mouseenter="toggleTooltipVisibility(true, i)"
-                            @mouseleave="toggleTooltipVisibility(false)" @click="selectX(i)" />
+                            fill="transparent" 
+                            @mouseenter="toggleTooltipVisibility(true, i)"
+                            @mouseleave="toggleTooltipVisibility(false, i)" 
+                            @click="selectX(i)" />
                     </g>
 
 

@@ -2969,9 +2969,14 @@ declare module "vue-data-ui" {
     }
 
     export type VueUiXyConfig = {
-        debug?: boolean;
-        responsive?: boolean;
+        debug?: boolean; // v3
+        responsive?: boolean; // v3
         loading?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUiXyEvent; // v3
+            datapointLeave?: VueUiXyEvent; // v3
+            datapointClick?: VueUiXyEvent; // v3
+        };
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -3306,13 +3311,16 @@ declare module "vue-data-ui" {
         {
             config?: VueUiXyConfig;
             dataset: VueUiXyDatasetItem[];
+            selectedXIndex?: number | null; // v3
         },
         VueUiXyExpose
     >;
 
-    export type VueUiDonutEvent = null | (({datapoint, seriesIndex }: { datapoint: VueUiDonutDatapoint; seriesIndex: number }) => void);
+    export type ChartEvent<T> = null | (({ datapoint, seriesIndex} : { datapoint: T, seriesIndex: number}) => void)
 
-    export type VueUiSparklineEvent = null | (({ datapoint, seriesIndex } : { datapoint: VueUiSparklineDatasetItem; seriesIndex: number }) => void);
+    export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
+    export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
+    export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
 
     export type VueUiDonutConfig = {
         debug?: boolean;
