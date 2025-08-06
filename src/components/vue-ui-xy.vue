@@ -919,6 +919,7 @@ function throt(fn, wait = 16) {
 }
 
 function onSvgMouseMove(e) {
+    if (isAnnotator.value) return;
     const rect  = svgRef.value.getBoundingClientRect();
     const viewBox = svgRef.value.viewBox.baseVal;
     const scaleX  = viewBox.width  / rect.width;
