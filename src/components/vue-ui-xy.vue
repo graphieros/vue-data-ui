@@ -885,39 +885,6 @@ function calcIndividualRectY(plot) {
 
 const hoveredIndex = ref(null);
 
-function getSvgPoint(e) {
-    const svg = svgRef.value;
-    const pt = svg.createSVGPoint();
-    pt.x = e.clientX;
-    pt.y = e.clientY;
-    return pt.matrixTransform(svg.getScreenCTM().inverse());
-}
-
-function throt(fn, wait = 16) {
-    let lastTime = 0;
-    let timeoutId = null;
-
-    return function(...args) {
-        const now = Date.now();
-        const remaining = wait - (now - lastTime);
-
-        if (remaining <= 0) {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-        }
-        lastTime = now;
-        fn.apply(this, args);
-        } else if (!timeoutId) {
-        timeoutId = setTimeout(() => {
-            lastTime = Date.now();
-            timeoutId = null;
-            fn.apply(this, args);
-        }, remaining);
-        }
-    };
-}
-
 function onSvgMouseMove(e) {
     if (isAnnotator.value) return;
     const rect  = svgRef.value.getBoundingClientRect();
@@ -936,8 +903,6 @@ function onSvgMouseMove(e) {
         onSvgMouseLeave();
     }
 }
-
-const onSvgMouseMoveThrottled = throt(onSvgMouseMove, 8);
 
 function onSvgMouseLeave() {
     hoveredIndex.value = null;
@@ -2495,7 +2460,7 @@ defineExpose({
             role="img" 
             aria-live="polite" 
             preserveAspectRatio="xMidYMid"
-            @mousemove="onSvgMouseMoveThrottled"
+            @mousemove="onSvgMouseMove"
             @mouseleave="onSvgMouseLeave"
             @click="onSvgClick"
         >
