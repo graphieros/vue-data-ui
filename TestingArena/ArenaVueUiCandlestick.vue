@@ -62,7 +62,7 @@ function alterDataset() {
 }
 
 const model = ref([
-    { key: 'loading', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'debug', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
@@ -81,7 +81,7 @@ const model = ref([
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
-    { key: 'useCssAnimation', def: true, type: 'checkbox'},
+    { key: 'useCssAnimation', def: false, type: 'checkbox'},
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
@@ -116,7 +116,7 @@ const model = ref([
     { key: 'style.layout.grid.yAxis.scale.max', def: null, type: 'number', min: 0, max: 10000},
 
     { key: 'style.layout.wick.stroke', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.wick.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.5},
+    { key: 'style.layout.wick.strokeWidth', def: 3, type: 'number', min: 0, max: 12, step: 0.5},
     { key: 'style.layout.wick.extremity.shape', def: 'line', type: 'select', options: ['line', 'circle']},
     { key: 'style.layout.wick.extremity.size', def: 'auto', type: 'select', options: ['auto', 5, 10, 20, 40]},
     { key: 'style.layout.wick.extremity.color', def: '#1A1A1A', type: 'color'},

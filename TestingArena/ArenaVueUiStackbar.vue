@@ -91,7 +91,7 @@ const model = ref([
     { key: 'orientation', def: 'horizontal', type:'select', options: ['vertical', 'horizontal']},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'theme', def: '', type: 'select', options: ['', 'zen', 'hack', 'concrete']},
-    { key: 'useCssAnimation', def: true, type: 'checkbox'},
+    { key: 'useCssAnimation', def: false, type: 'checkbox'},
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.height', def: 500, type: 'number', min: 200, max: 1000},

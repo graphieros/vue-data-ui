@@ -273,7 +273,7 @@ export function useConfig() {
         theme: '',
         responsive: false,
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         orientation: 'vertical', // or 'horizontal'
         table: {
             ...TABLE,
@@ -1724,7 +1724,7 @@ export function useConfig() {
         responsive: false,
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         events: {
             datapointEnter: null,
             datapointLeave: null,
@@ -2114,7 +2114,7 @@ export function useConfig() {
         responsive: false,
         responsiveProportionalSizing: true,
         theme: '',
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
