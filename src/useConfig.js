@@ -112,7 +112,8 @@ export function useConfig() {
         borderWidth: 1,
         backgroundOpacity: 100,
         position: POSITION.CENTER,
-        offsetY: 24
+        offsetY: 24,
+        smooth: true, // v3
     }
 
     const AXIS_DATE_FORMATTER = {
@@ -2690,6 +2691,7 @@ export function useConfig() {
         tooltipFontSize: FONT._14,
         tooltipPosition: POSITION.CENTER,
         tooltipOffsetY: 24,
+        tooltipSmooth: true,
         useCustomLegend: false,
         valuePrefix: '',
         valueSuffix: '',

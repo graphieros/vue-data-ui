@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch, onUnmounted, nextTick } from "vue";
 import { calcTooltipPosition } from "../calcTooltipPosition";
 import { useMouse } from "../useMouse";
@@ -68,33 +68,33 @@ const props = defineProps({
     disableSmoothing: {
         type: Boolean,
         default: false
+    },
+    smooth: {
+        type: Boolean,
+        default: true
     }
 });
 
-const tooltip = ref(null);
+const tooltip = ref < HTMLElement | null > (null);
+const { x, y } = useMouse(props.parent!);
 
-const { x, y } = useMouse(props.parent);
 const targetPosition = ref({ x: 0, y: 0 });
 const displayPosition = ref({ x: 0, y: 0 });
 
-const smoothing = 0.18;
-let animationFrameId = null;
+const SMOOTHING = 0.18;
+let rafId: number | null = null;
 
 function animate() {
-    if (props.disableSmoothing) {
-        displayPosition.value.x = targetPosition.value.x;
-        displayPosition.value.y = targetPosition.value.y;
-        return;
-    }
-    displayPosition.value.x += (targetPosition.value.x - displayPosition.value.x) * smoothing;
-    displayPosition.value.y += (targetPosition.value.y - displayPosition.value.y) * smoothing;
-    animationFrameId = requestAnimationFrame(animate);
+    if (!props.smooth) return;
+    displayPosition.value.x += (targetPosition.value.x - displayPosition.value.x) * SMOOTHING;
+    displayPosition.value.y += (targetPosition.value.y - displayPosition.value.y) * SMOOTHING;
+    rafId = requestAnimationFrame(animate);
 }
 
 watch([x, y], ([newX, newY]) => {
     targetPosition.value.x = newX;
     targetPosition.value.y = newY;
-    if (props.disableSmoothing) {
+    if (!props.smooth) {
         displayPosition.value.x = newX;
         displayPosition.value.y = newY;
     }
@@ -102,24 +102,22 @@ watch([x, y], ([newX, newY]) => {
 
 watch(() => props.show, async (show) => {
     if (show) {
-        const initialX = x.value;
-        const initialY = y.value;
-        targetPosition.value.x = initialX;
-        targetPosition.value.y = initialY;
-        displayPosition.value.x = initialX;
-        displayPosition.value.y = initialY;
+        targetPosition.value = { x: x.value, y: y.value };
+        displayPosition.value = { x: x.value, y: y.value };
         await nextTick();
-        if (!animationFrameId) animate();
+        if (props.smooth && rafId === null) {
+            animate();
+        }
     } else {
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
+        if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
         }
     }
 });
 
 onUnmounted(() => {
-    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    if (rafId !== null) cancelAnimationFrame(rafId);
 });
 
 const position = computed(() => {
@@ -131,57 +129,53 @@ const position = computed(() => {
         defaultOffsetY: props.offsetY,
         blockShiftY: props.blockShiftY
     });
-    return {
-        top: Math.round(pos.top),
-        left: Math.round(pos.left)
-    };
+    return { top: Math.round(pos.top), left: Math.round(pos.left) };
 });
 
-const convertedBackground = computed(() => {
-    return setOpacity(props.backgroundColor, props.backgroundOpacity);
-});
+const convertedBackground = computed(() =>
+    setOpacity(props.backgroundColor, props.backgroundOpacity)
+);
 </script>
 
 <template>
-    <teleport :to="isFullscreen ? parent : 'body'">
-        <div
-            ref="tooltip"
-            role="tooltip"
-            :aria-hidden="!show"
-            aria-live="polite"
-            data-cy="tooltip"
-            :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
-            v-if="show"
-            :style="`
-                pointer-events:none;
-                top:${position.top}px;
-                left:${position.left}px;
-                ${isCustom ? '' : `background:${convertedBackground};color:${color};max-width:${maxWidth};font-size:${fontSize}px`};
-                border-radius:${borderRadius}px;
-                border:${borderWidth}px solid ${borderColor};
-                z-index:2147483647;
-            `"
-        >
-            <slot name="tooltip-before"/>
-            <slot/>
-            <div v-html="content"/>
-            <slot name="tooltip-after"/>
+    <teleport :to="props.isFullscreen ? props.parent : 'body'">
+        <div ref="tooltip" role="tooltip" :aria-hidden="!props.show" aria-live="polite" data-cy="tooltip"
+            v-if="props.show" :class="{
+                'vue-data-ui-custom-tooltip': props.isCustom,
+                'vue-data-ui-tooltip': !props.isCustom
+            }" :style="`
+        pointer-events: none;
+        top: ${position.top}px;
+        left: ${position.left}px;
+        ${props.isCustom
+            ? ''
+            : `background: ${convertedBackground}; color: ${props.color}; max-width: ${props.maxWidth}; font-size: ${props.fontSize}px;`}
+        border-radius: ${props.borderRadius}px;
+        border: ${props.borderWidth}px solid ${props.borderColor};
+        z-index: 2147483647;
+    `">
+            <slot name="tooltip-before" />
+            <slot />
+            <div v-html="props.content" />
+            <slot name="tooltip-after" />
         </div>
     </teleport>
 </template>
 
 <style>
 .vue-data-ui-tooltip {
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.2);
     position: fixed;
-    padding:12px;
+    padding: 12px;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
+
 .vue-data-ui-custom-tooltip {
     position: fixed;
     z-index: 3;
 }
+
 .vue-data-ui-tooltip,
 .vue-data-ui-custom-tooltip {
     will-change: top, left;

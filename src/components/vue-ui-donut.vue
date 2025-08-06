@@ -1792,15 +1792,23 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <Tooltip :show="mutableConfig.showTooltip && isTooltip"
+        <Tooltip 
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color" :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :color="FINAL_CONFIG.style.chart.tooltip.color" 
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
-            :position="FINAL_CONFIG.style.chart.tooltip.position" :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
-            :parent="donutChart" :content="tooltipContent" :isCustom="useCustomFormat" :isFullscreen="isFullscreen">
+            :position="FINAL_CONFIG.style.chart.tooltip.position" 
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :parent="donutChart" 
+            :content="tooltipContent" 
+            :isCustom="useCustomFormat" 
+            :isFullscreen="isFullscreen"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+        >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>

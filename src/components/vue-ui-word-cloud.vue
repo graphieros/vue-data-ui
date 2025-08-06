@@ -604,6 +604,7 @@ function useTooltip(word) {
             :parent="wordCloudChart"
             :content="tooltipContent"
             :isCustom="useCustomFormat"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

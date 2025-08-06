@@ -1634,7 +1634,9 @@ defineExpose({
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
             :position="FINAL_CONFIG.style.chart.tooltip.position" :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="nestedDonutsChart" :content="tooltipContent" :isFullscreen="isFullscreen"
-            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)">
+            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+        >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>

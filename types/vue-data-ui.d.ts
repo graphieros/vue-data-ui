@@ -259,6 +259,7 @@ declare module "vue-data-ui" {
         backgroundOpacity?: number;
         position?: TooltipPosition;
         offsetY?: number;
+        smooth?: boolean;
     };
 
     export type ZoomMinimap = {
@@ -5730,6 +5731,7 @@ declare module "vue-data-ui" {
         tooltipFontSize?: number;
         tooltipPosition?: TooltipPosition;
         tooltipOffsetY?: number;
+        tooltipSmooth?: boolean;
         useCustomLegend?: boolean;
         valuePrefix?: string;
         valueSuffix?: string;
