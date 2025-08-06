@@ -713,7 +713,7 @@ defineExpose({
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
-            :smooth="FINAL_CONFIG.chart.tooltip.smooth"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>

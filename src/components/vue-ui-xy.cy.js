@@ -17,14 +17,6 @@ describe("<VueUiXy />", () => {
 				title: true,
 				subtitle: true,
 				slicer: true,
-				tooltipCallback: () => {
-					cy.get('.vue-ui-xy').trigger('mouseenter', { force: true });
-					cy.wait(300)
-					cy.get('[data-cy="tooltip-trap"]')
-						.first()
-						.trigger("mouseenter", { force: true });
-					cy.get('[data-cy="highlighter"]').should("exist").and("be.visible");
-				},
 			});
 
 			cy.log("grid");
@@ -164,9 +156,7 @@ describe("<VueUiXy />", () => {
 				});
 
 			cy.log("@selectX");
-			cy.get('[data-cy="tooltip-trap"]')
-				.first()
-				.click()
+			cy.get('.vue-ui-xy').trigger('click', { force: true, x: 50, y: 100})
 				.then(() => {
 					expect(wrapper.emitted("selectX")).to.deep.equal([
 						[

@@ -65,10 +65,6 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    disableSmoothing: {
-        type: Boolean,
-        default: false
-    },
     smooth: {
         type: Boolean,
         default: true
@@ -138,25 +134,25 @@ const convertedBackground = computed(() =>
 </script>
 
 <template>
-    <teleport :to="props.isFullscreen ? props.parent : 'body'">
-        <div ref="tooltip" role="tooltip" :aria-hidden="!props.show" aria-live="polite" data-cy="tooltip"
-            v-if="props.show" :class="{
-                'vue-data-ui-custom-tooltip': props.isCustom,
-                'vue-data-ui-tooltip': !props.isCustom
+    <teleport :to="isFullscreen ? parent : 'body'">
+        <div ref="tooltip" role="tooltip" :aria-hidden="!show" aria-live="polite" data-cy="tooltip"
+            v-if="show" :class="{
+                'vue-data-ui-custom-tooltip': isCustom,
+                'vue-data-ui-tooltip': !isCustom
             }" :style="`
         pointer-events: none;
         top: ${position.top}px;
         left: ${position.left}px;
-        ${props.isCustom
+        ${isCustom
             ? ''
-            : `background: ${convertedBackground}; color: ${props.color}; max-width: ${props.maxWidth}; font-size: ${props.fontSize}px;`}
-        border-radius: ${props.borderRadius}px;
-        border: ${props.borderWidth}px solid ${props.borderColor};
+            : `background: ${convertedBackground}; color: ${color}; max-width: ${maxWidth}; font-size: ${fontSize}px;`}
+        border-radius: ${borderRadius}px;
+        border: ${borderWidth}px solid ${borderColor};
         z-index: 2147483647;
     `">
             <slot name="tooltip-before" />
             <slot />
-            <div v-html="props.content" />
+            <div v-html="content" />
             <slot name="tooltip-after" />
         </div>
     </teleport>
