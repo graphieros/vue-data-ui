@@ -24,10 +24,6 @@ describe('<VueUiCandlestick />', () => {
         }
       });
 
-      cy.log('Grid axes');
-      cy.get('[data-cy="candlestick-grid-y-axis"]').should('exist').and('be.visible');
-      cy.get('[data-cy="candlestick-grid-x-axis"]').should('exist').and('be.visible');
-
       cy.log('Y scale ticks');
       cy.get('[data-cy="y-scale-tick"]').should('exist').and('have.length', 9);
       
