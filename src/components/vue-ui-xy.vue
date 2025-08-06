@@ -883,6 +883,42 @@ function calcIndividualRectY(plot) {
     return [null, undefined, NaN, Infinity, -Infinity].includes(plot.zeroPosition) ? 0 : plot.zeroPosition;
 }
 
+const hoveredIndex = ref(null);
+
+function getSvgPoint(e) {
+    const svg = svgRef.value;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+function onSvgMouseMove(e) {
+    const pt = getSvgPoint(e);
+    const localX = pt.x - drawingArea.value.left;
+    const slotW = drawingArea.value.width / maxSeries.value;
+    const idx = Math.floor(localX / slotW);
+    if (idx >= 0 && idx < maxSeries.value) {
+        if (hoveredIndex.value !== idx) {
+        hoveredIndex.value = idx;
+        toggleTooltipVisibility(true, idx);
+        }
+    } else {
+        onSvgMouseLeave();
+    }
+}
+
+function onSvgMouseLeave() {
+    hoveredIndex.value = null;
+    toggleTooltipVisibility(false, null);
+}
+
+function onSvgClick() {
+    if (hoveredIndex.value != null) {
+        selectX(hoveredIndex.value);
+    }
+}
+
 function selectX(index) {
     const datapoint = relativeDataset.value.map(s => {
         return {
@@ -2416,12 +2452,22 @@ defineExpose({
 
         <svg ref="svgRef" xmlns="http://www.w3.org/2000/svg"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            data-cy="xy-svg" :width="'100%'" :viewBox="viewBox"
-            class="vue-ui-xy-svg vue-data-ui-svg" :style="{
+            data-cy="xy-svg" :width="'100%'" 
+            :viewBox="viewBox"
+            class="vue-ui-xy-svg vue-data-ui-svg" 
+            :style="{
                 background: 'transparent',
                 color: FINAL_CONFIG.chart.color,
                 fontFamily: FINAL_CONFIG.chart.fontFamily,
-            }" :aria-label="chartAriaLabel" role="img" aria-live="polite" preserveAspectRatio="xMidYMid">
+            }" 
+            :aria-label="chartAriaLabel" 
+            role="img" 
+            aria-live="polite" 
+            preserveAspectRatio="xMidYMid"
+            @mousemove="onSvgMouseMove"
+            @mouseleave="onSvgMouseLeave"
+            @click="onSvgClick"
+        >
             <g ref="G" class="vue-data-ui-g">
                 <PackageVersion />
 
@@ -3291,19 +3337,6 @@ defineExpose({
                         </g>
                     </g>
 
-                    <!-- TOOLTIP TRAPS -->
-                    <g v-if="userHovers">
-                        <rect data-cy="tooltip-trap" v-for="(_, i) in maxSeries" :key="`tooltip_trap_${i}`"
-                            :x="drawingArea.left + (drawingArea.width / maxSeries) * i" :y="drawingArea.top"
-                            :height="drawingArea.height < 0 ? 10 : drawingArea.height"
-                            :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
-                            fill="transparent" 
-                            @mouseenter="toggleTooltipVisibility(true, i)"
-                            @mouseleave="toggleTooltipVisibility(false, i)" 
-                            @click="selectX(i)" />
-                    </g>
-
-
                     <!-- TIME TAG -->
                     <g v-if="FINAL_CONFIG.chart.timeTag.show && (![null, undefined].includes(selectedSerieIndex) || ![null, undefined].includes(selectedMinimapIndex))"
                         style="pointer-events:none">
@@ -3568,14 +3601,23 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <Tooltip :show="mutableConfig.showTooltip && isTooltip"
-            :backgroundColor="FINAL_CONFIG.chart.tooltip.backgroundColor" :color="FINAL_CONFIG.chart.tooltip.color"
-            :fontSize="FINAL_CONFIG.chart.tooltip.fontSize" :borderRadius="FINAL_CONFIG.chart.tooltip.borderRadius"
-            :borderColor="FINAL_CONFIG.chart.tooltip.borderColor" :borderWidth="FINAL_CONFIG.chart.tooltip.borderWidth"
+        <Tooltip 
+            :show="mutableConfig.showTooltip && isTooltip"
+            :backgroundColor="FINAL_CONFIG.chart.tooltip.backgroundColor" 
+            :color="FINAL_CONFIG.chart.tooltip.color"
+            :fontSize="FINAL_CONFIG.chart.tooltip.fontSize" 
+            :borderRadius="FINAL_CONFIG.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.chart.tooltip.borderColor" 
+            :borderWidth="FINAL_CONFIG.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.chart.tooltip.backgroundOpacity"
-            :position="FINAL_CONFIG.chart.tooltip.position" :offsetY="FINAL_CONFIG.chart.tooltip.offsetY"
-            :parent="$refs.chart" :content="tooltipContent" :isFullscreen="isFullscreen"
-            :isCustom="FINAL_CONFIG.chart.tooltip.customFormat && typeof FINAL_CONFIG.chart.tooltip.customFormat === 'function'">
+            :position="FINAL_CONFIG.chart.tooltip.position" 
+            :offsetY="FINAL_CONFIG.chart.tooltip.offsetY"
+            :parent="$refs.chart" 
+            :content="tooltipContent" 
+            :isFullscreen="isFullscreen"
+            :isCustom="FINAL_CONFIG.chart.tooltip.customFormat && typeof FINAL_CONFIG.chart.tooltip.customFormat === 'function'"
+            :smooth="FINAL_CONFIG.chart.tooltip.smooth"
+        >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>
