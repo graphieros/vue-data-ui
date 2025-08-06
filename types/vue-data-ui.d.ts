@@ -3312,6 +3312,8 @@ declare module "vue-data-ui" {
 
     export type VueUiDonutEvent = null | (({datapoint, seriesIndex }: { datapoint: VueUiDonutDatapoint; seriesIndex: number }) => void);
 
+    export type VueUiSparklineEvent = null | (({ datapoint, seriesIndex } : { datapoint: VueUiSparklineDatasetItem; seriesIndex: number }) => void);
+
     export type VueUiDonutConfig = {
         debug?: boolean;
         type?: "classic" | "polar";
@@ -4940,7 +4942,7 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiSparklineDatasetItem = {
-        period: string;
+        period: string | number;
         value: number;
         absoluteValue?: number;
         id?: string;
@@ -4952,9 +4954,16 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiSparklineConfig = {
+        loading?: boolean; // v3
+        debug?: boolean; // v3
         theme?: Theme;
         type?: "line" | "bar";
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiSparklineEvent; // v3
+            datapointLeave?: VueUiSparklineEvent; // v3
+            datapointClick?: VueUiSparklineEvent; // v3
+        };
         downsample?: {
             threshold?: number;
         };
@@ -5022,6 +5031,7 @@ declare module "vue-data-ui" {
                 prefix?: string;
                 suffix?: string;
                 formatter?: Formatter;
+                datetimeFormatter?: AxisDateFormatter; // v3
             };
             title?: {
                 show?: boolean;

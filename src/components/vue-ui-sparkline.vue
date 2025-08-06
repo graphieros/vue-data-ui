@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent, shallowRef, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted, watch, defineAsyncComponent, shallowRef, onBeforeUnmount, toRefs, nextTick } from "vue";
 import {
     applyDataLabel,
     calcLinearProgression,
@@ -9,6 +9,7 @@ import {
     createUid,
     dataLabel as dl,
     error,
+    fib,
     forceValidValue,
     getMissingDatasetAttributes,
     hasDeepProperty,
@@ -16,6 +17,7 @@ import {
     objectIsEmpty,
     setOpacity,
     shiftHue,
+    treeShake,
     XMLNS
 } from "../lib";
 import { useNestedProp } from "../useNestedProp";
@@ -23,9 +25,11 @@ import { useConfig } from "../useConfig";
 import { useResponsive } from "../useResponsive";
 import { throttle } from "../canvas-lib";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { useLoading } from "../useLoading";
 import themes from "../themes.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
+import { useTimeLabels } from "../useTimeLabels";
 
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const SparkTooltip = defineAsyncComponent(() => import('../atoms/SparkTooltip.vue'));
 
@@ -71,14 +75,42 @@ const sparklineChart = ref(null);
 const chartTitle = ref(null);
 const source = ref(null);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+function makeSkeletonDs(n) {
+    return fib(n).map(value => ({ period: '-', value }));
+}
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading } = useLoading(({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async() => {
+            await nextTick();
+            animateSL();
+        })
     },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+    skeletonDataset: makeSkeletonDs(12),
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            style: {
+                backgroundColor: '#99999930',
+                scaleMin: 0,
+                scaleMax: 89,
+                animation: { show: false },
+                line: { color: '#AAAAAA' },
+                bar: { color: '#AAAAAA' },
+                area: { color: '#CACACA' },
+                zeroLine: { color: '#6A6A6A' },
+                dataLabel: { show: false },
+                tooltip: { show: false },
+            }
+        }
+    })
+}))
 
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
 
@@ -121,20 +153,25 @@ function prepareConfig() {
 
 const downsampled = computed(() => {
     return largestTriangleThreeBucketsArrayObjects({
-        data: props.dataset,
+        data: FINAL_DATASET.value,
         threshold: FINAL_CONFIG.value.downsample.threshold
     })
 })
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     prepareChart();
     svg.value.chartWidth = FINAL_CONFIG.value.style.chartWidth;
 }, { deep: true });
 
 watch(() => props.dataset, (_) => {
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
     safeDatasetCopy.value = largestTriangleThreeBucketsArrayObjects({
-        data: props.dataset.map(d => {
+        data: FINAL_DATASET.value.map(d => {
         return {
             ...d,
             value: ![undefined].includes(d.value) ? d.value : null
@@ -148,8 +185,8 @@ const safeDatasetCopy = ref(prepareDsCopy());
 
 function prepareDsCopy() {
     return largestTriangleThreeBucketsArrayObjects({
-        data: props.dataset.map(d => {
-            if (FINAL_CONFIG.value.style.animation.show && props.dataset.length > 1) {
+        data: FINAL_DATASET.value.map(d => {
+            if (FINAL_CONFIG.value.style.animation.show && FINAL_DATASET.value.length > 1) {
                 return {
                     ...d,
                     value: null
@@ -168,9 +205,8 @@ function prepareDsCopy() {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-onMounted(() => {
-    prepareChart();
-    if (FINAL_CONFIG.value.style.animation.show && props.dataset.length > 1) {
+function animateSL() {
+    if (FINAL_CONFIG.value.style.animation.show && props.dataset.length > 1 && !loading.value) {
         safeDatasetCopy.value = [];
         const chunks = FINAL_CONFIG.value.style.animation.animationFrames / props.dataset.length;
         let start = 0;
@@ -188,14 +224,23 @@ onMounted(() => {
         }
         animate();
     }
+}
+
+onMounted(() => {
+    prepareChart();
+    animateSL();
 });
+
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkline',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value,
+        });
+        manualLoading.value = true; // v3
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
@@ -206,10 +251,16 @@ function prepareChart() {
                     componentName: 'VueUiSparkline',
                     type: 'datasetSerieAttribute',
                     property: attr,
-                    index: i
+                    index: i,
+                    debug: debug.value
                 });
             });
         });
+    }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -307,13 +358,23 @@ function ratioToMax(v) {
 
 const len = computed(() => downsampled.value.length - 1);
 
+const timeLabels = computed(() => {
+    return useTimeLabels({
+        values: downsampled.value.map(d => d.period),
+        maxDatapoints: downsampled.value.length,
+        formatter: FINAL_CONFIG.value.style.dataLabel.datetimeFormatter,
+        start: 0,
+        end: downsampled.value.length
+    })
+});
+
 const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((s, i) => {
         const absoluteValue = isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : (s.value || 0);
         const width = (drawingArea.value.width / (len.value + 1)) > svg.padding ? svg.padding : (drawingArea.value.width / (len.value + 1));
         return {
             absoluteValue,
-            period: s.period,
+            period: timeLabels.value && timeLabels.value[i] && timeLabels.value[i].text ? timeLabels.value[i].text : s.period,
             plotValue: absoluteValue + absoluteMin.value,
             toMax: ratioToMax(absoluteValue + absoluteMin.value),
             x: drawingArea.value.start + (i * (width > drawingArea.value.width / 12 ? drawingArea.value.width / 12 : width)),
@@ -340,6 +401,10 @@ const selectedPlot = ref(undefined);
 const previousSelectedPlot = ref(undefined);
 
 function selectPlot(plot, index) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: plot, seriesIndex: index });
+    }
+
     selectedPlot.value = plot;
     if (!previousSelectedPlot.value) {
         previousSelectedPlot.value = plot;
@@ -347,7 +412,11 @@ function selectPlot(plot, index) {
     emits('hoverIndex', {index})
 }
 
-function unselectPlot() {
+function unselectPlot(plot, index) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: plot, seriesIndex: index });
+    }
+
     previousSelectedPlot.value = selectedPlot.value;
     selectedPlot.value = undefined;
     emits('hoverIndex', {index:undefined})
@@ -401,6 +470,9 @@ const isBar = computed(() => {
 });
 
 function selectDatapoint(datapoint, index) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index })
+    }
     emits('selectDatapoint', { datapoint, index })
 }
 </script>
@@ -431,7 +503,6 @@ function selectDatapoint(datapoint, index) {
         <svg
             ref="svgRef"
             :xmlns="XMLNS"
-            v-if="isDataset"
             data-cy="sparkline-svg"
             :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`"
             @mouseleave="previousSelectedPlot = undefined"
@@ -555,16 +626,16 @@ function selectDatapoint(datapoint, index) {
                 :font-weight="FINAL_CONFIG.style.dataLabel.bold ? 'bold' : 'normal'"
                 :fill="FINAL_CONFIG.style.dataLabel.color"
             >
-            {{ selectedPlot ? applyDataLabel(
-                    FINAL_CONFIG.style.dataLabel.formatter,
-                    selectedPlot.absoluteValue,
-                    dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: selectedPlot.absoluteValue, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }), { datapoint: selectedPlot }
-                ) : applyDataLabel(
-                    FINAL_CONFIG.style.dataLabel.formatter,
-                    dataLabel,
-                    dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: dataLabel, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }),
-                ) 
-            }}
+                {{ selectedPlot ? applyDataLabel(
+                        FINAL_CONFIG.style.dataLabel.formatter,
+                        selectedPlot.absoluteValue,
+                        dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: selectedPlot.absoluteValue, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }), { datapoint: selectedPlot }
+                    ) : applyDataLabel(
+                        FINAL_CONFIG.style.dataLabel.formatter,
+                        dataLabel,
+                        dl({p: FINAL_CONFIG.style.dataLabel.prefix, v: dataLabel, s: FINAL_CONFIG.style.dataLabel.suffix, r: FINAL_CONFIG.style.dataLabel.roundingValue }),
+                    ) 
+                }}
             </text>
 
             <!-- MOUSE TRAP -->
@@ -576,8 +647,8 @@ function selectDatapoint(datapoint, index) {
                 :height="drawingArea.height + 6"
                 :width="(drawingArea.width / (len + 1) > svg.padding ? svg.padding: drawingArea.width / (len + 1))"
                 fill="transparent"
-                @mouseenter="selectPlot(plot, i)"
-                @mouseleave="unselectPlot"
+                @mouseenter="() => selectPlot(plot, i)"
+                @mouseleave="() => unselectPlot(plot, i)"
                 @click="() => selectDatapoint(plot, i)"
             />
             <slot name="svg" :svg="svg"/>
@@ -620,22 +691,15 @@ function selectDatapoint(datapoint, index) {
             <slot name="source" />
         </div>
         
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'sparkline',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                    sparkline: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading"/>
     </div>
 </template>
 
 <style scoped>
+.vue-ui-sparkline {
+    position: relative;
+}
 .vue-ui-sparkline * {
     transition: unset;
 }

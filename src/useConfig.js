@@ -2224,10 +2224,17 @@ export function useConfig() {
     }
 
     const vue_ui_sparkline = {
+        debug: false, // v3
+        loading: false, // v3
         theme: '',
         responsive: false,
         type: SHAPE.LINE,
         downsample: LTTB,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         style: {
             chartWidth: 290,
             animation: {
@@ -2276,7 +2283,8 @@ export function useConfig() {
                 valueType: 'latest',
                 prefix: '',
                 suffix: '',
-                formatter: null
+                formatter: null,
+                datetimeFormatter: AXIS_DATE_FORMATTER // v3
             },
             title: {
                 show: true,

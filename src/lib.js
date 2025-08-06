@@ -2784,6 +2784,15 @@ export function formatSmallValue({
     return str;
 }
 
+// Create skeleton dataset with basic fib
+export function fib(n) {
+    const a = [];
+    for (let i = 0; i < n; i += 1) {
+        a.push(i === 0 ? 0 : i === 1 ? 1 : a[i-1] + a[i-2]);
+    }
+    return a;
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -2833,6 +2842,7 @@ const lib = {
     easeOutCubic,
     emptyObjectToNull,
     error,
+    fib,
     forceValidValue,
     formatSmallValue,
     functionReturnsString,
