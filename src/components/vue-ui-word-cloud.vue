@@ -605,6 +605,7 @@ function useTooltip(word) {
             :content="tooltipContent"
             :isCustom="useCustomFormat"
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

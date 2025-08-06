@@ -1718,6 +1718,7 @@ defineExpose({
                 :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
                 :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
                 :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+                :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             >
                 <template #tooltip-before>
                     <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>

@@ -482,6 +482,7 @@ function useTooltip({ datapoint, seriesIndex }) {
             :offsetY="-124 + FINAL_CONFIG.style.tooltip.offsetY"
             :blockShiftY="true"
             :smooth="FINAL_CONFIG.style.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

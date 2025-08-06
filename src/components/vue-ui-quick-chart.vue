@@ -1939,6 +1939,7 @@ defineExpose({
             :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.tooltipCustomFormat)"
             :smooth="FINAL_CONFIG.tooltipSmooth"
+            :backdropFilter="FINAL_CONFIG.tooltipBackdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

@@ -125,7 +125,7 @@ const mapping = ref({
 })
 
 const options = computed(() => Object.keys(mapping.value));
-const selectedComponent = ref('VueUiStackbar');
+const selectedComponent = ref('VueUiXy');
 
 /**
  * Legacy testing arena where some non chart components can be tested

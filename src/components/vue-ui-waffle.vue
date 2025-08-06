@@ -1136,6 +1136,7 @@ defineExpose({
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :isFullscreen="isFullscreen"
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropfilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

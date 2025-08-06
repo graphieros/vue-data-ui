@@ -114,6 +114,7 @@ export function useConfig() {
         position: POSITION.CENTER,
         offsetY: 24,
         smooth: true, // v3
+        backdropFilter: true, // v3
     }
 
     const AXIS_DATE_FORMATTER = {
@@ -2692,6 +2693,7 @@ export function useConfig() {
         tooltipPosition: POSITION.CENTER,
         tooltipOffsetY: 24,
         tooltipSmooth: true,
+        tooltipBackdropFilter: true,
         useCustomLegend: false,
         valuePrefix: '',
         valueSuffix: '',

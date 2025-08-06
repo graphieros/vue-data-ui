@@ -893,11 +893,39 @@ function getSvgPoint(e) {
     return pt.matrixTransform(svg.getScreenCTM().inverse());
 }
 
+function throt(fn, wait = 16) {
+    let lastTime = 0;
+    let timeoutId = null;
+
+    return function(...args) {
+        const now = Date.now();
+        const remaining = wait - (now - lastTime);
+
+        if (remaining <= 0) {
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+            timeoutId = null;
+        }
+        lastTime = now;
+        fn.apply(this, args);
+        } else if (!timeoutId) {
+        timeoutId = setTimeout(() => {
+            lastTime = Date.now();
+            timeoutId = null;
+            fn.apply(this, args);
+        }, remaining);
+        }
+    };
+}
+
 function onSvgMouseMove(e) {
-    const pt = getSvgPoint(e);
-    const localX = pt.x - drawingArea.value.left;
+    const rect  = svgRef.value.getBoundingClientRect();
+    const viewBox = svgRef.value.viewBox.baseVal;
+    const scaleX  = viewBox.width  / rect.width;
+    const svgX    = (e.clientX - rect.left) * scaleX;
+    const localX = svgX - drawingArea.value.left;
     const slotW = drawingArea.value.width / maxSeries.value;
-    const idx = Math.floor(localX / slotW);
+    const idx   = Math.floor(localX / slotW);
     if (idx >= 0 && idx < maxSeries.value) {
         if (hoveredIndex.value !== idx) {
         hoveredIndex.value = idx;
@@ -907,6 +935,8 @@ function onSvgMouseMove(e) {
         onSvgMouseLeave();
     }
 }
+
+const onSvgMouseMoveThrottled = throt(onSvgMouseMove, 8);
 
 function onSvgMouseLeave() {
     hoveredIndex.value = null;
@@ -2464,7 +2494,7 @@ defineExpose({
             role="img" 
             aria-live="polite" 
             preserveAspectRatio="xMidYMid"
-            @mousemove="onSvgMouseMove"
+            @mousemove="onSvgMouseMoveThrottled"
             @mouseleave="onSvgMouseLeave"
             @click="onSvgClick"
         >
@@ -3617,6 +3647,7 @@ defineExpose({
             :isFullscreen="isFullscreen"
             :isCustom="FINAL_CONFIG.chart.tooltip.customFormat && typeof FINAL_CONFIG.chart.tooltip.customFormat === 'function'"
             :smooth="FINAL_CONFIG.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
