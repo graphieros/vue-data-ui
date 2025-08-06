@@ -49,13 +49,13 @@ import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { useLoading } from "../useLoading";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import BaseScanner from "../atoms/BaseScanner.vue";
 import img from "../img";
-import { useLoading } from "../useLoading";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
