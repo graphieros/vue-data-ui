@@ -62,6 +62,8 @@ const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 })
 
+const isLoaded = ref(false);
+const to = ref(null);
 const uid = ref(createUid());
 const details = ref(null);
 const isTooltip = ref(false);
@@ -100,7 +102,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
         [1714521600000, 50, 130, 30, 100, 210],
         [1717200000000, 80, 210, 50, 150, 340],
         [1719792000000, 130, 340, 80, 280, 550],
-        [1722470400000, 210, 550, 130, 50, 890],
+        [1722470400000, 210, 550, 130, 450, 890],
         [1725148800000, 340, 890, 210, 750, 1440],
         [1727740800000, 550, 1440, 340, 1230, 2330],
         [1730419200000, 890, 2330, 550, 1950, 3770],
@@ -257,9 +259,14 @@ function prepareChart() {
         manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
+    setTimeout(() => {
+        isLoaded.value = true;
+    }, 10)
+
     if (FINAL_CONFIG.value.responsive) {
         const additionalPad = 12;
         const handleResize = throttle(() => {
+            isLoaded.value = false;
             const { width, height } = useResponsive({
                 chart: candlestickChart.value,
                 title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
@@ -291,6 +298,10 @@ function prepareChart() {
                     svg.value.xAxisFontSize = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.fontSize;
                     svg.value.yAxisFontSize = FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.fontSize;
                 }
+                if (to.value) clearTimeout(to.value);
+                to.value = setTimeout(() => {
+                    isLoaded.value = true;
+                }, 10);
             });
         });
 
@@ -1085,15 +1096,16 @@ defineExpose({
             <!-- CANDLE WICK -->
             <g>
                 <g v-for="(wick, i) in drawableDataset">
-                    <line
+                    <rect
                         :data-cy="`candlestick-wick-vertical-${i}`" 
-                        :x1="wick.open.x"
-                        :x2="wick.open.x"
-                        :y1="wick.high.y"
-                        :y2="wick.low.y"
-                        :stroke="FINAL_CONFIG.style.layout.wick.stroke"
-                        :stroke-width="FINAL_CONFIG.style.layout.wick.strokeWidth"
-                        stroke-linecap="round"
+                        :x="wick.open.x - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
+                        :y="wick.high.y"
+                        :width="FINAL_CONFIG.style.layout.wick.strokeWidth"
+                        :height="Math.abs(wick.high.y - wick.low.y)"
+                        :fill="FINAL_CONFIG.style.layout.wick.stroke"
+                        stroke="none"
+                        :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
+                        :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
                     />
                     <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'circle'">
                         <circle 
@@ -1101,34 +1113,38 @@ defineExpose({
                             :cy="wick.high.y" 
                             :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
                             :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
                         />
                         <circle 
                             :cx="wick.low.x" 
                             :cy="wick.low.y" 
                             :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
                             :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
                         />
                     </g>
                     <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'line'">
-                        <line
-                            :data-cy="`candlestick-wick-high-${i}`" 
-                            :x1="wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
-                            :x2="wick.high.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
-                            :y1="wick.high.y"
-                            :y2="wick.high.y"
-                            :stroke="FINAL_CONFIG.style.layout.wick.extremity.color"
-                            :stroke-width="FINAL_CONFIG.style.layout.wick.strokeWidth"
-                            stroke-linecap="round"
+                        <rect
+                            :data-cy="`candlestick-wick-high-${i}`"
+                            :x="wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
+                            :y="wick.high.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
+                            :width="Math.abs((wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.high.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
+                            :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
+                            :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
+                            :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                            stroke="none"
+                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
                         />
-                        <line
+                        <rect
                             :data-cy="`candlestick-wick-low-${i}`"
-                            :x1="wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
-                            :x2="wick.low.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
-                            :y1="wick.low.y"
-                            :y2="wick.low.y"
-                            :stroke="FINAL_CONFIG.style.layout.wick.extremity.color"
-                            :stroke-width="FINAL_CONFIG.style.layout.wick.strokeWidth"
-                            stroke-linecap="round"
+                            :x="wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
+                            :y="wick.low.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
+                            :width="Math.abs((wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.low.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
+                            :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
+                            :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                            stroke="none"
+                            :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
+                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
                         />
                     </g>
                 </g>
@@ -1145,6 +1161,7 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.layout.candle.gradient.underlayer"
                     :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
                     stroke="none"
+                    :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
                 />
                 <rect
                     v-for="(candle, i) in drawableDataset"
@@ -1159,6 +1176,7 @@ defineExpose({
                     :stroke-width="FINAL_CONFIG.style.layout.candle.strokeWidth"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
                 />
             </g>
 
@@ -1333,5 +1351,9 @@ path, line, rect {
     position: fixed;
     padding:12px;
     z-index:1;
+}
+
+.vue-data-ui-transition {
+    transition: all 0.2s ease-in-out !important;
 }
 </style>
