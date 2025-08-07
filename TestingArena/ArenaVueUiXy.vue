@@ -650,19 +650,19 @@ const config = computed(() => {
     } else {
         return {
             ...c,
-            events: {
-                datapointEnter: ({ datapoint, seriesIndex }) => {
-                    console.log('enter event', { datapoint, seriesIndex })
-                    selectedIndex.value = seriesIndex
-                },
-                datapointLeave: ({ datapoint, seriesIndex }) => {
-                    console.log('leave event', { datapoint, seriesIndex })
-                    selectedIndex.value = null;
-                },
-                datapointClick: ({ datapoint, seriesIndex }) => {
-                    console.log('click event', { datapoint, seriesIndex })
-                }
-            },
+            // events: {
+            //     datapointEnter: ({ datapoint, seriesIndex }) => {
+            //         console.log('enter event', { datapoint, seriesIndex })
+            //         selectedIndex.value = seriesIndex
+            //     },
+            //     datapointLeave: ({ datapoint, seriesIndex }) => {
+            //         console.log('leave event', { datapoint, seriesIndex })
+            //         selectedIndex.value = null;
+            //     },
+            //     datapointClick: ({ datapoint, seriesIndex }) => {
+            //         console.log('click event', { datapoint, seriesIndex })
+            //     }
+            // },
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
             theme: currentTheme.value,
             line: {

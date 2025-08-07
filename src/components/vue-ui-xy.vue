@@ -48,6 +48,7 @@ import { useTimeLabels } from '../useTimeLabels.js';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import { computed, defineAsyncComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, toRefs, useSlots, watch, watchEffect } from 'vue';
 import Slicer from '../atoms/Slicer.vue';
+import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
 import Title from '../atoms/Title.vue';
 import Shape from '../atoms/Shape.vue';
 import img from '../img.js';
@@ -389,6 +390,44 @@ const maxX = computed({
 });
 
 const slicer = ref({ start: 0, end: maxX.value });
+const slicerPrecog = ref({ start: 0, end: maxX.value });
+
+const isPrecog = computed(() => {
+    return FINAL_CONFIG.value.chart.zoom.preview.enable && (slicerPrecog.value.start !== slicer.value.start || slicerPrecog.value.end !== slicer.value.end);
+});
+
+function setPrecog(side, val) {
+    slicerPrecog.value[side] = val;
+}
+
+const precogRect = computed(() => {
+    const { left, top, width: totalWidth, height } = drawingArea.value
+    const windowStart = slicer.value.start
+    const windowEnd = slicer.value.end
+    const windowLen = windowEnd - windowStart
+    const unit = totalWidth / windowLen
+
+    const rawStart = slicerPrecog.value.start - windowStart;
+    const rawEnd   = slicerPrecog.value.end   - windowStart;
+    const relStart = Math.max(0, Math.min(windowLen, rawStart));
+    const relEnd   = Math.max(0, Math.min(windowLen, rawEnd));
+
+    return {
+        x: left + relStart * unit,
+        y: top,
+        width: (relEnd - relStart) * unit,
+        height,
+        fill: FINAL_CONFIG.value.chart.zoom.preview.fill,
+        stroke: FINAL_CONFIG.value.chart.zoom.preview.stroke,
+        strokeWidth: FINAL_CONFIG.value.chart.zoom.preview.strokeWidth,
+        strokeDasharray: FINAL_CONFIG.value.chart.zoom.preview.strokeDasharray,
+        style: {
+            pointerEvents: 'none',
+            transition: 'all 0.1s ease-in-out',
+            animation: 'none !important'
+        }
+    }
+});
 
 watch(() => props.selectedXIndex, (v) => {
     if ([null, undefined].includes(props.selectedXIndex)) {
@@ -800,19 +839,21 @@ async function setupSlicer() {
 
     if ((startIndex != null || endIndex != null) && comp) {
         if (startIndex != null) {
-        comp.setStartValue(startIndex);
+            comp.setStartValue(startIndex);
         }
         if (endIndex != null) {
-        comp.setEndValue(validSlicerEnd(endIndex + 1));
+            comp.setEndValue(validSlicerEnd(endIndex + 1));
         }
     } else {
         slicer.value = { start: 0, end: max };
         slicerStep.value += 1;
     }
+    slicerPrecog.value.start = slicer.value.start;
+    slicerPrecog.value.end = slicer.value.end;
 }
 
-function refreshSlicer() {
-    setupSlicer();
+async function refreshSlicer() {
+    await setupSlicer();
 }
 
 function canShowValue(v) {
@@ -3355,6 +3396,9 @@ defineExpose({
                     </g>
                 </g>
 
+                <!-- ZOOM PREVIEW -->
+                <rect v-if="isPrecog" v-bind="precogRect"/>
+
                 <slot name="svg" :svg="svg" />
             </g>
         </svg>
@@ -3535,30 +3579,64 @@ defineExpose({
             </template>
         </template>
 
-        <Slicer ref="chartSlicer" v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
-            :key="`slicer_${slicerStep}`" :background="FINAL_CONFIG.chart.zoom.color"
-            :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
-            :labelLeft="timeLabels[0]? timeLabels[0].text : ''" :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" :textColor="FINAL_CONFIG.chart.color"
-            :inputColor="FINAL_CONFIG.chart.zoom.color" :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
-            :borderColor="FINAL_CONFIG.chart.backgroundColor" :minimap="minimap"
-            :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
-            :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
-            :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
-            :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
-            :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
-            :minimapSelectedIndex="selectedSerieIndex"
-            :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
-            :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" :max="maxX" :min="0"
-            :valueStart="slicer.start" :valueEnd="slicer.end" v-model:start="slicer.start" v-model:end="slicer.end"
-            :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
-            :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.downsample.threshold }).length))"
-            :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
-            :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag" @reset="refreshSlicer"
-            @trapMouse="selectMinimapIndex">
-            <template #reset-action="{ reset }">
-                <slot name="reset-action" v-bind="{ reset }" />
-            </template>
-        </Slicer>
+        <template v-if="FINAL_CONFIG.chart.zoom.preview.enable">
+            <SlicerPreview ref="chartSlicer" v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
+                :key="`slicer_${slicerStep}`" :background="FINAL_CONFIG.chart.zoom.color"
+                :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
+                :labelLeft="timeLabels[0]? timeLabels[0].text : ''" :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" :textColor="FINAL_CONFIG.chart.color"
+                :inputColor="FINAL_CONFIG.chart.zoom.color" :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
+                :borderColor="FINAL_CONFIG.chart.backgroundColor" :minimap="minimap"
+                :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
+                :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
+                :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
+                :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
+                :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
+                :minimapSelectedIndex="selectedSerieIndex"
+                :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
+                :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" :max="maxX" :min="0"
+                :valueStart="slicer.start" :valueEnd="slicer.end" v-model:start="slicer.start" v-model:end="slicer.end"
+                :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
+                :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.downsample.threshold }).length))"
+                :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
+                :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag" 
+                @reset="refreshSlicer"
+                @trapMouse="selectMinimapIndex"
+                @futureStart="v => setPrecog('start', v)"
+                @futureEnd="v => setPrecog('end', v)"
+    
+            >
+                <template #reset-action="{ reset }">
+                    <slot name="reset-action" v-bind="{ reset }" />
+                </template>
+            </SlicerPreview>
+        </template>
+        <template v-else>
+            <Slicer ref="chartSlicer" v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
+                :key="`slicer_${slicerStep}`" :background="FINAL_CONFIG.chart.zoom.color"
+                :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
+                :labelLeft="timeLabels[0]? timeLabels[0].text : ''" :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" :textColor="FINAL_CONFIG.chart.color"
+                :inputColor="FINAL_CONFIG.chart.zoom.color" :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
+                :borderColor="FINAL_CONFIG.chart.backgroundColor" :minimap="minimap"
+                :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
+                :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
+                :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
+                :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
+                :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
+                :minimapSelectedIndex="selectedSerieIndex"
+                :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
+                :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" :max="maxX" :min="0"
+                :valueStart="slicer.start" :valueEnd="slicer.end" v-model:start="slicer.start" v-model:end="slicer.end"
+                :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
+                :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.downsample.threshold }).length))"
+                :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
+                :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag" @reset="refreshSlicer"
+                @trapMouse="selectMinimapIndex">
+                <template #reset-action="{ reset }">
+                    <slot name="reset-action" v-bind="{ reset }" />
+                </template>
+            </Slicer>
+        </template>
+
 
         <!-- LEGEND AS OUTSIDE DIV -->
         <div ref="chartLegend" data-cy="xy-div-legend" v-if="FINAL_CONFIG.chart.legend.show" class="vue-ui-xy-legend"

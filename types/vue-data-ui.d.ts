@@ -2992,7 +2992,15 @@ declare module "vue-data-ui" {
             color?: string;
             height?: number;
             width?: number;
-            zoom?: ChartZoom;
+            zoom?: ChartZoom & {
+                preview?: {
+                    enable?: boolean;
+                    fill?: string;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    strokeDasharray?: number;
+                };
+            };
             padding?: ChartPadding;
             annotations?: VueUiXyAnnotation[];
             highlighter?: {

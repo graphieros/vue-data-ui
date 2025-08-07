@@ -479,6 +479,13 @@ export function useConfig() {
             zoom: {
                 ...ZOOM,
                 minimap: MINIMAP,
+                preview: {
+                    enable: false,
+                    fill: '#CCCCCC50',
+                    stroke: '#6A6A6A',
+                    strokeWidth: 2,
+                    strokeDasharray: 0,
+                }
             },
             padding: PADDING([0, 0, 0, 0]),
             highlighter: {

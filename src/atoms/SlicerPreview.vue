@@ -120,27 +120,66 @@ const uid = ref(createUid());
 
 const wrapperWidth = ref(0);
 
+const start = computed({
+    get() {
+        return startValue.value
+    },
+    set(raw) {
+
+        const v = Math.min(raw, endValue.value - 1)
+        startValue.value = v
+        if (rangeStart.value) rangeStart.value.value = String(v)
+        emit('futureStart', v)
+    }
+})
+
+const end = computed({
+    get() {
+        return endValue.value
+    },
+    set(raw) {
+        const v = Math.max(raw, startValue.value + 1)
+        endValue.value = v
+        if (rangeEnd.value) rangeEnd.value.value = String(v)
+        emit('futureEnd', v)
+  }
+})
+
 onMounted(() => {
-  // measure once on mount
-  const updateWidth = () => {
-    wrapperWidth.value = zoomWrapper.value.getBoundingClientRect().width;
-  };
-  updateWidth();
+    const updateWidth = () => {
+        wrapperWidth.value = zoomWrapper.value.getBoundingClientRect().width;
+    };
+    updateWidth();
 
-  // re-measure only when the window actually resizes
-  const onWinResize = throttle(updateWidth, 50);
-  window.addEventListener('resize', onWinResize);
+    const onWinResize = throttle(updateWidth, 50);
+    window.addEventListener('resize', onWinResize);
 
-  onBeforeUnmount(() => {
-    window.removeEventListener('resize', onWinResize);
-  });
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', onWinResize);
+    });
 });
+
+let _commitTimeout = null;
+
+function scheduleCommit() {
+    clearTimeout(_commitTimeout);
+    _commitTimeout = setTimeout(() => {
+        emit('update:start', Number(startValue.value));
+        emit('update:end',   Number(endValue.value));
+    }, 150);
+}
+
+function commitImmediately() {
+    clearTimeout(_commitTimeout);
+    emit('update:start', Number(startValue.value));
+    emit('update:end',   Number(endValue.value));
+}
 
 const endpoint = computed(() => {
     return props.refreshEndPoint === null ? props.max : props.refreshEndPoint;
 })
 
-const emit = defineEmits(['update:start', 'update:end', 'reset', 'trapMouse']);
+const emit = defineEmits(['futureStart','futureEnd', 'update:start', 'update:end', 'reset', 'trapMouse']);
 
 const highlightStyle = computed(() => {
     const range = props.max - props.min;
@@ -192,18 +231,26 @@ function reset() {
     emit('reset');
 }
 
-function onStartInput() {
-    if (Number(startValue.value) > Number(endValue.value) - 1) {
+function onStartInput(event) {
+    const v = Number(event.target.value);
+    if (v > Number(endValue.value) - 1) {
         startValue.value = Number(endValue.value) - 1;
+    } else {
+        startValue.value = v;
     }
-    emit('update:start', Number(startValue.value));
+    emit('futureStart', startValue.value);
+    // scheduleCommit();
 }
 
-function onEndInput() {
-    if (Number(endValue.value) < Number(startValue.value) + 1) {
+function onEndInput(event) {
+    const v = Number(event.target.value);
+    if (v < Number(startValue.value) + 1) {
         endValue.value = Number(startValue.value) + 1;
+    } else {
+        endValue.value = v;
     }
-    emit('update:end', Number(endValue.value));
+    emit('futureEnd', endValue.value);
+    // scheduleCommit();
 }
 
 watch(
@@ -314,9 +361,10 @@ const rangeEnd = ref(null);
 function setStartValue(value) {
     startValue.value = value;
     if (rangeStart.value) {
-        rangeStart.value.value = value;
+        rangeStart.value.value = String(value);
     }
-    emit('update:start', Number(startValue.value));
+    emit('futureStart', value);
+    scheduleCommit();
 }
 
 function setEndValue(value) {
@@ -324,7 +372,8 @@ function setEndValue(value) {
     if (rangeEnd.value) {
         rangeEnd.value.value = value;
     }
-    emit('update:end', Number(endValue.value));
+    emit('futureEnd', value);
+    scheduleCommit();
 }
 
 const currentRange = computed(() => {
@@ -335,7 +384,7 @@ const isDragging = ref(false);
 let initialMouseX = ref(null);
 
 const dragThreshold = computed(() => {
-  return (wrapperWidth.value - 48) / (props.max - props.min);
+    return (wrapperWidth.value - 48) / (props.max - props.min);
 });
 
 const selectionWidth = computed(() => {
@@ -348,8 +397,8 @@ const flooredDatapointsToWidth = computed(() => {
     // use the throttled wrapperWidth instead of measuring on every access
     const w = wrapperWidth.value - 48;
     return Math.ceil(
-      (props.max - props.min) /
-      ((w - selectionWidth.value) / RA_SPECIAL_MAGIC_NUMBER.value)
+        (props.max - props.min) /
+        ((w - selectionWidth.value) / RA_SPECIAL_MAGIC_NUMBER.value)
     );
 });
 
@@ -392,26 +441,20 @@ function handleTouchDragging(event) {
 
 function updateDragging(currentX) {
     if (!isDragging.value) return;
-
     const deltaX = currentX - initialMouseX.value;
-
     if (Math.abs(deltaX) > dragThreshold.value) {
         if (deltaX > 0) {
-            if (Number(endValue.value) + 1 <= props.max) {
-                const v = Math.min(props.max, Number(endValue.value) + flooredDatapointsToWidth.value)
-                setEndValue(v);
-                setStartValue(v - currentRange.value);
-            }
+            const v = Math.min(props.max, endValue.value + flooredDatapointsToWidth.value);
+            end.value = v;
+            start.value = v - currentRange.value;
         } else {
-            if (Number(startValue.value) - 1 >= props.min) {
-                const v = Math.max(0, Number(startValue.value) - flooredDatapointsToWidth.value);
-                setStartValue(v);
-                setEndValue(v + currentRange.value);
-            }
+            const u = Math.max(props.min, startValue.value - flooredDatapointsToWidth.value);
+            start.value = u;
+            end.value = u + currentRange.value;
         }
         initialMouseX.value = currentX;
     }
-};
+}
 
 function stopDragging() {
     endDragging('mousemove', 'mouseup');
@@ -425,6 +468,7 @@ function endDragging(moveEvent, endEvent) {
     isDragging.value = false;
     window.removeEventListener(moveEvent, handleDragging);
     window.removeEventListener(endEvent, stopDragging);
+    commitImmediately();
 };
 
 const isMouseDown = ref(false)
@@ -513,7 +557,6 @@ defineExpose({
         ref="zoomWrapper"
         @mousedown="startDragging"
         @touchstart="startDragging"
-        @touchend="showTooltip = false"
     >
         <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1; pointer-events: none;">
             <div v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint" style="width: 100%; position: relative">
@@ -689,9 +732,11 @@ defineExpose({
                 :class="{'range-left': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles }" 
                 :min="min" 
                 :max="max" 
-                v-model="startValue" 
-                @input="onStartInput"
+                v-model.number="start"
+                @inuput="setStartValue"
                 @mouseenter="setLeftLabelZIndex('start')"
+                @pointermove="start = +$event.target.value"
+                @pointerup="commitImmediately"
             />
 
             <input 
@@ -702,9 +747,11 @@ defineExpose({
                 :class="{'range-right': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles }" 
                 :min="min" 
                 :max="max" 
-                v-model="endValue" 
-                @input="onEndInput" 
+                v-model.number="end"
+                @inuput="setEndValue"
                 @mouseenter="setLeftLabelZIndex('end')"
+                @pointermove="end = +$event.target.value"
+                @pointerup="commitImmediately"
             />
 
             <div
