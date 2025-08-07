@@ -745,6 +745,18 @@ const timeLabels = computed(() => {
     });
 });
 
+const allTimeLabels = computed(() => {
+    const _max = Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold }).length));
+
+    return useTimeLabels({
+        values: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values,
+        maxDatapoints: _max,
+        formatter: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter,
+        start: 0,
+        end: maxX.value
+    });
+})
+
 const modulo = computed(() => {
     const m = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.modulo;
     if (!timeLabels.value.length) return m;
@@ -3603,7 +3615,8 @@ defineExpose({
                 @trapMouse="selectMinimapIndex"
                 @futureStart="v => setPrecog('start', v)"
                 @futureEnd="v => setPrecog('end', v)"
-    
+                :timeLabels="allTimeLabels"
+                :isPreview="isPrecog"
             >
                 <template #reset-action="{ reset }">
                     <slot name="reset-action" v-bind="{ reset }" />

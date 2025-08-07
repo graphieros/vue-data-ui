@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 function makeDs() {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     const arr = [];
-    const dsLen = 26;
+    const dsLen = 5;
     const serieLen = days.length;
     for (let i = 0; i < serieLen; i += 1) {
         const values = [];
@@ -74,6 +74,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
@@ -92,10 +94,12 @@ const model = ref([
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.padding.top', def: 36, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.right', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.bottom', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.left', def: 48, type: 'number', min: 0, max: 100},
+
+    { key: 'style.layout.padding.top', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.right', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.left', def: 0, type: 'number', min: 0, max: 100},
+
     { key: 'style.layout.cells.height', def: 36, type: 'number', min: 12, max: 64},
     { key: 'style.layout.cells.value.show', def: true, type: 'checkbox'},
     { key: 'style.layout.cells.value.fontSize', def: 18, type: 'number', min: 8, max: 48},
@@ -264,6 +268,14 @@ onMounted(async() => {
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiHeatmap :dataset="isPropsToggled ? alternateDataset : dataset" :config="{
+            ...config,
+            responsive: true
+        }" :key="`local_${step}`" ref="local" @selectDatapoint="logCell"/>
+    </div>
+
     <Box comp="VueUiHeatmap" :dataset="dataset">
         <template #title>VueUiHeatmap</template>
         

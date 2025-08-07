@@ -2759,12 +2759,17 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiHeatmapConfig = {
+        debug?: boolean;
+        loading?: boolean;
+        responsive?: boolean;
         theme?: Theme;
         style?: {
             backgroundColor?: string;
             color?: string;
             fontFamily?: string;
             layout?: {
+                height?: number;
+                width?: number;
                 padding?: ChartPadding;
                 cells?: {
                     height?: number;

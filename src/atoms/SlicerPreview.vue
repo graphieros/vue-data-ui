@@ -109,6 +109,13 @@ const props = defineProps({
     verticalHandles: {
         type: Boolean,
         default: false,
+    },
+    timeLabels: {
+        type: Array,
+    },
+    isPreview: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -125,7 +132,6 @@ const start = computed({
         return startValue.value
     },
     set(raw) {
-
         const v = Math.min(raw, endValue.value - 1)
         startValue.value = v
         if (rangeStart.value) rangeStart.value.value = String(v)
@@ -142,7 +148,7 @@ const end = computed({
         endValue.value = v
         if (rangeEnd.value) rangeEnd.value.value = String(v)
         emit('futureEnd', v)
-  }
+    }
 })
 
 onMounted(() => {
@@ -231,26 +237,19 @@ function reset() {
     emit('reset');
 }
 
+const previewIndices = ref({
+    start: startValue.value,
+    end: endValue.value
+})
+
 function onStartInput(event) {
     const v = Number(event.target.value);
-    if (v > Number(endValue.value) - 1) {
-        startValue.value = Number(endValue.value) - 1;
-    } else {
-        startValue.value = v;
-    }
-    emit('futureStart', startValue.value);
-    // scheduleCommit();
+    previewIndices.value.start = v;
 }
 
 function onEndInput(event) {
     const v = Number(event.target.value);
-    if (v < Number(startValue.value) + 1) {
-        endValue.value = Number(startValue.value) + 1;
-    } else {
-        endValue.value = v;
-    }
-    emit('futureEnd', endValue.value);
-    // scheduleCommit();
+    previewIndices.value.end = v;
 }
 
 watch(
@@ -541,10 +540,19 @@ watch(() => props.labelRight, () => {
 }, { deep: true });
 
 
+const labels = computed(() => {
+    const left = props.timeLabels.find(t => t.absoluteIndex === startValue.value);
+    const right = props.timeLabels.find(t => t.absoluteIndex === endValue.value-1);
+    return {
+        left: left ? left.text : '',
+        right: right ? right.text : ''
+    }
+});
+
 defineExpose({
     setStartValue,
     setEndValue
-})
+});
 
 </script>
 
@@ -755,7 +763,7 @@ defineExpose({
             />
 
             <div
-                v-if="labelLeft"
+                v-if="labels.left"
                 data-cy="slicer-label-left"
                 ref="tooltipLeft"
                 :class="{
@@ -770,14 +778,14 @@ defineExpose({
                     backgroundColor: selectColor,
                     border: `1px solid ${borderColor}`,
                     zIndex: `${leftLabelZIndex + 4}`,
-                    visibility: tooltipsCollide || labelLeft === labelRight ? 'hidden' : 'visible'
+                    visibility: tooltipsCollide || labels.left === labels.right ? 'hidden' : 'visible'
                 }"
             >
-                {{ labelLeft }}
+                {{ labels.left }}
             </div>
 
             <div
-                v-if="tooltipsCollide || labelLeft === labelRight"
+                v-if="tooltipsCollide || labels.left === labels.right"
                 data-cy="slicer-label-merged"
                 ref="tooltipMerge"
                 :class="{
@@ -796,11 +804,11 @@ defineExpose({
                     zIndex: '4'
                 }"
             >
-                {{ labelLeft === labelRight ? labelLeft : `${labelLeft} - ${labelRight}` }}
+                {{ labels.left === labels.right ? labels.left : `${labels.left} - ${labels.right}` }}
             </div>
             
             <div
-                v-if="labelRight"
+                v-if="labels.right"
                 data-cy="slicer-label-right"
                 ref="tooltipRight"
                 :class="{
@@ -815,10 +823,10 @@ defineExpose({
                     backgroundColor: selectColor,
                     border: `1px solid ${borderColor}`,
                     zIndex: '4',
-                    visibility: tooltipsCollide || labelLeft === labelRight ? 'hidden' : 'visible'
+                    visibility: tooltipsCollide || labels.left === labels.right ? 'hidden' : 'visible'
                 }"
             >
-                {{ labelRight }}
+                {{ labels.right }}
             </div>
         </div>
     </div>

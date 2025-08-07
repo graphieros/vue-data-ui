@@ -1859,15 +1859,20 @@ export function useConfig() {
     const vue_ui_horizontal_bar = vue_ui_vertical_bar;
 
     const vue_ui_heatmap = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
             color: COLOR_BLACK,
             layout: {
-                padding: PADDING([36, 12, 12, 48]),
+                height: 400, // v3
+                width: 1000, // v3
+                padding: PADDING([0, 0, 0, 0]),
                 cells: {
-                    height: 36,
+                    height: 36, // deprecate ??
                     rowTotal: {
                         value: {
                             show: false,

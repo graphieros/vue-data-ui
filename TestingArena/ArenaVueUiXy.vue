@@ -364,6 +364,7 @@ const model = ref([
 
     { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
+    { key: 'chart.zoom.preview.enable', def: true, type: 'checkbox'},
 
     { key: 'chart.padding.top', def: 0, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
     { key: 'chart.padding.right', def: 0, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
@@ -825,7 +826,7 @@ const config = computed(() => {
                             // }),
                             // rotation: -30,
                             datetimeFormatter: {
-                                enable: false,
+                                enable: true,
                                 locale: 'en',
                                 useUTC: false,
                                 januaryAsYear: true,

@@ -184,6 +184,23 @@ const maxX = computed(() => {
     return Math.max(...props.dataset.flatMap(el => (el.values || []).length));
 });
 
+/**
+ * Add events
+ * Add default width & height in config
+ * Set size of svg based on this
+ * Set x labels
+ * set top Y labels + rotation & add autoRotate (with 30° rotation)
+ * set fixed width for right legend
+ * set fixed height for bottom legend
+ * have them also be substracted in responsive mode
+ * 
+ * set reactive drawing area to fit labels (top and left)
+ */
+
+const width = ref(1000);
+const height = ref(300);
+
+
 const svg = computed(() => {
     const height = FINAL_CONFIG.value.style.layout.padding.top + FINAL_CONFIG.value.style.layout.padding.bottom + (props.dataset.length * FINAL_CONFIG.value.style.layout.cells.height);
     const width= FINAL_CONFIG.value.style.layout.padding.left + FINAL_CONFIG.value.style.layout.padding.right + ((maxX.value < props.dataset.length ? props.dataset.length : maxX.value) * FINAL_CONFIG.value.style.layout.cells.height);
@@ -213,8 +230,7 @@ const drawingArea = computed(() => {
 
 const sideLegendHeight = computed(() => {
     return cellSize.value.height * props.dataset.length
-})
-
+});
 
 const maxValue = computed(() => {
     return Math.max(...props.dataset.flatMap(el => el.values));
