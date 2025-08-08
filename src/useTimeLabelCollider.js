@@ -10,7 +10,11 @@ export function useTimeLabelCollision({
     isAutoSize,
     setViewBox,
     forceResizeObserver,
-    callback
+    callback,
+    targetClass = '.vue-data-ui-time-label',
+    rotation = -30.0001,
+    height = null,
+    width = null
 }) {
 
     function getNestedProp(obj, path) {
@@ -37,8 +41,7 @@ export function useTimeLabelCollision({
         const container = timeLabelsEls.value;
         if (!container) return;
 
-        const texts = Array.from(container.querySelectorAll('.vue-data-ui-time-label'));
-
+        const texts = Array.from(container.querySelectorAll(targetClass));
         const textCoordinates = texts.map(t => ({
             ...parseTranslate(t.getAttribute('transform')),
             width: t.getBBox().width
@@ -65,13 +68,13 @@ export function useTimeLabelCollision({
         const currentRotation = getNestedProp(configRef.value, rotationPath);
 
         if (collision && !currentRotation) {
-            setNestedProp(configRef.value, rotationPath, -30.0001);
+            setNestedProp(configRef.value, rotationPath, rotation);
             callback && callback({ collision })
             if (isAutoSize.value && setViewBox && forceResizeObserver) {
                 setViewBox();
                 forceResizeObserver();
             }
-        } else if (!collision && currentRotation === -30.0001) {
+        } else if (!collision && currentRotation === rotation) {
             setNestedProp(configRef.value, rotationPath, 0);
             callback && callback({ collision })
         }
@@ -86,6 +89,20 @@ export function useTimeLabelCollision({
     }
 
     const debouncedDetect = debounce(detectTimeLabelCollision, 200);
+
+    if (height && width) {
+        watch([() => width.value, () => height.value] , async([newW, newH], [oldW, oldH]) => {
+            const autoRotate = getNestedProp(configRef.value, autoRotatePath);
+            if (!autoRotate) return;
+            const ratChanged = newW !== oldW || newH !== oldH;
+
+            if (ratChanged) {
+                debouncedDetect();
+            } else {
+                await detectTimeLabelCollision();
+            }
+        })
+    }
 
     watch(
         [

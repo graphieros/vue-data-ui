@@ -857,6 +857,9 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const WIDTH = computed(() => defaultSizes.value.width);
+const HEIGHT = computed(() => defaultSizes.value.height);
+
 useTimeLabelCollision({
     timeLabelsEls,
     timeLabels,
@@ -865,6 +868,8 @@ useTimeLabelCollision({
     rotationPath: ['style', 'chart', 'layout', 'grid', 'xAxis', 'dataLabels', 'rotation'],
     autoRotatePath: ['style', 'chart', 'layout', 'grid', 'xAxis', 'dataLabels', 'autoRotate'],
     isAutoSize: false,
+    width: WIDTH,
+    height: HEIGHT
 });
 
 defineExpose({

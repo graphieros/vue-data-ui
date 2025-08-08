@@ -918,6 +918,9 @@ function useTooltip(seriesIndex) {
     }
 }
 
+const WIDTH = computed(() => defaultSizes.value.width);
+const HEIGHT = computed(() => defaultSizes.value.height);
+
 useTimeLabelCollision({
     timeLabelsEls: FINAL_CONFIG.value.orientation === 'vertical' ? timeLabelsEls : scaleLabels,
     timeLabels,
@@ -926,6 +929,8 @@ useTimeLabelCollision({
     rotationPath: ['style', 'chart', 'grid', 'x', 'timeLabels', 'rotation'],
     autoRotatePath: ['style', 'chart', 'grid', 'x', 'timeLabels', 'autoRotate'],
     isAutoSize: false,
+    width: WIDTH,
+    height: HEIGHT
 });
 
 function toggleFullscreen(state) {

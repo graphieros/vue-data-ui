@@ -832,6 +832,9 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const WIDTH = computed(() => svg.value.width);
+const HEIGHT = computed(() => svg.value.height);
+
 useTimeLabelCollision({
     timeLabelsEls,
     timeLabels,
@@ -840,6 +843,8 @@ useTimeLabelCollision({
     rotationPath: ['style', 'layout', 'grid', 'xAxis', 'dataLabels', 'rotation'],
     autoRotatePath: ['style', 'layout', 'grid', 'xAxis', 'dataLabels', 'autoRotate'],
     isAutoSize: false,
+    width: WIDTH,
+    height: HEIGHT
 });
 
 // v3 - Essential to make shifting between loading config and final config work

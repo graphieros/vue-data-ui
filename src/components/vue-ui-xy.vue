@@ -2347,6 +2347,8 @@ useTimeLabelCollision({
     rotationPath: ['chart', 'grid', 'labels', 'xAxisLabels', 'rotation'],
     autoRotatePath: ['chart', 'grid', 'labels', 'xAxisLabels', 'autoRotate'],
     isAutoSize,
+    height,
+    width
 });
 
 // Force reflow when component is mounted in a hidden div
