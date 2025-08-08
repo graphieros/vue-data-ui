@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 function makeDs() {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     const arr = [];
-    const dsLen = 5;
+    const dsLen = 12;
     const serieLen = days.length;
     for (let i = 0; i < serieLen; i += 1) {
         const values = [];
@@ -26,7 +26,14 @@ function makeDs() {
     return arr
 }
 
-const dataset = ref(makeDs())
+const dataset = ref([])
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = makeDs();
+    }, 2000)
+})
+
 
 const alternateDataset = computed(() => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -89,7 +96,7 @@ const model = ref([
     { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
     { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
+    { key: 'userOptions.print.backgroundColor', def: '#FF0000' },
     
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
     { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -125,16 +132,16 @@ const model = ref([
     { key: 'style.layout.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.layout.dataLabels.suffix', def: 'S', type: 'text'},
     { key: 'style.layout.dataLabels.xAXis.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.dataLabels.xAxis.fontSize', def: 8, type: 'number', min: 8, max: 24},
+    { key: 'style.layout.dataLabels.xAxis.fontSize', def: 14, type: 'number', min: 8, max: 24},
     { key: 'style.layout.dataLabels.xAxis.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.dataLabels.xAxis.bold', def: false, type: 'checkbox'},
     { key: 'style.layout.dataLabels.xAxis.offsetX', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.layout.dataLabels.xAxis.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.layout.dataLabels.xAxis.showOnlyAtModulo', def: null, type: 'number', min: 2, max: 24},
-    { key: 'style.layout.dataLabels.xAxis.rotation', def: -45, type: 'number', min: -90, max: 0},
+    { key: 'style.layout.dataLabels.xAxis.rotation', def: 0, type: 'number', min: -90, max: 0},
 
     { key: 'style.layout.dataLabels.yAxis.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.dataLabels.yAxis.fontSize', def: 8, type: 'number', min: 8, max: 24},
+    { key: 'style.layout.dataLabels.yAxis.fontSize', def: 14, type: 'number', min: 8, max: 24},
     { key: 'style.layout.dataLabels.yAxis.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.dataLabels.yAxis.bold', def: false, type: 'checkbox'},
     { key: 'style.layout.dataLabels.yAxis.offsetY', def: 0, type: 'number', min: -100, max: 100},
@@ -153,8 +160,8 @@ const model = ref([
     { key: 'style.legend.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.legend.fontSize', def: 12, type: 'range', min: 8, max: 48},
     { key: 'style.legend.roundingValue', def: 2, type: 'range', min: 0, max: 12},
-    { key: 'style.legend.position', def: 'right', type: 'select', options: ['right', 'bottom']},
-    { key: 'style.legend.scaleBorderRadius', def: 18, type: 'number', min: 0, max: 48},
+    // { key: 'style.legend.position', def: 'right', type: 'select', options: ['right', 'bottom']},
+    // { key: 'style.legend.scaleBorderRadius', def: 18, type: 'number', min: 0, max: 48},
 
     { key: 'style.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -211,6 +218,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            // events: {
+            //     datapointEnter: ({ datapoint, seriesIndex }) => {
+            //         console.log('enter event', { datapoint, seriesIndex });
+            //     },
+            //     datapointLeave: ({ datapoint, seriesIndex }) => {
+            //         console.log('leave event', { datapoint, seriesIndex });
+            //     },
+            //     datapointClick: ({ datapoint, seriesIndex }) => {
+            //         console.log('click event', { datapoint, seriesIndex });
+            //     }
+            // },
             theme: currentTheme.value,
             style: {
                 ...c.style,
@@ -229,7 +247,51 @@ const config = computed(() => {
                         ...c.style.layout.dataLabels,
                         xAxis: {
                             ...c.style.layout.dataLabels.xAxis,
-                            values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 24, 25]
+                            values: [
+                                1754604000000,
+                                1754690400000,
+                                1754776800000,
+                                1754863200000,
+                                1754949600000,
+                                1755036000000,
+                                1755122400000,
+                                1755208800000,
+                                1755295200000,
+                                1755381600000,
+                                1755468000000,
+                                1755554400000,
+                                1755640800000,
+                                1755727200000,
+                                1755813600000,
+                                1755900000000,
+                                1755986400000,
+                                1756072800000,
+                                1756159200000,
+                                1756245600000,
+                                1756332000000,
+                                1756418400000,
+                                1756504800000,
+                                1756591200000,
+                                1756677600000,
+                                1756764000000
+                            ],
+                            datetimeFormatter: {
+                                enable: true
+                            }
+                        },
+                        yAxis: {
+                            values: [
+                                1754604000000,
+                                1754690400000,
+                                1754776800000,
+                                1754863200000,
+                                1754949600000,
+                                1755036000000,
+                                1755122400000
+                            ],
+                            datetimeFormatter: {
+                                enable: true
+                            }
                         }
                     }
                 },
@@ -269,7 +331,7 @@ onMounted(async() => {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+    <div style="width: 600px; height: 600px; padding: 12px; resize: both; overflow: auto; background: white">
         <LocalVueUiHeatmap :dataset="isPropsToggled ? alternateDataset : dataset" :config="{
             ...config,
             responsive: true

@@ -1862,6 +1862,11 @@ export function useConfig() {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -1872,7 +1877,7 @@ export function useConfig() {
                 width: 1000, // v3
                 padding: PADDING([0, 0, 0, 0]),
                 cells: {
-                    height: 36, // deprecate ??
+                    // height: 36, // v3 deprecated
                     rowTotal: {
                         value: {
                             show: false,
@@ -1885,6 +1890,7 @@ export function useConfig() {
                         value: {
                             show: false,
                             rotation: 0,
+                            autoRotate: true,
                             offsetX: 0,
                             offsetY: 0
                         },
@@ -1917,8 +1923,10 @@ export function useConfig() {
                     xAxis: {
                         show: true,
                         values: [],
+                        datetimeFormatter: AXIS_DATE_FORMATTER,
                         showOnlyAtModulo: null,
                         rotation: 0,
+                        autoRotate: true,
                         fontSize: FONT._10,
                         color: COLOR_BLACK,
                         bold: false,
@@ -1928,6 +1936,7 @@ export function useConfig() {
                     yAxis: {
                         show: true,
                         values: [],
+                        datetimeFormatter: AXIS_DATE_FORMATTER,
                         fontSize: FONT._10,
                         color: COLOR_BLACK,
                         bold: false,
@@ -1941,8 +1950,9 @@ export function useConfig() {
                 ...LEGEND,
                 fontSize: FONT._12,
                 roundingValue: 0,
-                position: POSITION.RIGHT,
-                scaleBorderRadius: 18
+                width: 64,
+                // position: POSITION.RIGHT, // v3 deprecated
+                // scaleBorderRadius: 18 // v3 deprecated
             },
             tooltip: {
                 ...TOOLTIP,

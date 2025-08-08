@@ -39,32 +39,14 @@ describe('<VueUiHeatmap />', () => {
 		cy.log('legend');
 		cy.get('[data-cy="legend-label-max"]').should('exist').and('be.visible').and('contain', 30);
 		cy.get('[data-cy="legend-label-min"]').should('exist').and('be.visible').and('contain', 0);
-		cy.get('[data-cy="legend-pill"]').should('exist').and('be.visible');
-		cy.get('[data-cy="legend-indicator-line"]').should('exist').and('have.css', 'opacity', '1');
-		cy.get('[data-cy="legend-indicator-triangle"]').should('exist').and('be.visible');
+		cy.get('[data-cy="legend-gauge"]').should('exist').and('be.visible');
+		cy.get('[data-cy="gauge-indicator"]').should('exist').and('be.visible');
 	}
 
-	it('renders with right legend', () => {
+	it('renders with legend', () => {
 		cy.mount(VueUiHeatmap, {
 			props: {
 				config,
-				dataset
-			}
-		}).then(commonTest);
-	});
-
-	it('renders with bottom legend', () => {
-		cy.mount(VueUiHeatmap, {
-			props: {
-				config: {
-					...config,
-					style: {
-						...config.style,
-						legend: {
-							position: 'bottom'
-						}
-					}
-				},
 				dataset
 			}
 		}).then(commonTest);

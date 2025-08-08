@@ -2759,9 +2759,9 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiHeatmapConfig = {
-        debug?: boolean;
-        loading?: boolean;
-        responsive?: boolean;
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         style?: {
             backgroundColor?: string;
@@ -2772,11 +2772,12 @@ declare module "vue-data-ui" {
                 width?: number;
                 padding?: ChartPadding;
                 cells?: {
-                    height?: number;
+                    // height?: number; // v3 deprecated
                     columnTotal?: {
                         value?: {
                             show?: boolean;
                             rotation?: number;
+                            autoRotate?: boolean; // v3
                             offsetX?: number;
                             offsetY?: number;
                         };
@@ -2817,8 +2818,10 @@ declare module "vue-data-ui" {
                     xAxis?: {
                         show?: boolean;
                         values?: Array<string | number>;
+                        datetimeFormatter?: AxisDateFormatter; // v3
                         showOnlyAtModulo?: number | null;
                         rotation?: number;
+                        autoRotate?: boolean; // v3
                         fontSize?: number;
                         color?: string;
                         bold?: boolean;
@@ -2828,6 +2831,7 @@ declare module "vue-data-ui" {
                     yAxis?: {
                         show?: boolean;
                         values?: Array<string | number>;
+                        datetimeFormatter?: AxisDateFormatter; // v3
                         fontSize?: number;
                         color?: string;
                         bold?: boolean;
@@ -2840,8 +2844,9 @@ declare module "vue-data-ui" {
             legend?: ChartBaseLegend & {
                 backgroundColor?: string;
                 roundingValue?: number;
-                position?: "right" | "bottom";
-                scaleBorderRadius?: number;
+                width?: number;
+                // position?: "right" | "bottom"; // v3 deprecated
+                // scaleBorderRadius?: number; // v3 deprecated
             };
             tooltip?: ChartTooltip & {
                 roundingValue?: number;
@@ -2887,7 +2892,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiHeatmapDatasetItem = {
-        name: string;
+        name: string | number;
         values: number[];
     };
 
