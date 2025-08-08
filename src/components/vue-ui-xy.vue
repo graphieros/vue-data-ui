@@ -3336,10 +3336,11 @@ defineExpose({
 
                                     <!-- MULTILINE LABEL (when label includes \n) -->
                                     <text v-else data-cy="time-label"
+                                        class="vue-data-ui-time-label"
                                         :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                                         :font-size="fontSizes.xAxis"
                                         :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                                        :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                        :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                         :style="{
                                             cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
                                         }" v-html="createTSpansFromLineBreaksOnX({
