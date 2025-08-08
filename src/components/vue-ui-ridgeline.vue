@@ -529,6 +529,7 @@ function createXyDatasetForDialog(ds) {
                     xAxisLabels: {
                         ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid.labels.xAxisLabels,
                         values: FINAL_CONFIG.value.style.chart.xAxis.labels.values, // Overriding
+                        autoRotate: true, // overriding
                         datetimeFormatter: FINAL_CONFIG.value.style.chart.xAxis.labels.datetimeFormatter, // Overriding
                     }
                 }
