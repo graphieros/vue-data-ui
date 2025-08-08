@@ -3341,6 +3341,7 @@ declare module "vue-data-ui" {
     export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
     export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
     export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
+    export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
 
     export type VueUiDonutConfig = {
         debug?: boolean;
@@ -7074,6 +7075,11 @@ declare module "vue-data-ui" {
         responsive?: boolean;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiStackbarEvent; // v3
+            datapointLeave?: VueUiStackbarEvent; // v3
+            datapointClick?: VueUiStackbarEvent; // v3
+        };
         orientation?: "vertical" | "horizontal";
         table?: {
             show?: boolean;

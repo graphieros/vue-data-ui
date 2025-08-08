@@ -274,6 +274,11 @@ export function useConfig() {
         debug: false, // v3
         theme: '',
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
         orientation: 'vertical', // or 'horizontal'
@@ -1731,7 +1736,7 @@ export function useConfig() {
         }
     }
 
-    const vue_ui_vertical_bar = {
+    const vue_ui_vertical_bar = { // v3 renamed to _horizontal_ (yet still works)
         bebug: false, // v3
         loading: false, // v3
         autoSize: true, // v3

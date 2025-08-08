@@ -184,7 +184,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
             }
         }
     })
-})
+});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -835,16 +835,15 @@ function selectDatapoint(index) {
         }
     });
 
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index + slicer.value.start })
+    }
+
     emit('selectDatapoint', { datapoint, period: timeLabels.value[index] });
 }
 
-function useTooltip(seriesIndex) {
-    trapIndex.value = seriesIndex;
-    isTooltip.value = true;
-
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
-
-    const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(fd => {
+function getDatapoint(seriesIndex) {
+    return JSON.parse(JSON.stringify(formattedDataset.value)).map(fd => {
         return {
             name: fd.name,
             absoluteIndex: fd.absoluteIndex,
@@ -854,6 +853,27 @@ function useTooltip(seriesIndex) {
             id: fd.id
         }
     });
+}
+
+function onTrapLeave(i) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        const datapoint = getDatapoint(i);
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: i + slicer.value.start });
+    }
+    isTooltip.value = null;
+    trapIndex.value = null;
+}
+
+function useTooltip(seriesIndex) {
+    trapIndex.value = seriesIndex;
+    isTooltip.value = true;
+
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const datapoint = getDatapoint(seriesIndex);
+
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: seriesIndex + slicer.value.start });
+    }
 
     dataTooltipSlot.value = {
         datapoint,
@@ -1765,9 +1785,9 @@ defineExpose({
                     :y="drawingArea.top"
                     :width="barSlot"
                     :height="drawingArea.height < 0 ? 0 : drawingArea.height"
-                    @click="selectDatapoint(i)"
-                    @mouseenter="useTooltip(i)"
-                    @mouseleave="trapIndex = null; isTooltip = false"
+                    @click="() => selectDatapoint(i)"
+                    @mouseenter="() => useTooltip(i)"
+                    @mouseleave="() => onTrapLeave(i)"
                     :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
                     :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
                 />
@@ -1782,9 +1802,9 @@ defineExpose({
                     :y="drawingArea.top + (i * barSlot)"
                     :width="drawingArea.width < 0 ? 0 : drawingArea.width"
                     :height="barSlot"
-                    @click="selectDatapoint(i)"
-                    @mouseenter="useTooltip(i)"
-                    @mouseleave="trapIndex = null; isTooltip = false"
+                    @click="() => selectDatapoint(i)"
+                    @mouseenter="() => useTooltip(i)"
+                    @mouseleave="() => onTrapLeave(i)"
                     :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
                     :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
                 />
