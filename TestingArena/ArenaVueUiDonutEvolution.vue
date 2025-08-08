@@ -169,6 +169,17 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value)
     return {
         ...c,
+        // events: {
+        //     datapointEnter: ({ datapoint, seriesIndex }) => {
+        //         console.log('enter event', { datapoint, seriesIndex })
+        //     },
+        //     datapointLeave: ({ datapoint, seriesIndex }) => {
+        //         console.log('leave event', { datapoint, seriesIndex });
+        //     },
+        //     datapointClick: ({ datapoint, seriesIndex }) => {
+        //         console.log('click event', { datapoint, seriesIndex });
+        //     }
+        // },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         style: {

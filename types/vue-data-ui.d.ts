@@ -1310,10 +1310,30 @@ declare module "vue-data-ui" {
         isSpin?: boolean;
     }>;
 
+    export type VueUiDonutEvolutionDatapoint = {
+        activeRadius: number;
+        donut: VueUiDonutDatapoint[];
+        donutFocus: VueUiDonutDatapoint[];
+        donutHover: VueUiDonutDatapoint[];
+        hoverRadius: number;
+        index: number;
+        percentages: number[0];
+        radius: number;
+        subtotal: number;
+        values: Array<number | null>;
+        x: number;
+        y: number;
+    }
+
     export type VueUiDonutEvolutionConfig = {
         debug?: boolean; // v3
         loading?: boolean; // v3
-        responsive?: boolean; // V3
+        responsive?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUiDonutEvolutionEvent; // v3
+            datapointLeave?: VueUiDonutEvolutionEvent; // v3
+            datapointClick?: VueUiDonutEvolutionEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -3348,6 +3368,7 @@ declare module "vue-data-ui" {
     export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
     export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
     export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
+    export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
 
     export type VueUiDonutConfig = {
         debug?: boolean;

@@ -3040,6 +3040,11 @@ export function useConfig() {
         loading: false, // v3
         responsive: false, // v3
         theme: '',
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         customPalette: [],
         style: {
             fontFamily: 'inherit',

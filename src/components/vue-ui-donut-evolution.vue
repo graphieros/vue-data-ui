@@ -660,12 +660,18 @@ function displayArcPercentage(arc, stepBreakdown) {
     return isNaN(arc.value / sumByAttribute(stepBreakdown, 'value')) ? 0 : ((arc.value / sumByAttribute(stepBreakdown, "value")) * 100).toFixed(0) + "%";
 }
 
-function leave() {
+function leave(datapoint) {
     hoveredIndex.value = null;
     hoveredDatapoint.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.seriesIndex + slicer.value.start });
+    }
 }
 
 function enter(datapoint) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.index + slicer.value.start })
+    }
     hoveredIndex.value = datapoint.index;
     hoveredDatapoint.value = datapoint;
 }
@@ -673,6 +679,10 @@ function enter(datapoint) {
 const fixedDatapointIndex = ref(null);
 
 function fixDatapoint(datapoint, index) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: datapoint.index + slicer.value.start });
+    }
+
     if(!datapoint.subtotal || !FINAL_CONFIG.value.style.chart.dialog.show) return;
     hoveredDatapoint.value = null;
     hoveredIndex.value = null;
@@ -1284,7 +1294,7 @@ defineExpose({
                 :height="svg.height"
                 fill="transparent"
                 @mouseenter="enter(datapoint)"
-                @mouseleave="leave"
+                @mouseleave="leave(datapoint)"
                 @click="fixDatapoint(datapoint, i)"
                 :class="{'donut-hover': hoveredIndex === datapoint.index && datapoint.subtotal}"
             />
