@@ -215,6 +215,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            // events: {
+            //     datapointEnter: ({ datapoint, seriesIndex }) => {
+            //         console.log('enter event', { datapoint, seriesIndex })
+            //     },
+            //     datapointLeave: ({ datapoint, seriesIndex }) => {
+            //         console.log('leave event', { datapoint, seriesIndex });
+            //     },
+            //     datapointClick: ({ datapoint, seriesIndex }) => {
+            //         console.log('click event', { datapoint, seriesIndex });
+            //     }
+            // },
             theme: currentTheme.value,
             style: {
                 ...c.style,

@@ -580,7 +580,24 @@ const slicerLabels = computed(() => {
 
 const dataTooltipSlot = ref(null);
 
+function selectDatapoint(index, datapoint) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index + slicer.value.start });
+    }
+}
+
+function onTrapLeave(index, datapoint) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: index + slicer.value.start });
+    }
+    hoveredIndex.value = undefined;
+    isTooltip.value = false;
+}
+
 function useTooltip(index, datapoint) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: index + slicer.value.start })
+    }
     hoveredIndex.value = index;
 
     dataTooltipSlot.value = {
@@ -1195,8 +1212,9 @@ defineExpose({
                     :height="drawingArea.height <= 0 ? 0.0001 : drawingArea.height"
                     :width="slot <= 0 ? 0.0001 : slot"
                     :fill="hoveredIndex === i ? setOpacity(FINAL_CONFIG.style.layout.selector.color, FINAL_CONFIG.style.layout.selector.opacity) : 'transparent'"
-                    @mouseover="useTooltip(i,rect)"
-                    @mouseleave="hoveredIndex = undefined; isTooltip = false"
+                    @mouseover="() => useTooltip(i, rect)"
+                    @mouseleave="() => onTrapLeave(i, rect)"
+                    @click="() => selectDatapoint(i, rect)"
                 />
             </g>
             </g>

@@ -2147,6 +2147,11 @@ export function useConfig() {
         loading: false, // v3
         responsive: false,
         responsiveProportionalSizing: true,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         useCssAnimation: false, // v3 (v2 = true)
         style: {
