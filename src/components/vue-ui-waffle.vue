@@ -80,14 +80,7 @@ const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const FINAL_CONFIG = ref(prepareConfig());
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -235,11 +228,11 @@ const rectDimensionY = computed(() => {
 })
 
 const absoluteRectDimension = computed(() => {
-    return ((drawingArea.value.width) / FINAL_CONFIG.value.style.chart.layout.grid.size);
+    return Math.max(0.0001, ((drawingArea.value.width) / FINAL_CONFIG.value.style.chart.layout.grid.size));
 });
 
 const absoluteRectDimensionY = computed(() => {
-    return ((drawingArea.value.height) / FINAL_CONFIG.value.style.chart.layout.grid.size);
+    return Math.max(0.0001, ((drawingArea.value.height) / FINAL_CONFIG.value.style.chart.layout.grid.size));
 })
 
 function calculateProportions(numbers) {
@@ -649,6 +642,44 @@ function getBlurFilter(index) {
     }
 }
 
+function showDataLabel(i, position) {
+    return rects.value.length 
+        && !isAnimating.value 
+        && !FINAL_CONFIG.value.style.chart.layout.grid.vertical 
+        && FINAL_CONFIG.value.style.chart.layout.labels.captions.show 
+        && ((rects.value[i].isFirst 
+        && position.position < FINAL_CONFIG.value.style.chart.layout.grid.size - 2) 
+        || (rects.value[i].isAbsoluteFirst && i % FINAL_CONFIG.value.style.chart.layout.grid.size === 0 && rects.value[i].absoluteStartIndex))
+}
+
+function getCaption(i, position = null) {
+    const valueLabel = applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+        rects.value[i].value,
+        dataLabel({ p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
+            v: rects.value[i].value, 
+            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+            r: FINAL_CONFIG.value.style.chart.layout.labels.captions.roundingValue 
+        }),
+        { datapoint: rects.value[i], position }
+    );
+    const percentageLabel = dataLabel({ v: rects.value[i].proportion, s: '%', r: FINAL_CONFIG.value.style.chart.layout.labels.captions.roundingPercentage });
+    const nameLabel = (FINAL_CONFIG.value.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects.value[i].name, length: FINAL_CONFIG.value.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects.value[i].name) + (FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage || FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue ? ':' : '');
+
+    const name = FINAL_CONFIG.value.style.chart.layout.labels.captions.showSerieName ? nameLabel : '';
+    let val = '';
+
+    if (FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue) {
+        val = `${percentageLabel} (${valueLabel})`;
+    } else if (FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage && !FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue) {
+        val = percentageLabel;
+    } else if (!FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue) {
+        val = valueLabel;
+    }
+
+    return `${name}${val}`;
+}
+
 function generateCsv(callback=null) {
     nextTick(() => {
         const labels = table.value.head.map((h,i) => {
@@ -665,7 +696,6 @@ function generateCsv(callback=null) {
         } else {
             callback(csvContent);
         }
-
     });
 }
 
@@ -993,48 +1023,16 @@ defineExpose({
 
             <!-- DATA LABELS -->
             <template v-for="(position, i) in positions">
-                <foreignObject
-                    v-if="rects.length && !isAnimating && !FINAL_CONFIG.style.chart.layout.grid.vertical && FINAL_CONFIG.style.chart.layout.labels.captions.show && ((rects[i].isFirst && position.position < FINAL_CONFIG.style.chart.layout.grid.size - 2) || (rects[i].isAbsoluteFirst && i % FINAL_CONFIG.style.chart.layout.grid.size === 0 && rects[i].absoluteStartIndex))"
-                    :x="position.x + FINAL_CONFIG.style.chart.layout.labels.captions.offsetX + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                    :y="position.y + FINAL_CONFIG.style.chart.layout.labels.captions.offsetY + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                    :height="absoluteRectDimensionY <= 0 ? 0.0001 : absoluteRectDimensionY"
-                    :width="absoluteRectDimension * FINAL_CONFIG.style.chart.layout.grid.size <= 0 ? 0.0001 : absoluteRectDimension * FINAL_CONFIG.style.chart.layout.grid.size"
+                <text
+                    :key="`datalabel_${i}`"
+                    v-if="showDataLabel(i, position)"
+                    v-text="getCaption(i, position)"
+                    :x="(position.x + FINAL_CONFIG.style.chart.layout.labels.captions.offsetX + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2) + 6"
+                    :y="position.y + FINAL_CONFIG.style.chart.layout.labels.captions.offsetY + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2 + absoluteRectDimensionY / 2 + FINAL_CONFIG.style.chart.layout.labels.captions.fontSize / 3"
+                    :font-size="FINAL_CONFIG.style.chart.layout.labels.captions.fontSize"
+                    :fill="adaptColorToBackground(rects[i].color)"
                     :filter="getBlurFilter(rects[i].serieIndex)"
-                >
-                    <div data-cy="datapoint-caption" class="vue-ui-waffle-caption" :style="`height: 100%; width: 100%; font-size:${FINAL_CONFIG.style.chart.layout.labels.captions.fontSize}px;display:flex;align-items:center;justify-content:flex-start;padding: 0 ${absoluteRectDimension / 12}px;color:${adaptColorToBackground(rects[i].color)};gap:2px`">
-                        <span v-if="FINAL_CONFIG.style.chart.layout.labels.captions.showSerieName">
-                            {{ FINAL_CONFIG.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects[i].name, length: FINAL_CONFIG.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects[i].name }}:
-                        </span>
-                        <span v-if="FINAL_CONFIG.style.chart.layout.labels.captions.showPercentage">
-                            {{ dataLabel({ v: rects[i].proportion, s: '%', r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingPercentage }) }}
-                        </span>
-                        <span v-if="FINAL_CONFIG.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.style.chart.layout.labels.captions.showValue">
-                            ({{ applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                                rects[i].value,
-                                dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
-                                    v: rects[i].value, 
-                                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
-                                    r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue 
-                                }),
-                                { datapoint: rects[i], position }
-                            )}})
-                        </span>
-                        <span v-if="!FINAL_CONFIG.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.style.chart.layout.labels.captions.showValue">
-                            {{ applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                                rects[i].value,
-                                dataLabel({ p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
-                                    v: rects[i].value, 
-                                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
-                                    r: FINAL_CONFIG.style.chart.layout.labels.captions.roundingValue 
-                                }),
-                                { datapoint: rects[i], position }
-                            )
-                            }}
-                        </span>
-                    </div>
-                </foreignObject>
+                />
             </template>
     
             <rect
@@ -1044,8 +1042,8 @@ defineExpose({
                 @mouseleave="isTooltip = false; selectedSerie = null"
                 :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                 :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                :height="absoluteRectDimensionY <= 0 ? 0.0001 : absoluteRectDimensionY"
-                :width="absoluteRectDimension <= 0 ? 0.0001 : absoluteRectDimension"
+                :height="absoluteRectDimensionY"
+                :width="absoluteRectDimension"
                 fill="transparent"
                 stroke="none"
             />
@@ -1136,7 +1134,7 @@ defineExpose({
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :isFullscreen="isFullscreen"
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
-            :backdropfilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
