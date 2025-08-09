@@ -2906,14 +2906,14 @@ defineExpose({
                             v-if="serie.smooth && serie.plots.length > 1 && !!serie.curve" :d="`M${serie.curve}`"
                             :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :stroke-width="FINAL_CONFIG.line.strokeWidth + 1"
-                            :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none" />
+                            :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none" style="transition: all 0.3s ease-in-out" />
 
                         <path data-cy="datapoint-line-coating-straight"
                             v-else-if="serie.plots.length > 1 && !!serie.straight" :d="`M${serie.straight}`"
                             :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :stroke-width="FINAL_CONFIG.line.strokeWidth + 1"
                             :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none"
-                            stroke-linecap="round" stroke-linejoin="round" />
+                            stroke-linecap="round" stroke-linejoin="round" style="transition: all 0.3s ease-in-out" />
                     </g>
 
                     <defs v-if="$slots.pattern">
@@ -2929,17 +2929,17 @@ defineExpose({
                             <template v-if="serie.smooth">
                                 <template v-for="(d, segIndex) in serie.curveAreas" :key="segIndex">
                                     <path v-if="d" :d="d"
-                                        :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" />
+                                        :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" style="transition: all 0.3s ease-in-out"/>
                                     <path v-if="$slots.pattern && d" :d="d"
-                                        :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" />
+                                        :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" style="transition: all 0.3s ease-in-out"/>
                                 </template>
                             </template>
                             <template v-else>
                                 <template v-for="(d, segIndex) in serie.area.split(';')" :key="segIndex">
                                     <path v-if="d" data-cy="datapoint-line-area-straight" :d="`M${d}Z`"
-                                        :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" />
+                                        :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" style="transition: all 0.3s ease-in-out"/>
                                     <path v-if="$slots.pattern && d" :d="`M${d}Z`"
-                                        :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" />
+                                        :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" style="transition: all 0.3s ease-in-out"/>
                                 </template>
                             </template>
                         </g>
@@ -2948,13 +2948,13 @@ defineExpose({
                             v-if="serie.smooth && serie.plots.length > 1 && !!serie.curve" :d="`M${serie.curve}`"
                             :stroke="serie.color" :stroke-width="FINAL_CONFIG.line.strokeWidth"
                             :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none"
-                            stroke-linecap="round" />
+                            stroke-linecap="round" style="transition: all 0.3s ease-in-out"/>
 
                         <path data-cy="datapoint-line-straight" v-else-if="serie.plots.length > 1 && !!serie.straight"
                             :d="`M${serie.straight}`" :stroke="serie.color"
                             :stroke-width="FINAL_CONFIG.line.strokeWidth"
                             :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none"
-                            stroke-linecap="round" stroke-linejoin="round" />
+                            stroke-linecap="round" stroke-linejoin="round" style="transition: all 0.3s ease-in-out"/>
 
                         <template v-for="(plot, j) in serie.plots" :key="`circle_line_${i}_${j}`">
                             <Shape data-cy="datapoint-line-plot"
