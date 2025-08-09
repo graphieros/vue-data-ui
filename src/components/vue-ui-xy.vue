@@ -419,8 +419,10 @@ const precogRect = computed(() => {
         height,
         fill: FINAL_CONFIG.value.chart.zoom.preview.fill,
         stroke: FINAL_CONFIG.value.chart.zoom.preview.stroke,
-        strokeWidth: FINAL_CONFIG.value.chart.zoom.preview.strokeWidth,
-        strokeDasharray: FINAL_CONFIG.value.chart.zoom.preview.strokeDasharray,
+        ['stroke-width']: FINAL_CONFIG.value.chart.zoom.preview.strokeWidth,
+        ['stroke-dasharray']: FINAL_CONFIG.value.chart.zoom.preview.strokeDasharray,
+        ['stroke-linecap']: 'round',
+        ['stroke-linejoin']: 'round',
         style: {
             pointerEvents: 'none',
             transition: 'all 0.1s ease-in-out',
