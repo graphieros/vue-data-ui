@@ -3172,6 +3172,8 @@ declare module "vue-data-ui" {
             userOptions?: ChartUserOptions;
         };
         bar?: {
+            showTransition?: boolean;
+            transitionDurationMs?: number;
             borderRadius?: number;
             useGradient?: boolean;
             periodGap?: number;
@@ -3198,6 +3200,8 @@ declare module "vue-data-ui" {
             };
         };
         line?: {
+            showTransition?: boolean;
+            transitionDurationMs?: number;
             radius?: number;
             useGradient?: boolean;
             strokeWidth?: number;
@@ -3226,6 +3230,8 @@ declare module "vue-data-ui" {
             };
         };
         plot?: {
+            showTransition?: boolean;
+            transitionDurationMs?: number;
             radius?: number;
             useGradient?: boolean;
             dot?: {
@@ -5735,6 +5741,9 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiQuickChartConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        // FIXME: events
         responsive?: boolean;
         theme?: Theme;
         axisLabelsFontSize?: number;
@@ -5808,6 +5817,7 @@ declare module "vue-data-ui" {
         xyPeriods?: Array<number | string>;
         datetimeFormatter?: AxisDateFormatter;
         xyPeriodLabelsRotation?: number;
+        xyPeriodLabelsAutoRotate?: boolean; // v3
         xyPeriodsShowOnlyAtModulo?: boolean;
         xyPeriodsModulo?: number;
         xyScaleSegments?: number;

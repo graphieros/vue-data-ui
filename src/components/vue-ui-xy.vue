@@ -2689,7 +2689,8 @@ defineExpose({
                                     :fill="FINAL_CONFIG.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})` : `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                                     :stroke="FINAL_CONFIG.bar.border.useSerieColor ? serie.color : FINAL_CONFIG.bar.border.stroke"
                                     :stroke-width="FINAL_CONFIG.bar.border.strokeWidth"
-                                    :style="`${loading ? 'transition:none !important' : ''}`" />
+                                    :style="{ transition: loading || !FINAL_CONFIG.bar.showTransition ? undefined: `all ${FINAL_CONFIG.bar.transitionDurationMs}ms ease-in-out`}"
+                                />
                                 <rect data-cy="datapoint-bar" v-if="canShowValue(plot.value) && $slots.pattern"
                                     :x="calcRectX(plot)"
                                     :y="mutableConfig.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
@@ -2698,7 +2699,9 @@ defineExpose({
                                     :rx="FINAL_CONFIG.bar.borderRadius"
                                     :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
                                     :stroke="FINAL_CONFIG.bar.border.useSerieColor ? serie.color : FINAL_CONFIG.bar.border.stroke"
-                                    :stroke-width="FINAL_CONFIG.bar.border.strokeWidth" />
+                                    :stroke-width="FINAL_CONFIG.bar.border.strokeWidth"
+                                    :style="{ transition: loading || !FINAL_CONFIG.bar.showTransition ? undefined: `all ${FINAL_CONFIG.bar.transitionDurationMs}ms ease-in-out`}"
+                                />
 
                                 <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
                                     <foreignObject style="overflow: visible" height="12"
@@ -2853,13 +2856,16 @@ defineExpose({
                     <g v-for="(serie, i) in plotSet" :key="`serie_plot_${i}`" :class="`serie_plot_${i}`"
                         :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <g data-cy="datapoint-plot" v-for="(plot, j) in serie.plots" :key="`circle_plot_${i}_${j}`">
-                            <Shape :data-cy="`xy-plot-${i}-${j}`" v-if="plot && canShowValue(plot.value)"
+                            <Shape 
+                                :data-cy="`xy-plot-${i}-${j}`" v-if="plot && canShowValue(plot.value)"
                                 :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                                 :color="FINAL_CONFIG.plot.useGradient ? `url(#plotGradient_${i}_${uniqueId})` : FINAL_CONFIG.plot.dot.useSerieColor ? serie.color : FINAL_CONFIG.plot.dot.fill"
                                 :plot="{ x: checkNaN(plot.x), y: checkNaN(plot.y) }"
                                 :radius="((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)) ? (plotRadii.plot || 6) * 1.5 : plotRadii.plot || 6"
                                 :stroke="FINAL_CONFIG.plot.dot.useSerieColor ? FINAL_CONFIG.chart.backgroundColor : serie.color"
-                                :strokeWidth="FINAL_CONFIG.plot.dot.strokeWidth" />
+                                :strokeWidth="FINAL_CONFIG.plot.dot.strokeWidth"
+                                :transition="loading || !FINAL_CONFIG.plot.showTransition || ((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)) ? undefined: `all ${FINAL_CONFIG.plot.transitionDurationMs}ms ease-in-out`"
+                            />
 
                             <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
                                 <foreignObject style="overflow: visible" height="12"
@@ -2906,14 +2912,14 @@ defineExpose({
                             v-if="serie.smooth && serie.plots.length > 1 && !!serie.curve" :d="`M${serie.curve}`"
                             :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :stroke-width="FINAL_CONFIG.line.strokeWidth + 1"
-                            :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none" style="transition: all 0.3s ease-in-out" />
+                            :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}" />
 
                         <path data-cy="datapoint-line-coating-straight"
                             v-else-if="serie.plots.length > 1 && !!serie.straight" :d="`M${serie.straight}`"
                             :stroke="FINAL_CONFIG.chart.backgroundColor"
                             :stroke-width="FINAL_CONFIG.line.strokeWidth + 1"
                             :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none"
-                            stroke-linecap="round" stroke-linejoin="round" style="transition: all 0.3s ease-in-out" />
+                            stroke-linecap="round" stroke-linejoin="round" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}" />
                     </g>
 
                     <defs v-if="$slots.pattern">
@@ -2929,17 +2935,17 @@ defineExpose({
                             <template v-if="serie.smooth">
                                 <template v-for="(d, segIndex) in serie.curveAreas" :key="segIndex">
                                     <path v-if="d" :d="d"
-                                        :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" style="transition: all 0.3s ease-in-out"/>
+                                        :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"/>
                                     <path v-if="$slots.pattern && d" :d="d"
-                                        :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" style="transition: all 0.3s ease-in-out"/>
+                                        :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"/>
                                 </template>
                             </template>
                             <template v-else>
                                 <template v-for="(d, segIndex) in serie.area.split(';')" :key="segIndex">
                                     <path v-if="d" data-cy="datapoint-line-area-straight" :d="`M${d}Z`"
-                                        :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" style="transition: all 0.3s ease-in-out"/>
+                                        :fill="FINAL_CONFIG.line.area.useGradient ? `url(#areaGradient_${i}_${uniqueId})` : setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"/>
                                     <path v-if="$slots.pattern && d" :d="`M${d}Z`"
-                                        :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" style="transition: all 0.3s ease-in-out"/>
+                                        :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"/>
                                 </template>
                             </template>
                         </g>
@@ -2948,23 +2954,26 @@ defineExpose({
                             v-if="serie.smooth && serie.plots.length > 1 && !!serie.curve" :d="`M${serie.curve}`"
                             :stroke="serie.color" :stroke-width="FINAL_CONFIG.line.strokeWidth"
                             :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none"
-                            stroke-linecap="round" style="transition: all 0.3s ease-in-out"/>
+                            stroke-linecap="round" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"/>
 
                         <path data-cy="datapoint-line-straight" v-else-if="serie.plots.length > 1 && !!serie.straight"
                             :d="`M${serie.straight}`" :stroke="serie.color"
                             :stroke-width="FINAL_CONFIG.line.strokeWidth"
                             :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none"
-                            stroke-linecap="round" stroke-linejoin="round" style="transition: all 0.3s ease-in-out"/>
+                            stroke-linecap="round" stroke-linejoin="round" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"/>
 
                         <template v-for="(plot, j) in serie.plots" :key="`circle_line_${i}_${j}`">
-                            <Shape data-cy="datapoint-line-plot"
+                            <Shape 
+                                data-cy="datapoint-line-plot"
                                 v-if="(!optimize.linePlot && plot && canShowValue(plot.value)) || (optimize.linePlot && plot && canShowValue(plot.value) && ((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)))"
                                 :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                                 :color="FINAL_CONFIG.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : FINAL_CONFIG.line.dot.useSerieColor ? serie.color : FINAL_CONFIG.line.dot.fill"
                                 :plot="{ x: checkNaN(plot.x), y: checkNaN(plot.y) }"
                                 :radius="((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)) ? (plotRadii.line || 6) * 1.5 : plotRadii.line || 6"
                                 :stroke="FINAL_CONFIG.line.dot.useSerieColor ? FINAL_CONFIG.chart.backgroundColor : serie.color"
-                                :strokeWidth="FINAL_CONFIG.line.dot.strokeWidth" />
+                                :strokeWidth="FINAL_CONFIG.line.dot.strokeWidth"
+                                :transition="loading || !FINAL_CONFIG.line.showTransition || ((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)) ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`"
+                            />
 
                             <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
                                 <foreignObject style="overflow: visible" height="12"
@@ -3830,10 +3839,6 @@ rect {
     flex-direction: column;
     justify-content: center;
     width: 100%;
-}
-
-.vue-ui-xy svg rect {
-    transition: all 0.11s ease-in-out;
 }
 
 canvas {
