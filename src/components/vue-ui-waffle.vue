@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef, toRefs } from "vue";
 import { 
     abbreviate,
     adaptColorToBackground,
@@ -19,6 +19,7 @@ import {
     setOpacity,
     shiftHue,
     themePalettes,
+    treeShake,
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
@@ -33,11 +34,12 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import img from "../img";
+import { useLoading } from "../useLoading";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
@@ -82,6 +84,61 @@ const legendStep = ref(0);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            datasetCopy.value = prepareDataset();
+        })
+    },
+    skeletonDataset: [
+        {
+            name: '',
+            values: [1],
+            color: '#AAAAAA',
+        },
+        {
+            name: '',
+            values: [1],
+            color: '#BABABA',
+        },
+        {
+            name: '',
+            values: [1],
+            color: '#CACACA',
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            useCustomCells: false,
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        labels: {
+                            captions: { show: false }
+                        },
+                        rect: {
+                            stroke: '#999999'
+                        }
+                    },
+                    legend: {
+                        backgroundColor: 'transparent',
+                        showValue: false,
+                        showPercentage: false
+                    }
+                }
+            }
+        }
+    })
+});
+
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
@@ -105,7 +162,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -120,12 +179,17 @@ watch(() => props.config, (_newCfg) => {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiWaffle',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
+        isDataset.value = false;
+        manualLoading.value = true; // v3
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
@@ -136,10 +200,16 @@ function prepareChart() {
                     componentName: 'VueUiWaffle',
                     type: 'datasetSerieAttribute',
                     property: attr,
-                    index: i
+                    index: i,
+                    debug: debug.value
                 });
             });
         });
+    }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -207,6 +277,14 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    };
+}, { immediate: true });
+
 const svg = ref({
     height: 512,
     width: 512
@@ -258,9 +336,9 @@ function calculateProportions(numbers) {
 const allDatapointsAreEmpty = ref(false);
 
 function prepareDataset() {
-    allDatapointsAreEmpty.value = props.dataset.flatMap(ds => ds.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0) === 0;
+    allDatapointsAreEmpty.value = FINAL_DATASET.value.flatMap(ds => ds.values.reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0) === 0;
 
-    return props.dataset.map((s, i) => {
+    return FINAL_DATASET.value.map((s, i) => {
         return {
             ...s,
             color: convertColorToHex(s.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
@@ -275,6 +353,13 @@ const datasetCopyReference = computed(() => {
 });
 
 const datasetCopy = ref(datasetCopyReference.value)
+
+// v3 - Stop skeleton loader when props.dataset becomes valid
+watch(() => props.dataset, (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+        manualLoading.value = false;
+    }
+}, { immediate: true });
 
 watch(() => props.dataset, (_) => {
     datasetCopy.value = prepareDataset();
@@ -306,7 +391,7 @@ const immutableProportions = computed(() => {
 });
 
 const waffleSet = computed(() => {
-    props.dataset.forEach((ds, i) => {
+    FINAL_DATASET.value.forEach((ds, i) => {
         if([null, undefined].includes(ds.values)) {
             error({
                 componentName: 'VueUiWaffle',
@@ -556,6 +641,27 @@ const total = computed(() => {
 
 const dataTooltipSlot = ref(null);
 
+const selectedSeriesIndex = ref(null);
+
+function selectDatapoint(index) {
+    const selected = rects.value[index];
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: selected, seriesIndex: selected.serieIndex });
+    }
+}
+
+function onTrapLeave(index) {
+    const selected = rects.value[index];
+
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: selected, seriesIndex: selected.serieIndex});
+    }
+
+    selectedSeriesIndex.value = null;
+    isTooltip.value = false;
+    selectedSerie.value = null;
+}
+
 function useTooltip(index) {
     if(segregated.value.length === props.dataset.length) return;
     
@@ -568,6 +674,11 @@ function useTooltip(index) {
         config: FINAL_CONFIG.value
     }
     
+    if (FINAL_CONFIG.value.events.datapointEnter && selectedSeriesIndex.value !== selected.serieIndex) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: selected,  seriesIndex: selected.serieIndex })
+    }
+
+    selectedSeriesIndex.value = selected.serieIndex;
     isTooltip.value = true;
     selectedSerie.value = rects.value[index].serieIndex;
 
@@ -607,7 +718,7 @@ function useTooltip(index) {
         }
         if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
             const dp = dataLabel({
-                v: allDatapointsAreEmpty.value ? 1 / props.dataset.length * 100 : selected.value / total.value * 100,
+                v: allDatapointsAreEmpty.value ? 1 / FINAL_DATASET.value.length * 100 : selected.value / total.value * 100,
                 s: '%',
                 r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
             });
@@ -643,10 +754,11 @@ function getBlurFilter(index) {
 }
 
 function showDataLabel(i, position) {
+    if (!FINAL_CONFIG.value.style.chart.layout.labels.captions.show) return false;
+
     return rects.value.length 
         && !isAnimating.value 
         && !FINAL_CONFIG.value.style.chart.layout.grid.vertical 
-        && FINAL_CONFIG.value.style.chart.layout.labels.captions.show 
         && ((rects.value[i].isFirst 
         && position.position < FINAL_CONFIG.value.style.chart.layout.grid.size - 2) 
         || (rects.value[i].isAbsoluteFirst && i % FINAL_CONFIG.value.style.chart.layout.grid.size === 0 && rects.value[i].absoluteStartIndex))
@@ -923,7 +1035,6 @@ defineExpose({
         <svg 
             ref="svgRef"
             :xmlns="XMLNS" 
-            v-if="isDataset" 
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
             data-cy="waffle-svg" 
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" 
@@ -1025,6 +1136,7 @@ defineExpose({
             <template v-for="(position, i) in positions">
                 <text
                     :key="`datalabel_${i}`"
+                    data-cy="datapoint-caption"
                     v-if="showDataLabel(i, position)"
                     v-text="getCaption(i, position)"
                     :x="(position.x + FINAL_CONFIG.style.chart.layout.labels.captions.offsetX + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2) + 6"
@@ -1038,14 +1150,15 @@ defineExpose({
             <rect
                 data-cy="tooltip-trap"
                 v-for="(position, i) in positions"
-                @mouseover="useTooltip(i)"
-                @mouseleave="isTooltip = false; selectedSerie = null"
                 :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                 :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                 :height="absoluteRectDimensionY"
                 :width="absoluteRectDimension"
                 fill="transparent"
                 stroke="none"
+                @mouseover="useTooltip(i)"
+                @mouseleave="onTrapLeave(i)"
+                @click="selectDatapoint(i)"
             />
             <slot name="svg" :svg="svg"/>
         </svg>
@@ -1053,19 +1166,6 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
-
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'waffle',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    waffle: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
 
         <!-- LEGEND AS DIV -->
         <div ref="chartLegend">        
@@ -1177,6 +1277,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading"/>
     </div>
 </template>
 

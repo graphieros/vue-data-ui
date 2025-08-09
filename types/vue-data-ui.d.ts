@@ -3361,7 +3361,7 @@ declare module "vue-data-ui" {
         VueUiXyExpose
     >;
 
-    export type ChartEvent<T> = null | (({ datapoint, seriesIndex} : { datapoint: T, seriesIndex: number}) => void)
+    export type ChartEvent<T> = null | (({ datapoint, seriesIndex} : { datapoint: T, seriesIndex: number}) => void);
 
     export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
     export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
@@ -3369,6 +3369,7 @@ declare module "vue-data-ui" {
     export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
     export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
     export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
+    export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
 
     export type VueUiDonutConfig = {
         debug?: boolean;
@@ -3798,7 +3799,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiWaffleConfig = {
+        debug?: boolean;
+        loading?: boolean;
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiWaffleEvent; // v3
+            datapointLeave?: VueUiWaffleEvent; // v3
+            datapointClick?: VueUiWaffleEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useBlurOnHover?: boolean;

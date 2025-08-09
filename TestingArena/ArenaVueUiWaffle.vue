@@ -8,20 +8,26 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref([
-    {
-        name: 'Lorem Ipsum',
-        values: [1],
-    },
-    {
-        name: 'Dolor Amet',
-        values: [1]
-    },
-    {
-        name: 'Dignissimos Ducimus',
-        values: [2]
-    }
-]);
+const dataset = ref([])
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: 'A with a long name',
+                values: [3]
+            },
+            {
+                name: 'A',
+                values: [2]
+            },
+            {
+                name: 'A',
+                values: [1]
+            },
+        ]
+    }, 2000)
+})
 
 const alternateDataset = ref([
     { name: 'Alt 1', values: [20]},
@@ -58,6 +64,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -179,6 +187,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex});
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex});
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex});
+                },
+            },
             style: {
                 ...c.style,
                 chart: {
