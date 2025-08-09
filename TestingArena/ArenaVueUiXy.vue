@@ -127,7 +127,9 @@ onMounted(() => {
         type: "line",
         dataLabels: false,
         shape: 'triangle',
-        useProgression: false
+        useProgression: false,
+        useArea: true,
+        smooth: true
     },
     {
         name: "C",
@@ -365,6 +367,10 @@ const model = ref([
     { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.preview.enable', def: true, type: 'checkbox'},
+    { key: 'chart.zoom.preview.stroke', def: '#1f77b4', type: 'color'},
+    { key: 'chart.zoom.preview.fill', def: '#1f77b420', type: 'color'},
+    { key: 'chart.zoom.preview.strokeDasharray', def: 0, type: 'number', min: 0, max: 12},
+    { key: 'chart.zoom.preview.strokeWidth', def: 2, type: 'number', min: 0, max: 12},
 
     { key: 'chart.padding.top', def: 0, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
     { key: 'chart.padding.right', def: 0, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
@@ -499,6 +505,7 @@ const model = ref([
     { key: 'bar.border.stroke', def: '#FFFFFF', type: 'color' },
     { key: 'bar.border.strokeWidth', def: 1, type: 'number', min: 0, max: 12, step: 0.5 },
 
+    { key: 'line.showTransition', def: true, type: 'checkbox' },
     { key: 'line.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'line' },
     { key: 'line.useGradient', def: false, type: 'checkbox', label: 'useGradient', category: 'line' },
     { key: 'line.strokeWidth', def: 2, type: 'number', min: 1, max: 20, label: 'thickness', category: 'line' },
@@ -651,19 +658,19 @@ const config = computed(() => {
     } else {
         return {
             ...c,
-            // events: {
-            //     datapointEnter: ({ datapoint, seriesIndex }) => {
-            //         console.log('enter event', { datapoint, seriesIndex })
-            //         selectedIndex.value = seriesIndex
-            //     },
-            //     datapointLeave: ({ datapoint, seriesIndex }) => {
-            //         console.log('leave event', { datapoint, seriesIndex })
-            //         selectedIndex.value = null;
-            //     },
-            //     datapointClick: ({ datapoint, seriesIndex }) => {
-            //         console.log('click event', { datapoint, seriesIndex })
-            //     }
-            // },
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex })
+                    selectedIndex.value = seriesIndex
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex })
+                    selectedIndex.value = null;
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex })
+                }
+            },
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
             theme: currentTheme.value,
             line: {

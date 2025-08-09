@@ -11,7 +11,7 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 function makeDs() {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     const arr = [];
-    const dsLen = 12;
+    const dsLen = 52;
     const serieLen = days.length;
     for (let i = 0; i < serieLen; i += 1) {
         const values = [];

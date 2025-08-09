@@ -75,8 +75,8 @@ describe('VueUiQuickChart', () => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
                     'absoluteIndices',
+                    'absoluteIndex',
                     'color',
-                    'coordinates',
                     'id',
                     'name',
                     'value',
@@ -171,10 +171,9 @@ describe('VueUiQuickChart', () => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
                     'absoluteIndices',
+                    'absoluteIndex',
                     'color',
-                    'coordinates',
                     'id',
-                    'linePath',
                     'name',
                     'value',
                     'values'
@@ -283,8 +282,8 @@ describe('VueUiQuickChart', () => {
                     'NAME',
                     'VALUES',
                     'absoluteIndices',
+                    'absoluteIndex',
                     'color',
-                    'coordinates',
                     'id',
                     'name',
                     'value',
@@ -397,10 +396,9 @@ describe('VueUiQuickChart', () => {
                     'NAME',
                     'VALUES',
                     'absoluteIndices',
+                    'absoluteIndex',
                     'color',
-                    'coordinates',
                     'id',
-                    'linePath',
                     'name',
                     'value',
                     'values'

@@ -785,7 +785,7 @@ defineExpose({
             </div>
 
             <div
-                v-if="tooltipsCollide || labels.left === labels.right"
+                v-if="(tooltipsCollide || labels.left === labels.right) && (labels.left || labels.right)"
                 data-cy="slicer-label-merged"
                 ref="tooltipMerge"
                 :class="{

@@ -9,7 +9,7 @@ export const nameType = ['NAME', 'TITLE', 'DESCRIPTION', 'LABEL'];
 export const dataType = ['SERIE', 'SERIES', 'DATA', 'VALUE', 'VALUES', 'NUM'];
 export const timeType = ['TIME', 'PERIOD', 'MONTH', 'YEAR', 'MONTHS', 'YEARS', 'DAY', 'DAYS', 'HOUR', 'HOURS']
 
-export function detectChart({dataset, barLineSwitch = 6}) {
+export function detectChart({dataset, barLineSwitch = 6, debug = true}) {
     let type = null;
     let usableDataset = null;
     let maxSeriesLength = 0;
@@ -18,7 +18,9 @@ export function detectChart({dataset, barLineSwitch = 6}) {
     const isJustAString = typeof dataset === 'string';
 
     if (isJustANumber || isJustAString) {
-        console.warn(`The provided dataset (${dataset}) is not sufficient to build a chart`);
+        if (debug) {
+            console.warn(`The provided dataset (${dataset}) is not sufficient to build a chart`);
+        }
     }
     
     if (isSimpleArray(dataset)) {
@@ -31,13 +33,17 @@ export function detectChart({dataset, barLineSwitch = 6}) {
 
         if (isSimpleArrayOfObjects(dataset)) {
             if (!isArrayOfObjectsOfSameDataType(dataset)) {
-                console.warn('The objects in the dataset array have a different data structure. Either keys or value types are different.')
-                return false
+                if (debug) {
+                    console.warn('The objects in the dataset array have a different data structure. Either keys or value types are different.')
+                }
+                return false;
             }
             const keys = Object.keys(dataset[0]);
             const values = Object.values(dataset[0]);
             if (!keys.some(key => hasValidDataTypeKey(key))) {
-                console.warn('The data type of the dataset objects in the array must contain one of the following keys: DATA, SERIES, VALUE, VALUES, NUM. Casing is not important.')
+                if (debug) {
+                    console.warn('The data type of the dataset objects in the array must contain one of the following keys: DATA, SERIES, VALUE, VALUES, NUM. Casing is not important.')
+                }
                 return false;
             }
 

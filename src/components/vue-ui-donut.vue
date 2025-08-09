@@ -43,19 +43,19 @@ import {
     treeShake
 } from '../lib';
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { usePrinter } from "../usePrinter";
+import { useLoading } from "../useLoading";
+import { useResponsive } from "../useResponsive";
+import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import { useLoading } from "../useLoading";
+import img from "../img";
+import Shape from "../atoms/Shape.vue";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import Shape from "../atoms/Shape.vue";
 import BaseScanner from "../atoms/BaseScanner.vue";
-import img from "../img";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));

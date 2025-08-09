@@ -639,6 +639,8 @@ export function useConfig() {
             })
         },
         bar: {
+            showTransition: true,
+            transitionDurationMs: 300,
             borderRadius: 2,
             useGradient: true,
             periodGap: 0.1,
@@ -665,6 +667,8 @@ export function useConfig() {
             }
         },
         line: {
+            showTransition: true,
+            transitionDurationMs: 300,
             radius: 3,
             useGradient: true,
             strokeWidth: 3,
@@ -693,6 +697,8 @@ export function useConfig() {
             }
         },
         plot: {
+            showTransition: true,
+            transitionDurationMs: 300,
             radius: 3,
             useGradient: true,
             dot: {
@@ -793,7 +799,7 @@ export function useConfig() {
                 width: 512,
                 height: 360,
                 layout: {
-                    curvedMarkers: false,
+                    curvedMarkers: true, // v2 = false
                     labels: {
                         dataLabels: {
                             show: true,
@@ -2646,6 +2652,13 @@ export function useConfig() {
     }
 
     const vue_ui_quick_chart = {
+        debug: false, // v3
+        loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsive: false,
         theme: '',
         axisLabelsFontSize: FONT._12,
@@ -2661,10 +2674,12 @@ export function useConfig() {
         dataLabelRoundingPercentage: 1,
         dataLabelRoundingValue: 0,
         donutHideLabelUnderPercentage: 3,
+        donutCurvedMarkers: true, // v3
         donutLabelMarkerStrokeWidth: 1,
         donutRadiusRatio: 0.4,
         donutShowTotal: true,
         donutStrokeWidth: 2,
+        donutStroke: '#FFFFFF',
         donutThicknessRatio: 0.18,
         donutTotalLabelFontSize: FONT._24,
         donutTotalLabelOffsetY: 0,
@@ -2746,11 +2761,12 @@ export function useConfig() {
         xyHighlighterOpacity: 0.05,
         xyLabelsXFontSize: FONT._10,
         xyLabelsYFontSize: FONT._12,
-        xyPaddingBottom: 48,
-        xyPaddingLeft: 48,
+        xyPaddingBottom: 0,
+        xyPaddingLeft: 12,
         xyPaddingRight: 12,
-        xyPaddingTop: 24,
+        xyPaddingTop: 12,
         xyPeriodLabelsRotation: 0,
+        xyPeriodLabelsAutoRotate: true, // v3
         xyPeriods: [],
         datetimeFormatter: AXIS_DATE_FORMATTER,
         xyPeriodsShowOnlyAtModulo: false,

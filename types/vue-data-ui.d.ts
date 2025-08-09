@@ -5743,7 +5743,11 @@ declare module "vue-data-ui" {
     export type VueUiQuickChartConfig = {
         debug?: boolean; // v3
         loading?: boolean; // v3
-        // FIXME: events
+        events?: {
+            datapointEnter?: ChartEvent<object| object[]>;
+            datapointLeave?: ChartEvent<object| object[]>;
+            datapointClick?: ChartEvent<object| object[]>;
+        };
         responsive?: boolean;
         theme?: Theme;
         axisLabelsFontSize?: number;
@@ -5758,11 +5762,13 @@ declare module "vue-data-ui" {
         dataLabelFontSize?: number;
         dataLabelRoundingPercentage?: number;
         dataLabelRoundingValue?: number;
+        donutCurvedMarkers?: boolean; // v3
         donutHideLabelUnderPercentage?: number;
         donutLabelMarkerStrokeWidth?: number;
         donutRadiusRatio?: number;
         donutShowTotal?: boolean;
         donutStrokeWidth?: number;
+        donutStroke?: string; // v3
         donutThicknessRatio?: number;
         donutTotalLabelFontSize?: number;
         donutTotalLabelOffsetY?: number;
