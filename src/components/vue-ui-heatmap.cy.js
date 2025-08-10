@@ -13,7 +13,7 @@ describe('<VueUiHeatmap />', () => {
 			subtitle: true,
 			dataTable: true,
 			tooltipCallback: () => {
-				cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseover', { force: true });
+				cy.get('[data-cy="cell"]').first().trigger('mouseover', { force: true });
 				cy.get('[data-cy="cell-selected"]').should('exist').and('be.visible');
 			}
 		});
@@ -22,7 +22,6 @@ describe('<VueUiHeatmap />', () => {
 		cy.get('[data-cy="cell-underlayer"]').should('exist').and('be.visible').and('have.length', 91);
 		cy.get('[data-cy="cell"]').should('exist').and('be.visible').and('have.length', 91);
 		cy.get('[data-cy="cell-label"]').should('exist').and('be.visible').and('have.length', 91);
-		cy.get('[data-cy="tooltip-trap"]').should('exist').and('be.visible').and('have.length', 91);
 		
 		cy.log('y axis labels');
 		cy.get('[data-cy="axis-y-label"]').as('yLabels').should('exist').and('be.visible').and('have.length', dataset.length);

@@ -153,6 +153,10 @@ const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = us
 
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
 
+function setVisibility(state) {
+    setUserOptionsVisibility(state);
+}
+
 function prepareConfig() {
     const mergedConfig = useNestedProp({
         userConfig: props.config,
@@ -794,7 +798,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`" @mouseenter="() => setVisibility(true)" @mouseleave="() => setVisibility(false)">
         
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
@@ -972,6 +976,9 @@ defineExpose({
                                 :fill="cell.color"
                                 :stroke="FINAL_CONFIG.style.backgroundColor"
                                 :stroke-width="cellGap"
+                                @mouseover="useTooltip(cell, i, drawingArea.left + drawingArea.cellSize.width * j, drawingArea.top + drawingArea.cellSize.height * i)"
+                                @mouseout="() => onTrapLeave({ datapoint: cell, seriesIndex: i })"
+                                @click="() => selectDatapoint(cell, i)"
                             />
                             <text 
                                 data-cy="cell-label"
@@ -993,6 +1000,7 @@ defineExpose({
                                     hideAll,
                                     rotateAll
                                 }"
+                                :style="{ pointerEvents: 'none', userSelect: 'none'}"
                             >
                                 {{ applyDataLabel(
                                     FINAL_CONFIG.style.layout.cells.value.formatter,
@@ -1007,21 +1015,6 @@ defineExpose({
                                 )
                                 }}
                             </text>
-                        </g>
-                        <g v-for="(cell, j) in serie.temperatures">
-                            <!-- TOOLTIP TRAPS -->
-                            <rect
-                                data-cy="tooltip-trap"
-                                :x="drawingArea.left + drawingArea.cellSize.width * j + drawingArea.sumCellXHeight"
-                                :y="drawingArea.top + drawingArea.cellSize.height * i"
-                                :width="drawingArea.cellSize.width"
-                                :height="drawingArea.cellSize.height"
-                                fill="transparent"
-                                stroke="none"
-                                @mouseover="useTooltip(cell, i, drawingArea.left + drawingArea.cellSize.width * j, drawingArea.top + drawingArea.cellSize.height * i)"
-                                @mouseout="() => onTrapLeave({ datapoint: cell, seriesIndex: i })"
-                                @click="() => selectDatapoint(cell, i)"
-                            />
                         </g>
                     </template>
                 </g>
