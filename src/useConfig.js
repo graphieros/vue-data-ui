@@ -5211,6 +5211,9 @@ export function useConfig() {
     }
 
     const vue_ui_bullet = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         userOptions: USER_OPTIONS({
             tooltip: false,
@@ -5255,6 +5258,7 @@ export function useConfig() {
                     }
                 },
                 target: {
+                    show: true, // v3
                     onTop: true,
                     color: COLOR_BLACK,
                     rounded: true,

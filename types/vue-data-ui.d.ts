@@ -7324,6 +7324,9 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiBulletConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         userOptions?: ChartUserOptions;
         style?: {
@@ -7358,6 +7361,7 @@ declare module "vue-data-ui" {
                     };
                 };
                 target?: {
+                    show?: boolean;
                     onTop?: boolean;
                     color?: string;
                     rounded?: boolean;
