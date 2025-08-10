@@ -28,6 +28,7 @@ describe('VueUiQuickChart', () => {
                 userOptions: true,
                 slicer: true,
                 tooltipCallback: () => {
+                    cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
                     cy.get('[data-cy="tooltip-trap-bar"]').first().trigger('mouseenter', { force: true })
                 }
             });
@@ -71,6 +72,7 @@ describe('VueUiQuickChart', () => {
             }
         }).then(({ wrapper }) => {
             cy.log('@selectDatapoint');
+            cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
             cy.get('[data-cy="tooltip-trap-bar"]').first().click({ force: true }).then(() => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
@@ -119,6 +121,7 @@ describe('VueUiQuickChart', () => {
                 userOptions: true,
                 slicer: true,
                 tooltipCallback: () => {
+                    cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
                     cy.get('[data-cy="tooltip-trap-line"]').first().trigger('mouseenter', { force: true })
                 }
             });
@@ -167,6 +170,7 @@ describe('VueUiQuickChart', () => {
             }
         ).then(({ wrapper }) => {
             cy.log('@selectDatapoint');
+            cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
             cy.get('[data-cy="tooltip-trap-line"]').first().click({ force: true }).then(() => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
@@ -223,6 +227,7 @@ describe('VueUiQuickChart', () => {
                 userOptions: true,
                 slicer: true,
                 tooltipCallback: () => {
+                    cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
                     cy.get('[data-cy="tooltip-trap-bar"]').first().trigger('mouseenter', { force: true })
                 }
             });
@@ -276,6 +281,7 @@ describe('VueUiQuickChart', () => {
             }
         }).then(({ wrapper }) => {
             cy.log('@selectDatapoint');
+            cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
             cy.get('[data-cy="tooltip-trap-bar"]').first().click({ force: true }).then(() => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
@@ -335,6 +341,7 @@ describe('VueUiQuickChart', () => {
                 userOptions: true,
                 slicer: true,
                 tooltipCallback: () => {
+                    cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
                     cy.get('[data-cy="tooltip-trap-line"]').first().trigger('mouseenter', { force: true })
                 }
             });
@@ -390,6 +397,7 @@ describe('VueUiQuickChart', () => {
             }
         }).then(({ wrapper }) => {
             cy.log('@selectDatapoint');
+            cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
             cy.get('[data-cy="tooltip-trap-line"]').first().click({ force: true }).then(() => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
@@ -449,6 +457,7 @@ describe('VueUiQuickChart', () => {
             testCommonFeatures({
                 userOptions: true,
                 tooltipCallback: () => {
+                    cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
                     cy.get('[data-cy="tooltip-trap-donut"]').first().trigger('mouseenter', { force: true });
                 }
             });
@@ -498,6 +507,7 @@ describe('VueUiQuickChart', () => {
             }
         }).then(({ wrapper }) => {
             cy.log('@selectDatapoint');
+            cy.get('.vue-ui-quick-chart').trigger('mouseenter', { force: true });
             cy.get('[data-cy="tooltip-trap-donut"]').first().click({ force: true }).then(() => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys(
