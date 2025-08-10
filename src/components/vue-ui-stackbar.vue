@@ -28,10 +28,12 @@ import {
     treeShake, 
     XMLNS, 
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
 import { throttle } from "../canvas-lib";
-import { useResponsive } from "../useResponsive";
 import { usePrinter } from "../usePrinter";
+import { useLoading } from "../useLoading.js";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
+import { useTimeLabels } from "../useTimeLabels";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
@@ -40,9 +42,7 @@ import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
-import { useTimeLabels } from "../useTimeLabels";
 import img from "../img";
-import { useLoading } from "../useLoading.js";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -1876,7 +1876,7 @@ defineExpose({
         </Tooltip>
 
         <div ref="chartLegend">
-            <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig"
+            <Legend v-if="FINAL_CONFIG.style.chart.legend.show" :legendSet="legendSet" :config="legendConfig"
                 @clickMarker="({ legend }) => legend.segregate()">
                 <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
                     <Shape
@@ -1889,7 +1889,7 @@ defineExpose({
                 </template>
 
                 <template #item="{ legend }">
-                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
                         {{ legend.name }}
                     </div>
                 </template>

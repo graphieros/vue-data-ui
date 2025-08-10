@@ -1,4 +1,17 @@
 <script setup>
+import { 
+    computed, 
+    defineAsyncComponent, 
+    getCurrentInstance, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    toRefs, 
+    useSlots, 
+    watch, 
+    watchEffect,
+} from 'vue';
 import {
     abbreviate,
     adaptColorToBackground,
@@ -39,23 +52,22 @@ import {
     createIndividualAreaWithCuts,
     createSmoothAreaSegments,
     createIndividualArea,
-    treeShake
+    treeShake,
 } from '../lib';
-import themes from "../themes.json";
+import { throttle } from '../canvas-lib.js';
 import { useConfig } from '../useConfig';
+import { usePrinter } from '../usePrinter.js';
+import { useLoading } from '../useLoading.js';
 import { useNestedProp } from '../useNestedProp';
 import { useTimeLabels } from '../useTimeLabels.js';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
-import { computed, defineAsyncComponent, getCurrentInstance, nextTick, onBeforeUnmount, onMounted, ref, toRefs, useSlots, watch, watchEffect } from 'vue';
-import Slicer from '../atoms/Slicer.vue';
-import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
-import Title from '../atoms/Title.vue';
-import Shape from '../atoms/Shape.vue';
 import img from '../img.js';
-import { usePrinter } from '../usePrinter.js';
-import { useLoading } from '../useLoading.js';
+import Title from '../atoms/Title.vue';
+import themes from "../themes.json";
+import Slicer from '../atoms/Slicer.vue';
+import Shape from '../atoms/Shape.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
-import { throttle } from '../canvas-lib.js';
+import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
 
 const props = defineProps({
     config: {
