@@ -3670,7 +3670,7 @@ defineExpose({
             :style="`font-size:${FINAL_CONFIG.chart.legend.fontSize}px`">
             <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`"
                 :key="`div_legend_item_${i}`" @click="segregate(legendItem)"
-                :class="{ 'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated': segregatedSeries.includes(legendItem.id) }">
+                :class="{ 'vue-ui-xy-legend-item-alone': absoluteDataset.length === 1 , 'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated': segregatedSeries.includes(legendItem.id) }">
                 <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
                     <rect x="0" y="7.5" rx="1.5" :stroke="FINAL_CONFIG.chart.backgroundColor" :stroke-width="0.5"
                         height="3" width="20" :fill="legendItem.color" />
@@ -3829,6 +3829,10 @@ rect {
     flex-wrap: wrap;
     gap: 5px;
     cursor: pointer;
+}
+
+.vue-ui-xy-legend-item-alone {
+    cursor: default;
 }
 
 .vue-ui-xy-legend-item-segregated {
