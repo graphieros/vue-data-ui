@@ -63,18 +63,15 @@ describe('<VueUiParallelCoordinatePlot />', () => {
             cy.get('.vdui-shape-circle').first().click({ force: true }).then(() => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys(
-                    'axisIndex',
-                    'comment',
-                    'datapointIndex',
+                    'color',
+                    'datapoints',
+                    'id',
                     'name',
-                    'seriesIndex',
-                    'seriesName',
-                    'value',
-                    'x',
-                    'y'
+                    'pathLength',
+                    'smoothPath',
+                    'straightPath',
+                    'values'
                 );
-                expect(wrapper.emitted('selectDatapoint')[0][0].axisIndex).to.equal(0);
-                expect(wrapper.emitted('selectDatapoint')[0][0].seriesIndex).to.equal(0);
             });
         });
     });

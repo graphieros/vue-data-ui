@@ -8,46 +8,54 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
-const dataset = ref([
-    {
-        name: "Series 1",
-        shape: "triangle",
-        series: [
+const dataset = ref([]);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
             {
-                name: 'Item 1.1',
-                values: [1200, 300, 12, 1.2],
-                comments: ['', '', 'This is some sort of comment', '']
+                name: "Series 1",
+                shape: "triangle",
+                series: [
+                    {
+                        name: 'Item 1.1',
+                        values: [1200, 300, 12, 1.2],
+                        comments: ['', '', 'This is some sort of comment', '']
+                    },
+                    {
+                        name: 'Item 1.2',
+                        values: [1000, 100, 10, 1]
+                    },
+                    {
+                        name: 'Item 1.3',
+                        values: [-800, 85, 8.5, 0.85]
+                    },
+                ]
             },
             {
-                name: 'Item 1.2',
-                values: [1000, 100, 10, 1]
-            },
-            {
-                name: 'Item 1.3',
-                values: [-800, 85, 8.5, 0.85]
+                name: "Series 2",
+                series: [
+                    {
+                        name: 'Item 2.1',
+                        values: [2300, 230, 23, 2.3]
+                    },
+                    {
+                        name: 'Item 2.2',
+                        values: [2500, 250, 25, 2.5]
+                    },
+                    {
+                        name: 'Item 2.3',
+                        values: [2800, 280, 28, 2.8]
+                    },
+                ]
             },
         ]
-    },
-    {
-        name: "Series 2",
-        series: [
-            {
-                name: 'Item 2.1',
-                values: [2300, 230, 23, 2.3]
-            },
-            {
-                name: 'Item 2.2',
-                values: [2500, 250, 25, 2.5]
-            },
-            {
-                name: 'Item 2.3',
-                values: [2800, 280, 28, 2.8]
-            },
-        ]
-    },
-])
+    }, 2000)
+})
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
     { key: 'style.chart.comments.show', def: true, type: 'checkbox'},
     { key: 'style.chart.comments.showInTooltip', def: true, type: 'checkbox'},
@@ -74,14 +82,14 @@ const model = ref([
     
     { key: 'useCssAnimation', def: true, type: 'checkbox' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color' },
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.height', def: 600, type: 'number', min: 300, max: 1000 },
     { key: 'style.chart.width', def: 1000, type: 'number', min: 300, max: 1500 },
-    { key: 'style.chart.padding.top', def: 24, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.bottom', def: 36, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.left', def: 36, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.right', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.left', def: 0, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.lines.smooth', def: false, type: 'checkbox'},
     { key: 'style.chart.lines.strokeWidth', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.lines.opacity', def: 0.8, type: 'number', min: 0, max: 1, step: 0.01 },
@@ -143,12 +151,23 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex })
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex })
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex })
+            },
+        },
         theme: currentTheme.value,
         variables: [
             "Variable 1",

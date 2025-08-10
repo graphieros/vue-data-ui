@@ -4239,7 +4239,14 @@ export function useConfig() {
     }
 
     const vue_ui_parallel_coordinate_plot = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsiveProportionalSizing: true,
         theme: '',
         useCssAnimation: true,
@@ -4286,6 +4293,8 @@ export function useConfig() {
                     labels: {
                         showAxisNames: true,
                         axisNames: [],
+                        axisNamesRotation: 0, // v3
+                        axisNamesAutoRotate: true, // v3
                         axisNamesColor: COLOR_BLACK,
                         axisNamesFontSize: FONT._16,
                         axisNamesBold: true,

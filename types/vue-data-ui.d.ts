@@ -6766,7 +6766,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiParallelCoordinatePlotConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiParallelCoordinatePlotEvent; // v3
+            datapointLeave?: VueUiParallelCoordinatePlotEvent; // v3
+            datapointClick?: VueUiParallelCoordinatePlotEvent; // v3
+        },
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
@@ -6805,6 +6812,8 @@ declare module "vue-data-ui" {
                         axisNames?: string[];
                         axisNamesColor?: string;
                         axisNamesFontSize?: number;
+                        axisNamesRotation?: number; // v3
+                        axisNamesAutoRotate?: boolean; // v3
                         axisNamesBold?: boolean;
                         roundings?: number[];
                         prefixes?: string[];
@@ -6858,6 +6867,28 @@ declare module "vue-data-ui" {
             td: ChartTableCell;
         };
     };
+
+    export type VueUiParallelCoordinatePlotEventDatapoint = {
+        color: string;
+        datapoints: Array<{
+            axisIndex: number;
+            comment: string;
+            datapointIndex: number;
+            name: string;
+            seriesIndex: number;
+            seriesName: string;
+            value: number;
+            x: number;
+            y: number;
+        }>;
+        id: string;
+        name: string;
+        pathLength: number;
+        shape: Shape;
+        smoothPath: string;
+        straightPath: string;
+        values: number[];
+    }
 
     export type VueUiParallelCoordinatePlotDatapointSelection = {
         id: string;
