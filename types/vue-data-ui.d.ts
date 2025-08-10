@@ -3376,6 +3376,7 @@ declare module "vue-data-ui" {
     export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
     export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
     export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
+    export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>
 
     export type VueUiDonutConfig = {
         debug?: boolean;
