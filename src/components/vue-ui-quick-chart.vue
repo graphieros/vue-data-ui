@@ -134,7 +134,10 @@ const showUserOptionsOnChartHover = computed(() => FINAL_CONFIG.value.showUserOp
 const keepUserOptionState = computed(() => FINAL_CONFIG.value.keepUserOptionsStateOnChartLeave);
 const userOptionsVisible = ref(!FINAL_CONFIG.value.showUserOptionsOnChartHover);
 
+const userHovers = ref(false);
+
 function setUserOptionsVisibility(state = false) {
+        userHovers.value = state;
         if (!showUserOptionsOnChartHover.value) return;
         userOptionsVisible.value = state;
     }
@@ -1171,7 +1174,13 @@ const timeLabels = computed(() => {
         start: slicer.value.start,
         end: slicer.value.end
     })
-})
+});
+
+const modulo = computed(() => {
+    const m = FINAL_CONFIG.value.xyPeriodsModulo;
+    if (!FINAL_CONFIG.value.xyPeriods.length) return m;
+    return Math.min(m, [...new Set(timeLabels.value.map(t => t.text))].length);
+});
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -1584,7 +1593,7 @@ defineExpose({
                 <g class="periodLabels" v-if="FINAL_CONFIG.xyShowScale && FINAL_CONFIG.xyPeriods.length">
                     <template v-for="(period, i) in timeLabels.map(l => l.text)">
                         <line
-                            v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))"
+                            v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0)) || (slicer.end - slicer.start <= modulo))"
                             data-cy="period-tick"
                             :x1="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
                             :x2="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
@@ -1597,7 +1606,7 @@ defineExpose({
                     </template>
                     <g ref="timeLabelsEls">
                         <template v-for="(period, i) in timeLabels.map(l => l.text)">
-                            <g v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))">
+                            <g v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0)) || (slicer.end - slicer.start <= modulo))">
                             <text
                                 class="vue-data-ui-time-label"
                                 v-if="!String(period).includes('\n')"
@@ -1721,7 +1730,7 @@ defineExpose({
                         </text>
                     </template>
                 </g>
-                <g class="tooltip-traps">
+                <g class="tooltip-traps" v-if="userHovers">
                     <rect
                         data-cy="tooltip-trap-line"
                         v-for="(_, i) in line.extremes.maxSeries"
@@ -1838,7 +1847,7 @@ defineExpose({
                     />
                     <g ref="timeLabelsEls">
                         <template v-for="(period, i) in timeLabels.map(l => l.text)">
-                            <g v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))">
+                            <g v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0)) || (slicer.end - slicer.start <= modulo))">
                             <text
                                 class="vue-data-ui-time-label"
                                 v-if="!String(period).includes('\n')"
@@ -1929,7 +1938,7 @@ defineExpose({
                         </text>
                     </template>
                 </g>
-                <g class="tooltip-traps">
+                <g class="tooltip-traps" v-if="userHovers">
                     <rect 
                         data-cy="tooltip-trap-bar"
                         v-for="(_, i) in bar.extremes.maxSeries"
