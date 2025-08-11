@@ -268,6 +268,7 @@ describe("treeShake", () => {
                     bool0: false
                 },
             },
+            key4: {}
         };
 
         const userConfig0 = {};
@@ -289,6 +290,9 @@ describe("treeShake", () => {
                     bool0: false
                 },
             },
+            key4: {
+                A: '1',
+            }
         };
 
         expect(treeShake({ defaultConfig, userConfig: userConfig0 })).toStrictEqual(
@@ -305,6 +309,7 @@ describe("treeShake", () => {
                         bool0: false
                     },
                 },
+                key4: {}
             }
         );
 
@@ -322,6 +327,7 @@ describe("treeShake", () => {
                         bool0: false
                     },
                 },
+                key4: {}
             }
         );
 
@@ -339,6 +345,7 @@ describe("treeShake", () => {
                         bool0: false
                     },
                 },
+                key4: {}
             }
         );
 
@@ -356,6 +363,9 @@ describe("treeShake", () => {
                         bool0: false
                     },
                 },
+                key4: {
+                    A: '1',
+                }
             }
         );
     });

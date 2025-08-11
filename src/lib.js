@@ -161,6 +161,17 @@ export function treeShake({ defaultConfig, userConfig }) {
             }
         }
     });
+
+    // Allow override of default empty objects in config
+    Object.keys(userConfig).forEach(key => {
+        if (!Object.hasOwn(finalConfig, key)) {
+            const val = userConfig[key];
+            finalConfig[key] = (val && typeof val === 'object' && !Array.isArray(val))
+                ? { ...val }
+                : val;
+        }
+    });
+    
     return finalConfig;
 }
 
