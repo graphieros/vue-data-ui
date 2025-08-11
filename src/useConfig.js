@@ -4192,8 +4192,8 @@ export function useConfig() {
             fontFamily: 'inherit',
             chart: {
                 backgroundColor: COLOR_WHITE,
-                width: 1000,
-                height: 600,
+                width: 1000, // v3
+                height: 600, // v3
                 color: COLOR_BLACK,
                 padding: PADDING([12, 12, 12, 12]), // v3 update
                 title: TITLE,

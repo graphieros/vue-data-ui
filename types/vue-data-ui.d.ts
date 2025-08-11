@@ -6646,6 +6646,8 @@ declare module "vue-data-ui" {
             fontFamily?: string;
             chart?: {
                 backgroundColor?: string;
+                width?: number; // v3
+                height?: number; // v3
                 color?: string;
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
@@ -6677,7 +6679,7 @@ declare module "vue-data-ui" {
                 title?: ChartTitle;
                 nodes?: {
                     gap?: number;
-                    minHeight?: number;
+                    // minHeight?: number; // v3 deprecated
                     width?: number;
                     labels?: {
                         fontSize?: number;
@@ -6694,7 +6696,7 @@ declare module "vue-data-ui" {
                     strokeWidth?: number;
                 };
                 links?: {
-                    width?: number;
+                    // width?: number; // v3 deprecated
                     opacity?: number;
                     stroke?: string;
                     strokeWidth?: number;
