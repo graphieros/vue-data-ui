@@ -5,14 +5,20 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref([
-    ['2017', 5, 366538, 382762],
-    ['2018', 4, 356873, 376705],
-    ['2019', 3, 351707, 368670],
-    ['2020', 2, 341042, 356678],
-    ['2021', 1, 343026, 357351],
-    ['2022', 0, 330929, 345538] 
-]);
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            ['2017', 5, 366538, 382762],
+            ['2018', 4, 356873, 376705],
+            ['2019', 3, 351707, 368670],
+            ['2020', 2, 341042, 356678],
+            ['2021', 1, 343026, 357351],
+            ['2022', 0, 330929, 345538] 
+        ];
+    }, 2000)
+})
 
 const alternateDataset = ref([
     ['2017', 5, 10, 9],
@@ -44,6 +50,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
@@ -60,14 +68,14 @@ const model = ref([
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.height', def: 200, type: 'number', min: 200, max: 1000},
     { key: 'style.width', def: 500, type: 'number', min: 200, max: 1000},
-    { key: 'style.layout.padding.top', def: 36, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.top', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.layout.padding.right', def: 24, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.bottom', def: 48, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.bottom', def: 24, type: 'number', min: 0, max: 100},
     { key: 'style.layout.padding.left', def: 24, type: 'number', min: 0, max: 100},
     { key: 'style.layout.grid.show', def: true, type: 'checkbox'},
     { key: 'style.layout.grid.stroke', def: '#e1e5e8', type: 'color'},
@@ -146,7 +154,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)
@@ -167,6 +175,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex });
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex });
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex });
+                },
+            },
             style: {
                 ...c.style,
                 layout: {

@@ -2789,7 +2789,14 @@ export function useConfig() {
     }
 
     const vue_ui_age_pyramid = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -2798,7 +2805,7 @@ export function useConfig() {
             height: 500,
             width: 500,
             layout: {
-                padding: PADDING([36, 12, 48, 12]),
+                padding: PADDING([12, 12, 36, 12]),
                 grid: {
                     show: true,
                     stroke: COLOR_GREY_LIGHT,
@@ -2820,7 +2827,9 @@ export function useConfig() {
                         bold: false,
                         scale: 1000,
                         translation: 'in thousands',
-                        formatter: null
+                        formatter: null,
+                        rotation: 0, // v3
+                        autoRotate: true // v3
                     },
                     yAxis: {
                         show: true,

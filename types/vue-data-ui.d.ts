@@ -2265,7 +2265,14 @@ declare module "vue-data-ui" {
     export type VueUiAgePyramidDataset = Array<Array<string | number>>;
 
     export type VueUiAgePyramidConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiAgePyramidEvent; // v3
+            datapointLeave?: VueUiAgePyramidEvent; // v3
+            datapointClick?: VueUiAgePyramidEvent; // v3
+        };
         theme?: Theme;
         style?: {
             backgroundColor?: string;
@@ -2297,6 +2304,8 @@ declare module "vue-data-ui" {
                         scale?: number;
                         translation?: string;
                         formatter?: Formatter;
+                        rotation?: number;
+                        autoRotate?: boolean;
                     };
                     yAxis?: {
                         show?: boolean;
@@ -3376,8 +3385,9 @@ declare module "vue-data-ui" {
     export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
     export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
     export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
-    export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>
-    export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>
+    export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
+    export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
+    export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
 
     export type VueUiDonutConfig = {
         debug?: boolean;
