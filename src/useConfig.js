@@ -4269,7 +4269,7 @@ export function useConfig() {
         },
         responsiveProportionalSizing: true,
         theme: '',
-        useCssAnimation: true,
+        useCssAnimation: false, // v3
         customPalette: [],
         userOptions: USER_OPTIONS({
             tooltip: true,
@@ -5416,11 +5416,18 @@ export function useConfig() {
     }
 
     const vue_ui_history_plot = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,
@@ -5453,7 +5460,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 height: 500,
                 width: 600,
-                padding: PADDING([12, 24, 48, 48]),
+                padding: PADDING([12, 12, 12, 12]),
                 grid: {
                     xAxis: {
                         show: true,
@@ -5489,6 +5496,7 @@ export function useConfig() {
                             rounding: 1,
                             offsetY: 0,
                             rotation: 0,
+                            autoRotate: true, // v3
                             formatter: null,
                             prefix: '',
                             suffix: ''

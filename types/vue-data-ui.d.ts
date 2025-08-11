@@ -3388,6 +3388,7 @@ declare module "vue-data-ui" {
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
     export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
     export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
+    export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
 
     export type VueUiDonutConfig = {
         debug?: boolean;
@@ -7594,7 +7595,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiHistoryPlotConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiHistoryPlotEvent; // v3
+            datapointLeave?: VueUiHistoryPlotEvent; // v3
+            datapointClick?: VueUiHistoryPlotEvent; // v3
+        }
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -7657,6 +7665,7 @@ declare module "vue-data-ui" {
                             rounding?: number;
                             offsetY?: number;
                             rotation?: number;
+                            autoRotate?: boolean; // v3
                             formatter?: Formatter;
                             prefix?: string;
                             suffix?: string;
@@ -7757,6 +7766,11 @@ declare module "vue-data-ui" {
         x: number;
         y: number;
     };
+
+    export type VueUiHistoryPlotDatapointEvent = VueUiHistoryPlotDatapoint & {
+        plotIndex: number;
+        seriesIndex: number;
+    }
 
     export type VueUiHistoryPlotDatpointSeries = VueUiHistoryPlotDatasetItem & {
         seriesIndex: number;

@@ -80,7 +80,7 @@ const model = ref([
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
     
-    { key: 'useCssAnimation', def: true, type: 'checkbox' },
+    { key: 'useCssAnimation', def: false, type: 'checkbox' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },

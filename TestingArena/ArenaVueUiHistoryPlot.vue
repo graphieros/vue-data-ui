@@ -8,28 +8,38 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild } = useArena()
 
-const dataset = ref([
-    {
-        name: 'Series 1',
-        values: [
-            { x: 2, y: 0, label: 'T1 with some sort\nof long name'},
-            { x: 18, y: 0.2, label: 'T2'},
-            { x: 21, y: 0.8, label: 'T3'},
-            { x: 19, y: 1.2, label: 'T4'},
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: 'Series 1',
+                values: [
+                    { x: 2, y: 21, label: 'F'},
+                    { x: 3, y: 13, label: 'E'},
+                    { x: 5, y: 8, label: 'D'},
+                    { x: 8, y: 5, label: 'C'},
+                    { x: 13, y: 3, label: 'B'},
+                    { x: 21, y: 2, label: 'A'},
+                ]
+            },
+            {
+                name: 'Series 2',
+                values: [
+                    { x: 22, y: 2, label: 'T1'},
+                    { x: 44, y: 4, label: 'T2'},
+                    { x: 65, y: 3, label: 'T3'},
+                    { x: 12, y: 2.5, label: 'T4'},
+                ],
+            },
         ]
-    },
-    {
-        name: 'Series 2',
-        values: [
-            { x: 22, y: 2, label: 'T1'},
-            { x: 44, y: 4, label: 'T2'},
-            { x: 65, y: 3, label: 'T3'},
-            { x: 12, y: 2.5, label: 'T4'},
-        ],
-    },
-]);
+    }, 2000)
+})
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox' },
+    { key: 'loading', def: false, type: 'checkbox' },
     { key: 'responsive', def: false, type: 'checkbox' },
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox' },
 
@@ -41,9 +51,9 @@ const model = ref([
     { key: 'style.chart.width', def: 600, type: 'range', min: 300, max: 1000 },
 
     { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.bottom', def: 48, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.left', def: 48, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.right', def:12, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.bottom', def:12, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.left', def:12, type: 'number', min: 0, max: 100 },
 
     { key: 'style.chart.grid.xAxis.show', def: true, type: 'checkbox' },
     { key: 'style.chart.grid.xAxis.stroke', def: '#E1E5E8', type: 'color'},
@@ -77,7 +87,7 @@ const model = ref([
     { key: 'style.chart.axes.x.name.text', def: 'X AXIS', type: 'text' },
     { key: 'style.chart.axes.x.name.fontSize', def: 16, type: 'number', min: 8, max: 42},
     { key: 'style.chart.axes.x.name.offsetX', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.axes.x.name.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.axes.x.name.offsetY', def:0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.axes.x.name.bold', def: false, type: 'checkbox' },
 
     { key: 'style.chart.axes.y.scaleMin', def: null, type: 'number', min: 0, max: 1000},
@@ -137,12 +147,23 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6]);
+const currentTheme = ref(themeOptions.value[0]);
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            }
+        },
         theme: currentTheme.value,
         // style: {
         //     ...c.style,
