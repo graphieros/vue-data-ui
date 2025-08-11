@@ -4167,6 +4167,14 @@ export function useConfig() {
     }
 
     const vue_ui_flow = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         userOptions: USER_OPTIONS({
@@ -4184,8 +4192,10 @@ export function useConfig() {
             fontFamily: 'inherit',
             chart: {
                 backgroundColor: COLOR_WHITE,
+                width: 1000,
+                height: 600,
                 color: COLOR_BLACK,
-                padding: PADDING([12, 12, 12, 12]),
+                padding: PADDING([12, 12, 12, 12]), // v3 update
                 title: TITLE,
                 tooltip: {
                     ...TOOLTIP,
@@ -4202,9 +4212,10 @@ export function useConfig() {
                 },
                 nodes: {
                     gap: 10,
-                    minHeight: 20,
+                    // minHeight: 20, // v3 deprecated
                     width: 40,
                     labels: {
+                        show: true, // v3
                         fontSize: FONT._14,
                         abbreviation: {
                             use: true,
@@ -4219,7 +4230,7 @@ export function useConfig() {
                     strokeWidth: 1
                 },
                 links: {
-                    width: 200,
+                    // width: 200, // v3 deprecated
                     opacity: 0.8,
                     stroke: COLOR_WHITE,
                     strokeWidth: 1

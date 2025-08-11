@@ -3377,6 +3377,7 @@ declare module "vue-data-ui" {
     export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
     export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>
+    export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>
 
     export type VueUiDonutConfig = {
         debug?: boolean;
@@ -6602,6 +6603,7 @@ declare module "vue-data-ui" {
         inflow?: number;
         outflow?: number;
         percentOfTotal: number;
+        name?: string;
     }
 
     export type VueUiFlowFormattedDataset = {
@@ -6627,6 +6629,14 @@ declare module "vue-data-ui" {
     }
 
     export type VueUiFlowConfig = {
+        debug?: boolean;
+        loading?: boolean;
+        responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiFlowEvent;
+            datapointLeave?: VueUiFlowEvent;
+            datapointClick?: VueUiFlowEvent;
+        };
         theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;

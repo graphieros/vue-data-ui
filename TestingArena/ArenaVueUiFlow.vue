@@ -8,132 +8,140 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref([
-  // root
-  ['Config', 'theme', 1],
-  ['Config', 'customPalette', 1],
-  ['Config', 'userOptions', 1],
-  ['Config', 'nodeCategories', 1],
-  ['Config', 'nodeCategoryColors', 1],
-  ['Config', 'style', 1],
-  ['Config', 'table', 1],
+const dataset = ref(undefined);
 
-  // userOptions
-  ['userOptions', 'show', 1],
-  ['userOptions', 'showOnChartHover', 1],
-  ['userOptions', 'position', 1],
-  ['userOptions', 'buttons', 1],
-  ['buttons', 'pdf', 1],
-  ['buttons', 'csv', 1],
-  ['buttons', 'img', 1],
-  ['buttons', 'table', 1],
-  ['buttons', 'fullscreen', 1],
-  ['buttons', 'annotator', 1],
-  ['buttons', 'tooltip', 1],
-  ['userOptions', 'buttonTitles', 1],
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            // root
+            ['Config', 'theme', 1],
+            ['Config', 'customPalette', 1],
+            ['Config', 'userOptions', 1],
+            ['Config', 'nodeCategories', 1],
+            ['Config', 'nodeCategoryColors', 1],
+            ['Config', 'style', 1],
+            ['Config', 'table', 1],
 
-  // style
-  ['style', 'fontFamily', 1],
-  ['style', 'chart', 1],
+            // userOptions
+            ['userOptions', 'show', 1],
+            ['userOptions', 'showOnChartHover', 1],
+            ['userOptions', 'position', 1],
+            ['userOptions', 'buttons', 1],
+            ['buttons', 'pdf', 1],
+            ['buttons', 'csv', 1],
+            ['buttons', 'img', 1],
+            ['buttons', 'table', 1],
+            ['buttons', 'fullscreen', 1],
+            ['buttons', 'annotator', 1],
+            ['buttons', 'tooltip', 1],
+            ['userOptions', 'buttonTitles', 1],
 
-  // chart
-  ['chart', 'backgroundColor', 1],
-  ['chart', 'color', 1],
-  ['chart', 'padding', 1],
-  ['chart', 'title', 1],
-  ['chart', 'tooltip', 1],
-  ['chart', 'legend', 1],
-  ['chart', 'nodes', 1],
-  ['chart', 'links', 1],
+            // style
+            ['style', 'fontFamily', 1],
+            ['style', 'chart', 1],
 
-  // padding
-  ['padding', 'top', 1],
-  ['padding', 'right', 1],
-  ['padding', 'bottom', 1],
-  ['padding', 'left', 1],
+            // chart
+            ['chart', 'backgroundColor', 1],
+            ['chart', 'color', 1],
+            ['chart', 'padding', 1],
+            ['chart', 'title', 1],
+            ['chart', 'tooltip', 1],
+            ['chart', 'legend', 1],
+            ['chart', 'nodes', 1],
+            ['chart', 'links', 1],
 
-  // title
-  ['title', 'text', 1],
-  ['title', 'subtitle', 1],
-  ['subtitle', 'text', 1],
-  ['title', 'cy', 1],
+            // padding
+            ['padding', 'top', 1],
+            ['padding', 'right', 1],
+            ['padding', 'bottom', 1],
+            ['padding', 'left', 1],
 
-  // tooltip
-  ['tooltip', 'show', 1],
-  ['tooltip', 'fontSize', 1],
-  ['tooltip', 'backgroundColor', 1],
-  ['tooltip', 'color', 1],
-  ['tooltip', 'borderColor', 1],
-  ['tooltip', 'borderWidth', 1],
-  ['tooltip', 'borderRadius', 1],
-  ['tooltip', 'backgroundOpacity', 1],
-  ['tooltip', 'position', 1],
-  ['tooltip', 'offsetY', 1],
-  ['tooltip', 'showPercentage', 1],
-  ['tooltip', 'roundingPercentage', 1],
-  ['tooltip', 'translations', 1],
-  ['translations', 'from', 1],
-  ['translations', 'to', 1],
-  ['translations', 'percentOfTotal', 1],
+            // title
+            ['title', 'text', 1],
+            ['title', 'subtitle', 1],
+            ['subtitle', 'text', 1],
+            ['title', 'cy', 1],
 
-  // legend
-  ['legend', 'show', 1],
-  ['legend', 'backgroundColor', 1],
-  ['legend', 'color', 1],
-  ['legend', 'fontSize', 1],
-  ['legend', 'paddingBottom', 1],
-  ['legend', 'paddingTop', 1],
-  ['legend', 'bold', 1],
-  ['legend', 'cy', 1],
+            // tooltip
+            ['tooltip', 'show', 1],
+            ['tooltip', 'fontSize', 1],
+            ['tooltip', 'backgroundColor', 1],
+            ['tooltip', 'color', 1],
+            ['tooltip', 'borderColor', 1],
+            ['tooltip', 'borderWidth', 1],
+            ['tooltip', 'borderRadius', 1],
+            ['tooltip', 'backgroundOpacity', 1],
+            ['tooltip', 'position', 1],
+            ['tooltip', 'offsetY', 1],
+            ['tooltip', 'showPercentage', 1],
+            ['tooltip', 'roundingPercentage', 1],
+            ['tooltip', 'translations', 1],
+            ['translations', 'from', 1],
+            ['translations', 'to', 1],
+            ['translations', 'percentOfTotal', 1],
 
-  // nodes
-  ['nodes', 'gap', 1],
-  ['nodes', 'minHeight', 1],
-  ['nodes', 'width', 1],
-  ['nodes', 'labels', 1],
-  ['nodes', 'stroke', 1],
-  ['nodes', 'strokeWidth', 1],
+            // legend
+            ['legend', 'show', 1],
+            ['legend', 'backgroundColor', 1],
+            ['legend', 'color', 1],
+            ['legend', 'fontSize', 1],
+            ['legend', 'paddingBottom', 1],
+            ['legend', 'paddingTop', 1],
+            ['legend', 'bold', 1],
+            ['legend', 'cy', 1],
 
-  // labels
-  ['labels', 'fontSize', 1],
-  ['labels', 'abbreviation', 1],
-  ['labels', 'prefix', 1],
-  ['labels', 'suffix', 1],
-  ['labels', 'rounding', 1],
-  ['labels', 'formatter', 1],
+            // nodes
+            ['nodes', 'gap', 1],
+            ['nodes', 'minHeight', 1],
+            ['nodes', 'width', 1],
+            ['nodes', 'labels', 1],
+            ['nodes', 'stroke', 1],
+            ['nodes', 'strokeWidth', 1],
 
-  // abbreviation
-  ['abbreviation', 'use', 1],
-  ['abbreviation', 'length', 1],
+            // labels
+            ['labels', 'fontSize', 1],
+            ['labels', 'abbreviation', 1],
+            ['labels', 'prefix', 1],
+            ['labels', 'suffix', 1],
+            ['labels', 'rounding', 1],
+            ['labels', 'formatter', 1],
 
-  // links
-  ['links', 'width', 1],
-  ['links', 'opacity', 1],
-  ['links', 'stroke', 1],
-  ['links', 'strokeWidth', 1],
+            // abbreviation
+            ['abbreviation', 'use', 1],
+            ['abbreviation', 'length', 1],
 
-  // table
-  ['table', 'show', 1],
-  ['table', 'responsiveBreakpoint', 1],
-  ['table', 'columnNames', 1],
-  ['columnNames', 'source', 1],
-  ['columnNames', 'target', 1],
-  ['columnNames', 'value', 1],
-  ['table', 'th', 1],
-  ['table', 'td', 1],
+            // links
+            ['links', 'width', 1],
+            ['links', 'opacity', 1],
+            ['links', 'stroke', 1],
+            ['links', 'strokeWidth', 1],
 
-  // th
-  ['th', 'backgroundColor', 1],
-  ['th', 'color', 1],
-  ['th', 'outline', 1],
+            // table
+            ['table', 'show', 1],
+            ['table', 'responsiveBreakpoint', 1],
+            ['table', 'columnNames', 1],
+            ['columnNames', 'source', 1],
+            ['columnNames', 'target', 1],
+            ['columnNames', 'value', 1],
+            ['table', 'th', 1],
+            ['table', 'td', 1],
 
-  // td
-  ['td', 'backgroundColor', 1],
-  ['td', 'color', 1],
-  ['td', 'outline', 1],
-]);
+            // th
+            ['th', 'backgroundColor', 1],
+            ['th', 'color', 1],
+            ['th', 'outline', 1],
+
+            // td
+            ['td', 'backgroundColor', 1],
+            ['td', 'color', 1],
+            ['td', 'outline', 1],
+            ]
+    }, 2000)
+})
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox' },
+    { key: 'loading', def: false, type: 'checkbox' },
     { key: 'userOptions.show', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
@@ -155,12 +163,12 @@ const model = ref([
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
 
     { key: 'style.fontFamily', def: 'inherit', type: 'text' },
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color' },
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.padding.left', def: 12, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.padding.right', def: 12, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.chart.padding.bottom', def: 12, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.title.text', def: 'Lorem ipsum dolor', type: 'text' },
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 42 },
@@ -169,10 +177,10 @@ const model = ref([
     { key: 'style.chart.title.subtitle.color', def: '#CCCCCC', type: 'color' },
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 42 },
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox' },
-    { key: 'style.chart.nodes.gap', def: 10, type: 'number', min: 0, max: 40 },
+    { key: 'style.chart.nodes.gap', def: 0, type: 'number', min: 0, max: 40 },
     { key: 'style.chart.nodes.minHeight', def: 20, type: 'number', min: 5, max: 100 },
     { key: 'style.chart.nodes.width', def: 40, type: 'number', min: 10, max: 100 },
-    { key: 'style.chart.nodes.labels.fontSize', def: 14, type: 'number', min: 8, max: 42 },
+    { key: 'style.chart.nodes.labels.fontSize', def: 8, type: 'number', min: 8, max: 42 },
     { key: 'style.chart.nodes.labels.abbreviation.use', def: true, type: 'checkbox' },
     { key: 'style.chart.nodes.labels.abbreviation.length', def: 3, type: 'number', min: 1, max: 12 },
     { key: 'style.chart.nodes.stroke', def: '#FFFFFF', type: 'color' },
@@ -193,7 +201,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -201,6 +209,17 @@ const config = computed(() => {
     return {
         theme: currentTheme.value,
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            },
+        },
         nodeCategories: {
   // top‐level
   theme:                   'config',
@@ -392,6 +411,13 @@ onMounted(async () => {
         <select v-model="currentTheme" @change="step += 1">
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
+    </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiFlow :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }" :key="`local_${step}`" ref="local" />
     </div>
 
     <Box comp="VueUiFlow" :dataset="dataset">
