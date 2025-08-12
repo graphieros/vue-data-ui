@@ -5742,9 +5742,16 @@ export function useConfig() {
     }
 
     const vue_ui_ridgeline = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        responsive: false,
         useCssAnimation: true,
         userOptions: USER_OPTIONS({
             tooltip: false,
@@ -5869,6 +5876,7 @@ export function useConfig() {
                         prefix: '',
                         suffix: '',
                         rotation: 0,
+                        autoRotate: true,
                         values: [],
                         datetimeFormatter: AXIS_DATE_FORMATTER,
                         color: COLOR_BLACK,

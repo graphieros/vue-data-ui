@@ -3389,6 +3389,7 @@ declare module "vue-data-ui" {
     export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
     export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
     export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
+    export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
 
     export type VueUiDonutConfig = {
         debug?: boolean;
@@ -8032,10 +8033,31 @@ declare module "vue-data-ui" {
         datapoints: VueUiRidgelineDatapoint[]
     }
 
+    export type VueUiRidgelineDatapointEventUnit = {
+        color: string;
+        name: string;
+        values: number[];
+        id: string;
+    };
+
+    export type VueUiRidgelineDatapointEventEntry = {
+        dp: VueUiRidgelineDatapointEventUnit;
+        selected: number;
+    };      
+
+    export type VueUiRidgelineDatapointEvent = VueUiRidgelineDatapointEventEntry[][];
+
     export type VueUiRidgelineConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiRidgelineEvent; // v3
+            datapointLeave?: VueUiRidgelineEvent; // v3
+            datapointClick?: VueUiRidgelineEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
-        responsive?: boolean;
         userOptions?: ChartUserOptions;
         useCssAnimation?: boolean;
         table?: {
@@ -8120,6 +8142,7 @@ declare module "vue-data-ui" {
                         prefix?: string;
                         suffix?: string;
                         rotation?: number;
+                        autoRotate?: boolean; // v3
                         values?: Array<number | string>;
                         datetimeFormatter?: AxisDateFormatter;
                         color?: string;
