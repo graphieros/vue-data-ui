@@ -6,116 +6,116 @@ import { throttle } from '../canvas-lib';
 import { XMLNS, adaptColorToBackground, createSmoothPath, createStraightPath, createUid } from '../lib';
 
 const props = defineProps({
-    background: {
-        type: String,
-        default: '#FFFFFF'
+    background: { 
+        type: String, 
+        default: '#FFFFFF' 
     },
-    borderColor: {
-        type: String,
-        default: '#FFFFFF'
+    borderColor: { 
+        type: String, 
+        default: '#FFFFFF' 
     },
-    fontSize: {
-        type: Number,
-        default: 14
+    fontSize: { 
+        type: Number, 
+        default: 14 
     },
-    labelLeft: {
-        type: [String, Number],
-        default: ''
+    labelLeft: { 
+        type: [String, Number], 
+        default: '' 
     },
-    labelRight: {
-        type: [String, Number],
-        default: ''
+    labelRight: { 
+        type: [String, Number], 
+        default: '' 
     },
-    textColor: {
-        type: String,
-        default: '#1A1A1A'
+    textColor: { 
+        type: String, 
+        default: '#1A1A1A' 
     },
-    inputColor: {
-        type: String,
-        default: '#1A1A1A'
+    inputColor: { 
+        type: String, 
+        default: '#1A1A1A' 
     },
-    max: {
-        type: Number,
-        default: 0
+    max: { 
+        type: Number, 
+        default: 0 
     },
-    min: {
-        type: Number,
-        default: 0
+    min: { 
+        type: Number, 
+        default: 0 
     },
-    selectColor: {
-        type: String,
-        default: '#4A4A4A'
+    selectColor: { 
+        type: String, 
+        default: '#4A4A4A' 
     },
-    useResetSlot: {
-        type: Boolean,
-        default: false
+    useResetSlot: { 
+        type: Boolean, 
+        default: false 
     },
-    valueStart: {
-        type: [Number, String],
-        default: 0
+    valueStart: { 
+        type: [Number, String], 
+        default: 0 
     },
-    valueEnd: {
-        type: [Number, String],
-        default: 0
+    valueEnd: { 
+        type: [Number, String], 
+        default: 0 
     },
-    minimap: {
-        type: Array,
-        default: []
+    minimap: { 
+        type: Array, 
+        default: [] 
     },
-    smoothMinimap: {
-        type: Boolean,
-        default: false
+    smoothMinimap: { 
+        type: Boolean, 
+        default: false 
     },
-    minimapSelectedColor: {
-        type: String,
-        default: '#1f77b4'
+    minimapSelectedColor: { 
+        type: String, 
+        default: '#1f77b4' 
     },
-    minimapSelectionRadius: {
-        type: Number,
-        default: 12
+    minimapSelectionRadius: { 
+        type: Number, 
+        default: 12 
     },
-    minimapLineColor: {
-        type: String,
-        default: '#2D353C'
+    minimapLineColor: { 
+        type: String, 
+        default: '#2D353C' 
     },
-    minimapSelectedColorOpacity: {
-        type: Number,
-        default: 0.2
+    minimapSelectedColorOpacity: { 
+        type: Number, 
+        default: 0.2 
     },
-    minimapSelectedIndex: {
-        type: Number,
-        default: null
+    minimapSelectedIndex: { 
+        type: Number, 
+        default: null 
     },
-    minimapIndicatorColor: {
-        type: String,
-        default: '#2D353C'
+    minimapIndicatorColor: { 
+        type: String, 
+        default: '#2D353C' 
     },
-    refreshStartPoint: {
-        type: Number,
-        default: 0
+    refreshStartPoint: { 
+        type: Number, 
+        default: 0 
     },
-    refreshEndPoint: {
-        type: Number,
-        default: null
+    refreshEndPoint: { 
+        type: Number, 
+        default: null 
     },
-    enableRangeHandles: {
-        type: Boolean,
-        default: false
+    enableRangeHandles: { 
+        type: Boolean, 
+        default: false 
     },
-    enableSelectionDrag: {
-        type: Boolean,
-        default: true
+    enableSelectionDrag: { 
+        type: Boolean, 
+        default: true 
     },
-    verticalHandles: {
-        type: Boolean,
-        default: false,
+    verticalHandles: { 
+        type: Boolean, 
+        default: false 
     },
-    timeLabels: {
-        type: Array,
+    timeLabels: { 
+        type: Array 
     },
-    isPreview: {
-        type: Boolean,
-        default: false
+    isPreview: { 
+        type: Boolean, 
+        default: false 
     }
 });
 
@@ -128,31 +128,28 @@ const uid = ref(createUid());
 const wrapperWidth = ref(0);
 
 const start = computed({
-    get() {
-        return startValue.value
-    },
+    get() { return startValue.value },
     set(raw) {
-        const v = Math.min(raw, endValue.value - 1)
-        startValue.value = v
-        if (rangeStart.value) rangeStart.value.value = String(v)
-        emit('futureStart', v)
+        const v = Math.min(raw, endValue.value - 1);
+        startValue.value = v;
+        if (rangeStart.value) rangeStart.value.value = String(v);
+        emit('futureStart', v);
     }
-})
+});
 
 const end = computed({
-    get() {
-        return endValue.value
-    },
+    get() { return endValue.value },
     set(raw) {
-        const v = Math.max(raw, startValue.value + 1)
-        endValue.value = v
-        if (rangeEnd.value) rangeEnd.value.value = String(v)
-        emit('futureEnd', v)
+        const v = Math.max(raw, startValue.value + 1);
+        endValue.value = v;
+        if (rangeEnd.value) rangeEnd.value.value = String(v);
+        emit('futureEnd', v);
     }
-})
+});
 
 onMounted(() => {
     const updateWidth = () => {
+        if (!zoomWrapper.value) return;
         wrapperWidth.value = zoomWrapper.value.getBoundingClientRect().width;
     };
     updateWidth();
@@ -183,7 +180,7 @@ function commitImmediately() {
 
 const endpoint = computed(() => {
     return props.refreshEndPoint === null ? props.max : props.refreshEndPoint;
-})
+});
 
 const emit = defineEmits(['futureStart','futureEnd', 'update:start', 'update:end', 'reset', 'trapMouse']);
 
@@ -196,7 +193,7 @@ const highlightStyle = computed(() => {
         ? `calc(${centerPercent}% - ${mergeTooltip.value.width}px)`
         : overflowsLeft.value 
         ? `calc(${centerPercent}%)`
-        : `calc(${centerPercent}% - ${mergeTooltip.value.width / 2}px)`
+        : `calc(${centerPercent}% - ${mergeTooltip.value.width / 2}px)`;
 
     return {
         left: `${startPercent}%`,
@@ -212,13 +209,13 @@ const highlightStyle = computed(() => {
 
 const overflowsLeft = computed(() => {
     if (!zoomWrapper.value) return false;
-    return zoomWrapper.value.getBoundingClientRect().width * ((startValue.value - props.min) / (props.max - props.min)) - tooltipLeftWidth.value / 2 < 0
+    return zoomWrapper.value.getBoundingClientRect().width * ((startValue.value - props.min) / (props.max - props.min)) - tooltipLeftWidth.value / 2 < 0;
 });
 
 const overflowsRight = computed(() => {
     if (!zoomWrapper.value) return false;
     return zoomWrapper.value.getBoundingClientRect().width * ((endValue.value - props.min) / (props.max - props.min)) + tooltipRightWidth.value / 2 > zoomWrapper.value.getBoundingClientRect().width;
-})
+});
 
 const slicerColor = computed(() => props.inputColor);
 const backgroundColor = computed(() => props.background);
@@ -228,10 +225,10 @@ const borderColor = computed(() => props.borderColor);
 const availableTraps = computed(() => {
     let arr = [];
     for (let i = 0; i < props.minimap.length; i += 1) {
-        arr.push(i)
+        arr.push(i);
     }
     return arr;
-})
+});
 
 function reset() {
     emit('reset');
@@ -240,17 +237,7 @@ function reset() {
 const previewIndices = ref({
     start: startValue.value,
     end: endValue.value
-})
-
-function onStartInput(event) {
-    const v = Number(event.target.value);
-    previewIndices.value.start = v;
-}
-
-function onEndInput(event) {
-    const v = Number(event.target.value);
-    previewIndices.value.end = v;
-}
+});
 
 watch(
     () => props.min,
@@ -281,7 +268,7 @@ const minimapWrapper = ref(null);
 const svgMinimap = ref({
     width: 1,
     height: 1
-})
+});
 
 const resizeObserver = ref(null);
 
@@ -290,13 +277,13 @@ onMounted(() => {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
                 chart: minimapWrapper.value,
-            })
+            });
             svgMinimap.value.width = width;
             svgMinimap.value.height = height - 47;
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(minimapWrapper.value)
+        resizeObserver.value.observe(minimapWrapper.value);
     }
 });
 
@@ -305,8 +292,8 @@ onBeforeUnmount(() => {
 });
 
 const unitWidthX = computed(() => {
-    if(!props.minimap.length) return 0
-    return svgMinimap.value.width / props.minimap.length
+    if(!props.minimap.length) return 0;
+    return svgMinimap.value.width / props.minimap.length;
 });
 
 const minimapLine = computed(() => {
@@ -319,10 +306,10 @@ const minimapLine = computed(() => {
         return {
             x: svgMinimap.value.width / (props.minimap.length) * (i) + (unitWidthX.value / 2),
             y: svgMinimap.value.height - (normalizedVal / diff * (svgMinimap.value.height * 0.9))
-        }
+        };
     });
     const fullSet = props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points);
-    const sliced = [...points].slice(props.valueStart, props.valueEnd)
+    const sliced = [...points].slice(props.valueStart, props.valueEnd);
     const selectionSet = props.smoothMinimap ? createSmoothPath(sliced) : createStraightPath(sliced);
     return {
         fullSet,
@@ -330,30 +317,30 @@ const minimapLine = computed(() => {
         sliced,
         firstPlot: points[props.valueStart],
         lastPlot: points[props.valueEnd - 1]
-    }
+    };
 });
 
 const selectionRectCoordinates = computed(() => {
     return {
         x: unitWidthX.value * startValue.value + (unitWidthX.value / 2),
         width: svgMinimap.value.width * ((endValue.value - startValue.value) / props.max) - unitWidthX.value
-    }
+    };
 });
 
-const selectedTrap = ref(props.minimapSelectedIndex)
+const selectedTrap = ref(props.minimapSelectedIndex);
 
 watch(() => props.minimapSelectedIndex, (v) => {
-    selectedTrap.value = v + props.valueStart
-}, { immediate: true })
+    selectedTrap.value = v + props.valueStart;
+}, { immediate: true });
 
 function trapMouse(trap) {
     selectedTrap.value = trap;
     if (trap >= props.valueStart && trap < props.valueEnd) {
-        emit('trapMouse', trap - props.valueStart)
+        emit('trapMouse', trap - props.valueStart);
     }
 }
 
-const inputStep = ref(0)
+const inputStep = ref(0);
 const rangeStart = ref(null);
 const rangeEnd = ref(null);
 
@@ -393,7 +380,6 @@ const selectionWidth = computed(() => {
 const RA_SPECIAL_MAGIC_NUMBER = ref(2.5);
 
 const flooredDatapointsToWidth = computed(() => {
-    // use the throttled wrapperWidth instead of measuring on every access
     const w = wrapperWidth.value - 48;
     return Math.ceil(
         (props.max - props.min) /
@@ -401,42 +387,58 @@ const flooredDatapointsToWidth = computed(() => {
     );
 });
 
+let activeMoveEvent = null;
+let activeEndEvent  = null;
+let activeMoveHandler = null;
+let activeEndHandler  = null;
+
 const startDragging = (event) => {
     showTooltip.value = true;
-    if (!props.enableSelectionDrag) {
-        return;
-    }
+    if (!props.enableSelectionDrag) return;
+
     const isTouch = event.type === 'touchstart';
-    const target = isTouch ? event.targetTouches[0].target : event.target;
-    if (target.classList.contains('range-handle')) {
-        return;
-    }
+    const touch0 = isTouch && event.targetTouches && event.targetTouches[0] ? event.targetTouches[0] : null;
+    const target = isTouch ? (touch0 ? touch0.target : null) : event.target;
+
+    if (!target || !(target instanceof Element)) return;
+    if (target.classList && target.classList.contains('range-handle')) return;
+
     isDragging.value = true;
-    initialMouseX.value = isTouch ? event.targetTouches[0].clientX : event.clientX;
+    initialMouseX.value = isTouch ? (touch0 ? touch0.clientX : 0) : event.clientX;
 
-    const moveHandler = isTouch ? handleTouchDragging : handleDragging;
-    const endHandler = isTouch ? stopTouchDragging : stopDragging;
+    activeMoveEvent    = isTouch ? 'touchmove' : 'mousemove';
+    activeEndEvent     = isTouch ? 'touchend'  : 'mouseup';
+    activeMoveHandler  = isTouch ? handleTouchDragging : handleDragging;
+    activeEndHandler   = isTouch ? stopTouchDragging   : stopDragging;
 
-    window.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, { passive: false });
-    window.addEventListener(isTouch ? 'touchend' : 'mouseup', endHandler);
+    window.addEventListener(activeMoveEvent, activeMoveHandler, { passive: false });
+    window.addEventListener(activeEndEvent,  activeEndHandler);
 };
 
 function handleDragging(event) {
+    if (!isDragging.value) return;
     updateDragging(event.clientX);
-};
+}
 
 function handleTouchDragging(event) {
-    if (!zoomWrapper.value.contains(event.target)) {
-        // Allow scrolling
-        return;
-    }
+    if (!isDragging.value) return;
+    if (!zoomWrapper.value) return;
 
-    if (event.target.classList.contains('range-handle')) {
-        return;
-    }
-    event.preventDefault(); 
-    updateDragging(event.targetTouches[0].clientX);
-};
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    // Allow scrolling when the touch is outside the component
+    if (!zoomWrapper.value.contains(target)) return;
+
+    if (target.classList && target.classList.contains('range-handle')) return;
+
+    event.preventDefault();
+
+    const touch0 = event.targetTouches && event.targetTouches[0] ? event.targetTouches[0] : null;
+    if (!touch0) return;
+
+    updateDragging(touch0.clientX);
+}
 
 function updateDragging(currentX) {
     if (!isDragging.value) return;
@@ -456,21 +458,30 @@ function updateDragging(currentX) {
 }
 
 function stopDragging() {
-    endDragging('mousemove', 'mouseup');
-};
+    endDragging();
+}
 
 function stopTouchDragging () {
-    endDragging('touchmove', 'touchend');
-};
+    endDragging();
+}
 
-function endDragging(moveEvent, endEvent) {
+function endDragging() {
     isDragging.value = false;
-    window.removeEventListener(moveEvent, handleDragging);
-    window.removeEventListener(endEvent, stopDragging);
-    commitImmediately();
-};
 
-const isMouseDown = ref(false)
+    if (activeMoveEvent && activeMoveHandler) {
+        window.removeEventListener(activeMoveEvent, activeMoveHandler);
+    }
+    if (activeEndEvent && activeEndHandler) {
+        window.removeEventListener(activeEndEvent, activeEndHandler);
+    }
+
+    activeMoveEvent = activeEndEvent = null;
+    activeMoveHandler = activeEndHandler = null;
+
+    commitImmediately();
+}
+
+const isMouseDown = ref(false);
 const tooltipLeft = ref(null);
 const tooltipRight = ref(null);
 const tooltipLeftWidth = ref(1);
@@ -478,7 +489,7 @@ const tooltipRightWidth = ref(1);
 const showTooltip = ref(false);
 
 function setTooltipLeft() {
-    if(tooltipLeft.value) {
+    if (tooltipLeft.value) {
         tooltipLeftWidth.value = tooltipLeft.value.getBoundingClientRect().width;
     }
 }
@@ -492,14 +503,14 @@ function setTooltipRight() {
 const leftLabelZIndex = ref(0);
 
 function setLeftLabelZIndex(handle) {
-    leftLabelZIndex.value = handle === 'start' ? 1 : 0
+    leftLabelZIndex.value = handle === 'start' ? 1 : 0;
 }
 
 const tooltipsCollide = ref(false);
 const mergeTooltip = ref({
-    width:0,
+    width: 0,
     left: 0,
-})
+});
 
 watch([startValue, endValue], async () => {
     await nextTick();
@@ -529,7 +540,7 @@ watch([startValue, endValue], async () => {
 onUpdated(() => {
     setTooltipLeft();
     setTooltipRight();
-})
+});
 
 watch(() => props.labelLeft, () => {
     nextTick(setTooltipLeft);
@@ -539,22 +550,37 @@ watch(() => props.labelRight, () => {
     nextTick(setTooltipRight);
 }, { deep: true });
 
-
 const labels = computed(() => {
     const left = props.timeLabels.find(t => t.absoluteIndex === startValue.value);
-    const right = props.timeLabels.find(t => t.absoluteIndex === endValue.value-1);
+    const right = props.timeLabels.find(t => t.absoluteIndex === endValue.value - 1);
     return {
         left: left ? left.text : '',
         right: right ? right.text : ''
+    };
+});
+
+
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+
+    if (activeMoveEvent && activeMoveHandler) {
+        window.removeEventListener(activeMoveEvent, activeMoveHandler);
     }
+    if (activeEndEvent && activeEndHandler) {
+        window.removeEventListener(activeEndEvent, activeEndHandler);
+    }
+    activeMoveEvent = activeEndEvent = null;
+    activeMoveHandler = activeEndHandler = null;
+
+    clearTimeout(_commitTimeout);
 });
 
 defineExpose({
     setStartValue,
     setEndValue
 });
-
 </script>
+
 
 <template>
     <div 
