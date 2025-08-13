@@ -286,7 +286,7 @@ const config = computed(() => {
                             //     return `Some long name\nfor dataset of index ${i}` 
                             // }),
                             datetimeFormatter: {
-                                enable: false
+                                enable: true
                             }
                             // values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG']
                         }

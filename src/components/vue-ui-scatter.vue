@@ -1,8 +1,19 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs,
+    watch, 
+} from "vue";
 import {
     applyDataLabel,
     checkNaN,
+    convertColorToHex,
     convertCustomPalette,
     createCsvContent, 
     createSmoothPath,
@@ -20,13 +31,15 @@ import {
     palette,
     setOpacity,
     themePalettes,
+    treeShake,
     XMLNS,
 } from '../lib';
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
@@ -34,12 +47,12 @@ import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import img from "../img";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
@@ -79,14 +92,100 @@ const tableStep = ref(0);
 const legendStep = ref(0);
 const segregated = ref([]);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
+const xAxisLabelLeft = ref(null);
+const xAxisLabelRight = ref(null);
+
+const yAxisLabelTop = ref(null);
+const yAxisLabelBottom = ref(null);
+
+const FINAL_CONFIG = ref(prepareConfig());
+
+function mockData(n = 100, r = 0.8, opts = {}) {
+    const { meanX = 0, sdX = 1, meanY = 0, sdY = 1, seed } = opts;
+    let s = (seed ?? Math.floor(Math.random() * 2 ** 31)) >>> 0;
+    const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0), s / 2 ** 32);
+    const randn = () => {
+        let u = 0, v = 0;
+        while (u === 0) u = rnd();
+        while (v === 0) v = rnd();
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    };
+    const half = n / 2;
+    const x = Array.from({ length: half }, randn);
+    const z = Array.from({ length: half }, randn);
+    const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+    const mx = mean(x), mz = mean(z);
+    for (let i = 0; i < half; i += 1) { x[i] -= mx; z[i] -= mz; }
+    const dot = (a, b) => a.reduce((s, v, i) => s + v * b[i], 0);
+    const norm2 = a => dot(a, a);
+    const alpha = dot(z, x) / norm2(x);
+    const zp = z.map((v, i) => v - alpha * x[i]);
+    const varX = norm2(x) / half;
+    const varZp = norm2(zp) / half;
+    const b = Math.sqrt((1 - r * r) * varX / varZp);
+    const y = x.map((vx, i) => r * vx + b * zp[i]);
+    const X = x.concat(x.map(v => -v));
+    const Y = y.concat(y.map(v => -v));
+    const sd = a => Math.sqrt(norm2(a) / a.length);
+    const scaleTo = (a, s, m) => {
+        const cur = sd(a);
+        return a.map(v => m + (cur ? (v / cur) * s : 0));
+    };
+    const Xout = scaleTo(X, sdX, meanX);
+    const Yout = scaleTo(Y, sdY, meanY);
+    for (let i = Xout.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(rnd() * (i + 1));
+        [Xout[i], Xout[j]] = [Xout[j], Xout[i]];
+        [Yout[i], Yout[j]] = [Yout[j], Yout[i]];
     }
-});
+    return Xout.map((vx, i) => ({ x: vx, y: Yout[i] }));
+}
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        {
+            name: '',
+            color: '#999999',
+            values: mockData(100, 0.5, { seed: 42 })
+        }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false, },
+            table: { show: false },
+            useCssAnimation: false,
+            style: {
+                backgroundColor: '#99999930',
+                layout: {
+                    axis: {
+                        stroke: '#6A6A6A'
+                    },
+                    correlation: {
+                        label: { show: false }
+                    },
+                    dataLabels: {
+                        xAxis: { show: false },
+                        yAxis: { show: false }
+                    },
+                    marginalBars: {
+                        fill: '#99999960'
+                    },
+                    padding: { top: 12, right: 12, bottom: 12, left: 12 },
+                    plots: {
+                        stroke: '#6A6A6A'
+                    }
+                },
+                legend: {
+                    backgroundColor: 'transparent'
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
@@ -110,7 +209,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -122,6 +223,12 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.tooltip.show;
 }, { deep: true });
 
+watch(() => props.dataset, (_) => {
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
+}, { deep: true })
+
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
@@ -129,12 +236,21 @@ onMounted(() => {
     prepareChart();
 });
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)){
         error({ 
             componentName: 'VueUiScatter',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
+        manualLoading.value = true;
+    }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -194,6 +310,14 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.tooltip.show
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.tooltip.show
+    }
+}, { immediate: true });
+
 const svg = ref({
     height: FINAL_CONFIG.value.style.layout.height,
     width: FINAL_CONFIG.value.style.layout.width,
@@ -204,21 +328,32 @@ const marginalSize = computed(() => {
         return 0
     }
     return FINAL_CONFIG.value.style.layout.marginalBars.size + FINAL_CONFIG.value.style.layout.marginalBars.offset
-})
+});
 
 const drawingArea = computed(() => {
+    let offsetL = 0;
+    let offsetB = 0;
+
+    if (xAxisLabelLeft.value) {
+        offsetL = xAxisLabelLeft.value.getBBox().width + 6;
+    }
+
+    if (yAxisLabelBottom.value) {
+        offsetB = yAxisLabelBottom.value.getBBox().height + 6
+    }
+
     return {
-        top: FINAL_CONFIG.value.style.layout.padding.top + marginalSize.value,
-        right: svg.value.width - FINAL_CONFIG.value.style.layout.padding.right - marginalSize.value,
-        bottom: svg.value.height - FINAL_CONFIG.value.style.layout.padding.bottom,
-        left: FINAL_CONFIG.value.style.layout.padding.left,
-        height: svg.value.height - FINAL_CONFIG.value.style.layout.padding.top - FINAL_CONFIG.value.style.layout.padding.bottom - marginalSize.value,
-        width: svg.value.width - FINAL_CONFIG.value.style.layout.padding.left - FINAL_CONFIG.value.style.layout.padding.right - marginalSize.value
+        top: FINAL_CONFIG.value.style.layout.padding.top + marginalSize.value + (FINAL_CONFIG.value.style.layout.dataLabels.yAxis.fontSize * 2),
+        right: svg.value.width - FINAL_CONFIG.value.style.layout.padding.right - marginalSize.value - 6,
+        bottom: svg.value.height - FINAL_CONFIG.value.style.layout.padding.bottom - offsetB,
+        left: FINAL_CONFIG.value.style.layout.padding.left + offsetL,
+        height: svg.value.height - FINAL_CONFIG.value.style.layout.padding.top - FINAL_CONFIG.value.style.layout.padding.bottom - marginalSize.value - offsetB - (FINAL_CONFIG.value.style.layout.dataLabels.yAxis.fontSize * 2),
+        width: svg.value.width - FINAL_CONFIG.value.style.layout.padding.left - FINAL_CONFIG.value.style.layout.padding.right - marginalSize.value - offsetL - 6
     }
 });
 
 const extremes = computed(() => {
-    props.dataset.forEach((ds, i) => {
+    FINAL_DATASET.value.forEach((ds, i) => {
         getMissingDatasetAttributes({
             datasetObject: ds,
             requiredAttributes: ['values']
@@ -262,7 +397,7 @@ const zero = computed(() => {
 });
 
 const datasetWithId = computed(() => {
-    return props.dataset.map((ds, i) => {
+    return FINAL_DATASET.value.map((ds, i) => {
         const id = `cluster_${uid.value}_${i}`;
         return {
             ...ds,
@@ -314,63 +449,178 @@ const mutableDataset = computed(() => {
 })
 
 const drawableDataset = computed(() => {
+    const EPS = 1e-9;
+
+    const clipLineToRect = ({ m, b, rect, verticalX = null }) => {
+        const { left, right, top, bottom } = rect;
+        const pts = [];
+        const add = (x, y) => {
+            if (Number.isFinite(x) && Number.isFinite(y)) pts.push({ x, y });
+        };
+        const inside = ({ x, y }) =>
+            x >= left - EPS && x <= right + EPS && y >= top - EPS && y <= bottom + EPS;
+
+        if (verticalX !== null) {
+            if (verticalX >= left - EPS && verticalX <= right + EPS) {
+                add(verticalX, top);
+                add(verticalX, bottom);
+            }
+        } else if (Number.isFinite(m)) {
+            add(left, m * left + b);
+            add(right, m * right + b);
+            if (Math.abs(m) > EPS) {
+                    add((top - b) / m, top);
+                    add((bottom - b) / m, bottom);
+            } else {
+                if (b >= top - EPS && b <= bottom + EPS) {
+                    add(left, b);
+                    add(right, b);
+                }
+            }
+        }
+
+        const inRect = pts.filter(inside);
+        const unique = [];
+        for (const p of inRect) {
+            if (!unique.some(q => Math.abs(q.x - p.x) < 1e-6 && Math.abs(q.y - p.y) < 1e-6)) {
+                unique.push(p);
+            }
+        }
+        if (unique.length < 2) return null;
+
+        let p1 = unique[0], p2 = unique[1], maxD2 = 0;
+        for (let i = 0; i < unique.length; i += 1) {
+            for (let j = i + 1; j < unique.length; j += 1) {
+                const dx = unique[i].x - unique[j].x;
+                const dy = unique[i].y - unique[j].y;
+                const d2 = dx * dx + dy * dy;
+                if (d2 > maxD2) {
+                    maxD2 = d2; p1 = unique[i]; p2 = unique[j];
+                }
+            }
+        }
+        return { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y };
+    };
+
     return mutableDataset.value.map(ds => {
+        const n = ds.plots.length;
 
-        const meanX = ds.plots.reduce((sum, point) => sum + point.x, 0) / ds.plots.length;
-        const meanY = ds.plots.reduce((sum, point) => sum + point.y, 0) / ds.plots.length;
-        let numerator = 0;
-        let denominatorX = 0;
-        let denominatorY = 0;
+        const meanX = ds.plots.reduce((s, p) => s + p.x, 0) / n;
+        const meanY = ds.plots.reduce((s, p) => s + p.y, 0) / n;
 
-        for (const point of ds.plots) {
-            numerator += (point.x - meanX) * (point.y - meanY);
-            denominatorX += (point.x - meanX) ** 2;
-            denominatorY += (point.y - meanY) ** 2;
+        let covXY_pix = 0, varX_pix = 0, varY_pix = 0;
+        for (const p of ds.plots) {
+            const dx = p.x - meanX;
+            const dy = p.y - meanY;
+            covXY_pix += dx * dy;
+            varX_pix += dx * dx;
+            varY_pix += dy * dy;
         }
 
-        const correlationCoefficient = numerator / Math.sqrt(denominatorX * denominatorY);
-        const slope = correlationCoefficient * (Math.sqrt(denominatorY) / Math.sqrt(denominatorX));
-        const intercept = meanY - slope * meanX;
-        const correlation = {
-            x1: drawingArea.value.left,
-            x2: drawingArea.value.right,
-            y1: slope * drawingArea.value.left + intercept,
-            y2: slope * drawingArea.value.right + intercept,
-            coefficient: correlationCoefficient
+        let slope, intercept, verticalX = null;
+        if (varX_pix < EPS) {
+            verticalX = meanX;
+            slope = Infinity;
+            intercept = null;
+        } else {
+            // m = cov(x,y)/var(x) in pixel space
+            slope = covXY_pix / varX_pix;
+            intercept = meanY - slope * meanX;
         }
 
-        const m = (correlation.y2 - correlation.y1) / (correlation.x2 - correlation.x1);
-        const b = correlation.y1 - m * correlation.x1;
-
-        const labelX = Math.min(svg.value.width - FINAL_CONFIG.value.style.layout.padding.right, Math.max(FINAL_CONFIG.value.style.layout.padding.left, (drawingArea.value.top - b) / m));
-
-        const label = {
-            x: labelX,
-            y: m * labelX + b <= FINAL_CONFIG.value.style.layout.padding.top ? drawingArea.value.top : m * labelX + b
+        let m, b;
+        if (verticalX !== null) {
+        m = Infinity; b = null;
+        } else {
+        m = slope; b = intercept;
         }
+
+        // CORRELATION COEFFICIENT (data space, y-flipped)
+        // Prefer data values if present; else use pixel x and -y to flip orientation.
+        const hasData = ds.plots.every(p => p.v && typeof p.v.x === "number" && typeof p.v.y === "number");
+
+        let r = NaN;
+        if (n >= 2) {
+            let mx = 0, my = 0;
+            if (hasData) {
+                mx = ds.plots.reduce((s, p) => s + p.v.x, 0) / n;
+                my = ds.plots.reduce((s, p) => s + p.v.y, 0) / n;
+            } else {
+                mx = meanX;
+                my = -meanY; // inverted Y for correlation only
+            }
+
+            let num = 0, dx2 = 0, dy2 = 0;
+            for (const p of ds.plots) {
+                const xi = hasData ? p.v.x : p.x;
+                const yi = hasData ? p.v.y : -p.y; // flipped
+                const dx = xi - mx;
+                const dy = yi - my;
+                num += dx * dy;
+                dx2 += dx * dx;
+                dy2 += dy * dy;
+            }
+            if (dx2 >= EPS && dy2 >= EPS) {
+                const raw = num / Math.sqrt(dx2 * dy2);
+                r = Math.max(-1, Math.min(1, raw));
+            }
+        }
+
+        const clipped = clipLineToRect({ m, b, rect: drawingArea.value, verticalX });
+        if (!clipped) {
+            return {
+                ...ds,
+                correlation: null,
+                label: null,
+                plots: ds.plots.map(plot => ({
+                    ...plot,
+                    deviation: 0,
+                    shape: ds.shape,
+                    color: convertColorToHex(ds.color)
+                }))
+            };
+        }
+
+        const midX = (clipped.x1 + clipped.x2) / 2;
+        const midY = (clipped.y1 + clipped.y2) / 2;
+        const label = { x: midX, y: midY };
 
         return {
             ...ds,
-            correlation,
+            color: convertColorToHex(ds.color),
+            correlation: {
+                ...clipped,
+                coefficient: r
+            },
             label,
             plots: ds.plots.map(plot => {
-                const x_proj = (plot.x + m * plot.y - m * b) / (1 + Math.pow(m, 2));
-                const y_proj = (m * plot.x + Math.pow(m, 2) * plot.y + b) / (1 + Math.pow(m, 2));
-                const deviation = Math.sqrt(Math.pow(plot.x - x_proj, 2) + Math.pow(plot.y - y_proj, 2));
+                let x_proj, y_proj;
+                if (verticalX !== null) {
+                    x_proj = verticalX; y_proj = plot.y;
+                } else if (Math.abs(m) < EPS) {
+                    x_proj = plot.x; y_proj = b;
+                } else {
+                    x_proj = (plot.x + m * plot.y - m * b) / (1 + m * m);
+                    y_proj = (m * plot.x + m * m * plot.y + b) / (1 + m * m);
+                }
+                const dx = plot.x - x_proj;
+                const dy = plot.y - y_proj;
+                const deviation = Math.sqrt(dx * dx + dy * dy);
                 return {
                     ...plot,
                     deviation,
                     shape: ds.shape,
-                    color: ds.color
-                }
+                    color: convertColorToHex(ds.color)
+                };
             })
-        }
-    })
+        };
+    });
 });
+
 
 const maxDeviation = computed(() => {
     return Math.max(...drawableDataset.value.flatMap(ds => ds.plots.map(p => Math.abs(p.deviation))))
-})
+});
 
 function getData() {
     return drawableDataset.value;
@@ -467,10 +717,14 @@ const selectedPlotId = ref(undefined);
 const selectedPlot = ref(null);
 const dataTooltipSlot = ref(null);
 
-function useTooltip(plot, seriesIndex) {
+function onTrapEnter(plot, seriesIndex) {
     selectedPlotId.value = plot.id;
     selectedPlot.value = plot;
     let html = "";
+
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: plot, seriesIndex})
+    }
 
     dataTooltipSlot.value = {
         datapoint: plot,
@@ -541,17 +795,27 @@ function useTooltip(plot, seriesIndex) {
     isTooltip.value = true;
 }
 
-function clearHover() {
+function onTrapLeave(datapoint, seriesIndex) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex })
+    }
+
     isTooltip.value = false;
     selectedPlotId.value = undefined;
     selectedPlot.value = null;
+}
+
+function onTrapClick(datapoint, seriesIndex) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex })
+    }
 }
 
 function segregate(id) {
     if (segregated.value.includes(id)) {
         segregated.value = segregated.value.filter(el => el !== id);
     } else {
-        if (segregated.value.length < props.dataset.length - 1) {
+        if (segregated.value.length < FINAL_DATASET.value.length - 1) {
             segregated.value.push(id)
         }
     }
@@ -772,8 +1036,7 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS"
-            v-if="isDataset"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'animated': FINAL_CONFIG.useCssAnimation }"
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.color}`"
         >
@@ -845,9 +1108,10 @@ defineExpose({
                         :fill="setOpacity(ds.color, FINAL_CONFIG.style.layout.plots.opacity * 100)"
                         :stroke="FINAL_CONFIG.style.layout.plots.stroke"
                         :stroke-width="FINAL_CONFIG.style.layout.plots.strokeWidth"
-                        @mouseover="useTooltip(plot, i)"
-                        @mouseleave="clearHover"
                         :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
+                        @mouseover="onTrapEnter(plot, i)"
+                        @mouseleave="onTrapLeave(plot, i)"
+                        @click="onTrapClick(plot, i)"
                     />
                 </g>
                 <g v-else>
@@ -859,9 +1123,10 @@ defineExpose({
                         :color="setOpacity(ds.color, FINAL_CONFIG.style.layout.plots.opacity * 100)"
                         :stroke="FINAL_CONFIG.style.layout.plots.stroke"
                         :strokeWidth="FINAL_CONFIG.style.layout.plots.strokeWidth"
-                        @mouseover="useTooltip(plot, i)"
-                        @mouseleave="clearHover"
                         :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
+                        @mouseover="onTrapEnter(plot, i)"
+                        @mouseleave="onTrapLeave(plot, i)"
+                        @click="onTrapClick(plot, i)"
                     />
                 </g>
             </g>
@@ -1057,14 +1322,26 @@ defineExpose({
             </g>
 
             <!-- AXIS LABELS -->
-            <g v-if="FINAL_CONFIG.style.layout.dataLabels.xAxis.show">
+            <g v-if="FINAL_CONFIG.style.layout.dataLabels.xAxis.show" ref="xAxisLabelLeft">
+                <!-- X NAME -->
+                <text
+                    data-cy="scatter-x-label-name"
+                    :id="`vue-ui-scatter-xAxis-label-${uid}`"
+                    :transform="`translate(${FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize}, ${drawingArea.top + drawingArea.height / 2}), rotate(-90)`" 
+                    text-anchor="middle"
+                    :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                    :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
+                >
+                    {{ FINAL_CONFIG.style.layout.dataLabels.xAxis.name }}
+                </text>
+                <!-- X MIN -->
                 <text
                     data-cy="scatter-x-min-axis-label"
-                    :x="drawingArea.left - 5"
-                    :y="zero.y + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 3"
-                    text-anchor="end"
+                    text-anchor="middle"
                     :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
                     :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
+                    :transform="`translate(${FINAL_CONFIG.style.layout.dataLabels.xAxis.name ? FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 3 : 0}, ${zero.y + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 3}), rotate(-90)`" 
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.layout.plots.selectors.labels.x.formatter,
@@ -1077,43 +1354,58 @@ defineExpose({
                         })) 
                     }}
                 </text>
-                <text
-                    data-cy="scatter-x-max-axis-label"
-                    :x="drawingArea.right + 3"
-                    :y="zero.y + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 3"
-                    text-anchor="start"
-                    :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
-                    :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
-                >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.layout.plots.selectors.labels.x.formatter,
-                        checkNaN(extremes.xMax),
-                        dataLabel({
-                            p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                            v: checkNaN(extremes.xMax),
-                            s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
-                            r: FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding
-                        })) 
-                    }}
-                </text>
-                <text
-                    data-cy="scatter-x-label-name"
-                    :id="`vue-ui-scatter-xAxis-label-${uid}`"
-                    :transform="`translate(${FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2}, ${drawingArea.top + drawingArea.height / 2}), rotate(-90)`" 
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
-                    :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold' : 'normal'"
-                    :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
-                >
-                    {{ FINAL_CONFIG.style.layout.dataLabels.xAxis.name }}
-                </text>
-
             </g>
-            <g v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show">
+            <!-- X MAX -->
+            <text
+                v-if="FINAL_CONFIG.style.layout.dataLabels.xAxis.show"
+                ref="xAxisLabelRight"
+                data-cy="scatter-x-max-axis-label"
+                text-anchor="middle"
+                :transform="`translate(${drawingArea.right + FINAL_CONFIG.style.layout.padding.right + 6}, ${zero.y + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 3}), rotate(-90)`" 
+                :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
+                :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
+            >
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.layout.plots.selectors.labels.x.formatter,
+                    checkNaN(extremes.xMax),
+                    dataLabel({
+                        p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
+                        v: checkNaN(extremes.xMax),
+                        s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                        r: FINAL_CONFIG.style.layout.dataLabels.xAxis.rounding
+                    })) 
+                }}
+            </text>
+
+            <!-- Y AXIS LABELS -->
+            <text
+                v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show"
+                ref="yAxisLabelTop"
+                data-cy="scatter-y-max-axis-label"
+                :x="zero.x"
+                :y="drawingArea.top - FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
+                text-anchor="middle"
+                :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
+                :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
+            >
+                {{ applyDataLabel(
+                    FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
+                    checkNaN(extremes.yMax),
+                    dataLabel({
+                        p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
+                        v: checkNaN(extremes.yMax),
+                        s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
+                        r: FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding
+                    })) 
+                }}
+            </text>
+
+            <g v-if="FINAL_CONFIG.style.layout.dataLabels.yAxis.show" ref="yAxisLabelBottom">
+                <!-- Y MIN -->
                 <text
                     data-cy="scatter-y-min-axis-label"
                     :x="zero.x"
-                    :y="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize + 3"
+                    :y="svg.height - FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize * 2"
                     text-anchor="middle"
                     :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
                     :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
@@ -1129,25 +1421,7 @@ defineExpose({
                         })) 
                     }}
                 </text>
-                <text
-                    data-cy="scatter-y-max-axis-label"
-                    :x="zero.x"
-                    :y="drawingArea.top - FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize / 2"
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize"
-                    :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
-                >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.layout.plots.selectors.labels.y.formatter,
-                        checkNaN(extremes.yMax),
-                        dataLabel({
-                            p: FINAL_CONFIG.style.layout.plots.selectors.labels.prefix,
-                            v: checkNaN(extremes.yMax),
-                            s: FINAL_CONFIG.style.layout.plots.selectors.labels.suffix,
-                            r: FINAL_CONFIG.style.layout.dataLabels.yAxis.rounding
-                        })) 
-                    }}
-                </text>
+                <!-- Y NAME -->
                 <text
                     data-cy="scatter-y-label-name"
                     text-anchor="middle"
@@ -1155,7 +1429,7 @@ defineExpose({
                     :font-weight="FINAL_CONFIG.style.layout.dataLabels.yAxis.bold ? 'bold' : 'normal'"
                     :fill="FINAL_CONFIG.style.layout.dataLabels.yAxis.color"
                     :x="drawingArea.left + drawingArea.width / 2"
-                    :y="drawingArea.bottom + 8 + FINAL_CONFIG.style.layout.dataLabels.yAxis.fontSize * 2"
+                    :y="svg.height"
                 >
                     {{ FINAL_CONFIG.style.layout.dataLabels.yAxis.name }}
                 </text>
@@ -1171,7 +1445,7 @@ defineExpose({
             </clipPath>
 
             <!-- CORRELATION -->
-            <g v-if="FINAL_CONFIG.style.layout.correlation.show">
+            <g v-if="FINAL_CONFIG.style.layout.correlation.show" :style="{ pointerEvents: 'none' }">
                 <line 
                     v-for="(ds, i) in drawableDataset"
                     data-cy="correlation-line"
@@ -1188,9 +1462,10 @@ defineExpose({
                     <text
                         data-cy="correlation-label"
                         v-if="FINAL_CONFIG.style.layout.correlation.label.show"
-                        :x="ds.label.x"
-                        :y="ds.label.y"
+                        :x="ds.correlation.x2"
+                        :y="ds.correlation.y2"
                         :fill="FINAL_CONFIG.style.layout.correlation.label.useSerieColor ? ds.color : FINAL_CONFIG.style.layout.correlation.label.color"
+                        text-anchor="end"
                         :font-size="FINAL_CONFIG.style.layout.correlation.label.fontSize"
                         :font-weight="FINAL_CONFIG.style.layout.correlation.label.bold ? 'bold' : 'normal'"
                     >
@@ -1207,25 +1482,6 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
-
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'quadrant',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                    quadrant: {
-                        grid: {
-                            color: FINAL_CONFIG.style.layout.axis.stroke
-                        },
-                        plots: {
-                            color: FINAL_CONFIG.style.layout.axis.stroke,
-                            radius: 1
-                        }
-                    }
-                }
-            }"
-        />
 
         <!-- LEGEND AS DIV -->
         <div ref="chartLegend">
@@ -1321,6 +1577,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
@@ -1335,10 +1594,13 @@ defineExpose({
     position: relative;
 }
 
-path, line:not(.line-pointer), circle:not(.line-pointer) {
+.animated path,
+.animated line:not(.line-pointer),
+.animated circle:not(.line-pointer) {
     animation: verticalBarAnimation 0.5s ease-in-out !important;
     transform-origin: center !important;
 }
+
 @keyframes verticalBarAnimation {
     0% {
         transform: scale(0.9,0.9);
@@ -1388,18 +1650,5 @@ path, line:not(.line-pointer), circle:not(.line-pointer) {
     top:0;
     font-weight: 400;
     user-select: none;
-}
-.line-pointer {
-    animation: line-pointer-opacity 0.3s ease-in-out forwards;
-    opacity: 0;
-}
-
-@keyframes line-pointer-opacity {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
 }
 </style>

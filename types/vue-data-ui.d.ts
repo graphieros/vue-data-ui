@@ -2581,7 +2581,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiScatterConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiScatterEvent; // v3
+            datapointLeave?: VueUiScatterEvent; // v3
+            datapointClick?: VueUiScatterEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -3390,6 +3397,7 @@ declare module "vue-data-ui" {
     export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
     export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
     export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
+    export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
 
     export type VueUiDonutConfig = {
         debug?: boolean;

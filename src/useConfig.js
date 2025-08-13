@@ -2000,10 +2000,17 @@ export function useConfig() {
     }
 
     const vue_ui_scatter = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: {
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         downsample: LTTB,
         style: {
             fontFamily: 'inherit',
@@ -2012,7 +2019,7 @@ export function useConfig() {
             layout: {
                 height: 316,
                 width: 512,
-                padding: PADDING([36, 48, 36, 48]),
+                padding: PADDING([0, 0, 0, 0]), // v3 modification
                 axis: {
                     show: true,
                     stroke: COLOR_GREY_LIGHT,

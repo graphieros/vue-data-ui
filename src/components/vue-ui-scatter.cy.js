@@ -24,7 +24,7 @@ describe('<VueUiScatter />', () => {
 			});
 
 			cy.log('marginal bars');
-			cy.get('[data-cy="marginal-bar-x"]').should('exist').and('be.visible').and('have.length', 16);
+			cy.get('[data-cy="marginal-bar-x"]').should('exist').and('be.visible').and('have.length', 20);
 			cy.get('[data-cy="marginal-bar-y"]').should('exist').and('be.visible').and('have.length', 19);
 			cy.get('[data-cy="marginal-line-x-wrapper"]').should('exist').and('be.visible');
 			cy.get('[data-cy="marginal-line-x"]').should('exist').and('be.visible');
