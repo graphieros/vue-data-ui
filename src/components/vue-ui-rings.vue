@@ -1,5 +1,16 @@
 <script setup>
-import { computed, ref, nextTick, onMounted, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef } from "vue";
+import { 
+  computed, 
+  defineAsyncComponent, 
+  nextTick, 
+  onBeforeUnmount, 
+  onMounted, 
+  ref, 
+  shallowRef, 
+  toRefs,
+  useSlots, 
+  watch, 
+} from "vue";
 import {
   applyDataLabel,
   checkNaN,
@@ -19,13 +30,15 @@ import {
   setOpacity,
   shiftHue,
   themePalettes,
+  treeShake,
   XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { usePrinter } from "../usePrinter";
+import { useLoading } from "../useLoading";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
@@ -33,12 +46,12 @@ import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import img from "../img";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
@@ -80,14 +93,44 @@ const noTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
+const resizing = ref(false);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+  ...toRefs(props),
+  FINAL_CONFIG,
+  prepareConfig,
+  skeletonDataset: [
+    { name: '_', values: [13], color: '#808080' },
+    { name: '_', values: [8], color: '#969696' },
+    { name: '_', values: [5], color: '#ADADAD' },
+    { name: '_', values: [3], color: '#C4C4C4' },
+    { name: '_', values: [2], color: '#DBDBDB' },
+  ],
+  skeletonConfig: treeShake({
+    defaultConfig: FINAL_CONFIG.value,
+    userConfig: {
+      userOptions: { show: false },
+      table: { show: false },
+      style: {
+        chart: {
+          backgroundColor: '#99999930',
+          layout: {
+            rings: {
+              stroke: '#6A6A6A',
+              gradient: {
+                underlayerColor: '#FFFFFF'
+              }
+            }
+          },
+          legend: {
+            backgroundColor: 'transparent'
+          }
+        }
+      }
     }
+  })
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -112,7 +155,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+      FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -124,6 +169,12 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
+watch(() => props.dataset, (_) => {
+  if (Array.isArray(_) && _.length > 0) {
+      manualLoading.value = false;
+  }
+}, { deep: true })
+
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
@@ -131,19 +182,25 @@ onMounted(() => {
   prepareChart();
 });
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
   if(objectIsEmpty(props.dataset)) {
     error({
       componentName: 'VueUiRings',
-      type: 'dataset'
-    })
+      type: 'dataset',
+      debug: debug.value
+    });
+    manualLoading.value = true;
   } else {
     props.dataset.forEach((ds, i) => {
       if (!ds.values.length) {
         error({
           componentName: 'VueUiRings',
           type: 'dataset',
-        })
+          debug: debug.value
+        });
+        manualLoading.value = true;
       }      
       getMissingDatasetAttributes({
         datasetObject: ds,
@@ -153,14 +210,21 @@ function prepareChart() {
           componentName: 'VueUiRings',
           type: 'datasetSerieAttribute',
           property: attr,
-          index: i
+          index: i,
+          debug: debug.value
         });
       });
     })
   }
 
+   // v3
+  if (!objectIsEmpty(props.dataset)) {
+    manualLoading.value = FINAL_CONFIG.value.loading;
+  }
+
   if (FINAL_CONFIG.value.responsive) {
     const handleResize = throttle(() => {
+      resizing.value = true;
             const { width, height } = useResponsive({
                 chart: ringsChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
@@ -171,7 +235,8 @@ function prepareChart() {
 
             requestAnimationFrame(() => {
               svg.value.width = width;
-              svg.value.height = height;
+              svg.value.height = height - 12;
+              resizing.value = false;
             });
         });
 
@@ -219,6 +284,14 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+      showTable: FINAL_CONFIG.value.table.show,
+      showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    }
+}, { immediate: true });
+
 const svg = ref({
     height: 360,
     width: 360,
@@ -262,13 +335,13 @@ function proportionToMax(val) {
 }
 
 const datasetCopy = computed(() => {
-    return props.dataset.map(({ values, name, color = null }, i) => {
+    return FINAL_DATASET.value.map(({ values, name, color = null }, i) => {
         const subTotal = sanitizeArray(values).reduce((a, b) => a + b, 0);
         return {
             name,
             color: color || convertColorToHex(color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
             value: subTotal,
-            proportion: subTotal / props.dataset.map(ds => (ds.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
+            proportion: subTotal / FINAL_DATASET.value.map(ds => (ds.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
             uid: createUid(),
             absoluteIndex: i
         }
@@ -346,9 +419,27 @@ const maxHeight = computed(() => {
   return chartRadius.value - FINAL_CONFIG.value.style.chart.layout.rings.strokeWidth * 2;
 });
 
+function onTrapClick(datapoint, seriesIndex) {
+  if (FINAL_CONFIG.value.events.datapointClick) {
+    FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
+  }
+}
+
+function onTrapLeave(datapoint, seriesIndex) {
+  selectedSerie.value = null;
+  isTooltip.value = false;
+  if (FINAL_CONFIG.value.events.datapointLeave) {
+    FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
+  }
+}
+
 const dataTooltipSlot = ref(null);
 
-function useTooltip(index, datapoint) {
+function useTooltip(datapoint, index) {
+  if (FINAL_CONFIG.value.events.datapointEnter) {
+    FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: index });
+  }
+
   if (segregated.value.length === props.dataset.length) return;
 
   dataTooltipSlot.value = {
@@ -654,8 +745,7 @@ defineExpose({
     <svg
       ref="svgRef"
       :xmlns="XMLNS"
-      v-if="isDataset"
-      :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+      :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'resizing': resizing || loading }"
       data-cy="rings-svg"
       :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
       :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
@@ -707,7 +797,7 @@ defineExpose({
           data-cy="ring-underlayer"
           :class="{
             'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
-            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation,
+            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation && !loading,
             'vue-ui-rings-opacity': selectedSerie !== null && selectedSerie !== i,
           }"
           :style="`animation-delay:${i * 100}ms`"
@@ -722,7 +812,7 @@ defineExpose({
           data-cy="ring"
           :class="{
             'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
-            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation,
+            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation && !loading,
             'vue-ui-rings-shadow': FINAL_CONFIG.style.chart.layout.rings.useShadow,
             'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
           }"
@@ -744,7 +834,7 @@ defineExpose({
           :data-cy="`ring-pattern-${i}`"
           :class="{
             'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
-            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation,
+            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation && !loading,
             'vue-ui-rings-shadow': FINAL_CONFIG.style.chart.layout.rings.useShadow,
             'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
           }"
@@ -764,11 +854,9 @@ defineExpose({
           :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
           :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
           fill="transparent"
-          @mouseenter="useTooltip(i, ring)"
-          @mouseleave="
-            selectedSerie = null;
-            isTooltip = false;
-          "
+          @mouseenter="useTooltip(ring, i)"
+          @mouseleave="onTrapLeave(ring, i)"
+          @click="onTrapClick(ring, i)"
         />
       </g>
       <slot name="svg" :svg="svg"/>
@@ -777,19 +865,6 @@ defineExpose({
     <div v-if="$slots.watermark" class="vue-data-ui-watermark">
         <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
     </div>
-
-    <Skeleton
-      v-if="!isDataset"
-      :config="{
-        type: 'rings',
-        style: {
-          backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-          rings: {
-            color: '#CCCCCC'
-          }
-        }
-      }"
-    />
 
     <!-- LEGEND AS DIV -->
     <div ref="chartLegend">
@@ -811,7 +886,7 @@ defineExpose({
         </template>
 
         <template #item="{legend, index }">
-            <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+            <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`" v-if="!loading">
                 {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
                   FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
                   legend.value,
@@ -907,6 +982,10 @@ defineExpose({
         </DataTable>
       </template>
     </Accordion>
+
+    <!-- v3 Skeleton loader -->
+    <BaseScanner v-if="loading" />
+
   </div>
 </template>
 
@@ -936,6 +1015,10 @@ defineExpose({
 
 .vue-ui-rings-item {
   transition: all 0.2s ease-in-out;
+}
+
+.resizing .vue-ui-rings-item {
+  transition: none;
 }
 
 .vue-rings-item-onload {

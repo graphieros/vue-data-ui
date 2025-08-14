@@ -1623,7 +1623,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiRingsConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiRingsEvent; // v3
+            datapointLeave?: VueUiRingsEvent; // v3
+            datapointClick?: VueUiRingsEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -1702,6 +1709,7 @@ declare module "vue-data-ui" {
         strokeWidth: number;
         uid: string;
         value: number;
+        absoluteIndex: number;
     };
 
     export type VueUiRingsDatasetItem = {
@@ -3407,6 +3415,7 @@ declare module "vue-data-ui" {
     export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
     export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
+    export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>
 
     export type VueUiDonutConfig = {
         debug?: boolean;

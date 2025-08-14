@@ -8,28 +8,34 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref([
-    {
-        name: "Serie 1",
-        values: [100],
-    },
-    {
-        name: "Serie 2",
-        values: [200]
-    },
-    {
-        name: "Serie 3",
-        values: [300, 1],
-    },
-    {
-        name: "Serie 4",
-        values: [50, 1]
-    },
-    {
-        name: "Serie 5",
-        values: [25, 1]
-    }
-])
+const dataset = ref(undefined)
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: "Serie 1",
+                values: [100],
+            },
+            {
+                name: "Serie 2",
+                values: [200]
+            },
+            {
+                name: "Serie 3",
+                values: [300, 1],
+            },
+            {
+                name: "Serie 4",
+                values: [50, 1]
+            },
+            {
+                name: "Serie 5",
+                values: [25, 1]
+            }
+        ]
+    }, 2000)
+})
 
 const alternateDataset = ref([
     { name: 'Alt 1', values: [20]},
@@ -64,6 +70,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -83,7 +91,7 @@ const model = ref([
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.labels.dataLabels.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.layout.labels.dataLabels.suffix', def: '2', type: 'text'},
@@ -151,7 +159,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -176,6 +184,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex })
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex })
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex })
+                },
+            },
             style: {
                 ...c.style,
                 chart: {

@@ -3010,10 +3010,17 @@ export function useConfig() {
     }
 
     const vue_ui_rings = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: {
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         useBlurOnHover: true,
         style: {
             fontFamily: 'inherit',
