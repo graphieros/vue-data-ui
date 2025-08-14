@@ -369,7 +369,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiTreemapConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiTreemapEvent; // v3
+            datapointLeave?: VueUiTreemapEvent; // v3
+            datapointClick?: VueUiTreemapEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
@@ -454,6 +461,7 @@ declare module "vue-data-ui" {
         name: string;
         normalizedValue: number;
         parentName?: string;
+        parentId?: string;
         proportion: number;
         value: number;
         x0: number;
@@ -3398,6 +3406,7 @@ declare module "vue-data-ui" {
     export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
     export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
+    export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
 
     export type VueUiDonutConfig = {
         debug?: boolean;

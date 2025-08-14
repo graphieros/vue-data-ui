@@ -906,7 +906,14 @@ export function useConfig() {
     }
 
     const vue_ui_treemap = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         userOptions: USER_OPTIONS({
@@ -925,7 +932,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 height: 500,
                 width: 800,
-                padding: PADDING([0, 6, 12, 6]),
+                padding: PADDING([0, 0, 0, 0]),
                 layout: {
                     sorted: true,
                     rects: {

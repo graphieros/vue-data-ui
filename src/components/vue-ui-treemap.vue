@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef } from 'vue';
+import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef, toRefs } from 'vue';
 import {
     adaptColorToBackground,
     applyDataLabel,
@@ -16,6 +16,7 @@ import {
     objectIsEmpty,
     palette,
     themePalettes,
+    treeShake,
     XMLNS
 } from '../lib';
 import { throttle } from '../canvas-lib';
@@ -33,11 +34,12 @@ import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import Legend from "../atoms/Legend.vue";
 import img from '../img';
+import { useLoading } from '../useLoading';
+import BaseScanner from '../atoms/BaseScanner.vue';
 
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
@@ -90,15 +92,54 @@ const noTitle = shallowRef(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
+const drillStack = ref([]); 
+const breadcrumbsNav = ref(null);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        {
+            name: '_',
+            value: 53,
+            color: '#CACACA90',
+            children: [
+                { name: '_', value: 21 },
+                { name: '_', value: 13 },
+                { name: '_', value: 8 },
+                { name: '_', value: 5 },
+                { name: '_', value: 3 },
+                { name: '_', value: 2 },
+                { name: '_', value: 1 },
+            ]
+        }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#999999',
+                    layout: {
+                        labels: {
+                            showDefaultLabels: false
+                        },
+                        rects: {
+                            stroke: '#6A6A6A'
+                        },
+                    },
+                    legend: {
+                        backgroundColor: 'transparent'
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -122,7 +163,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     titleStep.value += 1;
     tableStep.value += 1;
@@ -151,6 +194,14 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
+
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    }
+}, { immediate: true });
 
 const chartDimensions = ref({
     height: FINAL_CONFIG.value.style.chart.height,
@@ -184,7 +235,62 @@ function addIdsToTree(tree) {
     });
 }
 
-const immutableDataset = shallowRef(props.dataset);
+const immutableDataset = ref(FINAL_DATASET.value);
+const currentSet = ref(immutableDataset.value);
+
+const rootColorMap = shallowRef(new Map());
+
+function applyIdsAndTopLevelColors(tree) {
+    if (!Array.isArray(tree)) return;
+
+    tree.forEach((node, i) => {
+        if (!node.id) node.id = createUid();
+
+        let base = convertColorToHex(node.color) 
+            || rootColorMap.value.get(node.id) 
+            || customPalette.value[i] 
+            || palette[i] 
+            || palette[i % palette.length];
+
+        base = convertColorToHex(base);
+        rootColorMap.value.set(node.id, base);
+        node.color = base;
+
+        propagateColor(node, base);
+    });
+}
+
+function propagateColor(node, base) {
+    if (!Array.isArray(node.children)) return;
+    node.children.forEach((child) => {
+        if (!child.id) child.id = createUid();
+        child.parentId = node.id;
+        child.color = base;
+        propagateColor(child, base);
+    });
+}
+
+function syncToZoomLevel() {
+    if (!drillStack.value.length) {
+        currentSet.value = immutableDataset.value.slice();
+    } else {
+        const topId = drillStack.value[drillStack.value.length - 1];
+        const n = findNodeById(topId);
+        currentSet.value = n?.children?.slice() || [];
+    }
+}
+
+watch(
+    () => FINAL_DATASET.value,
+    () => {
+        immutableDataset.value = FINAL_DATASET.value;
+        applyIdsAndTopLevelColors(immutableDataset.value);
+        syncToZoomLevel();
+        legendStep.value += 1;
+        tableStep.value += 1;
+    },
+    { deep: true, immediate: true, flush: 'post' }
+);
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
@@ -193,15 +299,23 @@ onMounted(() => {
     prepareChart();
 });
 
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiTreemap',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         });
     }
 
-    addIdsToTree(immutableDataset.value);
+    applyIdsAndTopLevelColors(immutableDataset.value);
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
+    }
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
@@ -215,7 +329,7 @@ function prepareChart() {
 
             requestAnimationFrame(() => {
                 chartDimensions.value.width = width;
-                chartDimensions.value.height = height;
+                chartDimensions.value.height = height - 12;
             });
         });
 
@@ -240,8 +354,6 @@ onBeforeUnmount(() => {
         resizeObserver.value.disconnect();
     }
 });
-
-const currentSet = ref(immutableDataset.value);
         
 const datasetCopy = computed(() => {
     return currentSet.value.map((ds, i) => {
@@ -332,11 +444,15 @@ function toggleFullscreen(state) {
 }
 
 const viewBox = computed(() => {
+    let offsetBreadcrumbsY = 0;
+    if (breadcrumbsNav.value) {
+        offsetBreadcrumbsY = breadcrumbsNav.value.getBoundingClientRect().height; 
+    }
     return {
         startX: 0,
         startY: 0,
         width: svg.value.vbWidth,
-        height: svg.value.vbHeight,
+        height: svg.value.vbHeight - offsetBreadcrumbsY,
     }
 });
 
@@ -355,16 +471,18 @@ function findNodeById(id, nodes = immutableDataset.value) {
     return null;
 };
 
-const drillStack = ref([]);  
-
 const isZoom = computed(() => drillStack.value.length > 0);
 
-function zoom(rect) {
+function zoom(rect, seriesIndex) {
     if (!rect) {
         currentSet.value = immutableDataset.value.slice()
         emit('selectDatapoint', undefined)
         drillStack.value = []
         return
+    }
+
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: rect, seriesIndex });
     }
 
     const node = findNodeById(rect.id)
@@ -471,9 +589,21 @@ function segregate(rect) {
     emit('selectLegend', orderedDataset.value);
 }
 
+function onTrapLeave({ datapoint, seriesIndex }) {
+    selectedRect.value = null;
+    isTooltip.value = false;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
+    }
+}
+
 const dataTooltipSlot = ref(null);
 
 function useTooltip({ datapoint, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
+    }
+
     selectedRect.value = datapoint;
     dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: datasetCopy.value };
 
@@ -763,7 +893,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <nav class="vue-ui-treemap-breadcrumbs" v-if="breadcrumbs.length > 1" data-dom-to-png-ignore>
+        <nav class="vue-ui-treemap-breadcrumbs" v-if="breadcrumbs.length > 1" data-dom-to-png-ignore ref="breadcrumbsNav">
             <span 
                 v-for="(crumb, i) in breadcrumbs"
                 role="button"
@@ -811,8 +941,7 @@ defineExpose({
         <svg 
             ref="svgRef"
             :xmlns="XMLNS" 
-            v-if="isDataset"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom, 'loading': loading }"
             data-cy="treemap-svg" 
             :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
             :style="`max-width:100%; overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
@@ -839,12 +968,12 @@ defineExpose({
                     :rx="FINAL_CONFIG.style.chart.layout.rects.borderRadius"
                     :stroke="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.stroke : FINAL_CONFIG.style.chart.layout.rects.stroke"
                     :stroke-width="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.strokeWidth : FINAL_CONFIG.style.chart.layout.rects.strokeWidth"
-                    @click.stop="zoom(rect)"
+                    @click.stop="zoom(rect, i)"
                     @mouseenter="() => useTooltip({
                         datapoint: rect,
                         seriesIndex: i,
                     })"
-                    @mouseleave="selectedRect = null; isTooltip = false"
+                    @mouseleave="onTrapLeave({ datapoint: rect, seriesIndex: i})"
                     :style="`opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
                     :class="[
                         'vue-ui-treemap-rect',
@@ -884,7 +1013,8 @@ defineExpose({
                                 }}
                             </span>
                         </div>
-                        <slot 
+                        <slot
+                            v-if="!loading"
                             name="rect" 
                             v-bind="{ 
                                 rect, 
@@ -903,19 +1033,6 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'treemap',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    treemap: {
-                        color: '#CCCCCC',
-                    }
-                }
-            }"
-        />
-
         <!-- LEGEND & LEGEND SLOT -->
         <div ref="chartLegend">
             <Legend
@@ -927,7 +1044,7 @@ defineExpose({
                 @clickMarker="({legend}) => segregate(legend)"
             >
                 <template #item="{ legend, index }">
-                    <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
                         {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
                             FINAL_CONFIG.style.chart.layout.labels.formatter,
                             legend.value,
@@ -1017,6 +1134,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
@@ -1043,6 +1163,10 @@ defineExpose({
 
 .vue-ui-treemap-rect {
     transition: all 0.2s ease-in-out;
+}
+
+.loading .vue-ui-treemap-rect {
+    transition: none;
 }
 
 .vue-ui-treemap-zoom-info {
