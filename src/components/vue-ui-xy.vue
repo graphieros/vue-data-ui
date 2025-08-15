@@ -2686,7 +2686,9 @@ defineExpose({
                             <rect data-cy="highlighter" :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
                                 :y="drawingArea.top" :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                                 :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
-                                :fill="[selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(i) ? setOpacity(FINAL_CONFIG.chart.highlighter.color, FINAL_CONFIG.chart.highlighter.opacity) : 'transparent'" />
+                                :fill="[selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(i) ? setOpacity(FINAL_CONFIG.chart.highlighter.color, FINAL_CONFIG.chart.highlighter.opacity) : 'transparent'"
+                                :style="{ transition: 'none !important', animation: 'none !important' }"
+                            />
                         </g>
                     </g>
 
