@@ -1164,6 +1164,12 @@ const barSlot = computed(() => {
 
 const barPeriodGap = computed(() => slot.value.line * FINAL_CONFIG.value.bar.periodGap);
 
+const barWidth = computed(() => {
+    return Math.max(0.00001, calcRectWidth() - (mutableConfig.value.useIndividualScale && mutableConfig.value.isStacked ? 0 : barPeriodGap.value))
+});
+
+const barInnerGap = computed(() => barWidth.value * FINAL_CONFIG.value.bar.innerGap);
+
 const minimap = computed(() => {
     if (!FINAL_CONFIG.value.chart.zoom.minimap.show) return [];
     const _source = datasetWithIds.value.filter(ds => !segregatedSeries.value.includes(ds.id));
@@ -2697,21 +2703,26 @@ defineExpose({
                         <g v-for="(serie, i) in barSet" :key="`serie_bar_${i}`" :class="`serie_bar_${i}`"
                             :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                             <g v-for="(plot, j) in serie.plots" :key="`bar_plot_${i}_${j}`">
-                                <rect data-cy="datapoint-bar" v-if="canShowValue(plot.value)" :x="calcRectX(plot)"
+                                <rect 
+                                    data-cy="datapoint-bar" 
+                                    v-if="canShowValue(plot.value)" 
+                                    :x="calcRectX(plot) + barInnerGap / 2"
                                     :y="mutableConfig.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
                                     :height="mutableConfig.useIndividualScale ? Math.abs(calcIndividualHeight(plot)) : Math.abs(calcRectHeight(plot))"
-                                    :width="calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap)"
+                                    :width="barWidth - barInnerGap"
                                     :rx="FINAL_CONFIG.bar.borderRadius"
                                     :fill="FINAL_CONFIG.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})` : `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                                     :stroke="FINAL_CONFIG.bar.border.useSerieColor ? serie.color : FINAL_CONFIG.bar.border.stroke"
                                     :stroke-width="FINAL_CONFIG.bar.border.strokeWidth"
                                     :style="{ transition: loading || !FINAL_CONFIG.bar.showTransition ? undefined: `all ${FINAL_CONFIG.bar.transitionDurationMs}ms ease-in-out`}"
                                 />
-                                <rect data-cy="datapoint-bar" v-if="canShowValue(plot.value) && $slots.pattern"
-                                    :x="calcRectX(plot)"
+                                <rect 
+                                    data-cy="datapoint-bar" 
+                                    v-if="canShowValue(plot.value) && $slots.pattern"
+                                    :x="calcRectX(plot) - barInnerGap / 2"
                                     :y="mutableConfig.useIndividualScale ? calcIndividualRectY(plot) : calcRectY(plot)"
                                     :height="mutableConfig.useIndividualScale ? Math.abs(calcIndividualHeight(plot)) : Math.abs(calcRectHeight(plot))"
-                                    :width="calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap)"
+                                    :width="barWidth - barInnerGap"
                                     :rx="FINAL_CONFIG.bar.borderRadius"
                                     :fill="`url(#pattern_${uniqueId}_${serie.slotAbsoluteIndex})`"
                                     :stroke="FINAL_CONFIG.bar.border.useSerieColor ? serie.color : FINAL_CONFIG.bar.border.stroke"
@@ -2721,7 +2732,7 @@ defineExpose({
 
                                 <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
                                     <foreignObject style="overflow: visible" height="12"
-                                        :width="(calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) < 0 ? 0.00001 : calcRectWidth() - (mutableConfig.useIndividualScale && mutableConfig.isStacked ? 0 : barPeriodGap) / 2) + FINAL_CONFIG.chart.comments.width"
+                                        :width="(barWidth / 2) + FINAL_CONFIG.chart.comments.width"
                                         :x="calcRectX(plot) - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX"
                                         :y="checkNaN(plot.y) + FINAL_CONFIG.chart.comments.offsetY + 6">
                                         <slot name="plot-comment"

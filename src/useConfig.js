@@ -644,6 +644,7 @@ export function useConfig() {
             borderRadius: 2,
             useGradient: true,
             periodGap: 0.1,
+            innerGap: 0,
             border: {
                 useSerieColor: false,
                 strokeWidth: 0,

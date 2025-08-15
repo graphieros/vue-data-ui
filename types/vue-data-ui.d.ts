@@ -3233,6 +3233,7 @@ declare module "vue-data-ui" {
             borderRadius?: number;
             useGradient?: boolean;
             periodGap?: number;
+            innerGap?: number;
             border?: {
                 useSerieColor?: boolean;
                 strokeWidth?: number;

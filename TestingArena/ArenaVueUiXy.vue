@@ -109,37 +109,45 @@ function createDs(n, m = 100) {
 //     },
 // ])
 
-const dataset = ref(undefined)
+// const dataset = ref(undefined)
 
-onMounted(() => {
-    dataset.value = undefined;
-    setTimeout(() => {
-        dataset.value = [
-    {
-        name: "A",
-        series: [60, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, 120],
-        type: "bar",
-        dataLabels: false,
-    },
-    {
-        name: "B",
-        series: [60, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, 87],
-        type: "line",
-        dataLabels: false,
-        shape: 'triangle',
-        useProgression: false,
-        useArea: true,
-        smooth: true
-    },
-    {
-        name: "C",
-        series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
-        type: "plot",
-        dataLabels: false,
-    },
-]
-    }, 2000)
-})
+// onMounted(() => {
+//     dataset.value = undefined;
+//     setTimeout(() => {
+//         dataset.value = [
+//     {
+//         name: "A",
+//         series: [60, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, 120],
+//         type: "bar",
+//         dataLabels: false,
+//     },
+//     {
+//         name: "B",
+//         series: [60, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, 87],
+//         type: "line",
+//         dataLabels: false,
+//         shape: 'triangle',
+//         useProgression: false,
+//         useArea: true,
+//         smooth: true
+//     },
+//     {
+//         name: "C",
+//         series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
+//         type: "plot",
+//         dataLabels: false,
+//     },
+// ]
+//     }, 2000)
+// })
+
+const dataset = ref([
+    { name: 'A', series: [3], type: 'bar' },
+    { name: 'B', series: [5], type: 'bar' },
+    { name: 'C', series: [8], type: 'bar' },
+    { name: 'D', series: [13], type: 'bar' },
+    { name: 'E', series: [21], type: 'bar' },
+])
 
 // const dataset = ref([
 // {
@@ -501,6 +509,7 @@ const model = ref([
     { key: 'bar.serieName.useSerieColor', def: true, type: 'checkbox', label: ['serieName', 'textColor', 'is', 'series'], category: 'bar' },
     { key: 'bar.serieName.color', def: '#1A1A1A', type: 'color', label: ['serieName', 'is', 'textColor'], category: 'bar' },
     { key: 'bar.periodGap', def: 0.01, type: 'number', min: 0, max: 24 },
+    { key: 'bar.innerGap', def: 0.2, type: 'number', min: 0, max: 1},
     { key: 'bar.border.useSerieColor', def: false, type: 'checkbox' },
     { key: 'bar.border.stroke', def: '#FFFFFF', type: 'color' },
     { key: 'bar.border.strokeWidth', def: 1, type: 'number', min: 0, max: 12, step: 0.5 },
