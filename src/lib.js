@@ -1628,7 +1628,7 @@ export function createTSpansFromLineBreaksOnX({ content, fontSize, fill, x, y })
     const lines = content.split('\n');
     return lines
         .map((line, idx) =>
-            `<tspan x="${x}" y="${y + idx * (fontSize * 1.3)}" fill="${fill}">${line}</tspan>`
+            `<tspan x="${x}" y="${y + idx * (fontSize)}" fill="${fill}">${line}</tspan>`
         )
         .join('');
 }
@@ -1637,7 +1637,7 @@ export function createTSpansFromLineBreaksOnY({ content, fontSize, fill, x }) {
     const lines = content.split('\n');
     return lines
         .map((line, idx) => {
-            const dy = idx === 0 ? 0 : fontSize * 1.3;
+            const dy = idx === 0 ? 0 : fontSize;
             return `<tspan x="${x}" dy="${dy}" fill="${fill}">${line}</tspan>`;
         })
         .join('');

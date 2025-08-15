@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, shallowRef } from "vue";
+import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, shallowRef, toRefs, nextTick } from "vue";
 import {
     applyDataLabel,
     convertColorToHex,
@@ -18,6 +18,11 @@ import {
     offsetFromCenterPoint,
     XMLNS,
     calcMarkerOffsetX,
+    treeShake,
+    autoFontSize,
+    createTSpansFromLineBreaksOnX,
+    createTSpansFromLineBreaksOnY,
+    checkNaN,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
 import { useNestedProp } from "../useNestedProp";
@@ -29,9 +34,10 @@ import { useChartAccessibility } from "../useChartAccessibility.js";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img.js";
+import { useLoading } from "../useLoading.js";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
@@ -66,24 +72,73 @@ const source = ref(null);
 const noTitle = ref(null);
 const titleStep = ref(0);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+        })
     },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+    skeletonDataset: {
+        value: 0,
+        series: [
+            { from: -1, to: 0, name: '_', color: '#A1A1A1' },
+            { from: 0, to: 1, name: '__', color: '#CACACA'},
+        ]
+    },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    animation: { use: false },
+                    layout: {
+                        markers: { show: false },
+                        segmentSeparators: { stroke: '#6A6A6A' },
+                        segmentNames: { show: false },
+                        indicatorArc: { fill: '#6A6A6A50' },
+                        pointer: {
+                            stroke: '#6A6A6A',
+                            useRatingColor: true,
+                            circle: {
+                                stroke: '#6A6A6A',
+                                color: '#6A6A6A'
+                            }
+                        }
+                    },
+                    legend: {
+                        show: false,
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
 }, { deep: true });
+
+watch(() => props.dataset, (ds) => {
+    prepareChart();
+    if (ds && Object.keys(ds).length > 0) {
+        manualLoading.value = FINAL_CONFIG.value?.loading ?? false;
+    }
+}, { deep: true, immediate: false });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -119,7 +174,7 @@ const customPalette = computed(() => {
 
 const mutableDataset = computed(() => {
 
-    if (!isDataset.value || objectIsEmpty(props.dataset.series || {})) {
+    if (objectIsEmpty(FINAL_DATASET.value.series || {})) {
         return {
             value: 0,
             series: [
@@ -133,14 +188,14 @@ const mutableDataset = computed(() => {
 
     const arr = [];
 
-    (props.dataset.series || []).forEach(serie => {
+    (FINAL_DATASET.value.series || []).forEach(serie => {
         arr.push(serie.from || 0.0000001);
         arr.push(serie.to || 0.0000001);
     });
     const max = Math.max(...arr);
     return {
-        ...props.dataset,
-        series: (props.dataset.series || []).map((serie, i) => {
+        ...FINAL_DATASET.value,
+        series: (FINAL_DATASET.value.series || []).map((serie, i) => {
             return {
                 ...serie,
                 color: convertColorToHex(serie.color) || customPalette.value[i] || palette[i],
@@ -174,12 +229,12 @@ const min = ref(0);
 
 const activeRating = ref(
     FINAL_CONFIG.value.style.chart.animation.use
-        ? Math.min(...props.dataset.series.map(s => s.from))
-        : props.dataset.value
+        ? Math.min(...FINAL_DATASET.value.series.map(s => s.from))
+        : FINAL_DATASET.value.value
 );
 
-watch(() => props.dataset.value, () => {
-    useAnimation(props.dataset.value);
+watch(() => FINAL_DATASET.value.value, () => {
+    useAnimation(FINAL_DATASET.value.value);
 })
 
 const pointer = computed(() => {
@@ -224,12 +279,19 @@ const ratingColor = computed(() => {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
+    let hasError = false;
+
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiGauge',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
+        manualLoading.value = true;
+        hasError = true;
     } else {
         getMissingDatasetAttributes({
             datasetObject: props.dataset,
@@ -238,16 +300,22 @@ function prepareChart() {
             error({
                 componentName: 'VueUiGauge',
                 type: 'datasetAttribute',
-                property: attr
-            })
+                property: attr,
+                debug: debug.value
+            });
+            manualLoading.value = true;
+            hasError = true;
         });
         if (Object.hasOwn(props.dataset, 'series')) {
             if (!props.dataset.series.length) {
                 error({
                     componentName: 'VueUiGauge',
                     type: 'datasetAttributeEmpty',
-                    property: 'series'
-                })
+                    property: 'series',
+                    debug: debug.value
+                });
+                manualLoading.value = true;
+                hasError = true;
             } else {
                 props.dataset.series.forEach((serie, i) => {
                     getMissingDatasetAttributes({
@@ -258,25 +326,32 @@ function prepareChart() {
                             componentName: 'VueUiGauge',
                             type: 'datasetSerieAttribute',
                             property: attr,
-                            index: i
-                        })
+                            index: i,
+                            debug: debug.value
+                        });
+                        manualLoading.value = true;
+                        hasError = true;
                     })
                 })
             }
-
         }
     }
-    useAnimation(props.dataset.value || 0);
+    
+    manualLoading.value = hasError;
+
+    useAnimation(FINAL_DATASET.value.value || 0);
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
+            let { width, height } = useResponsive({
                 chart: gaugeChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: chartLegend.value,
                 source: source.value,
                 noTitle: noTitle.value
             });
+
+            height -= 12;
 
             requestAnimationFrame(() => {
                 svg.value.width = width;
@@ -310,6 +385,8 @@ function prepareChart() {
                     fallback: 8
                 });
             });
+
+            resizeAndReflow();
         });
 
         if (resizeObserver.value) {
@@ -323,6 +400,8 @@ function prepareChart() {
         observedEl.value = gaugeChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
     }
+
+    requestAnimationFrame(resizeAndReflow);
 }
 
 onMounted(() => {
@@ -337,6 +416,61 @@ onBeforeUnmount(() => {
         resizeObserver.value.disconnect();
     }
 });
+
+const labels_font_size = computed({
+    get: () => svg.value.segmentFontSize,
+    set: v => v
+});
+
+let rafScheduled = false;
+function resizeAndReflow() {
+    if (rafScheduled) return;
+
+    requestAnimationFrame(() => {
+        rafScheduled = false;
+
+        const cfg = FINAL_CONFIG.value;
+        const container = svgRef.value;
+
+        const [x, y, w, h] = container
+            .getAttribute('viewBox')
+            .split(' ')
+            .map(Number)
+
+        const bounds = { x, y, width: w, height: h };
+
+        const labelTypes = [
+            {
+                selector: '.vue-ui-gauge-label-flat',
+                baseSize: svg.value.segmentFontSize,
+                minSize: FINAL_CONFIG.value.style.chart.layout.segmentNames.minFontSize,
+                sizeRef: labels_font_size
+            }
+        ];
+
+        const totalMatches = labelTypes
+            .map(lt => container.querySelectorAll(lt.selector).length)
+            .reduce((a, b) => a + b, 0);
+
+        if (totalMatches === 0) return;
+
+        labelTypes.forEach(({ selector, baseSize, minSize, sizeRef }) => {
+            container
+                .querySelectorAll(selector)
+                .forEach(el => {
+                    const final = autoFontSize({
+                        el,
+                        bounds,
+                        currentFontSize: baseSize,
+                        minFontSize: minSize,
+                        attempts: 200,
+                        padding: 1
+                    });
+                    sizeRef.value = final;
+                });
+            });
+    })
+}
 
 function useAnimation(targetValue) {
     const arr = [];
@@ -370,7 +504,7 @@ const arcSizeSource = computed(() => {
     return {
         arcs: src / arcRatio,
         gradients: src / (arcRatio * 1.1),
-        base: FINAL_CONFIG.value.responsive ? svg.value.height / 2 : svg.value.height * 0.7,
+        base: FINAL_CONFIG.value.responsive ? svg.value.height / 1.618 : svg.value.height * 0.7,
         ratingBase: FINAL_CONFIG.value.responsive ? svg.value.height / 2 + (svg.value.height / 4) : svg.value.height * 0.9,
         pointerSize: FINAL_CONFIG.value.responsive ? Math.min(svg.value.width, svg.value.height) / 3 : svg.value.width / 3.2
     }
@@ -495,9 +629,8 @@ const gaugeArc = computed(() => {
         radius: FINAL_CONFIG.value.style.chart.layout.indicatorArc.radius * svg.value.trackSize,
         centerX: svg.value.width / 2,
         centerY: arcSizeSource.value.base,
-        percentage: (activeRating.value + added) / (max.value + added)
-    }
-    );
+        percentage: checkNaN((activeRating.value + added) / (max.value + added))
+    });
 });
 
 const isFullscreen = ref(false);
@@ -541,6 +674,7 @@ defineExpose({
         :id="`vue-ui-gauge_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator" 
             :svgRef="svgRef"
@@ -604,7 +738,6 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS"
-            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             :style="`max-width:100%;overflow:hidden !important;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
@@ -664,7 +797,7 @@ defineExpose({
             </template>
 
             <!-- GAUGE ARC INDICATOR-->
-            <path 
+            <path
                 data-cy="arc-indicator"
                 v-if="FINAL_CONFIG.style.chart.layout.indicatorArc.show" 
                 :d="gaugeArc"
@@ -682,7 +815,7 @@ defineExpose({
                 <text v-for="(arc, i) in arcs" 
                     data-cy="arc-label"
                     :fill="FINAL_CONFIG.style.chart.layout.segmentNames.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.segmentNames.color"
-                    :font-size="svg.segmentFontSize"
+                    :font-size="labels_font_size"
                     :font-weight="FINAL_CONFIG.style.chart.layout.segmentNames.bold ? 'bold' : 'normal'"
                     text-anchor="middle">
                     <textPath :href="`#curve_${uid}_${i}`" :startOffset="curveLabelOffsets[i]">
@@ -693,13 +826,21 @@ defineExpose({
 
             <template
                 v-if="FINAL_CONFIG.style.chart.layout.segmentNames.show && !FINAL_CONFIG.style.chart.layout.segmentNames.curved">
-                <text v-for="(arc, i) in labelArcs" :x="arc.center.endX" :y="arc.center.endY"
+                <text
+                    class="vue-ui-gauge-label-flat"
+                    v-for="(arc, i) in labelArcs"
                     :text-anchor="calcMarkerOffsetX(arc, false, 12).anchor"
                     :fill="FINAL_CONFIG.style.chart.layout.segmentNames.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.segmentNames.color"
-                    :font-size="svg.segmentFontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.segmentNames.bold ? 'bold' : 'normal'">
-                    {{ arc.name || '' }}
-                </text>
+                    :font-size="labels_font_size"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.segmentNames.bold ? 'bold' : 'normal'"
+                    v-html="createTSpansFromLineBreaksOnX({
+                        content: String(arc.name ?? ''),
+                        fontSize: labels_font_size,
+                        fill: FINAL_CONFIG.style.chart.layout.segmentNames.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.segmentNames.color,
+                        x: arc.center.endX,
+                        y: arc.center.endY
+                    })"    
+                />
             </template>
 
             <!-- ARC STEPS GRADIENTS-->
@@ -866,22 +1007,15 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
 
-        <Skeleton v-if="!isDataset" :config="{
-        type: 'gauge',
-        style: {
-            backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-            gauge: {
-                color: '#CCCCCC'
-            }
-        }
-    }" />
-
         <div ref="chartLegend">
             <slot name="legend" v-bind:legend="mutableDataset"></slot>
         </div>
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

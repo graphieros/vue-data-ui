@@ -1308,6 +1308,8 @@ export function useConfig() {
     }
 
     const vue_ui_gauge = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
         theme: '',
         customPalette: [],
@@ -1351,6 +1353,7 @@ export function useConfig() {
                         curved: true,
                         offsetRatio: 1.1,
                         fontSize: FONT._16,
+                        minFontSize: MIN_FONT_SIZE, // v3
                         useSerieColor: true,
                         color: COLOR_BLACK,
                         bold: false,

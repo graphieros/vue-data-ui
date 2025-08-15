@@ -3574,7 +3574,7 @@ describe('createTSpansFromLineBreaksOnX', () => {
             x: 5,
             y: 10,
         });
-        const lineHeight = 12 * 1.3;
+        const lineHeight = 12;
         const expected = [
             `<tspan x=\"5\" y=\"10\" fill=\"#00f\">Line1</tspan>`,
             `<tspan x=\"5\" y=\"${10 + lineHeight}\" fill=\"#00f\">Line2</tspan>`
@@ -3602,7 +3602,7 @@ describe('createTSpansFromLineBreaksOnX', () => {
             x: 2,
             y: 3,
         });
-        const lineHeight = 15 * 1.3;
+        const lineHeight = 15;
         const expected = [
             `<tspan x=\"2\" y=\"3\" fill=\"green\">A</tspan>`,
             `<tspan x=\"2\" y=\"${3 + lineHeight}\" fill=\"green\">B</tspan>`,
@@ -3619,7 +3619,7 @@ describe('createTSpansFromLineBreaksOnX', () => {
             x: 0,
             y: 0,
         });
-        const lineHeight = 5 * 1.3;
+        const lineHeight = 5;
         const expected = [
             `<tspan x=\"0\" y=\"0\" fill=\"blue\">X</tspan>`,
             `<tspan x=\"0\" y=\"${0 + lineHeight}\" fill=\"blue\"></tspan>`,
@@ -3649,7 +3649,7 @@ describe('createTSpansFromLineBreaksOnY', () => {
             fill: '#00f',
             x: 0,
         });
-        const dy = fontSize * 1.3;
+        const dy = fontSize;
         const expected = [
             `<tspan x=\"0\" dy=\"0\" fill=\"#00f\">Line1</tspan>`,
             `<tspan x=\"0\" dy=\"${dy}\" fill=\"#00f\">Line2</tspan>`,
@@ -3676,7 +3676,7 @@ describe('createTSpansFromLineBreaksOnY', () => {
             fill: 'green',
             x: 1,
         });
-        const dy = fontSize * 1.3;
+        const dy = fontSize;
         const expected = [
             `<tspan x=\"1\" dy=\"0\" fill=\"green\">A</tspan>`,
             `<tspan x=\"1\" dy=\"${dy}\" fill=\"green\">B</tspan>`,
@@ -3693,7 +3693,7 @@ describe('createTSpansFromLineBreaksOnY', () => {
             fill: 'blue',
             x: 3,
         });
-        const dy = fontSize * 1.3;
+        const dy = fontSize;
         const expected = [
             `<tspan x=\"3\" dy=\"0\" fill=\"blue\">X</tspan>`,
             `<tspan x=\"3\" dy=\"${dy}\" fill=\"blue\"></tspan>`,

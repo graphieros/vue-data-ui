@@ -4362,6 +4362,8 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiGaugeConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -4405,6 +4407,7 @@ declare module "vue-data-ui" {
                         curved?: boolean;
                         offsetRatio?: number;
                         fontSize?: number;
+                        minFontSize?: number; // v3
                         useSerieColor?: boolean;
                         color?: string;
                         bold?: boolean;
