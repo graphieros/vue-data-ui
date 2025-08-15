@@ -1168,7 +1168,7 @@ const barWidth = computed(() => {
     return Math.max(0.00001, calcRectWidth() - (mutableConfig.value.useIndividualScale && mutableConfig.value.isStacked ? 0 : barPeriodGap.value))
 });
 
-const barInnerGap = computed(() => barWidth.value * FINAL_CONFIG.value.bar.innerGap);
+const barInnerGap = computed(() => barWidth.value * Math.min(Math.abs(FINAL_CONFIG.value.bar.innerGap), 0.95));
 
 const minimap = computed(() => {
     if (!FINAL_CONFIG.value.chart.zoom.minimap.show) return [];
