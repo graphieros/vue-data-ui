@@ -5,12 +5,12 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref({ percentage: 66.6 })
+const dataset = ref(undefined)
 
 onMounted(() => {
     setTimeout(() => {
-        dataset.value.percentage = 10;
-    }, 3000)
+        dataset.value = { percentage : 100 }
+    }, 2000)
 })
 
 const isPropsToggled = ref(false);
@@ -36,6 +36,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
@@ -94,7 +96,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -106,9 +108,9 @@ const config = computed(() => {
                 ...c.style.chart,
                 percentage: {
                     ...c.style.chart.percentage,
-                    formatter: ({value}) => {
-                        return `f - ${value}`
-                    }
+                    // formatter: ({value}) => {
+                    //     return `f - ${value}`
+                    // }
                 }
             }
         },
@@ -140,14 +142,21 @@ onMounted(async () => {
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
     <button @click="alterDataset">ALTER DATASET</button>
 
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiTiremarks :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }"/>
+    </div>
+
     <Box comp="VueUiTiremarks" :dataset="dataset">
         <template #title>VueUiTiremarks</template>
 
         <template #local>
             <LocalVueUiTiremarks :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
-                <template #chart-background>
+                <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-                </template>
+                </template> -->
 
                 <template #optionPdf>
                     PRINT PDF
@@ -166,7 +175,19 @@ onMounted(async () => {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiTiremarks" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`">
+            <LocalVueDataUi component="VueUiTiremarks" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : {
+                ...config,
+                style: {
+                    ...config.style,
+                    chart: {
+                        ...config.style.chart,
+                        layout: {
+                            ...config.style.chart.layout,
+                            display: 'horizontal'
+                        }
+                    }
+                }
+            }" :key="`VDUI-lodal_${step}`">
             </LocalVueDataUi>
         </template>
 

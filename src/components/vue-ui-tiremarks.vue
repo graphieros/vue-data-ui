@@ -1,26 +1,37 @@
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent } from "vue";
-import { useNestedProp } from "../useNestedProp";
 import { 
-applyDataLabel,
+    computed, 
+    defineAsyncComponent, 
+    onMounted, 
+    ref, 
+    toRefs,
+    watch, 
+} from "vue";
+import { 
+    applyDataLabel,
     checkNaN,
     createUid,
     dataLabel,
     error,
     objectIsEmpty, 
     shiftHue,
+    treeShake,
     XMLNS
 } from "../lib";
-import { usePrinter } from "../usePrinter";
+import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue";
 import img from "../img";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
@@ -48,16 +59,39 @@ const isDataset = computed(() => {
 const uid = ref(createUid());
 const tiremarksChart = ref(null);
 const noTitle = ref(null);
+const chartTitle = ref(null);
+const source = ref(null);
 const step = ref(0);
 const titleStep = ref(0);
+const resizeObserver = ref(null);
+const observedEl = ref(null);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: { percentage: 50 },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    animation: { use: false },
+                    layout: {
+                        activeColor: '#6A6A6A80',
+                        inactiveColor: '#CACACA80',
+                        ticks: {
+                            gradient: { show: false }
+                        }
+                    },
+                },
+            }
+        }
+    })
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -97,9 +131,9 @@ const hasOptionsNoTitle = computed(() => {
     return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
 });
 
-const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : checkNaN(props.dataset.percentage));
+const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : checkNaN(FINAL_DATASET.value.percentage));
 
-watch(() => props.dataset, (v) => {
+watch(() => FINAL_DATASET.value, (v) => {
     if (FINAL_CONFIG.value.style.chart.animation.use) {
         useAnimation(v.percentage);
     } else {
@@ -129,14 +163,44 @@ function useAnimation(targetValue) {
     animate();
 }
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiTiremarks',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
     }
-    useAnimation(props.dataset.percentage || 0);
+
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: tiremarksChart.value,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                source: source.value
+            });
+
+            requestAnimationFrame(() => {
+                WIDTH.value = Math.max(0.1, width);
+                HEIGHT.value = Math.max(0.1, height - 12);
+            })
+        });
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        observedEl.value = tiremarksChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
+    }
+
+    useAnimation(FINAL_DATASET.value.percentage || 0);
 }
 
 const isVertical = computed(() => {
@@ -144,12 +208,13 @@ const isVertical = computed(() => {
 });
 
 const padding = computed(() => {
-    
+    const showLabel = FINAL_CONFIG.value.style.chart.percentage.show;
+
     const paddingRef = {
-        top: 48,
-        left: 64,
-        right: 64,
-        bottom: 48
+        top: showLabel ? 48 : 12,
+        left: showLabel ? 64 : 16,
+        right: showLabel ? 64 : 16,
+        bottom: showLabel ? 48 : 12
     }
 
     if(isVertical.value) {
@@ -163,7 +228,7 @@ const padding = computed(() => {
         return {
             top: 0,
             bottom: 0,
-            left: FINAL_CONFIG.value.style.chart.percentage.horizontalPosition === 'left' ? paddingRef.left : 3,
+            left: FINAL_CONFIG.value.style.chart.percentage.horizontalPosition === 'left' ? paddingRef.left : 16,
             right: FINAL_CONFIG.value.style.chart.percentage.horizontalPosition === 'right' ? paddingRef.right : 10,
         }
     }
@@ -174,14 +239,28 @@ const totalPadding = computed(() => {
     return Object.values(padding.value).reduce((a, b) => a + b, 0)
 })
 
+const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
+const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
+
 const svg = computed(() => {
-    const small = 56;
-    const big = 312;
     return {
-        height: isVertical.value ? big : small,
-        width: isVertical.value ? small : big,
+        height: HEIGHT.value,
+        width: WIDTH.value,
     }
 });
+
+const labelSkeleton = computed(() => {
+    return {
+        horizontal: {
+            x: tireLabel.value.x + (FINAL_CONFIG.value.style.chart.percentage.horizontalPosition === 'left' ? 6 : 3),
+            y: (svg.value.height / 2) - (tireLabel.value.fontSize / 2)
+        },
+        vertical: {
+            x: svg.value.width / 2 - 20,
+            y: tireLabel.value.y - (tireLabel.value.fontSize / 2)
+        }
+    }[FINAL_CONFIG.value.style.chart.layout.display]
+})
 
 const tickSize = computed(() => {
     if (isVertical.value) {
@@ -329,7 +408,7 @@ defineExpose({
             :style="`height:36px; width: 100%;background:transparent`"
         />
 
-        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:12px`">
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
@@ -394,7 +473,6 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS"
-            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`0 0 ${svg.width} ${svg.height}`"
             :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
@@ -439,26 +517,37 @@ defineExpose({
                     stroke-linecap="round"
                 />
             </g>
-            <text
-                data-cy="data-label"
-                v-if="FINAL_CONFIG.style.chart.percentage.show"
-                :x="tireLabel.x"
-                :y="tireLabel.y"
-                :font-size="tireLabel.fontSize"
-                :fill="FINAL_CONFIG.style.chart.layout.ticks.gradient.show && FINAL_CONFIG.style.chart.percentage.useGradientColor ? shiftHue(FINAL_CONFIG.style.chart.layout.activeColor, activeValue / 100 * (FINAL_CONFIG.style.chart.layout.ticks.gradient.shiftHueIntensity / 100)) : FINAL_CONFIG.style.chart.percentage.color"
-                :font-weight="tireLabel.bold ? 'bold': 'normal'"
-                :text-anchor="tireLabel.textAnchor"
-            >
-                {{ applyDataLabel(
-                    FINAL_CONFIG.style.chart.percentage.formatter,
-                    activeValue,
-                    dataLabel({
-                        v: activeValue,
-                        s: '%',
-                        r: FINAL_CONFIG.style.chart.percentage.rounding
-                    }))
-                }}
-            </text>
+            <g v-if="FINAL_CONFIG.style.chart.percentage.show">
+                <rect 
+                    v-if="loading"
+                    :x="labelSkeleton.x"
+                    :y="labelSkeleton.y"
+                    :width="40"
+                    :height="tireLabel.fontSize"
+                    fill="#6A6A6A80"
+                    :rx="3"
+                />
+                <text
+                    v-else
+                    data-cy="data-label"
+                    :x="tireLabel.x"
+                    :y="tireLabel.y"
+                    :font-size="tireLabel.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.ticks.gradient.show && FINAL_CONFIG.style.chart.percentage.useGradientColor ? shiftHue(FINAL_CONFIG.style.chart.layout.activeColor, activeValue / 100 * (FINAL_CONFIG.style.chart.layout.ticks.gradient.shiftHueIntensity / 100)) : FINAL_CONFIG.style.chart.percentage.color"
+                    :font-weight="tireLabel.bold ? 'bold': 'normal'"
+                    :text-anchor="tireLabel.textAnchor"
+                >
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.percentage.formatter,
+                        activeValue,
+                        dataLabel({
+                            v: activeValue,
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.percentage.rounding
+                        }))
+                    }}
+                </text>
+            </g>
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -470,19 +559,8 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'tiremarks',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    tiremarks: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
-
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

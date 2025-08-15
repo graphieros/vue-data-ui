@@ -1510,11 +1510,16 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiTiremarksConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
+                width?: number; // v3
+                height?: number; // v3
                 backgroundColor?: string;
                 color?: string;
                 animation?: {

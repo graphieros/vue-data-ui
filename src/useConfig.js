@@ -1458,12 +1458,17 @@ export function useConfig() {
     }
 
     const vue_ui_tiremarks = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         style: {
             fontFamily: 'inherit',
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
+                width: 312, // v3
+                height: 56, // v3
                 animation: {
                     use: true,
                     speed: 0.5,
