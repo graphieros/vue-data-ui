@@ -124,6 +124,25 @@ declare module "vue-data-ui" {
         | VueUiChordConfig;
     }>;
 
+    export type ChartEvent<T> = null | (({ datapoint, seriesIndex} : { datapoint: T, seriesIndex: number}) => void);
+
+    export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
+    export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
+    export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
+    export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
+    export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
+    export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
+    export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
+    export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
+    export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
+    export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
+    export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
+    export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
+    export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
+    export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
+    export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
+    export type VueUiOnionEvent = ChartEvent<VueUiOnionDatapoint>;
+
     export type VueUiPatternName =
         | "bubbles"
         | "flooring"
@@ -3399,24 +3418,6 @@ declare module "vue-data-ui" {
         VueUiXyExpose
     >;
 
-    export type ChartEvent<T> = null | (({ datapoint, seriesIndex} : { datapoint: T, seriesIndex: number}) => void);
-
-    export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
-    export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
-    export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
-    export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
-    export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
-    export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
-    export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
-    export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
-    export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
-    export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
-    export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
-    export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
-    export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
-    export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
-    export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>
-
     export type VueUiDonutConfig = {
         debug?: boolean;
         type?: "classic" | "polar";
@@ -4697,7 +4698,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiOnionConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiOnionEvent; // v3
+            datapointLeave?: VueUiOnionEvent; // v3
+            datapointClick?: VueUiOnionEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -4722,6 +4730,7 @@ declare module "vue-data-ui" {
                     labels?: {
                         show?: boolean;
                         fontSize?: number;
+                        minFontSize?: number; // v3
                         color?: string;
                         roundingValue?: number;
                         roundingPercentage?: number;

@@ -36,6 +36,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img.js";
 import { useLoading } from "../useLoading.js";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
@@ -279,6 +280,19 @@ const ratingColor = computed(() => {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
+const labels_font_size = computed({
+    get: () => svg.value.segmentFontSize,
+    set: v => v
+});
+
+const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
+    svgRef,
+    fontSize: svg.value.segmentFontSize,
+    minFontSize: FINAL_CONFIG.value.style.chart.layout.segmentNames.minFontSize,
+    sizeRef: labels_font_size,
+    labelClass: '.vue-ui-gauge-label-flat'
+})
+
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
@@ -386,7 +400,7 @@ function prepareChart() {
                 });
             });
 
-            resizeAndReflow();
+            autoSizeLabels();
         });
 
         if (resizeObserver.value) {
@@ -401,7 +415,7 @@ function prepareChart() {
         resizeObserver.value.observe(observedEl.value);
     }
 
-    requestAnimationFrame(resizeAndReflow);
+    requestAnimationFrame(autoSizeLabels);
 }
 
 onMounted(() => {
@@ -416,61 +430,6 @@ onBeforeUnmount(() => {
         resizeObserver.value.disconnect();
     }
 });
-
-const labels_font_size = computed({
-    get: () => svg.value.segmentFontSize,
-    set: v => v
-});
-
-let rafScheduled = false;
-function resizeAndReflow() {
-    if (rafScheduled) return;
-
-    requestAnimationFrame(() => {
-        rafScheduled = false;
-
-        const cfg = FINAL_CONFIG.value;
-        const container = svgRef.value;
-
-        const [x, y, w, h] = container
-            .getAttribute('viewBox')
-            .split(' ')
-            .map(Number)
-
-        const bounds = { x, y, width: w, height: h };
-
-        const labelTypes = [
-            {
-                selector: '.vue-ui-gauge-label-flat',
-                baseSize: svg.value.segmentFontSize,
-                minSize: FINAL_CONFIG.value.style.chart.layout.segmentNames.minFontSize,
-                sizeRef: labels_font_size
-            }
-        ];
-
-        const totalMatches = labelTypes
-            .map(lt => container.querySelectorAll(lt.selector).length)
-            .reduce((a, b) => a + b, 0);
-
-        if (totalMatches === 0) return;
-
-        labelTypes.forEach(({ selector, baseSize, minSize, sizeRef }) => {
-            container
-                .querySelectorAll(selector)
-                .forEach(el => {
-                    const final = autoFontSize({
-                        el,
-                        bounds,
-                        currentFontSize: baseSize,
-                        minFontSize: minSize,
-                        attempts: 200,
-                        padding: 1
-                    });
-                    sizeRef.value = final;
-                });
-            });
-    })
-}
 
 function useAnimation(targetValue) {
     const arr = [];

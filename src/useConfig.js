@@ -1679,7 +1679,14 @@ export function useConfig() {
     }
 
     const vue_ui_onion = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         useCssAnimation: true,
@@ -1704,6 +1711,7 @@ export function useConfig() {
                     labels: {
                         show: true,
                         fontSize: FONT._14,
+                        minFontSize: MIN_FONT_SIZE, // v3
                         color: COLOR_BLACK,
                         roundingValue: 0,
                         roundingPercentage: 0,
