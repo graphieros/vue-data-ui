@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, shallowRef } from "vue";
+import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, shallowRef, toRefs } from "vue";
 import { 
     applyDataLabel,
     checkNaN,
@@ -9,6 +9,7 @@ import {
     makeDonut,
     objectIsEmpty,
     shiftHue,
+    treeShake,
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
@@ -21,9 +22,10 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
+import { useLoading } from "../useLoading";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
@@ -57,14 +59,37 @@ const source = ref(null);
 const noTitle = ref(null);
 const titleStep = ref(0);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: { percentage: 50 },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+        userOptions: { show: false },
+        style: {
+            chart: {
+                backgroundColor: '#99999930',
+                animation: { use: false },
+                layout: {
+                    wheel: {
+                        ticks: {
+                            activeColor: '#6A6A6A80',
+                            inactiveColor: '#CACACA80',
+                        }
+                    },
+                    innerCircle: {
+                        stroke: '#CACACA80'
+                    },
+                }
+            }
+        }
     }
-});
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -127,9 +152,9 @@ function calcTickStart(angle, distance = 1) {
     }
 }
 
-const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : (props.dataset.percentage || 0));
+const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : (FINAL_DATASET.value.percentage || 0));
 
-watch(() => props.dataset, (v) => {
+watch(() => FINAL_DATASET.value, (v) => {
     if (FINAL_CONFIG.value.style.chart.animation.use) {
         useAnimation(v.percentage);
     } else {
@@ -144,14 +169,16 @@ onMounted(() => {
     prepareChart();
 });
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiWheel',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
     }
-    useAnimation(props.dataset.percentage || 0);
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
@@ -180,6 +207,8 @@ function prepareChart() {
         observedEl.value = wheelChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
     }
+
+    useAnimation(FINAL_DATASET.value.percentage || 0);
 }
 
 onBeforeUnmount(() => {
@@ -367,7 +396,6 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS"
-            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             data-cy="wheel-svg"
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
@@ -423,27 +451,38 @@ defineExpose({
                 :stroke-width="FINAL_CONFIG.style.chart.layout.innerCircle.strokeWidth"
                 fill="none"
             />
-            <text
-                data-cy="data-label"
-                v-if="FINAL_CONFIG.style.chart.layout.percentage.show"
-                :x="wheel.centerX"
-                :y="wheel.centerY + baseLabelFontSize / 3"
-                :font-size="baseLabelFontSize"
-                :fill="FINAL_CONFIG.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(FINAL_CONFIG.style.chart.layout.wheel.ticks.activeColor, activeValue / 100 * (FINAL_CONFIG.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : FINAL_CONFIG.style.chart.layout.wheel.ticks.activeColor"
-                text-anchor="middle"
-                :font-weight="FINAL_CONFIG.style.chart.layout.percentage.bold ? 'bold' : 'normal'"
-                style="font-variant-numeric:tabluar-nums"
-            >
-                {{ applyDataLabel(
-                    FINAL_CONFIG.style.chart.layout.percentage.formatter,
-                    checkNaN(activeValue),
-                    dataLabel({
-                        v: checkNaN(activeValue),
-                        s: '%',
-                        r: FINAL_CONFIG.style.chart.layout.percentage.rounding
-                    }))
-                }}
-            </text>
+            <g v-if="FINAL_CONFIG.style.chart.layout.percentage.show">
+                <rect 
+                    v-if="loading"
+                    :x="wheel.centerX - 40"
+                    :y="wheel.centerY - baseLabelFontSize / 2"
+                    :width="80"
+                    :height="baseLabelFontSize"
+                    fill="#6A6A6A80"
+                    rx="3"
+                />
+                <text
+                    v-else
+                    data-cy="data-label"
+                    :x="wheel.centerX"
+                    :y="wheel.centerY + baseLabelFontSize / 3"
+                    :font-size="baseLabelFontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(FINAL_CONFIG.style.chart.layout.wheel.ticks.activeColor, activeValue / 100 * (FINAL_CONFIG.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : FINAL_CONFIG.style.chart.layout.wheel.ticks.activeColor"
+                    text-anchor="middle"
+                    :font-weight="FINAL_CONFIG.style.chart.layout.percentage.bold ? 'bold' : 'normal'"
+                    style="font-variant-numeric:tabluar-nums"
+                >
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.layout.percentage.formatter,
+                        checkNaN(activeValue),
+                        dataLabel({
+                            v: checkNaN(activeValue),
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.layout.percentage.rounding
+                        }))
+                    }}
+                </text>
+            </g>
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -455,18 +494,8 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'wheel',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    wheel: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

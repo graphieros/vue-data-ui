@@ -1406,6 +1406,8 @@ export function useConfig() {
     }
 
     const vue_ui_wheel = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
         theme: '',
         style: {

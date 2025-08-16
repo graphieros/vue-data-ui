@@ -5,7 +5,13 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref({ percentage: 50 })
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = { percentage: 75 };
+    }, 2000)
+})
 
 
 // onMounted(() => {
@@ -37,6 +43,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: true, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -174,38 +182,38 @@ onMounted(async () => {
                 <template #optionPdf>
                     PRINT PDF
                 </template>
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39230" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
                 
             </LocalVueUiWheel>
         </template>
         
         <template #VDUI-local>
             <LocalVueDataUi component="VueUiWheel" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`">
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39230" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
             </LocalVueDataUi>
         </template>
         
         <template #build>
             <VueUiWheel :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39230" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
             </VueUiWheel>
         </template>
         
         <template #VDUI-build>
             <VueDataUi component="VueUiWheel" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`">
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39230" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
             </VueDataUi>
         </template>
 

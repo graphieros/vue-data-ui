@@ -68,7 +68,7 @@ const observedEl = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
+const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,

@@ -1579,6 +1579,8 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiWheelConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
         theme?: Theme;
         style?: {
