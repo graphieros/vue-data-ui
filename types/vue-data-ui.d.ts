@@ -126,22 +126,23 @@ declare module "vue-data-ui" {
 
     export type ChartEvent<T> = null | (({ datapoint, seriesIndex} : { datapoint: T, seriesIndex: number}) => void);
 
-    export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
-    export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
-    export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
-    export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
-    export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
-    export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
-    export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
-    export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
     export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
-    export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
-    export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
-    export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
-    export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
-    export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
+    export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
+    export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
     export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
     export type VueUiOnionEvent = ChartEvent<VueUiOnionDatapoint>;
+    export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
+    export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
+    export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
+    export type VueUiStripPlotEvent = ChartEvent<VueUiStripPlotDatapoint>;
+    export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
+    export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
+    export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
+    export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
+    export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
+    export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
+    export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
+    export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
 
     export type VueUiPatternName =
         | "bubbles"
@@ -6065,7 +6066,14 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiStripPlotConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiStripPlotEvent; // v3
+            datapointLeave?: VueUiStripPlotEvent; // v3
+            datapointClick?: VueUiStripPlotEvent; // v3
+        };
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -6089,7 +6097,8 @@ declare module "vue-data-ui" {
                 backgroundColor?: string;
                 color?: string;
                 height?: number;
-                stripWidth?: number;
+                width?: number; // v3
+                // stripWidth?: number; // v3 deprecated
                 padding?: ChartPadding;
                 grid?: {
                     show?: boolean;
@@ -6145,6 +6154,8 @@ declare module "vue-data-ui" {
                         color?: string;
                         fontSize?: number;
                         offsetY?: number;
+                        rotation?: number; // v3
+                        autoRotate?: boolean; // v3
                     };
                     yAxisLabels?: {
                         show?: boolean;
@@ -6176,6 +6187,9 @@ declare module "vue-data-ui" {
         id: string;
         name: string;
         parentId: string;
+        parentIndex: number;
+        parentName: string;
+        plotIndex: number;
         value: number;
         x: number;
         y: number;

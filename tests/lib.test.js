@@ -23,6 +23,7 @@ import {
     calculateNiceScale,
     calculateNiceScaleWithExactExtremes,
     checkArray,
+    checkFormatter,
     checkNaN,
     checkObj,
     closestDecimal,
@@ -30,17 +31,22 @@ import {
     convertCustomPalette,
     convertNameColorToHex,
     createArc,
+    createAreaWithCuts,
     createHalfCircleArc,
+    createIndividualArea,
+    createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
+    createSmoothAreaSegments,
     createSmoothPath,
+    createSmoothPathWithCuts,
     createSpiralPath,
     createStar,
+    createStraightPathWithCuts,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createTSpansFromLineBreaksOnY,
     createWordCloudDatasetFromPlainText,
-    checkFormatter,
     darkenHexColor,
     dataLabel,
     degreesToRadians,
@@ -49,11 +55,14 @@ import {
     formatSmallValue,
     functionReturnsString,
     generateSpiralCoordinates,
+    getAreaSegments,
     getCloserPoint,
     getCumulativeAverage,
     getCumulativeMedian,
     getMissingDatasetAttributes,
+    getPathLengthFromCoordinates,
     getScaleFactorUsingArcSize,
+    getValidSegments,
     hasDeepProperty,
     hslToRgba,
     interpolateColorHex,
@@ -73,21 +82,13 @@ import {
     rotateMatrix,
     sanitizeArray,
     setOpacity,
-    shiftHue,
     setOpacityIfWithinBBox,
+    shiftHue,
     sumByAttribute,
+    sumSeries,
     translateSize,
     treeShake,
-    getPathLengthFromCoordinates,
-    sumSeries,
-    getAreaSegments,
-    createAreaWithCuts,
-    createIndividualArea,
-    createIndividualAreaWithCuts,
-    getValidSegments,
-    createStraightPathWithCuts,
-    createSmoothPathWithCuts,
-    createSmoothAreaSegments
+    wrapText
 } from "../src/lib";
 
 describe("calcTrend", () => {
@@ -4066,3 +4067,22 @@ describe('formatSmallValue()', () => {
         expect(formatSmallValue({ value: 0.0000123, removeTrailingZero: false })).toBe('0.0000')
     })
 })
+
+describe('wrapText', () => {
+    test('does not error on empy string', () => {
+        expect(wrapText('')).toBe('');
+    });
+
+    test('preserves the original string if under maxChar', () => {
+        expect(wrapText('Some normal text')).toBe('Some normal text');
+    });
+
+    test('adds a line break when the original string exceeds maxChar', () => {
+        expect(wrapText('Some text that is too long')).toBe('Some text that is\ntoo long');
+        expect(wrapText('Some normal text', 10)).toBe('Some\nnormal\ntext');
+    });
+
+    test('only wraps full words', () => {
+        expect(wrapText('ABCDEFGHIJKLMNOPQRSTUVWXYZ')).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    });
+});

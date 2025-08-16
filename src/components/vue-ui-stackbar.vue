@@ -1,5 +1,17 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick, useSlots, defineAsyncComponent, shallowRef, onBeforeUnmount, watchEffect, reactive, toRefs } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs ,
+    useSlots, 
+    watch, 
+    watchEffect,
+} from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
@@ -37,20 +49,20 @@ import { useTimeLabels } from "../useTimeLabels";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
+import img from "../img";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import Shape from "../atoms/Shape.vue";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import Shape from "../atoms/Shape.vue";
-import img from "../img";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig();
 const slots = useSlots();

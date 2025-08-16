@@ -8,7 +8,11 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
-const dataset = ref([
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
     {
         name: "Some continent\nwith a long name",
         plots: [
@@ -85,9 +89,21 @@ const dataset = ref([
         ]
     },
 ]
-)
+    }, 2000)
+})
+
+function addDatapoint() {
+    dataset.value.push({
+        name: 'DP',
+        plots: [
+            { name: '___', value: 5}
+        ]
+    })
+}
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
 
@@ -109,14 +125,14 @@ const model = ref([
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.height', def: 600, type: 'number', min: 200, max: 1000},
     { key: 'style.chart.stripWidth', def: 120, type: 'number', min: 48, max: 300},
-    { key: 'style.chart.padding.top', def: 24, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.left', def: 64, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.bottom', def: 64, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.left', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.right', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.chart.grid.show', def: true, type: 'checkbox'},
     { key: 'style.chart.grid.stroke', def: '#e1e5e8', type: 'color'},
     { key: 'style.chart.grid.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
@@ -201,7 +217,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)
@@ -226,6 +242,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex });
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex });
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex });
+                },
+            },
             style: {
                 ...c.style,
                 chart: {
@@ -259,6 +286,7 @@ onMounted(async () => {
 <template>
     <button @click="toggleTable">TOGGLE TABLE</button>
     <button @click="toggleLabels">TOGGLE LABELS</button>
+    <button @click="addDatapoint">ADD DATAPOINT</button>
     <div style="margin: 12px 0; color: white">
         Theme:
         <select v-model="currentTheme" @change="step += 1">
@@ -275,9 +303,9 @@ onMounted(async () => {
             ...config,
             responsive: true
         }">
-        <template #chart-background>
+        <!-- <template #chart-background>
             <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-        </template>
+        </template> -->
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                 WATERMARK

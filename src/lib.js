@@ -2804,6 +2804,31 @@ export function fib(n) {
     return a;
 }
 
+export function wrapText(str, maxChars = 20) {
+    str = str.replace(/[\r\n]+/g, " ");
+
+    const words = str.split(" ");
+    let line = "";
+    let result = "";
+
+    for (let word of words) {
+    if ((line + (line ? " " : "") + word).length <= maxChars) {
+        line += (line ? " " : "") + word;
+    } else {
+        if (line) {
+        result += (result ? "\n" : "") + line;
+        }
+        line = word;
+    }
+    }
+
+    if (line) {
+    result += (result ? "\n" : "") + line;
+    }
+
+    return result;
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -2829,16 +2854,22 @@ const lib = {
     convertColorToHex,
     convertConfigColors,
     convertCustomPalette,
+    createAreaWithCuts,
     createCsvContent,
     createHalfCircleArc,
+    createIndividualArea,
+    createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
     createShadesOfGrey,
+    createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathVertical,
+    createSmoothPathWithCuts,
     createSpiralPath,
     createStar,
     createStraightPath,
+    createStraightPathWithCuts,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createTSpansFromLineBreaksOnY,
@@ -2858,6 +2889,7 @@ const lib = {
     formatSmallValue,
     functionReturnsString,
     generateSpiralCoordinates,
+    getAreaSegments,
     getCloserPoint,
     getCumulativeAverage,
     getCumulativeMedian,
@@ -2886,20 +2918,14 @@ const lib = {
     rotateMatrix,
     sanitizeArray,
     setOpacity,
+    setOpacityIfWithinBBox,
     shiftHue,
     slugify,
-    setOpacityIfWithinBBox,
     sumByAttribute,
     sumSeries,
     themePalettes,
     translateSize,
     treeShake,
-    createStraightPathWithCuts,
-    createSmoothPathWithCuts,
-    getAreaSegments,
-    createAreaWithCuts,
-    createIndividualAreaWithCuts,
-    createSmoothAreaSegments,
-    createIndividualArea,
+    wrapText
 };
 export default lib;

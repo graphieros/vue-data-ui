@@ -3602,7 +3602,14 @@ export function useConfig() {
     }
 
     const vue_ui_strip_plot = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
@@ -3623,8 +3630,9 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 height: 600,
-                stripWidth: 120,
-                padding: PADDING([24, 24, 64, 64]),
+                width: 600, // v3
+                // stripWidth: 120, v3 deprecated
+                padding: PADDING([12, 12, 12, 12]), // v3 modified
                 grid: {
                     show: true,
                     stroke: COLOR_GREY_MID,
@@ -3678,7 +3686,9 @@ export function useConfig() {
                         show: true,
                         color: COLOR_BLACK,
                         fontSize: FONT._14,
-                        offsetY: 0
+                        offsetY: 0,
+                        rotation: 0, // v3,
+                        autoRotate: true, // v3
                     },
                     yAxisLabels: {
                         show: true,
