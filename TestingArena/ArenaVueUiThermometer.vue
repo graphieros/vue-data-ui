@@ -5,11 +5,17 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref({
-    value: 37,
-    from: -100,
-    to: 100,
-    steps: 20,
+const dataset = ref(undefined)
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = {
+            value: 0,
+            from: -100,
+            to: 100,
+            steps: 20,
+        }
+    }, 2000)
 })
 
 const alternateDataset = ref({
@@ -40,6 +46,9 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
@@ -54,14 +63,14 @@ const model = ref([
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.height', def: 360, type: 'number', min: 100, max: 1000},
     { key: 'style.chart.thermometer.width', def: 48, type: 'number', min: 12, max: 64},
     { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 100},
     { key: 'style.chart.padding.bottom', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.left', def: 100, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.right', def: 100, type: 'number', min: 0, max: 100},
+    // DEPRECATED { key: 'style.chart.padding.left', def: 100, type: 'number', min: 0, max: 100},
+    // DEPRECATED { key: 'style.chart.padding.right', def: 100, type: 'number', min: 0, max: 100},
     { key: 'style.chart.graduations.show', def: true, type: 'checkbox'},
     { key: 'style.chart.graduations.sides', def: 'both', type: 'select', options: ['both', 'left', 'right']},
     { key: 'style.chart.graduations.height', def: 2, type: 'number', min: 0, max: 12},
@@ -98,7 +107,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -146,14 +155,18 @@ onMounted(async () => {
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
     <button @click="alterDataset">ALTER DATASET</button>
 
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiThermometer :dataset="dataset" :config="{...config, responsive: true }"/>
+    </div>
+
     <Box comp="VueUiThermometer" :dataset="dataset">
         <template #title>VueUiThermometer</template>
 
         <template #local>
             <LocalVueUiThermometer :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
-                <template #chart-background>
+                <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-                </template>
+                </template> -->
                 <template #optionPdf>
                     PRINT PDF
                 </template>

@@ -1961,6 +1961,9 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiThermometerConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -1969,10 +1972,15 @@ declare module "vue-data-ui" {
                 backgroundColor?: string;
                 color?: string;
                 height?: number;
+                width?: number; // v3
                 thermometer?: {
                     width?: number;
                 };
-                padding?: ChartPadding;
+                padding?: {
+                    // v3 left and right are deprecated
+                    top?: number;
+                    bottom?: number;
+                };
                 graduations?: {
                     show?: boolean;
                     sides?: "left" | "right" | "both" | "none";
@@ -1990,7 +1998,9 @@ declare module "vue-data-ui" {
                     speedMs?: number;
                 };
                 label?: {
+                    show?: boolean; // v3
                     fontSize?: number;
+                    minFontSize?: number;
                     rounding?: number;
                     bold?: boolean;
                     prefix?: string;

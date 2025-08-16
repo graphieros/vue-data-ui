@@ -2980,6 +2980,9 @@ export function useConfig() {
     }
 
     const vue_ui_thermometer = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         customPalette: [],
         style: {
@@ -2988,10 +2991,15 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 height: 360,
+                width: 256, // v3
                 thermometer: {
                     width: 48
                 },
-                padding: PADDING([12, 64, 12, 64]),
+                padding: {
+                    // v3 left and right are deprecated
+                    top: 12,
+                    bottom: 12,
+                },
                 graduations: {
                     show: true,
                     sides: 'both',
@@ -3009,7 +3017,9 @@ export function useConfig() {
                     speedMs: 1000
                 },
                 label: {
+                    show: true, // v3
                     fontSize: FONT._20,
+                    minFontSize: MIN_FONT_SIZE, // v3
                     rounding: 1,
                     bold: true,
                     color: COLOR_BLACK,

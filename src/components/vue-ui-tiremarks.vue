@@ -474,7 +474,7 @@ defineExpose({
             ref="svgRef"
             :xmlns="XMLNS"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :viewBox="`0 0 ${svg.width} ${svg.height}`"
+            :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
             :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <PackageVersion />
