@@ -146,13 +146,14 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     plots: {
                         endColor: '#969696',
                         startColor: '#DBDBDB',
-                        stroke: '#6A6A6A'
+                        stroke: '#6A6A6A',
+                        evaluationColors: { enable: false }
                     }
                 }
             }
         }
     })
-})
+});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -410,6 +411,7 @@ const drawingArea = computed(() => {
     const absoluteHeight = baseRowHeight.value * rows.value;
     const width = WIDTH.value - offsetX - padding.left - padding.right;
     const widthPlotReference = (scale.value.ticks.length) * (width / scale.value.ticks.length);
+
     return {
         left: FINAL_CONFIG.value.style.chart.padding.left + offsetX,
         right: WIDTH.value - FINAL_CONFIG.value.style.chart.padding.right,
@@ -434,16 +436,28 @@ const mutableDataset = computed({
         const da = drawingArea.value;
         const sc = scale.value;
         return MUTABLE.value.map((ds, i) => {
-        const startX = projectX(ds.start,  sc, da);
-        const endX   = projectX(ds.endVal, sc, da); // animated
-        const centerX = startX + (endX - startX) / 2;
-        return {
-            ...ds,
-            startX,
-            endX,
-            centerX,
-            y: da.top + i * da.rowHeight + da.rowHeight / 2,
-        };
+            const startX = projectX(ds.start,  sc, da);
+            const endX   = projectX(ds.endVal, sc, da); // animated
+            const centerX = startX + (endX - startX) / 2;
+
+            const isPositive = ![null, undefined].includes(ds.start) && ![null, undefined].includes(ds.end) && ds.end > ds.start;
+            const isNegative = ![null, undefined].includes(ds.start) && ![null, undefined].includes(ds.end) && ds.end < ds.start;
+            const isNeutral = (![null, undefined].includes(ds.start) && ![null, undefined].includes(ds.end) && ds.end === ds.start) || ([null, undefined].includes(ds.start) || [null, undefined].includes(ds.end));
+
+            const evaluationColor = isPositive ? FINAL_CONFIG.value.style.chart.plots.evaluationColors.positive : isNegative ? FINAL_CONFIG.value.style.chart.plots.evaluationColors.negative : isNeutral ? FINAL_CONFIG.value.style.chart.plots.evaluationColors.neutral : FINAL_CONFIG.value.style.chart.plots.evaluationColors.neutral;
+
+            return {
+                ...ds,
+                isPositive,
+                isNegative,
+                isNeutral,
+                evaluationColor,
+                evaluationGrad: `url(#${isPositive ? 'positive': isNegative ? 'negative' : 'neutral'}_grad_${uid.value})`,
+                startX,
+                endX,
+                centerX,
+                y: da.top + i * da.rowHeight + da.rowHeight / 2,
+            };
         });
     },
     set(v) { MUTABLE.value = v; }
@@ -508,10 +522,18 @@ function prepareDataset() {
 }
 
 const legendSet = computed(() => {
-    return [
-        { name: FINAL_CONFIG.value.style.chart.legend.labelStart, color: FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#start_grad_${uid.value})` : FINAL_CONFIG.value.style.chart.plots.startColor},
-        { name: FINAL_CONFIG.value.style.chart.legend.labelEnd, color: FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#end_grad_${uid.value})` : FINAL_CONFIG.value.style.chart.plots.endColor},
-    ]
+    if (FINAL_CONFIG.value.style.chart.plots.evaluationColors.enable) {
+        return [
+            { name: FINAL_CONFIG.value.style.chart.legend.labelNegative, color: FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#negative_grad_${uid.value})` : FINAL_CONFIG.value.style.chart.plots.evaluationColors.negative},
+            { name: FINAL_CONFIG.value.style.chart.legend.labelNeutral, color: FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#neutral_grad_${uid.value})` : FINAL_CONFIG.value.style.chart.plots.evaluationColors.neutral},
+            { name: FINAL_CONFIG.value.style.chart.legend.labelPositive, color: FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#positive_grad_${uid.value})` : FINAL_CONFIG.value.style.chart.plots.evaluationColors.positive},
+        ]
+    } else {
+        return [
+            { name: FINAL_CONFIG.value.style.chart.legend.labelStart, color: FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#start_grad_${uid.value})` : FINAL_CONFIG.value.style.chart.plots.startColor},
+            { name: FINAL_CONFIG.value.style.chart.legend.labelEnd, color: FINAL_CONFIG.value.style.chart.plots.gradient.show ? `url(#end_grad_${uid.value})` : FINAL_CONFIG.value.style.chart.plots.endColor},
+        ]
+    }
 })
 
 const legendConfig = computed(() => {
@@ -1082,7 +1104,7 @@ defineExpose({
                 <path
                     v-show="selectedDatapoint !== null && ![null, undefined].includes(selectedDatapoint.start)"
                     :d="`M ${selectedDatapoint ? selectedDatapoint.startX : drawingArea.left},${drawingArea.top} ${selectedDatapoint ? selectedDatapoint.startX : drawingArea.left},${drawingArea.bottom}`"
-                    :stroke="selectedDatapoint ? FINAL_CONFIG.style.chart.plots.startColor : 'transparent'"
+                    :stroke="selectedDatapoint ? FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? selectedDatapoint.evaluationColor : FINAL_CONFIG.style.chart.plots.startColor : 'transparent'"
                     :stroke-width="FINAL_CONFIG.style.chart.comparisonLines.strokeWidth"
                     :stroke-dasharray="FINAL_CONFIG.style.chart.comparisonLines.strokeDasharray"
                     :style="{ transition: 'all 0.3s ease-in-out'}"
@@ -1092,7 +1114,7 @@ defineExpose({
                 <path
                     v-show="selectedDatapoint !== null && ![null, undefined].includes(selectedDatapoint.end)"
                     :d="`M ${selectedDatapoint ? selectedDatapoint.endX : drawingArea.left},${drawingArea.top} ${selectedDatapoint ? selectedDatapoint.endX : drawingArea.left},${drawingArea.bottom}`"
-                    :stroke="selectedDatapoint ? FINAL_CONFIG.style.chart.plots.endColor : 'transparent'"
+                    :stroke="selectedDatapoint ? FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? selectedDatapoint.evaluationColor : FINAL_CONFIG.style.chart.plots.endColor : 'transparent'"
                     :stroke-width="FINAL_CONFIG.style.chart.comparisonLines.strokeWidth"
                     :stroke-dasharray="FINAL_CONFIG.style.chart.comparisonLines.strokeDasharray"
                     :style="{ transition: 'all 0.3s ease-in-out'}"
@@ -1132,15 +1154,30 @@ defineExpose({
                     <stop offset="90%" :stop-color="darkenHexColor(FINAL_CONFIG.style.chart.plots.endColor, 0.1)"/>
                     <stop offset="100%" :stop-color="FINAL_CONFIG.style.chart.plots.endColor"/>
                 </radialGradient>
+                <radialGradient :id="`positive_grad_${uid}`" fy="30%">
+                    <stop offset="10%" :stop-color="lightenHexColor(FINAL_CONFIG.style.chart.plots.evaluationColors.positive, FINAL_CONFIG.style.chart.plots.gradient.intensity / 100)"/>
+                    <stop offset="90%" :stop-color="darkenHexColor(FINAL_CONFIG.style.chart.plots.evaluationColors.positive, 0.1)"/>
+                    <stop offset="100%" :stop-color="FINAL_CONFIG.style.chart.plots.evaluationColors.positive"/>
+                </radialGradient>
+                <radialGradient :id="`negative_grad_${uid}`" fy="30%">
+                    <stop offset="10%" :stop-color="lightenHexColor(FINAL_CONFIG.style.chart.plots.evaluationColors.negative, FINAL_CONFIG.style.chart.plots.gradient.intensity / 100)"/>
+                    <stop offset="90%" :stop-color="darkenHexColor(FINAL_CONFIG.style.chart.plots.evaluationColors.negative, 0.1)"/>
+                    <stop offset="100%" :stop-color="FINAL_CONFIG.style.chart.plots.evaluationColors.negative"/>
+                </radialGradient>
+                <radialGradient :id="`neutral_grad_${uid}`" fy="30%">
+                    <stop offset="10%" :stop-color="lightenHexColor(FINAL_CONFIG.style.chart.plots.evaluationColors.neutral, FINAL_CONFIG.style.chart.plots.gradient.intensity / 100)"/>
+                    <stop offset="90%" :stop-color="darkenHexColor(FINAL_CONFIG.style.chart.plots.evaluationColors.neutral, 0.1)"/>
+                    <stop offset="100%" :stop-color="FINAL_CONFIG.style.chart.plots.evaluationColors.neutral"/>
+                </radialGradient>
             </defs>
             <g v-for="(plot, i) in mutableDataset" :key="`plot_${i}_${plot.id}`">
                 <!-- LINK -->
                 <defs>
-                    <linearGradient :id="`grad_positive_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
+                    <linearGradient :id="`grad_pos_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
                         <stop offset="0%" :stop-color="FINAL_CONFIG.style.chart.plots.startColor"/>
                         <stop offset="100%" :stop-color="FINAL_CONFIG.style.chart.plots.endColor"/>
                     </linearGradient>
-                    <linearGradient :id="`grad_negative_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
+                    <linearGradient :id="`grad_neg_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
                         <stop offset="0%" :stop-color="FINAL_CONFIG.style.chart.plots.endColor"/>
                         <stop offset="100%" :stop-color="FINAL_CONFIG.style.chart.plots.startColor"/>
                     </linearGradient>
@@ -1158,7 +1195,7 @@ defineExpose({
                                 ${plot.startX},${plot.y - plotRadius / 2}
                                 Z
                             `"
-                            :fill="plot.endX > plot.startX ? `url(#grad_positive_${uid})`: `url(#grad_negative_${uid})`"
+                            :fill="FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationColor : plot.endX > plot.startX ? `url(#grad_pos_${uid})`: `url(#grad_neg_${uid})`"
                         />
                     </g>
                     <g v-else>
@@ -1168,7 +1205,7 @@ defineExpose({
                             :y="plot.y - (FINAL_CONFIG.style.chart.plots.link.strokeWidth / 2)"
                             :height="Math.max(0.01, FINAL_CONFIG.style.chart.plots.link.strokeWidth)"
                             :width="Math.max(0.01, Math.abs(plot.endX - plot.startX))"
-                            :fill="plot.endX > plot.startX ? `url(#grad_positive_${uid})`: `url(#grad_negative_${uid})`"
+                            :fill="FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationColor : plot.endX > plot.startX ? `url(#grad_pos_${uid})`: `url(#grad_neg_${uid})`"
                         />
                     </g>
                 </g>
@@ -1180,7 +1217,7 @@ defineExpose({
                     :cx="plot.startX"
                     :cy="plot.y"
                     :r="plotRadius"
-                    :fill="FINAL_CONFIG.style.chart.plots.gradient.show ? `url(#start_grad_${uid})` : FINAL_CONFIG.style.chart.plots.startColor"
+                    :fill="FINAL_CONFIG.style.chart.plots.gradient.show ? FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationGrad : `url(#start_grad_${uid})` : FINAL_CONFIG.style.chart.plots.startColor"
                     :stroke="FINAL_CONFIG.style.chart.plots.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.plots.strokeWidth"
                     
@@ -1192,7 +1229,7 @@ defineExpose({
                     :cx="plot.endX"
                     :cy="plot.y"
                     :r="plotRadius"
-                    :fill="FINAL_CONFIG.style.chart.plots.gradient.show ? `url(#end_grad_${uid})` : FINAL_CONFIG.style.chart.plots.endColor"
+                    :fill="FINAL_CONFIG.style.chart.plots.gradient.show ? FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationGrad : `url(#end_grad_${uid})` : FINAL_CONFIG.style.chart.plots.endColor"
                     :stroke="FINAL_CONFIG.style.chart.plots.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.plots.strokeWidth"
                     
@@ -1206,7 +1243,7 @@ defineExpose({
                         data-cy="datapoint-label-start"
                         :x="plot.startX"
                         :y="plot.y + plotRadius * 2 + (FINAL_CONFIG.style.chart.labels.startLabels.fontSize / 2)"
-                        :fill="FINAL_CONFIG.style.chart.labels.startLabels.useStartColor ? FINAL_CONFIG.style.chart.plots.startColor : FINAL_CONFIG.style.chart.labels.startLabels.color"
+                        :fill="FINAL_CONFIG.style.chart.plots.evaluationColors.enable && FINAL_CONFIG.style.chart.labels.startLabels.useEvaluationColor ? plot.evaluationColor : FINAL_CONFIG.style.chart.labels.startLabels.useStartColor ? FINAL_CONFIG.style.chart.plots.startColor : FINAL_CONFIG.style.chart.labels.startLabels.color"
                         :font-size="FINAL_CONFIG.style.chart.labels.startLabels.fontSize"
                         text-anchor="middle"
                         
@@ -1234,7 +1271,7 @@ defineExpose({
                         data-cy="datapoint-label-end"
                         :x="plot.endX"
                         :y="plot.y - (plotRadius * 2 - (FINAL_CONFIG.style.chart.labels.startLabels.fontSize / 3))"
-                        :fill="FINAL_CONFIG.style.chart.labels.endLabels.useEndColor ? FINAL_CONFIG.style.chart.plots.endColor : FINAL_CONFIG.style.chart.labels.endLabels.color"
+                        :fill="FINAL_CONFIG.style.chart.plots.evaluationColors.enable && FINAL_CONFIG.style.chart.labels.endLabels.useEvaluationColor ? plot.evaluationColor : FINAL_CONFIG.style.chart.labels.endLabels.useEndColor ? FINAL_CONFIG.style.chart.plots.endColor : FINAL_CONFIG.style.chart.labels.endLabels.color"
                         :font-size="FINAL_CONFIG.style.chart.labels.endLabels.fontSize"
                         text-anchor="middle"
                         

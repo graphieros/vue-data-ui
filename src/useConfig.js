@@ -3750,6 +3750,12 @@ export function useConfig() {
                 plots: {
                     startColor: COLOR_RED,
                     endColor: COLOR_BLUE,
+                    evaluationColors: { // v3
+                        enable: false, // v3
+                        positive: '#2ca02c', // v3
+                        negative: '#d62728', // v3
+                        neutral: '#c7c7c7', // v3
+                    },
                     radius: 6,
                     stroke: COLOR_WHITE,
                     strokeWidth: 1,
@@ -3782,7 +3788,7 @@ export function useConfig() {
                 },
                 comparisonLines: { // v3
                     show: true,// v3
-                    strokeWidth: 1,// v3
+                    strokeWidth: 1, // v3
                     strokeDasharray: 4, // v3
                     showRect: true, // v3
                     rectColor: COLOR_BLACK, // v3
@@ -3833,7 +3839,8 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         offsetY: 0,
                         rounding: 0,
-                        useStartColor: true
+                        useStartColor: true,
+                        useEvaluationColor: true, // v3
                     },
                     endLabels: {
                         show: true,
@@ -3841,13 +3848,17 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         offsetY: 0,
                         rounding: 0,
-                        useEndColor: true
+                        useEndColor: true,
+                        useEvaluationColor: true, // v3
                     }
                 },
                 legend: {
                     ...LEGEND,
                     labelStart: 'start',
-                    labelEnd: 'end'
+                    labelEnd: 'end',
+                    labelPositive: 'positive', // v3
+                    labelNegative: 'negative', // v3
+                    labelNeutral: 'neutral' // v3
                 },
                 title: TITLE
             }

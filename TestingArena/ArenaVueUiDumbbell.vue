@@ -13,7 +13,7 @@ const dataset =  ref(undefined)
 onMounted(() => {
     setTimeout(() => {
         dataset.value = [
-            { name: 'Sweden', start: 5000, end: null },
+            { name: 'Sweden', start: 5000, end: 5000 },
             { name: 'Korea, Rep.', start: null, end: 7050 },
             { name: 'Iceland', start: null, end: null },
             { name: 'Finland', start: 6400, end: 7600 },
@@ -65,10 +65,16 @@ const model = ref([
     { key: 'style.chart.rowHeight', def: 48, type: 'number', min: 40, max: 100},
     { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 100},
     { key: 'style.chart.padding.left', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.right', def: 12, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100},
     { key: 'style.chart.padding.bottom', def: 12, type: 'number', min: 0, max: 100},
     { key: 'style.chart.plots.startColor', def: '#FF6400', type: 'color'},
     { key: 'style.chart.plots.endColor', def: '#5F8BEE', type: 'color'},
+    { key: 'style.chart.plots.evaluationColors.enable', def: true, type: 'checkbox'},
+
+    { key: 'style.chart.plots.evaluationColors.positive', def: '#2ca02c', type: 'color'},
+    { key: 'style.chart.plots.evaluationColors.negative', def: '#d62728', type: 'color'},
+    { key: 'style.chart.plots.evaluationColors.neutral', def: '#c7c7c7', type: 'color'},
+
     { key: 'style.chart.plots.radius', def: 6, type: 'number', min: 2, max: 40},
     { key: 'style.chart.plots.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.plots.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
@@ -120,6 +126,8 @@ const model = ref([
     { key: 'style.chart.labels.startLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.labels.startLabels.rounding', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.labels.startLabels.useStartColor', def: true, type: 'checkbox'},
+    { key: 'style.chart.labels.startLabels.useEvaluationColor', def: true, type: 'checkbox'},
+    
     { key: 'style.chart.labels.xAxisLabels.rounding', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.labels.endLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.labels.endLabels.fontSize', def: 10, type: 'number', min: 8, max: 24},
@@ -127,6 +135,8 @@ const model = ref([
     { key: 'style.chart.labels.endLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.labels.endLabels.rounding', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.labels.endLabels.useEndColor', def: true, type: 'checkbox'},
+    { key: 'style.chart.labels.endLabels.useEvaluationColor', def: true, type: 'checkbox'},
+
     { key: 'style.chart.legend.show', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.labelStart', def: 'start', type:'text'},
     { key: 'style.chart.legend.labelEnd', def: 'end', type: 'text'},

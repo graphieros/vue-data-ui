@@ -6288,6 +6288,11 @@ declare module "vue-data-ui" {
         start: number | null;
         startX: number;
         y: number;
+        evaluationColor: string;
+        evaluationGrad: string;
+        isPositive: boolean;
+        isNegative: boolean;
+        isNeutral: boolean;
     }
 
     export type VueUiDumbbellConfig = {
@@ -6314,6 +6319,12 @@ declare module "vue-data-ui" {
                 plots?: {
                     startColor?: string;
                     endColor?: string;
+                    evaluationColors?: { // v3
+                        enable?: boolean; // v3
+                        positive?: string; // v3
+                        negative?: string; // v3
+                        neutral?: string; // v3
+                    };
                     radius?: number;
                     stroke?: string;
                     strokeWidth?: number;
@@ -6388,15 +6399,20 @@ declare module "vue-data-ui" {
                     };
                     startLabels?: VueUiDumbbellConfigLabel & {
                         useStartColor?: boolean;
+                        useEvaluationColor?: boolean; // v3
                     };
                     endLabels?: VueUiDumbbellConfigLabel & {
                         useEndColor?: boolean;
+                        useEvaluationColor?: boolean;
                     };
                 };
                 legend?: ChartBaseLegend & {
+                    backgroundColor?: string;
                     labelStart?: string;
                     labelEnd?: string;
-                    backgroundColor?: string;
+                    labelPositive?: string; // v3
+                    labelNegative?: string; // v3
+                    labelNeutral?: string; // v3
                 };
                 title?: ChartTitle;
             };
