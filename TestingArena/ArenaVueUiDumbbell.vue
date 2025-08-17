@@ -8,26 +8,38 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset =  ref([
-    { name: 'Sweden', start: 5000, end: 7100 },
-    { name: 'Korea, Rep.', start: 4900, end: 7050 },
-    { name: 'Iceland', start: 6500, end: 8000 },
-    { name: 'Finland', start: 6400, end: 7600 },
-    { name: 'Norway', start: 5400, end: 6050 },
-    { name: 'Ireland', start: 3000, end: 2000 }
-])
+const dataset =  ref(undefined)
 
 onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            { name: 'Sweden', start: 5000, end: null },
+            { name: 'Korea, Rep.', start: null, end: 7050 },
+            { name: 'Iceland', start: null, end: null },
+            { name: 'Finland', start: 6400, end: 7600 },
+            { name: 'Norway', start: 5400, end: 6050 },
+            { name: 'Ireland', start: 3000, end: 2000 },
+            { name: 'Sweden', start: 5000, end: 7100 },
+            { name: 'Korea, Rep.', start: 4900, end: 7050 },
+            { name: 'Iceland', start: 6500, end: 8000 },
+            { name: 'Finland', start: 6400, end: 7600 },
+            { name: 'Norway', start: 5400, end: 6050 },
+            { name: 'Ireland', start: 3000, end: 2000 },
+        ]
+    }, 2000)
+
     setTimeout(() => {
         dataset.value.push({
             name: 'ALT',
             start: 3000,
             end: 3500
         })
-    }, 3000)
+    }, 4000)
 })
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -47,13 +59,13 @@ const model = ref([
     { key: 'useAnimation', def: true, type: 'checkbox'},
     { key: 'animationSpeed', def: 2, type: 'number', min: 1, max: 10},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.width', def: 600, type: 'number', min: 300, max: 1000},
-    { key: 'style.chart.rowHeight', def: 40, type: 'number', min: 40, max: 100},
+    { key: 'style.chart.rowHeight', def: 48, type: 'number', min: 40, max: 100},
     { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.left', def: 100, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.left', def: 12, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.right', def: 12, type: 'number', min: 0, max: 100},
     { key: 'style.chart.padding.bottom', def: 12, type: 'number', min: 0, max: 100},
     { key: 'style.chart.plots.startColor', def: '#FF6400', type: 'color'},
     { key: 'style.chart.plots.endColor', def: '#5F8BEE', type: 'color'},
@@ -64,8 +76,12 @@ const model = ref([
     { key: 'style.chart.plots.link.type', def: 'curved', type: 'select', options: ['curved', 'line']},
     { key: 'style.chart.plots.gradient.show', def: true, type: 'checkbox'},
     { key: 'style.chart.plots.gradient.intensity', def: 40, type: 'range', min: 0, max: 100},
+
     { key: 'style.chart.grid.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
     { key: 'style.chart.grid.scaleSteps', def: 10, type: 'number', min: 2, max: 20},
+    { key: 'style.chart.grid.scaleMin', def: null, type: 'number', min: -100, max: 200},
+    { key: 'style.chart.grid.scaleMax', def: null, type: 'number', min: -100, max: 100},
+
     { key: 'style.chart.grid.horizontalGrid.show', def: true, type: 'checkbox'},
     { key: 'style.chart.grid.horizontalGrid.stroke', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.grid.horizontalGrid.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.5},
@@ -74,8 +90,17 @@ const model = ref([
     { key: 'style.chart.grid.verticalGrid.stroke', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.grid.verticalGrid.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.5},
     { key: 'style.chart.grid.verticalGrid.strokeDasharray', def: 0, type: 'number', min: 0, max: 100},
+
     { key: 'style.chart.labels.prefix', def: 'P', type: 'text'},
     { key: 'style.chart.labels.suffix', def: 'S', type: 'text'},
+
+    { key: 'style.chart.labels.axis.yLabel', def: 'Y label', type: 'text'},
+    { key: 'style.chart.labels.axis.xLabel', def: 'X label', type: 'text'},
+    { key: 'style.chart.labels.axis.yLabelOffsetX', def: 0, type: 'number', min: -100, max: 100 },
+    { key: 'style.chart.labels.axis.xLabelOffsetY', def: 0, type: 'number', min: -100, max: 100 },
+    { key: 'style.chart.labels.axis.fontSize', def: 14, type: 'number', min: 8, max: 42 },
+    { key: 'style.chart.labels.axis.color', def: '#1A1A1A', type: 'color'},
+
     { key: 'style.chart.labels.yAxisLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.labels.yAxisLabels.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'style.chart.labels.yAxisLabels.color', def: '#1A1A1A', type: 'color'},
@@ -143,12 +168,23 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            },
+        },
         style: {
             ...c.style,
             chart: {
@@ -158,7 +194,14 @@ const config = computed(() => {
                     formatter: ({value, config}) => {
                         // console.log(config)
                         return `f | ${value}`
-                    }
+                    },
+                    // yAxisLabels: {
+                    //     ...c.style.chart.labels.yAxisLabels,
+                    //     formatter: (v) => {
+                    //         console.log(v);
+                    //         return v.value
+                    //     }
+                    // }
                 }
             }
         },
@@ -192,9 +235,9 @@ onMounted(async () => {
             ...config,
             responsive: true
         }">
-        <template #chart-background>
+        <!-- <template #chart-background>
             <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-        </template>
+        </template> -->
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                 WATERMARK

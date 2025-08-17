@@ -3720,9 +3720,16 @@ export function useConfig() {
     }
 
     const vue_ui_dumbbell = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
-        useAnimation: true,
+        useAnimation: false, // v2 = true
         animationSpeed: 2,
         userOptions: USER_OPTIONS({
             pdf: true,
@@ -3738,8 +3745,8 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 width: 600,
-                rowHeight: 40,
-                padding: PADDING([12, 24, 12, 100]),
+                rowHeight: 48, // v3 modified
+                padding: PADDING([12, 24, 12, 12]), // v3 modified
                 plots: {
                     startColor: COLOR_RED,
                     endColor: COLOR_BLUE,
@@ -3758,6 +3765,8 @@ export function useConfig() {
                 grid: {
                     strokeWidth: 1,
                     scaleSteps: 10,
+                    scaleMin: null, // v3
+                    scaleMax: null, // V3
                     horizontalGrid: {
                         show: true,
                         stroke: COLOR_GREY_MID,
@@ -3771,10 +3780,33 @@ export function useConfig() {
                         strokeDasharray: 0
                     }
                 },
+                comparisonLines: { // v3
+                    show: true,// v3
+                    strokeWidth: 1,// v3
+                    strokeDasharray: 4, // v3
+                    showRect: true, // v3
+                    rectColor: COLOR_BLACK, // v3
+                    rectOpacity: 5, // v3
+                    showLabel: true, // v3
+                    labelColor: COLOR_BLACK, // v3
+                    labelFontSize: FONT._12, // v3
+                },
+                highlighter: { // v3
+                    color: COLOR_BLACK, // v3
+                    opacity: 5, // v3
+                },
                 labels: {
                     prefix: '',
                     suffix: '',
                     formatter: null,
+                    axis: { // v3
+                        yLabel: '', // v3
+                        yLabelOffsetX: 0, // v3
+                        xLabel: '', // v3
+                        xLabelOffsetY: 0, // v3
+                        fontSize: FONT._14, // v3
+                        color: COLOR_BLACK, // v3
+                    },
                     yAxisLabels: {
                         show: true,
                         fontSize: FONT._14,
@@ -3782,7 +3814,8 @@ export function useConfig() {
                         offsetX: 0,
                         bold: true,
                         showProgression: true,
-                        rounding: 1
+                        rounding: 1,
+                        formatter: null // v3
                     },
                     xAxisLabels: {
                         show: true,
@@ -3790,7 +3823,9 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         offsetY: 0,
                         bold: false,
-                        rounding: 0
+                        rounding: 0,
+                        rotation: 0, // v3
+                        autoRotate: true, // v3
                     },
                     startLabels: {
                         show: true,

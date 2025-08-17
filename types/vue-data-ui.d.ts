@@ -134,6 +134,7 @@ declare module "vue-data-ui" {
     export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
     export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
+    export type VueUiDumbbellEvent = ChartEvent<VueUiDumbbellDatapoint>;
     export type VueUiStripPlotEvent = ChartEvent<VueUiStripPlotDatapoint>;
     export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
     export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
@@ -6253,8 +6254,27 @@ declare module "vue-data-ui" {
         show?: boolean;
     };
 
+    export type VueUiDumbbellDatapoint = {
+        centerX: number;
+        end: number | null;
+        endVal: number;
+        endX: number;
+        id: string;
+        name: string;
+        start: number | null;
+        startX: number;
+        y: number;
+    }
+
     export type VueUiDumbbellConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiDumbbellEvent; // v3
+            datapointLeave?: VueUiDumbbellEvent; // v3
+            datapointClick?: VueUiDumbbellEvent; // v3
+        };
         theme?: Theme;
         useAnimation?: boolean;
         animationSpeed?: number;
@@ -6285,6 +6305,8 @@ declare module "vue-data-ui" {
                 grid?: {
                     strokeWidth?: number;
                     scaleSteps?: number;
+                    scaleMin?: number | null; // v3
+                    scaleMax?: number | null; // v3
                     horizontalGrid?: {
                         show?: boolean;
                         stroke?: string;
@@ -6298,6 +6320,21 @@ declare module "vue-data-ui" {
                         strokeDasharray?: number;
                     };
                 };
+                comparisonLines?: { // v3
+                    show?: boolean; // v3
+                    strokeWidth?: number; // v3
+                    strokeDasharray?: number; // v3
+                    showRect?: boolean; // v3
+                    rectColor?: string; // v3
+                    rectOpacity?: number; // v3
+                    showLabel?: boolean; // v3
+                    labelColor?: boolean; // v3
+                    labelFontSize?: number; // v3
+                }; // v3
+                highlighter?: { // v3
+                    color?: string; // v3
+                    opacity?: number; // v3
+                };
                 labels?: {
                     prefix?: string;
                     suffix?: string;
@@ -6310,9 +6347,20 @@ declare module "vue-data-ui" {
                         rounding?: number;
                         show?: boolean;
                         showProgression?: boolean;
+                        formatter?: Formatter; // v3
+                    };
+                    axis?: { // v3
+                        yLabel?: string; // v3
+                        yLabelOffsetX?: number; // v3
+                        xLabel?: string; // v3
+                        xLabelOffsetY?: number; // v3
+                        fontSize?: number; // v3
+                        color?: string; // v3
                     };
                     xAxisLabels?: VueUiDumbbellConfigLabel & {
                         bold?: boolean;
+                        rotation?: number; // v3
+                        autoRotate?: boolean; // v3
                     };
                     startLabels?: VueUiDumbbellConfigLabel & {
                         useStartColor?: boolean;
@@ -6348,16 +6396,16 @@ declare module "vue-data-ui" {
 
     export type VueUiDumbbellDataset = {
         name: string;
-        start: number;
-        end: number;
+        start: number | null;
+        end: number | null;
     };
 
     export type VueUiDumbbellExpose = {
         getData(): Promise<Array<{
-            end: number
+            end: number | null
             id: string
             name: string
-            start: number
+            start: number | null
         }>>
         getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
