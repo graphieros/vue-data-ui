@@ -1217,7 +1217,7 @@ defineExpose({
                     :cx="plot.startX"
                     :cy="plot.y"
                     :r="plotRadius"
-                    :fill="FINAL_CONFIG.style.chart.plots.gradient.show ? FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationGrad : `url(#start_grad_${uid})` : FINAL_CONFIG.style.chart.plots.startColor"
+                    :fill="FINAL_CONFIG.style.chart.plots.gradient.show ? FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationGrad : `url(#start_grad_${uid})` : FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationColor : FINAL_CONFIG.style.chart.plots.startColor"
                     :stroke="FINAL_CONFIG.style.chart.plots.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.plots.strokeWidth"
                     
@@ -1229,7 +1229,7 @@ defineExpose({
                     :cx="plot.endX"
                     :cy="plot.y"
                     :r="plotRadius"
-                    :fill="FINAL_CONFIG.style.chart.plots.gradient.show ? FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationGrad : `url(#end_grad_${uid})` : FINAL_CONFIG.style.chart.plots.endColor"
+                    :fill="FINAL_CONFIG.style.chart.plots.gradient.show ? FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationGrad : `url(#end_grad_${uid})` : FINAL_CONFIG.style.chart.plots.evaluationColors.enable ? plot.evaluationColor : FINAL_CONFIG.style.chart.plots.endColor"
                     :stroke="FINAL_CONFIG.style.chart.plots.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.plots.strokeWidth"
                     
