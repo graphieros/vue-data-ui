@@ -247,7 +247,7 @@ function prepareChart() {
 
             requestAnimationFrame(async () => {
                 WIDTH.value = Math.max(0.1, width);
-                baseRowHeight.value = Math.max(0.1, (height - (padTitle + padLegend)) / FINAL_DATASET.value.length);
+                baseRowHeight.value = Math.max(0.1, (Math.max(0.1, height) - (padTitle + padLegend)) / FINAL_DATASET.value.length);
                 updateNameValueCollision();
             });
         });
@@ -1102,8 +1102,8 @@ defineExpose({
                     v-show="FINAL_CONFIG.style.chart.comparisonLines.showRect && selectedDatapoint !== null && ![null, undefined].includes(selectedDatapoint.start) && ![null, undefined].includes(selectedDatapoint.end)"
                     :x="selectedDatapoint ? Math.min(selectedDatapoint.startX, selectedDatapoint.endX) : drawingArea.left"
                     :y="drawingArea.top"
-                    :height="drawingArea.height"
-                    :width="selectedDatapoint ? Math.abs(selectedDatapoint.endX - selectedDatapoint.startX) : 0"
+                    :height="Math.max(0.1, drawingArea.height)"
+                    :width="selectedDatapoint ? Math.max(0.1, Math.abs(selectedDatapoint.endX - selectedDatapoint.startX)) : 0"
                     :fill="selectedDatapoint ? setOpacity(FINAL_CONFIG.style.chart.comparisonLines.rectColor, FINAL_CONFIG.style.chart.comparisonLines.rectOpacity) : 'transparent'"
                     :style="{ transition: 'all 0.3s ease-in-out'}"
                 />
@@ -1166,8 +1166,8 @@ defineExpose({
                             data-cy="link-straight"
                             :x="plot.endX > plot.startX ? plot.startX : plot.endX"
                             :y="plot.y - (FINAL_CONFIG.style.chart.plots.link.strokeWidth / 2)"
-                            :height="FINAL_CONFIG.style.chart.plots.link.strokeWidth"
-                            :width="Math.abs(plot.endX - plot.startX)"
+                            :height="Math.max(0.01, FINAL_CONFIG.style.chart.plots.link.strokeWidth)"
+                            :width="Math.max(0.01, Math.abs(plot.endX - plot.startX))"
                             :fill="plot.endX > plot.startX ? `url(#grad_positive_${uid})`: `url(#grad_negative_${uid})`"
                         />
                     </g>
@@ -1260,9 +1260,9 @@ defineExpose({
                 <rect
                     v-for="(trap, i) in mutableDataset"
                     :x="drawingArea.left"
-                    :y="drawingArea.top + i * drawingArea.rowHeight"
-                    :width="drawingArea.width"
-                    :height="drawingArea.rowHeight"
+                    :y="drawingArea.top + i * Math.max(0.1, drawingArea.rowHeight)"
+                    :width="Math.max(0.1, drawingArea.width)"
+                    :height="Math.max(0.1, drawingArea.rowHeight)"
                     :fill="selectedTrapIndex !== null ? selectedTrapIndex === i ? setOpacity(FINAL_CONFIG.style.chart.highlighter.color, FINAL_CONFIG.style.chart.highlighter.opacity) : 'transparent' : 'transparent'"
                     @mouseenter="onTrapEnter({ datapoint: trap, seriesIndex: i })"
                     @mouseleave="onTrapLeave({ datapoint: trap, seriesIndex: i })"
