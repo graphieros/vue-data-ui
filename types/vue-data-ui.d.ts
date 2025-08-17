@@ -127,6 +127,7 @@ declare module "vue-data-ui" {
     export type ChartEvent<T> = null | (({ datapoint, seriesIndex} : { datapoint: T, seriesIndex: number}) => void);
 
     export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
+    export type VueUi3dBarEvent = ChartEvent<VueUi3dBarDatapoint>;
     export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
     export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
     export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
@@ -975,7 +976,30 @@ declare module "vue-data-ui" {
         }>;
     };
 
+    export type VueUi3dBarDatapoint = {
+        breakdown: null | Array<{
+            name: string;
+            value: number;
+        }>;
+        color: string;
+        fill: Object; // Feeling too lazy to drill that one
+        id: string;
+        name: string;
+        proportion: number;
+        seriesIndex: number;
+        value: number;
+    }
+
     export type VueUi3dBarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUi3dBarEvent; // v3
+            datapointLeave?: VueUi3dBarEvent; // v3
+            datapointClick?: VueUi3dBarEvent; // v3
+        };
+        useCssAnimation?: boolean; // v3
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -6328,7 +6352,7 @@ declare module "vue-data-ui" {
                     rectColor?: string; // v3
                     rectOpacity?: number; // v3
                     showLabel?: boolean; // v3
-                    labelColor?: boolean; // v3
+                    labelColor?: string; // v3
                     labelFontSize?: number; // v3
                 }; // v3
                 highlighter?: { // v3
