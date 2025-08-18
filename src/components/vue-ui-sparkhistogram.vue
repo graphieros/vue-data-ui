@@ -1,5 +1,13 @@
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onMounted, 
+    ref, 
+    toRefs, 
+    watch, 
+} from "vue";
 import { 
     applyDataLabel,
     createUid,
@@ -9,16 +17,21 @@ import {
     objectIsEmpty,
     setOpacity,
     shiftHue,
+    treeShake,
     XMLNS 
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
+import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { useFitSvgText } from "../useFitSvgText";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
 import Shape from "../atoms/Shape.vue";
+import themes from "../themes.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 
 const { vue_ui_sparkhistogram: DEFAULT_CONFIG } = useConfig()
 
@@ -37,47 +50,47 @@ const props = defineProps({
     }
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
-});
-
-onMounted(() => {
-    prepareChart();
-});
-
-function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiSparkHistogram',
-            type: 'dataset'
-        })
-    } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['value']
-            }).forEach(attr => {
-                error({
-                    componentName: 'VueUiSparkHistogram',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i
-                });
-            });
-        });
-    }
-}
-
 const uid = ref(createUid());
+const source = ref(null);
+const chartTitle = ref(null);
+const histogramChart = ref(null);
+const resizeObserver = ref(null);
+const observedEl = ref(null);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        { value: 1, intensity: 0.2, color: '#CACACA' },
+        { value: 2, intensity: 0.3, color: '#CACACA' },
+        { value: 3, intensity: 0.5, color: '#CACACA' },
+        { value: 5, intensity: 0.7, color: '#CACACA' },
+        { value: 8, intensity: 0.9, color: '#CACACA' },
+        { value: 13, intensity: 0.95, color: '#CACACA' },
+        { value: 21, intensity: 1, color: '#CACACA' },
+        { value: 13, intensity: 0.95, color: '#CACACA' },
+        { value: 8, intensity: 0.9, color: '#CACACA' },
+        { value: 5, intensity: 0.7, color: '#CACACA' },
+        { value: 3, intensity: 0.5, color: '#CACACA' },
+        { value: 2, intensity: 0.3, color: '#CACACA' },
+        { value: 1, intensity: 0.2, color: '#CACACA' },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            style: {
+                animation: { show: false },
+                backgroundColor: '#99999930',
+            }
+        }
+    })
+})
+
+const WIDTH = ref(FINAL_CONFIG.value.style.layout.width);
+const HEIGHT = ref(FINAL_CONFIG.value.style.layout.height);
 
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
 
@@ -98,14 +111,70 @@ function prepareConfig() {
     }
 }
 
+onMounted(() => {
+    prepareChart();
+});
+
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
+function prepareChart() {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiSparkHistogram',
+            type: 'dataset',
+            debug: debug.value
+        })
+    } else {
+        props.dataset.forEach((ds, i) => {
+            getMissingDatasetAttributes({
+                datasetObject: ds,
+                requiredAttributes: ['value']
+            }).forEach(attr => {
+                error({
+                    componentName: 'VueUiSparkHistogram',
+                    type: 'datasetSerieAttribute',
+                    property: attr,
+                    index: i,
+                    debug: debug.value
+                });
+            });
+        });
+    }
+
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: histogramChart.value,
+                title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
+                source: source.value
+            });
+
+            requestAnimationFrame(() => {
+                WIDTH.value = Math.max(10, width);
+                HEIGHT.value = Math.max(10, height - 12);
+            });
+        });
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+        resizeObserver.value = new ResizeObserver(handleResize);
+        observedEl.value = histogramChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
+    }
+}
+
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
     prepareChart();
 }, { deep: true });
 
 const drawingArea = computed(() => {
-    const height = FINAL_CONFIG.value.style.layout.height;
-    const width = FINAL_CONFIG.value.style.layout.width;
+    const height = HEIGHT.value;
+    const width = WIDTH.value;
     const top = FINAL_CONFIG.value.style.layout.padding.top;
     const bottom = height - FINAL_CONFIG.value.style.layout.padding.bottom;
     const left = FINAL_CONFIG.value.style.layout.padding.left;
@@ -127,7 +196,7 @@ const drawingArea = computed(() => {
 });
 
 const maxVal = computed(() => {
-    return Math.max(...props.dataset.map(ds => Math.abs(ds.value || 0)))
+    return Math.max(...FINAL_DATASET.value.map(ds => Math.abs(ds.value || 0)))
 });
 
 function toMax(val) {
@@ -135,10 +204,10 @@ function toMax(val) {
 }
 
 const computedDataset = computed(() => {
-    return props.dataset.map((dp,i) => {
+    return FINAL_DATASET.value.map((dp,i) => {
         const proportion = toMax(dp.value || 0);
         const height = drawingArea.value.drawingHeight * proportion;
-        const unitWidth = drawingArea.value.drawingWidth / props.dataset.length;
+        const unitWidth = drawingArea.value.drawingWidth / FINAL_DATASET.value.length;
         const gap = unitWidth * (FINAL_CONFIG.value.style.bars.gap / 100)
         const width = unitWidth - gap;
         const y = drawingArea.value.centerY - height / 2;
@@ -167,24 +236,80 @@ const computedDataset = computed(() => {
     });
 });
 
+function getTopLabel(datapoint, index) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.labels.value.formatter,
+        datapoint.value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.labels.value.prefix,
+            v: datapoint.value,
+            s: FINAL_CONFIG.value.style.labels.value.suffix,
+            r: FINAL_CONFIG.value.style.labels.value.rounding
+        }),
+        { datapoint, seriesIndex: index }
+    )
+}
+
 const selectedIndex = ref(null);
 
 const emits = defineEmits(['selectDatapoint'])
 
 function selectDatapoint(datapoint, index) {
-    emits('selectDatapoint', { datapoint, index })
+    emits('selectDatapoint', { datapoint, index });
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index })
+    }
+}
+
+function onTrapEnter(datapoint, index) {
+    selectedIndex.value = index;
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: index });
+    }
+}
+
+function onTrapLeave(datapoint, index) {
+    selectedIndex.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: index });
+    }
 }
 
 const animation = computed(() => {
     return `${FINAL_CONFIG.value.style.animation.speedMs}ms`
 })
 
+const unitWidth = computed(() => (drawingArea.value.drawingWidth / FINAL_DATASET.value.length) * 0.9);
+
+const { fitText } = useFitSvgText({
+    svgRef,
+    unitWidth,
+});
+
+onMounted(async () => {
+    await nextTick();
+    fitText('.vue-ui-sparkhistogram-top-label', FINAL_CONFIG.value.style.labels.value.minFontSize);
+    fitText('.vue-ui-sparkhistogram-bottom-label', FINAL_CONFIG.value.style.labels.valueLabel.minFontSize);
+    fitText('.vue-ui-sparkhistogram-time-label', FINAL_CONFIG.value.style.labels.timeLabel.minFontSize);
+});
+
+watch([WIDTH, HEIGHT, () => FINAL_DATASET.value], async() => {
+    await nextTick();
+    fitText('.vue-ui-sparkhistogram-top-label', FINAL_CONFIG.value.style.labels.value.minFontSize);
+    fitText('.vue-ui-sparkhistogram-bottom-label', FINAL_CONFIG.value.style.labels.valueLabel.minFontSize);
+    fitText('.vue-ui-sparkhistogram-time-label', FINAL_CONFIG.value.style.labels.timeLabel.minFontSize);
+})
+
 </script>
 
 <template>
-    <div class="vue-ui-spark-histogram" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily}`" @mouseleave="selectedIndex = null">
+    <div 
+        class="vue-ui-spark-histogram"
+        ref="histogramChart"
+        :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily}`" @mouseleave="selectedIndex = null"
+    >
         <!-- TITLE -->
-        <div v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
             <div data-cy="title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
                 {{ FINAL_CONFIG.style.title.text }} 
                 <span data-cy="title-selection" v-if="selectedIndex !== null">- 
@@ -212,7 +337,6 @@ const animation = computed(() => {
         <svg
             ref="svgRef"
             :xmlns="XMLNS" 
-            v-if="isDataset" 
             data-cy="sparkhistogram-svg" 
             :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" 
             style="overflow: visible"
@@ -249,6 +373,22 @@ const animation = computed(() => {
                     <stop offset="100%" :stop-color="setOpacity(dp.color, dp.intensity)"/>
                 </radialGradient>
             </defs>
+
+            <g v-for="(rect, i) in computedDataset">
+                <rect
+                    v-if="selectedIndex !== null && selectedIndex === i"
+                    data-cy="tooltip-trap"
+                    :height="drawingArea.height" 
+                    :width="rect.unitWidth" 
+                    :fill="FINAL_CONFIG.style.selector.fill" 
+                    :x="rect.trapX" 
+                    :y="0" 
+                    :stroke="FINAL_CONFIG.style.selector.stroke"
+                    :stroke-width="FINAL_CONFIG.style.selector.strokeWidth"
+                    :rx="FINAL_CONFIG.style.selector.borderRadius"
+                    :stroke-dasharray="FINAL_CONFIG.style.selector.strokeDasharray"
+                />
+            </g>
             
             <g v-if="!FINAL_CONFIG.style.bars.shape || FINAL_CONFIG.style.bars.shape === 'square'">
                 <rect v-for="(rect, i) in computedDataset"
@@ -266,66 +406,59 @@ const animation = computed(() => {
             </g>
             <g v-else>                
                 <Shape 
-                    v-for="(rect, i) in computedDataset"
+                    v-for="(rect, _i) in computedDataset"
                     :plot="{ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }"
                     :color="FINAL_CONFIG.style.bars.colors.gradient.show ? rect.gradient : rect.color"
                     :shape="FINAL_CONFIG.style.bars.shape"
-                    :radius="rect.height * 0.4"
+                    :radius="Math.min(rect.height * 0.4, rect.width * 0.4)"
                     :class="{'vue-ui-sparkhistogram-shape' : FINAL_CONFIG.style.animation.show }"
                 />
             </g>
 
-            <text v-for="(val, i) in computedDataset"
-                data-cy="datapoint-label-value"
-                text-anchor="middle"
-                :x="val.textAnchor"
-                :y="val.y - (FINAL_CONFIG.style.labels.value.fontSize / 3) + FINAL_CONFIG.style.labels.value.offsetY"
-                :font-size="FINAL_CONFIG.style.labels.value.fontSize"
-                :font-weight="FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'"
-                :fill="FINAL_CONFIG.style.labels.value.color"
-            >
-                {{ 
-                    applyDataLabel(
-                        FINAL_CONFIG.style.labels.value.formatter,
-                        val.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.labels.value.prefix,
-                            v: val.value,
-                            s: FINAL_CONFIG.style.labels.value.suffix,
-                            r: FINAL_CONFIG.style.labels.value.rounding
-                        }),
-                        { datapoint: computedDataset[selectedIndex], seriesIndex: selectedIndex }
-                        ) 
-                }}
-            </text>
-
-            <g v-for="(label, i) in computedDataset">
-                <text 
-                    data-cy="datapoint-label-valueLabel"
-                    v-if="label.valueLabel"
-                    :x="label.textAnchor"
-                    :y="label.y + label.height + FINAL_CONFIG.style.labels.valueLabel.fontSize"
-                    :font-size="FINAL_CONFIG.style.labels.valueLabel.fontSize"
+            <template v-if="!loading">
+                <text v-for="(val, i) in computedDataset"
+                    class="vue-ui-sparkhistogram-top-label"
+                    data-cy="datapoint-label-value"
                     text-anchor="middle"
-                    :fill="FINAL_CONFIG.style.labels.valueLabel.color"
+                    :x="val.textAnchor"
+                    :y="val.y - (FINAL_CONFIG.style.labels.value.fontSize / 3) + FINAL_CONFIG.style.labels.value.offsetY"
+                    :font-size="FINAL_CONFIG.style.labels.value.fontSize"
+                    :font-weight="FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'"
+                    :fill="FINAL_CONFIG.style.labels.value.color"
                 >
-                    {{ label.valueLabel }}
+                    {{ getTopLabel(val, i) }}
                 </text>
-            </g>
-
-            <g v-for="(time, i) in computedDataset">
-                <text
-                    data-cy="datapoint-label-time"
-                    v-if="time.timeLabel"
-                    :x="time.textAnchor"
-                    :y="drawingArea.height - FINAL_CONFIG.style.labels.timeLabel.fontSize / 2"
-                    :font-size="FINAL_CONFIG.style.labels.timeLabel.fontSize"
-                    :fill="FINAL_CONFIG.style.labels.timeLabel.color"
-                    text-anchor="middle"
-                >
-                    {{ time.timeLabel }}
-                </text>
-            </g>
+    
+                <g v-for="(label, _i) in computedDataset">
+                    <text 
+                        class="vue-ui-sparkhistogram-bottom-label"
+                        data-cy="datapoint-label-valueLabel"
+                        v-if="label.valueLabel"
+                        :x="label.textAnchor"
+                        :y="label.y + label.height + FINAL_CONFIG.style.labels.valueLabel.fontSize"
+                        :font-size="FINAL_CONFIG.style.labels.valueLabel.fontSize"
+                        text-anchor="middle"
+                        :fill="FINAL_CONFIG.style.labels.valueLabel.color"
+                    >
+                        {{ label.valueLabel }}
+                    </text>
+                </g>
+    
+                <g v-for="(time, _i) in computedDataset">
+                    <text
+                        class="vue-ui-sparkhistogram-time-label"
+                        data-cy="datapoint-label-time"
+                        v-if="time.timeLabel"
+                        :x="time.textAnchor"
+                        :y="drawingArea.height - FINAL_CONFIG.style.labels.timeLabel.fontSize / 2"
+                        :font-size="FINAL_CONFIG.style.labels.timeLabel.fontSize"
+                        :fill="FINAL_CONFIG.style.labels.timeLabel.color"
+                        text-anchor="middle"
+                    >
+                        {{ time.timeLabel }}
+                    </text>
+                </g>
+            </template>
 
             <!-- TOOLTIP TRAPS -->
             <g v-for="(rect, i) in computedDataset">
@@ -336,12 +469,8 @@ const animation = computed(() => {
                     fill="transparent" 
                     :x="rect.trapX" 
                     :y="0" 
-                    @mouseover="selectedIndex = i" 
-                    @mouseleave="selectedIndex = null" 
-                    :stroke="selectedIndex !== null && selectedIndex === i ? FINAL_CONFIG.style.selector.stroke : ''"
-                    :stroke-width="selectedIndex !== null && selectedIndex === i ? FINAL_CONFIG.style.selector.strokeWidth : 0"
-                    :rx="FINAL_CONFIG.style.selector.borderRadius"
-                    :stroke-dasharray="FINAL_CONFIG.style.selector.strokeDasharray"
+                    @mouseover="onTrapEnter(rect, i)" 
+                    @mouseleave="onTrapLeave(rect, i)" 
                     @click="() => selectDatapoint(rect, i)"
                 />
             </g>
@@ -351,22 +480,16 @@ const animation = computed(() => {
             <slot name="source" />
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'sparkHistogram',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                    sparkHistogram: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
 <style scoped>
+.vue-ui-spark-histogram {
+    position: relative;
+}
+
 .vue-ui-sparkhistogram-shape {
     animation: expand v-bind(animation) ease-in forwards;
     transform-origin: center;

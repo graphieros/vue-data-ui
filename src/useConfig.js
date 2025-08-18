@@ -2526,6 +2526,14 @@ export function useConfig() {
     }
 
     const vue_ui_sparkhistogram = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
+        events: {
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -2555,28 +2563,32 @@ export function useConfig() {
             labels: {
                 value: {
                     fontSize: FONT._14,
+                    minFontSize: MIN_FONT_SIZE, // v3
                     color: COLOR_BLACK,
                     bold: true,
                     rounding: 1,
                     prefix: '',
                     suffix: '',
                     offsetY: 0,
-                    formatter: null
+                    formatter: null,
                 },
                 valueLabel: {
                     fontSize: FONT._14,
+                    minFontSize: MIN_FONT_SIZE, // v3
                     color: COLOR_BLACK,
                     bold: false,
-                    rounding: 0
+                    rounding: 0,
                 },
                 timeLabel: {
                     fontSize: FONT._12,
+                    minFontSize: MIN_FONT_SIZE, // v3
                     color: COLOR_BLACK,
-                    bold: false
+                    bold: false,
                 }
             },
             selector: {
                 stroke: COLOR_BLUE,
+                fill: '#2D353C10',
                 strokeWidth: 2,
                 strokeDasharray: 0,
                 borderRadius: 2

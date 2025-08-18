@@ -147,6 +147,7 @@ declare module "vue-data-ui" {
     export type VueUiSparkStackbarEvent = ChartEvent<VueUiSparkStackbarDatapoint>;
     export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
     export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
+    export type VueUiSparkHistogramEvent = ChartEvent<VueUiSparkHistogramDatasetItem>;
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
 
     export type VueUiPatternName =
@@ -1800,6 +1801,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiSparkHistogramConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
+        events?: {
+            datapointEnter?: VueUiSparkHistogramEvent; // v3
+            datapointLeave?: VueUiSparkHistogramEvent; // v3
+            datapointClick?: VueUiSparkHistogramEvent; // v3
+        };
         theme?: Theme;
         style?: {
             backgroundColor?: string;
@@ -1836,6 +1845,7 @@ declare module "vue-data-ui" {
             labels?: {
                 value?: {
                     fontSize?: number;
+                    minFontSize?: number; // v3
                     color?: string;
                     bold?: boolean;
                     rounding?: number;
@@ -1846,12 +1856,14 @@ declare module "vue-data-ui" {
                 };
                 valueLabel?: {
                     fontSize?: number;
+                    minFontSize?: number; // v3
                     color?: string;
                     bold?: boolean;
                     rounding?: number;
                 };
                 timeLabel?: {
                     fontSize?: number;
+                    minFontSize?: number; // v3
                     color?: string;
                     bold?: boolean;
                 };
