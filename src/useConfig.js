@@ -2400,6 +2400,13 @@ export function useConfig() {
     }
 
     const vue_ui_sparkbar = {
+        debug: false, // v3
+        loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         style: {

@@ -136,6 +136,7 @@ declare module "vue-data-ui" {
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
     export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
     export type VueUiDumbbellEvent = ChartEvent<VueUiDumbbellDatapoint>;
+    export type VueUiSparkbarEvent = ChartEvent<VueUiSparkbarDatasetItem>;
     export type VueUiWordCloudEvent = ChartEvent<VueUiWordCloudDatapoint>;
     export type VueUiStripPlotEvent = ChartEvent<VueUiStripPlotDatapoint>;
     export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
@@ -2271,7 +2272,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiSparkbarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         theme?: Theme;
+        events?: { // v3
+            datapointEnter?: VueUiSparkbarEvent; // v3
+            datapointLeave?: VueUiSparkbarEvent; // v3
+            datapointClick?: VueUiSparkbarEvent; // v3
+        }
         customPalette?: string[];
         style?: {
             backgroundColor?: string;
