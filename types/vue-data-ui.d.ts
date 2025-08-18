@@ -144,6 +144,7 @@ declare module "vue-data-ui" {
     export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
     export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
     export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
+    export type VueUiSparkStackbarEvent = ChartEvent<VueUiSparkStackbarDatapoint>;
     export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
     export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
@@ -1901,7 +1902,26 @@ declare module "vue-data-ui" {
         dataset: VueUiSparkHistogramDatasetItem[];
     }>;
 
+    export type VueUiSparkStackbarDatapoint = {
+        color: string;
+        id: string;
+        name: string;
+        proportion: number;
+        proportionLabel: string;
+        seriesIndex: number;
+        start: number;
+        value: number;
+        width: number;
+    }
+
     export type VueUiSparkStackbarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        events?: {
+            datapointEnter?: VueUiSparkStackbarEvent; // v3
+            datapointLeave?: VueUiSparkStackbarEvent; // v3
+            datapointClick?: VueUiSparkStackbarEvent; // v3
+        }
         theme?: Theme;
         customPalette?: string[];
         style?: {

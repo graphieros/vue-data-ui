@@ -1,26 +1,30 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiSparkStackbar from '../src/components/vue-ui-sparkstackbar.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref(
-    [
-        {
-            name: "Vue",
-            value: 258,
-        },
-        {
-            name: "Javascript",
-            value: 36,
-        },
-        {
-            name: "Other",
-            value: 16,
-        },
-    ]
-);
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: "Vue",
+                value: 258,
+            },
+            {
+                name: "Javascript",
+                value: 36,
+            },
+            {
+                name: "Other",
+                value: 16,
+            },
+        ]
+    }, 2000)
+})
 
 const alternateDataset = ref([
         {
@@ -55,13 +59,15 @@ function alterDataset() {
 }
 
 const model = ref([
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.animationFrames', def: 60, type: 'number', min: 0, max: 300},
     { key: 'style.bar.gradient.show', def: true, type: 'checkbox'},
     { key: 'style.bar.gradient.intensity', def: 40, type: 'range', min: 0, max: 100},
-    { key: 'style.bar.gradient.underlayerColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.bar.gradient.underlayerColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.legend.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
     { key: 'style.legend.show', def: true, type: 'checkbox'},
     { key: 'style.legend.fontSize', def: 12, type: 'number', min: 8, max: 48},
@@ -108,12 +114,23 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            },
+        },
         style: {
             ...c.style,
             legend: {
