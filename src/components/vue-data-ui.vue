@@ -169,7 +169,9 @@ const emit = defineEmits([
     'lap',
     'toggleAnnotator',
     'selectGroup',
-    'selectRibbon'
+    'selectRibbon',
+    'toggleTable',
+    'resetZoom'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -213,13 +215,13 @@ const selectNode = ref(() => null);
 const selectGroup = ref(() => null);
 const selectRibbon = ref(() => null);
 const autoSize = ref(() => null);
+const resetZoom = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
         console.error(`\n\nVue Data UI exception:\nThe provided component "${props.component}" does not exist. Check the spelling.\n\nAvailable components:\n\n${Object.keys(components).map(key => `. ${key}\n`).join('')}`);
     }
 });
-
 
 watch(currentComponentRef, async (newRef) => {
     if (newRef) {
@@ -307,6 +309,9 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.autoSize) {
             autoSize.value = newRef.autoSize;
         }
+        if (newRef.resetZoom) { 
+            resetZoom.value = newRef.resetZoom;
+        }
     }
 })
 
@@ -340,7 +345,9 @@ const getEventHandlers = () => {
         'selectNode',
         'selectGroup',
         'selectRibbon',
-        'autoSize'
+        'autoSize',
+        'toggleTable',
+        'resetZoom',
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -415,7 +422,8 @@ defineExpose({
     toggleAnnotator,
     selectNode,
     selectGroup,
-    selectRibbon
+    selectRibbon,
+    resetZoom
 });
 
 const notSupported = computed(() => {

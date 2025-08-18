@@ -136,6 +136,7 @@ declare module "vue-data-ui" {
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
     export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
     export type VueUiDumbbellEvent = ChartEvent<VueUiDumbbellDatapoint>;
+    export type VueUiWordCloudEvent = ChartEvent<VueUiWordCloudDatapoint>;
     export type VueUiStripPlotEvent = ChartEvent<VueUiStripPlotDatapoint>;
     export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
     export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
@@ -6482,7 +6483,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiWordCloudConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiWordCloudEvent; // v3
+            datapointLeave?: VueUiWordCloudEvent; // v3
+            datapointClick?: VueUiWordCloudEvent; // v3
+        }
         theme?: string;
         customPalette?: string[];
         userOptions?: ChartUserOptions;

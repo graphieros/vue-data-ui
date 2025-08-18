@@ -4091,10 +4091,17 @@ export function useConfig() {
     }
 
     const vue_ui_word_cloud = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         animationDelayMs: 20,
         strictPixelPadding: false, // If true, strict per-pixel padding is used (dilateWordMask); if false, just rectangular bounding box (or pad).
         userOptions: USER_OPTIONS({
