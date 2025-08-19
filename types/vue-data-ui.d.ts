@@ -6074,6 +6074,9 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiSparkTrendConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         downsample?: {
             threshold?: number;
@@ -6081,6 +6084,8 @@ declare module "vue-data-ui" {
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
+            width?: number; // v3
+            height?: number; // v3
             animation?: {
                 show?: boolean;
                 animationFrames?: number;

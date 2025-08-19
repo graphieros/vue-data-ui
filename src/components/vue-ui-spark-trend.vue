@@ -1,5 +1,12 @@
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    onMounted, 
+    ref, 
+    toRefs,
+    watch, 
+} from "vue";
 import {
     applyDataLabel,
     calcTrend,
@@ -11,15 +18,19 @@ import {
     largestTriangleThreeBucketsArray,
     objectIsEmpty,
     setOpacity,
+    treeShake,
     XMLNS,
 } from "../lib"
-import { useNestedProp } from "../useNestedProp";
+import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { useFitSvgText } from "../useFitSvgText";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import themes from "../themes.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
-const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 
 const { vue_ui_spark_trend: DEFAULT_CONFIG } = useConfig();
 
@@ -38,19 +49,35 @@ const props = defineProps({
     }
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
-});
+const sparkTrendChart = ref(null);
+const svgRef = ref(null);
+const source = ref(null);
+const resizeObserver = ref(null);
+const observedEl = ref(null);
 
 const uid = ref(createUid());
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            style: {
+                animation: { show: false },
+                backgroundColor: '#99999930',
+                line: {
+                    stroke: '#6A6A6A',
+                    useColorTrend: false
+                },
+                dataLabel: { show: false, useColorTrend: false, color: '#6A6A6A' },
+            }
+        }
+    })
 });
 
 function prepareConfig() {
@@ -71,22 +98,27 @@ function prepareConfig() {
 }
 
 const downsampled = computed(() => largestTriangleThreeBucketsArray({
-    data: props.dataset,
+    data: FINAL_DATASET.value,
     threshold: FINAL_CONFIG.value.downsample.threshold
 }))
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
+    WIDTH.value = FINAL_CONFIG.value.style.width;
+    HEIGHT.value = FINAL_CONFIG.value.style.height;
     prepareChart();
 }, { deep: true });
 
-watch(() => props.dataset, (_) => {
+watch(() => FINAL_DATASET.value, (_) => {
     safeDatasetCopy.value = largestTriangleThreeBucketsArray({
-        data: props.dataset,
+        data: FINAL_DATASET.value,
         threshold: FINAL_CONFIG.value.downsample.threshold
     }).map(v => {
         return ![undefined, Infinity, -Infinity, null, NaN].includes(v) ? v : null
-    })
+    });
+
+    animateChart();
+    fitText('.vue-ui-sparktrend-progress-label', 6);
 }, { deep: true })
 
 function sanitize(arr) {
@@ -94,7 +126,7 @@ function sanitize(arr) {
 }
 
 const safeDatasetCopy = ref(largestTriangleThreeBucketsArray({
-    data: props.dataset,
+    data: FINAL_DATASET.value,
     threshold: FINAL_CONFIG.value.downsample.threshold
 }).map(v => {
     if(FINAL_CONFIG.value.style.animation.show) {
@@ -106,15 +138,14 @@ const safeDatasetCopy = ref(largestTriangleThreeBucketsArray({
 
 const isAnimating = ref(false);
 
-const raf = ref(null)
-onMounted(() => {
-    prepareChart();
+const raf = ref(null);
 
+function animateChart() {
     let fps = FINAL_CONFIG.value.style.animation.animationFrames;
     let interval = 1000 / fps;
     let then = performance.now();
 
-    if (FINAL_CONFIG.value.style.animation.show && FINAL_CONFIG.value.style.animation.animationFrames && props.dataset.length > 1) {
+    if (!loading.value && FINAL_CONFIG.value.style.animation.show && FINAL_CONFIG.value.style.animation.animationFrames && FINAL_DATASET.value.length > 1) {
         safeDatasetCopy.value = [];
         let start = 0;
 
@@ -132,6 +163,7 @@ onMounted(() => {
                     cancelAnimationFrame(raf.value)
                     safeDatasetCopy.value = sanitize(downsampled.value);
                     isAnimating.value = false;
+                    fitText('.vue-ui-sparktrend-progress-label', 6);
                 }
             } else {
                 raf.value = requestAnimationFrame(animate);
@@ -139,21 +171,64 @@ onMounted(() => {
         }
         animate()
     }
+}
+
+onMounted(() => {
+    prepareChart();
 });
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkTrend',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
+        manualLoading.value = true;
     }
+
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = false;
+    }
+
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width: W, height: H } = useResponsive({
+                chart: sparkTrendChart.value,
+                source: source.value
+            });
+
+            requestAnimationFrame(() => {
+                WIDTH.value = W;
+                HEIGHT.value = H;
+            });
+        });
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        observedEl.value = sparkTrendChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
+    }
+
+    animateChart();
+    fitText('.vue-ui-sparktrend-progress-label', 6);
 }
 
-const svg = ref({
-    height: 80,
-    width: 300
-})
+const WIDTH = ref(FINAL_CONFIG.value.style.width);
+const HEIGHT = ref(FINAL_CONFIG.value.style.height)
+
+const svg = computed(() => ({
+    height: HEIGHT.value,
+    width: WIDTH.value
+}))
 
 const drawingArea = computed(() => {
     return {
@@ -254,25 +329,25 @@ const straightLine = computed(() => {
         path.push(`${d.x},${d.y} `);
     })
     return `M ${path.toString()}`;
+});
+
+const arrowBase = computed(() => {
+    return HEIGHT.value / 2 - FINAL_CONFIG.value.style.trendLabel.fontSize;
 })
+
+const unitWidth = computed(() => drawingArea.value.left * 0.8);
+
+const { fitText } = useFitSvgText({
+    svgRef,
+    unitWidth,
+    fontSize: FINAL_CONFIG.value.style.trendLabel.fontSize,
+});
 
 </script>
 
 <template>
-    <div class="vue-ui-spark-trend" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor}`">
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'sparkline',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                    sparkline: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
-        <svg v-else :xmlns="XMLNS" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`">
+    <div ref="sparkTrendChart" class="vue-ui-spark-trend" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor}`">
+        <svg ref="svgRef" :xmlns="XMLNS" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
@@ -323,24 +398,33 @@ const straightLine = computed(() => {
 
 
             <!-- ARROW -->
-            <foreignObject 
-                v-if="!isAnimating"
-                :height="svg.height / 2"
-                :width="svg.height / 2"
-                :x="svg.height / 5"
-                :y="8"
-            >
-                <div style="width:100%">
-                    <BaseIcon v-if="trend === 'positive'" :stroke="trendColor" name="arrowTop" :size="svg.height / 2"/>
-                    <BaseIcon v-if="trend === 'negative'" :stroke="trendColor" name="arrowBottom" :size="svg.height / 2"/>
-                    <BaseIcon v-if="trend === 'neutral'" :stroke="trendColor" name="arrowRight" :size="svg.height / 2"/>
-                </div>
-            </foreignObject>
 
-            <text 
-                v-if="!isAnimating"
-                :x="(svg.height / 2) - (svg.height / 20)"
-                :y="drawingArea.bottom"
+            <path 
+                v-if="loading"
+                fill="#6A6A6A"
+                :d="`M ${drawingArea.left / 2 + 6}, ${arrowBase + 7} ${drawingArea.left / 2 - 7}, ${arrowBase} ${drawingArea.left / 2 - 7}, ${arrowBase + 14} Z`"
+            />
+            <path 
+                v-else
+                :fill="trendColor"
+                :d="trend === 'positive' ? `M ${drawingArea.left / 2}, ${arrowBase} ${drawingArea.left / 2 - 7}, ${arrowBase + 12} ${drawingArea.left / 2 + 7}, ${arrowBase + 12} Z` : trend === 'negative' ? `M ${drawingArea.left / 2}, ${arrowBase + 12} ${drawingArea.left / 2 - 7}, ${arrowBase} ${drawingArea.left / 2 + 7}, ${arrowBase} Z` : `M ${drawingArea.left / 2 + 6}, ${arrowBase + 7} ${drawingArea.left / 2 - 7}, ${arrowBase} ${drawingArea.left / 2 - 7}, ${arrowBase + 14} Z`"
+            />
+
+            <rect 
+                v-if="loading"
+                :x="drawingArea.left / 2 - FINAL_CONFIG.style.trendLabel.fontSize - 2"
+                :y="HEIGHT / 2 + FINAL_CONFIG.style.trendLabel.fontSize - 2"
+                :width="FINAL_CONFIG.style.trendLabel.fontSize * 2"
+                :height="FINAL_CONFIG.style.trendLabel.fontSize"
+                fill="#6A6A6A80"
+                rx="3"
+            />
+
+            <text
+                class="vue-ui-sparktrend-progress-label"
+                v-if="!isAnimating && !loading"
+                :x="drawingArea.left / 2"
+                :y="HEIGHT / 2 + FINAL_CONFIG.style.trendLabel.fontSize * 2"
                 text-anchor="middle"
                 :fill="FINAL_CONFIG.style.trendLabel.useColorTrend ? trendColor : FINAL_CONFIG.style.trendLabel.color"
                 :font-size="FINAL_CONFIG.style.trendLabel.fontSize"
@@ -361,7 +445,7 @@ const straightLine = computed(() => {
                 :cx="mutableDataset.at(-1).x"
                 :cy="mutableDataset.at(-1).y"
                 :r="4"
-                :fill="trendColor"
+                :fill="loading ? '#6A6A6A' : trendColor"
             />
             <text
                 v-if="mutableDataset.length && mutableDataset.at(-1).x !== undefined && FINAL_CONFIG.style.dataLabel.show"
@@ -390,10 +474,17 @@ const straightLine = computed(() => {
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
 <style scoped>
+.vue-ui-spark-trend {
+    position: relative;
+}
+
 .vue-ui-spark-trend * {
     transition: unset;
 }

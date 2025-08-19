@@ -2660,11 +2660,16 @@ export function useConfig() {
     }
 
     const vue_ui_spark_trend = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         downsample: LTTB,
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
+            height: 80,
+            width: 300,
             animation: {
                 show: true,
                 animationFrames: 20

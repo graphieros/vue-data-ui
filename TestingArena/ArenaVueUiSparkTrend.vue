@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiSparkTrend from '../src/components/vue-ui-spark-trend.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -15,9 +15,17 @@ function makeDs(n,m) {
 
 
 const datasets = ref({
-    neutral: makeDs(10, 100),
-    positive: makeDs(10, 100),
-    negative: makeDs(10, 100),
+    positive: undefined,
+    neutral: undefined,
+    negative: undefined,
+})
+
+onMounted(() => {
+    setTimeout(() => {
+        datasets.value.positive = [1, 2, 3, 5, 8]
+        datasets.value.neutral = [1, 1, 1, 1, 1, 1]
+        datasets.value.negative = [8, 5, 3, 2, 1]
+    }, 2000)
 })
 
 const alternateDataset = ref({
@@ -43,7 +51,9 @@ function alterDataset() {
 
 
 const model = ref([
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.animationFrames', def: 20, type: 'number', min: 0, max: 200},
@@ -89,7 +99,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -124,15 +134,19 @@ const step = ref(0)
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
     <button @click="alterDataset">ALTER DATASET</button>
 
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiSparkTrend :dataset="datasets.positive" :config="{ ...config, responsive: true }"/>
+    </div>
+
     <Box comp="VueUiSparkTrend" :dataset="datasets.positive">
         <template #title>VueUiSparkTrend</template>
 
         <template #local>
             <div style="width: 100%">
                 <LocalVueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.negative : datasets.negative" :config="isPropsToggled ? alternateConfig : config" :key="`local0_${step}`">
-                    <template #chart-background>
+                    <!-- <template #chart-background>
                         <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-                    </template>
+                    </template> -->
                     
                     <template #source>
                         <div style="width:100%;font-size:10px;text-align:left">
