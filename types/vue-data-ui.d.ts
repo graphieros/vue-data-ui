@@ -525,6 +525,7 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiKpiConfig = {
+        debug?: boolean;
         animationFrames?: number;
         animationValueStart?: number;
         backgroundColor?: string;

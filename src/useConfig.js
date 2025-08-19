@@ -4627,6 +4627,7 @@ export function useConfig() {
     }
 
     const vue_ui_kpi = {
+        debug: false, // v3
         animationFrames: 60,
         animationValueStart: 0,
         backgroundColor: COLOR_WHITE,
