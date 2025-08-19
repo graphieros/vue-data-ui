@@ -469,13 +469,6 @@ const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
-const max = computed(() => {
-    if (FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax) {
-        return FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax
-    }
-    return Math.max(...safeDataset.value.filter(s => !segregatedSeries.value.includes(s.id)).map(datapoint => Math.max(...datapoint.series)));
-});
-
 const min = computed(() => {
     if (FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin !== null) {
         return FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin
@@ -483,7 +476,18 @@ const min = computed(() => {
     const _min = Math.min(...safeDataset.value.filter(s => !segregatedSeries.value.includes(s.id)).map(datapoint => Math.min(...datapoint.series)));
     if (_min > 0) return 0;
     return _min;
-})
+});
+
+const max = computed(() => {
+    if (FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax) {
+        return FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax
+    }
+    const m = Math.max(...safeDataset.value.filter(s => !segregatedSeries.value.includes(s.id)).map(datapoint => Math.max(...datapoint.series)));
+    if (min.value === m) {
+        return m + 1
+    }
+    return m;
+});
 
 const niceScale = computed(() => {
     return FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(min.value, max.value < 0 ? 0 : max.value, FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps) : calculateNiceScaleWithExactExtremes(min.value, max.value < 0 ? 0 : max.value, FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps)
@@ -1291,6 +1295,15 @@ const annotationsY = computed(() => {
     });
 });
 
+function isPlotAlone(plotSeries, index) {
+    const before = plotSeries[index - 1];
+    const after = plotSeries[index + 1];
+
+    let isAlone = (!!before && !!after && before.value == null && after.value == null) || (!before && !!after && after.value == null) || (!!before && !after && before.value == null);
+
+    return canShowValue(plotSeries[index].value) && isAlone;
+}
+
 /******************************************************************************************/
 /                                 DATAPOINTS COMPUTING                                     /
 /******************************************************************************************/
@@ -1461,6 +1474,7 @@ const lineSet = computed(() => {
         const autoScaledRatios = datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)).map(v => {
             return (v - _min) / (_max - _min)
         });
+
         const autoScale = {
             ratios: autoScaledRatios,
             valueMin: _min,
@@ -2992,11 +3006,11 @@ defineExpose({
                         <template v-for="(plot, j) in serie.plots" :key="`circle_line_${i}_${j}`">
                             <Shape 
                                 data-cy="datapoint-line-plot"
-                                v-if="(!optimize.linePlot && plot && canShowValue(plot.value)) || (optimize.linePlot && plot && canShowValue(plot.value) && ((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)))"
+                                v-if="(!optimize.linePlot && plot && canShowValue(plot.value)) || (optimize.linePlot && plot && canShowValue(plot.value) && ((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j))) || isPlotAlone(serie.plots, j)"
                                 :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(serie.shape) ? serie.shape : 'circle'"
                                 :color="FINAL_CONFIG.line.useGradient ? `url(#lineGradient_${i}_${uniqueId})` : FINAL_CONFIG.line.dot.useSerieColor ? serie.color : FINAL_CONFIG.line.dot.fill"
                                 :plot="{ x: checkNaN(plot.x), y: checkNaN(plot.y) }"
-                                :radius="((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)) ? (plotRadii.line || 6) * 1.5 : plotRadii.line || 6"
+                                :radius="((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)) ? (plotRadii.line || 6) * 1.5 : isPlotAlone(serie.plots, j) ? (plotRadii.line || 6) : (plotRadii.line || 6)"
                                 :stroke="FINAL_CONFIG.line.dot.useSerieColor ? FINAL_CONFIG.chart.backgroundColor : serie.color"
                                 :strokeWidth="FINAL_CONFIG.line.dot.strokeWidth"
                                 :transition="loading || !FINAL_CONFIG.line.showTransition || ((selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)) ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`"
@@ -3433,9 +3447,11 @@ defineExpose({
                             :y="drawingArea.bottom" width="200" height="40" style="overflow: visible !important;">
                             <div class="vue-ui-xy-time-tag"
                                 :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${FINAL_CONFIG.chart.timeTag.backgroundColor};color:${FINAL_CONFIG.chart.timeTag.color};font-size:${FINAL_CONFIG.chart.timeTag.fontSize}px`">
-                                {{ timeLabels[(selectedSerieIndex !== null ? selectedSerieIndex : 0) ||
+                                {{ (timeLabels[(selectedSerieIndex !== null ? selectedSerieIndex : 0) ||
                                     (selectedMinimapIndex !== null ?
-                                        selectedMinimapIndex : 0)].text || ((selectedSerieIndex !== null ? selectedSerieIndex :
+                                        selectedMinimapIndex : 0)] ? timeLabels[(selectedSerieIndex !== null ? selectedSerieIndex : 0) ||
+                                    (selectedMinimapIndex !== null ?
+                                        selectedMinimapIndex : 0)].text : '') || ((selectedSerieIndex !== null ? selectedSerieIndex :
                                 0) ||
                                 (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) }}
                             </div>
