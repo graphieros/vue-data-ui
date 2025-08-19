@@ -2961,7 +2961,14 @@ export function useConfig() {
     }
 
     const vue_ui_relation_circle = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
@@ -2977,7 +2984,8 @@ export function useConfig() {
             },
             labels: {
                 color: COLOR_BLACK,
-                fontSize: FONT._10
+                fontSize: FONT._14,
+                minFontSize: MIN_FONT_SIZE, // v3
             },
             weightLabels: {
                 size: 8,

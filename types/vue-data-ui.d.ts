@@ -146,6 +146,7 @@ declare module "vue-data-ui" {
     export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
     export type VueUiSparkStackbarEvent = ChartEvent<VueUiSparkStackbarDatapoint>;
     export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
+    export type VueUiRelationCircleEvent = ChartEvent<VueUiRelationCircleDatapoint>;
     export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
     export type VueUiSparkHistogramEvent = ChartEvent<VueUiSparkHistogramDatasetItem>;
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
@@ -2105,7 +2106,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiRelationCircleConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiRelationCircleEvent; // v3
+            datapointLeave?: VueUiRelationCircleEvent; // v3
+            datapointClick?: VueUiRelationCircleEvent; // v3
+        };
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -2122,6 +2130,7 @@ declare module "vue-data-ui" {
             labels?: {
                 color?: string;
                 fontSize?: number;
+                minFontSize?: number; // v3
             };
             weightLabels?: {
                 size?: number;
@@ -2158,6 +2167,18 @@ declare module "vue-data-ui" {
         weights?: number[];
         color?: string;
     };
+
+    export type VueUiRelationCircleDatapoint = {
+        color: string;
+        id: string;
+        label: string;
+        regAngle: number;
+        relations: string[];
+        totalWeight: number;
+        weights: number[];
+        x: number;
+        y: number;
+    }
 
     export type VueUiRelationCircleExpose = {
         getImage(options?: { scale?: number }): GetImagePromise

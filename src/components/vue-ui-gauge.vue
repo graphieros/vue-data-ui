@@ -415,7 +415,7 @@ function prepareChart() {
         resizeObserver.value.observe(observedEl.value);
     }
 
-    requestAnimationFrame(autoSizeLabels);
+    autoSizeLabels();
 }
 
 onMounted(() => {

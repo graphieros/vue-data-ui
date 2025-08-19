@@ -5,7 +5,11 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref([
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
     {
         id: "01",
         label: "Lorem",
@@ -78,9 +82,13 @@ const dataset = ref([
         relations: ["01", "07", "08"],
         weights: [8, 1, 1],
     }
-])
+]
+    }, 2000);
+})
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
 
@@ -105,7 +113,7 @@ const model = ref([
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.speedMs', def: 300, type: 'number', min: 0, max: 1000},
     { key: 'style.labels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.labels.fontSize', def: 10, type: 'number', min: 8, max: 48},
+    { key: 'style.labels.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'style.links.curved', def: false, type: 'checkbox'},
     { key: 'style.links.maxWidth', def: 5, type: 'number', min: 0, max: 100},
     
@@ -135,12 +143,23 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            },
+        },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         style: {
@@ -184,9 +203,9 @@ onMounted(async() => {
         <!-- <template #dataLabel="{ x,y,color,weight }">
             <circle :cx="x" :cy="y" r="12" :fill="color"/>
         </template> -->
-        <template #chart-background>
+        <!-- <template #chart-background>
             <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-        </template>
+        </template> -->
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                 WATERMARK

@@ -151,7 +151,7 @@ function prepareChart() {
         observedEl.value = thermoChart.value;
         resizeObserver.value.observe(observedEl.value);
     }
-    requestAnimationFrame(autoSizeLabels);
+    autoSizeLabels();
 }
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
