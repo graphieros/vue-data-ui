@@ -5,23 +5,29 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref({
-    value: 8,
-    min: -10,
-    max: 10,
-    title: 'KPI 1'
-});
+const dataset = ref(undefined);
 
 onMounted(() => {
     setTimeout(() => {
+        dataset.value = {
+            value: 8,
+            min: -10,
+            max: 10,
+            title: 'KPI 1'
+        }
+    }, 2000)
+
+    setTimeout(() => {
         dataset.value.value = 3
-    }, 3000)
+    }, 4000)
 })
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.background', def: '#FFFFFF20', type: 'color'},
-    { key: 'style.height', def: 84, type: 'number', min: 10, max: 200},
+    { key: 'style.background', def: '#FFFFFF', type: 'color'},
+    { key: 'style.height', def: 100, type: 'number', min: 10, max: 200},
     { key: 'style.basePosition', def: 72, type: 'number', min: 0, max: 100},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.speedMs', def: 150, type: 'number', min: 0, max: 1000},
@@ -59,7 +65,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -95,9 +101,9 @@ const step = ref(0);
 
         <template #local>
             <LocalVueUiSparkgauge :dataset="dataset" :config="config" :key="`local_${step}`">
-                <template #chart-background>
+                <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-                </template>
+                </template> -->
                 
                 <template #source>
                     <div style="width:100%;font-size:10px;text-align:left">

@@ -687,6 +687,8 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiSparkgaugeConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         theme?: Theme;
         style?: {
             fontFamily?: string;

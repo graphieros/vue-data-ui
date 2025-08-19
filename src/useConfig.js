@@ -2611,6 +2611,8 @@ export function useConfig() {
     }
 
     const vue_ui_sparkgauge = {
+        debug: false, // v3
+        loading: false, // v3
         theme: '',
         style: {
             fontFamily: 'inherit',
