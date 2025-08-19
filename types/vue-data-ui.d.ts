@@ -7346,6 +7346,8 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiGizmoConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         type?: "battery" | "gauge";
         size?: number;
         stroke?: string;

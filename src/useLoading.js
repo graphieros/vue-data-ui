@@ -7,16 +7,17 @@ export function useLoading({
     skeletonConfig,
     FINAL_CONFIG,
     prepareConfig,
-    callback = null
+    callback = null,
+    dsIsNumber = false
 }) {
     const manualLoading = ref(false);
 
     const loading = computed(() => {
         const configLoading = unref(config)?.loading ?? false;
         const ds = unref(dataset);
-        const datasetEmpty = ds == null 
+        const datasetEmpty = dsIsNumber ? [null, undefined].includes(ds) : ds == null 
             || (Array.isArray(ds) && ds.length === 0) 
-            || Object.keys(ds).length === 0;
+            || Object.keys(ds).length === 0
 
         return manualLoading.value || configLoading || datasetEmpty;
     });

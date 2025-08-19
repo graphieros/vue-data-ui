@@ -5382,6 +5382,8 @@ export function useConfig() {
     }
 
     const vue_ui_gizmo = {
+        debug: false, // v3
+        loading: false, // v3
         type: 'battery', // battery | gauge
         size: 64,
         stroke: COLOR_GREY_MID,

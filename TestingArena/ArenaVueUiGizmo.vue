@@ -1,13 +1,21 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiGizmo from '../src/components/vue-ui-gizmo.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref(100)
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = 50;
+    }, 2000);
+})
 
 const model= ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'type', def: 'battery', type: 'select', options: ['battery', 'gauge']},
     { key: 'size', def: 64, type: 'range', min: 10, max: 100},
     { key: 'stroke', def: '#e1e5e8', type: 'color'},
@@ -33,7 +41,7 @@ const step = ref(0)
 </script>
 
 <template>
-    <input type="range" v-model="dataset" :min="0" :max="100"/>
+    <div style="color: white">{{ dataset }}</div>
     <Box comp="VueUiGizmo" :dataset="dataset">
         <template #title>VueUiGizmo</template>
         
