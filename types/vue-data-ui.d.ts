@@ -139,6 +139,7 @@ declare module "vue-data-ui" {
     export type VueUiSparkbarEvent = ChartEvent<VueUiSparkbarDatasetItem>;
     export type VueUiWordCloudEvent = ChartEvent<VueUiWordCloudDatapoint>;
     export type VueUiStripPlotEvent = ChartEvent<VueUiStripPlotDatapoint>;
+    export type VueUiMoodRadarEvent = ChartEvent<VueUiMoodRadarDatapoint>;
     export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
     export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
     export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
@@ -1108,7 +1109,23 @@ declare module "vue-data-ui" {
         "5": number;
     };
 
+    export type VueUiMoodRadarDatapoint = {
+        index: number;
+        key: "1" | "2" | "3" | "4" | "5";
+        value: number;
+        proportion: number;
+        color: string;
+    }
+
     export type VueUiMoodRadarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
+        events?: {
+            datapointEnter?: VueUiMoodRadarEvent; // v3
+            datapointLeave?: VueUiMoodRadarEvent; // v3
+            datapointClick?: VueUiMoodRadarEvent; // v3
+        };
         theme?: Theme;
         style?: {
             fontFamily?: string;

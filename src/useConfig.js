@@ -1099,7 +1099,7 @@ export function useConfig() {
         },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -3335,6 +3335,14 @@ export function useConfig() {
     }
 
     const vue_ui_mood_radar = {
+        debug: false, // null
+        loading: false, // null
+        responsive: false, // null
+        events: {
+            datapointEnter: null, // null
+            datapointLeave: null, // null
+            datapointClick: null, // null
+        },
         theme: '',
         style: {
             fontFamily: 'inherit',

@@ -1,5 +1,15 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef, toRefs } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs,
+    watch, 
+} from "vue";
 import {
     applyDataLabel,
     checkNaN,
@@ -24,19 +34,19 @@ import {
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
+import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
-import { useConfig } from "../useConfig";
+import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
-import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import img from "../img";
-import { useLoading } from "../useLoading";
-import BaseScanner from "../atoms/BaseScanner.vue";
 import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
+import img from "../img";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import themes from "../themes.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
