@@ -171,7 +171,7 @@ export function treeShake({ defaultConfig, userConfig }) {
                 : val;
         }
     });
-    
+
     return finalConfig;
 }
 
@@ -646,49 +646,63 @@ export function createStar({
 }
 
 export function giftWrap({ series }) {
-    series = series.sort((a, b) => a.x - b.x);
-    function polarAngle(a, b, c) {
-        const x = (a.x - b.x) * (c.x - b.x) + (a.y - b.y) * (c.y - b.y);
-        const y = (a.x - b.x) * (c.y - b.y) - (c.x - b.x) * (a.y - b.y);
-        return Math.atan2(y, x);
+    if (!Array.isArray(series) || series.length === 0) return "";
+
+    const pts = Array.from(
+        new Map(
+            series
+                .filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y))
+                .map(p => [`${p.x},${p.y}`, { x: +p.x, y: +p.y }])
+        ).values()
+    );
+    if (pts.length === 0) return "";
+    if (pts.length === 1) return `${Math.round(pts[0].x)},${Math.round(pts[0].y)} `;
+
+    const dist2 = (a, b) => {
+        const dx = a.x - b.x, dy = a.y - b.y;
+        return dx * dx + dy * dy;
+    };
+    const cross = (o, a, b) =>
+        (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+
+    let start = pts[0];
+    for (const p of pts) {
+        if (p.x < start.x || (p.x === start.x && p.y < start.y)) start = p;
     }
-    const perimeter = [];
-    let currentPoint;
-    currentPoint = series[0];
-    for (const p of series) {
-        if (p.x < currentPoint.x) {
-            currentPoint = p;
-        }
-    }
-    perimeter[0] = currentPoint;
-    let endpoint, secondlast;
-    let minAngle, newEnd;
-    endpoint = perimeter[0];
-    secondlast = { x: endpoint.x, y: endpoint.y + 1 };
-    do {
-        minAngle = Math.PI;
-        for (const p of series) {
-            currentPoint = polarAngle(secondlast, endpoint, p);
-            if (currentPoint <= minAngle) {
-                newEnd = p;
-                minAngle = currentPoint;
+
+    const hull = [start];
+    let endpoint = start;
+
+    const maxSteps = pts.length + 2;
+    let steps = 0;
+
+    while (true) {
+        if (++steps > maxSteps) break;
+        let candidate = pts[0] === endpoint ? pts[1] : pts[0];
+        for (const p of pts) {
+            if (p === endpoint || p === candidate) continue;
+            const c = cross(endpoint, candidate, p);
+            if (c < 0) continue;
+            if (c > 0) {
+                candidate = p;
+            } else {
+                if (dist2(endpoint, p) > dist2(endpoint, candidate)) {
+                    candidate = p;
+                }
             }
         }
-        if (newEnd !== perimeter[0]) {
-            perimeter.push(newEnd);
-            secondlast = endpoint;
-            endpoint = newEnd;
-        }
-    } while (newEnd !== perimeter[0]);
-    let result;
-    perimeter.forEach((res) => {
-        if (res && res.x && res.y) {
-            result += `${Math.round(res.x)},${Math.round(res.y)} `;
-        }
-    });
-    result = result.replaceAll("undefined", "");
+        if (candidate === start) break;
+        hull.push(candidate);
+        endpoint = candidate;
+    }
+
+    let result = "";
+    for (const p of hull) {
+        result += `${Math.round(p.x)},${Math.round(p.y)} `;
+    }
     return result;
 }
+
 
 export function degreesToRadians(degrees) {
     return (degrees * Math.PI) / 180;
@@ -2799,7 +2813,7 @@ export function formatSmallValue({
 export function fib(n) {
     const a = [];
     for (let i = 0; i < n; i += 1) {
-        a.push(i === 0 ? 0 : i === 1 ? 1 : a[i-1] + a[i-2]);
+        a.push(i === 0 ? 0 : i === 1 ? 1 : a[i - 1] + a[i - 2]);
     }
     return a;
 }
@@ -2812,18 +2826,18 @@ export function wrapText(str, maxChars = 20) {
     let result = "";
 
     for (let word of words) {
-    if ((line + (line ? " " : "") + word).length <= maxChars) {
-        line += (line ? " " : "") + word;
-    } else {
-        if (line) {
-        result += (result ? "\n" : "") + line;
+        if ((line + (line ? " " : "") + word).length <= maxChars) {
+            line += (line ? " " : "") + word;
+        } else {
+            if (line) {
+                result += (result ? "\n" : "") + line;
+            }
+            line = word;
         }
-        line = word;
-    }
     }
 
     if (line) {
-    result += (result ? "\n" : "") + line;
+        result += (result ? "\n" : "") + line;
     }
 
     return result;

@@ -129,6 +129,7 @@ declare module "vue-data-ui" {
     export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
     export type VueUi3dBarEvent = ChartEvent<VueUi3dBarDatapoint>;
     export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
+    export type VueUiRadarEvent = ChartEvent<VueUiRadarDatapoint>;
     export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
     export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
     export type VueUiOnionEvent = ChartEvent<VueUiOnionDatapoint>;
@@ -136,6 +137,7 @@ declare module "vue-data-ui" {
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
     export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
     export type VueUiDumbbellEvent = ChartEvent<VueUiDumbbellDatapoint>;
+    export type VueUiQuadrantEvent = ChartEvent<VueUiQuadrantDatapoint>;
     export type VueUiSparkbarEvent = ChartEvent<VueUiSparkbarDatasetItem>;
     export type VueUiWordCloudEvent = ChartEvent<VueUiWordCloudDatapoint>;
     export type VueUiStripPlotEvent = ChartEvent<VueUiStripPlotDatapoint>;
@@ -152,7 +154,6 @@ declare module "vue-data-ui" {
     export type VueUiSparkHistogramEvent = ChartEvent<VueUiSparkHistogramDatasetItem>;
     export type VueUiChordEvent = ChartEvent<VueUiChordDatapointArc | VueUiChordDatapointRibbon>;
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
-    export type VueUiRadarEvent = ChartEvent<VueUiRadarDatapoint>;
 
     export type VueUiPatternName =
         | "bubbles"
@@ -4310,7 +4311,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiQuadrantConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiQuadrantEvent; // v3
+            datapointLeave?: VueUiQuadrantEvent; // v3
+            datapointClick?: VueUiQuadrantEvent; // v3
+        };
         theme?: Theme;
         useCssAnimation?: boolean;
         zoomAnimationFrames?: number;

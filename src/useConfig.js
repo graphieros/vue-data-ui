@@ -1178,10 +1178,17 @@ export function useConfig() {
     }
 
     const vue_ui_quadrant = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         zoomAnimationFrames: 20,
         downsample: LTTB,
         style: {
