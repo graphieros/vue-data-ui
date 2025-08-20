@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef } from "vue";
+import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef, toRefs } from "vue";
 import {
     applyDataLabel,
     checkNaN,
@@ -20,6 +20,7 @@ import {
     setOpacity,
     shiftHue,
     themePalettes,
+    treeShake,
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
@@ -33,11 +34,13 @@ import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
+import { useLoading } from "../useLoading";
+import BaseScanner from "../atoms/BaseScanner.vue";
+import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
 
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
@@ -78,14 +81,51 @@ const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: {
+        categories: [{ name: '_', color: '#6A6A6A'}, ],
+        series: [
+            { name: '_', values: [0.6], target: 1 },
+            { name: '_', values: [0.6], target: 1 },
+            { name: '_', values: [0.6], target: 1 },
+            { name: '_', values: [0.6], target: 1 },
+            { name: '_', values: [0.6], target: 1 },
+            { name: '_', values: [0.6], target: 1 },
+        ]
     },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            useCssAnimation: false,
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        grid: {
+                            stroke: '#6A6A6A90'
+                        },
+                        labels: {
+                            dataLabels: { show: false }
+                        },
+                        outerPolygon: {
+                            stroke: '#6A6A6A'
+                        }
+                    },
+                    legend: {
+                        backgroundColor: 'transparent'
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -119,17 +159,20 @@ watch(() => props.config, (_newCfg) => {
     // Reset mutable config
     mutableConfig.value.dataLabels.show = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tootlip? FINAL_CONFIG.value.style.chart.tootlip.show : false;
+    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip? FINAL_CONFIG.value.style.chart.tooltip.show : false;
 }, { deep: true });
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiRadar',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
     }
 
@@ -146,6 +189,7 @@ function prepareChart() {
             requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height;
+                autoSizeLabels();
             });
         });
 
@@ -160,6 +204,7 @@ function prepareChart() {
         observedEl.value = radarChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
     }
+    autoSizeLabels();
 }
 
 onMounted(() => {
@@ -265,22 +310,24 @@ function getData() {
 }
 
 const datasetCopy = computed(() => {
-    if ([null, undefined].includes(props.dataset.categories)) {
+    if ([null, undefined].includes(FINAL_DATASET.value.categories)) {
         error({
             componentName: 'VueUiRadar',
             type: 'datasetAttribute',
-            property: 'categories ({ name: string; prefix?: string; suffix?: string}[])'
+            property: 'categories ({ name: string; prefix?: string; suffix?: string}[])',
+            debug: debug.value
         });
         return []
     } else {
-        if(props.dataset.categories.length === 0) {
+        if(FINAL_DATASET.value.categories.length === 0) {
             error({
                 componentName: 'VueUiRadar',
                 type: 'datasetAttributeEmpty',
                 property: 'categories',
+                debug: debug.value
             })
         } else {
-            props.dataset.categories.forEach((cat, i) => {
+            FINAL_DATASET.value.categories.forEach((cat, i) => {
                 getMissingDatasetAttributes({
                     datasetObject: cat,
                     requiredAttributes: ['name']
@@ -289,20 +336,22 @@ const datasetCopy = computed(() => {
                         componentName: 'VueUiRadar',
                         type: 'datasetAttribute',
                         property: `category.${attr} at index ${i}`,
-                        index: i
+                        index: i,
+                        debug: debug.value
                     })
                 })
             })
         }
     }
-    if([null, undefined].includes(props.dataset.series)) {
+    if([null, undefined].includes(FINAL_DATASET.value.series)) {
         error({
             componentName: 'VueUiRadar',
             type: 'datasetAttribute',
-            property: 'series ({ name: string; values: number[]; color?: string; target: number}[])'
+            property: 'series ({ name: string; values: number[]; color?: string; target: number}[])',
+            debug: debug.value
         })
     } else {
-        props.dataset.series.forEach((serie, i) => {
+        FINAL_DATASET.value.series.forEach((serie, i) => {
             getMissingDatasetAttributes({
                 datasetObject: serie,
                 requiredAttributes: ['name', 'values', 'target']
@@ -312,13 +361,14 @@ const datasetCopy = computed(() => {
                     type: 'datasetSerieAttribute',
                     key: 'series',
                     property: attr,
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
             })
         })
     }
 
-    return props.dataset.categories.map((c, i) => {
+    return FINAL_DATASET.value.categories.map((c, i) => {
         return {
             name: c.name,
             categoryId: `radar_category_${uid.value}_${i}`,
@@ -330,10 +380,7 @@ const datasetCopy = computed(() => {
 });
 
 const seriesCopy = computed(() => {
-    if (!isDataset.value) {
-        return []
-    }
-    return props.dataset.series
+    return FINAL_DATASET.value.series
         .map((s, i) => {
             return {
                 ...s,
@@ -388,6 +435,13 @@ const radar = computed(() => {
             ...seriesCopy.value[i],
             plots,
         }
+    }).map(r => {
+        return {
+            ...r,
+            labelX: offset(r).x,
+            labelY: offset(r).y,
+            labelAnchor: offset(r).anchor
+        }
     })
 });
 
@@ -403,10 +457,10 @@ function offset({x, y}) {
         x -= 12;
         anchor="end"
     }
-    if(y > svg.value.height / 2) {
+    if(y > svg.value.height / 2 + 1) {
         y += 20;
     }
-    if(y < svg.value.height / 2) {
+    if(y < svg.value.height / 2 - 1) {
         y -= 12;
     }
     if(y === svg.value.height / 2) {
@@ -414,6 +468,19 @@ function offset({x, y}) {
     }
     return {x, y, anchor}
 }
+
+const labelFontSize = computed({
+    get: () => FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.fontSize,
+    set: v => v
+})
+
+const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
+    svgRef,
+    fontSize: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.fontSize,
+    minFontSize: 6,
+    sizeRef: labelFontSize,
+    labelClass: '.vue-ui-radar-apex-label'
+});
 
 function plot({ centerX, centerY, apexX, apexY, proportion }) {
     return {
@@ -455,7 +522,7 @@ const dataTable = computed(() => {
         { name: FINAL_CONFIG.value.translations.target, color: "" },
         ...legendSet.value
     ];
-    const body = props.dataset.series.map(ds => {
+    const body = FINAL_DATASET.value.series.map(ds => {
         return [
             ds.name,
             applyDataLabel(
@@ -503,7 +570,25 @@ const sparkBarData = ref([]);
 
 const dataTooltipSlot = ref(null);
 
+function onTrapLeave(apex, i) {
+    isTooltip.value = false;
+    selectedIndex.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: apex, seriesIndex: i });
+    }
+}
+
+function onTrapClick(apex, i) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: apex, seriesIndex: i});
+    }
+}
+
 function useTooltip(apex, i) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: apex, seriesIndex: i });
+    }
+    
     sparkBarData.value = [];
     selectedIndex.value = i;
     isTooltip.value = true;
@@ -557,7 +642,7 @@ function generateCsv(callback=null) {
     nextTick(() => {
         const title = [[FINAL_CONFIG.value.style.chart.title.text], [FINAL_CONFIG.value.style.chart.title.subtitle.text], [""]];
         const head = [[""],[FINAL_CONFIG.value.translations.target], ...legendSet.value.flatMap(l => [[l.name], ["%"]])];
-        const body = props.dataset.series.map((s, i) => {
+        const body = FINAL_DATASET.value.series.map((s, i) => {
             return [ s.name, s.target, ...s.values.flatMap(v => {
                 return [
                     v, isNaN(v / s.target) ? '' : v / s.target * 100
@@ -730,8 +815,7 @@ defineExpose({
         <!-- CHART -->
         <svg
             ref="svgRef"
-            :xmlns="XMLNS" 
-            v-if="isDataset" 
+            :xmlns="XMLNS"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" 
         >
@@ -809,13 +893,15 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
             <text v-for="(label, i) in radar"
                 data-cy="label-apex"
-                :x="offset(label).x"
-                :y="offset(label).y"
-                :text-anchor="offset(label).anchor"
+                class="vue-ui-radar-apex-label"
+                :x="label.labelX"
+                :y="label.labelY"
+                :text-anchor="label.labelAnchor"
                 :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
                 :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
                 @mouseenter="useTooltip(label, i)"
-                @mouseleave="isTooltip = false; selectedIndex = null"
+                @mouseleave="onTrapLeave(label, i)"
+                @click="onTrapClick(label, i)"
             >
                 {{ label.name }}
             </text>
@@ -852,7 +938,7 @@ defineExpose({
                         v-for="(p, j) in category.plots"
                         :cx="p.x"
                         :cy="p.y"
-                        :fill="segregated.includes(j) ? 'transparent' : datasetCopy[j].color"
+                        :fill="segregated.includes(j) ? 'transparent' : datasetCopy[j] ? datasetCopy[j].color : 'transparent'"
                         :r="selectedIndex !== null && selectedIndex === i ? FINAL_CONFIG.style.chart.layout.plots.radius * 1.6 : FINAL_CONFIG.style.chart.layout.plots.radius"
                         :stroke="segregated.includes(j) ? 'transparent' : FINAL_CONFIG.style.chart.backgroundColor"
                         :stroke-width="0.5"
@@ -867,24 +953,6 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'radar',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    radar: {
-                        grid: {
-                            color: FINAL_CONFIG.style.chart.layout.outerPolygon.stroke
-                        },
-                        shapes: {
-                            color: FINAL_CONFIG.style.chart.layout.outerPolygon.stroke
-                        }
-                    }
-                }
-            }"
-        />
-
         <!-- LEGEND -->
         <div ref="chartLegend">
             <Legend
@@ -895,7 +963,7 @@ defineExpose({
                 @clickMarker="({i}) => segregate(i)"
             >
                 <template #item="{ legend, index }">
-                    <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                    <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`" v-if="!loading">
                         {{ legend.name }}: {{ 
                             dataLabel({
                                 v: legend.totalProportion * 100,
@@ -976,6 +1044,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

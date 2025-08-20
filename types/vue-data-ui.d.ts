@@ -151,6 +151,7 @@ declare module "vue-data-ui" {
     export type VueUiSparkHistogramEvent = ChartEvent<VueUiSparkHistogramDatasetItem>;
     export type VueUiChordEvent = ChartEvent<VueUiChordDatapointArc | VueUiChordDatapointRibbon>;
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
+    export type VueUiRadarEvent = ChartEvent<VueUiRadarDatapoint>;
 
     export type VueUiPatternName =
         | "bubbles"
@@ -4105,7 +4106,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiRadarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiRadarEvent; // v3
+            datapointLeave?: VueUiRadarEvent; // v3
+            datapointClick?: VueUiRadarEvent; // v3
+        }
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -4195,6 +4203,7 @@ declare module "vue-data-ui" {
         values: number[];
         x: number;
         y: number;
+        formatter: Formatter
     };
 
     export type VueUiRadarCategory = {
