@@ -149,6 +149,7 @@ declare module "vue-data-ui" {
     export type VueUiRelationCircleEvent = ChartEvent<VueUiRelationCircleDatapoint>;
     export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
     export type VueUiSparkHistogramEvent = ChartEvent<VueUiSparkHistogramDatasetItem>;
+    export type VueUiChordEvent = ChartEvent<VueUiChordDatapointArc | VueUiChordDatapointRibbon>;
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
 
     export type VueUiPatternName =
@@ -8456,13 +8457,53 @@ declare module "vue-data-ui" {
         colors?: string[];
     }
 
+    export type VueUiChordDatapointArc = {
+        color: string;
+        endAngle: number;
+        id: string;
+        index: number;
+        name: string;
+        pattern: string;
+        proportion: number;
+        startAngle: number;
+    }
+
+    export type VueUiChordNode = {
+        endAngle: number;
+        groupColor: string;
+        groupId: string;
+        groupName: string;
+        index: number;
+        midAngle: number;
+        midBaseX: number;
+        midBaseY: number;
+        pattern: string;
+        startAngle: number;
+        subIndex: number;
+        value: number;
+    }
+
+    export type VueUiChordDatapointRibbon = {
+        color: string;
+        id: string;
+        source: VueUiChordNode;
+        target: VueUiChordNode;
+    }
+
     export type VueUiChordConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiChordEvent; // v3
+            datapointLeave?: VueUiChordEvent; // v3
+            datapointClick?: VueUiChordEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         enableRotation?: boolean;
         initialRotation?: nulber;
         useCssAnimation?: boolean;
-        responsive?: boolean;
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;

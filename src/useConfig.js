@@ -6067,12 +6067,19 @@ export function useConfig() {
     }
 
     const vue_ui_chord = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false,
+        events: {
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         enableRotation: true,
         initialRotation: 0,
-        useCssAnimation: true,
-        responsive: false,
+        useCssAnimation: false, // v2 = true
         userOptions: USER_OPTIONS({
             tooltip: false,
             pdf: true,

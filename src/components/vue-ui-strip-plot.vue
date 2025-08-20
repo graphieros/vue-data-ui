@@ -983,7 +983,7 @@ defineExpose({
                         :fill="FINAL_CONFIG.style.chart.labels.xAxisLabels.color"
                         :text-anchor="FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                     >
-                        {{ wrapText(String(label)) }}
+                        {{ String(label) }}
                     </text>
 
                     <!-- MULTILINE -->
