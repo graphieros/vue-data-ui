@@ -102,7 +102,8 @@ const model = ref([
     { key: 'style.layout.grid.xAxis.dataLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.layout.grid.xAxis.dataLabels.bold', def: false, type: 'checkbox'},
     { key: 'style.layout.grid.xAxis.dataLabels.rotation', def: -20, type: 'number', min: -360, max: 360},
-    { key: 'style.layout.grid.xAxis.dataLabels.autoRotate', def: true, type: 'checkbox'},
+    { key: 'style.layout.grid.xAxis.dataLabels.autoRotate.enable', def: true, type: 'checkbox'},
+    { key: 'style.layout.grid.xAxis.dataLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
 
     { key: 'style.layout.grid.yAxis.dataLabels.show', def: true, type: 'checkbox'},
     { key: 'style.layout.grid.yAxis.dataLabels.fontSize', def: 10, type: 'number', min: 4, max: 12},

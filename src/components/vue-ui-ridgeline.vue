@@ -749,7 +749,10 @@ function createXyDatasetForDialog(ds) {
                     xAxisLabels: {
                         ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid.labels.xAxisLabels,
                         values: FINAL_CONFIG.value.style.chart.xAxis.labels.values, // Overriding
-                        autoRotate: true, // overriding
+                        autoRotate: {
+                            enable: true,
+                            angle: FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid.labels.xAxisLabels.autoRotate.angle
+                        }, // overriding
                         datetimeFormatter: FINAL_CONFIG.value.style.chart.xAxis.labels.datetimeFormatter, // Overriding
                     }
                 }
@@ -891,11 +894,12 @@ useTimeLabelCollision({
     slicer: dummySlicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'chart', 'xAxis', 'labels', 'rotation'],
-    autoRotatePath: ['style', 'chart', 'xAxis', 'labels', 'autoRotate'],
+    autoRotatePath: ['style', 'chart', 'xAxis', 'labels', 'autoRotate', 'enable'],
     isAutoSize: false,
     width: WIDTH,
     height: HEIGHT,
-    targetClass: '.vue-ui-ridgeline-x-axis-label'
+    targetClass: '.vue-ui-ridgeline-x-axis-label',
+    angle: FINAL_CONFIG.value.style.chart.xAxis.labels.autoRotate.angle
 });
 
 defineExpose({

@@ -202,6 +202,9 @@ const model = ref([
     { key: 'xyPaddingRight', def: 12, type: 'number', min: 0, max: 100},
     { key: 'xyPaddingTop', def: 12, type: 'number', min: 0, max: 100},
     { key: 'xyPeriodLabelsRotation', def: 0, type: 'number', min: -360, max: 360},
+    { key: 'xyPeriodLabelsAutoRotate.enable', def: true, type: 'checkbox'},
+    { key: 'xyPeriodLabelsAutoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'xyPeriodsShowOnlyAtModulo', def: true, type: 'checkbox' },
     { key: 'xyPeriodsModulo', def: 12, type: 'number', min: 0, max: 12 },
 

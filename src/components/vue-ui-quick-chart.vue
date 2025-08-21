@@ -1221,8 +1221,9 @@ useTimeLabelCollision({
     slicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['xyPeriodLabelsRotation'],
-    autoRotatePath: ['xyPeriodLabelsAutoRotate'],
+    autoRotatePath: ['xyPeriodLabelsAutoRotate', 'enable'],
     isAutoSize: false,
+    rotation: FINAL_CONFIG.value.xyPeriodLabelsAutoRotate.angle,
     height: HEIGHT.value,
     width: WIDTH.value
 });

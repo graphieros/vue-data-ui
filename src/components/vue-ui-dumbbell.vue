@@ -687,11 +687,12 @@ useTimeLabelCollision({
     slicer: dummySlicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'chart', 'labels', 'xAxisLabels', 'rotation'],
-    autoRotatePath: ['style', 'chart', 'labels', 'xAxisLabels', 'autoRotate'],
+    autoRotatePath: ['style', 'chart', 'labels', 'xAxisLabels', 'autoRotate', 'enable'],
     isAutoSize: false,
     width: WIDTH,
     height: baseRowHeight,
-    targetClass: '.vue-ui-dumbbell-scale-label'
+    targetClass: '.vue-ui-dumbbell-scale-label',
+    rotation: FINAL_CONFIG.value.style.chart.labels.xAxisLabels.autoRotate.angle
 })
 
 function computeYAxisNameCollision({

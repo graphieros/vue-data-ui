@@ -90,6 +90,8 @@ const model = ref([
     { key: 'style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast', def: false, type: 'checkbox'},
     { key: 'style.chart.layout.grid.xAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.grid.xAxis.dataLabels.rotation', def: 0, type: 'number', min: -360, max: 360},
+    { key: 'style.chart.layout.grid.xAxis.dataLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'style.chart.layout.grid.xAxis.dataLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
 
     { key: 'style.chart.layout.grid.axis.yLabel', def: 'THIS IS Y LABEL', type: 'text'},

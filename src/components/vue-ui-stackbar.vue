@@ -959,10 +959,11 @@ useTimeLabelCollision({
     slicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'chart', 'grid', 'x', 'timeLabels', 'rotation'],
-    autoRotatePath: ['style', 'chart', 'grid', 'x', 'timeLabels', 'autoRotate'],
+    autoRotatePath: ['style', 'chart', 'grid', 'x', 'timeLabels', 'autoRotate', 'enable'],
     isAutoSize: false,
     width: WIDTH,
-    height: HEIGHT
+    height: HEIGHT,
+    rotation: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.autoRotate.angle
 });
 
 function toggleFullscreen(state) {

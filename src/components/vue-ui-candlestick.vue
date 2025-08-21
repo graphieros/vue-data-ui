@@ -858,8 +858,9 @@ useTimeLabelCollision({
     slicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'layout', 'grid', 'xAxis', 'dataLabels', 'rotation'],
-    autoRotatePath: ['style', 'layout', 'grid', 'xAxis', 'dataLabels', 'autoRotate'],
+    autoRotatePath: ['style', 'layout', 'grid', 'xAxis', 'dataLabels', 'autoRotate', 'enable'],
     isAutoSize: false,
+    rotation: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.autoRotate.angle,
     width: WIDTH,
     height: HEIGHT
 });

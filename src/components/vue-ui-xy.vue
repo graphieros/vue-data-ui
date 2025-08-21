@@ -2379,10 +2379,11 @@ useTimeLabelCollision({
     slicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['chart', 'grid', 'labels', 'xAxisLabels', 'rotation'],
-    autoRotatePath: ['chart', 'grid', 'labels', 'xAxisLabels', 'autoRotate'],
+    autoRotatePath: ['chart', 'grid', 'labels', 'xAxisLabels', 'autoRotate', 'enable'],
     isAutoSize,
     height,
-    width
+    width,
+    rotation: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.autoRotate.angle
 });
 
 // Force reflow when component is mounted in a hidden div

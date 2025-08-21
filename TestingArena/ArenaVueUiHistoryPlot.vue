@@ -81,6 +81,8 @@ const model = ref([
     { key: 'style.chart.axes.x.labels.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.axes.x.labels.rounding', def: 1, type: 'number', min: 0, max: 1},
     { key: 'style.chart.axes.x.labels.rotation', def: 0, type: 'number', min: -90, max: 90},
+    { key: 'style.chart.axes.x.labels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'style.chart.axes.x.labels.prefix', def: '', type: 'text'},
     { key: 'style.chart.axes.x.labels.suffix', def: '', type: 'text'},
 

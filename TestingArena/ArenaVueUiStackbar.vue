@@ -197,6 +197,9 @@ const model = ref([
     { key: 'style.chart.grid.x.timeLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.grid.x.timeLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.grid.x.timeLabels.rotation', def: 0, type: 'range', min: -90, max: 90},
+    { key: 'style.chart.grid.x.timeLabels.autoRotate.enable', def: true, type: 'checkbox'},
+    { key: 'style.chart.grid.x.timeLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'style.chart.grid.x.timeLabels.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'style.chart.grid.x.timeLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.grid.x.timeLabels.bold', def: false, type: 'checkbox'},

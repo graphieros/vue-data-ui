@@ -92,6 +92,8 @@ const model = ref([
     { key: 'style.layout.dataLabels.xAxis.bold', def: false, type: 'checkbox'},
     { key: 'style.layout.dataLabels.xAxis.scale', def: 1000, type: 'range', min: 100, max: 10000},
     { key: 'style.layout.dataLabels.xAxis.translation', def: 'in thousands', type: 'text'},
+    { key: 'style.layout.dataLabels.xAxis.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'style.layout.dataLabels.yAxis.show', def: true, type: 'checkbox'},
     { key: 'style.layout.dataLabels.yAxis.display', def: 'age', type: 'select', options: ['age', 'year']},
     { key: 'style.layout.dataLabels.yAxis.fontSize', def: 12, type: 'number', min: 8, max: 48},

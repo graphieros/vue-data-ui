@@ -876,10 +876,11 @@ useTimeLabelCollision({
     slicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'chart', 'layout', 'grid', 'xAxis', 'dataLabels', 'rotation'],
-    autoRotatePath: ['style', 'chart', 'layout', 'grid', 'xAxis', 'dataLabels', 'autoRotate'],
+    autoRotatePath: ['style', 'chart', 'layout', 'grid', 'xAxis', 'dataLabels', 'autoRotate', 'enable'],
     isAutoSize: false,
     width: WIDTH,
-    height: HEIGHT
+    height: HEIGHT,
+    rotation: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.autoRotate.angle
 });
 
 defineExpose({

@@ -120,6 +120,8 @@ const model = ref([
     { key: 'style.chart.labels.xAxisLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.labels.xAxisLabels.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.labels.xAxisLabels.rounding', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.labels.xAxisLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'style.chart.labels.startLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.labels.startLabels.fontSize', def: 10, type: 'number', min: 8, max: 24},
     { key: 'style.chart.labels.startLabels.color', def: '#1A1A1A', type: 'color'},

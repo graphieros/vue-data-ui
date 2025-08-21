@@ -601,11 +601,12 @@ useTimeLabelCollision({
     slicer: dummySlicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'layout', 'dataLabels', 'xAxis', 'rotation'],
-    autoRotatePath: ['style', 'layout', 'dataLabels', 'xAxis', 'autoRotate'],
+    autoRotatePath: ['style', 'layout', 'dataLabels', 'xAxis', 'autoRotate', 'enable'],
     isAutoSize: false,
     width: WIDTH,
     height: HEIGHT,
-    targetClass: '.vue-ui-age-pyramid-x-axis-label'
+    targetClass: '.vue-ui-age-pyramid-x-axis-label',
+    rotation: FINAL_CONFIG.value.style.layout.dataLabels.xAxis.autoRotate.angle
 });
 
 defineExpose({

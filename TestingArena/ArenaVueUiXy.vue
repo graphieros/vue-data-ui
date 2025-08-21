@@ -109,45 +109,45 @@ function createDs(n, m = 100) {
 //     },
 // ])
 
-// const dataset = ref(undefined)
+const dataset = ref(undefined)
 
-// onMounted(() => {
-//     dataset.value = undefined;
-//     setTimeout(() => {
-//         dataset.value = [
-//     {
-//         name: "A",
-//         series: [60, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, 120],
-//         type: "bar",
-//         dataLabels: false,
-//     },
-//     {
-//         name: "B",
-//         series: [60, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, 87],
-//         type: "line",
-//         dataLabels: false,
-//         shape: 'triangle',
-//         useProgression: false,
-//         useArea: true,
-//         smooth: true
-//     },
-//     {
-//         name: "C",
-//         series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
-//         type: "plot",
-//         dataLabels: false,
-//     },
-// ]
-//     }, 2000)
-// })
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
+    {
+        name: "A",
+        series: [60, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, 120],
+        type: "bar",
+        dataLabels: false,
+    },
+    {
+        name: "B",
+        series: [60, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, 87],
+        type: "line",
+        dataLabels: false,
+        shape: 'triangle',
+        useProgression: false,
+        useArea: true,
+        smooth: true
+    },
+    {
+        name: "C",
+        series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
+        type: "plot",
+        dataLabels: false,
+    },
+]
+    }, 2000)
+})
 
-const dataset = ref([
-    { name: 'A', series: [3], type: 'bar' },
-    { name: 'B', series: [5], type: 'bar' },
-    { name: 'C', series: [8], type: 'bar' },
-    { name: 'D', series: [13], type: 'bar' },
-    { name: 'E', series: [21], type: 'bar' },
-])
+// const dataset = ref([
+//     { name: 'A', series: [3], type: 'bar' },
+//     { name: 'B', series: [5], type: 'bar' },
+//     { name: 'C', series: [8], type: 'bar' },
+//     { name: 'D', series: [13], type: 'bar' },
+//     { name: 'E', series: [21], type: 'bar' },
+// ])
 
 // const dataset = ref([
 // {
@@ -430,6 +430,9 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.showOnlyFirstAndLast', def: false, type: 'checkbox', label: 'showOnlyFirstAndLast', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 24, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
+    { key: 'chart.grid.labels.xAxisLabels.autoRotate.enable', def: true, type: 'checkbox'},
+    { key: 'chart.grid.labels.xAxisLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 0, type: 'number', min: -100, max: 100 },
     { key: 'chart.grid.labels.axis.yLabelOffsetX', def: 0, type: 'number', min: -100, max: 100 },
 

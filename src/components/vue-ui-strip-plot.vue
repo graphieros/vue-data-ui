@@ -744,11 +744,12 @@ useTimeLabelCollision({
     slicer: dummySlicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'chart', 'labels', 'xAxisLabels', 'rotation'],
-    autoRotatePath: ['style', 'chart', 'labels', 'xAxisLabels', 'autoRotate'],
+    autoRotatePath: ['style', 'chart', 'labels', 'xAxisLabels', 'autoRotate', 'enable'],
     isAutoSize: false,
     width: WIDTH,
     height: HEIGHT,
-    targetClass: '.vue-ui-strip-plot-category-name'
+    targetClass: '.vue-ui-strip-plot-category-name',
+    rotation: FINAL_CONFIG.value.style.chart.labels.xAxisLabels.autoRotate.angle
 })
 
 defineExpose({

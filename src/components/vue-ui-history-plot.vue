@@ -887,11 +887,12 @@ useTimeLabelCollision({
     slicer: dummySlicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'chart', 'axes', 'x', 'labels', 'rotation'],
-    autoRotatePath: ['style', 'chart', 'axes', 'x', 'labels', 'autoRotate'],
+    autoRotatePath: ['style', 'chart', 'axes', 'x', 'labels', 'autoRotate', 'enable'],
     isAutoSize: false,
     width: WIDTH,
     height: HEIGHT,
-    targetClass: '.vue-ui-history-plot-x-axis-scale'
+    targetClass: '.vue-ui-history-plot-x-axis-scale',
+    rotation: FINAL_CONFIG.value.style.chart.axes.x.labels.autoRotate.angle
 })
 
 defineExpose({

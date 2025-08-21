@@ -125,6 +125,8 @@ const model = ref([
 
     { key: 'style.layout.cells.columnTotal.value.show', def: true, type: 'checkbox'},
     { key: 'style.layout.cells.columnTotal.value.rotation', def: 0, type: 'range', min: -90, max: 90 },
+    { key: 'style.layout.cells.columnTotal.value.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'style.layout.cells.columnTotal.value.offsetX', def: 0, type: 'number', min: -30, max: 30},
     { key: 'style.layout.cells.columnTotal.value.offsetY', def: 0, type: 'number', min: -30, max: 30},
     { key: 'style.layout.cells.columnTotal.color.show', def: true, type: 'checkbox'},

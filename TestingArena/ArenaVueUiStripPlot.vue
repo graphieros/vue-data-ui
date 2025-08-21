@@ -169,6 +169,8 @@ const model = ref([
     { key: 'style.chart.labels.xAxisLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.labels.xAxisLabels.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'style.chart.labels.xAxisLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.labels.xAxisLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'style.chart.labels.yAxisLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.labels.yAxisLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.labels.yAxisLabels.fontSize', def: 14, type: 'number', min: 8, max: 48},

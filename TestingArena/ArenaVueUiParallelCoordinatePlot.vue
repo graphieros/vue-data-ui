@@ -116,6 +116,8 @@ const model = ref([
     { key: 'style.chart.yAxis.labels.axisNamesColor', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.yAxis.labels.axisNamesFontSize', def: 16, type: 'number', min: 8, max: 42 },
     { key: 'style.chart.yAxis.labels.axisNamesBold', def: true, type: 'checkbox' },
+    { key: 'style.chart.yAxis.labels.axisNamesAutoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'style.chart.title.text', def: 'Lorem ipsum', type: 'text' },
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 42 },

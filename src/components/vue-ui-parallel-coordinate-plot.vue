@@ -737,11 +737,12 @@ useTimeLabelCollision({
     slicer: dummySlicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'chart', 'yAxis', 'labels', 'axisNamesRotation'],
-    autoRotatePath: ['style', 'chart', 'yAxis', 'labels', 'axisNamesAutoRotate'],
+    autoRotatePath: ['style', 'chart', 'yAxis', 'labels', 'axisNamesAutoRotate', 'enable'],
     isAutoSize: false,
     width: WIDTH,
     height: HEIGHT,
-    targetClass: '.vue-ui-parallel-coordinate-plot-x-label'
+    targetClass: '.vue-ui-parallel-coordinate-plot-x-label',
+    rotation: FINAL_CONFIG.value.style.chart.yAxis.labels.axisNamesAutoRotate.angle
 });
 
 defineExpose({

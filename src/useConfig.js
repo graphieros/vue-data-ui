@@ -388,7 +388,10 @@ export function useConfig() {
                             datetimeFormatter: AXIS_DATE_FORMATTER,
                             offsetY: 0,
                             rotation: 0,
-                            autoRotate: true,
+                            autoRotate: { // v3
+                                enable: true, // v3
+                                angle: -30 // v3
+                            },
                             fontSize: FONT._14,
                             color: COLOR_BLACK,
                             bold: false
@@ -593,7 +596,10 @@ export function useConfig() {
                         modulo: 12,
                         yOffset: 24,
                         rotation: 0,
-                        autoRotate: true
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30, // v3
+                        }
                     }
                 }
             },
@@ -1950,7 +1956,10 @@ export function useConfig() {
                         value: {
                             show: false,
                             rotation: 0,
-                            autoRotate: true,
+                            autoRotate: { // v3
+                                enable: true, // v3
+                                angle: -30, // v3
+                            },
                             offsetX: 0,
                             offsetY: 0
                         },
@@ -1986,7 +1995,10 @@ export function useConfig() {
                         datetimeFormatter: AXIS_DATE_FORMATTER,
                         showOnlyAtModulo: null,
                         rotation: 0,
-                        autoRotate: true,
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30, // v3
+                        },
                         fontSize: FONT._10,
                         color: COLOR_BLACK,
                         bold: false,
@@ -2240,7 +2252,10 @@ export function useConfig() {
                             offsetY: 0,
                             bold: false,
                             rotation: 0,
-                            autoRotate: true, // v3
+                            autoRotate: { // v3
+                                enable: true, // v3
+                                angle: -30 // v3
+                            },
                             datetimeFormatter: AXIS_DATE_FORMATTER
                         },
                     },
@@ -2848,7 +2863,10 @@ export function useConfig() {
         xyPaddingRight: 12,
         xyPaddingTop: 12,
         xyPeriodLabelsRotation: 0,
-        xyPeriodLabelsAutoRotate: true, // v3
+        xyPeriodLabelsAutoRotate: { // v3
+            enable: true, // v3
+            angle: -30, // v3
+        },
         xyPeriods: [],
         datetimeFormatter: AXIS_DATE_FORMATTER,
         xyPeriodsShowOnlyAtModulo: false,
@@ -2911,7 +2929,10 @@ export function useConfig() {
                         translation: 'in thousands',
                         formatter: null,
                         rotation: 0, // v3
-                        autoRotate: true // v3
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30 // v3
+                        }
                     },
                     yAxis: {
                         show: true,
@@ -3284,7 +3305,10 @@ export function useConfig() {
                                 showOnlyFirstAndLast: false,
                                 color: COLOR_BLACK,
                                 rotation: 0,
-                                autoRotate: true,
+                                autoRotate: { // v3
+                                    enable: true, // v3
+                                    angle: -30, // v3
+                                },
                                 offsetY: 0
                             }
                         }
@@ -3761,7 +3785,10 @@ export function useConfig() {
                         fontSize: FONT._14,
                         offsetY: 0,
                         rotation: 0, // v3,
-                        autoRotate: true, // v3
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30, // v3
+                        }
                     },
                     yAxisLabels: {
                         show: true,
@@ -3904,7 +3931,10 @@ export function useConfig() {
                         bold: false,
                         rounding: 0,
                         rotation: 0, // v3
-                        autoRotate: true, // v3
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30, // v3
+                        }
                     },
                     startLabels: {
                         show: true,
@@ -4509,7 +4539,10 @@ export function useConfig() {
                         showAxisNames: true,
                         axisNames: [],
                         axisNamesRotation: 0, // v3
-                        axisNamesAutoRotate: true, // v3
+                        axisNamesAutoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30 // v3
+                        },
                         axisNamesColor: COLOR_BLACK,
                         axisNamesFontSize: FONT._16,
                         axisNamesBold: true,
@@ -5694,7 +5727,10 @@ export function useConfig() {
                             rounding: 1,
                             offsetY: 0,
                             rotation: 0,
-                            autoRotate: true, // v3
+                            autoRotate: { // v3
+                                enable: true, // v3
+                                angle: -30, // v3
+                            },
                             formatter: null,
                             prefix: '',
                             suffix: ''
@@ -6081,7 +6117,10 @@ export function useConfig() {
                         prefix: '',
                         suffix: '',
                         rotation: 0,
-                        autoRotate: true,
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30 // v3
+                        },
                         values: [],
                         datetimeFormatter: AXIS_DATE_FORMATTER,
                         color: COLOR_BLACK,

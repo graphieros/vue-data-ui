@@ -761,10 +761,10 @@ useTimeLabelCollision({
     slicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'layout', 'dataLabels', 'xAxis', 'rotation'],
-    autoRotatePath: ['style', 'layout', 'dataLabels', 'xAxis', 'autoRotate'],
+    autoRotatePath: ['style', 'layout', 'dataLabels', 'xAxis', 'autoRotate', 'enable'],
     isAutoSize: false,
     targetClass: '.vue-ui-heatmap-col-name',
-    rotation: -30.0001,
+    rotation: FINAL_CONFIG.value.style.layout.dataLabels.xAxis.autoRotate.angle,
     width: WIDTH,
     height: HEIGHT
 });
@@ -775,10 +775,10 @@ useTimeLabelCollision({
     slicer,
     configRef: FINAL_CONFIG,
     rotationPath: ['style', 'layout', 'cells', 'columnTotal', 'value', 'rotation'],
-    autoRotatePath: ['style', 'layout', 'cells', 'columnTotal', 'value', 'autoRotate'],
+    autoRotatePath: ['style', 'layout', 'cells', 'columnTotal', 'value', 'autoRotate', 'enable'],
     isAutoSize: false,
     targetClass: '.vue-ui-heatmap-col-total',
-    rotation: -30.0001,
+    rotation: FINAL_CONFIG.value.style.layout.cells.columnTotal.value.autoRotate.angle,
     width: WIDTH,
     height: HEIGHT
 });
