@@ -1369,27 +1369,63 @@ export function generateSpiralCoordinates({ points, a, b, angleStep, startX, sta
     return coordinates;
 }
 
-export function createSpiralPath({ points, a, b, angleStep, startX, startY }) {
-    const coordinates = generateSpiralCoordinates({ points, a: a || 6, b: b || 6, angleStep: angleStep || 0.07, startX, startY });
-    let path = `M${coordinates[0].x} ${coordinates[0].y}`;
+function boundsOf(points) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const p of points) {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+    }
+    return { minX, minY, maxX, maxY, width: maxX - minX || 1, height: maxY - minY || 1 };
+}
 
+function buildSmoothPath(coordinates) {
+    if (!coordinates.length) return "";
+    let path = `M${coordinates[0].x} ${coordinates[0].y}`;
     for (let i = 1; i < coordinates.length - 2; i += 2) {
         const p0 = coordinates[i - 1];
         const p1 = coordinates[i];
         const p2 = coordinates[i + 1];
         const p3 = coordinates[i + 2];
-
         const xc1 = (p0.x + p1.x) / 2;
         const yc1 = (p0.y + p1.y) / 2;
         const xc2 = (p1.x + p2.x) / 2;
         const yc2 = (p1.y + p2.y) / 2;
         const xc3 = (p2.x + p3.x) / 2;
         const yc3 = (p2.y + p3.y) / 2;
-
         path += ` C${xc1} ${yc1}, ${xc2} ${yc2}, ${xc3} ${yc3}`;
     }
     return path;
 }
+
+export function createSpiralPath({
+    maxPoints,
+    a = 6,
+    b = 6,
+    angleStep = 0.07,
+    startX,
+    startY,
+    boxWidth,
+    boxHeight,
+    padding = 12
+}) {
+    const raw = generateSpiralCoordinates({ points: maxPoints, a, b, angleStep, startX: 0, startY: 0 });
+    const { minX, minY, maxX, maxY, width, height } = boundsOf(raw);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const availW = Math.max(1, boxWidth - 2 * padding);
+    const availH = Math.max(1, boxHeight - 2 * padding);
+    const s = Math.min(availW / width, availH / height);
+    const tx = startX - cx * s;
+    const ty = startY - cy * s;
+    return function toPath(endPoints) {
+        const n = Math.max(2, Math.min(Math.round(endPoints), raw.length));
+        const fitted = raw.slice(0, n).map(p => ({ x: p.x * s + tx, y: p.y * s + ty }));
+        return buildSmoothPath(fitted);
+    };
+}
+
 
 export function calculateDistance(point1, point2) {
     return Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);

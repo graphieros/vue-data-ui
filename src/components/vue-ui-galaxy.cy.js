@@ -57,7 +57,8 @@ describe('<VueUiGalaxy />', () => {
                     'points',
                     'proportion',
                     'seriesIndex',
-                    'value'
+                    'value',
+                    'absoluteIndex'
                 );
                 expect(wrapper.emitted('selectDatapoint')[0][0].seriesIndex).to.equal(1);
             });

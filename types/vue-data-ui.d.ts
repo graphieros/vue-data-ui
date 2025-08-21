@@ -133,6 +133,7 @@ declare module "vue-data-ui" {
     export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
     export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
     export type VueUiOnionEvent = ChartEvent<VueUiOnionDatapoint>;
+    export type VueUiGalaxyEvent = ChartEvent<VueUiGalaxyDatapoint>;
     export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
     export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
@@ -569,6 +570,14 @@ declare module "vue-data-ui" {
     export type VueUiGalaxyDatasetItem = VueUiDonutDatasetItem;
 
     export type VueUiGalaxyConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUiGalaxyEvent; // v3
+            datapointLeave?: VueUiGalaxyEvent; // v3
+            datapointClick?: VueUiGalaxyEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -652,6 +661,7 @@ declare module "vue-data-ui" {
         proportion: number;
         seriesIndex: number;
         value: number;
+        absoluteIndex: number;
     };
 
     export type VueUiGalaxySeriesItem = VueUiGalaxyDatasetItem & {
