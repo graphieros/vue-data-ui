@@ -143,6 +143,7 @@ declare module "vue-data-ui" {
     export type VueUiWordCloudEvent = ChartEvent<VueUiWordCloudDatapoint>;
     export type VueUiStripPlotEvent = ChartEvent<VueUiStripPlotDatapoint>;
     export type VueUiMoodRadarEvent = ChartEvent<VueUiMoodRadarDatapoint>;
+    export type VueUiCirclePackEvent = ChartEvent<VueUiCirclePackDatapoint>;
     export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
     export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
     export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
@@ -8107,7 +8108,24 @@ declare module "vue-data-ui" {
         color?: string;
     };
 
+    export type VueUiCirclePackDatapoint = {
+        name: string;
+        value: number;
+        r: number;
+        id: string;
+        color: string;
+        x: number;
+        y: number;
+    }
+
     export type VueUiCirclePackConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUiCirclePackEvent; // v3
+            datapointLeave?: VueUiCirclePackEvent; // v3
+            datapointClick?: VueUiCirclePackEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
@@ -8185,15 +8203,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiCirclePackExpose = {
-        getData(): Promise<Array<{
-            color: string
-            id: string
-            name: string
-            r: number
-            value: number
-            x: number
-            y: number
-        }>>
+        getData(): Promise<Array<VueUiCirclePackDatapoint>>
         getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void

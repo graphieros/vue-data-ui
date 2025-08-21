@@ -26,7 +26,21 @@ function makeDs({ name, qty, maxVal }) {
   return datapoints;
 }
 
-const dataset = ref(makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 }));
+const dataset = ref(undefined);
+
+onMounted(() => {
+  setTimeout(() => {
+    dataset.value = makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 })
+  }, 2000)
+
+  // setTimeout(() => {
+  //   dataset.value = undefined;
+  // }, 4000)
+
+  // setTimeout(() => {
+  //   dataset.value = makeDs({ name: "Pack 1", qty: 12, maxVal: 12000 })
+  // }, 6000)
+})
 
 // const dataset = ref([
 //   { name: 'D', value: 10 },
@@ -59,6 +73,8 @@ const dataset = ref(makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 }));
 // });
 
 const model = ref([
+  { key: "debug", def: true, type: "checkbox" },
+  { key: "loading", def: false, type: "checkbox" },
   { key: "userOptions.show", def: true, type: "checkbox" },
   { key: "style.chart.backgroundColor", def: "#FFFFFF", type: "color" },
   { key: "style.chart.color", def: "#1A1A1A", type: "color" },
@@ -236,6 +252,17 @@ const config = computed(() => {
   const c = convertArrayToObject(model.value);
   return {
     ...c,
+    events: {
+      datapointEnter: ({ datapoint, seriesIndex }) => {
+        console.log('enter event', { datapoint, seriesIndex });
+      },
+      datapointLeave: ({ datapoint, seriesIndex }) => {
+        console.log('leave event', { datapoint, seriesIndex });
+      },
+      datapointClick: ({ datapoint, seriesIndex }) => {
+        console.log('click event', { datapoint, seriesIndex });
+      },
+    },
     theme: currentTheme.value
   };
 });
