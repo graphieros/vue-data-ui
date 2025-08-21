@@ -8,7 +8,9 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref([
+const dataset = ref(undefined);
+
+const ds = [
     {
         name: "Root1",
         branches: [
@@ -187,7 +189,13 @@ const dataset = ref([
             }
         ]
     },
-]);
+]
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = ds;
+    }, 2000)
+})
 
 const alternateDataset = ref([
 {
@@ -275,6 +283,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: true, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
@@ -292,7 +302,7 @@ const model = ref([
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.grandTotal.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.grandTotal.fontSize', def: 20, type: 'number', min: 8, max: 48},
@@ -415,7 +425,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -518,9 +528,9 @@ onMounted(async () => {
             ...config,
             responsive: true
         }">
-        <template #chart-background>
+        <!-- <template #chart-background>
             <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-        </template>
+        </template> -->
         
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">

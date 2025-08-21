@@ -4643,6 +4643,8 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiChestnutConfig = {
+        debug?: boolean;
+        loading?: boolean;
         theme?: Theme;
         customPalette?: string[];
         style?: {

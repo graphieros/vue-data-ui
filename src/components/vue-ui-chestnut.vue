@@ -1,5 +1,15 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, watch, defineAsyncComponent, shallowRef, onBeforeUnmount } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs,
+    watch, 
+} from "vue";
 import { 
     adaptColorToBackground,
     applyDataLabel,
@@ -20,22 +30,24 @@ import {
     setOpacity,
     shiftHue,
     themePalettes,
+    treeShake,
     XMLNS
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
 import img from "../img";
+import themes from "../themes.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 
 const { vue_ui_chestnut: DEFAULT_CONFIG } = useConfig()
 
@@ -63,14 +75,119 @@ const chestnutChart = ref(null);
 const details = ref(null);
 const step = ref(0);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        {
+            name: '_',
+            color: '#969696',
+            branches: [
+                {
+                    name: '_',
+                    value: 32,
+                    breakdown: [
+                        { name: '_', value: 16, color: '#CACACA'},
+                        { name: '_', value: 16, color: '#6A6A6A'},
+                    ]
+                },
+                {
+                    name: '_',
+                    value: 16,
+                    breakdown: [
+                        { name: '_', value: 8, color: '#CACACA'},
+                        { name: '_', value: 8, color: '#6A6A6A'},
+                    ]
+                },
+                {
+                    name: '_',
+                    value: 8,
+                    breakdown: [
+                        { name: '_', value: 4, color: '#CACACA'},
+                        { name: '_', value: 4, color: '#6A6A6A'},
+                    ]
+                },
+                {
+                    name: '_',
+                    value: 4,
+                    breakdown: [
+                        { name: '_', value: 2, color: '#CACACA'},
+                        { name: '_', value: 2, color: '#6A6A6A'},
+                    ]
+                },
+            ]
+        },
+        {
+            name: '_',
+            color: '#C4C4C4',
+            branches: [
+                {
+                    name: '_',
+                    value: 24,
+                    breakdown: [
+                        { name: '_', value: 12, color: '#CACACA'},
+                        { name: '_', value: 12, color: '#6A6A6A'},
+                    ]
+                },
+                {
+                    name: '_',
+                    value: 12,
+                    breakdown: [
+                        { name: '_', value: 6, color: '#CACACA'},
+                        { name: '_', value: 6, color: '#6A6A6A'},
+                    ]
+                },
+                {
+                    name: '_',
+                    value: 6,
+                    breakdown: [
+                        { name: '_', value: 3, color: '#CACACA'},
+                        { name: '_', value: 3, color: '#6A6A6A'},
+                    ]
+                },
+                {
+                    name: '_',
+                    value: 2,
+                    breakdown: [
+                        { name: '_', value: 1, color: '#CACACA'},
+                        { name: '_', value: 1, color: '#6A6A6A'},
+                    ]
+                },
+            ]
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        grandTotal: { show: false },
+                        roots: {
+                            stroke: '#6A6A6A',
+                            labels: { show: false }
+                        },
+                        verticalSeparator: { stroke: 'transparent' },
+                        branches: {
+                            stroke: '#6A6A6A',
+                            underlayerColor: '#6A6A6A90',
+                            labels: { 
+                                show: false,
+                                dataLabels: { show: false }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.layout.title });
@@ -121,6 +238,13 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+    }
+}, { immediate: true });
+
 const tableContainer = ref(null)
 const isResponsive = ref(false)
 const breakpoint = computed(() => {
@@ -154,15 +278,11 @@ const drawableArea = computed(() => {
 });
 
 const treeTotal = computed(() => {
-    if(!isDataset.value) {
-        return 0
-    }
-    return props.dataset.flatMap(root => (root.branches || []).map(branch => (branch.value || 0))).reduce((a,b) => a + b, 0);
+    return FINAL_DATASET.value.flatMap(root => (root.branches || []).map(branch => (branch.value || 0))).reduce((a,b) => a + b, 0);
 })
 
 const mutableDataset = computed(() => {
-
-    props.dataset.forEach((ds, i) => {
+    FINAL_DATASET.value.forEach((ds, i) => {
         getMissingDatasetAttributes({
             datasetObject: ds,
             requiredAttributes: ['name', 'branches']
@@ -171,7 +291,8 @@ const mutableDataset = computed(() => {
                 componentName: 'VueUiChestnut',
                 type: 'datasetSerieAttribute',
                 property: attr,
-                index: i
+                index: i,
+                debug: debug.value
             });
         });
 
@@ -185,7 +306,8 @@ const mutableDataset = computed(() => {
                         componentName: 'VueUiChestnut',
                         type: 'datasetSerieAttribute',
                         property: attr,
-                        index: `${i} - ${j}`
+                        index: `${i} - ${j}`,
+                        debug: debug.value
                     });
                 });
 
@@ -199,7 +321,8 @@ const mutableDataset = computed(() => {
                                 componentName: 'VueUiChestnut',
                                 type: 'datasetSerieAttribute',
                                 property: attr,
-                                index: `${i} - ${j} - ${k}`
+                                index: `${i} - ${j} - ${k}`,
+                                debug: debug.value
                             });
                         });
                     });
@@ -208,7 +331,7 @@ const mutableDataset = computed(() => {
         }
     });
 
-    return props.dataset.map((root, i) => {
+    return FINAL_DATASET.value.map((root, i) => {
         const rootTotal = (root.branches || []).map(branch => (branch.value || 0)).reduce((a, b) => a + b, 0);
         return {
             ...root,
@@ -449,11 +572,14 @@ onBeforeUnmount(() => {
     }
 })
 
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiChestnut',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
     }
 
@@ -547,6 +673,22 @@ async function getImage({ scale = 2} = {}) {
         height,
         aspectRatio
     }
+}
+
+function getLinkPath(branch) {
+    const root = getRoot(branch);
+    const x0 = branch.x1;
+    const y0 = branch.y1;
+    const t  = svg.value.branchSize;
+    const xR = root.x + root.r / 2;
+    const yR = root.y;
+    const k  = 20;
+    return [
+        `M ${x0},${y0}`,
+        `C ${x0 - k},${y0} ${x0 - k},${y0} ${xR},${yR}`,
+        `C ${xR},${yR} ${x0 - k},${y0 + t} ${x0},${y0 + t}`,
+        `Z`
+    ].join(' ');
 }
 
 defineExpose({
@@ -646,7 +788,7 @@ defineExpose({
             ref="svgRef"
             :xmlns="XMLNS"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            v-if="svg.height > 0 && isDataset" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+            v-if="svg.height > 0" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <PackageVersion />
@@ -779,18 +921,18 @@ defineExpose({
 
             <!-- LINKS -->
             <g v-for="branch in branches">
+                <defs>
+                    <linearGradient :id="`link_grad_${branch.id}`">
+                        <stop offset="0%" :stop-color="branch.color"/>
+                        <stop offset="100%" :stop-color="setOpacity(branch.color, FINAL_CONFIG.style.chart.layout.links.opacity)"/>
+                    </linearGradient>
+                </defs>
                 <path 
-                    v-for="(p, i) in svg.branchSize"
-                    :d="`M
-                    ${branch.x1},${branch.y1 + i}
-                    C${branch.x1 - 20},${branch.y1 + i} 
-                    ${branch.x1 - 80},${branch.y1 + i} 
-                    ${getRoot(branch).x + getRoot(branch).r / 2}, ${getRoot(branch).y}
-                `"
+                    :d="getLinkPath(branch)"
                     :stroke="setOpacity(branch.color, FINAL_CONFIG.style.chart.layout.links.opacity)"
-                    fill="none"
-                    stroke-width="2"
-                    shape-rendering="cirspEdges"
+                    :fill="`url(#link_grad_${branch.id})`"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                     :style="`opacity:${isFocused(branch) ? 1 : 0}`"
                     @click="resetTree"
                 />
@@ -994,25 +1136,27 @@ defineExpose({
                             <svg viewBox="0 0 20 20" height="16" width="16">
                                 <circle cx="10" cy="10" r="10" :fill="root.color" stroke="none"/>
                             </svg>
-                            <span>{{ root.name }}:</span>
-                            <b>
-                                {{ applyDataLabel(
-                                    FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
-                                    root.total,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.style.chart.layout.legend.prefix,
-                                        v: root.total,
-                                        s: FINAL_CONFIG.style.chart.layout.legend.suffix,
-                                        r: FINAL_CONFIG.style.chart.layout.legend.roundingValue
-                                    }),
-                                    { datapoint: root }
-                                ) }}
-                            </b>
-                            ({{ dataLabel({
-                                v: root.total / treeTotal * 100,
-                                s: '%',
-                                r: FINAL_CONFIG.style.chart.layout.legend.roundingPercentage
-                            }) }})
+                            <template v-if="!loading">
+                                <span>{{ root.name }}:</span>
+                                <b>
+                                    {{ applyDataLabel(
+                                        FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
+                                        root.total,
+                                        dataLabel({
+                                            p: FINAL_CONFIG.style.chart.layout.legend.prefix,
+                                            v: root.total,
+                                            s: FINAL_CONFIG.style.chart.layout.legend.suffix,
+                                            r: FINAL_CONFIG.style.chart.layout.legend.roundingValue
+                                        }),
+                                        { datapoint: root }
+                                    ) }}
+                                </b>
+                                ({{ dataLabel({
+                                    v: root.total / treeTotal * 100,
+                                    s: '%',
+                                    r: FINAL_CONFIG.style.chart.layout.legend.roundingPercentage
+                                }) }})
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -1304,18 +1448,6 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'chestnut',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    chestnut: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
         <slot name="legend" v-bind:legend="mutableDataset"></slot>
 
         <div v-if="$slots.source" ref="source" dir="auto">
@@ -1452,6 +1584,8 @@ defineExpose({
             </template>
         </Accordion>
 
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>  
 </template>
 

@@ -1529,6 +1529,8 @@ export function useConfig() {
     }
 
     const vue_ui_chestnut = {
+        debug: false, // v3
+        loading: false, // v3
         theme: '',
         customPalette: [],
         style: {
