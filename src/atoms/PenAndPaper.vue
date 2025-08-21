@@ -573,7 +573,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     if (G.value && props.svgRef) {
-        props.svgRef.removeChild(G.value);
+        G.value.remove();
         disableDrawing();
     }
 });

@@ -1,8 +1,8 @@
 <template>
-    <template v-for="node in dataset">
+    <template v-for="(node, i) in dataset">
         <template v-if="node.polygonPath && node.polygonPath.coordinates">
-            <template v-for="(coordinate, index) in node.polygonPath.coordinates">
-                <circle 
+            <template v-for="(coordinate, index) in node.polygonPath.coordinates" :key="`node_${i}_${index}`">
+                <circle
                     data-cy="recursive-circle"
                     :cx="coordinate.x" 
                     :cy="coordinate.y" 
