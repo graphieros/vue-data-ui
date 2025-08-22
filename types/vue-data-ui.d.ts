@@ -133,6 +133,7 @@ declare module "vue-data-ui" {
     export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
     export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
     export type VueUiOnionEvent = ChartEvent<VueUiOnionDatapoint>;
+    export type VueUiWorldEvent = ChartEvent<VueUiWorldDatapoint>;
     export type VueUiGalaxyEvent = ChartEvent<VueUiGalaxyDatapoint>;
     export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
@@ -8265,7 +8266,41 @@ declare module "vue-data-ui" {
         VueUiCirclePackExpose
     >;
 
+    export type VueUiWorldDatapoint = {
+        category: string | null;
+        code: string;
+        color: string;
+        geo: {
+            geometry: {
+                coordinates: Array<Array<Array<Array<number>>>>;
+                type: string;
+            };
+            properties: {
+                admin: string;
+                iso_a3: string;
+                name: string;
+            };
+            type: string;
+        },
+        geometry: {
+            coordinates: Array<Array<Array<number>>>;
+            type: string;
+        };
+        isActive: boolean;
+        name: string;
+        path: string;
+        uid: string;
+        value: number | null;
+    }
+
     export type VueUiWorldConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        events?: {
+            datapointEnter?: VueUiWorldEvent; // v3
+            datapointLeave?: VueUiWorldEvent; // v3
+            datapointClick?: VueUiWorldEvent; // v3
+        };
         userOptions?: ChartUserOptions;
         customPalette?: string[];
         projection?: 'aitoff' | 'azimuthalEquidistant' | 'bonne' | 'equirectangular' | 'gallPeters' | 'globe' | 'hammer' | 'mercator' | 'mollweide' | 'robinson' | 'sinusoidal' | 'vanDerGrinten' | 'winkelTripel',
