@@ -46,6 +46,7 @@ declare module "vue-data-ui" {
         | VueUiTreemapDatasetItem[]
         | VueUiQuickChartDataset
         | number[]
+        | Array<number | null>
         | VueUiStripPlotDataset[]
         | VueUiWordCloudDatasetItem[]
         | VueUiXyCanvasDatasetItem[]
@@ -1557,7 +1558,7 @@ declare module "vue-data-ui" {
 
     export type VueUiDonutEvolutionDatasetItem = {
         name: string;
-        values: number[];
+        values: Array<number | null>;
         color?: string;
     };
 
@@ -1949,7 +1950,7 @@ declare module "vue-data-ui" {
         timeLabel?: string;
         trapX?: number;
         unitWidth?: number;
-        value?: number;
+        value?: number | null;
         valueLabel?: string;
         width?: number;
         x?: number;
@@ -2058,7 +2059,7 @@ declare module "vue-data-ui" {
         proportion?: number;
         proportionLabel?: string;
         start?: number;
-        value?: number;
+        value?: number | null;
         width?: number;
     };
 
@@ -2361,7 +2362,7 @@ declare module "vue-data-ui" {
 
     export type VueUiSparkbarDatasetItem = {
         name: string;
-        value: number;
+        value: number | null;
         suffix?: string;
         prefix?: string;
         rounding?: number;
@@ -2448,7 +2449,14 @@ declare module "vue-data-ui" {
         dataset: VueUiSparkbarDatasetItem[];
     }>;
 
-    export type VueUiAgePyramidDataset = Array<Array<string | number>>;
+    export type VueUiAgePyramidDatasetRow = [
+        year: string,
+        rank: number,
+        v1: number | null,
+        v2: number | null
+    ]
+
+    export type VueUiAgePyramidDataset = VueUiAgePyramidDatasetRow[];
 
     export type VueUiAgePyramidConfig = {
         debug?: boolean; // v3
@@ -3119,7 +3127,7 @@ declare module "vue-data-ui" {
         id: string;
         ratio: number;
         side: "up" | "down";
-        value: number;
+        value: number | null;
         xAxisName: string | undefined;
         yAxisName: string | undefined;
     };
@@ -3127,12 +3135,12 @@ declare module "vue-data-ui" {
     export type VueUiHeatmapRow = {
         name: string;
         temperatures: VueUiHeatmapDatapoint[];
-        values: number[];
+        values: Array<number | null>;
     };
 
     export type VueUiHeatmapDatasetItem = {
         name: string | number;
-        values: number[];
+        values: Array<number | null>;
     };
 
     export type VueUiHeatmapExpose = {
@@ -3188,8 +3196,8 @@ declare module "vue-data-ui" {
     export type VueUiXyAnnotation = {
         show?: boolean;
         yAxis?: {
-            yTop?: number;
-            yBottom?: number;
+            yTop?: number | null;
+            yBottom?: number | null;
             label?: {
                 text?: string;
                 textAnchor?: 'start' | 'end';
@@ -3487,7 +3495,7 @@ declare module "vue-data-ui" {
 
     export type VueUiXyDatasetItem = {
         name: string;
-        series: number[];
+        series: Array<number | null>;
         type: "bar" | "line" | "plot";
         color?: string;
         dashed?: boolean;
@@ -3510,17 +3518,17 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiXyDatasetBarItem = {
-        absoluteValues: number[];
+        absoluteValues: Array<number | null>;
         color: string;
         id: string;
         name: string;
         plots: Array<{ x: number; y: number; value: number }>;
-        series: number[];
+        series: Array<number | null>;
         type: "bar";
     };
 
     export type VueUiXyDatasetLineItem = {
-        absoluteValues: number[];
+        absoluteValues: Array<number | null>;
         area: string;
         color: string;
         curve: string;
@@ -3528,7 +3536,7 @@ declare module "vue-data-ui" {
         id: string;
         name: string;
         plots: Array<{ x: number; y: number; value: number }>;
-        series: number[];
+        series: Array<number | null>;
         shape: Shape | null;
         type: "line";
         useArea: boolean;
@@ -3538,12 +3546,12 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiXyDatasetPlotItem = {
-        absoluteValues: number[];
+        absoluteValues: Array<number | null>;
         color: string;
         id: string;
         name: string;
         plots: Array<{ x: number; y: number; value: number }>;
-        series: number[];
+        series: Array<number | null>;
         shape: Shape | null;
         type: "plot";
         useTag?: boolean;
@@ -3559,7 +3567,7 @@ declare module "vue-data-ui" {
         name: string;
         shape: Shape | null;
         type: "bar" | "line" | "plot";
-        value: number;
+        value: number | null;
     };
 
     export type VueUiXyExpose = {
@@ -5036,14 +5044,14 @@ declare module "vue-data-ui" {
 
     export type VueUiVerticalBarDatasetChild = {
         name: string;
-        value: number;
+        value: number | null;
     };
 
     export type VueUiHorizontalBarDatasetChild = VueUiVerticalBarDatasetChild; // v3 renaming
 
     export type VueUiVerticalBarDatasetItem = {
         name: string;
-        value: number;
+        value: number | null;
         color?: string;
         children?: VueUiVerticalBarDatasetChild[] | VueUiHorizontalBarDatasetChild[];
     };
@@ -5249,8 +5257,8 @@ declare module "vue-data-ui" {
 
     export type VueUiSparklineDatasetItem = {
         period: string | number;
-        value: number;
-        absoluteValue?: number;
+        value: number | null;
+        absoluteValue?: number | null;
         id?: string;
         plotValue?: number;
         toMax?: number;
@@ -6117,11 +6125,11 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiQuickChartDatasetObjectItem = {
-        [key: string]: string | number | number[];
+        [key: string]: string | number | Array<number | null>;
     };
 
     export type VueUiQuickChartDataset =
-        | number[]
+        | Array<number | null>
         | VueUiQuickChartDatasetObjectItem
         | VueUiQuickChartDatasetObjectItem[];
 
@@ -6234,7 +6242,7 @@ declare module "vue-data-ui" {
     };
 
     export const VueUiSparkTrend: DefineComponent<{
-        dataset: number[];
+        dataset: Array<number | null>;
         config?: VueUiSparkTrendConfig;
     }>;
 
@@ -6735,7 +6743,7 @@ declare module "vue-data-ui" {
 
     export type VueUiXyCanvasDatasetItem = {
         name: string;
-        series: number[];
+        series: Array<number | null>;
         color?: string;
         type?: "line" | "plot" | "bar";
         useArea?: boolean;
@@ -6925,7 +6933,7 @@ declare module "vue-data-ui" {
         VueUiXyCanvasExpose
     >;
 
-    export type VueUiFlowDatasetItem = [string, string, number];
+    export type VueUiFlowDatasetItem = [string, string, number | null];
 
     export type VueUiFlowNode = {
         color: string;
@@ -7099,7 +7107,7 @@ declare module "vue-data-ui" {
 
     export type VueUiParallelCoordinatePlotDatasetSerieItem = {
         name: string;
-        values: number[];
+        values: Array<number | null>;
     };
 
     export type VueUiParallelCoordinatePlotDatasetItem = {
@@ -7478,7 +7486,7 @@ declare module "vue-data-ui" {
 
     export type VueUiStackbarDatasetItem = {
         name: string;
-        series: number[];
+        series: Array<number | null>;
         color?: string;
     };
 
@@ -8397,7 +8405,7 @@ declare module "vue-data-ui" {
 
     export type VueUiRidgelineDatapoint = {
         name: string;
-        values: number[];
+        values: Array<number | null>;
         color?: string;
     }
 
@@ -8409,7 +8417,7 @@ declare module "vue-data-ui" {
     export type VueUiRidgelineDatapointEventUnit = {
         color: string;
         name: string;
-        values: number[];
+        values: Array<number | null>;
         id: string;
     };
 
@@ -8533,7 +8541,7 @@ declare module "vue-data-ui" {
                 yAxis?: {
                     labels?: {
                         fontSize?: number;
-                        bold?: number;
+                        bold?: boolean;
                         color?: string;
                         offsetX?: number;
                     };
@@ -8590,7 +8598,7 @@ declare module "vue-data-ui" {
     >
 
     export type VueUiChordDataset = {
-        matrix: number[][];
+        matrix: Array<Array<number | null>>;
         labels?: string[];
         colors?: string[];
     }
@@ -8663,7 +8671,7 @@ declare module "vue-data-ui" {
                     outerRadiusRatio?: number;
                     padAngle?: number;
                     stroke?: string;
-                    strokeWidth?: string;
+                    strokeWidth?: number;
                     labels?: {
                         show?: boolean;
                         fontSize?: number;
