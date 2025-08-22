@@ -1798,7 +1798,7 @@ export function useConfig() {
     }
 
     const vue_ui_vertical_bar = { // v3 renamed to _horizontal_ (yet still works)
-        bebug: false, // v3
+        debug: false, // v3
         loading: false, // v3
         autoSize: true, // v3
         responsive: false,
