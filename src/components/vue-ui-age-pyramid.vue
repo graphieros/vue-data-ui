@@ -510,7 +510,7 @@ function generateCsv(callback=null) {
                 ds[1],
                 ds[2],
                 ds[3],
-                ds[2] + ds[3]
+                (ds[2] ?? 0 + ds[3] ??)
             ]
         });
 
@@ -536,9 +536,9 @@ const dataTable = computed(() => {
         return [
             ds[0],
             ds[1],
-            ds[2].toLocaleString(),
-            ds[3].toLocaleString(),
-            (ds[2] + ds[3]).toLocaleString()
+            ds[2] == null ? '' : ds[2].toLocaleString(),
+            ds[3] == null ? '' : ds[3].toLocaleString(),
+            (ds[2] ?? 0 + ds[3] ?? 0).toLocaleString()
         ]
     });
     const config = {
