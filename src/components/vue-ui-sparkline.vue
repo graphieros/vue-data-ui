@@ -205,30 +205,88 @@ function prepareDsCopy() {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-function animateSL() {
-    if (FINAL_CONFIG.value.style.animation.show && props.dataset.length > 1 && !loading.value) {
-        safeDatasetCopy.value = [];
-        const chunks = FINAL_CONFIG.value.style.animation.animationFrames / props.dataset.length;
-        let start = 0;
+const isAnimating = ref(false);
+const rafId = ref(0);
+const timeoutIds = ref([]);
+const lastAnimationKey = ref('');
 
-        function animate() {
-            if (start < downsampled.value.length) {
-                safeDatasetCopy.value.push(downsampled.value[start])
-                setTimeout(() => {
-                    requestAnimationFrame(animate)
-                }, chunks)
-            } else {
-                safeDatasetCopy.value = downsampled.value
-            }
-            start += 1;
-        }
-        animate();
+const animationKey = computed(() => {
+    const ds = downsampled.value || [];
+    const sig = ds.map(d => `${d.period}::${Number.isFinite(d.value) ? d.value : 0}`).join("|");
+    const cfg = FINAL_CONFIG.value?.style?.animation || {};
+    return `${sig}#${!!cfg.show}#${cfg.animationFrames || 0}`;
+});
+
+function stopAnimation() {
+    if (rafId.value) {
+        cancelAnimationFrame(rafId.value);
+        rafId.value = 0;
     }
+    timeoutIds.value.forEach(id => clearTimeout(id));
+    timeoutIds.value = [];
+    isAnimating.value = false;
 }
+
+function animateSL() {
+    const cfg = FINAL_CONFIG.value?.style?.animation || {};
+    const ds = downsampled.value || [];
+    const key = animationKey.value;
+
+    if (key && key === lastAnimationKey.value && (isAnimating.value || safeDatasetCopy.value.length === ds.length)) {
+        return;
+    }
+
+    stopAnimation();
+
+
+    if (!cfg.show || loading.value || ds.length <= 1) {
+        safeDatasetCopy.value = ds;
+        lastAnimationKey.value = key;
+        return;
+    }
+
+
+    isAnimating.value = true;
+    lastAnimationKey.value = key;
+    safeDatasetCopy.value = [];
+
+    const frames = Math.max(1, Number(cfg.animationFrames) || 1);
+    const delay = Math.max(1, Math.floor(frames / ds.length));
+    let i = 0;
+
+    const tick = () => {
+        if (key !== animationKey.value) {
+
+        stopAnimation();
+        return;
+        }
+        if (i < ds.length) {
+        safeDatasetCopy.value.push(ds[i]);
+        const t = setTimeout(() => {
+            rafId.value = requestAnimationFrame(tick);
+        }, delay);
+        timeoutIds.value.push(t);
+        i += 1;
+        } else {
+        safeDatasetCopy.value = ds;
+        stopAnimation();
+        }
+    };
+
+    rafId.value = requestAnimationFrame(tick);
+}
+
+watch(animationKey, () => {
+    animateSL();
+});
 
 onMounted(() => {
     prepareChart();
     animateSL();
+});
+
+onBeforeUnmount(() => {
+    stopAnimation();
 });
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
@@ -371,7 +429,7 @@ const timeLabels = computed(() => {
 const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((s, i) => {
         const absoluteValue = isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : (s.value || 0);
-        const width = (drawingArea.value.width / (len.value + 1)) > svg.padding ? svg.padding : (drawingArea.value.width / (len.value + 1));
+        const width = (drawingArea.value.width / (len.value + 1)) > svg.value.padding ? svg.value.padding : (drawingArea.value.width / (len.value + 1));
         return {
             absoluteValue,
             period: timeLabels.value && timeLabels.value[i] && timeLabels.value[i].text ? timeLabels.value[i].text : s.period,
@@ -435,7 +493,7 @@ const dataLabelValues = computed(() => {
         const ds = mutableDataset.value.map(m => m.absoluteValue);
         const sum = ds.reduce((a, b) => a + b, 0)
         return {
-            latest: mutableDataset.value[mutableDataset.value.length -1].absoluteValue,
+            latest: mutableDataset.value[mutableDataset.value.length -1] ? mutableDataset.value[mutableDataset.value.length -1].absoluteValue : 0,
             sum,
             average: sum / mutableDataset.value.length,
             median: calcMedian(ds),

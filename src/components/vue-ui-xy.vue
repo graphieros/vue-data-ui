@@ -361,7 +361,6 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                         zeroLine: { show: true }
                     },
                 },
-                legend: { show: false },
                 padding: {
                     top: 12,
                     bottom: 24,

@@ -487,8 +487,8 @@ export function useConfig() {
             zoom: {
                 ...ZOOM,
                 minimap: MINIMAP,
-                preview: {
-                    enable: false,
+                preview: { // v3
+                    enable: true,
                     fill: '#CCCCCC50',
                     stroke: '#6A6A6A',
                     strokeWidth: 2,
@@ -6007,7 +6007,7 @@ export function useConfig() {
         },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         userOptions: USER_OPTIONS({
             tooltip: false,
             pdf: true,
