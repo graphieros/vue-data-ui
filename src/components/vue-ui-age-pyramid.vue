@@ -510,7 +510,7 @@ function generateCsv(callback=null) {
                 ds[1],
                 ds[2],
                 ds[3],
-                (ds[2] ?? 0 + ds[3] ??)
+                (ds[2] ?? 0 + ds[3] ?? 0)
             ]
         });
 
