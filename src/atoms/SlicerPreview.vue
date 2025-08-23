@@ -344,22 +344,26 @@ const inputStep = ref(0);
 const rangeStart = ref(null);
 const rangeEnd = ref(null);
 
-function setStartValue(value) {
-    startValue.value = value;
-    if (rangeStart.value) {
-        rangeStart.value.value = String(value);
+function coerceInput(eOrVal) {
+    if (typeof eOrVal === 'object' && eOrVal && 'target' in eOrVal) {
+        const t = eOrVal.target
+        const n = 'valueAsNumber' in t ? t.valueAsNumber : +t.value;
+        return Number.isFinite(n) ? n : NaN;
     }
-    emit('futureStart', value);
-    scheduleCommit();
+    const n = +eOrVal;
+    return Number.isFinite(n) ? n : NaN;
 }
 
-function setEndValue(value) {
-    endValue.value = value;
-    if (rangeEnd.value) {
-        rangeEnd.value.value = value;
-    }
-    emit('futureEnd', value);
-    scheduleCommit();
+function setStartValue(eOrVal) {
+    const n = coerceInput(eOrVal);
+    if (!Number.isFinite(n)) return;
+    start.value = n;
+}
+
+function setEndValue(eOrVal) {
+    const n = coerceInput(eOrVal);
+    if (!Number.isFinite(n)) return;
+    end.value = n;
 }
 
 const currentRange = computed(() => {
@@ -757,32 +761,38 @@ defineExpose({
                 }"
             />
             
-            <input 
+            <input
                 v-if="enableRangeHandles"
                 data-cy="slicer-handle-left"
-                ref="rangeStart" 
-                :key="`range-min${inputStep}`" 
-                type="range" 
-                :class="{'range-left': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles }" 
-                :min="min" 
-                :max="max" 
-                v-model.number="start"
-                @inuput="setStartValue"
+                ref="rangeStart"
+                :key="`range-min${inputStep}`"
+                type="range"
+                :class="{'range-left': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles}"
+                :min="min"
+                :max="max"
+                v-model.number="start"                
+                @input="setStartValue($event)"       
+                @change="commitImmediately"       
+                @keyup.enter="commitImmediately"     
+                @blur="commitImmediately"           
                 @mouseenter="setLeftLabelZIndex('start')"
                 @pointermove="start = +$event.target.value"
                 @pointerup="commitImmediately"
             />
 
-            <input 
+            <input
                 v-if="enableRangeHandles"
                 data-cy="slicer-handle-right"
-                ref="rangeEnd" 
-                type="range" 
-                :class="{'range-right': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles }" 
-                :min="min" 
-                :max="max" 
-                v-model.number="end"
-                @inuput="setEndValue"
+                ref="rangeEnd"
+                type="range"
+                :class="{'range-right': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles}"
+                :min="min"
+                :max="max"
+                v-model.number="end"                
+                @input="setEndValue($event)"       
+                @change="commitImmediately"       
+                @keyup.enter="commitImmediately"    
+                @blur="commitImmediately"            
                 @mouseenter="setLeftLabelZIndex('end')"
                 @pointermove="end = +$event.target.value"
                 @pointerup="commitImmediately"

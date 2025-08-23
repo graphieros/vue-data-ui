@@ -154,6 +154,13 @@ const svg = computed(() => {
 
 const lttbThreshold = props.config.downsample ? props.config.downsample.threshold ? props.config.downsample.threshold : 500 : 500;
 
+function safeInt(n) { return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0 }
+function safeDiv(a, b, fallback = 0) {
+    return (Number.isFinite(a) && Number.isFinite(b) && Math.abs(b) > 1e-9) ? (a / b) : fallback
+}
+
+const mutableInitialized = ref(false)
+
 const mutableConfig = ref({
     dataLabels: { show: true },
     showTooltip: true,
@@ -161,6 +168,24 @@ const mutableConfig = ref({
     isStacked: false,
     useIndividualScale: false
 });
+
+function seedMutableFromConfig() {
+    if (!mutableInitialized.value) {
+        mutableConfig.value = {
+            dataLabels: { show: true },
+            showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
+            showTable: FINAL_CONFIG.value.showTable === true,
+            isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
+            useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
+        };
+        mutableInitialized.value = true;
+    } else {
+        mutableConfig.value.isStacked = FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked;
+        if (mutableConfig.value.useIndividualScale == null) {
+            mutableConfig.value.useIndividualScale = FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale;
+        }
+    }
+}
 
 const fontSizes = ref({
     xAxis: 18,
@@ -409,6 +434,24 @@ const isPrecog = computed(() => {
 
 function setPrecog(side, val) {
     slicerPrecog.value[side] = val;
+}
+
+function normalizeSlicerWindow() {
+    const maxLen = Math.max(
+        1,
+        ...FINAL_DATASET.value.map(dp => largestTriangleThreeBucketsArray({
+        data: dp.series, threshold: FINAL_CONFIG.value.downsample.threshold
+        }).length)
+    )
+
+    let s = Math.max(0, Math.min(slicer.value.start ?? 0, maxLen - 1))
+    let e = Math.max(s + 1, Math.min(slicer.value.end ?? maxLen, maxLen))
+
+    if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) { s = 0; e = maxLen }
+
+    slicer.value = { start: s, end: e }
+    slicerPrecog.value.start = s
+    slicerPrecog.value.end   = e
 }
 
 const precogRect = computed(() => {
@@ -800,7 +843,10 @@ function selectTimeLabel(label, relativeIndex) {
     })
 }
 
-const maxSeries = computed(() => slicer.value.end - slicer.value.start);
+const maxSeries = computed(() => {
+  const len = safeInt((slicer.value.end ?? 0) - (slicer.value.start ?? 0))
+  return Math.max(1, len)
+})
 
 function selectMinimapIndex(i) {
     selectedMinimapIndex.value = i;
@@ -828,11 +874,10 @@ function checkAutoScaleError(datapoint) {
 }
 
 function fillArray(len, src) {
-    let res = Array(Math.abs(len)).fill(0);
-    for (let i = 0; i < src.length && i < len; i += 1) {
-        res[i] = src[i];
-    }
-    return res;
+    const L = safeInt(len)
+    const res = Array(L).fill(0)
+    for (let i = 0; i < src.length && i < L; i += 1) res[i] = src[i] ?? 0
+    return res
 }
 
 function validSlicerEnd(v) {
@@ -879,6 +924,7 @@ async function setupSlicer() {
     }
     slicerPrecog.value.start = slicer.value.start;
     slicerPrecog.value.end = slicer.value.end;
+    normalizeSlicerWindow()
 }
 
 async function refreshSlicer() {
@@ -922,10 +968,13 @@ function calcIndividualHeight(plot) {
 }
 
 const slot = computed(() => {
+    const denom = Math.max(1, maxSeries.value)
+    const w = Math.max(1, drawingArea.value.width)
+    const bars = Math.max(1, safeDataset.value.filter(s => s.type === 'bar' && !segregatedSeries.value.includes(s.id)).length)
     return {
-        bar: drawingArea.value.width / maxSeries.value / safeDataset.value.filter(serie => serie.type === 'bar').filter(s => !segregatedSeries.value.includes(s.id)).length,
-        plot: drawingArea.value.width / maxSeries.value,
-        line: drawingArea.value.width / maxSeries.value,
+        bar: safeDiv(w, denom * bars, 1),
+        plot: safeDiv(w, denom, 1),
+        line: safeDiv(w, denom, 1),
     }
 })
 
@@ -2218,15 +2267,7 @@ function prepareChart() {
     keepUserOptionState.value = FINAL_CONFIG.value.chart.userOptions.keepStateOnChartLeave;
     userOptionsVisible.value = !FINAL_CONFIG.value.chart.userOptions.showOnChartHover;
 
-    mutableConfig.value = {
-        dataLabels: {
-            show: true,
-        },
-        showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
-        showTable: FINAL_CONFIG.value.showTable === true,
-        isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
-        useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
-    }
+    seedMutableFromConfig()
 
     const additionalPad = 12;
 
@@ -2403,6 +2444,7 @@ watch(() => props.dataset, (_) => {
 
     slicerStep.value += 1;
     segregateStep.value += 1;
+    normalizeSlicerWindow();
 
 }, { deep: true });
 
@@ -2415,28 +2457,37 @@ watch(() => props.config, (_) => {
     tableStep.value += 1;
 
     // Reset mutable config
-    mutableConfig.value = {
-        dataLabels: {
-            show: true,
-        },
-        showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
-        showTable: FINAL_CONFIG.value.showTable === true,
-        isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
-        useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
-    }
+    seedMutableFromConfig()
+
+    normalizeSlicerWindow();
 }, { deep: true });
+
+const isActuallyVisible = ref(false)
+
+function recomputeVisibility() {
+  const el = chart.value?.parentNode
+  if (!el) { isActuallyVisible.value = false; return }
+  const r = el.getBoundingClientRect()
+  isActuallyVisible.value = r.width > 2 && r.height > 2
+}
+
+onMounted(() => {
+  recomputeVisibility()
+  const ro = new ResizeObserver(() => {
+    recomputeVisibility()
+    if (isActuallyVisible.value) {
+      // re-measure and re-init once we have size
+      prepareChart()
+      normalizeSlicerWindow()
+      setupSlicer()
+    }
+  })
+  if (chart.value?.parentNode) ro.observe(chart.value.parentNode)
+})
 
 // v3 - Essential to make shifting between loading config and final config work
 watch(FINAL_CONFIG, () => {
-    mutableConfig.value = {
-        dataLabels: {
-            show: true,
-        },
-        showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
-        showTable: FINAL_CONFIG.value.showTable === true,
-        isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
-        useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
-    }
+    seedMutableFromConfig()
 }, { immediate: true });
 
 defineExpose({

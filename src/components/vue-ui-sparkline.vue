@@ -412,7 +412,7 @@ function ratioToMax(v) {
     return isNaN(v / absoluteMax.value) ? 0 : v / absoluteMax.value;
 }
 
-const len = computed(() => downsampled.value.length - 1);
+const len = computed(() => (downsampled.value.length - 1) || 1);
 
 const timeLabels = computed(() => {
     return useTimeLabels({
