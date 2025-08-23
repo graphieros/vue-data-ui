@@ -127,9 +127,9 @@ onMounted(() => {
         type: "line",
         dataLabels: false,
         shape: 'triangle',
-        useProgression: false,
         useArea: true,
-        smooth: true
+        smooth: true,
+        useProgression: true
     },
     {
         name: "C",

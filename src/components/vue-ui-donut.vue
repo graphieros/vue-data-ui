@@ -177,12 +177,12 @@ const resizeAndReflow = () => {
                 });
             });
         
-        if (FINAL_CONFIG.value.autoSize && G_hollow.value && circle_hollow.value) {
-            setOpacityIfWithinBBox({
-                el: G_hollow.value,
-                container: circle_hollow.value,
-            });
-        }
+        // if (FINAL_CONFIG.value.autoSize && G_hollow.value && circle_hollow.value) {
+        //     setOpacityIfWithinBBox({
+        //         el: G_hollow.value,
+        //         container: circle_hollow.value,
+        //     });
+        // }
     });
 }
 

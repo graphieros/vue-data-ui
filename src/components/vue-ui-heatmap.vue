@@ -200,6 +200,9 @@ watch(() => props.config, (_newCfg) => {
     // Reset mutable config
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.tooltip.show;
+
+    WIDTH.value = FINAL_CONFIG.value.style.layout.width;
+    HEIGHT.value = FINAL_CONFIG.value.style.layout.height;
 }, { deep: true });
 
 watch(() => props.dataset, (newVal) => {
@@ -325,8 +328,8 @@ const maxX = computed(() => {
     return Math.max(...FINAL_DATASET.value.flatMap(el => (el.values || []).length));
 });
 
-const WIDTH = ref(1000);
-const HEIGHT = ref(300);
+const WIDTH = ref(FINAL_CONFIG.value.style.layout.width);
+const HEIGHT = ref(FINAL_CONFIG.value.style.layout.height);
 
 const svg = computed(() => ({
     width: Math.max(10, WIDTH.value),

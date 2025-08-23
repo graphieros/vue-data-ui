@@ -89,13 +89,15 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'type', def: 'line', type: 'select', options: ['line', 'bar']},
     { key: 'style.scaleMin', def: null, type: 'number', min: -1000, max: 1000},
     { key: 'style.scaleMax', def: null, type: 'number', min: -1000, max: 1000},
 
     { key: 'style.padding.top', def: 12, type: 'number', min: 0, max: 100 },
-    { key: 'style.padding.right', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.padding.right', def: 12, type: 'number', min: 0, max: 100 },
     { key: 'style.padding.bottom', def: 3, type: 'number', min: 0, max: 100 },
     { key: 'style.padding.left', def: 0, type: 'number', min: 0, max: 100 },
 

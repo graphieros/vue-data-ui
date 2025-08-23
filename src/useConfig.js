@@ -311,7 +311,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 height: 500,
                 width: 800,
-                padding: PADDING([24, 24, 36, 48]),
+                padding: PADDING([12, 12, 12, 12]),
                 title: TITLE,
                 legend: LEGEND,
                 zoom: ZOOM,
@@ -461,7 +461,7 @@ export function useConfig() {
                             position: 'start', // or end
                             offsetX: 0,
                             offsetY: 0,
-                            padding: PADDING([5, 10, 5, 10]),
+                            padding: PADDING([12, 12, 12, 12]),
                             border: {
                                 stroke: COLOR_WHITE,
                                 strokeWidth: 1,
@@ -495,7 +495,7 @@ export function useConfig() {
                     strokeDasharray: 0,
                 }
             },
-            padding: PADDING([0, 0, 0, 0]),
+            padding: PADDING([12, 12, 6, 6]),
             highlighter: {
                 color: COLOR_BLACK,
                 opacity: 5,
@@ -751,7 +751,6 @@ export function useConfig() {
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
-        useCssAnimation: true,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -1939,7 +1938,7 @@ export function useConfig() {
             backgroundColor: COLOR_WHITE,
             color: COLOR_BLACK,
             layout: {
-                height: 400, // v3
+                height: 300, // v3
                 width: 1000, // v3
                 padding: PADDING([0, 0, 0, 0]),
                 cells: {
@@ -2022,7 +2021,7 @@ export function useConfig() {
                 ...LEGEND,
                 fontSize: FONT._12,
                 roundingValue: 0,
-                width: 64,
+                width: 24,
                 // position: POSITION.RIGHT, // v3 deprecated
                 // scaleBorderRadius: 18 // v3 deprecated
             },
