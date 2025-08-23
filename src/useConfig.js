@@ -2857,7 +2857,7 @@ export function useConfig() {
         xyHighlighterOpacity: 0.05,
         xyLabelsXFontSize: FONT._10,
         xyLabelsYFontSize: FONT._12,
-        xyPaddingBottom: 0,
+        xyPaddingBottom: 12,
         xyPaddingLeft: 12,
         xyPaddingRight: 12,
         xyPaddingTop: 12,
@@ -3507,7 +3507,6 @@ export function useConfig() {
     const vue_ui_nested_donuts = {
         debug: false, // v3
         loading: false, // v3
-        autoSize: true, // v3 (false = v2), unused on this component for now
         responsive: false,
         theme: '',
         customPalette: [],
@@ -4519,7 +4518,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 height: 600,
                 width: 1000,
-                padding: PADDING([24, 24, 36, 36]),
+                padding: PADDING([0, 0, 0, 0]),
                 comments: {
                     show: true,
                     showInTooltip: true,

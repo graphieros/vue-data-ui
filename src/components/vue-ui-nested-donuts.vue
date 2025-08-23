@@ -37,26 +37,25 @@ import {
     hasDeepProperty,
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import img from "../img";
-import { useLoading } from "../useLoading";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
 
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
-const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_nested_donuts: DEFAULT_CONFIG } = useConfig();
 
