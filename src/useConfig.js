@@ -2357,7 +2357,7 @@ export function useConfig() {
                 show: true,
                 animationFrames: 360
             },
-            padding: PADDING([12, 0, 3, 0]),
+            padding: PADDING([12, 12, 3, 0]),
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
             scaleMin: null,

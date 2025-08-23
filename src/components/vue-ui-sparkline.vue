@@ -99,7 +99,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading(({
             style: {
                 backgroundColor: '#99999930',
                 scaleMin: 0,
-                scaleMax: 89,
+                scaleMax: null,
                 animation: { show: false },
                 line: { color: '#AAAAAA' },
                 bar: { color: '#AAAAAA' },
@@ -238,13 +238,11 @@ function animateSL() {
 
     stopAnimation();
 
-
     if (!cfg.show || loading.value || ds.length <= 1) {
         safeDatasetCopy.value = ds;
         lastAnimationKey.value = key;
         return;
     }
-
 
     isAnimating.value = true;
     lastAnimationKey.value = key;
@@ -429,17 +427,17 @@ const timeLabels = computed(() => {
 const mutableDataset = computed(() => {
     return safeDatasetCopy.value.map((s, i) => {
         const absoluteValue = isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : (s.value || 0);
-        const width = (drawingArea.value.width / (len.value + 1)) > svg.value.padding ? svg.value.padding : (drawingArea.value.width / (len.value + 1));
+        const width = drawingArea.value.width / len.value
         return {
             absoluteValue,
             period: timeLabels.value && timeLabels.value[i] && timeLabels.value[i].text ? timeLabels.value[i].text : s.period,
             plotValue: absoluteValue + absoluteMin.value,
             toMax: ratioToMax(absoluteValue + absoluteMin.value),
-            x: drawingArea.value.start + (i * (width > drawingArea.value.width / 12 ? drawingArea.value.width / 12 : width)),
+            x: drawingArea.value.start + (i * width),
             y: drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(absoluteValue + absoluteMin.value)),
             id: `plot_${uid.value}_${i}`,
             color: isBar.value ? FINAL_CONFIG.value.style.bar.color : FINAL_CONFIG.value.style.area.useGradient ? shiftHue(FINAL_CONFIG.value.style.line.color, 0.05 * ( 1 - (i / len.value))) : FINAL_CONFIG.value.style.line.color,
-            width: width > drawingArea.value.width / 12 ? drawingArea.value.width / 12 : width
+            width
         }
     })
 });
@@ -601,7 +599,7 @@ function selectDatapoint(datapoint, index) {
             </defs>
 
             <!-- AREA -->
-            <g v-if="FINAL_CONFIG.style.area.show && !isBar && mutableDataset[0]">
+            <g v-if="FINAL_CONFIG.style.area.show && !isBar && mutableDataset[0] && mutableDataset.length > 1">
                 <path
                     data-cy="sparkline-smooth-area"
                     v-if="FINAL_CONFIG.style.line.smooth"
@@ -616,9 +614,9 @@ function selectDatapoint(datapoint, index) {
                 />
             </g>
 
-            <path data-cy="sparkline-smooth-path" v-if="FINAL_CONFIG.style.line.smooth && !isBar" :d="`M ${createSmoothPath(mutableDataset)}`" :stroke="FINAL_CONFIG.style.line.color" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" stroke-linecap="round"/>
+            <path data-cy="sparkline-smooth-path" v-if="FINAL_CONFIG.style.line.smooth && !isBar" :d="`M ${createSmoothPath(mutableDataset) || '0,0'}`" :stroke="FINAL_CONFIG.style.line.color" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" stroke-linecap="round"/>
 
-            <path data-cy="sparkline-straight-line" v-if="!FINAL_CONFIG.style.line.smooth && !isBar" :d="`M ${createStraightPath(mutableDataset)}`" :stroke="FINAL_CONFIG.style.line.color" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" stroke-linecap="round"/>
+            <path data-cy="sparkline-straight-line" v-if="!FINAL_CONFIG.style.line.smooth && !isBar" :d="`M ${createStraightPath(mutableDataset) || '0,0'}`" :stroke="FINAL_CONFIG.style.line.color" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" stroke-linecap="round"/>
             
             <g v-for="(plot, i) in mutableDataset">
                 <rect
@@ -651,7 +649,7 @@ function selectDatapoint(datapoint, index) {
                 data-cy="sparkline-zero-axis"
                 v-if="min < 0"
                 :x1="drawingArea.start"
-                :x2="drawingArea.start + drawingArea.width - 16"
+                :x2="drawingArea.start + drawingArea.width"
                 :y1="forceValidValue(absoluteZero, drawingArea.bottom)"
                 :y2="forceValidValue(absoluteZero, drawingArea.bottom)"
                 :stroke="FINAL_CONFIG.style.zeroLine.color"

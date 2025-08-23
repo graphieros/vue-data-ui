@@ -807,6 +807,9 @@ defineExpose({
                                         show: FINAL_CONFIG.sparkline.animation.show && !isPrinting && !isImaging,
                                         animationFrames: FINAL_CONFIG.sparkline.animation.animationFrames
                                     },
+                                    padding: {
+                                        right: 12
+                                    },
                                     line: {
                                         color: tr.color,
                                         smooth: FINAL_CONFIG.sparkline.smooth,
