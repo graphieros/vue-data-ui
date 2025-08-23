@@ -295,7 +295,7 @@ async function autoSize() {
     }
 
     await nextTick();
-    const bb = G.value.getBBox()
+    const bb = G.value ? G.value.getBBox() : 0;
     const offX = FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.offsetX;
     viewBox.value = [
         bb.x + (-offX),
