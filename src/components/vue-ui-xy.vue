@@ -1351,7 +1351,7 @@ function isPlotAlone(plotSeries, index) {
 
     let isAlone = (!!before && !!after && before.value == null && after.value == null) || (!before && !!after && after.value == null) || (!!before && !after && before.value == null);
 
-    return canShowValue(plotSeries[index].value) && isAlone;
+    return canShowValue(plotSeries[index].value) && isAlone && FINAL_CONFIG.value.line.cutNullValues;
 }
 
 /******************************************************************************************/
