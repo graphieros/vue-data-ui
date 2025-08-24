@@ -1718,7 +1718,7 @@ export function useConfig() {
         },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         useStartAnimation: true,
         useBlurOnHover: true,
         style: {
@@ -4232,9 +4232,6 @@ export function useConfig() {
                 width: 512,
                 zoom: {
                     show: true,
-                    color: COLOR_GREY_MID, // deprecated
-                    highlightColor: COLOR_GREY_DARK, // deprecated
-                    useResetSlot: false // deprecated
                 },
                 words: {
                     maxFontSize: 100,

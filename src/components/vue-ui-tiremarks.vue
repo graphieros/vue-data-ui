@@ -117,6 +117,8 @@ function prepareConfig() {
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+    WIDTH.value = FINAL_CONFIG.value.style.chart.width;
+    HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
     prepareChart();
     titleStep.value += 1;
 }, { deep: true });
