@@ -18,7 +18,7 @@ export function useTimeLabels({
     end: sliceEnd
 }) {
     const out = [];
-    if (!xl.enable) {
+    if (!xl.enable || values.length === 0) {
         for (let i = sliceStart; i < sliceEnd; i++) {
             out.push({ text: String(values[i] ?? i), absoluteIndex: i });
         }

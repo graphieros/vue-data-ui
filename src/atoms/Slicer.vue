@@ -118,9 +118,26 @@ const endValue = ref(props.max);
 const hasMinimap = computed(() => !!props.minimap.length);
 const uid = ref(createUid());
 
+const wrapperWidth = ref(0);
+
+onMounted(() => {
+    const updateWidth = () => {
+        if (!zoomWrapper.value) return;
+        wrapperWidth.value = zoomWrapper.value.getBoundingClientRect().width;
+    };
+    updateWidth();
+
+    const onWinResize = throttle(updateWidth, 50);
+    window.addEventListener('resize', onWinResize);
+
+    onBeforeUnmount(() => {
+        window.removeEventListener('resize', onWinResize);
+    });
+});
+
 const endpoint = computed(() => {
     return props.refreshEndPoint === null ? props.max : props.refreshEndPoint;
-})
+});
 
 const emit = defineEmits(['update:start', 'update:end', 'reset', 'trapMouse']);
 
@@ -133,7 +150,7 @@ const highlightStyle = computed(() => {
         ? `calc(${centerPercent}% - ${mergeTooltip.value.width}px)`
         : overflowsLeft.value 
         ? `calc(${centerPercent}%)`
-        : `calc(${centerPercent}% - ${mergeTooltip.value.width / 2}px)`
+        : `calc(${centerPercent}% - ${mergeTooltip.value.width / 2}px)`;
 
     return {
         left: `${startPercent}%`,
@@ -149,13 +166,23 @@ const highlightStyle = computed(() => {
 
 const overflowsLeft = computed(() => {
     if (!zoomWrapper.value) return false;
-    return zoomWrapper.value.getBoundingClientRect().width * ((startValue.value - props.min) / (props.max - props.min)) - tooltipLeftWidth.value / 2 < 0
+    return (
+        zoomWrapper.value.getBoundingClientRect().width *
+        ((startValue.value - props.min) / (props.max - props.min)) -
+        tooltipLeftWidth.value / 2 <
+        0
+    );
 });
 
 const overflowsRight = computed(() => {
     if (!zoomWrapper.value) return false;
-    return zoomWrapper.value.getBoundingClientRect().width * ((endValue.value - props.min) / (props.max - props.min)) + tooltipRightWidth.value / 2 > zoomWrapper.value.getBoundingClientRect().width;
-})
+    return (
+        zoomWrapper.value.getBoundingClientRect().width *
+        ((endValue.value - props.min) / (props.max - props.min)) +
+        tooltipRightWidth.value / 2 >
+        zoomWrapper.value.getBoundingClientRect().width
+    );
+});
 
 const slicerColor = computed(() => props.inputColor);
 const backgroundColor = computed(() => props.background);
@@ -163,12 +190,12 @@ const selectColorOpaque = computed(() => `${props.selectColor}33`);
 const borderColor = computed(() => props.borderColor);
 
 const availableTraps = computed(() => {
-    let arr = [];
+    const arr = [];
     for (let i = 0; i < props.minimap.length; i += 1) {
-        arr.push(i)
+        arr.push(i);
     }
     return arr;
-})
+});
 
 function reset() {
     emit('reset');
@@ -192,10 +219,10 @@ watch(
     () => props.min,
     (newMin) => {
         if (Number(startValue.value) < Number(newMin)) {
-            startValue.value = Number(newMin);
+        startValue.value = Number(newMin);
         }
         if (Number(endValue.value) < Number(newMin)) {
-            endValue.value = Number(newMin);
+        endValue.value = Number(newMin);
         }
     }
 );
@@ -204,10 +231,10 @@ watch(
     () => props.max,
     (newMax) => {
         if (Number(startValue.value) > Number(newMax)) {
-            startValue.value = Number(newMax);
+        startValue.value = Number(newMax);
         }
         if (Number(endValue.value) > Number(newMax)) {
-            endValue.value = Number(newMax);
+        endValue.value = Number(newMax);
         }
     }
 );
@@ -217,22 +244,22 @@ const minimapWrapper = ref(null);
 const svgMinimap = ref({
     width: 1,
     height: 1
-})
+});
 
 const resizeObserver = ref(null);
 
 onMounted(() => {
     if (hasMinimap.value) {
         const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
-                chart: minimapWrapper.value,
-            })
-            svgMinimap.value.width = width;
-            svgMinimap.value.height = height - 47;
+        const { width, height } = useResponsive({
+            chart: minimapWrapper.value
+        });
+        svgMinimap.value.width = width;
+        svgMinimap.value.height = height - 47;
         });
 
         resizeObserver.value = new ResizeObserver(handleResize);
-        resizeObserver.value.observe(minimapWrapper.value)
+        resizeObserver.value.observe(minimapWrapper.value);
     }
 });
 
@@ -241,24 +268,24 @@ onBeforeUnmount(() => {
 });
 
 const unitWidthX = computed(() => {
-    if(!props.minimap.length) return 0
-    return svgMinimap.value.width / props.minimap.length
+    if (!props.minimap.length) return 0;
+    return svgMinimap.value.width / props.minimap.length;
 });
 
 const minimapLine = computed(() => {
-    if(!props.minimap.length) return [];
+    if (!props.minimap.length) return [];
     const max = Math.max(...props.minimap);
     const min = Math.min(...props.minimap) - 10;
     const diff = max - (min > 0 ? 0 : min);
     const points = props.minimap.map((dp, i) => {
         const normalizedVal = dp - min;
         return {
-            x: svgMinimap.value.width / (props.minimap.length) * (i) + (unitWidthX.value / 2),
-            y: svgMinimap.value.height - (normalizedVal / diff * (svgMinimap.value.height * 0.9))
-        }
+        x: (svgMinimap.value.width / props.minimap.length) * i + unitWidthX.value / 2,
+        y: svgMinimap.value.height - (normalizedVal / diff) * (svgMinimap.value.height * 0.9)
+        };
     });
     const fullSet = props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points);
-    const sliced = [...points].slice(props.valueStart, props.valueEnd)
+    const sliced = [...points].slice(props.valueStart, props.valueEnd);
     const selectionSet = props.smoothMinimap ? createSmoothPath(sliced) : createStraightPath(sliced);
     return {
         fullSet,
@@ -266,30 +293,34 @@ const minimapLine = computed(() => {
         sliced,
         firstPlot: points[props.valueStart],
         lastPlot: points[props.valueEnd - 1]
-    }
+    };
 });
 
 const selectionRectCoordinates = computed(() => {
     return {
-        x: unitWidthX.value * startValue.value + (unitWidthX.value / 2),
+        x: unitWidthX.value * startValue.value + unitWidthX.value / 2,
         width: svgMinimap.value.width * ((endValue.value - startValue.value) / props.max) - unitWidthX.value
-    }
+    };
 });
 
-const selectedTrap = ref(props.minimapSelectedIndex)
+const selectedTrap = ref(props.minimapSelectedIndex);
 
-watch(() => props.minimapSelectedIndex, (v) => {
-    selectedTrap.value = v + props.valueStart
-}, { immediate: true })
+watch(
+    () => props.minimapSelectedIndex,
+    (v) => {
+        selectedTrap.value = v + props.valueStart;
+    },
+    { immediate: true }
+);
 
 function trapMouse(trap) {
     selectedTrap.value = trap;
     if (trap >= props.valueStart && trap < props.valueEnd) {
-        emit('trapMouse', trap - props.valueStart)
+        emit('trapMouse', trap - props.valueStart);
     }
 }
 
-const inputStep = ref(0)
+const inputStep = ref(0);
 const rangeStart = ref(null);
 const rangeEnd = ref(null);
 
@@ -317,60 +348,70 @@ const isDragging = ref(false);
 let initialMouseX = ref(null);
 
 const dragThreshold = computed(() => {
-    if (!zoomWrapper.value) return 20;
-    const w = zoomWrapper.value.getBoundingClientRect().width - 48;
-    return w / (props.max - props.min);
+    return (wrapperWidth.value - 48) / (props.max - props.min);
 });
 
 const selectionWidth = computed(() => {
-    const w = zoomWrapper.value.getBoundingClientRect().width - 48;
-    return w / (props.max - props.min) * currentRange.value;
-})
+    return ((wrapperWidth.value - 48) / (props.max - props.min)) * currentRange.value;
+});
 
 const RA_SPECIAL_MAGIC_NUMBER = ref(2.5);
 
 const flooredDatapointsToWidth = computed(() => {
-    const w = zoomWrapper.value.getBoundingClientRect().width - 48;
-
+    const w = wrapperWidth.value - 48;
     return Math.ceil((props.max - props.min) / ((w - selectionWidth.value) / RA_SPECIAL_MAGIC_NUMBER.value));
-})
+});
+
+let activeMoveEvent = null;
+let activeEndEvent = null;
+let activeMoveHandler = null;
+let activeEndHandler = null;
 
 const startDragging = (event) => {
     showTooltip.value = true;
-    if (!props.enableSelectionDrag) {
-        return;
-    }
+    if (!props.enableSelectionDrag) return;
+
     const isTouch = event.type === 'touchstart';
-    const target = isTouch ? event.targetTouches[0].target : event.target;
-    if (target.classList.contains('range-handle')) {
-        return;
-    }
+    const touch0 =
+        isTouch && event.targetTouches && event.targetTouches[0] ? event.targetTouches[0] : null;
+    const target = isTouch ? (touch0 ? touch0.target : null) : event.target;
+
+    if (!target || !(target instanceof Element)) return;
+    if (target.classList && target.classList.contains('range-handle')) return;
+
     isDragging.value = true;
-    initialMouseX.value = isTouch ? event.targetTouches[0].clientX : event.clientX;
+    initialMouseX.value = isTouch ? (touch0 ? touch0.clientX : 0) : event.clientX;
 
-    const moveHandler = isTouch ? handleTouchDragging : handleDragging;
-    const endHandler = isTouch ? stopTouchDragging : stopDragging;
+    activeMoveEvent = isTouch ? 'touchmove' : 'mousemove';
+    activeEndEvent = isTouch ? 'touchend' : 'mouseup';
+    activeMoveHandler = isTouch ? handleTouchDragging : handleDragging;
+    activeEndHandler = isTouch ? stopTouchDragging : stopDragging;
 
-    window.addEventListener(isTouch ? 'touchmove' : 'mousemove', moveHandler, { passive: false });
-    window.addEventListener(isTouch ? 'touchend' : 'mouseup', endHandler);
+    window.addEventListener(activeMoveEvent, activeMoveHandler, { passive: false });
+    window.addEventListener(activeEndEvent, activeEndHandler);
 };
 
 function handleDragging(event) {
+    if (!isDragging.value) return;
     updateDragging(event.clientX);
-};
+}
 
 function handleTouchDragging(event) {
-    if (!zoomWrapper.value.contains(event.target)) {
-        // Allow scrolling
-        return;
-    }
+    if (!isDragging.value) return;
+    if (!zoomWrapper.value) return;
 
-    if (event.target.classList.contains('range-handle')) {
-        return;
-    }
-    event.preventDefault(); 
-    updateDragging(event.targetTouches[0].clientX);
-};
+    const target = event.target;
+
+    if (!(target instanceof Element)) return;
+    if (!zoomWrapper.value.contains(target)) return;
+    if (target.classList && target.classList.contains('range-handle')) return;
+
+    event.preventDefault();
+
+    const touch0 = event.targetTouches && event.targetTouches[0] ? event.targetTouches[0] : null;
+    if (!touch0) return;
+    updateDragging(touch0.clientX);
+}
 
 function updateDragging(currentX) {
     if (!isDragging.value) return;
@@ -379,37 +420,46 @@ function updateDragging(currentX) {
 
     if (Math.abs(deltaX) > dragThreshold.value) {
         if (deltaX > 0) {
-            if (Number(endValue.value) + 1 <= props.max) {
-                const v = Math.min(props.max, Number(endValue.value) + flooredDatapointsToWidth.value)
-                setEndValue(v);
-                setStartValue(v - currentRange.value);
-            }
+        if (Number(endValue.value) + 1 <= props.max) {
+            const v = Math.min(props.max, Number(endValue.value) + flooredDatapointsToWidth.value);
+            setEndValue(v);
+            setStartValue(v - currentRange.value);
+        }
         } else {
-            if (Number(startValue.value) - 1 >= props.min) {
-                const v = Math.max(0, Number(startValue.value) - flooredDatapointsToWidth.value);
-                setStartValue(v);
-                setEndValue(v + currentRange.value);
-            }
+        if (Number(startValue.value) - 1 >= props.min) {
+            const v = Math.max(props.min, Number(startValue.value) - flooredDatapointsToWidth.value);
+            setStartValue(v);
+            setEndValue(v + currentRange.value);
+        }
         }
         initialMouseX.value = currentX;
     }
-};
+}
 
 function stopDragging() {
-    endDragging('mousemove', 'mouseup');
-};
+    endDragging();
+}
 
-function stopTouchDragging () {
-    endDragging('touchmove', 'touchend');
-};
+function stopTouchDragging() {
+    endDragging();
+}
 
-function endDragging(moveEvent, endEvent) {
+function endDragging() {
     isDragging.value = false;
-    window.removeEventListener(moveEvent, handleDragging);
-    window.removeEventListener(endEvent, stopDragging);
-};
 
-const isMouseDown = ref(false)
+    if (activeMoveEvent && activeMoveHandler) {
+        window.removeEventListener(activeMoveEvent, activeMoveHandler);
+    }
+    if (activeEndEvent && activeEndHandler) {
+        window.removeEventListener(activeEndEvent, activeEndHandler);
+    }
+
+    activeMoveEvent = activeEndEvent = null;
+    activeMoveHandler = activeEndHandler = null;
+}
+
+// ===== tooltips =====
+const isMouseDown = ref(false);
 const tooltipLeft = ref(null);
 const tooltipRight = ref(null);
 const tooltipLeftWidth = ref(1);
@@ -417,7 +467,7 @@ const tooltipRightWidth = ref(1);
 const showTooltip = ref(false);
 
 function setTooltipLeft() {
-    if(tooltipLeft.value) {
+    if (tooltipLeft.value) {
         tooltipLeftWidth.value = tooltipLeft.value.getBoundingClientRect().width;
     }
 }
@@ -431,55 +481,78 @@ function setTooltipRight() {
 const leftLabelZIndex = ref(0);
 
 function setLeftLabelZIndex(handle) {
-    leftLabelZIndex.value = handle === 'start' ? 1 : 0
+    leftLabelZIndex.value = handle === 'start' ? 1 : 0;
 }
 
 const tooltipsCollide = ref(false);
 const mergeTooltip = ref({
-    width:0,
-    left: 0,
-})
+    width: 0,
+    left: 0
+});
 
-watchEffect(async() => {
-    const leftEl = tooltipLeft.value;
-    const rightEl = tooltipRight.value;
-    const __start = startValue.value; // required for reactivity
-    const __end = endValue.value; // required for reactivity
-    const wrapper = zoomWrapper.value;
-    if (!leftEl || !rightEl || !wrapper) {
+watch([startValue, endValue], async () => {
+    await nextTick();
+
+    if (!tooltipLeft.value || !tooltipRight.value) {
         tooltipsCollide.value = false;
+        mergeTooltip.value = { width: 0, left: 0 };
         return;
     }
-    await nextTick();
-    const { x: leftX, width: leftW}  = leftEl.getBoundingClientRect();
-    const { x: rightX, width: rightW} = rightEl.getBoundingClientRect();
-    const midX = (rightX + rightW / 2) - (((rightX + rightW / 2) - (leftX + leftW / 2)))
-    tooltipsCollide.value = (leftX + leftW) > rightX;
+
+    const leftRect = tooltipLeft.value.getBoundingClientRect();
+    const rightRect = tooltipRight.value.getBoundingClientRect();
+
+    tooltipsCollide.value = leftRect.x + leftRect.width > rightRect.x;
+
+    const leftCenter = leftRect.x + leftRect.width / 2;
+    const rightCenter = rightRect.x + rightRect.width / 2;
+    const totalWidth = leftRect.width + rightRect.width;
+    const centerX = (leftCenter + rightCenter) / 2;
+
     mergeTooltip.value = {
-        width: leftW + rightW,
-        left: midX - (leftW + rightW / 2)
-    }
+        width: totalWidth,
+        left: centerX - totalWidth / 2
+    };
 });
 
 onUpdated(() => {
     setTooltipLeft();
     setTooltipRight();
-})
+});
 
-watch(() => props.labelLeft, () => {
-    nextTick(setTooltipLeft);
-}, { deep: true });
+watch(
+    () => props.labelLeft,
+    () => {
+        nextTick(setTooltipLeft);
+    },
+    { deep: true }
+);
 
-watch(() => props.labelRight, () => {
-    nextTick(setTooltipRight);
-}, { deep: true });
-
+watch(
+    () => props.labelRight,
+    () => {
+        nextTick(setTooltipRight);
+    },
+    { deep: true }
+);
 
 defineExpose({
     setStartValue,
     setEndValue
-})
+});
 
+onBeforeUnmount(() => {
+    if (resizeObserver.value) resizeObserver.value.disconnect();
+
+    if (activeMoveEvent && activeMoveHandler) {
+        window.removeEventListener(activeMoveEvent, activeMoveHandler);
+    }
+    if (activeEndEvent && activeEndHandler) {
+        window.removeEventListener(activeEndEvent, activeEndHandler);
+    }
+    activeMoveEvent = activeEndEvent = null;
+    activeMoveHandler = activeEndHandler = null;
+});
 </script>
 
 <template>
@@ -708,7 +781,7 @@ defineExpose({
             </div>
 
             <div
-                v-if="tooltipsCollide || labelLeft === labelRight"
+                v-if="(tooltipsCollide || labelLeft === labelRight) && (labelLeft || labelRight)"
                 data-cy="slicer-label-merged"
                 ref="tooltipMerge"
                 :class="{

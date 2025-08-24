@@ -1,7 +1,7 @@
 <template>
-  <template v-for="node in dataset">
+  <template v-for="(node, i) in dataset">
     <template v-if="node.polygonPath && node.polygonPath.coordinates">
-      <template v-for="(coordinate, index) in node.polygonPath.coordinates">
+      <template v-for="(coordinate, index) in node.polygonPath.coordinates" :key="`node_${i}_${index}`">
         <template v-if="node.ancestor && node.ancestor.polygonPath">
           <line
             data-cy="recursive-link-wrapper"

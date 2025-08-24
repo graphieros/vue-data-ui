@@ -1,5 +1,15 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, watch, onBeforeUnmount, defineAsyncComponent, shallowRef } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef,
+    toRefs,
+    watch, 
+} from "vue";
 import { 
     adaptColorToBackground,
     applyDataLabel,
@@ -21,25 +31,27 @@ import {
     shiftHue,
     themePalettes,
     XMLNS,
+    treeShake,
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
+import { useConfig } from "../useConfig";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
-import { useConfig } from "../useConfig";
+import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
-import Shape from "../atoms/Shape.vue";
 import img from "../img";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import Shape from "../atoms/Shape.vue";
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import BaseScanner from "../atoms/BaseScanner.vue";
+import { useLoading } from "../useLoading";
 
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
-const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
@@ -80,14 +92,73 @@ const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        {
+            name: '_',
+            shape: 'circle',
+            color: '#CACACA',
+            series: [
+                { name: "_", x: -6, y: -4 },
+                { name: "_", x: -5,  y: -2 },
+                { name: "_", x: -4,  y: -1 },
+                { name: "_", x: -3,  y: -0.5 },
+                { name: "_", x: -2,  y: -0.25 },
+                { name: "_", x: -1,  y: -0.135 },
+                { name: "_", x: 0,   y: 0 },
+                { name: "_", x: 1,   y: 0.135 },
+                { name: "_", x: 2,   y: 0.25 },
+                { name: "_", x: 3,   y: 0.5 },
+                { name: "_", x: 4,   y: 1 },
+                { name: "_", x: 5,   y: 2 },
+                { name: "_", x: 6,  y: 4 },
+            ]
+        }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false, },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        grid: {
+                            stroke: '#6A6A6A',
+                            graduations: {
+                                stroke: '#6A6A6A',
+                                color: '#6A6A6A90'
+                            },
+                            xAxis: {
+                                auto: true
+                            },
+                            yAxis: {
+                                auto: true
+                            }
+                        },
+                        labels: {
+                            quadrantLabels: { show: false },
+                            plotLabels: { show: false },
+                            axisLabels: { show: false }
+                        },
+                        plots: {
+                            outlineColor: '#6A6A6A'
+                        }
+                    },
+                    legend: {
+                        backgroundColor: 'transparent'
+                    },
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -127,11 +198,14 @@ watch(() => props.config, (_newCfg) => {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiQuadrant',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
     } else {
         props.dataset.forEach((ds, i) => {
@@ -140,7 +214,8 @@ function prepareChart() {
                     componentName: 'VueUiQuadrant',
                     type: 'datasetSerieAttribute',
                     property: 'name',
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
             }
             if([null, undefined].includes(ds.series)) {
@@ -148,7 +223,8 @@ function prepareChart() {
                     componentName: 'VueUiQuadrant',
                     type: 'datasetSerieAttribute',
                     property: 'series',
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
             } else {
                 ds.series.forEach((serie, j) => {
@@ -158,7 +234,8 @@ function prepareChart() {
                             type: 'datasetSerieAttribute',
                             property: 'name',
                             key: 'series',
-                            index: j
+                            index: j,
+                            debug: debug.value
                         })
                     }
                 })
@@ -474,7 +551,7 @@ const axisValues = computed(() => {
 
 const segregated = ref([]);
 
-const immutableDataset = computed(() => props.dataset.map((category, i) => {
+const immutableDataset = computed(() => FINAL_DATASET.value.map((category, i) => {
     return {
         ...category,
         series: largestTriangleThreeBuckets({
@@ -515,7 +592,7 @@ const datasetReference = computed(() => {
 });
 
 const drawableDataset = computed(() => {
-    props.dataset.forEach((ds,i) => {
+    FINAL_DATASET.value.forEach((ds,i) => {
         ds.series.forEach((serie,j) => {
             if ([null, undefined].includes(serie.x)) {
                 error({
@@ -523,7 +600,8 @@ const drawableDataset = computed(() => {
                     type: 'datasetSerieAttribute',
                     property: 'x',
                     key: 'series',
-                    index: j
+                    index: j,
+                    debug: debug.value
                 })
             }
             if ([null, undefined].includes(serie.y)) {
@@ -532,7 +610,8 @@ const drawableDataset = computed(() => {
                     type: 'datasetSerieAttribute',
                     property: 'y',
                     key: 'series',
-                    index: j
+                    index: j,
+                    debug: debug.value
                 })
             }
         })
@@ -717,6 +796,10 @@ const hoveredPlot = ref(null);
 const dataTooltipSlot = ref(null);
 
 function useTooltip(category, plot, categoryIndex) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: plot, seriesIndex: categoryIndex });
+    }
+
     hoveredPlotId.value = plot.uid;
     hoveredPlot.value = {
         color: category.color,
@@ -778,7 +861,20 @@ function useTooltip(category, plot, categoryIndex) {
 
 }
 
-function selectPlot(category, plot) {
+function onTrapLeave(plot, index) {
+    isTooltip.value = false;
+    hoveredPlotId.value = null;
+    hoveredPlot.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: plot, seriesIndex: index });
+    }
+}
+
+function selectPlot(category, plot, index) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: plot, seriesIndex: index })
+    }
+
     const plotEmit = {
         category: category.name,
         shape: category.shape,
@@ -1113,10 +1209,9 @@ defineExpose({
             ref="svgRef"
             data-cy="quadrant-svg"
             :xmlns="XMLNS"
-            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`"
-            :style="`max-width:100%;overflow:${isZoom ? 'hidden' : 'visible'};background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  :id="`svg_${uid}`"
+            :style="`max-width:100%;overflow:hidden;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  :id="`svg_${uid}`"
         >
             <PackageVersion />
 
@@ -1421,8 +1516,8 @@ defineExpose({
                         :stroke="FINAL_CONFIG.style.chart.layout.plots.outline ? FINAL_CONFIG.style.chart.layout.plots.outlineColor : 'none'"
                         :strokeWidth="FINAL_CONFIG.style.chart.layout.plots.outlineWidth"
                         @mouseenter="useTooltip(category, plot, i)"
-                        @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
-                        @click="selectPlot(category, plot)"
+                        @mouseleave="onTrapLeave(plot, i)"
+                        @click="selectPlot(category, plot, i)"
                     />
                 </g>
 
@@ -1465,9 +1560,11 @@ defineExpose({
             <template v-else>
                 <g v-if="mutableConfig.plotLabels.show">
                     <template v-for="(category, i) in drawableDataset">
-                        <foreignObject v-for="plot in category.series" style="overflow: visible;" height="10" width="100" :x="plot.x - 50" :y="plot.y - (FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize)" @mouseover="useTooltip(category, plot, i)"
-                            @mouseleave="isTooltip = false; hoveredPlotId = null; hoveredPlot = null"
-                            @click="selectPlot(category, plot)">
+                        <foreignObject 
+                            v-for="plot in category.series" style="overflow: visible;" height="10" width="100" :x="plot.x - 50" :y="plot.y - (FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize)" 
+                            @mouseover="useTooltip(category, plot, i)"
+                            @mouseleave="onTrapLeave(plot, i)"
+                            @click="selectPlot(category, plot, i)">
                             <div :style="`color:${adaptColorToBackground(category.color)};margin: 0 auto; font-size:${FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize}px; text-align:center;background:${category.color}; padding: 2px 4px; border-radius: 12px; height: fit-content;`">
                                 {{  plot.name }}
                             </div>
@@ -1582,25 +1679,6 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
-
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'quadrant',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    quadrant: {
-                        grid: {
-                            color: FINAL_CONFIG.style.chart.layout.grid.stroke
-                        },
-                        plots: {
-                            color: FINAL_CONFIG.style.chart.layout.grid.stroke,
-                            radius: 1
-                        }
-                    }
-                }
-            }"
-        />
         
         <div ref="chartLegend">
             <Legend
@@ -1611,7 +1689,7 @@ defineExpose({
                 @clickMarker="({legend}) => segregate(legend.id)"
             >
                 <template #item="{ legend }">
-                    <div data-cy="legend-item" @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    <div data-cy="legend-item" @click="segregate(legend.id)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
                         {{ legend.name }} 
                     </div>
                 </template>
@@ -1640,6 +1718,8 @@ defineExpose({
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1691,6 +1771,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

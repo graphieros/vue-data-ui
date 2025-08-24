@@ -1,6 +1,6 @@
 
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent } from "vue";
+import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent, watchEffect, onBeforeUnmount, toRefs, shallowRef } from "vue";
 import {
     applyDataLabel,
     calcMarkerOffsetX, 
@@ -26,7 +26,8 @@ import {
     setOpacity,
     sumByAttribute,
     themePalettes,
-    XMLNS
+    XMLNS,
+    treeShake
 } from '../lib';
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useConfig } from "../useConfig";
@@ -34,18 +35,22 @@ import { useNestedProp } from "../useNestedProp";
 import { usePrinter } from "../usePrinter";
 import { useTimeLabels } from "../useTimeLabels";
 import { useUserOptionState } from "../useUserOptionState";
+import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
+import { throttle } from "../canvas-lib";
+import { useLoading } from "../useLoading.js";
+import BaseScanner from "../atoms/BaseScanner.vue";
+import { useResponsive } from "../useResponsive.js";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const VueUiDonut = defineAsyncComponent(() => import('./vue-ui-donut.vue'));
 
@@ -66,32 +71,224 @@ const props = defineProps({
     },
 });
 
+const uid = ref(createUid());
+const segregated = ref([]);
+const hoveredIndex = ref(null);
+const hoveredDatapoint = ref(null);
+const isFixed = ref(false);
+const fixedDatapoint = ref(null);
+const donutEvolutionChart = ref(null);
+const noTitle = ref(null);
+const step = ref(0);
+const slicerStep = ref(0);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
+const scaleLabels = ref(null);
+const timeLabelsEls = ref(null);
+const xAxisLabel = ref(null);
+const yAxisLabel = ref(null);
+
+const chartTitle = ref(null);
+const chartLegend = ref(null);
+const source = ref(null);
+const slicerComponent = ref(null);
+const chartSlicer = ref(null);
+
+const isLoaded = ref(false);
+
+const resizeObserver = shallowRef(null);
+const observedEl = shallowRef(null);
+const to = ref(null)
+
+const emit = defineEmits(['selectLegend']);
+
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 })
 
+onMounted(() => {
+    prepareChart();
+});
+
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
+function prepareChart() {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: 'VueUiDonutEvolution',
+            type: 'dataset',
+            debug: debug.value
+        });
+        manualLoading.value = true; // v3
+    } else {
+        if(props.dataset.length) {
+            props.dataset.forEach((ds, i) => {
+                getMissingDatasetAttributes({
+                    datasetObject: ds,
+                    requiredAttributes: ['name', 'values']
+                }).forEach(attr => {
+                    error({
+                        componentName: 'VueUiDonutEvolution',
+                        type: 'datasetSerieAttribute',
+                        property: attr,
+                        index: i,
+                        debug: debug.value
+                    });
+                    manualLoading.value = true;
+                })
+            })
+        }
+    }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
+    }
+
+    setTimeout(() => {
+        isLoaded.value = true;
+    }, 10);
+
+    setupSlicer();
+
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            isLoaded.value = false;
+            const { width, height } = useResponsive({
+                chart: donutEvolutionChart.value,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxX.value > 1 ? chartSlicer.value : null,
+                source: source.value
+            });
+
+            requestAnimationFrame(() => {
+                defaultSizes.value.width = width;
+                defaultSizes.value.height = height - 12;
+                clearTimeout(to.value);
+                to.value = setTimeout(() => {
+                    isLoaded.value = true;
+                },10)
+            });
+        });
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        observedEl.value = donutEvolutionChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
+    }
+}
+
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await setupSlicer();
+        });
+    },
+    skeletonDataset: [
+        {
+            name: '',
+            values: [1, 2, 3, 5, 8, 13],
+            color: '#AAAAAA'
+        },
+        {
+            name: '',
+            values: [1, 2, 3, 5, 8, 13],
+            color: '#BABABA'
+        },
+        {
+            name: '',
+            values: [1, 2, 3, 5, 8, 13],
+            color: '#CACACA'
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            useCssAnimation: false,
+            table: { show: false },
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        dataLabels: { show: false },
+                        grid: {
+                            stroke: '#6A6A6A',
+                            axis: {
+                                yLabel: '',
+                                xLabel: ''
+                            },
+                            yAxis: {
+                                dataLabels: { show: false }
+                            },
+                            xAxis: {
+                                dataLabels: { show: false }
+                            }
+                        },
+                        line: {
+                            stroke: '#CACACA60'
+                        }
+                    },
+                    legend: {
+                        backgroundColor: 'transparent',
+                        showValue: false,
+                        showPercentage: false,
+                    },
+                    zoom: { 
+                        show: false,
+                        startIndex: null,
+                        endIndex: null
+                    }
+                }
+            }
+        }
+    })
+});
+
+const defaultSizes = ref({
+    width: FINAL_CONFIG.value.style.chart.layout.width,
+    height: FINAL_CONFIG.value.style.chart.layout.height
+});
+
+const maxX = computed(() => {
+    return Math.max(...FINAL_DATASET.value.map(ds => ds.values.length))
+})
+
 const slicer = ref({
     start: 0,
-    end: Math.max(...props.dataset.map(ds => ds.values.length))
+    end: maxX.value
 })
 
 function refreshSlicer() {
     setupSlicer();
 }
 
-const slicerComponent = ref(null);
-
 async function setupSlicer() {
-    if ((FINAL_CONFIG.value.style.chart.zoom.startIndex !== null || FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) && slicerComponent.value) {
-        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.style.chart.zoom.startIndex);
+    await nextTick();
+    await nextTick();
+
+    const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
+    const comp = slicerComponent.value;
+
+    if ((startIndex != null || endIndex != null) && comp) {
+        if (startIndex != null) {
+        comp.setStartValue(startIndex);
         }
-        if (FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.style.chart.zoom.endIndex + 1));
+        if (endIndex != null) {
+        comp.setEndValue(validSlicerEnd(endIndex + 1));
         }
     } else {
         slicer.value = {
@@ -117,60 +314,6 @@ function validSlicerEnd(v) {
     return v;
 }
 
-onMounted(() => {
-    prepareChart();
-});
-
-function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiDonutEvolution',
-            type: 'dataset'
-        })
-    } else {
-        if(props.dataset.length) {
-            props.dataset.forEach((ds, i) => {
-                getMissingDatasetAttributes({
-                    datasetObject: ds,
-                    requiredAttributes: ['name', 'values']
-                }).forEach(attr => {
-                    error({
-                        componentName: 'VueUiDonutEvolution',
-                        type: 'datasetSerieAttribute',
-                        property: attr,
-                        index: i
-                    })
-                })
-            })
-        }
-    }
-    setupSlicer();
-}
-
-const uid = ref(createUid());
-const segregated = ref([]);
-const hoveredIndex = ref(null);
-const hoveredDatapoint = ref(null);
-const isFixed = ref(false);
-const fixedDatapoint = ref(null);
-const donutEvolutionChart = ref(null);
-const noTitle = ref(null);
-const step = ref(0);
-const slicerStep = ref(0);
-const titleStep = ref(0);
-const tableStep = ref(0);
-const legendStep = ref(0);
-
-const emit = defineEmits(['selectLegend'])
-
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -215,7 +358,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -227,6 +372,9 @@ watch(() => props.config, (_newCfg) => {
 }, { deep: true });
 
 watch(() => props.dataset, (_) => {
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
     refreshSlicer();
 }, { deep: true })
 
@@ -248,6 +396,13 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show
+    }
+}, { immediate: true });
+
 const padding = computed(() => {
     return {
         top: FINAL_CONFIG.value.style.chart.layout.padding.top,
@@ -257,29 +412,95 @@ const padding = computed(() => {
     }
 });
 
+function getScaleLabelX() {
+    let base = 0;
+    if (scaleLabels.value) {
+        const texts = Array.from(scaleLabels.value.querySelectorAll('text'))
+        base = texts.reduce((max, t) => {
+        const w = t.getComputedTextLength()
+        return( w > max ? w : max) + FINAL_CONFIG.value.style.chart.layout.grid.axis.yLabelOffsetX
+        }, 0)
+    }
+
+    const yAxisLabelW = yAxisLabel.value
+        ? yAxisLabel.value.getBoundingClientRect().width + FINAL_CONFIG.value.style.chart.layout.grid.axis.yLabelOffsetX + FINAL_CONFIG.value.style.chart.layout.grid.axis.fontSize
+        : 0
+
+    const crosshair = 5
+    return base + yAxisLabelW + crosshair
+}
+
+const timeLabelsHeight = ref(0);
+
+const updateHeight = throttle((h) => {
+    timeLabelsHeight.value = h
+}, 100)
+
+// Track time label height to update drawing area when they rotate
+watchEffect((onInvalidate) => {
+    const el = timeLabelsEls.value
+    if (!el) return
+
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height)
+    })
+    observer.observe(el)
+    onInvalidate(() => observer.disconnect())
+})
+
+onBeforeUnmount(() => {
+    timeLabelsHeight.value = 0
+})
+
+const timeLabelsY = computed(() => {
+    let h = 0;
+        if (xAxisLabel.value) {
+            h = xAxisLabel.value.getBBox().height;
+        }
+        let tlH = 0;
+        if (timeLabelsEls.value) {
+            tlH = timeLabelsHeight.value;
+        }
+        return h + tlH + FINAL_CONFIG.value.style.chart.layout.grid.axis.fontSize + FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.offsetY;
+});
+
 const svg = computed(() => {
-    const absoluteHeight = FINAL_CONFIG.value.style.chart.layout.height;
-    const absoluteWidth = FINAL_CONFIG.value.style.chart.layout.width;
-    const height = absoluteHeight - padding.value.top - padding.value.bottom;
-    const width = absoluteWidth - padding.value.left - padding.value.right;
+    const _scaleLabelX = getScaleLabelX();
+
+    const topOffset = FINAL_CONFIG.value.style.chart.layout.dataLabels.fontSize * 3;
+
+    const absoluteWidth = defaultSizes.value.width;
+    const absoluteHeight = defaultSizes.value.height;
+    const left = padding.value.left + _scaleLabelX;
+    const right = absoluteWidth - padding.value.right;
+    const width = absoluteWidth - left - padding.value.right;
+    const height = absoluteHeight - padding.value.top - padding.value.bottom - topOffset - timeLabelsY.value;
+    const top = padding.value.top + topOffset;
+    const bottom = absoluteHeight - padding.value.bottom - timeLabelsY.value;
+
     return {
+        top,
+        left,
+        right,
+        bottom,
         absoluteHeight,
         absoluteWidth,
-        centerX: padding.value.left + (width / 2),
-        centerY: padding.value.top + (height / 2),
-        height,
-        width,
+        centerX: left + (Math.max(10, width) / 2),
+        centerY: top + (Math.max(10, height) / 2),
+        width: Math.max(10, width),
+        height: Math.max(10, height),
     }
 });
 
 const convertedDataset = computed(() => {
-    props.dataset.forEach((ds, i) => {
+    FINAL_DATASET.value.forEach((ds, i) => {
         if([null, undefined].includes(ds.name)){
             error({
                 componentName: 'VueUiDonutEvolution',
                 type: 'datasetSerieAttribute',
                 property: 'name',
-                index: i
+                index: i,
+                debug: debug.value
             });
         }
         if([null, undefined].includes(ds.values)){
@@ -287,12 +508,13 @@ const convertedDataset = computed(() => {
                 componentName: 'VueUiDonutEvolution',
                 type: 'datasetSerieAttribute',
                 property: 'values',
-                index: i
+                index: i,
+                debug: debug.value
             });
         }
     });
     
-    return props.dataset.map((ds, i) => {
+    return FINAL_DATASET.value.map((ds, i) => {
         return {
             ...ds,
             values: sanitizeArray(ds.values),
@@ -338,7 +560,7 @@ const drawableDataset = computed(() => {
         const allValuesAreNull = values.filter(v => [undefined, null].includes(v)).length === values.length;
         const subtotal = values.reduce((a, b) => a + b, 0);
         const percentages = values.map(v => v / subtotal);
-        const x = padding.value.left + (slit.value * i) + slit.value / 2;
+        const x = svg.value.left + (slit.value * i) + slit.value / 2;
         arr.push({
             index: i,
             percentages,
@@ -353,11 +575,11 @@ const drawableDataset = computed(() => {
     const maxScale = arr.length === 1 ? maxSubtotal * 2 : maxSubtotal;
     
     return arr.map((a, i) => {
-        const radiusReference = (slit.value / 2) * 0.7;
+        const radiusReference = Math.min(svg.value.width / 24, (slit.value / 2) * 0.7);
         const radius = radiusReference > svg.value.width / 16 ? svg.value.width / 16 : radiusReference;
         const activeRadius = hoveredIndex.value === a.index ? svg.value.width / 16 : radius;
         const hoverRadius = arr.length > 4 ? radiusReference * 2 : radiusReference * 2 > (slit.value / 2 * 0.7) ? slit.value / 2 * 0.7 : radiusReference * 2
-        const y = svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxScale, FINAL_CONFIG.value.style.chart.layout.grid.yAxis.dataLabels.steps).max);
+        const y = svg.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxScale, FINAL_CONFIG.value.style.chart.layout.grid.yAxis.dataLabels.steps).max);
         return {
             ...a,
             y,
@@ -428,7 +650,7 @@ function ratioToMax(value) {
 const yLabels = computed(() => {
     return niceScale.value.ticks.map(t => {
         return {
-            y: svg.value.absoluteHeight - padding.value.bottom - (svg.value.height * ratioToMax(t)),
+            y: svg.value.bottom - (svg.value.height * ratioToMax(t)),
             value: t
         }
     })
@@ -438,12 +660,18 @@ function displayArcPercentage(arc, stepBreakdown) {
     return isNaN(arc.value / sumByAttribute(stepBreakdown, 'value')) ? 0 : ((arc.value / sumByAttribute(stepBreakdown, "value")) * 100).toFixed(0) + "%";
 }
 
-function leave() {
+function leave(datapoint) {
     hoveredIndex.value = null;
     hoveredDatapoint.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.seriesIndex + slicer.value.start });
+    }
 }
 
 function enter(datapoint) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.index + slicer.value.start })
+    }
     hoveredIndex.value = datapoint.index;
     hoveredDatapoint.value = datapoint;
 }
@@ -451,6 +679,10 @@ function enter(datapoint) {
 const fixedDatapointIndex = ref(null);
 
 function fixDatapoint(datapoint, index) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: datapoint.index + slicer.value.start });
+    }
+
     if(!datapoint.subtotal || !FINAL_CONFIG.value.style.chart.dialog.show) return;
     hoveredDatapoint.value = null;
     hoveredIndex.value = null;
@@ -635,6 +867,22 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const WIDTH = computed(() => defaultSizes.value.width);
+const HEIGHT = computed(() => defaultSizes.value.height);
+
+useTimeLabelCollision({
+    timeLabelsEls,
+    timeLabels,
+    slicer,
+    configRef: FINAL_CONFIG,
+    rotationPath: ['style', 'chart', 'layout', 'grid', 'xAxis', 'dataLabels', 'rotation'],
+    autoRotatePath: ['style', 'chart', 'layout', 'grid', 'xAxis', 'dataLabels', 'autoRotate', 'enable'],
+    isAutoSize: false,
+    width: WIDTH,
+    height: HEIGHT,
+    rotation: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.autoRotate.angle
+});
+
 defineExpose({
     getData,
     getImage,
@@ -666,7 +914,7 @@ defineExpose({
             :style="`height:36px; width: 100%;background:transparent`"
         />
 
-        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`" @mouseleave="leave">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`" @mouseleave="leave">
             <!-- TITLE AS DIV -->
             <Title
                 :key="`title_${titleStep}`"
@@ -741,7 +989,6 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS" 
-            v-if="isDataset" 
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
             data-cy="donut-evolution-svg" 
             :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" 
@@ -752,8 +999,8 @@ defineExpose({
             <!-- BACKGROUND SLOT -->
             <foreignObject 
                 v-if="$slots['chart-background']"
-                :x="padding.left"
-                :y="padding.top"
+                :x="svg.left"
+                :y="svg.top"
                 :width="svg.width"
                 :height="svg.height"
                 :style="{
@@ -781,10 +1028,10 @@ defineExpose({
             <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
                 <line
                     data-cy="axis-y"
-                    :x1="padding.left" 
-                    :x2="padding.left" 
-                    :y1="padding.top" 
-                    :y2="padding.top + svg.height" 
+                    :x1="svg.left" 
+                    :x2="svg.left" 
+                    :y1="svg.top" 
+                    :y2="svg.top + svg.height" 
                     :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
                     :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
                     stroke-linecap="round"
@@ -792,10 +1039,10 @@ defineExpose({
 
                 <line 
                     data-cy="axis-x"
-                    :x1="padding.left" 
-                    :x2="svg.absoluteWidth - padding.right" 
-                    :y1="svg.absoluteHeight - padding.bottom" 
-                    :y2="svg.absoluteHeight - padding.bottom" 
+                    :x1="svg.left" 
+                    :x2="svg.right" 
+                    :y1="svg.bottom" 
+                    :y2="svg.bottom" 
                     :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
                     :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
                     stroke-linecap="round" 
@@ -805,10 +1052,10 @@ defineExpose({
                     <line
                         data-cy="vertical-separator"
                         v-for="(l, i) in (slicer.end - slicer.start)" 
-                        :x1="padding.left + ((i +1 ) * slit)" 
-                        :x2="padding.left + ((i +1) * slit)" 
-                        :y1="padding.top" 
-                        :y2="svg.absoluteHeight - padding.bottom" 
+                        :x1="svg.left + ((i +1 ) * slit)" 
+                        :x2="svg.left + ((i +1) * slit)" 
+                        :y1="svg.top" 
+                        :y2="svg.bottom" 
                         :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
                         :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
                         stroke-linecap="round"
@@ -816,14 +1063,33 @@ defineExpose({
                 </g>
             </g>
 
+            <!-- AXIS LABELS -->
+            <g>
+                <text ref="yAxisLabel" data-cy="xy-axis-yLabel"
+                    v-if="FINAL_CONFIG.style.chart.layout.grid.axis.yLabel"
+                    :font-size="FINAL_CONFIG.style.chart.layout.grid.axis.fontSize" 
+                    :fill="FINAL_CONFIG.style.chart.layout.grid.axis.color"
+                    :transform="`translate(${FINAL_CONFIG.style.chart.layout.grid.axis.fontSize}, ${svg.top + svg.height / 2}) rotate(-90)`"
+                    text-anchor="middle" style="transition: none">
+                    {{ FINAL_CONFIG.style.chart.layout.grid.axis.yLabel }}
+                </text>
+                <text ref="xAxisLabel" data-cy="xy-axis-xLabel"
+                    v-if="FINAL_CONFIG.style.chart.layout.grid.axis.xLabel" text-anchor="middle"
+                    :x="svg.absoluteWidth / 2"
+                    :y="svg.absoluteHeight - 3"
+                    :font-size="FINAL_CONFIG.style.chart.layout.grid.axis.fontSize" :fill="FINAL_CONFIG.style.chart.layout.grid.axis.color">
+                    {{ FINAL_CONFIG.style.chart.layout.grid.axis.xLabel }}
+                </text>
+            </g>
+
             <!-- Y LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null}">
+            <g ref="scaleLabels" v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null}">
                 <g v-for="(yLabel, i) in yLabels">
                     <line 
                         data-cy="axis-y-tick"
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
-                        :x1="padding.left" 
-                        :x2="padding.left - 5" 
+                        :x1="svg.left" 
+                        :x2="svg.left - 5" 
                         :y1="yLabel.y" 
                         :y2="yLabel.y" 
                         :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
@@ -832,7 +1098,7 @@ defineExpose({
                     <text
                         data-cy="axis-y-label"
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
-                        :x="padding.left - 8 + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.offsetX" 
+                        :x="svg.left" 
                         :y="yLabel.y + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize / 3" 
                         :font-size="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize" 
                         text-anchor="end"
@@ -856,29 +1122,31 @@ defineExpose({
             </g>
 
             <!-- X LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true,}">
+            <g ref="timeLabelsEls" v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true,}">
                 <g v-for="(_, i) in (slicer.end - slicer.start)">
                     <g v-if="((FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast) && timeLabels[i] && timeLabels[i].text">
                         <!-- SINGLE LINE -->
                         <text
+                            class="vue-data-ui-time-label"
                             v-if="!String(timeLabels[i].text).includes('\n')"
                             data-cy="axis-x-label"
                             :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
                             :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
                             :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
-                            :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
+                            :transform="`translate(${svg.left + (slit * i) + (slit / 2)}, ${svg.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
     
                         >
-                            {{ timeLabels[i].text }}
+                            {{ timeLabels[i].text || '' }}
                         </text>
                         <!-- MULTILINE -->
                         <text
                             v-else
+                            class="vue-data-ui-time-label"
                             data-cy="axis-x-label"
                             :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
                             :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
                             :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
-                            :transform="`translate(${padding.left + (slit * i) + (slit / 2)}, ${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY + svg.absoluteHeight - padding.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize * 2}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
+                            :transform="`translate(${svg.left + (slit * i) + (slit / 2)}, ${svg.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
                             v-html="createTSpansFromLineBreaksOnX({
                                 content: String(timeLabels[i].text),
                                 fontSize: FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize,
@@ -1007,8 +1275,8 @@ defineExpose({
             <!-- TRAPS -->
             <rect 
                 v-for="(datapoint, i) in drawableDataset"
-                :x="padding.left + (i * slit)"
-                :y="padding.top"
+                :x="svg.left + (i * slit)"
+                :y="svg.top"
                 :width="slit"
                 :height="svg.height"
                 :fill="[hoveredIndex, fixedDatapointIndex].includes(datapoint.index) ? `url(#hover_${uid})` : 'transparent'"
@@ -1021,13 +1289,13 @@ defineExpose({
                 v-for="(datapoint, i) in drawableDataset"
                 :data-cy="`trap-${i}`"
                 data-cy-trap
-                :x="padding.left + (i * slit)"
-                :y="padding.top"
+                :x="svg.left + (i * slit)"
+                :y="svg.top"
                 :width="slit"
                 :height="svg.height"
                 fill="transparent"
                 @mouseenter="enter(datapoint)"
-                @mouseleave="leave"
+                @mouseleave="leave(datapoint)"
                 @click="fixDatapoint(datapoint, i)"
                 :class="{'donut-hover': hoveredIndex === datapoint.index && datapoint.subtotal}"
             />
@@ -1038,90 +1306,76 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'donutEvolution',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    donutEvolution: {
-                        axis: {
-                            color: '#CCCCCC'
-                        },
-                        donuts: {
-                            color: '#CCCCCC'
-                        }
-                    }
-                }
-            }"
-        />
+        <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-dom-to-png-ignore>
+            <Slicer
+                ref="slicerComponent"
+                v-if="maxLength > 1 && FINAL_CONFIG.style.chart.zoom.show"
+                :key="`slicer_${slicerStep}`"
+                :background="FINAL_CONFIG.style.chart.zoom.color"
+                :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
+                :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
+                :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
+                :labelLeft="timeLabels[0] ? timeLabels[0].text : ''"
+                :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''"
+                :textColor="FINAL_CONFIG.style.chart.color"
+                :inputColor="FINAL_CONFIG.style.chart.zoom.color"
+                :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
+                :max="maxLength"
+                :min="0"
+                :valueStart="slicer.start"
+                :valueEnd="slicer.end"
+                v-model:start="slicer.start"
+                v-model:end="slicer.end"
+                :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
+                :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxLength"
+                :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
+                :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
+                @reset="refreshSlicer"
+            >
+                <template #reset-action="{ reset }">
+                    <slot name="reset-action" v-bind="{ reset }"/>
+                </template>
+            </Slicer>
+        </div>
 
-        <Slicer
-            ref="slicerComponent"
-            v-if="maxLength > 1 && FINAL_CONFIG.style.chart.zoom.show"
-            :key="`slicer_${slicerStep}`"
-            :background="FINAL_CONFIG.style.chart.zoom.color"
-            :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
-            :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
-            :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-            :labelLeft="timeLabels[0] ? timeLabels[0].text : ''"
-            :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''"
-            :textColor="FINAL_CONFIG.style.chart.color"
-            :inputColor="FINAL_CONFIG.style.chart.zoom.color"
-            :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
-            :max="maxLength"
-            :min="0"
-            :valueStart="slicer.start"
-            :valueEnd="slicer.end"
-            v-model:start="slicer.start"
-            v-model:end="slicer.end"
-            :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
-            :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxLength"
-            :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
-            :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
-            @reset="refreshSlicer"
-        >
-            <template #reset-action="{ reset }">
-                <slot name="reset-action" v-bind="{ reset }"/>
-            </template>
-        </Slicer>
-
-        <Legend
-            v-if="FINAL_CONFIG.style.chart.legend.show"
-            :key="`legend_${legendStep}`"
-            :legendSet="legendSet"
-            :config="legendConfig"
-            @clickMarker="({legend}) => segregate(legend.uid)"
-        >
-            <template #item="{legend, index}">
-                <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                    {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.dataLabels.formatter,
-                        legend.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.dataLabels.prefix,
-                            v: legend.value,
-                            s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
-                            r: FINAL_CONFIG.style.chart.legend.roundingValue
-                        }),
-                        { datapoint: legend, seriesIndex: index }
-                        ) 
-                    }}
-                    {{ 
-                        !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
-                        !segregated.includes(legend.uid)
-                            ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / grandTotal) ? '-' : dataLabel({
-                            v: legend.value / grandTotal * 100,
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                        })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                            : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                    }}
-                </div>
-            </template>
-        </Legend>
-
-        <slot name="legend" v-bind:legend="legendSet"></slot>
+        <div ref="chartLegend">
+            <Legend
+                v-if="FINAL_CONFIG.style.chart.legend.show"
+                :key="`legend_${legendStep}`"
+                :legendSet="legendSet"
+                :config="legendConfig"
+                @clickMarker="({legend}) => segregate(legend.uid)"
+            >
+                <template #item="{legend, index}">
+                    <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
+                        {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.dataLabels.formatter,
+                            legend.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.dataLabels.prefix,
+                                v: legend.value,
+                                s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                            }),
+                            { datapoint: legend, seriesIndex: index }
+                            ) 
+                        }}
+                        {{ 
+                            !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
+                            !segregated.includes(legend.uid)
+                                ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / grandTotal) ? '-' : dataLabel({
+                                v: legend.value / grandTotal * 100,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                            })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                                : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                        }}
+                    </div>
+                </template>
+            </Legend>
+    
+            <slot name="legend" v-bind:legend="legendSet"></slot>
+        </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
@@ -1185,6 +1439,9 @@ defineExpose({
                 :dataset="donutDataset" 
             />
         </BaseDraggableDialog>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

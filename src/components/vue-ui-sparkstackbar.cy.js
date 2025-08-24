@@ -50,7 +50,7 @@ describe('<VueUiSparkStackbar />', () => {
 				cy.get('[data-cy="tooltip-trap"]').first().click().then(() => {
 					expect(wrapper.emitted('selectDatapoint')[0][0]).to.have.keys('datapoint', 'index');
 					expect(wrapper.emitted('selectDatapoint')[0][0].index).to.equal(0);
-					expect(wrapper.emitted('selectDatapoint')[0][0].datapoint).to.have.keys('color', 'name', 'proportion', 'proportionLabel', 'start', 'value', 'width');
+					expect(wrapper.emitted('selectDatapoint')[0][0].datapoint).to.have.keys('color', 'name', 'proportion', 'proportionLabel', 'start', 'value', 'width', 'seriesIndex');
 					expect(wrapper.emitted('selectDatapoint')[0][0].datapoint.color).to.equal('#1f77b4ff');
 					expect(wrapper.emitted('selectDatapoint')[0][0].datapoint.name).to.equal(dataset[0].name);
 				});

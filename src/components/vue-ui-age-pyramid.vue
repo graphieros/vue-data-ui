@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent, shallowRef, onBeforeUnmount } from "vue";
+import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent, shallowRef, onBeforeUnmount, watchEffect, toRefs } from "vue";
 import {
     applyDataLabel,
     checkNaN,
@@ -13,6 +13,7 @@ import {
     objectIsEmpty,
     setOpacity,
     shiftHue,
+    treeShake,
     XMLNS
 } from '../lib';
 import { throttle } from "../canvas-lib";
@@ -25,12 +26,14 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
+import { useTimeLabelCollision } from "../useTimeLabelCollider";
+import { useLoading } from "../useLoading";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
@@ -67,14 +70,59 @@ const source = ref(null);
 const noTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
+const xAxisLabels = ref(null);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        ['_', 9, 2, 2],
+        ['_', 8, 3, 3],
+        ['_', 7, 5, 5],
+        ['_', 6, 8, 8],
+        ['_', 5, 13, 13],
+        ['_', 4, 21, 21],
+        ['_', 3, 34, 34],
+        ['_', 2, 55, 55],
+        ['_', 1, 89, 89],
+        ['_', 0, 144, 144],
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false, },
+            table: { show: false },
+            translations: {
+                male: '',
+                female: ''
+            },
+            style: {
+                backgroundColor: '#99999930',
+                layout: {
+                    bars: {
+                        left: { color: '#CACACA' },
+                        right: { color: '#999999' },
+                    },
+                    dataLabels: {
+                        xAxis: { 
+                            fontSize: 0,
+                            scale: 1000,
+                            translation: ''
+                        },
+                        yAxis: {
+                            show: false
+                        }
+                    },
+                    grid: {
+                        stroke: '#6A6A6A'
+                    }
+                }
+            }
+        }
+    })
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -98,7 +146,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -109,6 +159,12 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.tooltip.show;
 }, { deep: true });
 
+watch(() => props.dataset, (_) => {
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
+}, { deep: true })
+
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
@@ -116,12 +172,21 @@ onMounted(() => {
     prepareChart();
 });
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiAgePyramid',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
+        manualLoading.value = true;
+    }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -176,22 +241,55 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.tooltip.show
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.tooltip.show
+    }
+}, { immediate: true });
+
 const svg = ref({
     height: FINAL_CONFIG.value.style.height,
     width: FINAL_CONFIG.value.style.width
+});
+
+const WIDTH = computed(() => svg.value.width);
+const HEIGHT = computed(() => svg.value.height);
+
+const xAxisLabelsHeight = ref(0);
+
+const updateHeight = throttle((h) => {
+    xAxisLabelsHeight.value = h;
+}, 100);
+
+watchEffect((onInvalidate) => {
+    const el = xAxisLabels.value;
+    if (!el) return;
+
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height);
+    });
+    observer.observe(el);
+    onInvalidate(() => observer.disconnect());
+});
+
+onBeforeUnmount(() => {
+    xAxisLabelsHeight.value = 0;
 })
 
 const drawingArea = computed(() => {
     const width = svg.value.width - FINAL_CONFIG.value.style.layout.padding.right - FINAL_CONFIG.value.style.layout.padding.left;
     const left = FINAL_CONFIG.value.style.layout.padding.left;
     const right = svg.value.width - FINAL_CONFIG.value.style.layout.padding.right;
+
     return {
-        top: FINAL_CONFIG.value.style.layout.padding.top,
+        top: FINAL_CONFIG.value.style.layout.padding.top + FINAL_CONFIG.value.style.layout.dataLabels.sideTitles.fontSize + FINAL_CONFIG.value.style.layout.dataLabels.sideTitles.offsetY + 12,
         left,
         right,
-        bottom: svg.value.height - FINAL_CONFIG.value.style.layout.padding.bottom,
+        bottom: svg.value.height - FINAL_CONFIG.value.style.layout.padding.bottom - xAxisLabelsHeight.value,
         width,
-        height: svg.value.height - FINAL_CONFIG.value.style.layout.padding.top - FINAL_CONFIG.value.style.layout.padding.bottom,
+        height: svg.value.height - FINAL_CONFIG.value.style.layout.padding.top - FINAL_CONFIG.value.style.layout.padding.bottom - xAxisLabelsHeight.value - FINAL_CONFIG.value.style.layout.dataLabels.sideTitles.fontSize - FINAL_CONFIG.value.style.layout.dataLabels.sideTitles.offsetY - 12,
         centerX: FINAL_CONFIG.value.style.layout.padding.left + width / 2,
         leftChart: {
             width: (width / 2) - FINAL_CONFIG.value.style.layout.centerSlit.width,
@@ -205,7 +303,7 @@ const drawingArea = computed(() => {
 });
 
 const yLabels =  computed(() => {
-    return props.dataset.map(ds => {
+    return FINAL_DATASET.value.map(ds => {
         if (FINAL_CONFIG.value.style.layout.dataLabels.yAxis.display === 'age') {
             return ds[1];
         } else {
@@ -252,15 +350,15 @@ function closestDecimal(number) {
 }
 
 const max = computed(() => {
-    return Math.max(...props.dataset.flatMap(ds => {
+    return Math.max(...FINAL_DATASET.value.flatMap(ds => {
         return ds.slice(-2).map(v => checkNaN(v));
     }));
 });
 
-const len = computed(() => props.dataset.length);
+const len = computed(() => FINAL_DATASET.value.length);
 
 const mutableDataset = computed(() => {
-    return props.dataset.map(ds => {
+    return FINAL_DATASET.value.map(ds => {
         return {
             segment: ds[0],
             age: ds[1],
@@ -305,7 +403,30 @@ const drawableDataset = computed(() => {
 
 const dataTooltipSlot = ref(null);
 
+function convertDatapoint(dp) {
+    const [ segment, index, left, right ] = dp;
+    return { segment, index, left, right };
+}
+
+function selectDatapoint(index, datapoint) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: convertDatapoint(datapoint), seriesIndex: index})
+    }
+}
+
+function onTrapLeave(index, datapoint) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: convertDatapoint(datapoint), seriesIndex: index });
+    }
+    selectedIndex.value = null;
+    isTooltip.value = false;
+}
+
 function useTooltip(index, datapoint) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: convertDatapoint(datapoint), seriesIndex: index });
+    }
+
     selectedIndex.value = index;
 
     dataTooltipSlot.value = {
@@ -389,7 +510,7 @@ function generateCsv(callback=null) {
                 ds[1],
                 ds[2],
                 ds[3],
-                ds[2] + ds[3]
+                (ds[2] ?? 0 + ds[3] ?? 0)
             ]
         });
 
@@ -415,9 +536,9 @@ const dataTable = computed(() => {
         return [
             ds[0],
             ds[1],
-            ds[2].toLocaleString(),
-            ds[3].toLocaleString(),
-            (ds[2] + ds[3]).toLocaleString()
+            ds[2] == null ? '' : ds[2].toLocaleString(),
+            ds[3] == null ? '' : ds[3].toLocaleString(),
+            (ds[2] ?? 0 + ds[3] ?? 0).toLocaleString()
         ]
     });
     const config = {
@@ -470,6 +591,23 @@ async function getImage({ scale = 2} = {}) {
         aspectRatio
     }
 }
+
+const dummyTimeLabels = ref([])
+const dummySlicer = ref( { start: 0, end: drawableDataset.value.length })
+
+useTimeLabelCollision({
+    timeLabelsEls: xAxisLabels,
+    timeLabels: dummyTimeLabels,
+    slicer: dummySlicer,
+    configRef: FINAL_CONFIG,
+    rotationPath: ['style', 'layout', 'dataLabels', 'xAxis', 'rotation'],
+    autoRotatePath: ['style', 'layout', 'dataLabels', 'xAxis', 'autoRotate', 'enable'],
+    isAutoSize: false,
+    width: WIDTH,
+    height: HEIGHT,
+    targetClass: '.vue-ui-age-pyramid-x-axis-label',
+    rotation: FINAL_CONFIG.value.style.layout.dataLabels.xAxis.autoRotate.angle
+});
 
 defineExpose({
     getImage,
@@ -584,7 +722,6 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS" 
-            v-if="isDataset" 
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" 
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.color}`" 
@@ -675,7 +812,7 @@ defineExpose({
                     <text
                         data-cy="label-left"
                         :x="drawingArea.left"
-                        :y="drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.sideTitles.offsetY"
+                        :y="FINAL_CONFIG.style.layout.dataLabels.sideTitles.fontSize"
                         :fill="FINAL_CONFIG.style.layout.dataLabels.sideTitles.useSideColor ? FINAL_CONFIG.style.layout.bars.left.color : FINAL_CONFIG.style.layout.dataLabels.sideTitles.color"
                         :font-size="FINAL_CONFIG.style.layout.dataLabels.sideTitles.fontSize"
                         text-anchor="start"
@@ -686,7 +823,7 @@ defineExpose({
                     <text
                         data-cy="label-right"
                         :x="drawingArea.right"
-                        :y="drawingArea.top + FINAL_CONFIG.style.layout.dataLabels.sideTitles.offsetY"
+                        :y="FINAL_CONFIG.style.layout.dataLabels.sideTitles.fontSize"
                         :fill="FINAL_CONFIG.style.layout.dataLabels.sideTitles.useSideColor ? FINAL_CONFIG.style.layout.bars.right.color : FINAL_CONFIG.style.layout.dataLabels.sideTitles.color"
                         :font-size="FINAL_CONFIG.style.layout.dataLabels.sideTitles.fontSize"
                         text-anchor="end"
@@ -748,19 +885,36 @@ defineExpose({
                             :x1="rightLabel.x"
                             :x2="rightLabel.x"
                             :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
-                            :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 4"
+                            :y2="drawingArea.bottom + (FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2) + 4"
                             :stroke="FINAL_CONFIG.style.layout.grid.stroke"
                             :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                             stroke-linecap="round"
                         />
+                    </g>
+                    <g v-for="(leftLabel, i) in xLabels.left">
+                        <line 
+                            v-if="FINAL_CONFIG.style.layout.grid.show"
+                            data-cy="scale-tick-left"
+                            :x1="leftLabel.x"
+                            :x2="leftLabel.x"
+                            :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
+                            :y2="drawingArea.bottom + (FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2) + 4"
+                            :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
+                            stroke-linecap="round"
+                        />
+                    </g>
+
+                    <g ref="xAxisLabels">
                         <text
+                            class="vue-ui-age-pyramid-x-axis-label"
+                            v-for="(rightLabel, i) in xLabels.right"
                             data-cy="scale-tick-right-label"
-                            :x="rightLabel.x"
-                            :y="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2"
                             :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
                             :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
-                            text-anchor="middle"
+                            :text-anchor="FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation > 0 ? 'start' : FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation < 0 ? 'end' : 'middle'"
                             :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
+                            :transform="`translate(${rightLabel.x}, ${drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2}) rotate(${FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation})`"
                         >
                             {{ applyDataLabel(
                                 FINAL_CONFIG.style.layout.dataLabels.xAxis.formatter,
@@ -771,27 +925,16 @@ defineExpose({
                                 { datapoint: rightLabel, seriesIndex: i }
                             ) }}
                         </text>
-                    </g>
-                    <g v-for="(leftLabel, i) in xLabels.left">
-                        <line 
-                            v-if="FINAL_CONFIG.style.layout.grid.show"
-                            data-cy="scale-tick-left"
-                            :x1="leftLabel.x"
-                            :x2="leftLabel.x"
-                            :y1="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 2"
-                            :y2="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize / 4"
-                            :stroke="FINAL_CONFIG.style.layout.grid.stroke"
-                            :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
-                            stroke-linecap="round"
-                        />
+
                         <text
+                            class="vue-ui-age-pyramid-x-axis-label"
+                            v-for="(leftLabel, i) in xLabels.left"
                             data-cy="scale-tick-left-label"
-                            :x="leftLabel.x"
-                            :y="drawingArea.bottom + FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2"
                             :font-size="FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize"
                             :fill="FINAL_CONFIG.style.layout.dataLabels.xAxis.color"
-                            text-anchor="middle"
+                            :text-anchor="FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation > 0 ? 'start' : FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation < 0 ? 'end' : 'middle'"
                             :font-weight="FINAL_CONFIG.style.layout.dataLabels.xAxis.bold ? 'bold': 'normal'"
+                            :transform="`translate(${leftLabel.x}, ${drawingArea.bottom +  FINAL_CONFIG.style.layout.dataLabels.xAxis.fontSize * 2}) rotate(${FINAL_CONFIG.style.layout.dataLabels.xAxis.rotation})`"
                         >
                             {{ applyDataLabel(
                                 FINAL_CONFIG.style.layout.dataLabels.xAxis.formatter,
@@ -813,6 +956,7 @@ defineExpose({
                     >
                         {{ FINAL_CONFIG.style.layout.dataLabels.xAxis.translation }}
                     </text>
+
                 </g>
             </g>
 
@@ -826,7 +970,8 @@ defineExpose({
                     :height="drawingArea.height / len <= 0 ? 0.0001 : drawingArea.height / len"
                     :fill="selectedIndex !== null && selectedIndex === i ? setOpacity(FINAL_CONFIG.style.highlighter.color, FINAL_CONFIG.style.highlighter.opacity) : 'transparent'"
                     @mouseover="useTooltip(i, datapoint)"
-                    @mouseleave="selectedIndex = null; isTooltip = false"
+                    @mouseleave="onTrapLeave(i, datapoint)"
+                    @click="selectDatapoint(i, datapoint)"
                 />
             </g>
 
@@ -836,19 +981,6 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
-
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'pyramid',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                    pyramid: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
 
         <slot name="legend" v-bind:legend="drawableDataset"></slot>
 
@@ -872,6 +1004,8 @@ defineExpose({
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="FINAL_CONFIG.style.tooltip.customFormat && typeof FINAL_CONFIG.style.tooltip.customFormat === 'function'"
+            :smooth="FINAL_CONFIG.style.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -913,6 +1047,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

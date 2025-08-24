@@ -1,5 +1,16 @@
 <script setup>
-import { ref, computed, onMounted, watch, watchEffect, nextTick, defineAsyncComponent, shallowRef, onBeforeUnmount } from 'vue'
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount,
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs, 
+    watch, 
+    watchEffect, 
+} from 'vue'
 import { useConfig } from '../useConfig';
 import {
     XMLNS,
@@ -17,25 +28,27 @@ import {
     lightenHexColor,
     objectIsEmpty,
     palette,
-    themePalettes
+    themePalettes,
+    treeShake,
 } from '../lib';
-import { useNestedProp } from '../useNestedProp';
+import { throttle } from '../canvas-lib';
 import { usePrinter } from '../usePrinter';
+import { useLoading } from '../useLoading';
+import { pack, bounds } from "../packCircles";
+import { useNestedProp } from '../useNestedProp';
+import { useResponsive } from '../useResponsive';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
-import { pack, bounds } from "../packCircles";
-import { throttle } from '../canvas-lib';
-import { useResponsive } from '../useResponsive';
-import themes from "../themes.json";
-import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import img from '../img';
+import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import themes from "../themes.json";
+import BaseScanner from '../atoms/BaseScanner.vue';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const props = defineProps({
     config: {
@@ -69,13 +82,39 @@ const tableStep = ref(0);
 const step = ref(0);
 const source = ref(null);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        { name: '_', value: 13, color: '#F2F2F2' },
+        { name: '_', value: 8, color: '#DBDBDB' },
+        { name: '_', value: 5, color: '#ADADAD' },
+        { name: '_', value: 3, color: '#969696' },
+        { name: '_', value: 2, color: '#808080' },
+        { name: '_', value: 1, color: '#696969' },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    circles: {
+                        stroke: '#6A6A6A',
+                        labels: {
+                            name: { show: false },
+                            value: { show: false }
+                        }
+                    }
+                }
+            }
+        }
+    })
 });
 
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -130,6 +169,13 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+    }
+}, { immediate: true });
+
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
@@ -138,13 +184,20 @@ const titleSize = ref(0);
 const boundValues = ref([0, 0, 100, 100]);
 const PARENT_SIZE = ref({ h: 0, w: 0});
 
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 async function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiCirclePack',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
     }
+
+    SIZE.value = { h: 10, w: 10 };
+    boundValues.value = [0, 0, 100, 100];
+    PARENT_SIZE.value = { h: 0, w: 0};
 
     circles.value = await pack(formattedDataset.value)
     viewBox.value = bounds(circles.value, 1).join(' ')
@@ -156,10 +209,10 @@ async function prepareChart() {
             chart: circlePackChart.value,
             title: chartTitle.value,
             noTitle: noTitle.value
-        })
+        });
 
-        const computedWidth = width || 10;
-        const computedHeight = height && height > 10 ? height : 10;
+        const computedWidth = Math.max(10, width);
+        const computedHeight = Math.max(10, height - 12);
 
         titleSize.value = FINAL_CONFIG.value.style.chart.title.text ? heightTitle : heightNoTitle
 
@@ -224,18 +277,16 @@ function getParentDimensions(component) {
 }
 
 
-watch(() => props.dataset, async (_ds) => {
+watch(() => FINAL_DATASET.value, async (_ds) => {
     await prepareChart();
 }, { deep: true })
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
-})
-
-
+});
 
 const formattedDataset = computed(() => {
-    return props.dataset.map((ds, i) => {
+    return FINAL_DATASET.value.map((ds, i) => {
         const color = convertColorToHex(ds.color) || customPalette.value[i] || themePalettes[FINAL_CONFIG.value.theme || 'default'][i % themePalettes[FINAL_CONFIG.value.theme || 'default'].length] || palette[i] || palette[i % palette.length];
         return {
             ...ds,
@@ -255,6 +306,27 @@ const maxRadius = computed(() => {
 
 function calcOffsetY(radius, offset) {
     return offset / maxRadius.value * radius;
+}
+
+function onTrapLeave(datapoint, seriesIndex) {
+    zoom.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
+    }
+}
+
+function onTrapClick(datapoint, seriesIndex) {
+    emit('selectDatapoint', datapoint);
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
+    }
+}
+
+function onTrapEnter(datapoint, seriesIndex) {
+    zoomTo(datapoint);
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
+    }
 }
 
 const zoom = ref(null);
@@ -475,7 +547,7 @@ defineExpose({
 
 <template>
     <div :id="`vue-ui-circle-pack_${uid}`"
-        :class="`vue-ui-circle-pack ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" ref="circlePackChart"
+        :class="`vue-ui-circle-pack ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${loading ? 'loading' : ''}`" ref="circlePackChart"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}; height: ${PARENT_SIZE.h}px; width:${PARENT_SIZE.w}px`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator" :svgRef="svgRef"
@@ -539,7 +611,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg ref="svgRef" v-if="isDataset" :xmlns="XMLNS" :viewBox="viewBox" :height="SIZE.h" :width="SIZE.w"
+        <svg ref="svgRef" :xmlns="XMLNS" :viewBox="viewBox" :height="Math.max(10, SIZE.h)" :width="Math.max(10, SIZE.w)"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <PackageVersion />
@@ -552,7 +624,7 @@ defineExpose({
                 <slot name="chart-background" />
             </foreignObject>
 
-            <template v-for="circle in circles">
+            <template v-for="(circle, i) in circles">
                 <defs>
                     <radialGradient :id="circle.id" fy="30%">
                         <stop offset="10%"
@@ -569,12 +641,21 @@ defineExpose({
                 </g>
 
                 <!-- 'CIRCLE' (using rect as circle does not css transition properly) -->
-                <rect data-cy="datapoint-circle" :x="circle.x - circle.r" :y="circle.y - circle.r" :width="circle.r * 2"
-                    :height="circle.r * 2" :stroke="FINAL_CONFIG.style.chart.circles.stroke"
+                <rect 
+                    data-cy="datapoint-circle" 
+                    :x="circle.x - circle.r" 
+                    :y="circle.y - circle.r" 
+                    :width="circle.r * 2"
+                    :height="circle.r * 2" 
+                    :stroke="FINAL_CONFIG.style.chart.circles.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * maxRadius / 100"
                     :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${circle.id})` : circle.color"
-                    :rx="circle.r" @mouseenter="() => zoomTo(circle)" @mouseout="zoom = null"
-                    @click="emit('selectDatapoint', circle)" />
+                    :rx="circle.r" 
+                    @mouseenter="onTrapEnter(circle, i)" 
+                    @mouseout="onTrapLeave(circle, i)"
+                    @click="onTrapClick(circle, i)" 
+                />
+
                 <rect v-if="$slots.pattern" :x="circle.x - circle.r" :y="circle.y - circle.r" :width="circle.r * 2"
                     :height="circle.r * 2" :stroke="FINAL_CONFIG.style.chart.circles.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * maxRadius / 100"
@@ -654,13 +735,6 @@ defineExpose({
             <slot name="svg" :svg="{ ...viewBox }" />
         </svg>
 
-        <Skeleton v-if="!isDataset" :config="{
-            type: 'circlePack',
-            style: {
-                color: '#CCCCCC',
-            }
-        }" />
-
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
@@ -695,6 +769,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
@@ -729,5 +806,9 @@ defineExpose({
 rect,
 text {
     transition: all 0.2s ease-in-out !important;
+}
+
+.loading rect,text {
+    transition: none !important;
 }
 </style>

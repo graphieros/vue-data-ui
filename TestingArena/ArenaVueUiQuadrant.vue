@@ -20,66 +20,33 @@ function makeDs(n,m) {
     return arr
 }
 
-const dataset = ref([
-    // {
-    //     name: 'Serie 1',
-    //     shape: 'star',
-    //     series: [
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: 'Serie 3',
+                shape: 'hexagon',
+                series: makeDs(10, 10)
+            }
+        ]
+    }, 2000)
+
+    // setTimeout(() => {
+    //     dataset.value = undefined;
+    // }, 4000);
+
+    // setTimeout(() => {
+    //     dataset.value = [
     //         {
-    //             name: "Star 1",
-    //             x: 50,
-    //             y: 50
-    //         },
-    //         {
-    //             name: "Star 2",
-    //             x: -10,
-    //             y: -10
-    //         },
-    //         {
-    //             name: "Star 3",
-    //             x: -15,
-    //             y: 20
-    //         },
-    //         {
-    //             name: "Star 4",
-    //             x: 15,
-    //             y: -20
-    //         },
-    //     ]
-    // },
-    // {
-    //     name: 'Serie 2',
-    //     shape: 'diamond',
-    //     series: [
-    //         {
-    //             name: "Triangle 1",
-    //             x: -50,
-    //             y: -50
-    //         },
-    //         {
-    //             name: "Triangle 2",
-    //             x: 25,
-    //             y: -25
-    //         },
-    //         {
-    //             name: "Triangle 3",
-    //             x: -25,
-    //             y: 25
-    //         },
-    //         {
-    //             name: "Triangle 4",
-    //             x: 10,
-    //             y: 10
+    //             name: 'Serie 3',
+    //             shape: 'hexagon',
+    //             series: makeDs(100, 10)
     //         }
     //     ]
-    // },
-    {
-        name: 'Serie 3',
-        shape: 'hexagon',
-        series: makeDs(10, 10)
-    }
-]);
-
+    // }, 6000)
+})
 const alternateConfig = ref({
     table: {
         th: {
@@ -139,8 +106,10 @@ function alterDataset() {
 }
 
 const model = ref([
-    { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
+    { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
@@ -157,7 +126,7 @@ const model = ref([
     { key: 'style.fontFamily', def: 'inherit', type: "text"},
     { key: 'style.chart.height', def: 512, type: 'number', min: 100, max: 1000},
     { key: 'style.chart.width', def: 512, type: 'number', min: 100, max: 1000},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.labels.quadrantLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.quadrantLabels.tl.text', def: 'Top left label', type: 'text'},
@@ -256,7 +225,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -282,6 +251,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex });
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex });
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex });
+                },
+            },
             style: {
                 ...c.style,
                 chart: {
@@ -357,9 +337,9 @@ onMounted(async () => {
             ...config,
             responsive: true
         }">
-        <template #chart-background>
+        <!-- <template #chart-background>
             <div style="height: 100%; width: 100%; background: radial-gradient(at top left, red, white)"/>
-        </template>
+        </template> -->
 
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">

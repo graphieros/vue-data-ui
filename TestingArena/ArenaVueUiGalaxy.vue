@@ -8,22 +8,31 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref([
-    {
-        name: "Series 1",
-        values: [100]
-    },
-    {
-        name: "Series 2",
-        values: [200]
-    },
-    {
-        name: "Series 1",
-        values: [300, 1]
-    },
-])
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: "Series 1",
+                values: [100]
+            },
+            {
+                name: "Series 2",
+                values: [200]
+            },
+            {
+                name: "Series 3",
+                values: [300, 1]
+            },
+        ]
+    }, 2000);
+})
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
@@ -42,7 +51,7 @@ const model = ref([
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.arcs.strokeWidth', def: 24, type: 'number', min: 2, max: 48},
     { key: 'style.chart.layout.arcs.borderWidth', def: 12, type: 'number', min: 1, max: 24},
@@ -110,7 +119,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)
@@ -135,6 +144,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex });
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex });
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex });
+                },
+            },
             style: {
                 ...c.style,
                 chart: {
@@ -191,14 +211,19 @@ onMounted(async () => {
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiGalaxy :dataset="dataset" :config="{ ...config, responsive: true }" />
+    </div>
+
     <Box comp="VueUiGalaxy" :dataset="dataset">
         <template #title>VueUiGalaxy</template>
 
         <template #local>
             <LocalVueUiGalaxy :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="local">
-                <template #chart-background>
+                <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-                </template>
+                </template> -->
                 <template #optionPdf>
                     PRINT PDF
                 </template>

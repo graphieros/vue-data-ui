@@ -13,7 +13,7 @@ describe('<VueUiHeatmap />', () => {
 			subtitle: true,
 			dataTable: true,
 			tooltipCallback: () => {
-				cy.get('[data-cy="tooltip-trap"]').first().trigger('mouseover', { force: true });
+				cy.get('[data-cy="cell"]').first().trigger('mouseover', { force: true });
 				cy.get('[data-cy="cell-selected"]').should('exist').and('be.visible');
 			}
 		});
@@ -22,7 +22,6 @@ describe('<VueUiHeatmap />', () => {
 		cy.get('[data-cy="cell-underlayer"]').should('exist').and('be.visible').and('have.length', 91);
 		cy.get('[data-cy="cell"]').should('exist').and('be.visible').and('have.length', 91);
 		cy.get('[data-cy="cell-label"]').should('exist').and('be.visible').and('have.length', 91);
-		cy.get('[data-cy="tooltip-trap"]').should('exist').and('be.visible').and('have.length', 91);
 		
 		cy.log('y axis labels');
 		cy.get('[data-cy="axis-y-label"]').as('yLabels').should('exist').and('be.visible').and('have.length', dataset.length);
@@ -39,32 +38,14 @@ describe('<VueUiHeatmap />', () => {
 		cy.log('legend');
 		cy.get('[data-cy="legend-label-max"]').should('exist').and('be.visible').and('contain', 30);
 		cy.get('[data-cy="legend-label-min"]').should('exist').and('be.visible').and('contain', 0);
-		cy.get('[data-cy="legend-pill"]').should('exist').and('be.visible');
-		cy.get('[data-cy="legend-indicator-line"]').should('exist').and('have.css', 'opacity', '1');
-		cy.get('[data-cy="legend-indicator-triangle"]').should('exist').and('be.visible');
+		cy.get('[data-cy="legend-gauge"]').should('exist').and('be.visible');
+		cy.get('[data-cy="gauge-indicator"]').should('exist').and('be.visible');
 	}
 
-	it('renders with right legend', () => {
+	it('renders with legend', () => {
 		cy.mount(VueUiHeatmap, {
 			props: {
 				config,
-				dataset
-			}
-		}).then(commonTest);
-	});
-
-	it('renders with bottom legend', () => {
-		cy.mount(VueUiHeatmap, {
-			props: {
-				config: {
-					...config,
-					style: {
-						...config.style,
-						legend: {
-							position: 'bottom'
-						}
-					}
-				},
 				dataset
 			}
 		}).then(commonTest);

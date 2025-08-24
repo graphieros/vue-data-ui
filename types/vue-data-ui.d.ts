@@ -39,12 +39,14 @@ declare module "vue-data-ui" {
         | VueUiThermometerDataset
         | VueUiTiremarksDataset
         | VueUiVerticalBarDatasetItem[]
+        | VueUiHorizontalBarDatasetItem[]
         | VueUiWaffleDatasetItem[]
         | VueUiWheelDataset
         | VueUiXyDatasetItem[]
         | VueUiTreemapDatasetItem[]
         | VueUiQuickChartDataset
         | number[]
+        | Array<number | null>
         | VueUiStripPlotDataset[]
         | VueUiWordCloudDatasetItem[]
         | VueUiXyCanvasDatasetItem[]
@@ -95,6 +97,7 @@ declare module "vue-data-ui" {
         | VueUiThermometerConfig
         | VueUiTiremarksConfig
         | VueUiVerticalBarConfig
+        | VueUiHorizontalBarConfig
         | VueUiWaffleConfig
         | VueUiWheelConfig
         | VueUiXyConfig
@@ -121,6 +124,41 @@ declare module "vue-data-ui" {
         | VueUiRidgelineConfig
         | VueUiChordConfig;
     }>;
+
+    export type ChartEvent<T> = null | (({ datapoint, seriesIndex} : { datapoint: T, seriesIndex: number}) => void);
+
+    export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
+    export type VueUi3dBarEvent = ChartEvent<VueUi3dBarDatapoint>;
+    export type VueUiDonutEvent = ChartEvent<VueUiDonutDatapoint>;
+    export type VueUiRadarEvent = ChartEvent<VueUiRadarDatapoint>;
+    export type VueUiXyEvent = ChartEvent<VueUiXyDatapointItem[]>;
+    export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
+    export type VueUiOnionEvent = ChartEvent<VueUiOnionDatapoint>;
+    export type VueUiWorldEvent = ChartEvent<VueUiWorldDatapoint>;
+    export type VueUiGalaxyEvent = ChartEvent<VueUiGalaxyDatapoint>;
+    export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
+    export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
+    export type VueUiTreemapEvent = ChartEvent<VueUiTreemapDatapoint>;
+    export type VueUiDumbbellEvent = ChartEvent<VueUiDumbbellDatapoint>;
+    export type VueUiMoleculeEvent = ChartEvent<VueUiMoleculeDatapoint>;
+    export type VueUiQuadrantEvent = ChartEvent<VueUiQuadrantDatapoint>;
+    export type VueUiSparkbarEvent = ChartEvent<VueUiSparkbarDatasetItem>;
+    export type VueUiWordCloudEvent = ChartEvent<VueUiWordCloudDatapoint>;
+    export type VueUiStripPlotEvent = ChartEvent<VueUiStripPlotDatapoint>;
+    export type VueUiMoodRadarEvent = ChartEvent<VueUiMoodRadarDatapoint>;
+    export type VueUiCirclePackEvent = ChartEvent<VueUiCirclePackDatapoint>;
+    export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
+    export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
+    export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
+    export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
+    export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
+    export type VueUiSparkStackbarEvent = ChartEvent<VueUiSparkStackbarDatapoint>;
+    export type VueUiHistoryPlotEvent = ChartEvent<VueUiHistoryPlotDatapointEvent>;
+    export type VueUiRelationCircleEvent = ChartEvent<VueUiRelationCircleDatapoint>;
+    export type VueUiDonutEvolutionEvent = ChartEvent<VueUiDonutEvolutionDatapoint>;
+    export type VueUiSparkHistogramEvent = ChartEvent<VueUiSparkHistogramDatasetItem>;
+    export type VueUiChordEvent = ChartEvent<VueUiChordDatapointArc | VueUiChordDatapointRibbon>;
+    export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
 
     export type VueUiPatternName =
         | "bubbles"
@@ -257,6 +295,8 @@ declare module "vue-data-ui" {
         backgroundOpacity?: number;
         position?: TooltipPosition;
         offsetY?: number;
+        smooth?: boolean;
+        backdropFilter?: boolean;
     };
 
     export type ZoomMinimap = {
@@ -365,7 +405,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiTreemapConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiTreemapEvent; // v3
+            datapointLeave?: VueUiTreemapEvent; // v3
+            datapointClick?: VueUiTreemapEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
@@ -450,6 +497,7 @@ declare module "vue-data-ui" {
         name: string;
         normalizedValue: number;
         parentName?: string;
+        parentId?: string;
         proportion: number;
         value: number;
         x0: number;
@@ -487,6 +535,7 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiKpiConfig = {
+        debug?: boolean;
         animationFrames?: number;
         animationValueStart?: number;
         backgroundColor?: string;
@@ -525,6 +574,14 @@ declare module "vue-data-ui" {
     export type VueUiGalaxyDatasetItem = VueUiDonutDatasetItem;
 
     export type VueUiGalaxyConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUiGalaxyEvent; // v3
+            datapointLeave?: VueUiGalaxyEvent; // v3
+            datapointClick?: VueUiGalaxyEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -608,6 +665,7 @@ declare module "vue-data-ui" {
         proportion: number;
         seriesIndex: number;
         value: number;
+        absoluteIndex: number;
     };
 
     export type VueUiGalaxySeriesItem = VueUiGalaxyDatasetItem & {
@@ -649,6 +707,8 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiSparkgaugeConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         theme?: Theme;
         style?: {
             fontFamily?: string;
@@ -830,6 +890,13 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiMoleculeConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        events?: {
+            datapointEnter?: VueUiMoleculeEvent; // v3
+            datapointLeave?: VueUiMoleculeEvent; // v3
+            datapointClick?: VueUiMoleculeEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -942,7 +1009,30 @@ declare module "vue-data-ui" {
         }>;
     };
 
+    export type VueUi3dBarDatapoint = {
+        breakdown: null | Array<{
+            name: string;
+            value: number;
+        }>;
+        color: string;
+        fill: Object; // Feeling too lazy to drill that one
+        id: string;
+        name: string;
+        proportion: number;
+        seriesIndex: number;
+        value: number;
+    }
+
     export type VueUi3dBarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUi3dBarEvent; // v3
+            datapointLeave?: VueUi3dBarEvent; // v3
+            datapointClick?: VueUi3dBarEvent; // v3
+        };
+        useCssAnimation?: boolean; // v3
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -1041,7 +1131,23 @@ declare module "vue-data-ui" {
         "5": number;
     };
 
+    export type VueUiMoodRadarDatapoint = {
+        index: number;
+        key: "1" | "2" | "3" | "4" | "5";
+        value: number;
+        proportion: number;
+        color: string;
+    }
+
     export type VueUiMoodRadarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
+        events?: {
+            datapointEnter?: VueUiMoodRadarEvent; // v3
+            datapointLeave?: VueUiMoodRadarEvent; // v3
+            datapointClick?: VueUiMoodRadarEvent; // v3
+        };
         theme?: Theme;
         style?: {
             fontFamily?: string;
@@ -1306,7 +1412,30 @@ declare module "vue-data-ui" {
         isSpin?: boolean;
     }>;
 
+    export type VueUiDonutEvolutionDatapoint = {
+        activeRadius: number;
+        donut: VueUiDonutDatapoint[];
+        donutFocus: VueUiDonutDatapoint[];
+        donutHover: VueUiDonutDatapoint[];
+        hoverRadius: number;
+        index: number;
+        percentages: number[0];
+        radius: number;
+        subtotal: number;
+        values: Array<number | null>;
+        x: number;
+        y: number;
+    }
+
     export type VueUiDonutEvolutionConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUiDonutEvolutionEvent; // v3
+            datapointLeave?: VueUiDonutEvolutionEvent; // v3
+            datapointClick?: VueUiDonutEvolutionEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -1344,6 +1473,14 @@ declare module "vue-data-ui" {
                         stroke?: string;
                         strokeWidth?: number;
                         showVerticalLines?: boolean;
+                        axis?: { // v3
+                            yLabel?: string; // v3
+                            yLabelOffsetX?: number; // v3
+                            xLabel?: string; // v3
+                            xLabelOffsetY?: number; // v3
+                            fontSize?: number; // v3
+                            color?: string; // v3
+                        };
                         yAxis?: {
                             dataLabels?: {
                                 show?: boolean;
@@ -1364,6 +1501,10 @@ declare module "vue-data-ui" {
                                 showOnlyFirstAndLast?: boolean;
                                 color?: string;
                                 rotation?: number;
+                                autoRotate?: { // v3
+                                    enable?: boolean; // v3
+                                    angle?: number; // v3
+                                };
                                 offsetY?: number;
                             };
                         };
@@ -1417,7 +1558,7 @@ declare module "vue-data-ui" {
 
     export type VueUiDonutEvolutionDatasetItem = {
         name: string;
-        values: number[];
+        values: Array<number | null>;
         color?: string;
     };
 
@@ -1447,11 +1588,16 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiTiremarksConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
+                width?: number; // v3
+                height?: number; // v3
                 backgroundColor?: string;
                 color?: string;
                 animation?: {
@@ -1511,6 +1657,8 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiWheelConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
         theme?: Theme;
         style?: {
@@ -1579,7 +1727,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiRingsConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiRingsEvent; // v3
+            datapointLeave?: VueUiRingsEvent; // v3
+            datapointClick?: VueUiRingsEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -1658,6 +1813,7 @@ declare module "vue-data-ui" {
         strokeWidth: number;
         uid: string;
         value: number;
+        absoluteIndex: number;
     };
 
     export type VueUiRingsDatasetItem = {
@@ -1693,6 +1849,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiSparkHistogramConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
+        events?: {
+            datapointEnter?: VueUiSparkHistogramEvent; // v3
+            datapointLeave?: VueUiSparkHistogramEvent; // v3
+            datapointClick?: VueUiSparkHistogramEvent; // v3
+        };
         theme?: Theme;
         style?: {
             backgroundColor?: string;
@@ -1729,6 +1893,7 @@ declare module "vue-data-ui" {
             labels?: {
                 value?: {
                     fontSize?: number;
+                    minFontSize?: number; // v3
                     color?: string;
                     bold?: boolean;
                     rounding?: number;
@@ -1739,12 +1904,14 @@ declare module "vue-data-ui" {
                 };
                 valueLabel?: {
                     fontSize?: number;
+                    minFontSize?: number; // v3
                     color?: string;
                     bold?: boolean;
                     rounding?: number;
                 };
                 timeLabel?: {
                     fontSize?: number;
+                    minFontSize?: number; // v3
                     color?: string;
                     bold?: boolean;
                 };
@@ -1783,7 +1950,7 @@ declare module "vue-data-ui" {
         timeLabel?: string;
         trapX?: number;
         unitWidth?: number;
-        value?: number;
+        value?: number | null;
         valueLabel?: string;
         width?: number;
         x?: number;
@@ -1795,7 +1962,26 @@ declare module "vue-data-ui" {
         dataset: VueUiSparkHistogramDatasetItem[];
     }>;
 
+    export type VueUiSparkStackbarDatapoint = {
+        color: string;
+        id: string;
+        name: string;
+        proportion: number;
+        proportionLabel: string;
+        seriesIndex: number;
+        start: number;
+        value: number;
+        width: number;
+    }
+
     export type VueUiSparkStackbarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        events?: {
+            datapointEnter?: VueUiSparkStackbarEvent; // v3
+            datapointLeave?: VueUiSparkStackbarEvent; // v3
+            datapointClick?: VueUiSparkStackbarEvent; // v3
+        }
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -1873,7 +2059,7 @@ declare module "vue-data-ui" {
         proportion?: number;
         proportionLabel?: string;
         start?: number;
-        value?: number;
+        value?: number | null;
         width?: number;
     };
 
@@ -1883,6 +2069,9 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiThermometerConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -1891,10 +2080,15 @@ declare module "vue-data-ui" {
                 backgroundColor?: string;
                 color?: string;
                 height?: number;
+                width?: number; // v3
                 thermometer?: {
                     width?: number;
                 };
-                padding?: ChartPadding;
+                padding?: {
+                    // v3 left and right are deprecated
+                    top?: number;
+                    bottom?: number;
+                };
                 graduations?: {
                     show?: boolean;
                     sides?: "left" | "right" | "both" | "none";
@@ -1912,7 +2106,9 @@ declare module "vue-data-ui" {
                     speedMs?: number;
                 };
                 label?: {
+                    show?: boolean; // v3
                     fontSize?: number;
+                    minFontSize?: number;
                     rounding?: number;
                     bold?: boolean;
                     prefix?: string;
@@ -1954,7 +2150,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiRelationCircleConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiRelationCircleEvent; // v3
+            datapointLeave?: VueUiRelationCircleEvent; // v3
+            datapointClick?: VueUiRelationCircleEvent; // v3
+        };
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -1971,6 +2174,7 @@ declare module "vue-data-ui" {
             labels?: {
                 color?: string;
                 fontSize?: number;
+                minFontSize?: number; // v3
             };
             weightLabels?: {
                 size?: number;
@@ -2007,6 +2211,18 @@ declare module "vue-data-ui" {
         weights?: number[];
         color?: string;
     };
+
+    export type VueUiRelationCircleDatapoint = {
+        color: string;
+        id: string;
+        label: string;
+        regAngle: number;
+        relations: string[];
+        totalWeight: number;
+        weights: number[];
+        x: number;
+        y: number;
+    }
 
     export type VueUiRelationCircleExpose = {
         getImage(options?: { scale?: number }): GetImagePromise
@@ -2146,7 +2362,7 @@ declare module "vue-data-ui" {
 
     export type VueUiSparkbarDatasetItem = {
         name: string;
-        value: number;
+        value: number | null;
         suffix?: string;
         prefix?: string;
         rounding?: number;
@@ -2156,7 +2372,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiSparkbarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         theme?: Theme;
+        events?: { // v3
+            datapointEnter?: VueUiSparkbarEvent; // v3
+            datapointLeave?: VueUiSparkbarEvent; // v3
+            datapointClick?: VueUiSparkbarEvent; // v3
+        }
         customPalette?: string[];
         style?: {
             backgroundColor?: string;
@@ -2226,10 +2449,24 @@ declare module "vue-data-ui" {
         dataset: VueUiSparkbarDatasetItem[];
     }>;
 
-    export type VueUiAgePyramidDataset = Array<Array<string | number>>;
+    export type VueUiAgePyramidDatasetRow = [
+        year: string,
+        rank: number,
+        v1: number | null,
+        v2: number | null
+    ]
+
+    export type VueUiAgePyramidDataset = VueUiAgePyramidDatasetRow[];
 
     export type VueUiAgePyramidConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiAgePyramidEvent; // v3
+            datapointLeave?: VueUiAgePyramidEvent; // v3
+            datapointClick?: VueUiAgePyramidEvent; // v3
+        };
         theme?: Theme;
         style?: {
             backgroundColor?: string;
@@ -2261,6 +2498,11 @@ declare module "vue-data-ui" {
                         scale?: number;
                         translation?: string;
                         formatter?: Formatter;
+                        rotation?: number;
+                        autoRotate?: { // v3
+                            enable?: boolean; // v3
+                            angle?: number; // v3
+                        }
                     };
                     yAxis?: {
                         show?: boolean;
@@ -2370,7 +2612,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiCandlestickConfig = {
+        debug?: boolean;
+        loading?: boolean;
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiCandlestickEvent; // v3
+            datapointLeave?: VueUiCandlestickEvent; // v3
+            datapointClick?: VueUiCandlestickEvent; // v3
+        };
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
@@ -2398,6 +2647,10 @@ declare module "vue-data-ui" {
                             offsetY?: number;
                             bold?: boolean;
                             rotation?: number;
+                            autoRotate?: { // v3
+                                enable?: boolean; // v3
+                                angle?: number; // v3
+                            }
                         };
                         timeLabels?: {
                             datetimeFormatter?: AxisDateFormatter
@@ -2528,7 +2781,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiScatterConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiScatterEvent; // v3
+            datapointLeave?: VueUiScatterEvent; // v3
+            datapointClick?: VueUiScatterEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -2740,19 +3000,28 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiHeatmapConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         style?: {
             backgroundColor?: string;
             color?: string;
             fontFamily?: string;
             layout?: {
+                height?: number;
+                width?: number;
                 padding?: ChartPadding;
                 cells?: {
-                    height?: number;
+                    // height?: number; // v3 deprecated
                     columnTotal?: {
                         value?: {
                             show?: boolean;
                             rotation?: number;
+                            autoRotate?: { // v3
+                                enable?: boolean; // v3
+                                angle?: number; // v3
+                            };
                             offsetX?: number;
                             offsetY?: number;
                         };
@@ -2793,8 +3062,13 @@ declare module "vue-data-ui" {
                     xAxis?: {
                         show?: boolean;
                         values?: Array<string | number>;
+                        datetimeFormatter?: AxisDateFormatter; // v3
                         showOnlyAtModulo?: number | null;
                         rotation?: number;
+                        autoRotate?: { // v3
+                            enable?: boolean; // v3
+                            angle?: number; // v3
+                        };
                         fontSize?: number;
                         color?: string;
                         bold?: boolean;
@@ -2804,6 +3078,7 @@ declare module "vue-data-ui" {
                     yAxis?: {
                         show?: boolean;
                         values?: Array<string | number>;
+                        datetimeFormatter?: AxisDateFormatter; // v3
                         fontSize?: number;
                         color?: string;
                         bold?: boolean;
@@ -2816,8 +3091,9 @@ declare module "vue-data-ui" {
             legend?: ChartBaseLegend & {
                 backgroundColor?: string;
                 roundingValue?: number;
-                position?: "right" | "bottom";
-                scaleBorderRadius?: number;
+                width?: number;
+                // position?: "right" | "bottom"; // v3 deprecated
+                // scaleBorderRadius?: number; // v3 deprecated
             };
             tooltip?: ChartTooltip & {
                 roundingValue?: number;
@@ -2851,7 +3127,7 @@ declare module "vue-data-ui" {
         id: string;
         ratio: number;
         side: "up" | "down";
-        value: number;
+        value: number | null;
         xAxisName: string | undefined;
         yAxisName: string | undefined;
     };
@@ -2859,12 +3135,12 @@ declare module "vue-data-ui" {
     export type VueUiHeatmapRow = {
         name: string;
         temperatures: VueUiHeatmapDatapoint[];
-        values: number[];
+        values: Array<number | null>;
     };
 
     export type VueUiHeatmapDatasetItem = {
-        name: string;
-        values: number[];
+        name: string | number;
+        values: Array<number | null>;
     };
 
     export type VueUiHeatmapExpose = {
@@ -2920,8 +3196,8 @@ declare module "vue-data-ui" {
     export type VueUiXyAnnotation = {
         show?: boolean;
         yAxis?: {
-            yTop?: number;
-            yBottom?: number;
+            yTop?: number | null;
+            yBottom?: number | null;
             label?: {
                 text?: string;
                 textAnchor?: 'start' | 'end';
@@ -2952,7 +3228,14 @@ declare module "vue-data-ui" {
     }
 
     export type VueUiXyConfig = {
-        responsive?: boolean;
+        debug?: boolean; // v3
+        responsive?: boolean; // v3
+        loading?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUiXyEvent; // v3
+            datapointLeave?: VueUiXyEvent; // v3
+            datapointClick?: VueUiXyEvent; // v3
+        };
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -2966,7 +3249,15 @@ declare module "vue-data-ui" {
             color?: string;
             height?: number;
             width?: number;
-            zoom?: ChartZoom;
+            zoom?: ChartZoom & {
+                preview?: {
+                    enable?: boolean;
+                    fill?: string;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    strokeDasharray?: number;
+                };
+            };
             padding?: ChartPadding;
             annotations?: VueUiXyAnnotation[];
             highlighter?: {
@@ -3030,6 +3321,8 @@ declare module "vue-data-ui" {
                         groupColor?: string | null;
                         scaleLabelOffsetX?: number;
                         scaleValueOffsetX?: number;
+                        rounding?: number;
+                        serieNameFormatter?: Formatter;
                     };
                     xAxis?: {
                         showBaseline?: boolean;
@@ -3048,6 +3341,10 @@ declare module "vue-data-ui" {
                         showOnlyAtModulo?: boolean;
                         modulo?: number;
                         datetimeFormatter?: AxisDateFormatter;
+                        autoRotate?: { // v3
+                            enable?: boolean; // v3
+                            angle?: number; // v3
+                        }
                     };
                 };
             };
@@ -3100,9 +3397,12 @@ declare module "vue-data-ui" {
             userOptions?: ChartUserOptions;
         };
         bar?: {
+            showTransition?: boolean;
+            transitionDurationMs?: number;
             borderRadius?: number;
             useGradient?: boolean;
             periodGap?: number;
+            innerGap?: number;
             border?: {
                 useSerieColor?: boolean;
                 strokeWidth?: number;
@@ -3126,6 +3426,8 @@ declare module "vue-data-ui" {
             };
         };
         line?: {
+            showTransition?: boolean;
+            transitionDurationMs?: number;
             radius?: number;
             useGradient?: boolean;
             strokeWidth?: number;
@@ -3154,6 +3456,8 @@ declare module "vue-data-ui" {
             };
         };
         plot?: {
+            showTransition?: boolean;
+            transitionDurationMs?: number;
             radius?: number;
             useGradient?: boolean;
             dot?: {
@@ -3191,7 +3495,7 @@ declare module "vue-data-ui" {
 
     export type VueUiXyDatasetItem = {
         name: string;
-        series: number[];
+        series: Array<number | null>;
         type: "bar" | "line" | "plot";
         color?: string;
         dashed?: boolean;
@@ -3214,17 +3518,17 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiXyDatasetBarItem = {
-        absoluteValues: number[];
+        absoluteValues: Array<number | null>;
         color: string;
         id: string;
         name: string;
         plots: Array<{ x: number; y: number; value: number }>;
-        series: number[];
+        series: Array<number | null>;
         type: "bar";
     };
 
     export type VueUiXyDatasetLineItem = {
-        absoluteValues: number[];
+        absoluteValues: Array<number | null>;
         area: string;
         color: string;
         curve: string;
@@ -3232,7 +3536,7 @@ declare module "vue-data-ui" {
         id: string;
         name: string;
         plots: Array<{ x: number; y: number; value: number }>;
-        series: number[];
+        series: Array<number | null>;
         shape: Shape | null;
         type: "line";
         useArea: boolean;
@@ -3242,12 +3546,12 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiXyDatasetPlotItem = {
-        absoluteValues: number[];
+        absoluteValues: Array<number | null>;
         color: string;
         id: string;
         name: string;
         plots: Array<{ x: number; y: number; value: number }>;
-        series: number[];
+        series: Array<number | null>;
         shape: Shape | null;
         type: "plot";
         useTag?: boolean;
@@ -3263,7 +3567,7 @@ declare module "vue-data-ui" {
         name: string;
         shape: Shape | null;
         type: "bar" | "line" | "plot";
-        value: number;
+        value: number | null;
     };
 
     export type VueUiXyExpose = {
@@ -3284,14 +3588,17 @@ declare module "vue-data-ui" {
         {
             config?: VueUiXyConfig;
             dataset: VueUiXyDatasetItem[];
+            selectedXIndex?: number | null; // v3
         },
         VueUiXyExpose
     >;
 
-    export type VueUiDonutEvent = null | (({datapoint, seriesIndex }: { datapoint: VueUiDonutDatapoint; seriesIndex: number }) => void);
-
     export type VueUiDonutConfig = {
+        debug?: boolean;
         type?: "classic" | "polar";
+        loading?: boolean;
+        pie?: boolean;
+        autoSize?: boolean;
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -3340,6 +3647,7 @@ declare module "vue-data-ui" {
                             color?: string;
                             bold?: boolean;
                             fontSize?: number;
+                            minFontSize?: number;
                             rounding?: number;
                             formatter?: Formatter;
                         };
@@ -3347,6 +3655,7 @@ declare module "vue-data-ui" {
                             color?: string;
                             bold?: boolean;
                             fontSize?: number;
+                            minFontSize?: number;
                         };
                         hollow?: {
                             show?: boolean;
@@ -3509,10 +3818,17 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiNestedDonutsConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        events?: {
+            datapointEnter?: VueUiDonutEvent;
+            datapointLeave?: VueUiDonutEvent;
+            datapointClick?: VueUiDonutEvent;
+        };
         serieToggleAnimation?: {
             show?: boolean;
             durationMs?: number;
@@ -3554,6 +3870,7 @@ declare module "vue-data-ui" {
                             useSerieColor?: boolean;
                             showDonutName?: boolean;
                             boldDonutName?: boolean;
+                            curvedDonutName?: boolean;
                             donutNameAbbreviation?: boolean;
                             donutNameOffsetY?: number;
                             donutNameMaxAbbreviationSize?: number;
@@ -3561,6 +3878,7 @@ declare module "vue-data-ui" {
                         };
                     };
                     donut?: {
+                        radiusRatio?: number;
                         strokeWidth?: number;
                         borderWidth?: number;
                         spacingRatio?: number;
@@ -3702,7 +4020,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiWaffleConfig = {
+        debug?: boolean;
+        loading?: boolean;
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiWaffleEvent; // v3
+            datapointLeave?: VueUiWaffleEvent; // v3
+            datapointClick?: VueUiWaffleEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useBlurOnHover?: boolean;
@@ -3844,7 +4169,14 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiRadarConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiRadarEvent; // v3
+            datapointLeave?: VueUiRadarEvent; // v3
+            datapointClick?: VueUiRadarEvent; // v3
+        }
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -3934,6 +4266,7 @@ declare module "vue-data-ui" {
         values: number[];
         x: number;
         y: number;
+        formatter: Formatter
     };
 
     export type VueUiRadarCategory = {
@@ -4023,7 +4356,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiQuadrantConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiQuadrantEvent; // v3
+            datapointLeave?: VueUiQuadrantEvent; // v3
+            datapointClick?: VueUiQuadrantEvent; // v3
+        };
         theme?: Theme;
         useCssAnimation?: boolean;
         zoomAnimationFrames?: number;
@@ -4212,6 +4552,8 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiGaugeConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -4255,6 +4597,7 @@ declare module "vue-data-ui" {
                         curved?: boolean;
                         offsetRatio?: number;
                         fontSize?: number;
+                        minFontSize?: number; // v3
                         useSerieColor?: boolean;
                         color?: string;
                         bold?: boolean;
@@ -4335,6 +4678,8 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiChestnutConfig = {
+        debug?: boolean;
+        loading?: boolean;
         theme?: Theme;
         customPalette?: string[];
         style?: {
@@ -4544,7 +4889,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiOnionConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiOnionEvent; // v3
+            datapointLeave?: VueUiOnionEvent; // v3
+            datapointClick?: VueUiOnionEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
@@ -4569,6 +4921,7 @@ declare module "vue-data-ui" {
                     labels?: {
                         show?: boolean;
                         fontSize?: number;
+                        minFontSize?: number; // v3
                         color?: string;
                         roundingValue?: number;
                         roundingPercentage?: number;
@@ -4690,27 +5043,36 @@ declare module "vue-data-ui" {
 
     export type VueUiVerticalBarDatasetChild = {
         name: string;
-        value: number;
+        value: number | null;
     };
+
+    export type VueUiHorizontalBarDatasetChild = VueUiVerticalBarDatasetChild; // v3 renaming
 
     export type VueUiVerticalBarDatasetItem = {
         name: string;
-        value: number;
+        value: number | null;
         color?: string;
-        children?: VueUiVerticalBarDatasetChild[];
+        children?: VueUiVerticalBarDatasetChild[] | VueUiHorizontalBarDatasetChild[];
     };
 
-    export type VueUiVerticalBarEvent = null | (({ datapoint, seriesIndex }: { datapoint: VueUiVerticalBarDatapoint; seriesIndex: number }) => void);
+    export type VueUiHorizontalBarDatasetItem = VueUiVerticalBarDatasetItem // v3 renaming
+
+    export type VueUiVerticalBarEvent = null | (({ datapoint, seriesIndex }: { datapoint: VueUiVerticalBarDatapoint | VueUiHorizontalBarDatapoint; seriesIndex: number }) => void);
+
+    export type VueUiHorizontalBarEvent = VueUiVerticalBarEvent; // v3 renaming
 
     export type VueUiVerticalBarConfig = {
+        debug?: boolean;
+        loading?: boolean;
+        autoSize?: boolean;
         responsive?: boolean;
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
         events?: {
-            datapointEnter?: VueUiVerticalBarEvent;
-            datapointLeave?: VueUiVerticalBarEvent;
-            datapointClick?: VueUiVerticalBarEvent;
+            datapointEnter?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
+            datapointLeave?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
+            datapointClick?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
         };
         style?: {
             fontFamily?: string;
@@ -4771,6 +5133,7 @@ declare module "vue-data-ui" {
                         show?: boolean;
                         color?: string;
                         strokeWidth?: number;
+                        fullWidth?: boolean;
                     };
                 };
                 title?: ChartTitle;
@@ -4793,9 +5156,9 @@ declare module "vue-data-ui" {
                     | null
                     | ((
                         params: VueUiTooltipParams<
-                            VueUiVerticalBarDatapoint,
-                            VueUiVerticalBarSerie[],
-                            VueUiVerticalBarConfig
+                            VueUiVerticalBarDatapoint | VueUiHorizontalBarDatapoint,
+                            VueUiVerticalBarSerie[] | VueUiHorizontalBarSerie[],
+                            VueUiVerticalBarConfig | VueUiHorizontalBarConfig
                         >
                     ) => string);
                 };
@@ -4822,6 +5185,8 @@ declare module "vue-data-ui" {
         };
     };
 
+    export type VueUiHorizontalBarConfig = VueUiVerticalBarConfig; // v3 renaming;
+
     export type VueUiVerticalBarDatapoint = {
         children?: Array<any>;
         childIndex?: number;
@@ -4838,8 +5203,10 @@ declare module "vue-data-ui" {
         value: number;
     };
 
+    export type VueUiHorizontalBarDatapoint = VueUiVerticalBarDatapoint; // v3 renaming
+
     export type VueUiVerticalBarSerie = {
-        children: VueUiVerticalBarDatapoint[];
+        children: VueUiVerticalBarDatapoint[] | VueUiHorizontalBarDatapoint[];
         color: string;
         hasChildren: boolean;
         is: string;
@@ -4850,8 +5217,10 @@ declare module "vue-data-ui" {
         value: number;
     };
 
+    export type VueUiHorizontalBarSerie = VueUiVerticalBarSerie; // v3 renaming
+
     export type VueUiVerticalBarExpose = {
-        getData(): Promise<Array<VueUiVerticalBarDatasetItem & Record<string, any>>>
+        getData(): Promise<Array<VueUiVerticalBarDatasetItem & Record<string, any>>> | Promise<Array<VueUiHorizontalBarDatasetItem & Record<string, any>>>
         getImage(options?: { scale?: number }): GetImagePromise
         recalculateHeight(): void,
         generateCsv(): void
@@ -4864,6 +5233,8 @@ declare module "vue-data-ui" {
         toggleFullscreen(): void
     }
 
+    export type VueUiHorizontalBarExpose = VueUiVerticalBarExpose; // v3 renaming
+
     export const VueUiVerticalBar: DefineComponent<
         {
             config?: VueUiVerticalBarConfig;
@@ -4872,10 +5243,21 @@ declare module "vue-data-ui" {
         VueUiVerticalBarExpose
     >;
 
+    /**
+     * Renamed from the v2 VueUiVerticalBar
+     */
+    export const VueUiHorizontalBar: DefineComponent<
+        {
+            config?: VueUiHorizontalBarConfig;
+            dataset: VueUiHorizontalBarDatasetItem[];
+        },
+        VueUiHorizontalBarExpose
+    >;
+
     export type VueUiSparklineDatasetItem = {
-        period: string;
-        value: number;
-        absoluteValue?: number;
+        period: string | number;
+        value: number | null;
+        absoluteValue?: number | null;
         id?: string;
         plotValue?: number;
         toMax?: number;
@@ -4885,9 +5267,16 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiSparklineConfig = {
+        loading?: boolean; // v3
+        debug?: boolean; // v3
         theme?: Theme;
         type?: "line" | "bar";
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiSparklineEvent; // v3
+            datapointLeave?: VueUiSparklineEvent; // v3
+            datapointClick?: VueUiSparklineEvent; // v3
+        };
         downsample?: {
             threshold?: number;
         };
@@ -4955,6 +5344,7 @@ declare module "vue-data-ui" {
                 prefix?: string;
                 suffix?: string;
                 formatter?: Formatter;
+                datetimeFormatter?: AxisDateFormatter; // v3
             };
             title?: {
                 show?: boolean;
@@ -5594,6 +5984,13 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiQuickChartConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        events?: {
+            datapointEnter?: ChartEvent<object| object[]>;
+            datapointLeave?: ChartEvent<object| object[]>;
+            datapointClick?: ChartEvent<object| object[]>;
+        };
         responsive?: boolean;
         theme?: Theme;
         axisLabelsFontSize?: number;
@@ -5608,11 +6005,13 @@ declare module "vue-data-ui" {
         dataLabelFontSize?: number;
         dataLabelRoundingPercentage?: number;
         dataLabelRoundingValue?: number;
+        donutCurvedMarkers?: boolean; // v3
         donutHideLabelUnderPercentage?: number;
         donutLabelMarkerStrokeWidth?: number;
         donutRadiusRatio?: number;
         donutShowTotal?: boolean;
         donutStrokeWidth?: number;
+        donutStroke?: string; // v3
         donutThicknessRatio?: number;
         donutTotalLabelFontSize?: number;
         donutTotalLabelOffsetY?: number;
@@ -5645,6 +6044,8 @@ declare module "vue-data-ui" {
         tooltipFontSize?: number;
         tooltipPosition?: TooltipPosition;
         tooltipOffsetY?: number;
+        tooltipSmooth?: boolean;
+        tooltipBackdropFilter?: boolean;
         useCustomLegend?: boolean;
         valuePrefix?: string;
         valueSuffix?: string;
@@ -5665,6 +6066,10 @@ declare module "vue-data-ui" {
         xyPeriods?: Array<number | string>;
         datetimeFormatter?: AxisDateFormatter;
         xyPeriodLabelsRotation?: number;
+        xyPeriodLabelsAutoRotate?: { // v3
+            enable?: boolean; // v3
+            angle?: number; // v3
+        };
         xyPeriodsShowOnlyAtModulo?: boolean;
         xyPeriodsModulo?: number;
         xyScaleSegments?: number;
@@ -5719,11 +6124,11 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiQuickChartDatasetObjectItem = {
-        [key: string]: string | number | number[];
+        [key: string]: string | number | Array<number | null>;
     };
 
     export type VueUiQuickChartDataset =
-        | number[]
+        | Array<number | null>
         | VueUiQuickChartDatasetObjectItem
         | VueUiQuickChartDatasetObjectItem[];
 
@@ -5776,6 +6181,9 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiSparkTrendConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         downsample?: {
             threshold?: number;
@@ -5783,6 +6191,8 @@ declare module "vue-data-ui" {
         style?: {
             backgroundColor?: string;
             fontFamily?: string;
+            width?: number; // v3
+            height?: number; // v3
             animation?: {
                 show?: boolean;
                 animationFrames?: number;
@@ -5831,12 +6241,19 @@ declare module "vue-data-ui" {
     };
 
     export const VueUiSparkTrend: DefineComponent<{
-        dataset: number[];
+        dataset: Array<number | null>;
         config?: VueUiSparkTrendConfig;
     }>;
 
     export type VueUiStripPlotConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiStripPlotEvent; // v3
+            datapointLeave?: VueUiStripPlotEvent; // v3
+            datapointClick?: VueUiStripPlotEvent; // v3
+        };
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -5860,7 +6277,8 @@ declare module "vue-data-ui" {
                 backgroundColor?: string;
                 color?: string;
                 height?: number;
-                stripWidth?: number;
+                width?: number; // v3
+                // stripWidth?: number; // v3 deprecated
                 padding?: ChartPadding;
                 grid?: {
                     show?: boolean;
@@ -5916,6 +6334,11 @@ declare module "vue-data-ui" {
                         color?: string;
                         fontSize?: number;
                         offsetY?: number;
+                        rotation?: number; // v3
+                        autoRotate?: { // v3
+                            enable?: boolean; // v3
+                            angle?: number; // v3
+                        }
                     };
                     yAxisLabels?: {
                         show?: boolean;
@@ -5947,6 +6370,9 @@ declare module "vue-data-ui" {
         id: string;
         name: string;
         parentId: string;
+        parentIndex: number;
+        parentName: string;
+        plotIndex: number;
         value: number;
         x: number;
         y: number;
@@ -6010,8 +6436,32 @@ declare module "vue-data-ui" {
         show?: boolean;
     };
 
+    export type VueUiDumbbellDatapoint = {
+        centerX: number;
+        end: number | null;
+        endVal: number;
+        endX: number;
+        id: string;
+        name: string;
+        start: number | null;
+        startX: number;
+        y: number;
+        evaluationColor: string;
+        evaluationGrad: string;
+        isPositive: boolean;
+        isNegative: boolean;
+        isNeutral: boolean;
+    }
+
     export type VueUiDumbbellConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiDumbbellEvent; // v3
+            datapointLeave?: VueUiDumbbellEvent; // v3
+            datapointClick?: VueUiDumbbellEvent; // v3
+        };
         theme?: Theme;
         useAnimation?: boolean;
         animationSpeed?: number;
@@ -6027,6 +6477,12 @@ declare module "vue-data-ui" {
                 plots?: {
                     startColor?: string;
                     endColor?: string;
+                    evaluationColors?: { // v3
+                        enable?: boolean; // v3
+                        positive?: string; // v3
+                        negative?: string; // v3
+                        neutral?: string; // v3
+                    };
                     radius?: number;
                     stroke?: string;
                     strokeWidth?: number;
@@ -6042,6 +6498,8 @@ declare module "vue-data-ui" {
                 grid?: {
                     strokeWidth?: number;
                     scaleSteps?: number;
+                    scaleMin?: number | null; // v3
+                    scaleMax?: number | null; // v3
                     horizontalGrid?: {
                         show?: boolean;
                         stroke?: string;
@@ -6055,6 +6513,21 @@ declare module "vue-data-ui" {
                         strokeDasharray?: number;
                     };
                 };
+                comparisonLines?: { // v3
+                    show?: boolean; // v3
+                    strokeWidth?: number; // v3
+                    strokeDasharray?: number; // v3
+                    showRect?: boolean; // v3
+                    rectColor?: string; // v3
+                    rectOpacity?: number; // v3
+                    showLabel?: boolean; // v3
+                    labelColor?: string; // v3
+                    labelFontSize?: number; // v3
+                }; // v3
+                highlighter?: { // v3
+                    color?: string; // v3
+                    opacity?: number; // v3
+                };
                 labels?: {
                     prefix?: string;
                     suffix?: string;
@@ -6067,21 +6540,40 @@ declare module "vue-data-ui" {
                         rounding?: number;
                         show?: boolean;
                         showProgression?: boolean;
+                        formatter?: Formatter; // v3
+                    };
+                    axis?: { // v3
+                        yLabel?: string; // v3
+                        yLabelOffsetX?: number; // v3
+                        xLabel?: string; // v3
+                        xLabelOffsetY?: number; // v3
+                        fontSize?: number; // v3
+                        color?: string; // v3
                     };
                     xAxisLabels?: VueUiDumbbellConfigLabel & {
                         bold?: boolean;
+                        rotation?: number; // v3
+                        autoRotate?: { // v3
+                            enable?: boolean; // v3
+                            angle?: number; // v3
+                        }
                     };
                     startLabels?: VueUiDumbbellConfigLabel & {
                         useStartColor?: boolean;
+                        useEvaluationColor?: boolean; // v3
                     };
                     endLabels?: VueUiDumbbellConfigLabel & {
                         useEndColor?: boolean;
+                        useEvaluationColor?: boolean;
                     };
                 };
                 legend?: ChartBaseLegend & {
+                    backgroundColor?: string;
                     labelStart?: string;
                     labelEnd?: string;
-                    backgroundColor?: string;
+                    labelPositive?: string; // v3
+                    labelNegative?: string; // v3
+                    labelNeutral?: string; // v3
                 };
                 title?: ChartTitle;
             };
@@ -6105,16 +6597,16 @@ declare module "vue-data-ui" {
 
     export type VueUiDumbbellDataset = {
         name: string;
-        start: number;
-        end: number;
+        start: number | null;
+        end: number | null;
     };
 
     export type VueUiDumbbellExpose = {
         getData(): Promise<Array<{
-            end: number
+            end: number | null
             id: string
             name: string
-            start: number
+            start: number | null
         }>>
         getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
@@ -6151,7 +6643,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiWordCloudConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiWordCloudEvent; // v3
+            datapointLeave?: VueUiWordCloudEvent; // v3
+            datapointClick?: VueUiWordCloudEvent; // v3
+        }
         theme?: string;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
@@ -6243,7 +6742,7 @@ declare module "vue-data-ui" {
 
     export type VueUiXyCanvasDatasetItem = {
         name: string;
-        series: number[];
+        series: Array<number | null>;
         color?: string;
         type?: "line" | "plot" | "bar";
         useArea?: boolean;
@@ -6433,7 +6932,7 @@ declare module "vue-data-ui" {
         VueUiXyCanvasExpose
     >;
 
-    export type VueUiFlowDatasetItem = [string, string, number];
+    export type VueUiFlowDatasetItem = [string, string, number | null];
 
     export type VueUiFlowNode = {
         color: string;
@@ -6442,6 +6941,7 @@ declare module "vue-data-ui" {
         inflow?: number;
         outflow?: number;
         percentOfTotal: number;
+        name?: string;
     }
 
     export type VueUiFlowFormattedDataset = {
@@ -6467,6 +6967,14 @@ declare module "vue-data-ui" {
     }
 
     export type VueUiFlowConfig = {
+        debug?: boolean;
+        loading?: boolean;
+        responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiFlowEvent;
+            datapointLeave?: VueUiFlowEvent;
+            datapointClick?: VueUiFlowEvent;
+        };
         theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
@@ -6476,6 +6984,8 @@ declare module "vue-data-ui" {
             fontFamily?: string;
             chart?: {
                 backgroundColor?: string;
+                width?: number; // v3
+                height?: number; // v3
                 color?: string;
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
@@ -6507,7 +7017,7 @@ declare module "vue-data-ui" {
                 title?: ChartTitle;
                 nodes?: {
                     gap?: number;
-                    minHeight?: number;
+                    // minHeight?: number; // v3 deprecated
                     width?: number;
                     labels?: {
                         fontSize?: number;
@@ -6524,7 +7034,7 @@ declare module "vue-data-ui" {
                     strokeWidth?: number;
                 };
                 links?: {
-                    width?: number;
+                    // width?: number; // v3 deprecated
                     opacity?: number;
                     stroke?: string;
                     strokeWidth?: number;
@@ -6596,7 +7106,7 @@ declare module "vue-data-ui" {
 
     export type VueUiParallelCoordinatePlotDatasetSerieItem = {
         name: string;
-        values: number[];
+        values: Array<number | null>;
     };
 
     export type VueUiParallelCoordinatePlotDatasetItem = {
@@ -6607,7 +7117,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiParallelCoordinatePlotConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiParallelCoordinatePlotEvent; // v3
+            datapointLeave?: VueUiParallelCoordinatePlotEvent; // v3
+            datapointClick?: VueUiParallelCoordinatePlotEvent; // v3
+        },
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         useCssAnimation?: boolean;
@@ -6646,6 +7163,11 @@ declare module "vue-data-ui" {
                         axisNames?: string[];
                         axisNamesColor?: string;
                         axisNamesFontSize?: number;
+                        axisNamesRotation?: number; // v3
+                        axisNamesAutoRotate?: { // v3
+                            enable?: boolean; // v3
+                            angle?: number; // v3
+                        };
                         axisNamesBold?: boolean;
                         roundings?: number[];
                         prefixes?: string[];
@@ -6699,6 +7221,28 @@ declare module "vue-data-ui" {
             td: ChartTableCell;
         };
     };
+
+    export type VueUiParallelCoordinatePlotEventDatapoint = {
+        color: string;
+        datapoints: Array<{
+            axisIndex: number;
+            comment: string;
+            datapointIndex: number;
+            name: string;
+            seriesIndex: number;
+            seriesName: string;
+            value: number;
+            x: number;
+            y: number;
+        }>;
+        id: string;
+        name: string;
+        pathLength: number;
+        shape: Shape;
+        smoothPath: string;
+        straightPath: string;
+        values: number[];
+    }
 
     export type VueUiParallelCoordinatePlotDatapointSelection = {
         id: string;
@@ -6918,6 +7462,8 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiGizmoConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         type?: "battery" | "gauge";
         size?: number;
         stroke?: string;
@@ -6939,7 +7485,7 @@ declare module "vue-data-ui" {
 
     export type VueUiStackbarDatasetItem = {
         name: string;
-        series: number[];
+        series: Array<number | null>;
         color?: string;
     };
 
@@ -6967,6 +7513,11 @@ declare module "vue-data-ui" {
         responsive?: boolean;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiStackbarEvent; // v3
+            datapointLeave?: VueUiStackbarEvent; // v3
+            datapointClick?: VueUiStackbarEvent; // v3
+        };
         orientation?: "vertical" | "horizontal";
         table?: {
             show?: boolean;
@@ -7075,6 +7626,10 @@ declare module "vue-data-ui" {
                             datetimeFormatter?: AxisDateFormatter;
                             offsetY?: number;
                             rotation?: number;
+                            autoRotate?: { // v3
+                                enable?: boolean; // v3
+                                angle?: number; // v3
+                            };
                             fontSize?: number;
                             color?: string;
                             bold?: boolean;
@@ -7159,6 +7714,9 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiBulletConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean; // v3
         theme?: Theme;
         userOptions?: ChartUserOptions;
         style?: {
@@ -7193,6 +7751,7 @@ declare module "vue-data-ui" {
                     };
                 };
                 target?: {
+                    show?: boolean;
                     onTop?: boolean;
                     color?: string;
                     rounded?: boolean;
@@ -7371,7 +7930,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiHistoryPlotConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
         responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiHistoryPlotEvent; // v3
+            datapointLeave?: VueUiHistoryPlotEvent; // v3
+            datapointClick?: VueUiHistoryPlotEvent; // v3
+        }
         responsiveProportionalSizing?: boolean;
         theme?: Theme;
         customPalette?: string[];
@@ -7434,6 +8000,10 @@ declare module "vue-data-ui" {
                             rounding?: number;
                             offsetY?: number;
                             rotation?: number;
+                            autoRotate?: { // v3
+                                enable?: boolean; // v3
+                                angle?: number; // v3
+                            };
                             formatter?: Formatter;
                             prefix?: string;
                             suffix?: string;
@@ -7535,6 +8105,11 @@ declare module "vue-data-ui" {
         y: number;
     };
 
+    export type VueUiHistoryPlotDatapointEvent = VueUiHistoryPlotDatapoint & {
+        plotIndex: number;
+        seriesIndex: number;
+    }
+
     export type VueUiHistoryPlotDatpointSeries = VueUiHistoryPlotDatasetItem & {
         seriesIndex: number;
     };
@@ -7585,7 +8160,24 @@ declare module "vue-data-ui" {
         color?: string;
     };
 
+    export type VueUiCirclePackDatapoint = {
+        name: string;
+        value: number;
+        r: number;
+        id: string;
+        color: string;
+        x: number;
+        y: number;
+    }
+
     export type VueUiCirclePackConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        events?: { // v3
+            datapointEnter?: VueUiCirclePackEvent; // v3
+            datapointLeave?: VueUiCirclePackEvent; // v3
+            datapointClick?: VueUiCirclePackEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         userOptions?: ChartUserOptions;
@@ -7663,15 +8255,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiCirclePackExpose = {
-        getData(): Promise<Array<{
-            color: string
-            id: string
-            name: string
-            r: number
-            value: number
-            x: number
-            y: number
-        }>>
+        getData(): Promise<Array<VueUiCirclePackDatapoint>>
         getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
@@ -7689,7 +8273,41 @@ declare module "vue-data-ui" {
         VueUiCirclePackExpose
     >;
 
+    export type VueUiWorldDatapoint = {
+        category: string | null;
+        code: string;
+        color: string;
+        geo: {
+            geometry: {
+                coordinates: Array<Array<Array<Array<number>>>>;
+                type: string;
+            };
+            properties: {
+                admin: string;
+                iso_a3: string;
+                name: string;
+            };
+            type: string;
+        },
+        geometry: {
+            coordinates: Array<Array<Array<number>>>;
+            type: string;
+        };
+        isActive: boolean;
+        name: string;
+        path: string;
+        uid: string;
+        value: number | null;
+    }
+
     export type VueUiWorldConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        events?: {
+            datapointEnter?: VueUiWorldEvent; // v3
+            datapointLeave?: VueUiWorldEvent; // v3
+            datapointClick?: VueUiWorldEvent; // v3
+        };
         userOptions?: ChartUserOptions;
         customPalette?: string[];
         projection?: 'aitoff' | 'azimuthalEquidistant' | 'bonne' | 'equirectangular' | 'gallPeters' | 'globe' | 'hammer' | 'mercator' | 'mollweide' | 'robinson' | 'sinusoidal' | 'vanDerGrinten' | 'winkelTripel',
@@ -7786,7 +8404,7 @@ declare module "vue-data-ui" {
 
     export type VueUiRidgelineDatapoint = {
         name: string;
-        values: number[];
+        values: Array<number | null>;
         color?: string;
     }
 
@@ -7795,10 +8413,31 @@ declare module "vue-data-ui" {
         datapoints: VueUiRidgelineDatapoint[]
     }
 
+    export type VueUiRidgelineDatapointEventUnit = {
+        color: string;
+        name: string;
+        values: Array<number | null>;
+        id: string;
+    };
+
+    export type VueUiRidgelineDatapointEventEntry = {
+        dp: VueUiRidgelineDatapointEventUnit;
+        selected: number;
+    };      
+
+    export type VueUiRidgelineDatapointEvent = VueUiRidgelineDatapointEventEntry[][];
+
     export type VueUiRidgelineConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean;
+        events?: { // v3
+            datapointEnter?: VueUiRidgelineEvent; // v3
+            datapointLeave?: VueUiRidgelineEvent; // v3
+            datapointClick?: VueUiRidgelineEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
-        responsive?: boolean;
         userOptions?: ChartUserOptions;
         useCssAnimation?: boolean;
         table?: {
@@ -7883,6 +8522,10 @@ declare module "vue-data-ui" {
                         prefix?: string;
                         suffix?: string;
                         rotation?: number;
+                        autoRotate?: { // v3
+                            enable?: boolean; // v3
+                            angle?: number; // v3
+                        };
                         values?: Array<number | string>;
                         datetimeFormatter?: AxisDateFormatter;
                         color?: string;
@@ -7897,7 +8540,7 @@ declare module "vue-data-ui" {
                 yAxis?: {
                     labels?: {
                         fontSize?: number;
-                        bold?: number;
+                        bold?: boolean;
                         color?: string;
                         offsetX?: number;
                     };
@@ -7954,18 +8597,58 @@ declare module "vue-data-ui" {
     >
 
     export type VueUiChordDataset = {
-        matrix: number[][];
+        matrix: Array<Array<number | null>>;
         labels?: string[];
         colors?: string[];
     }
 
+    export type VueUiChordDatapointArc = {
+        color: string;
+        endAngle: number;
+        id: string;
+        index: number;
+        name: string;
+        pattern: string;
+        proportion: number;
+        startAngle: number;
+    }
+
+    export type VueUiChordNode = {
+        endAngle: number;
+        groupColor: string;
+        groupId: string;
+        groupName: string;
+        index: number;
+        midAngle: number;
+        midBaseX: number;
+        midBaseY: number;
+        pattern: string;
+        startAngle: number;
+        subIndex: number;
+        value: number;
+    }
+
+    export type VueUiChordDatapointRibbon = {
+        color: string;
+        id: string;
+        source: VueUiChordNode;
+        target: VueUiChordNode;
+    }
+
     export type VueUiChordConfig = {
+        debug?: boolean; // v3
+        loading?: boolean; // v3
+        responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiChordEvent; // v3
+            datapointLeave?: VueUiChordEvent; // v3
+            datapointClick?: VueUiChordEvent; // v3
+        };
         theme?: Theme;
         customPalette?: string[];
         enableRotation?: boolean;
         initialRotation?: nulber;
         useCssAnimation?: boolean;
-        responsive?: boolean;
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
@@ -7987,7 +8670,7 @@ declare module "vue-data-ui" {
                     outerRadiusRatio?: number;
                     padAngle?: number;
                     stroke?: string;
-                    strokeWidth?: string;
+                    strokeWidth?: number;
                     labels?: {
                         show?: boolean;
                         fontSize?: number;
@@ -8096,6 +8779,7 @@ declare module "vue-data-ui" {
         | VueUiThermometerConfig
         | VueUiTiremarksConfig
         | VueUiVerticalBarConfig
+        | VueUiHorizontalBarConfig
         | VueUiWaffleConfig
         | VueUiWheelConfig
         | VueUiXyConfig
@@ -8159,6 +8843,7 @@ declare module "vue-data-ui" {
         | "vue_ui_thermometer"
         | "vue_ui_tiremarks"
         | "vue_ui_vertical_bar"
+        | "vue_ui_horizontal_bar"
         | "vue_ui_waffle"
         | "vue_ui_wheel"
         | "vue_ui_xy"
@@ -8474,6 +9159,55 @@ declare module "vue-data-ui" {
      * @returns The shifted color in hexadecimal format.
      */
     export const shiftColorHue: (color: string, strength: number) => string;
+    
+    export type FormatSmallValueArgs = {
+        value: number;
+        maxDecimals?: number;
+        fallbackFormatter?: (value: number) => string;
+        removeTrailingZero?: boolean
+    }
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Formats numeric values with a controlled number of decimal places,
+     * applying maxDecimals for all values when no fallbackFormatter is given,
+     * or calling the fallbackFormatter for values ≥ 1 if provided.
+     * ___
+     * @example
+     * // Zero value
+     * formatSmallValue({ value: 0 }); // "0"
+     *
+     * // Values < 1 use minimal decimals
+     * formatSmallValue({ value: 0.9 }); // "0.9"
+     * formatSmallValue({ value: 0.0042 }); // "0.0042"
+     * formatSmallValue({ value: 0.00420001 }); // "0.0042"
+     *
+     * // Retain trailing zeros
+     * formatSmallValue({ value: 0.9, removeTrailingZero: false }); // "0.90"
+     *
+     * // Values ≥ 1 without fallback apply maxDecimals
+     * formatSmallValue({ value: 1.61803, maxDecimals: 3 }); // "1.618"
+     *
+     * // Values ≥ 1 with fallbackFormatter
+     * formatSmallValue({ value: 2.5, fallbackFormatter: v => v.toFixed(1) }); // "2.5"
+     *
+     * // Negative values
+     * formatSmallValue({ value: -0.056 }); // "-0.056"
+     * 
+     * @param {FormatSmallValueArgs} options - Configuration object for formatting.
+     * @param {number} options.value                 - The numeric value to format.
+     * @param {number} [options.maxDecimals=4]       - Maximum decimal places to use.
+     * @param {(value: number) => string} [options.fallbackFormatter] - Formatter for values ≥ 1.
+     * @param {boolean} [options.removeTrailingZero=true] - Whether to strip unnecessary trailing zeros.
+     * @returns {string} The formatted number as a string.
+     */
+    export const formatSmallValue: ({
+        value,
+        maxDecimals,
+        fallbackFormatter,
+        removeTrailingZero
+    }: FormatSmallValueArgs) => string
 
     export type CreateTSpansArgs = {
         content: string;
@@ -8521,60 +9255,15 @@ declare module "vue-data-ui" {
         y
     }: CreateTSpansArgs) => string;
 
-    export type UseObjectBindingsOptions = {
-        /** Delimiter to join object‑path segments */
-        delimiter?: string;
-        /** If true, array indices will not be traversed */
-        skipArrays?: boolean;
-    };
-
-    /**
-     * Recursively build a union of dot‑delimited paths for an object type,
-     * but skip arrays (we don’t traverse them by default at runtime).
-     */
-    type Paths<T> = T extends object
-        ? T extends any[]
-        ? never
-        : {
-            [K in Extract<keyof T, string>]:
-            // if the property is itself an object, recurse
-            T[K] extends object
-            ? `${K}` | `${K}.${Paths<T[K]>}`
-            : `${K}`;
-        }[Extract<keyof T, string>]
-        : never;
-
-    /**
-     * Given an object type `T` and one of its path strings `P`,
-     * resolve the type at that path.
-     */
-    type PathValue<T, P extends string> =
-        P extends `${infer K}.${infer Rest}`
-        ? K extends keyof T
-        ? PathValue<T[K], Rest>
-        : never
-        : P extends keyof T
-        ? T[P]
-        : never;
-
-    /**
-     * A fully‑typed bindings record: for each valid path `P` in `T`,
-     * `ComputedRef` of the exact `PathValue<T,P>`.
-     */
-    export type TypedBindings<T extends object> = {
-        [P in Paths<T>]: WritableComputedRef<PathValue<T, P>>;
-    };
-
     /**
      * Vue Data UI composable
      * ---
      * Flattens a reactive config object into computed refs for every leaf property.
      * 
      * @template T extends object
-     * @param configRef  A Vue `Ref<T>` holding your object.
+     * @param configRef  A Vue `Ref` holding your object.
      * @param options    Optional settings: `delimiter` (default `"."`) and `skipArrays` (default `true`).
-     * @returns         A `TypedBindings<T>` whose keys are every “leaf” path in `T`
-     *                  and whose values are `WritableComputedRef` of the exact property type.
+     * @returns         An object with flatten config as refs
      * 
      * ___
      * @example
@@ -8604,8 +9293,11 @@ declare module "vue-data-ui" {
      *   </template>
      * ```
      */
-    export function useObjectBindings<T extends object>(
-        configRef: Ref<T>,
-        options?: UseObjectBindingsOptions
-    ): TypedBindings<T>;
+    export function useObjectBindings(
+        configRef: Ref<Record<string, any>>,
+        options?: {
+            delimiter?: string
+            skipArrays?: boolean
+        }
+    ): Record<string, Ref<any>>;
 }

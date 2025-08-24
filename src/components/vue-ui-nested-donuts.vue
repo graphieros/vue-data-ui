@@ -8,6 +8,7 @@ import {
     onBeforeUnmount,
     defineAsyncComponent,
     shallowRef,
+    toRefs,
 } from "vue";
 import {
     abbreviate,
@@ -32,26 +33,29 @@ import {
     themePalettes,
     XMLNS,
     checkNaN,
+    treeShake,
+    hasDeepProperty,
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import img from "../img";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import themes from "../themes.json";
+import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import BaseScanner from "../atoms/BaseScanner.vue";
 
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
-const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_nested_donuts: DEFAULT_CONFIG } = useConfig();
 
@@ -70,8 +74,13 @@ const props = defineProps({
     },
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
+const isDataset = computed({
+    get() {
+        return !!props.dataset && props.dataset.length;
+    },
+    set(bool) {
+        return bool;
+    }
 });
 
 const uid = ref(createUid());
@@ -97,14 +106,66 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const loaderDs = {
+    name: '',
+    series: [
+        {
+            name: '',
+            values: [3],
+            color: '#BABABA',
+        },
+        {
+            name: '',
+            values: [2],
+            color: '#AAAAAA',
+        },
+        {
+            name: '',
+            values: [1],
+            color: '#CACACA',
+        },
+    ]
+}
+
+const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async() => {
+            await triggerAnim();
+        });
     },
-    set: (newCfg) => {
-        return newCfg;
-    },
-});
+    skeletonDataset: [loaderDs, loaderDs],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            useCssAnimation: false,
+            table: { show: false },
+            startAnimation: { show: false },
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        labels: {
+                            dataLabels: { show: false },
+                        }
+                    },
+                    legend: { backgroundColor: 'transparent', showValue: false, showPercentage: false },
+                    title: {
+                        color: '#1A1A1A',
+                        subtitle: {
+                            color: '#5A5A5A'
+                        }
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
@@ -117,8 +178,11 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG,
     });
+
+    let finalConfig = {};
+
     if (mergedConfig.theme) {
-        return {
+        finalConfig = {
             ...useNestedProp({
                 userConfig:
                     themes.vue_ui_nested_donuts[mergedConfig.theme] || props.config,
@@ -127,14 +191,40 @@ function prepareConfig() {
             customPalette: themePalettes[mergedConfig.theme] || palette,
         };
     } else {
-        return mergedConfig;
+        finalConfig = mergedConfig;
     }
+
+    // ------------------------------ OVERRIDES -----------------------------------
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointEnter')) {
+        finalConfig.events.datapointEnter = props.config.events.datapointEnter;
+    } else {
+        finalConfig.events.datapointEnter = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointLeave')) {
+        finalConfig.events.datapointLeave = props.config.events.datapointLeave;
+    } else {
+        finalConfig.events.datapointLeave = null;
+    }
+
+    if (props.config && hasDeepProperty(props.config, 'events.datapointClick')) {
+        finalConfig.events.datapointClick = props.config.events.datapointClick;
+    } else {
+        finalConfig.events.datapointClick = null;
+    }
+
+    // ----------------------------------------------------------------------------
+
+    return finalConfig;
 }
 
 watch(
     () => props.config,
     (_newCfg) => {
-        FINAL_CONFIG.value = prepareConfig();
+        if (!loading.value) {
+            FINAL_CONFIG.value = prepareConfig();
+        }
         userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
         prepareChart();
         titleStep.value += 1;
@@ -232,11 +322,9 @@ function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
     });
 }
 
-onMounted(async () => {
-    prepareChart();
-
+async function triggerAnim() {
     if (FINAL_CONFIG.value.startAnimation?.show) {
-        const seriesList = props.dataset.flatMap((d) => d.series);
+        const seriesList = FINAL_DATASET.value.flatMap((d) => d.series);
         const finalValues = seriesList.map((s) =>
             sanitizeArray(s.values).reduce((a, b) => a + b, 0)
         );
@@ -244,7 +332,7 @@ onMounted(async () => {
         animatedValues.value = finalValues.map(() => 0);
         isFirstLoad.value = true;
 
-        ghostSlices.value = props.dataset.map((ds, i) => {
+        ghostSlices.value = FINAL_DATASET.value.map((ds, i) => {
             const total = ds.series.reduce(
                 (sum, s) => sum + sanitizeArray(s.values).reduce((a, b) => a + b, 0),
                 0
@@ -277,21 +365,29 @@ onMounted(async () => {
     } else {
         isFirstLoad.value = false;
     }
+}
+
+onMounted(async () => {
+    prepareChart();
+    await triggerAnim();
 });
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-onMounted(() => {
-    prepareChart();
-});
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: "VueUiNestedDonuts",
             type: "dataset",
+            debug: debug.value
         });
+        isDataset.value = false;
+        manualLoading.value = true; // v3
+    } else {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -362,6 +458,17 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        dataLabels: {
+            show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show,
+        },
+            showTable: FINAL_CONFIG.value.table.show,
+            showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    };
+}, { immediate: true });
+
 const svg = ref({
     width: FINAL_CONFIG.value.style.chart.width,
     height: FINAL_CONFIG.value.style.chart.height,
@@ -369,7 +476,10 @@ const svg = ref({
 
 const emit = defineEmits(["selectLegend", "selectDatapoint"]);
 
-function selectDatapoint({ datapoint, index }) {
+function selectDatapoint({ datapoint, index, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
+    }
     emit("selectDatapoint", { datapoint, index });
 }
 
@@ -400,13 +510,15 @@ function animateValue({
 const segregated = ref([]);
 
 const immutableDataset = computed(() => {
-    props.dataset.forEach((ds, i) => {
+    const l = loading.value;
+    FINAL_DATASET.value.forEach((ds, i) => {
         if ([null, undefined].includes(ds.name)) {
             error({
                 componentName: "VueUiNestedDonuts",
                 type: "datasetSerieAttribute",
                 property: "name",
                 index: i,
+                debug: debug.value
             });
         }
         if ([null, undefined].includes(ds.series)) {
@@ -415,6 +527,7 @@ const immutableDataset = computed(() => {
                 type: "datasetSerieAttribute",
                 property: "series",
                 index: i,
+                debug: debug.value
             });
         } else {
             if (ds.series.length === 0) {
@@ -422,6 +535,7 @@ const immutableDataset = computed(() => {
                     componentName: "VueUiNestedDonuts",
                     type: "datasetAttributeEmpty",
                     property: `series at index ${i}`,
+                    debug: debug.value
                 });
             } else {
                 ds.series.forEach((serie, j) => {
@@ -432,6 +546,7 @@ const immutableDataset = computed(() => {
                             property: "name",
                             index: j,
                             key: "serie",
+                            debug: debug.value
                         });
                     }
                     if ([null, undefined].includes(serie.values)) {
@@ -441,6 +556,7 @@ const immutableDataset = computed(() => {
                             property: "values",
                             index: j,
                             key: "serie",
+                            debug: debug.value
                         });
                     }
                 });
@@ -450,7 +566,7 @@ const immutableDataset = computed(() => {
 
     let animatedCounter = 0;
 
-    return props.dataset.map((ds, i) => {
+    return FINAL_DATASET.value.map((ds, i) => {
         return {
             ...ds,
             total: ds.series
@@ -482,6 +598,13 @@ const immutableDataset = computed(() => {
         };
     });
 });
+
+// v3 - Stop skeleton loader when props.dataset becomes valid
+watch(() => props.dataset, (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+        manualLoading.value = false;
+    }
+}, { immediate: true });
 
 const donutSize = computed(() => {
     return (
@@ -658,12 +781,18 @@ const donuts = computed(() => {
                 105.25,
                 donutThickness.value
             )
+
+            const fullCirclePath = `M ${svg.value.width/2},${(svg.value.height/2) + radius}
+            a ${radius},${radius} 0 1,1 0,${-2 * radius}
+            a ${radius},${radius} 0 1,1 0,${2 * radius}`;
+
     
         return {
             ...ds,
             hasData,
             radius,
             skeleton,
+            fullCirclePath,
             donut: makeDonut(
                 { series },
                 svg.value.width / 2,
@@ -710,7 +839,22 @@ const selectedDatapoint = ref(null);
 const selectedDatapointIndex = ref(null);
 const dataTooltipSlot = ref(null);
 
+function handleDatapointLeave({ datapoint, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex })
+    }
+    isTooltip.value = false;
+    selectedDonut.value = null;
+    selectedSerie.value = null;
+    selectedDatapoint.value = null;
+    selectedDatapointIndex.value = null;
+}
+
 function useTooltip({ datapoint, _relativeIndex, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex })
+    }
+
     selectedDonut.value = datapoint.arcOfId;
     selectedDatapoint.value = datapoint.id;
     selectedDatapointIndex.value = seriesIndex;
@@ -895,18 +1039,18 @@ const legendSets = computed(() => {
         const total = isFirstLoad.value
             ? visibleSeries
                 .map((s) => {
-                    const indexInOriginal = props.dataset[i].series.findIndex(
+                    const indexInOriginal = FINAL_DATASET.value[i].series.findIndex(
                         (orig) => orig.name === s.name
                     );
                     return sanitizeArray(
-                        props.dataset[i].series[indexInOriginal].values
+                        FINAL_DATASET.value[i].series[indexInOriginal].values
                     ).reduce((a, b) => a + b, 0);
                 })
                 .reduce((a, b) => a + b, 0)
             : visibleSeries.map((s) => s.value).reduce((a, b) => a + b, 0);
 
         return ds.series.map((s, j) => {
-            const rawValue = sanitizeArray(props.dataset[i].series[j].values).reduce(
+            const rawValue = sanitizeArray(FINAL_DATASET.value[i].series[j].values).reduce(
                 (a, b) => a + b,
                 0
             );
@@ -1189,7 +1333,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg ref="svgRef" :xmlns="XMLNS" v-if="isDataset" :class="{
+        <svg ref="svgRef" :xmlns="XMLNS" :class="{
             'vue-data-ui-fullscreen--on': isFullscreen,
             'vue-data-ui-fulscreen--off': !isFullscreen,
             'vue-data-ui-svg': true
@@ -1232,7 +1376,18 @@ defineExpose({
                             :flood-color="FINAL_CONFIG.style.chart.layout.donut.shadowColor" />
                     </filter>
                 </defs>
-    
+
+                <!-- CURVED PATHS -->
+                <defs>
+                    <path
+                        v-for="(item, i) in donuts"
+                        :key="`path-full-${i}`"
+                        :id="`path-full-${i}-${uid}`"
+                        :d="item.fullCirclePath"
+                        fill="none"
+                    />
+                </defs>
+
                 <!-- NESTED DONUTS -->
                 <g v-for="(item, i) in donuts">
                     <template v-if="item.hasData">
@@ -1261,32 +1416,70 @@ defineExpose({
                 </g>
     
                 <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.showDonutName">
-                    <g v-for="(item, i) in donuts">
-                        <g v-for="(arc, j) in item.donut">
-                            <text data-cy="datapoint-name" :class="{ animated: FINAL_CONFIG.useCssAnimation }"
-                                v-if="j === 0 && svg.width && svg.height" :x="svg.width / 2" :y="arc.startY -
-                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize +
-                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                        .donutNameOffsetY
-                                    " text-anchor="middle" :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                                        " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName
-                        ? 'bold'
-                        : 'normal'
-                        " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color">
-                                {{
-                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                        .donutNameAbbreviation
-                                        ? abbreviate({
-                                            source: item.name,
-                                            length:
+                    <template v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.curvedDonutName">
+                        <g v-for="(item, i) in donuts">
+                            <g v-for="(arc, j) in item.donut">
+                                <text 
+                                    data-cy="datapoint-name" 
+                                    :class="{ animated: FINAL_CONFIG.useCssAnimation }"
+                                    v-if="j === 0 && svg.width && svg.height" 
+                                    text-anchor="middle" 
+                                    :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName ? 'bold' : 'normal'" 
+                                    :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
+                                    :dy="FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameOffsetY"
+                                >
+                                    <textPath
+                                        :href="`#path-full-${i}-${uid}`"
+                                        startOffset="50%"
+                                        text-anchor="middle"
+                                        method="align"
+                                        spacing="auto"
+                                        side="right"
+                                    >
+                                        {{
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameAbbreviation
+                                            ? abbreviate({
+                                                source: item.name,
+                                                length:
                                                 FINAL_CONFIG.style.chart.layout.labels.dataLabels
                                                     .donutNameMaxAbbreviationSize,
-                                        })
-                                        : item.name
-                                }}
-                            </text>
+                                            })
+                                            : item.name
+                                        }}
+                                    </textPath>
+                                </text>
+                            </g>
                         </g>
-                    </g>
+                    </template>
+                    <template v-else>
+                        <g v-for="(item, i) in donuts">
+                            <g v-for="(arc, j) in item.donut">
+                                <text 
+                                    data-cy="datapoint-name" 
+                                    :class="{ animated: FINAL_CONFIG.useCssAnimation }"
+                                    v-if="j === 0 && svg.width && svg.height" 
+                                    :x="svg.width / 2" :y="arc.startY - FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameOffsetY" 
+                                    text-anchor="middle" 
+                                    :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" 
+                                    :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldDonutName
+                            ? 'bold'
+                            : 'normal'
+                            " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color">
+                                    {{
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                            .donutNameAbbreviation
+                                            ? abbreviate({
+                                                source: item.name,
+                                                length:
+                                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                                        .donutNameMaxAbbreviationSize,
+                                            })
+                                            : item.name
+                                    }}
+                                </text>
+                            </g>
+                        </g>
+                    </template>
                 </g>
     
                 <!-- DATALABELS -->
@@ -1407,20 +1600,18 @@ defineExpose({
                 <!-- TOOLTIP TRAPS -->
                 <g v-for="(item, i) in donuts">
                     <g v-for="(arc, j) in item.donut">
-                        <path data-cy="tooltip-trap" :d="arc.arcSlice"
-                            :fill="selectedSerie === arc.id ? FINAL_CONFIG.style.chart.layout.donut.selectedColor : 'transparent'" @mouseenter="
-                                useTooltip({
-                                    datapoint: arc,
-                                    relativeIndex: i,
-                                    seriesIndex: arc.seriesIndex,
-                                })
-                                " @click="selectDatapoint({ datapoint: arc, index: j })" @mouseleave="
-                                    isTooltip = false;
-                                selectedDonut = null;
-                                selectedDatapoint = null;
-                                selectedDatapointIndex = null;
-                                selectedSerie = null
-                                " />
+                        <path 
+                            data-cy="tooltip-trap" 
+                            :d="arc.arcSlice"
+                            :fill="selectedSerie === arc.id ? FINAL_CONFIG.style.chart.layout.donut.selectedColor : 'transparent'" 
+                            @mouseenter="useTooltip({
+                                datapoint: arc,
+                                relativeIndex: i,
+                                seriesIndex: arc.seriesIndex,
+                            })" 
+                            @click="selectDatapoint({ datapoint: arc, index: j, seriesIndex: arc.seriesIndex })" 
+                            @mouseleave="handleDatapointLeave({ datapoint: arc, seriesIndex: arc.seriesIndex })" 
+                        />
                     </g>
                 </g>
                 <slot name="svg" :svg="svg"></slot>
@@ -1430,16 +1621,6 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
-
-        <Skeleton v-if="!isDataset" :config="{
-            type: 'donut',
-            style: {
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                donut: {
-                    color: '#CCCCCC',
-                },
-            },
-        }" />
 
         <!-- TOOLTIP -->
         <Tooltip :show="mutableConfig.showTooltip && isTooltip"
@@ -1452,7 +1633,10 @@ defineExpose({
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
             :position="FINAL_CONFIG.style.chart.tooltip.position" :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
             :parent="nestedDonutsChart" :content="tooltipContent" :isFullscreen="isFullscreen"
-            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)">
+            :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
+        >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>
@@ -1542,6 +1726,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading"/>
     </div>
 </template>
 

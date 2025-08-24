@@ -8,35 +8,51 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref({
-    categories: [
-        { name: 'Category 1'},
-        { name: 'Category 2'},
-        { name: 'Category 3'},
-    ],
-    series: [
-        {
-            name: 'Serie 1',
-            values: [60, 20, 30],
-            target: 100,
-            formatter: ({value}) => {
-                return `f1 - ${value}`
-            }
-        },
-        {
-            name: 'Serie 2',
-            values: [20, 80, 40],
-            target: 100,
-            formatter: ({value}) => {
-                return `f2 - ${value}`
-            }
-        },
-        {
-            name: 'Serie 3',
-            values: [50, 60, 70],
-            target: 100
+const src = {
+            categories: [
+                { name: 'Category 1'},
+                { name: 'Category 2'},
+                { name: 'Category 3'},
+            ],
+            series: [
+                {
+                    name: 'Serie 1 with a long name',
+                    values: [60, 20, 30],
+                    target: 100,
+                    formatter: ({value}) => {
+                        return `f1 - ${value}`
+                    }
+                },
+                {
+                    name: 'Serie 2 with a long name',
+                    values: [20, 80, 40],
+                    target: 100,
+                    formatter: ({value}) => {
+                        return `f2 - ${value}`
+                    }
+                },
+                {
+                    name: 'Serie 3 also quite long',
+                    values: [50, 60, 70],
+                    target: 100
+                }
+            ]
         }
-    ]
+
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = src
+    }, 2000)
+    
+    // setTimeout(() => {
+    //     dataset.value = undefined;
+    // }, 4000);
+
+    // setTimeout(() => {
+    //     dataset.value = src
+    // }, 6000)
 })
 
 const alternateDataset = ref({
@@ -101,6 +117,8 @@ function alterDataset() {
 
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
@@ -114,7 +132,7 @@ const model = ref([
     
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.plots.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.plots.radius', def: 2, type: 'range', min: 0, max: 24},
@@ -189,7 +207,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[5])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -215,6 +233,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex});
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex});
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex});
+                },
+            },
             theme: currentTheme.value,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }
@@ -257,9 +286,9 @@ onMounted(async () => {
             responsive: true
         }">
 
-        <template #chart-background>
+        <!-- <template #chart-background>
             <div style="height: 100%; width: 100%; background: radial-gradient(at top left, red, white)"/>
-        </template>
+        </template> -->
 
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">

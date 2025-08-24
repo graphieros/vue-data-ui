@@ -1,3 +1,4 @@
+import { toRaw, isRef, unref } from "vue";
 import errors from "./errors.json";
 
 export function makeDonut(
@@ -161,6 +162,17 @@ export function treeShake({ defaultConfig, userConfig }) {
             }
         }
     });
+
+    // Allow override of default empty objects in config
+    Object.keys(userConfig).forEach(key => {
+        if (!Object.hasOwn(finalConfig, key)) {
+            const val = userConfig[key];
+            finalConfig[key] = (val && typeof val === 'object' && !Array.isArray(val))
+                ? { ...val }
+                : val;
+        }
+    });
+
     return finalConfig;
 }
 
@@ -404,11 +416,33 @@ export function convertColorToHex(color) {
         return null;
     }
 
+    color = isRef?.(color) ? unref(color) : color;
+
     color = convertNameColorToHex(color);
 
 
-    if (color === 'transparent') {
-        return "#FFFFFF00";
+    if (Array.isArray(color)) {
+        const [r, g, b, a = 1] = color;
+        color = `rgba(${r},${g},${b},${a})`;
+    } else if (typeof color === 'object') {
+        if (Number.isFinite(color.r) && Number.isFinite(color.g) && Number.isFinite(color.b)) {
+            const a = Number.isFinite(color.a) ? color.a : 1;
+            color = `rgba(${color.r},${color.g},${color.b},${a})`;
+        } else {
+            return null;
+        }
+    } else if (typeof color === 'number') {
+        const n = color >>> 0; // uint32
+        const hex = n.toString(16).padStart(n <= 0xFFFFFF ? 6 : 8, '0');
+        return `#${hex.length === 6 ? hex + 'ff' : hex}`;
+    } else if (typeof color !== 'string') {
+        return null;
+    }
+
+    color = color.trim();
+
+    if (color.toLowerCase() === 'transparent') {
+        return '#FFFFFF00';
     }
 
     color = color.replace(shorthandRegex, (_, r, g, b, a) => {
@@ -635,49 +669,63 @@ export function createStar({
 }
 
 export function giftWrap({ series }) {
-    series = series.sort((a, b) => a.x - b.x);
-    function polarAngle(a, b, c) {
-        const x = (a.x - b.x) * (c.x - b.x) + (a.y - b.y) * (c.y - b.y);
-        const y = (a.x - b.x) * (c.y - b.y) - (c.x - b.x) * (a.y - b.y);
-        return Math.atan2(y, x);
+    if (!Array.isArray(series) || series.length === 0) return "";
+
+    const pts = Array.from(
+        new Map(
+            series
+                .filter(p => p && Number.isFinite(p.x) && Number.isFinite(p.y))
+                .map(p => [`${p.x},${p.y}`, { x: +p.x, y: +p.y }])
+        ).values()
+    );
+    if (pts.length === 0) return "";
+    if (pts.length === 1) return `${Math.round(pts[0].x)},${Math.round(pts[0].y)} `;
+
+    const dist2 = (a, b) => {
+        const dx = a.x - b.x, dy = a.y - b.y;
+        return dx * dx + dy * dy;
+    };
+    const cross = (o, a, b) =>
+        (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+
+    let start = pts[0];
+    for (const p of pts) {
+        if (p.x < start.x || (p.x === start.x && p.y < start.y)) start = p;
     }
-    const perimeter = [];
-    let currentPoint;
-    currentPoint = series[0];
-    for (const p of series) {
-        if (p.x < currentPoint.x) {
-            currentPoint = p;
-        }
-    }
-    perimeter[0] = currentPoint;
-    let endpoint, secondlast;
-    let minAngle, newEnd;
-    endpoint = perimeter[0];
-    secondlast = { x: endpoint.x, y: endpoint.y + 1 };
-    do {
-        minAngle = Math.PI;
-        for (const p of series) {
-            currentPoint = polarAngle(secondlast, endpoint, p);
-            if (currentPoint <= minAngle) {
-                newEnd = p;
-                minAngle = currentPoint;
+
+    const hull = [start];
+    let endpoint = start;
+
+    const maxSteps = pts.length + 2;
+    let steps = 0;
+
+    while (true) {
+        if (++steps > maxSteps) break;
+        let candidate = pts[0] === endpoint ? pts[1] : pts[0];
+        for (const p of pts) {
+            if (p === endpoint || p === candidate) continue;
+            const c = cross(endpoint, candidate, p);
+            if (c < 0) continue;
+            if (c > 0) {
+                candidate = p;
+            } else {
+                if (dist2(endpoint, p) > dist2(endpoint, candidate)) {
+                    candidate = p;
+                }
             }
         }
-        if (newEnd !== perimeter[0]) {
-            perimeter.push(newEnd);
-            secondlast = endpoint;
-            endpoint = newEnd;
-        }
-    } while (newEnd !== perimeter[0]);
-    let result;
-    perimeter.forEach((res) => {
-        if (res && res.x && res.y) {
-            result += `${Math.round(res.x)},${Math.round(res.y)} `;
-        }
-    });
-    result = result.replaceAll("undefined", "");
+        if (candidate === start) break;
+        hull.push(candidate);
+        endpoint = candidate;
+    }
+
+    let result = "";
+    for (const p of hull) {
+        result += `${Math.round(p.x)},${Math.round(p.y)} `;
+    }
     return result;
 }
+
 
 export function degreesToRadians(degrees) {
     return (degrees * Math.PI) / 180;
@@ -727,21 +775,71 @@ export function adaptColorToBackground(bgColor) {
     return "#000000";
 }
 
-export function convertConfigColors(config) {
-    for (const key in config) {
-        if (typeof config[key] === 'object' && !Array.isArray(config[key]) && config[key] !== null) {
-            convertConfigColors(config[key]);
-        } else if (['color', 'backgroundColor', 'stroke'].includes(key)) {
-            if (config[key] === '') {
-                config[key] = '#000000';
-            } else if (config[key] === 'transparent') {
-                config[key] = '#FFFFFF00'
-            } else {
-                config[key] = convertColorToHex(config[key]);
+function isPlainObject(x) {
+    return (
+        x !== null &&
+        typeof x === 'object' &&
+        Object.prototype.toString.call(x) === '[object Object]' &&
+        (x.constructor === Object || x.constructor == null)
+    );
+}
+
+// Vue reactivity objects often expose these fields; avoid descending into them
+function looksLikeVueReactive(x) {
+    return !!x && (
+        x.__v_isRef ||
+        x.__v_isReactive ||
+        x.__v_isReadonly ||
+        x.effect ||
+        x.dep || x.deps || x.subs
+    );
+}
+
+function normalizeColor(raw) {
+    if (raw === '') return '#000000';
+    if (raw === 'transparent') return '#FFFFFF00';
+    const hex = convertColorToHex(raw);
+    return hex ?? raw;
+}
+
+export function convertConfigColors(config, seen = new WeakSet()) {
+    const obj = toRaw(config);
+    if (!isPlainObject(obj) || seen.has(obj)) return obj;
+    seen.add(obj);
+
+    for (const key in obj) {
+        const v = isRef(obj[key]) ? unref(obj[key]) : obj[key];
+
+        if (key === 'color' || key === 'backgroundColor') {
+            if (typeof v === 'string') obj[key] = normalizeColor(v);
+            continue;
+        }
+
+        // "stroke" can be EITHER a color string OR a nested object
+        if (key === 'stroke') {
+            if (typeof v === 'string') {
+                obj[key] = normalizeColor(v);
+            } else if (isPlainObject(v) && !looksLikeVueReactive(v)) {
+                convertConfigColors(v, seen);
             }
+            continue;
+        }
+
+        if (Array.isArray(v)) {
+            for (const item of v) {
+                if (isPlainObject(item) && !looksLikeVueReactive(item)) {
+                    convertConfigColors(item, seen);
+                }
+            }
+            continue;
+        }
+
+        if (isPlainObject(v) && !looksLikeVueReactive(v)) {
+            convertConfigColors(v, seen);
         }
     }
-    return config;
+
+    return obj;
 }
 
 export function calcLinearProgression(plots) {
@@ -1320,7 +1418,8 @@ export function objectIsEmpty(obj) {
     return Object.keys(obj).length === 0
 }
 
-export function error({ componentName, type, property = '', index = '', key = '', warn = true }) {
+export function error({ componentName, type, property = '', index = '', key = '', warn = true, debug = true }) {
+    if (!debug) return;
     const message = `\n> ${errors[type].replace('#COMP#', componentName).replace('#ATTR#', property).replace('#INDX#', index).replace('#KEY#', key)}\n`;
     if (warn) {
         console.warn(message)
@@ -1343,27 +1442,63 @@ export function generateSpiralCoordinates({ points, a, b, angleStep, startX, sta
     return coordinates;
 }
 
-export function createSpiralPath({ points, a, b, angleStep, startX, startY }) {
-    const coordinates = generateSpiralCoordinates({ points, a: a || 6, b: b || 6, angleStep: angleStep || 0.07, startX, startY });
-    let path = `M${coordinates[0].x} ${coordinates[0].y}`;
+function boundsOf(points) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const p of points) {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+    }
+    return { minX, minY, maxX, maxY, width: maxX - minX || 1, height: maxY - minY || 1 };
+}
 
+function buildSmoothPath(coordinates) {
+    if (!coordinates.length) return "";
+    let path = `M${coordinates[0].x} ${coordinates[0].y}`;
     for (let i = 1; i < coordinates.length - 2; i += 2) {
         const p0 = coordinates[i - 1];
         const p1 = coordinates[i];
         const p2 = coordinates[i + 1];
         const p3 = coordinates[i + 2];
-
         const xc1 = (p0.x + p1.x) / 2;
         const yc1 = (p0.y + p1.y) / 2;
         const xc2 = (p1.x + p2.x) / 2;
         const yc2 = (p1.y + p2.y) / 2;
         const xc3 = (p2.x + p3.x) / 2;
         const yc3 = (p2.y + p3.y) / 2;
-
         path += ` C${xc1} ${yc1}, ${xc2} ${yc2}, ${xc3} ${yc3}`;
     }
     return path;
 }
+
+export function createSpiralPath({
+    maxPoints,
+    a = 6,
+    b = 6,
+    angleStep = 0.07,
+    startX,
+    startY,
+    boxWidth,
+    boxHeight,
+    padding = 12
+}) {
+    const raw = generateSpiralCoordinates({ points: maxPoints, a, b, angleStep, startX: 0, startY: 0 });
+    const { minX, minY, maxX, maxY, width, height } = boundsOf(raw);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const availW = Math.max(1, boxWidth - 2 * padding);
+    const availH = Math.max(1, boxHeight - 2 * padding);
+    const s = Math.min(availW / width, availH / height);
+    const tx = startX - cx * s;
+    const ty = startY - cy * s;
+    return function toPath(endPoints) {
+        const n = Math.max(2, Math.min(Math.round(endPoints), raw.length));
+        const fitted = raw.slice(0, n).map(p => ({ x: p.x * s + tx, y: p.y * s + ty }));
+        return buildSmoothPath(fitted);
+    };
+}
+
 
 export function calculateDistance(point1, point2) {
     return Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
@@ -1433,151 +1568,160 @@ export function getMissingDatasetAttributes({ datasetObject, requiredAttributes 
     return errors;
 }
 
+const COLOR_MAP = {
+    ALICEBLUE: "#F0F8FF",
+    ANTIQUEWHITE: "#FAEBD7",
+    AQUA: "#00FFFF",
+    AQUAMARINE: "#7FFFD4",
+    AZURE: "#F0FFFF",
+    BEIGE: "#F5F5DC",
+    BISQUE: "#FFE4C4",
+    BLACK: "#000000",
+    BLANCHEDALMOND: "#FFEBCD",
+    BLUE: "#0000FF",
+    BLUEVIOLET: "#8A2BE2",
+    BROWN: "#A52A2A",
+    BURLYWOOD: "#DEB887",
+    CADETBLUE: "#5F9EA0",
+    CHARTREUSE: "#7FFF00",
+    CHOCOLATE: "#D2691E",
+    CORAL: "#FF7F50",
+    CORNFLOWERBLUE: "#6495ED",
+    CORNSILK: "#FFF8DC",
+    CRIMSON: "#DC143C",
+    CYAN: "#00FFFF",
+    DARKBLUE: "#00008B",
+    DARKCYAN: "#008B8B",
+    DARKGOLDENROD: "#B8860B",
+    DARKGREY: "#A9A9A9",
+    DARKGREEN: "#006400",
+    DARKKHAKI: "#BDB76B",
+    DARKMAGENTA: "#8B008B",
+    DARKOLIVEGREEN: "#556B2F",
+    DARKORANGE: "#FF8C00",
+    DARKORCHID: "#9932CC",
+    DARKRED: "#8B0000",
+    DARKSALMON: "#E9967A",
+    DARKSEAGREEN: "#8FBC8F",
+    DARKSLATEBLUE: "#483D8B",
+    DARKSLATEGREY: "#2F4F4F",
+    DARKTURQUOISE: "#00CED1",
+    DARKVIOLET: "#9400D3",
+    DEEPPINK: "#FF1493",
+    DEEPSKYBLUE: "#00BFFF",
+    DIMGRAY: "#696969",
+    DODGERBLUE: "#1E90FF",
+    FIREBRICK: "#B22222",
+    FLORALWHITE: "#FFFAF0",
+    FORESTGREEN: "#228B22",
+    FUCHSIA: "#FF00FF",
+    GAINSBORO: "#DCDCDC",
+    GHOSTWHITE: "#F8F8FF",
+    GOLD: "#FFD700",
+    GOLDENROD: "#DAA520",
+    GREY: "#808080",
+    GREEN: "#008000",
+    GREENYELLOW: "#ADFF2F",
+    HONEYDEW: "#F0FFF0",
+    HOTPINK: "#FF69B4",
+    INDIANRED: "#CD5C5C",
+    INDIGO: "#4B0082",
+    IVORY: "#FFFFF0",
+    KHAKI: "#F0E68C",
+    LAVENDER: "#E6E6FA",
+    LAVENDERBLUSH: "#FFF0F5",
+    LAWNGREEN: "#7CFC00",
+    LEMONCHIFFON: "#FFFACD",
+    LIGHTBLUE: "#ADD8E6",
+    LIGHTCORAL: "#F08080",
+    LIGHTCYAN: "#E0FFFF",
+    LIGHTGOLDENRODYELLOW: "#FAFAD2",
+    LIGHTGREY: "#D3D3D3",
+    LIGHTGREEN: "#90EE90",
+    LIGHTPINK: "#FFB6C1",
+    LIGHTSALMON: "#FFA07A",
+    LIGHTSEAGREEN: "#20B2AA",
+    LIGHTSKYBLUE: "#87CEFA",
+    LIGHTSLATEGREY: "#778899",
+    LIGHTSTEELBLUE: "#B0C4DE",
+    LIGHTYELLOW: "#FFFFE0",
+    LIME: "#00FF00",
+    LIMEGREEN: "#32CD32",
+    LINEN: "#FAF0E6",
+    MAGENTA: "#FF00FF",
+    MAROON: "#800000",
+    MEDIUMAQUAMARINE: "#66CDAA",
+    MEDIUMBLUE: "#0000CD",
+    MEDIUMORCHID: "#BA55D3",
+    MEDIUMPURPLE: "#9370D8",
+    MEDIUMSEAGREEN: "#3CB371",
+    MEDIUMSLATEBLUE: "#7B68EE",
+    MEDIUMSPRINGGREEN: "#00FA9A",
+    MEDIUMTURQUOISE: "#48D1CC",
+    MEDIUMVIOLETRED: "#C71585",
+    MIDNIGHTBLUE: "#191970",
+    MINTCREAM: "#F5FFFA",
+    MISTYROSE: "#FFE4E1",
+    MOCCASIN: "#FFE4B5",
+    NAVAJOWHITE: "#FFDEAD",
+    NAVY: "#000080",
+    OLDLACE: "#FDF5E6",
+    OLIVE: "#808000",
+    OLIVEDRAB: "#6B8E23",
+    ORANGE: "#FFA500",
+    ORANGERED: "#FF4500",
+    ORCHID: "#DA70D6",
+    PALEGOLDENROD: "#EEE8AA",
+    PALEGREEN: "#98FB98",
+    PALETURQUOISE: "#AFEEEE",
+    PALEVIOLETRED: "#D87093",
+    PAPAYAWHIP: "#FFEFD5",
+    PEACHPUFF: "#FFDAB9",
+    PERU: "#CD853F",
+    PINK: "#FFC0CB",
+    PLUM: "#DDA0DD",
+    POWDERBLUE: "#B0E0E6",
+    PURPLE: "#800080",
+    RED: "#FF0000",
+    ROSYBROWN: "#BC8F8F",
+    ROYALBLUE: "#4169E1",
+    SADDLEBROWN: "#8B4513",
+    SALMON: "#FA8072",
+    SANDYBROWN: "#F4A460",
+    SEAGREEN: "#2E8B57",
+    SEASHELL: "#FFF5EE",
+    SIENNA: "#A0522D",
+    SILVER: "#C0C0C0",
+    SKYBLUE: "#87CEEB",
+    SLATEBLUE: "#6A5ACD",
+    SLATEGREY: "#708090",
+    SNOW: "#FFFAFA",
+    SPRINGGREEN: "#00FF7F",
+    STEELBLUE: "#4682B4",
+    TAN: "#D2B48C",
+    TEAL: "#008080",
+    THISTLE: "#D8BFD8",
+    TOMATO: "#FF6347",
+    TURQUOISE: "#40E0D0",
+    VIOLET: "#EE82EE",
+    WHEAT: "#F5DEB3",
+    WHITE: "#FFFFFF",
+    WHITESMOKE: "#F5F5F5",
+    YELLOW: "#FFFF00",
+    YELLOWGREEN: "#9ACD32",
+    REBECCAPURPLE: "#663399"
+};
+
 export function convertNameColorToHex(colorName) {
-    const colorMap = {
-        ALICEBLUE: "#F0F8FF",
-        ANTIQUEWHITE: "#FAEBD7",
-        AQUA: "#00FFFF",
-        AQUAMARINE: "#7FFFD4",
-        AZURE: "#F0FFFF",
-        BEIGE: "#F5F5DC",
-        BISQUE: "#FFE4C4",
-        BLACK: "#000000",
-        BLANCHEDALMOND: "#FFEBCD",
-        BLUE: "#0000FF",
-        BLUEVIOLET: "#8A2BE2",
-        BROWN: "#A52A2A",
-        BURLYWOOD: "#DEB887",
-        CADETBLUE: "#5F9EA0",
-        CHARTREUSE: "#7FFF00",
-        CHOCOLATE: "#D2691E",
-        CORAL: "#FF7F50",
-        CORNFLOWERBLUE: "#6495ED",
-        CORNSILK: "#FFF8DC",
-        CRIMSON: "#DC143C",
-        CYAN: "#00FFFF",
-        DARKBLUE: "#00008B",
-        DARKCYAN: "#008B8B",
-        DARKGOLDENROD: "#B8860B",
-        DARKGREY: "#A9A9A9",
-        DARKGREEN: "#006400",
-        DARKKHAKI: "#BDB76B",
-        DARKMAGENTA: "#8B008B",
-        DARKOLIVEGREEN: "#556B2F",
-        DARKORANGE: "#FF8C00",
-        DARKORCHID: "#9932CC",
-        DARKRED: "#8B0000",
-        DARKSALMON: "#E9967A",
-        DARKSEAGREEN: "#8FBC8F",
-        DARKSLATEBLUE: "#483D8B",
-        DARKSLATEGREY: "#2F4F4F",
-        DARKTURQUOISE: "#00CED1",
-        DARKVIOLET: "#9400D3",
-        DEEPPINK: "#FF1493",
-        DEEPSKYBLUE: "#00BFFF",
-        DIMGRAY: "#696969",
-        DODGERBLUE: "#1E90FF",
-        FIREBRICK: "#B22222",
-        FLORALWHITE: "#FFFAF0",
-        FORESTGREEN: "#228B22",
-        FUCHSIA: "#FF00FF",
-        GAINSBORO: "#DCDCDC",
-        GHOSTWHITE: "#F8F8FF",
-        GOLD: "#FFD700",
-        GOLDENROD: "#DAA520",
-        GREY: "#808080",
-        GREEN: "#008000",
-        GREENYELLOW: "#ADFF2F",
-        HONEYDEW: "#F0FFF0",
-        HOTPINK: "#FF69B4",
-        INDIANRED: "#CD5C5C",
-        INDIGO: "#4B0082",
-        IVORY: "#FFFFF0",
-        KHAKI: "#F0E68C",
-        LAVENDER: "#E6E6FA",
-        LAVENDERBLUSH: "#FFF0F5",
-        LAWNGREEN: "#7CFC00",
-        LEMONCHIFFON: "#FFFACD",
-        LIGHTBLUE: "#ADD8E6",
-        LIGHTCORAL: "#F08080",
-        LIGHTCYAN: "#E0FFFF",
-        LIGHTGOLDENRODYELLOW: "#FAFAD2",
-        LIGHTGREY: "#D3D3D3",
-        LIGHTGREEN: "#90EE90",
-        LIGHTPINK: "#FFB6C1",
-        LIGHTSALMON: "#FFA07A",
-        LIGHTSEAGREEN: "#20B2AA",
-        LIGHTSKYBLUE: "#87CEFA",
-        LIGHTSLATEGREY: "#778899",
-        LIGHTSTEELBLUE: "#B0C4DE",
-        LIGHTYELLOW: "#FFFFE0",
-        LIME: "#00FF00",
-        LIMEGREEN: "#32CD32",
-        LINEN: "#FAF0E6",
-        MAGENTA: "#FF00FF",
-        MAROON: "#800000",
-        MEDIUMAQUAMARINE: "#66CDAA",
-        MEDIUMBLUE: "#0000CD",
-        MEDIUMORCHID: "#BA55D3",
-        MEDIUMPURPLE: "#9370D8",
-        MEDIUMSEAGREEN: "#3CB371",
-        MEDIUMSLATEBLUE: "#7B68EE",
-        MEDIUMSPRINGGREEN: "#00FA9A",
-        MEDIUMTURQUOISE: "#48D1CC",
-        MEDIUMVIOLETRED: "#C71585",
-        MIDNIGHTBLUE: "#191970",
-        MINTCREAM: "#F5FFFA",
-        MISTYROSE: "#FFE4E1",
-        MOCCASIN: "#FFE4B5",
-        NAVAJOWHITE: "#FFDEAD",
-        NAVY: "#000080",
-        OLDLACE: "#FDF5E6",
-        OLIVE: "#808000",
-        OLIVEDRAB: "#6B8E23",
-        ORANGE: "#FFA500",
-        ORANGERED: "#FF4500",
-        ORCHID: "#DA70D6",
-        PALEGOLDENROD: "#EEE8AA",
-        PALEGREEN: "#98FB98",
-        PALETURQUOISE: "#AFEEEE",
-        PALEVIOLETRED: "#D87093",
-        PAPAYAWHIP: "#FFEFD5",
-        PEACHPUFF: "#FFDAB9",
-        PERU: "#CD853F",
-        PINK: "#FFC0CB",
-        PLUM: "#DDA0DD",
-        POWDERBLUE: "#B0E0E6",
-        PURPLE: "#800080",
-        RED: "#FF0000",
-        ROSYBROWN: "#BC8F8F",
-        ROYALBLUE: "#4169E1",
-        SADDLEBROWN: "#8B4513",
-        SALMON: "#FA8072",
-        SANDYBROWN: "#F4A460",
-        SEAGREEN: "#2E8B57",
-        SEASHELL: "#FFF5EE",
-        SIENNA: "#A0522D",
-        SILVER: "#C0C0C0",
-        SKYBLUE: "#87CEEB",
-        SLATEBLUE: "#6A5ACD",
-        SLATEGREY: "#708090",
-        SNOW: "#FFFAFA",
-        SPRINGGREEN: "#00FF7F",
-        STEELBLUE: "#4682B4",
-        TAN: "#D2B48C",
-        TEAL: "#008080",
-        THISTLE: "#D8BFD8",
-        TOMATO: "#FF6347",
-        TURQUOISE: "#40E0D0",
-        VIOLET: "#EE82EE",
-        WHEAT: "#F5DEB3",
-        WHITE: "#FFFFFF",
-        WHITESMOKE: "#F5F5F5",
-        YELLOW: "#FFFF00",
-        YELLOWGREEN: "#9ACD32",
-        REBECCAPURPLE: "#663399"
-    };
-    return colorMap[colorName.toUpperCase()] || colorName;
+    const v = isRef?.(colorName) ? unref(colorName) : colorName;
+    if (typeof v !== 'string') return v;
+    const s = v.trim();
+    if (s === '') return s;
+    if (s[0] === '#') return s;
+    if (s.toLowerCase() === 'transparent') return '#FFFFFF00';
+    const upper = s.toUpperCase();
+    const normalized = upper.replace(/GRAY/g, 'GREY');
+    return COLOR_MAP[upper] || COLOR_MAP[normalized] || s;
 }
 
 export const XMLNS = "http://www.w3.org/2000/svg";
@@ -1616,7 +1760,7 @@ export function createTSpansFromLineBreaksOnX({ content, fontSize, fill, x, y })
     const lines = content.split('\n');
     return lines
         .map((line, idx) =>
-            `<tspan x="${x}" y="${y + idx * (fontSize * 1.3)}" fill="${fill}">${line}</tspan>`
+            `<tspan x="${x}" y="${y + idx * (fontSize)}" fill="${fill}">${line}</tspan>`
         )
         .join('');
 }
@@ -1625,7 +1769,7 @@ export function createTSpansFromLineBreaksOnY({ content, fontSize, fill, x }) {
     const lines = content.split('\n');
     return lines
         .map((line, idx) => {
-            const dy = idx === 0 ? 0 : fontSize * 1.3;
+            const dy = idx === 0 ? 0 : fontSize;
             return `<tspan x="${x}" dy="${dy}" fill="${fill}">${line}</tspan>`;
         })
         .join('');
@@ -1945,9 +2089,6 @@ export function hasDeepProperty(obj, path) {
 export function sanitizeArray(arr, keys = []) {
 
     function sanitizeValue(value) {
-        if ([NaN, undefined, Infinity, -Infinity, null].includes(value)) {
-            console.warn(`A non processable value was detected : ${value}`)
-        }
         if (typeof value === 'string' && isNaN(Number(value))) return value;
         return (typeof value === 'number' && isFinite(value)) ? value : 0;
     }
@@ -2614,6 +2755,211 @@ export function getCumulativeMedian({ values, config = {} }) {
     return medians;
 }
 
+export function setOpacityIfWithinBBox({
+    el,
+    container,
+    padding = 1
+}) {
+    if (!el || !container) return;
+
+    let elBB = el.getBBox();
+    let contBB = container.getBBox();
+
+    if (elBB.x < contBB.x + padding || elBB.y < contBB.y + padding || (elBB.x + elBB.width) > (contBB.x + contBB.width - padding) || (elBB.y + elBB.height) > (contBB.y + contBB.height - padding)) {
+        el.style.opacity = '0'
+    } else {
+        el.style.opacity = '1'
+    }
+}
+
+export function autoFontSize({
+    el,
+    bounds,
+    currentFontSize,
+    minFontSize = 6,
+    attempts = 200,
+    padding = 1
+}) {
+    if (!el || !currentFontSize) return 0;
+
+    let fontSize = currentFontSize;
+
+    el.style.fontSize = fontSize;
+
+    const { x, y, width: W, height: H } = bounds;
+    const cLeft = x + padding;
+    const cTop = y + padding;
+    const cRight = x + W - padding;
+    const cBottom = y + H - padding;
+
+    let er = el.getBBox();
+
+    if (
+        er.x >= cLeft + padding &&
+        er.y >= cTop + padding &&
+        er.x + er.width <= cRight - padding &&
+        er.y + er.height <= cBottom - padding
+    ) {
+        return fontSize;
+    }
+
+    let tries = attempts;
+
+    while (tries-- > 0 && fontSize > minFontSize) {
+        fontSize--;
+        el.style.fontSize = fontSize;
+        er = el.getBBox();
+        if (
+            er.x >= cLeft + padding &&
+            er.y >= cTop + padding &&
+            er.x + er.width <= cRight - padding &&
+            er.y + er.height <= cBottom - padding
+        ) {
+            break;
+        }
+    }
+    if (fontSize < minFontSize) {
+        fontSize = 0;
+        el.style.fontSize = 0;
+    }
+    return fontSize;
+}
+
+/**
+ * Starts observing for nodes with a given CSS class inside a specific container
+ * and fires callback whenever at least one such node is present.
+ *
+ * @param {HTMLElement} container       container element to observe
+ * @param {string} cssClass            class name without the leading dot
+ * @param {() => void} onNodesPresent  function to call when matching elements appear
+ * @returns {MutationObserver}         the observer instance (so you can disconnect it later)
+ */
+export function observeClassPresenceIn(container, cssClass, onNodesPresent) {
+    if (typeof cssClass !== 'string' || !cssClass.trim()) {
+        console.error('Vue Data UI - observeClassPresenceIn: cssClass must be a non-empty string');
+    }
+    if (typeof onNodesPresent !== 'function') {
+        console.error('Vue Data UI - observeClassPresenceIn: onNodesPresent must be a function');
+    }
+
+    const selector = `.${cssClass}`;
+    let hasSeen = false;
+
+    // Check the container for matching elements and trigger callback once per transition 0 → >0
+    function checkAndTrigger() {
+        const nodes = container.querySelectorAll(selector);
+        if (nodes.length > 0) {
+            if (!hasSeen) {
+                hasSeen = true;
+                onNodesPresent();
+            }
+        } else {
+            hasSeen = false;
+        }
+    }
+
+    // Observe the container for additions/removals anywhere in its subtree
+    const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+            if (m.addedNodes.length || m.removedNodes.length) {
+                checkAndTrigger();
+                break;
+            }
+        }
+    });
+
+    observer.observe(container, {
+        childList: true,
+        subtree: true,
+    });
+
+    // Initial check in case elements are already present
+    checkAndTrigger();
+
+    return observer;
+}
+
+/**
+ * Formats numeric values with a controlled number of decimal places,
+ * applying maxDecimals for all values when no fallbackFormatter is given,
+ * or calling the fallbackFormatter for values ≥ 1 if provided.
+ *
+ * @param {Object}   options
+ * @param {number}   options.value The numeric value to format.
+ * @param {number}   [options.maxDecimals=4] Max number of decimal places.
+ * @param {Function} [options.fallbackFormatter] Callback for values ≥ 1; receives the raw value and must return a string
+ * @param {boolean}  [options.removeTrailingZero=true] Whether to strip unnecessary trailing zeros.
+ * @returns {string}  The formatted number as a string.
+ */
+export function formatSmallValue({
+    value,
+    maxDecimals = 4,
+    fallbackFormatter,
+    removeTrailingZero = true,
+}) {
+    if (value === 0) {
+        return '0';
+    }
+
+    const abs = Math.abs(value);
+
+    if (abs >= 1 && typeof fallbackFormatter === 'function') {
+        const fb = fallbackFormatter(value);
+        return String(fb);
+    }
+
+    let decimals;
+    if (abs < 1) {
+        const exp = Math.floor(Math.log10(abs));
+        decimals = Math.min(Math.max(1 - exp, 1), maxDecimals);
+    } else {
+        decimals = maxDecimals;
+    }
+
+    let str = value.toFixed(decimals);
+
+    if (removeTrailingZero) {
+        str = str
+            .replace(/(\.\d*?[1-9])0+$/, '$1')   // drop zeros after last non-zero
+            .replace(/\.0+$/, '');               // drop ".0"
+    }
+
+    return str;
+}
+
+// Create skeleton dataset with basic fib
+export function fib(n) {
+    const a = [];
+    for (let i = 0; i < n; i += 1) {
+        a.push(i === 0 ? 0 : i === 1 ? 1 : a[i - 1] + a[i - 2]);
+    }
+    return a;
+}
+
+export function wrapText(str, maxChars = 20) {
+    str = str.replace(/[\r\n]+/g, " ");
+
+    const words = str.split(" ");
+    let line = "";
+    let result = "";
+
+    for (let word of words) {
+        if ((line + (line ? " " : "") + word).length <= maxChars) {
+            line += (line ? " " : "") + word;
+        } else {
+            if (line) {
+                result += (result ? "\n" : "") + line;
+            }
+            line = word;
+        }
+    }
+
+    if (line) {
+        result += (result ? "\n" : "") + line;
+    }
+
+    return result;
+}
 
 const lib = {
     XMLNS,
@@ -2622,6 +2968,7 @@ const lib = {
     addVector,
     applyDataLabel,
     assignStackRatios,
+    autoFontSize,
     calcLinearProgression,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
@@ -2639,16 +2986,22 @@ const lib = {
     convertColorToHex,
     convertConfigColors,
     convertCustomPalette,
+    createAreaWithCuts,
     createCsvContent,
     createHalfCircleArc,
+    createIndividualArea,
+    createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
     createShadesOfGrey,
+    createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathVertical,
+    createSmoothPathWithCuts,
     createSpiralPath,
     createStar,
     createStraightPath,
+    createStraightPathWithCuts,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createTSpansFromLineBreaksOnY,
@@ -2663,9 +3016,12 @@ const lib = {
     easeOutCubic,
     emptyObjectToNull,
     error,
+    fib,
     forceValidValue,
+    formatSmallValue,
     functionReturnsString,
     generateSpiralCoordinates,
+    getAreaSegments,
     getCloserPoint,
     getCumulativeAverage,
     getCumulativeMedian,
@@ -2686,6 +3042,7 @@ const lib = {
     matrixTimes,
     mergePointsByProximity,
     objectIsEmpty,
+    observeClassPresenceIn,
     opacity,
     palette,
     placeHTMLElementAtSVGCoordinates,
@@ -2693,6 +3050,7 @@ const lib = {
     rotateMatrix,
     sanitizeArray,
     setOpacity,
+    setOpacityIfWithinBBox,
     shiftHue,
     slugify,
     sumByAttribute,
@@ -2700,12 +3058,6 @@ const lib = {
     themePalettes,
     translateSize,
     treeShake,
-    createStraightPathWithCuts,
-    createSmoothPathWithCuts,
-    getAreaSegments,
-    createAreaWithCuts,
-    createIndividualAreaWithCuts,
-    createSmoothAreaSegments,
-    createIndividualArea,
+    wrapText
 };
 export default lib;

@@ -32,8 +32,10 @@ const FINAL_CONFIG = computed({
 
 const slots = useSlots();
 
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 onMounted(() => {
-    if (slots['chart-background']) {
+    if (slots['chart-background'] && debug.value) {
         console.warn('VueUiKpi does not support the #chart-background slot.')
     }
 });

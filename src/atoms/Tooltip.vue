@@ -65,10 +65,14 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    disableSmoothing: {
+    smooth: {
         type: Boolean,
-        default: false
-    }
+        default: true
+    },
+    backdropFilter: {
+        type: Boolean,
+        default: true
+    },
 });
 
 const tooltip = ref(null);
@@ -81,7 +85,7 @@ const smoothing = 0.18;
 let animationFrameId = null;
 
 function animate() {
-    if (props.disableSmoothing) {
+    if (!props.smooth) {
         displayPosition.value.x = targetPosition.value.x;
         displayPosition.value.y = targetPosition.value.y;
         return;
@@ -94,7 +98,7 @@ function animate() {
 watch([x, y], ([newX, newY]) => {
     targetPosition.value.x = newX;
     targetPosition.value.y = newY;
-    if (props.disableSmoothing) {
+    if (!props.smooth) {
         displayPosition.value.x = newX;
         displayPosition.value.y = newY;
     }
@@ -150,7 +154,7 @@ const convertedBackground = computed(() => {
             :aria-hidden="!show"
             aria-live="polite"
             data-cy="tooltip"
-            :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom}"
+            :class="{'vue-data-ui-custom-tooltip' : isCustom, 'vue-data-ui-tooltip': !isCustom, 'vue-data-ui-tooltip-backdrop': backdropFilter}"
             v-if="show"
             :style="`
                 pointer-events:none;
@@ -175,9 +179,13 @@ const convertedBackground = computed(() => {
     box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
     position: fixed;
     padding:12px;
+}
+
+.vue-data-ui-tooltip-backdrop {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
 }
+
 .vue-data-ui-custom-tooltip {
     position: fixed;
     z-index: 3;

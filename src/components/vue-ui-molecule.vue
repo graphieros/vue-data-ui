@@ -1,5 +1,13 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onMounted, 
+    ref, 
+    toRefs, 
+    watch, 
+} from "vue";
 import { 
     convertColorToHex,
     convertCustomPalette,
@@ -15,29 +23,31 @@ import {
     objectIsEmpty,
     palette,
     themePalettes,
+    treeShake,
     XMLNS
 } from '../lib';
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import usePanZoom from "../usePanZoom";
-import themes from "../themes.json";
 import img from "../img";
+import themes from "../themes.json";
+import usePanZoom from "../usePanZoom";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
-const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
-const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const RecursiveCircles = defineAsyncComponent(() => import('../atoms/RecursiveCircles.vue'));
-const RecursiveLabels = defineAsyncComponent(() => import('../atoms/RecursiveLabels.vue'));
-const RecursiveLinks = defineAsyncComponent(() => import('../atoms/RecursiveLinks.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const RecursiveLinks = defineAsyncComponent(() => import('../atoms/RecursiveLinks.vue'));
+const RecursiveLabels = defineAsyncComponent(() => import('../atoms/RecursiveLabels.vue'));
+const RecursiveCircles = defineAsyncComponent(() => import('../atoms/RecursiveCircles.vue'));
 
 const { vue_ui_molecule: DEFAULT_CONFIG } = useConfig();
 
@@ -66,12 +76,15 @@ onMounted(() => {
     prepareChart()
 })
 
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)){
         error({
             componentName: 'VueUiMolecule',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
     }
 }
 
@@ -84,14 +97,66 @@ const step = ref(0);
 const titleStep = ref(0);
 const tableStep = ref(0);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        {
+            name: '_',
+            color: '#CACACA',
+            nodes: [
+                { name: '_', color: '#CACACA', nodes: [
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+            ]},
+                { name: '_', color: '#CACACA', nodes: [
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+
+            ]},
+                { name: '_', color: '#CACACA', nodes: [
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+            ]},
+                { name: '_', color: '#CACACA', nodes: [
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+            ]},
+                { name: '_', color: '#CACACA', nodes: [
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+            ]},
+                { name: '_', color: '#CACACA', nodes: [
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+                { name: '_', color: '#CACACA'},
+            ]},
+            ]
+        }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false, },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    nodes: { stroke: '#6A6A6A' },
+                    links: { stroke: '#6A6A6A80'}
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -126,6 +191,21 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
+const layoutEpoch = ref(0);
+const bumpLayout = () => { layoutEpoch.value += 1; };
+
+watch([() => loading.value, () => FINAL_DATASET.value], async ([isLoading]) => {
+  if (!isLoading) {
+    await nextTick();
+    svg.value = sizeSvg();
+    await nextTick();
+    bumpLayout();
+    await nextTick();
+    setInitialViewBox({x: 0, y: 0, width: 400, height: 400});
+    resetZoom(false);
+  }
+}, { flush: "post", deep: false });
+
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `cluster_${uid.value}`,
     fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-molecule',
@@ -146,6 +226,14 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+        showDataLabels: true,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    }
+}, { immediate: true });
+
 function calculateDepth(data, depth = 0) {
     if (Array.isArray(data) && data.length > 0 && data[0].nodes) {
         return calculateDepth(data[0].nodes, depth + 1);
@@ -154,7 +242,7 @@ function calculateDepth(data, depth = 0) {
 }
 
 function sizeSvg() {
-    const depth = calculateDepth(props.dataset);
+    const depth = calculateDepth(FINAL_DATASET.value);
     let initSize = 100;
     let vbSize = initSize;
 
@@ -170,7 +258,6 @@ function sizeSvg() {
 }
 
 const svg = ref(sizeSvg());
-const dynamicViewBox = ref(`0 0 ${svg.value.width} ${svg.value.height}`)
 
 function processNodes(
     data,
@@ -275,7 +362,7 @@ const gradientIds = computed(() => {
 })
 
 const convertedDataset = computed(() => {
-    const dataCopy = deepClone(props.dataset);
+    const dataCopy = deepClone(FINAL_DATASET.value);
     return processNodes(dataCopy);
 })
 
@@ -318,9 +405,23 @@ function createTooltipContent(node) {
 
 const hoveredNode = ref(null);
 const hoveredUid = ref(null);
+const lastHoveredNode = ref(null);
 
 function hover(node) {
+    lastHoveredNode.value = hoveredNode.value;
     hoveredNode.value = node;
+
+    if (!node) {
+        if (FINAL_CONFIG.value.events.datapointLeave) {
+            FINAL_CONFIG.value.events.datapointLeave({ datapoint: lastHoveredNode.value || hoveredNode.value, seriesIndex: -1 })
+        }
+    } else {
+        if (FINAL_CONFIG.value.events.datapointEnter) {
+            FINAL_CONFIG.value.events.datapointEnter({ datapoint: node, seriesIndex: -1 })
+        }
+    }
+
+
     if(node) {
         isTooltip.value = true;
         createTooltipContent(node);
@@ -453,14 +554,17 @@ function toggleAnnotator() {
 
 const active = computed(() => !isAnnotator.value)
 
-const { viewBox, resetZoom, isZoom } = usePanZoom(svgRef, {
+const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(svgRef, {
     x: 0,
     y: 0,
-    width: svg.value.width <= 0 ? 10 : svg.value.width,
-    height: svg.value.height <= 0 ? 10 : svg.value.height,
+    width: Math.max(10, svg.value.width),
+    height: Math.max(10, svg.value.height),
 }, FINAL_CONFIG.value.style.chart.zoom.speed, active)
 
 function selectNode(node) {
+    if (FINAL_CONFIG.value.events.datapointClick){
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: node, seriesIndex: -1 })
+    }
     emit('selectNode', node)
 }
 
@@ -603,8 +707,8 @@ defineExpose({
 
         <svg
             ref="svgRef"
+            :key="`svg_${layoutEpoch}`"
             :xmlns="XMLNS" 
-            v-if="isDataset" 
             data-cy="cluster-svg" 
             :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
@@ -653,7 +757,7 @@ defineExpose({
                 </template>
             </RecursiveCircles>
             <RecursiveLabels
-                v-if="mutableConfig.showDataLabels"
+                v-if="mutableConfig.showDataLabels && !loading"
                 :dataset="convertedDataset"
                 :color="FINAL_CONFIG.style.chart.color" 
                 :hoveredUid="hoveredUid"
@@ -681,19 +785,6 @@ defineExpose({
             </slot>
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'molecule',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    molecule: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
-
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>
@@ -713,6 +804,8 @@ defineExpose({
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
@@ -753,6 +846,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

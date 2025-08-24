@@ -32,22 +32,25 @@ const scat2 = computed(() => {
     return arr;
 });
 
-const dataset = computed(() => {
+const dataset = ref(undefined);
 
-    return [
-        {
-            name: "Cluster 1",
-            values: scat1.value,
-            shape: "star",
-        },
-        {
-            name: "Cluster 2",
-            values: scat2.value,
-            shape: "triangle",
-            color: 'orange'
-        }
-    ]
-});
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: "Cluster 1",
+                values: scat1.value,
+                shape: "star",
+            },
+            {
+                name: "Cluster 2",
+                values: scat2.value,
+                shape: "triangle",
+                color: 'orange'
+            }
+        ]
+    }, 2000)
+})
 
 const alternateDataset = ref([
     {
@@ -98,6 +101,8 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -116,14 +121,14 @@ const model = ref([
 
     { key: 'useCssAnimation', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: "inherit", type: 'text'},
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.height', def: 316, type: 'number', min: 100, max: 1000},
     { key: 'style.layout.width', def: 512, type: 'number', min: 100, max: 1000},
-    { key: 'style.layout.padding.top', def: 36, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.right', def: 48, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.bottom', def: 36, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.left', def: 48, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.top', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.right', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.left', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.layout.axis.show', def: true, type: 'checkbox'},
     { key: 'style.layout.axis.stroke', def: '#e1e5e8', type: 'color'},
     { key: 'style.layout.axis.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
@@ -148,7 +153,7 @@ const model = ref([
     { key: 'style.layout.plots.significance.opacity', def: 0.3, type: 'number', min: 0, max: 1, step: 0.01},
     { key: 'style.layout.plots.deviation.translation', def: 'deviation', type: 'text'},
     { key: 'style.layout.plots.deviation.roundingValue', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.layout.plots.giftWrap.show', def: false, type: 'checkbox'},
+    { key: 'style.layout.plots.giftWrap.show', def: true, type: 'checkbox'},
     { key: 'style.layout.plots.giftWrap.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
     { key: 'style.layout.plots.giftWrap.strokeDasharray', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.layout.plots.giftWrap.fillOpacity', def: 0.2, type: 'number', min: 0, max: 1, step: 0.01},
@@ -248,7 +253,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 
 const config = computed(() => {
@@ -272,6 +277,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex });
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex });
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex });
+                },
+            },
             style: {
                 ...c.style,
                 layout: {
@@ -345,11 +361,11 @@ onMounted(async () => {
                 WATERMARK
             </div>
         </template>
-        <template #source>
+        <!-- <template #source>
             <div style="width:100%;font-size:10px;text-align:left">
                 SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
             </div>
-        </template>
+        </template> -->
     </LocalVueUiScatter>
     </div>
 
@@ -361,10 +377,10 @@ onMounted(async () => {
                 <template #optionPdf>
                     PRINT PDF
                 </template>
-                <template #svg="{ svg }">
+                <!-- <template #svg="{ svg }">
                     <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
-                </template>
+                </template> -->
                 <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">

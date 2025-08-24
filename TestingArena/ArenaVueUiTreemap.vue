@@ -8,7 +8,11 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref([
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
     {
         name: 'Some datapoint',
         value: 100,
@@ -119,7 +123,9 @@ const dataset = ref([
             }
         ]
     },
-]);
+]
+    }, 2000)
+})
 
 const isPropsToggled = ref(false);
 
@@ -144,6 +150,8 @@ const alternateConfig = ref({
 })
 
 const model = ref([
+    { key: 'debug', def: true, type:'checkbox'},
+    { key: 'loading', def: false, type:'checkbox'},
     { key: 'responsive', def: false, type:'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
@@ -240,7 +248,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -266,6 +274,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex })
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex })
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex })
+                },
+            },
             theme: currentTheme.value,
             style: {
                 ...c.style,

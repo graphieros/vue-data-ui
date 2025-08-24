@@ -1,5 +1,15 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, nextTick, defineAsyncComponent, shallowRef } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    ref, 
+    shallowRef, 
+    toRefs,
+    watch, 
+    watchEffect, 
+} from "vue";
 import {
     adaptColorToBackground,
     applyDataLabel,
@@ -21,28 +31,31 @@ import {
     palette,
     slugify,
     themePalettes,
+    treeShake,
     XMLNS
 } from "../lib";
+import { throttle } from "../canvas-lib";
+import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useResponsive } from "../useResponsive";
+import { useNestedProp } from "../useNestedProp";
+import { useTimeLabels } from "../useTimeLabels";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import { usePrinter } from "../usePrinter";
-import { throttle } from "../canvas-lib";
-import { useResponsive } from "../useResponsive";
-import { useConfig } from "../useConfig";
-import { useNestedProp } from "../useNestedProp";
+import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue";
 import Title from "../atoms/Title.vue";
 import Shape from "../atoms/Shape.vue";
-import { useTimeLabels } from "../useTimeLabels";
 import img from "../img";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const VueUiXy = defineAsyncComponent(() => import('./vue-ui-xy.vue'));
 
@@ -65,11 +78,9 @@ const props = defineProps({
 
 const isDataset = computed({
     get() {
-        return !!props.dataset && props.dataset.length;
+        return Array.isArray(FINAL_DATASET.value) && FINAL_DATASET.value.length > 0;
     },
-    set(bool) {
-        return bool;
-    }
+    set(v) { return v; }
 });
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint', 'selectX'])
@@ -92,6 +103,7 @@ const selectedX = ref(null);
 const selectedDatapoint = ref(null);
 const dialog = ref(null);
 const parentHeight = ref(0);
+const timeLabelsEls = ref(null);
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -111,13 +123,143 @@ function prepareConfig() {
     }
 }
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg;
-    }
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        {
+            name: "_",
+            datapoints: [
+                {
+                    name: "__",
+                    color: "#999999",
+                    values: [28.639,32.04,41.134,44.525,21.151,2.436,0.218,0.024,0.002,0,0,0]
+                },
+                {
+                    name: "_",
+                    color: "#CACACA",
+                    values: [13.253,15.621,23.36,33.698,29.935,10.874,2.364,0.561,0.107,0.02,0.006,0.004]
+                }
+            ]
+        },
+        {
+            name: "_",
+            datapoints: [
+                {
+                    name: "_",
+                    color: "#999999",
+                    values: [10.851,13.195,21.617,36.556,42.292,21.006,3.398,0.223,0.013,0.001,0,0]
+                },
+                {
+                    name: "_",
+                    color: "#CACACA",
+                    values: [3.171,4.115,8.108,18.248,31.641,29.063,12.031,2.742,0.504,0.102,0.032,0.021]
+                }
+            ]
+        },
+        {
+            name: "_",
+            datapoints: [
+                {
+                    name: "_",
+                    color: "#999999",
+                    values: [1.731,2.334,5.125,13.626,29.911,38.524,24.168,7.646,1.575,0.317,0.097,0.063]
+                },
+                {
+                    name: "_",
+                    color: "#CACACA",
+                    values: [0.25,0.367,1.026,3.944,13.635,28.891,30.149,15.419,4.714,1.246,0.442,0.299]
+                }
+            ]
+        },
+        {
+            name: "_",
+            datapoints: [
+                {
+                    name: "_",
+                    color: "#999999",
+                    values: [0.034,0.054,0.194,1.065,5.747,20.735,38.306,32.899,15.318,5.566,2.422,1.76]
+                },
+                {
+                    name: "_",
+                    color: "#CACACA",
+                    values: [0.001,0.002,0.009,0.095,1.124,8.342,27.115,35.08,21.449,9.093,4.243,3.143]
+                }
+            ]
+        },
+        {
+            name: "_",
+            datapoints: [
+                {
+                    name: "_",
+                    color: "#999999",
+                    values: [0,0.001,0.004,0.051,0.567,3.322,14.215,44.783,40.351,20.377,9.866,7.378]
+                },
+                {
+                    name: "_",
+                    color: "#CACACA",
+                    values: [0,0,0,0,0.001,0.11,4.136,27.498,43.24,29.807,17.345,13.678]
+                }
+            ]
+        },
+        {
+            name: "_",
+            datapoints: [
+                {
+                    name: "_",
+                    color: "#999999",
+                    values: [0,0,0,0,0.025,0.598,3.886,10.645,54.479,45.953,30.814,24.55]
+                },
+                {
+                    name: "_",
+                    color: "#CACACA",
+                    values: [0,0,0,0,0,0,0.007,1.655,26.63,52.017,45.192,39.651]
+                }
+            ]
+        }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false, },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    areas: {
+                        maxPoint: {
+                            show: false,
+                        },
+                        opacity: 0.9,
+                        stroke: {
+                            useSerieColor: true,
+                        },
+                    },
+                    legend: {
+                        backgroundColor: 'transparent'
+                    },
+                    padding: {
+                        right: -24,
+                        left: 0
+                    },
+                    xAxis: {
+                        labels: {
+                            values: []
+                        }
+                    },
+                    yAxis: {
+                        labels: {
+                            fontSize: 0,
+                        }
+                    },
+                    zeroLine: { show: false }
+                }
+            }
+        }
+    })
 });
 
 const rowHeight = ref(Math.min(
@@ -133,83 +275,88 @@ const {
 
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
-onMounted(prepareChart);
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiRidgeline',
-            type: 'dataset'
-        });
-    } else {
-        props.dataset.forEach((ds, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: ds,
-                requiredAttributes: ['name', 'datapoints']
-            }).forEach(attr => {
-                isDataset.value = false;
-                error({
-                    componentName: 'VueUiRidgeline',
-                    type: 'datasetSerieAttribute',
-                    property: attr,
-                    index: i
-                });
-            });
+    const ds = FINAL_DATASET.value || [];
 
-            if (ds.datapoints.length) {
-                ds.datapoints.forEach((dp, j) => {
-                    getMissingDatasetAttributes({
-                        datasetObject: dp,
-                        requiredAttributes: ['name', 'values']
-                    }).forEach(attr => {
+    if (!Array.isArray(ds) || ds.length === 0) {
+        error({ componentName: 'VueUiRidgeline', type: 'dataset', debug: debug.value });
+        manualLoading.value = true;
+        return;
+    }
+
+    ds.forEach((serie, i) => {
+        getMissingDatasetAttributes({
+        datasetObject: serie,
+        requiredAttributes: ['name', 'datapoints']
+        }).forEach(attr => {
+            isDataset.value = false;
+            error({
+                componentName: 'VueUiRidgeline',
+                type: 'datasetSerieAttribute',
+                property: attr,
+                index: i,
+                debug: debug.value
+            });
+        });
+
+        if (Array.isArray(serie.datapoints) && serie.datapoints.length) {
+            serie.datapoints.forEach((dp, j) => {
+                getMissingDatasetAttributes({
+                    datasetObject: dp,
+                    requiredAttributes: ['name', 'values']}).forEach(attr => {
                         isDataset.value = false;
                         error({
                             componentName: 'VueUiRidgeline',
                             type: 'datasetSerieAttribute',
                             property: `datapoint.${attr}`,
-                            index: `${i}-${j}`
+                            index: `${i}-${j}`,
+                            debug: debug.value
                         });
                     });
                 });
-            }
-        });
-    }
+        }
+    });
 
-    rowCount.value = props.dataset.length;
+    rowCount.value = ds.length;
 
     rowHeight.value = Math.min(
         FINAL_CONFIG.value.style.chart.areas.height,
         FINAL_CONFIG.value.style.chart.areas.rowHeight,
     );
 
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
+    }
+
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
-                chart: ridgelineChart.value,
-                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
-                source: source.value,
-                noTitle: noTitle.value,
-                padding: FINAL_CONFIG.value.style.chart.padding
-            });
+        const { width, height } = useResponsive({
+            chart: ridgelineChart.value,
+            title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+            legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+            source: source.value,
+            noTitle: noTitle.value,
+            padding: FINAL_CONFIG.value.style.chart.padding
+        });
 
-            requestAnimationFrame(() => {
-                baseWidth.value = width;
-                rowHeight.value = (height / props.dataset.length);
-                parentHeight.value = height
-            });
+        requestAnimationFrame(() => {
+            baseWidth.value = width;
+            rowHeight.value = ds.length ? (height / ds.length) : 0;
+            parentHeight.value = height - 12;
+        });
         });
 
         if (resizeObserver.value) {
-            if (observedEl.value) {
-                resizeObserver.value.unobserve(observedEl.value);
-            }
-            resizeObserver.value.disconnect();
+        if (observedEl.value) resizeObserver.value.unobserve(observedEl.value);
+        resizeObserver.value.disconnect();
         }
 
         resizeObserver.value = new ResizeObserver(handleResize);
-        observedEl.value = ridgelineChart.value.parentNode;
-        resizeObserver.value.observe(observedEl.value);
+        observedEl.value = ridgelineChart.value?.parentNode || null;
+        if (observedEl.value) resizeObserver.value.observe(observedEl.value);
     }
 }
 
@@ -240,20 +387,50 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
 });
 
-watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    prepareChart();
-    titleStep.value += 1;
-    legendStep.value += 1;
-    rowHeight.value = Math.min(
-        FINAL_CONFIG.value.style.chart.areas.height,
-        FINAL_CONFIG.value.style.chart.areas.rowHeight
-    );
-    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-}, { deep: true });
+watch(
+    () => FINAL_DATASET.value,
+    async (ds) => {
+        if (Array.isArray(ds) && ds.length) {
+            userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+            await nextTick();
+            prepareChart();
+            titleStep.value += 1;
+            legendStep.value += 1;
+            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        }
+    },
+    { deep: true, immediate: true }
+);
 
-watch(() => props.dataset, prepareChart, { deep: true });
+watch(() => props.dataset, (_) => {
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
+}, { deep: true })
+
+watch(
+    () => loading.value,
+    async (isLoading) => {
+        if (!isLoading) {
+            await nextTick();
+            prepareChart();
+        }
+    },
+    { immediate: true }
+);
+
+watch(
+    () => props.config,
+    () => {
+        FINAL_CONFIG.value = prepareConfig(FINAL_DATASET.value || null);
+        userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+        rowHeight.value = Math.min(FINAL_CONFIG.value.style.chart.areas.height, FINAL_CONFIG.value.style.chart.areas.rowHeight);
+        mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        titleStep.value += 1;
+        legendStep.value += 1;
+    },
+    { deep: true }
+);
 
 const overlapRatio = computed(() => {
     return FINAL_CONFIG.value.style.chart.areas.height / FINAL_CONFIG.value.style.chart.areas.rowHeight;
@@ -270,39 +447,21 @@ function segregate(slug) {
 }
 
 const formattedDataset = computed(() => {
-    if (!isDataset.value) return []
-
-    return props.dataset.map((ds, i) => {
-        return {
-            ...ds,
-            labelLen: measureSvgTextWidth(ds.name, FINAL_CONFIG.value.style.chart.yAxis.labels.fontSize),
-            uid: createUid(),
-            datapoints: ds.datapoints.map((dp, j) => {
-                const color = dp.color ? convertColorToHex(dp.color) : customPalette.value[j] || palette[j] || palette[j % palette.length];
-                const id = slugify(dp.name);
-                return {
-                    ...dp,
-                    color,
-                    id
-                }
-            })
-        }
-    });
+    if (!isDataset.value) return [];
+    return (FINAL_DATASET.value || []).map((ds) => ({
+        ...ds,
+        labelLen: measureSvgTextWidth(ds.name, FINAL_CONFIG.value.style.chart.yAxis.labels.fontSize),
+        uid: createUid(),
+        datapoints: ds.datapoints.map((dp, j) => {
+        const color = dp.color ? convertColorToHex(dp.color) : customPalette.value[j] || palette[j] || palette[j % palette.length];
+        const id = slugify(dp.name);
+        return { ...dp, color, id };
+        })
+    }));
 });
 
 const baseHeight = computed(() => {
-    return FINAL_CONFIG.value.style.chart.padding.top + (rowHeight.value * props.dataset.length) + (rowHeight.value * overlapRatio.value);
-});
-
-const drawableArea = computed(() => {
-    return {
-        fullHeight: svg.value.padding.top + svg.value.padding.bottom + svg.value.height,
-        top: svg.value.padding.top,
-        left: svg.value.padding.left,
-        right: svg.value.width - svg.value.padding.right,
-        bottom: svg.value.padding.top + svg.value.height,
-        width: svg.value.width - (svg.value.padding.left + svg.value.padding.right)
-    }
+    return FINAL_CONFIG.value.style.chart.padding.top + (rowHeight.value * (FINAL_DATASET.value || []).length) + (rowHeight.value * overlapRatio.value) + FINAL_CONFIG.value.style.chart.padding.bottom;
 });
 
 const svg = computed(() => {
@@ -311,6 +470,41 @@ const svg = computed(() => {
         width: baseWidth.value,
         height: baseHeight.value,
         padding
+    }
+});
+
+const WIDTH = computed(() => svg.value.width);
+const HEIGHT = computed(() => svg.value.height);
+
+const timeLabelsOffsetY = ref(0);
+
+const updateHeight = throttle((h) => {
+    timeLabelsOffsetY.value = h;
+}, 100);
+
+watchEffect((onInvalidate) => {
+    const el = timeLabelsEls.value;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height);
+    })
+    observer.observe(el);
+    onInvalidate(() => observer.disconnect());
+});
+
+onBeforeUnmount(() => {
+    timeLabelsOffsetY.value = 0;
+});
+
+const drawingArea = computed(() => {
+
+    return {
+        fullHeight: svg.value.height + timeLabelsOffsetY.value,
+        top: svg.value.padding.top,
+        left: svg.value.padding.left,
+        right: svg.value.width - svg.value.padding.right,
+        bottom: svg.value.height - FINAL_CONFIG.value.style.chart.padding.bottom,
+        width: svg.value.width - (svg.value.padding.left + svg.value.padding.right)
     }
 });
 
@@ -331,7 +525,7 @@ const timeLabels = computed(() => {
 const xAxisTrapsAndLabels = computed(() => {
     const maxLabelLen = Math.max(...formattedDataset.value.map(el => el.labelLen));
     const startX = svg.value.padding.left + maxLabelLen + 16 + FINAL_CONFIG.value.style.chart.yAxis.labels.offsetX;
-    const slotSize = (drawableArea.value.width - startX) / maxDpLen.value;
+    const slotSize = (drawingArea.value.width - startX) / maxDpLen.value;
 
     const arr = [];
 
@@ -339,7 +533,7 @@ const xAxisTrapsAndLabels = computed(() => {
         arr.push({
             selectorX: startX + (slotSize * i),
             x: startX + (slotSize * i) - slotSize / 2,
-            y: drawableArea.value.top,
+            y: drawingArea.value.top,
             label: FINAL_CONFIG.value.style.chart.xAxis.labels.values[i] ? timeLabels.value[i].text : '',
             index: i,
             width: slotSize,
@@ -349,15 +543,41 @@ const xAxisTrapsAndLabels = computed(() => {
     return arr;
 })
 
-function selectX(trap) {
-    emit('selectX', formattedDataset.value.map(ds => {
+function getDp(trap) {
+    return formattedDataset.value.map(ds => {
         return ds.datapoints.map(dp => {
             return {
                 dp,
                 selected: dp.values[trap.index]
             }
         });
-    }));
+    });
+}
+
+function onTrapEnter(trap) {
+    selectedX.value = trap;
+    const datapoint = getDp(trap);
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: trap.index });
+    }
+}
+
+function onTrapLeave(trap) {
+    selectedX.value = null;
+    const datapoint = getDp(trap);
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: trap.index });
+    }
+}
+
+function selectX(trap) {
+    const datapoint = getDp(trap);
+
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: trap.index });
+    }
+
+    emit('selectX', datapoint);
 }
 
 function stringSize(str, fontSize) {
@@ -367,7 +587,7 @@ function stringSize(str, fontSize) {
 
 function isTextOverflowingRight(x, text, fontSize) {
     const size = stringSize(text, fontSize);
-    return x + size > drawableArea.value.right;
+    return x + size > drawingArea.value.right;
 }
 
 function measureSvgTextWidth(text, fontSize, fontFamily = 'sans-serif') {
@@ -379,15 +599,15 @@ function measureSvgTextWidth(text, fontSize, fontFamily = 'sans-serif') {
     return metrics.width;
 }
 
+
 const drawableDataset = computed(() => {
-    const _rh = rowHeight.value
+    const _not_used_but_necessary = rowHeight.value;
 
     const maxLabelLen = Math.max(...formattedDataset.value.map(el => el.labelLen));
-    const maxDpLen = Math.max(...formattedDataset.value.flatMap(el => el.datapoints.map(dp => dp.values.length)));
     const maxVal = Math.max(...formattedDataset.value.flatMap(el => el.datapoints.flatMap(dp => dp.values)));
     const minVal = Math.min(...formattedDataset.value.flatMap(el => el.datapoints.flatMap(dp => dp.values)));
     const startX = svg.value.padding.left + maxLabelLen + 16 + FINAL_CONFIG.value.style.chart.yAxis.labels.offsetX;
-    const slotSize = (drawableArea.value.width - startX) / maxDpLen;
+    const slotSize = (drawingArea.value.width - startX) / maxDpLen.value;
     const absoluteMin = Math.abs(Math.min(minVal, 0));
     const absoluteMax = maxVal + absoluteMin;
 
@@ -396,8 +616,8 @@ const drawableDataset = computed(() => {
     }
 
     return formattedDataset.value.map((ds, i) => {
-        const base = drawableArea.value.top + (rowHeight.value * (i));
-        const zero = drawableArea.value.top + base + ((rowHeight.value * overlapRatio.value) * (1 - (ratioToMax(absoluteMin))));
+        const base = drawingArea.value.top + (rowHeight.value * (i));
+        const zero = drawingArea.value.top + base + ((rowHeight.value * overlapRatio.value) * (1 - (ratioToMax(absoluteMin))));
         return {
             ...ds,
             label: {
@@ -409,7 +629,7 @@ const drawableDataset = computed(() => {
                     const plots = dp.values.map((v, k) => {
                         const absoluteValue = isNaN(v) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(v) ? 0 : v || 0;
                         const x = startX + (slotSize * k);
-                        const y = drawableArea.value.top + base + ((rowHeight.value * overlapRatio.value) * (1 - ratioToMax(absoluteValue + absoluteMin)));
+                        const y = drawingArea.value.top + base + ((rowHeight.value * overlapRatio.value) * (1 - ratioToMax(absoluteValue + absoluteMin)));
                         const isMaxPoint = v === Math.max(...dp.values);
 
                         return {
@@ -529,6 +749,10 @@ function createXyDatasetForDialog(ds) {
                     xAxisLabels: {
                         ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid.labels.xAxisLabels,
                         values: FINAL_CONFIG.value.style.chart.xAxis.labels.values, // Overriding
+                        autoRotate: {
+                            enable: true,
+                            angle: FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.grid.labels.xAxisLabels.autoRotate.angle
+                        }, // overriding
                         datetimeFormatter: FINAL_CONFIG.value.style.chart.xAxis.labels.datetimeFormatter, // Overriding
                     }
                 }
@@ -662,6 +886,22 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const dummySlicer = computed(() => ({ min: 0, max: maxDpLen.value }));
+
+useTimeLabelCollision({
+    timeLabelsEls: timeLabelsEls,
+    timeLabels,
+    slicer: dummySlicer,
+    configRef: FINAL_CONFIG,
+    rotationPath: ['style', 'chart', 'xAxis', 'labels', 'rotation'],
+    autoRotatePath: ['style', 'chart', 'xAxis', 'labels', 'autoRotate', 'enable'],
+    isAutoSize: false,
+    width: WIDTH,
+    height: HEIGHT,
+    targetClass: '.vue-ui-ridgeline-x-axis-label',
+    angle: FINAL_CONFIG.value.style.chart.xAxis.labels.autoRotate.angle
+});
+
 defineExpose({
     getData,
     getImage,
@@ -754,9 +994,9 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg ref="svgRef" :xmlns="XMLNS" v-if="isDataset"
+        <svg ref="svgRef" :xmlns="XMLNS"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight}`"
+            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawingArea.fullHeight <= 0 ? 10 : drawingArea.fullHeight}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};${FINAL_CONFIG.responsive ? `height: ${parentHeight}px; width: 100%;` : ''}`">
             <PackageVersion />
 
@@ -801,7 +1041,7 @@ defineExpose({
                         :stroke-width="FINAL_CONFIG.style.chart.areas.strokeWidth"
                         :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPathRidge : dp.straightPathRidge"
                         stroke-linecap="round" stroke-linejoin="round"
-                        :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation }" 
+                        :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation && !loading }" 
                         :style="{
                             strokeDasharray: dp.pathLength,
                             strokeDashoffset: FINAL_CONFIG.useCssAnimation ? dp.pathLength : 0,
@@ -812,7 +1052,7 @@ defineExpose({
                         stroke="none"
                         :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath"
                         stroke-linecap="round" stroke-linejoin="round"
-                        :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation }" 
+                        :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation && !loading }" 
                         :style="{
                             strokeDasharray: dp.pathLength,
                             strokeDashoffset: FINAL_CONFIG.useCssAnimation ? dp.pathLength : 0,
@@ -867,7 +1107,7 @@ defineExpose({
             </g>
 
             <!-- X AXIS LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.xAxis.labels.values.length">
+            <g v-if="FINAL_CONFIG.style.chart.xAxis.labels.values.length" ref="timeLabelsEls">
                 <template v-for="(xLabel, i) in xAxisTrapsAndLabels">
                     <slot name="time-label" v-bind="{
                         show: (xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo) ||
@@ -878,9 +1118,9 @@ defineExpose({
                         content: xLabel.label,
                         textAnchor: FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle',
                         fill: FINAL_CONFIG.style.chart.xAxis.labels.color,
-                        transform: `translate(${xLabel.selectorX}, ${drawableArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`,
+                        transform: `translate(${xLabel.selectorX}, ${drawingArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`,
                         x: xLabel.selectorX,
-                        y: drawableArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY
+                        y: drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY
                     }">
                         <g v-if="(xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo) ||
                                 (xLabel && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && (i === 0 || i === xAxisTrapsAndLabels.length - 1)) ||
@@ -889,11 +1129,12 @@ defineExpose({
                         >
                         <!-- SINGLE LINE -->
                         <text
+                            class="vue-ui-ridgeline-x-axis-label"
                             v-if="!String(xLabel.label).includes('\n')"
                             :font-size="FINAL_CONFIG.style.chart.xAxis.labels.fontSize"
                             :fill="FINAL_CONFIG.style.chart.xAxis.labels.color"
                             :font-weight="FINAL_CONFIG.style.chart.xAxis.labels.bold ? 'bold' : 'normal'"
-                            :transform="`translate(${xLabel.selectorX}, ${drawableArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
+                            :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
                             :text-anchor="FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle'"
                             :style="{
                                 opacity: selectedX ? selectedX.index === i ? 1 : 0.2 : 1
@@ -903,11 +1144,12 @@ defineExpose({
 
                         <!-- MULTILINE -->
                         <text
+                            class="vue-ui-ridgeline-x-axis-label"
                             v-else
                             :font-size="FINAL_CONFIG.style.chart.xAxis.labels.fontSize"
                             :fill="FINAL_CONFIG.style.chart.xAxis.labels.color"
                             :font-weight="FINAL_CONFIG.style.chart.xAxis.labels.bold ? 'bold' : 'normal'"
-                            :transform="`translate(${xLabel.selectorX}, ${drawableArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
+                            :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
                             :text-anchor="FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle'"
                             :style="{
                                 opacity: selectedX ? selectedX.index === i ? 1 : 0.2 : 1
@@ -928,10 +1170,17 @@ defineExpose({
             <!-- TOOLTIP TRAPS, SELECTOR AND DATALABELS-->
             <g>
                 <!-- TOOLTIP TRAPS -->
-                <rect v-for="(trap, i) in xAxisTrapsAndLabels" :x="trap.x" :y="trap.y"
-                    :width="trap.width < 0 ? 0.1 : trap.width" :height="trap.height < 0 ? 0.1 : trap.height"
-                    fill="transparent" @mouseenter="selectedX = trap" @mouseleave="selectedX = null"
-                    @click="() => selectX(trap)" />
+                <rect 
+                    v-for="(trap, i) in xAxisTrapsAndLabels" 
+                    :x="trap.x" 
+                    :y="trap.y"
+                    :width="trap.width < 0 ? 0.1 : trap.width" 
+                    :height="trap.height < 0 ? 0.1 : trap.height"
+                    fill="transparent" 
+                    @mouseenter="onTrapEnter(trap)" 
+                    @mouseleave="onTrapLeave(trap)"
+                    @click="() => selectX(trap)" 
+                />
 
                 <!-- SELECTOR -->
                 <line v-if="FINAL_CONFIG.style.chart.selector.show && !!selectedX" :x1="selectedX.selectorX"
@@ -1006,16 +1255,6 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
 
-        <Skeleton v-if="!isDataset" :config="{
-            type: 'ridgeline',
-            style: {
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                ridgeline: {
-                    color: '#CCCCCC'
-                }
-            }
-        }" />
-
         <div ref="chartLegend">
             <Legend v-if="FINAL_CONFIG.style.chart.legend.show" :key="`legend_${legendStep}`" :legendSet="legendSet"
                 :config="legendConfig" @clickMarker="({ legend }) => segregate(legend.id)">
@@ -1025,7 +1264,7 @@ defineExpose({
                 </template>
 
                 <template #item="{ legend }">
-                    <div data-cy="legend-item" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`"
+                    <div data-cy="legend-item" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading"
                         @click="legend.segregate()">
                         {{ legend.name }}
                     </div>
@@ -1085,6 +1324,7 @@ defineExpose({
             :headerColor="FINAL_CONFIG.style.chart.dialog.header.color"
             :isFullscreen="isFullscreen"
             :fullscreenParent="ridgelineChart"
+            withPadding
         >
             <template #title>
                 {{ selectedDatapoint.name }}
@@ -1092,6 +1332,8 @@ defineExpose({
             <VueUiXy v-if="selectedDatapoint" :config="xyConfig" :dataset="xyDataset" />
         </BaseDraggableDialog>
 
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

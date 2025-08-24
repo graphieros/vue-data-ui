@@ -1,5 +1,16 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick, defineAsyncComponent, shallowRef } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs, 
+    watch, 
+    watchEffect,
+} from "vue";
 import * as detector from "../chartDetector";
 import {
     applyDataLabel,
@@ -22,27 +33,27 @@ import {
     palette,
     sanitizeArray,
     themePalettes,
-    XMLNS
+    XMLNS,
+    treeShake,
+    objectIsEmpty
 } from "../lib";
-import {
-    throttle
-} from "../canvas-lib"
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
+import { throttle } from "../canvas-lib"
 import { useConfig } from "../useConfig";
-import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
-import Slicer from "../atoms/Slicer.vue";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useTimeLabels } from "../useTimeLabels";
+import { useChartAccessibility } from "../useChartAccessibility";
+import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import img from "../img";
-
-//xyPeriodFormatter
+import Slicer from "../atoms/Slicer.vue";
+import themes from "../themes.json";
+import { useLoading } from "../useLoading";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
@@ -78,14 +89,44 @@ const segregated = ref([]);
 const step = ref(0);
 const slicerStep = ref(0);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const timeLabelsEls = ref(null);
+const scaleLabels = ref(null);
+const xAxisLabel = ref(null);
+const yAxisLabel = ref(null);
+
+const donutStroke = ref('#FFFFFF');
+const FINAL_CONFIG = ref(prepareConfig());
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            backgroundColor: '#99999930',
+            customPalette: ['#BABABA'],
+            showDataLabels: false,
+            paletteStartIndex: 0,
+            showUserOptions: false,
+            showTooltip: false,
+            xAxisLabel: '',
+            yAxisLabel: '',
+            xyAxisStroke: '#999999',
+            xyGridStroke: '#99999950',
+            xyPeriods: [],
+            xyShowScale: false,
+            xyPaddingLeft: 6,
+            xyPaddingBottom: 12,
+            zoomXy: false,
+            zoomStartIndex: null,
+            zoomEndIndex: null
+        }
+    })
+})
 
 const { svgRef } = useChartAccessibility({ config: { text: FINAL_CONFIG.value.title }});
 
@@ -93,7 +134,10 @@ const showUserOptionsOnChartHover = computed(() => FINAL_CONFIG.value.showUserOp
 const keepUserOptionState = computed(() => FINAL_CONFIG.value.keepUserOptionsStateOnChartLeave);
 const userOptionsVisible = ref(!FINAL_CONFIG.value.showUserOptionsOnChartHover);
 
+const userHovers = ref(false);
+
 function setUserOptionsVisibility(state = false) {
+        userHovers.value = state;
         if (!showUserOptionsOnChartHover.value) return;
         userOptionsVisible.value = state;
     }
@@ -131,12 +175,24 @@ function prepareConfig() {
         finalConfig.zoomEndIndex = null;
     }
 
+    if (props.config && !hasDeepProperty(props.config, 'donutStroke')) { 
+        if (hasDeepProperty(props.config, 'backgroundColor')) {
+            donutStroke.value = props.config.backgroundColor;
+        } else {
+            donutStroke.value = '#FFFFFF';
+        }
+    } else {
+        donutStroke.value = props.config.donutStroke;
+    }
+
     // ----------------------------------------------------------------------------
     return finalConfig;
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     defaultSizes.value.width = FINAL_CONFIG.value.width;
     defaultSizes.value.height = FINAL_CONFIG.value.height;
     userOptionsVisible.value = !FINAL_CONFIG.value.showUserOptionsOnChartHover;
@@ -151,7 +207,14 @@ watch(() => props.dataset, (_) => {
     slicer.value.start = 0;
     slicer.value.end = formattedDataset.value.maxSeriesLength;
     slicerStep.value += 1;
-}, { deep: true })
+}, { deep: true });
+
+// v3 - Stop skeleton loader when props.dataset becomes valid
+watch(() => props.dataset, (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+        manualLoading.value = false;
+    }
+}, { immediate: true });
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
@@ -160,7 +223,7 @@ const customPalette = computed(() => {
 const emit = defineEmits(['selectDatapoint', 'selectLegend'])
 
 const fd = computed(() => {
-    const f = detector.detectChart({ dataset: sanitizeArray(props.dataset, [
+    const f = detector.detectChart({ debug: debug.value, dataset: sanitizeArray(FINAL_DATASET.value, [
         'serie',
         'series',
         'data',
@@ -168,7 +231,7 @@ const fd = computed(() => {
         'values',
         'num',
     ]), barLineSwitch: FINAL_CONFIG.value.chartIsBarUnderDatasetLength });
-    if(!f) {
+    if(!f && debug.value) {
         console.error('VueUiQuickChart : Dataset is not processable')
     }
     return f
@@ -188,7 +251,8 @@ watch(() => chartType.value, (v) => {
     if (!v) {
         error({
             componentName: 'VueUiQuickChart',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
     }
 }, { immediate: true })
@@ -212,6 +276,13 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.showTooltip
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTooltip: FINAL_CONFIG.value.showTooltip
+    };
+}, { immediate: true });
+
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
@@ -220,6 +291,10 @@ onMounted(() => {
 })
 
 function prepareChart() {
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
+    }
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
             const { width, height } = useResponsive({
@@ -396,7 +471,7 @@ function setCommonSelectedIndex(index) {
 }
 
 const optimalDonutThickness = computed(() => {
-    return FINAL_CONFIG.value.donutThicknessRatio < 0.15 ? 0.15 : FINAL_CONFIG.value.donutThicknessRatio > 0.4 ? 0.4 :  FINAL_CONFIG.value.donutThicknessRatio;
+    return FINAL_CONFIG.value.donutThicknessRatio < 0.01 ? 0.01 : FINAL_CONFIG.value.donutThicknessRatio > 0.4 ? 0.4 :  FINAL_CONFIG.value.donutThicknessRatio;
 })
 
 const donut = computed(() => {
@@ -440,6 +515,10 @@ const donut = computed(() => {
         selectedDatapoint.value = datapoint.id;
         const customFormat = FINAL_CONFIG.value.tooltipCustomFormat;
 
+        if (FINAL_CONFIG.value.events.datapointEnter) {
+            FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
+        }
+
         if(isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint,
             seriesIndex,
@@ -478,10 +557,20 @@ const donut = computed(() => {
         isTooltip.value = true;
     }
 
-    function killTooltip() {
+    function killTooltip({ datapoint, seriesIndex }) {
+        if (FINAL_CONFIG.value.events.datapointLeave) {
+            FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
+        }
         isTooltip.value = false;
         selectedDatapoint.value = null;
         commonSelectedIndex.value = null;
+    }
+
+    function selectDatapoint({ datapoint, seriesIndex }) {
+        if (FINAL_CONFIG.value.events.datapointClick) {
+            FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
+        }
+        emit('selectDatapoint', datapoint)
     }
 
     const drawingArea = {
@@ -496,9 +585,9 @@ const donut = computed(() => {
             ...d,
             proportion: (d.value || 0) / total,
             value: d.value || 0,
-            absoluteValue: fd.value.dataset.find((el, idx) => `donut_${idx}` === d.id).VALUE,
+            absoluteValue: fd.value.dataset.find((_, idx) => `donut_${idx}` === d.id).VALUE,
         }
-    })
+    });
 
     const cx = (defaultSizes.value.width) / 2;
     const cy = (defaultSizes.value.height) / 2;
@@ -512,6 +601,7 @@ const donut = computed(() => {
         isArcBigEnough,
         useTooltip,
         killTooltip,
+        selectDatapoint,
         getSpaces,
         total,
         cx,
@@ -545,16 +635,18 @@ function refreshSlicer() {
 const slicerComponent = ref(null);
 
 async function setupSlicer() {
-    if ((FINAL_CONFIG.value.zoomStartIndex !== null || FINAL_CONFIG.value.zoomEndIndex !== null) && slicerComponent.value) {
-        if (FINAL_CONFIG.value.zoomStartIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.zoomStartIndex);
+    await nextTick();
+    await nextTick();
+
+    const { zoomStartIndex, zoomEndIndex } = FINAL_CONFIG.value;
+    const comp = slicerComponent.value;
+
+    if ((zoomStartIndex != null || zoomEndIndex != null) && comp) {
+        if (zoomStartIndex != null) {
+        comp.setStartValue(zoomStartIndex);
         }
-        if (FINAL_CONFIG.value.zoomEndIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.zoomEndIndex + 1));
+        if (zoomEndIndex != null) {
+        comp.setEndValue(validSlicerEnd(zoomEndIndex + 1));
         }
     } else {
         slicer.value = {
@@ -579,7 +671,6 @@ function validSlicerEnd(v) {
     }
     return v
 }
-
 
 const minimap = computed(() => {
     if(!FINAL_CONFIG.value.zoomMinimap.show || chartType.value === detector.chartType.DONUT) return [];
@@ -614,6 +705,51 @@ const minimap = computed(() => {
     return sumAllSeries.map(dp => dp + (min < 0 ? Math.abs(min) : 0)) // positivized
 });
 
+function getScaleLabelX() {
+    let base = 0;
+    if (scaleLabels.value) {
+        const texts = Array.from(scaleLabels.value.querySelectorAll('text'))
+        base = texts.reduce((max, t) => {
+        const w = t.getComputedTextLength()
+        return( w > max ? w : max)
+        }, 0)
+    }
+
+    const crosshair = 4
+    return base + crosshair
+}
+
+const timeLabelsHeight = ref(0);
+
+const updateHeight = throttle((h) => {
+    timeLabelsHeight.value = h
+}, 100)
+
+// Track time label height to update drawing area when they rotate
+watchEffect((onInvalidate) => {
+    const el = timeLabelsEls.value
+    if (!el) return
+
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height)
+    })
+    observer.observe(el)
+    onInvalidate(() => observer.disconnect())
+})
+
+onBeforeUnmount(() => {
+    timeLabelsHeight.value = 0
+})
+
+const timeLabelsY = computed(() => {
+    let h = 0;
+        let tlH = 0;
+        if (timeLabelsEls.value) {
+            tlH = timeLabelsHeight.value;
+        }
+        return h + tlH;
+});
+
 const line = computed(() => {
     if(chartType.value !== detector.chartType.LINE) return null;
 
@@ -622,13 +758,22 @@ const line = computed(() => {
         width: defaultSizes.value.width
     }
 
+    let _scaleLabelX = getScaleLabelX();
+
+    if (timeLabelsEls.value) {
+        const x = timeLabelsEls.value.getBBox().x
+        if (x < 0) {
+            _scaleLabelX += Math.abs(x)
+        }
+    }
+
     const drawingArea = {
-        left: FINAL_CONFIG.value.xyPaddingLeft,
+        left: _scaleLabelX + FINAL_CONFIG.value.xyPaddingLeft,
         top: FINAL_CONFIG.value.xyPaddingTop,
         right: chartDimensions.width - FINAL_CONFIG.value.xyPaddingRight,
-        bottom: chartDimensions.height - FINAL_CONFIG.value.xyPaddingBottom,
-        width: chartDimensions.width - FINAL_CONFIG.value.xyPaddingLeft - FINAL_CONFIG.value.xyPaddingRight,
-        height: chartDimensions.height - FINAL_CONFIG.value.xyPaddingTop - FINAL_CONFIG.value.xyPaddingBottom
+        bottom: chartDimensions.height - FINAL_CONFIG.value.xyPaddingBottom - timeLabelsY.value,
+        width: Math.max(10, chartDimensions.width - FINAL_CONFIG.value.xyPaddingLeft - FINAL_CONFIG.value.xyPaddingRight - _scaleLabelX),
+        height: Math.max(10, chartDimensions.height - FINAL_CONFIG.value.xyPaddingTop - FINAL_CONFIG.value.xyPaddingBottom - timeLabelsY.value)
     }
 
     let ds = [];
@@ -703,18 +848,27 @@ const line = computed(() => {
         }
     })
 
-    function useTooltip(index) {
-        selectedDatapoint.value = index;
-        commonSelectedIndex.value = index;
-        const mappedSeries = ds.map(d => {
+    function getMappedSeries(index) {
+        return ds.map(d => {
             return {
                 ...d,
                 value: d.values[index],
                 absoluteIndex: d.absoluteIndices[index]
             }
-        }).filter(d => !segregated.value.includes(d.id))
+        }).filter(d => !segregated.value.includes(d.id));
+    }
+
+    function useTooltip(index) {
+        selectedDatapoint.value = index;
+        commonSelectedIndex.value = index;
+        const mappedSeries = getMappedSeries(index);
+
         dataTooltipSlot.value = { datapoint: mappedSeries, seriesIndex: index, config: FINAL_CONFIG.value, dataset: ds };
         const customFormat = FINAL_CONFIG.value.tooltipCustomFormat;
+
+        if (FINAL_CONFIG.value.events.datapointEnter) {
+            FINAL_CONFIG.value.events.datapointEnter({ datapoint: mappedSeries, seriesIndex: index + slicer.value.start })
+        }
 
         if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint: mappedSeries,
@@ -760,10 +914,24 @@ const line = computed(() => {
         isTooltip.value = true;
     }
 
-    function killTooltip() {
+    function killTooltip(index) {
+        const datapoint = getMappedSeries(index);
+
+        if (FINAL_CONFIG.value.events.datapointLeave) {
+            FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: index + slicer.value.start })
+        }
+
         selectedDatapoint.value = null;
         commonSelectedIndex.value = null;
         isTooltip.value = false;
+    }
+
+    function selectDatapoint(index) {
+        const datapoint = getMappedSeries(index);
+        if (FINAL_CONFIG.value.events.datapointClick) {
+            FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index + slicer.value.start })
+        }
+        emit('selectDatapoint', datapoint);
     }
 
     return {
@@ -775,7 +943,8 @@ const line = computed(() => {
         slotSize,
         yLabels,
         useTooltip,
-        killTooltip
+        killTooltip,
+        selectDatapoint
     }
 })
 
@@ -787,13 +956,22 @@ const bar = computed(() => {
         width: defaultSizes.value.width
     };
 
+    let _scaleLabelX = getScaleLabelX();
+
+    if (timeLabelsEls.value) {
+        const x = timeLabelsEls.value.getBBox().x
+        if (x < 0) {
+            _scaleLabelX += Math.abs(x)
+        }
+    }
+
     const drawingArea = {
-        left: FINAL_CONFIG.value.xyPaddingLeft,
+        left: _scaleLabelX + FINAL_CONFIG.value.xyPaddingLeft,
         top: FINAL_CONFIG.value.xyPaddingTop,
         right: chartDimensions.width - FINAL_CONFIG.value.xyPaddingRight,
-        bottom: chartDimensions.height - FINAL_CONFIG.value.xyPaddingBottom,
-        width: chartDimensions.width - FINAL_CONFIG.value.xyPaddingLeft - FINAL_CONFIG.value.xyPaddingRight,
-        height: chartDimensions.height - FINAL_CONFIG.value.xyPaddingTop - FINAL_CONFIG.value.xyPaddingBottom
+        bottom: chartDimensions.height - FINAL_CONFIG.value.xyPaddingBottom - timeLabelsY.value,
+        width: Math.max(10, chartDimensions.width - FINAL_CONFIG.value.xyPaddingLeft - FINAL_CONFIG.value.xyPaddingRight - _scaleLabelX),
+        height: Math.max(10, chartDimensions.height - FINAL_CONFIG.value.xyPaddingTop - FINAL_CONFIG.value.xyPaddingBottom - timeLabelsY.value)
     }
 
     let ds = [];
@@ -887,20 +1065,28 @@ const bar = computed(() => {
         }
     });
 
-    function useTooltip(index) {
-        selectedDatapoint.value = index;
-        commonSelectedIndex.value = index;
-
-        const mappedSeries = ds.map(d => {
+    function getMappedSeries(index) {
+        return ds.map(d => {
             return {
                 ...d,
                 value: d.values[index],
                 absoluteIndex: d.absoluteIndices[index]
             }
         }).filter(d => !segregated.value.includes(d.id));
+    }
+
+    function useTooltip(index) {
+        selectedDatapoint.value = index;
+        commonSelectedIndex.value = index;
+
+        const mappedSeries = getMappedSeries(index);
 
         dataTooltipSlot.value = { datapoint: mappedSeries, seriesIndex: index, config: FINAL_CONFIG.value, dataset: ds };
         const customFormat = FINAL_CONFIG.value.tooltipCustomFormat;
+
+        if (FINAL_CONFIG.value.events.datapointEnter) {
+            FINAL_CONFIG.value.events.datapointEnter({ datapoint: mappedSeries, seriesIndex: index + slicer.value.start })
+        }
 
         if (isFunction(customFormat) && functionReturnsString(() => customFormat({
             datapoint: mappedSeries,
@@ -946,10 +1132,24 @@ const bar = computed(() => {
         isTooltip.value = true;
     }
 
-    function killTooltip() {
+    function killTooltip(index) {
+        const datapoint = getMappedSeries(index);
+
+        if (FINAL_CONFIG.value.events.datapointLeave) {
+            FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: index + slicer.value.start })
+        }
+
         isTooltip.value = false;
         selectedDatapoint.value = null;
         commonSelectedIndex.value = null;
+    }
+
+    function selectDatapoint(index) {
+        const datapoint = getMappedSeries(index);
+        if (FINAL_CONFIG.value.events.datapointClick) {
+            FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index + slicer.value.start })
+        }
+        emit('selectDatapoint', datapoint);
     }
 
     return {
@@ -961,7 +1161,8 @@ const bar = computed(() => {
         slotSize,
         yLabels,
         useTooltip,
-        killTooltip
+        killTooltip,
+        selectDatapoint
     }
 });
 
@@ -973,7 +1174,13 @@ const timeLabels = computed(() => {
         start: slicer.value.start,
         end: slicer.value.end
     })
-})
+});
+
+const modulo = computed(() => {
+    const m = FINAL_CONFIG.value.xyPeriodsModulo;
+    if (!FINAL_CONFIG.value.xyPeriods.length) return m;
+    return Math.min(m, [...new Set(timeLabels.value.map(t => t.text))].length);
+});
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -1004,6 +1211,22 @@ async function getImage({ scale = 2} = {}) {
         aspectRatio
     }
 }
+
+const WIDTH = computed(() => defaultSizes.value.width);
+const HEIGHT = computed(() => defaultSizes.value.height)
+
+useTimeLabelCollision({
+    timeLabelsEls,
+    timeLabels,
+    slicer,
+    configRef: FINAL_CONFIG,
+    rotationPath: ['xyPeriodLabelsRotation'],
+    autoRotatePath: ['xyPeriodLabelsAutoRotate', 'enable'],
+    isAutoSize: false,
+    rotation: FINAL_CONFIG.value.xyPeriodLabelsAutoRotate.angle,
+    height: HEIGHT.value,
+    width: WIDTH.value
+});
 
 defineExpose({
     getImage,
@@ -1161,7 +1384,7 @@ defineExpose({
                         <path
                             data-cy="datapoint-donut-markers"
                             v-if="donut.isArcBigEnough(arc)"
-                            :d="calcNutArrowPath(arc, {x: defaultSizes.width / 2, y: defaultSizes.height / 2}, 16, 16, false, false, (defaultSizes.height * optimalDonutThickness))"
+                            :d="calcNutArrowPath(arc, {x: defaultSizes.width / 2, y: defaultSizes.height / 2}, 16, 16, false, false, (defaultSizes.height * optimalDonutThickness), 12, FINAL_CONFIG.donutCurvedMarkers)"
                             :stroke="arc.color"
                             :stroke-width="FINAL_CONFIG.donutLabelMarkerStrokeWidth"
                             stroke-linecap="round"
@@ -1186,7 +1409,7 @@ defineExpose({
                         v-for="(arc, i) in donut.chart"
                         :d="arc.arcSlice"
                         :fill="arc.color"
-                        :stroke="FINAL_CONFIG.backgroundColor"
+                        :stroke="donutStroke"
                         :stroke-width="FINAL_CONFIG.donutStrokeWidth"
                         :filter="getBlurFilter(arc.id)"
                     />
@@ -1196,8 +1419,8 @@ defineExpose({
                         :d="arc.arcSlice"
                         fill="transparent"
                         @mouseenter="donut.useTooltip({ datapoint: arc, seriesIndex: i })"
-                        @mouseout="donut.killTooltip()"
-                        @click="emit('selectDatapoint', arc)"
+                        @mouseout="donut.killTooltip({ datapoint: arc, seriesIndex: i })"
+                        @click="donut.selectDatapoint({ datapoint: arc, seriesIndex: i })"
                     />
                 </g>
                 <g class="donut-labels quick-animation" v-if="FINAL_CONFIG.showDataLabels">
@@ -1329,7 +1552,7 @@ defineExpose({
                         stroke-linecap="round"
                     />
                 </g>
-                <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
+                <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale" ref="scaleLabels">
                     <template v-for="(label, i) in line.yLabels">   
                         <line
                             data-cy="scale-line-tick"
@@ -1366,10 +1589,12 @@ defineExpose({
                         </text>
                     </template>
                 </g>
+                
+                <!-- TIME LABELS -->
                 <g class="periodLabels" v-if="FINAL_CONFIG.xyShowScale && FINAL_CONFIG.xyPeriods.length">
                     <template v-for="(period, i) in timeLabels.map(l => l.text)">
                         <line
-                            v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))"
+                            v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0)) || (slicer.end - slicer.start <= modulo))"
                             data-cy="period-tick"
                             :x1="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
                             :x2="line.drawingArea.left + (line.slotSize * (i+1)) - (line.slotSize / 2)"
@@ -1379,8 +1604,12 @@ defineExpose({
                             :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                             stroke-linecap="round"
                         />
-                        <g v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / FINAL_CONFIG.xyPeriodsModulo) === 0)) || (slicer.end - slicer.start <= FINAL_CONFIG.xyPeriodsModulo))">
+                    </template>
+                    <g ref="timeLabelsEls">
+                        <template v-for="(period, i) in timeLabels.map(l => l.text)">
+                            <g v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0)) || (slicer.end - slicer.start <= modulo))">
                             <text
+                                class="vue-data-ui-time-label"
                                 v-if="!String(period).includes('\n')"
                                 data-cy="period-label"
                                 :font-size="FINAL_CONFIG.xyLabelsXFontSize"
@@ -1392,6 +1621,7 @@ defineExpose({
                             </text>
                             <text
                                 v-else
+                                class="vue-data-ui-time-label"
                                 data-cy="period-label"
                                 :font-size="FINAL_CONFIG.xyLabelsXFontSize"
                                 :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
@@ -1406,7 +1636,8 @@ defineExpose({
                                 })"
                             />
                         </g>
-                    </template>
+                        </template>
+                    </g>
                 </g>
                 <g class="plots">
                     <template v-for="(ds, i) in line.dataset">
@@ -1419,8 +1650,8 @@ defineExpose({
                                     :stroke-width="FINAL_CONFIG.lineStrokeWidth + 1"
                                     stroke-linecap="round"
                                     fill="none"
-                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated }"
-                                    style="transition: all 0.3s ease-in-out"
+                                    :class="{'quick-animation': !loading, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated && !loading }"
+                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
                                 />
                                 <path
                                     data-cy="datapoint-line"
@@ -1429,8 +1660,8 @@ defineExpose({
                                     :stroke-width="FINAL_CONFIG.lineStrokeWidth"
                                     stroke-linecap="round"
                                     fill="none"
-                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated }"
-                                    style="transition: all 0.3s ease-in-out"
+                                    :class="{'quick-animation': !loading, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated && !loading }"
+                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
                                 >
                             </path>
                             </template>
@@ -1442,8 +1673,8 @@ defineExpose({
                                     :stroke-width="FINAL_CONFIG.lineStrokeWidth + 1"
                                     stroke-linecap="round"
                                     fill="none"
-                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated }"
-                                    style="transition: all 0.3s ease-in-out"
+                                    :class="{'quick-animation': !loading, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated && !loading }"
+                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
                                 />
                                 <path
                                     data-cy="datapoint-line"
@@ -1452,8 +1683,8 @@ defineExpose({
                                     :stroke-width="FINAL_CONFIG.lineStrokeWidth"
                                     stroke-linecap="round"
                                     fill="none"
-                                    :class="{'quick-animation': true, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated }"
-                                    style="transition: all 0.3s ease-in-out"
+                                    :class="{'quick-animation': !loading, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated && !loading }"
+                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
                                 />
                             </template>
                             <template v-for="(plot, j) in ds.coordinates">
@@ -1465,8 +1696,8 @@ defineExpose({
                                     :fill="ds.color"
                                     :stroke="FINAL_CONFIG.backgroundColor"
                                     stroke-width="0.5"
-                                    class="quick-animation"
-                                    style="transition: all 0.3s ease-in-out"
+                                    :class="{ 'quick-animation': !loading }"
+                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
                                 />
                             </template>
                         </g>
@@ -1483,7 +1714,7 @@ defineExpose({
                             :x="plot.x"
                             :y="checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2"
                             class="quick-animation"
-                            style="transition: all 0.3s ease-in-out"
+                            :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
                         >
                             {{ applyDataLabel(
                                 FINAL_CONFIG.formatter,
@@ -1500,7 +1731,7 @@ defineExpose({
                         </text>
                     </template>
                 </g>
-                <g class="tooltip-traps">
+                <g class="tooltip-traps" v-if="userHovers">
                     <rect
                         data-cy="tooltip-trap-line"
                         v-for="(_, i) in line.extremes.maxSeries"
@@ -1511,13 +1742,8 @@ defineExpose({
                         :fill="[selectedDatapoint, commonSelectedIndex].includes(i) ? FINAL_CONFIG.xyHighlighterColor : 'transparent'"
                         :style="`opacity:${FINAL_CONFIG.xyHighlighterOpacity}`"
                         @mouseenter="line.useTooltip(i)"
-                        @mouseleave="line.killTooltip()"
-                        @click="emit('selectDatapoint', line.dataset.map(d => {
-                            return {
-                                ...d,
-                                value: d.values[i]
-                            }
-                        }))"
+                        @mouseleave="line.killTooltip(i)"
+                        @click="line.selectDatapoint(i)"
                     />
                 </g>
             </template>
@@ -1571,7 +1797,7 @@ defineExpose({
                         stroke-linecap="round"
                     />
                 </g>
-                <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale">
+                <g class="yLabels" v-if="FINAL_CONFIG.xyShowScale" ref="scaleLabels">
                     <template v-for="(label, i) in bar.yLabels">   
                         <line
                             data-cy="scale-bar-tick"
@@ -1620,16 +1846,39 @@ defineExpose({
                         :stroke-width="FINAL_CONFIG.xyAxisStrokeWidth"
                         stroke-linecap="round"
                     />
-                    <text
-                        data-cy="period-label"
-                        v-for="(period, i) in timeLabels.map(l => l.text)"
-                        :font-size="FINAL_CONFIG.xyLabelsXFontSize"
-                        :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
-                        :transform="`translate(${bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)}, ${bar.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}) rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
-                        :fill="FINAL_CONFIG.color"
-                    >
-                        {{ period }}
-                    </text>
+                    <g ref="timeLabelsEls">
+                        <template v-for="(period, i) in timeLabels.map(l => l.text)">
+                            <g v-if="(!FINAL_CONFIG.xyPeriodsShowOnlyAtModulo || (FINAL_CONFIG.xyPeriodsShowOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0)) || (slicer.end - slicer.start <= modulo))">
+                            <text
+                                class="vue-data-ui-time-label"
+                                v-if="!String(period).includes('\n')"
+                                data-cy="period-label"
+                                :font-size="FINAL_CONFIG.xyLabelsXFontSize"
+                                :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
+                                :fill="FINAL_CONFIG.color"
+                                :transform="`translate(${bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)}, ${bar.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
+                            >
+                                {{ period }}
+                            </text>
+                            <text
+                                v-else
+                                class="vue-data-ui-time-label"
+                                data-cy="period-label"
+                                :font-size="FINAL_CONFIG.xyLabelsXFontSize"
+                                :text-anchor="FINAL_CONFIG.xyPeriodLabelsRotation > 0 ? 'start' : FINAL_CONFIG.xyPeriodLabelsRotation < 0 ? 'end' : 'middle'"
+                                :fill="FINAL_CONFIG.color"
+                                :transform="`translate(${bar.drawingArea.left + (bar.slotSize * (i+1)) - (bar.slotSize / 2)}, ${bar.drawingArea.bottom + FINAL_CONFIG.xyLabelsXFontSize + 6}), rotate(${FINAL_CONFIG.xyPeriodLabelsRotation})`"
+                                v-html="createTSpansFromLineBreaksOnX({
+                                    content: String(period),
+                                    fontSize: FINAL_CONFIG.xyLabelsXFontSize,
+                                    fill: FINAL_CONFIG.color,
+                                    x: 0,
+                                    y: 0
+                                })"
+                            />
+                        </g>
+                        </template>
+                    </g>
                 </g>
                 <g class="plots">
                     <template v-for="(ds, i) in bar.dataset">
@@ -1644,7 +1893,7 @@ defineExpose({
                             :stroke="FINAL_CONFIG.backgroundColor"
                             :stroke-width="FINAL_CONFIG.barStrokeWidth"
                             stroke-linecap="round"
-                            :class="{'vue-data-ui-bar-animated': FINAL_CONFIG.barAnimated && plot.value < 0}"
+                            :class="{'vue-data-ui-bar-animated': FINAL_CONFIG.barAnimated && plot.value < 0 && !loading }"
                             >
                             <animate
                                 v-if="FINAL_CONFIG.barAnimated && plot.value > 0 && !isPrinting && !isImaging"
@@ -1690,7 +1939,7 @@ defineExpose({
                         </text>
                     </template>
                 </g>
-                <g class="tooltip-traps">
+                <g class="tooltip-traps" v-if="userHovers">
                     <rect 
                         data-cy="tooltip-trap-bar"
                         v-for="(_, i) in bar.extremes.maxSeries"
@@ -1701,20 +1950,15 @@ defineExpose({
                         :fill="[selectedDatapoint, commonSelectedIndex].includes(i) ? FINAL_CONFIG.xyHighlighterColor : 'transparent'"
                         :style="`opacity:${FINAL_CONFIG.xyHighlighterOpacity}`"
                         @mouseenter="bar.useTooltip(i)"
-                        @mouseleave="bar.killTooltip()"
-                        @click="emit('selectDatapoint', bar.dataset.map(d => {
-                            return {
-                                ...d,
-                                value: d.values[i]
-                            }
-                        }))"
+                        @mouseleave="bar.killTooltip(i)"
+                        @click="bar.selectDatapoint(i)"
                     />
                 </g>
             </template>
 
             <template v-if="[detector.chartType.LINE, detector.chartType.BAR].includes(chartType)">
                 <g class="axis-labels">
-                    <g v-if="FINAL_CONFIG.xAxisLabel && chartType === detector.chartType.LINE">
+                    <g v-if="FINAL_CONFIG.xAxisLabel && chartType === detector.chartType.LINE" ref="xAxisLabel">
                         <text 
                             :font-size="FINAL_CONFIG.axisLabelsFontSize"
                             :fill="FINAL_CONFIG.color" 
@@ -1725,7 +1969,7 @@ defineExpose({
                             {{ FINAL_CONFIG.xAxisLabel }}
                         </text>
                     </g>
-                    <g v-if="FINAL_CONFIG.xAxisLabel && chartType === detector.chartType.BAR">
+                    <g v-if="FINAL_CONFIG.xAxisLabel && chartType === detector.chartType.BAR" ref="xAxisLabel">
                         <text 
                             :font-size="FINAL_CONFIG.axisLabelsFontSize"
                             :fill="FINAL_CONFIG.color" 
@@ -1736,7 +1980,7 @@ defineExpose({
                             {{ FINAL_CONFIG.xAxisLabel }}
                         </text>
                     </g>
-                    <g v-if="FINAL_CONFIG.yAxisLabel && chartType === detector.chartType.LINE">
+                    <g v-if="FINAL_CONFIG.yAxisLabel && chartType === detector.chartType.LINE" ref="yAxisLabel">
                         <text 
                             :font-size="FINAL_CONFIG.axisLabelsFontSize"
                             :fill="FINAL_CONFIG.color"
@@ -1746,7 +1990,7 @@ defineExpose({
                             {{ FINAL_CONFIG.yAxisLabel }}
                         </text>
                     </g>
-                    <g v-if="FINAL_CONFIG.yAxisLabel && chartType === detector.chartType.BAR">
+                    <g v-if="FINAL_CONFIG.yAxisLabel && chartType === detector.chartType.BAR" ref="yAxisLabel">
                         <text 
                             :font-size="FINAL_CONFIG.axisLabelsFontSize"
                             :fill="FINAL_CONFIG.color"
@@ -1759,25 +2003,6 @@ defineExpose({
                 </g>
             </template>
         </svg>
-
-        <Skeleton 
-            v-if="!chartType"
-            :config="{
-                type: 'line',
-                style: {
-                    backgroundColor: FINAL_CONFIG.backgroundColor,
-                    line: {
-                        axis: {
-                            color: FINAL_CONFIG.xyAxisStroke,
-                        },
-                        path: {
-                            color: FINAL_CONFIG.xyAxisStroke,
-                            strokeWidth: 0.5
-                        }
-                    }
-                }
-            }"
-        />
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
@@ -1936,6 +2161,8 @@ defineExpose({
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.tooltipCustomFormat)"
+            :smooth="FINAL_CONFIG.tooltipSmooth"
+            :backdropFilter="FINAL_CONFIG.tooltipBackdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1944,6 +2171,9 @@ defineExpose({
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading"/>
     </div>
     <div v-else class="vue-ui-quick-chart-not-processable">
         <BaseIcon name="circleCancel" stroke="red"/>

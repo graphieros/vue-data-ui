@@ -1,80 +1,36 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiSparkline from '../src/components/vue-ui-sparkline.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref([
-    {
-        period: "period 1",
-        value: 0
-    },
-    {
-        period: "period 2",
-        value: -1
-    },
-    {
-        period: "period 3",
-        value: 2
-    },
-    {
-        period: "period 4",
-        value: -3
-    },
-    {
-        period: "period 5",
-        value: 4
-    },
-    {
-        period: "period 6",
-        value: -5
-    },
-    {
-        period: "period 7",
-        value: 6
-    },
-    {
-        period: "period 8",
-        value: -7
-    },
-    {
-        period: "period 9",
-        value: 8
-    },
-    {
-        period: "period 10",
-        value: -9
-    },
-    {
-        period: "period 11",
-        value: 10
-    },
-    {
-        period: "period 12",
-        value: -11
-    },
-    {
-        period: "period 13",
-        value: 12
-    },
-    {
-        period: "period 14",
-        value: -13
-    },
-    {
-        period: "period 15",
-        value: 14
-    },
-    {
-        period: "period 16",
-        value: -15
-    },
-    {
-        period: "period 17",
-        value: 1
-    },
-])
+const dataset = ref([])
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
+            { "period": 1735689600000, "value": 0 },
+            { "period": 1738368000000, "value": -1 },
+            { "period": 1740787200000, "value": 2 },
+            { "period": 1743465600000, "value": -3 },
+            { "period": 1746057600000, "value": 4 },
+            { "period": 1748736000000, "value": -5 },
+            { "period": 1751328000000, "value": 6 },
+            { "period": 1754006400000, "value": -7 },
+            { "period": 1756684800000, "value": 8 },
+            { "period": 1759276800000, "value": -9 },
+            { "period": 1761955200000, "value": 10 },
+            { "period": 1764547200000, "value": -11 },
+            { "period": 1767225600000, "value": 12 },
+            { "period": 1769904000000, "value": -13 },
+            { "period": 1772323200000, "value": 14 },
+            { "period": 1775001600000, "value": -15 },
+            { "period": 1777593600000, "value": 1 }
+        ]
+    }, 2000)
+})
+
 
 // const dataset = computed(() => {
 //     const arr = [];
@@ -133,13 +89,15 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'type', def: 'line', type: 'select', options: ['line', 'bar']},
     { key: 'style.scaleMin', def: null, type: 'number', min: -1000, max: 1000},
     { key: 'style.scaleMax', def: null, type: 'number', min: -1000, max: 1000},
 
     { key: 'style.padding.top', def: 12, type: 'number', min: 0, max: 100 },
-    { key: 'style.padding.right', def: 0, type: 'number', min: 0, max: 100 },
+    { key: 'style.padding.right', def: 12, type: 'number', min: 0, max: 100 },
     { key: 'style.padding.bottom', def: 3, type: 'number', min: 0, max: 100 },
     { key: 'style.padding.left', def: 0, type: 'number', min: 0, max: 100 },
 
@@ -205,12 +163,23 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex })
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex })
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex })
+            },
+        },
         style: {
             ...c.style,
             dataLabel: {
@@ -218,6 +187,20 @@ const config = computed(() => {
                 formatter: ({value, config}) => {
                     // console.log(config)
                     return `f - ${value}`
+                },
+                datetimeFormatter: {
+                    enable: true,
+                    locale: 'en',
+                    useUTC: false,
+                    januaryAsYear: true,
+                    options: { 
+                        year: 'yyyy',
+                        month: `MMM`,
+                        day: 'dd MMM',
+                        hour: 'HH:mm',
+                        minute: 'HH:mm:ss',
+                        second: 'HH:mm:ss'
+                    }
                 }
             }
         },
@@ -245,9 +228,9 @@ const step = ref(0)
             ...config,
             responsive: true
         }">
-            <template #chart-background>
+            <!-- <template #chart-background>
                 <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-            </template>
+            </template> -->
 
             <template #source>
                 <div style="width:100%;font-size:10px;text-align:left">
@@ -267,7 +250,7 @@ const step = ref(0)
                     {{ absoluteValue }}
                 </template>
 
-                <template #before="{ selected, latest, sum, average, median, trend }">
+                <!-- <template #before="{ selected, latest, sum, average, median, trend }">
                     <div style="color: white;height: 180px;font-size:11px">
                         #BEFORE
                         <ul>
@@ -279,7 +262,7 @@ const step = ref(0)
                             <li>Selected: {{ selected }}</li>
                         </ul>
                     </div>
-                </template>
+                </template> -->
             </LocalVueUiSparkline>
         </template>
 

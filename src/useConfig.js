@@ -13,6 +13,8 @@ export function useConfig() {
     const COLOR_YELLOW = '#FFD055'
 
     const FONT = {
+        _6: 6,
+        _8: 8,
         _10: 10,
         _12: 12,
         _14: 14,
@@ -23,6 +25,8 @@ export function useConfig() {
         _32: 32,
         _48: 48
     }
+
+    const MIN_FONT_SIZE = FONT._6;
 
     // -------------------------
     // COMBOS TO APPLY
@@ -70,7 +74,7 @@ export function useConfig() {
     }
 
     const LTTB = {
-        threshold: 500,
+        threshold: 1095, // v2 = 500
     }
 
     const TITLE = {
@@ -108,7 +112,9 @@ export function useConfig() {
         borderWidth: 1,
         backgroundOpacity: 100,
         position: POSITION.CENTER,
-        offsetY: 24
+        offsetY: 24,
+        smooth: true, // v3
+        backdropFilter: true, // v3
     }
 
     const AXIS_DATE_FORMATTER = {
@@ -264,10 +270,17 @@ export function useConfig() {
     }
 
     const vue_ui_stackbar = {
+        loading: false, // v3
+        debug: false, // v3
         theme: '',
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         orientation: 'vertical', // or 'horizontal'
         table: {
             ...TABLE,
@@ -298,7 +311,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 height: 500,
                 width: 800,
-                padding: PADDING([24, 24, 36, 48]),
+                padding: PADDING([12, 12, 12, 12]),
                 title: TITLE,
                 legend: LEGEND,
                 zoom: ZOOM,
@@ -375,6 +388,10 @@ export function useConfig() {
                             datetimeFormatter: AXIS_DATE_FORMATTER,
                             offsetY: 0,
                             rotation: 0,
+                            autoRotate: { // v3
+                                enable: true, // v3
+                                angle: -30 // v3
+                            },
                             fontSize: FONT._14,
                             color: COLOR_BLACK,
                             bold: false
@@ -412,11 +429,18 @@ export function useConfig() {
 
     // NOTE: Any update to this config will be reflected in VueUiRidgeline, which uses VueUiXy in its dialog.
     const vue_ui_xy = {
+        debug: false, // v3
         theme: '',
         responsive: false,
+        loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         responsiveProportionalSizing: true,
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         downsample: LTTB,
         chart: {
             fontFamily: 'inherit',
@@ -437,7 +461,7 @@ export function useConfig() {
                             position: 'start', // or end
                             offsetX: 0,
                             offsetY: 0,
-                            padding: PADDING([5, 10, 5, 10]),
+                            padding: PADDING([12, 12, 12, 12]),
                             border: {
                                 stroke: COLOR_WHITE,
                                 strokeWidth: 1,
@@ -463,8 +487,15 @@ export function useConfig() {
             zoom: {
                 ...ZOOM,
                 minimap: MINIMAP,
+                preview: { // v3
+                    enable: true,
+                    fill: '#CCCCCC50',
+                    stroke: '#6A6A6A',
+                    strokeWidth: 2,
+                    strokeDasharray: 0,
+                }
             },
-            padding: PADDING([36, 24, 64, 48]),
+            padding: PADDING([12, 12, 6, 6]),
             highlighter: {
                 color: COLOR_BLACK,
                 opacity: 5,
@@ -522,7 +553,7 @@ export function useConfig() {
                         yLabel: '',
                         yLabelOffsetX: 0,
                         xLabel: '',
-                        xLabelOffsetY: 14,
+                        xLabelOffsetY: 0,
                         fontSize: FONT._14
                     },
                     zeroLine: {
@@ -544,13 +575,15 @@ export function useConfig() {
                         useNiceScale: false,
                         stacked: false,
                         gap: 12,
-                        labelWidth: 40,
+                        labelWidth: 64,
                         formatter: null,
                         scaleMin: null, // Overrides auto scaling
                         scaleMax: null, // idem
                         groupColor: null, // force yAxis labels color
                         scaleLabelOffsetX: 0,
-                        scaleValueOffsetX: 0
+                        scaleValueOffsetX: 0,
+                        rounding: 1,
+                        serieNameFormatter: null // v3, for individual scale & stacked modes
                     },
                     xAxisLabels: {
                         color: COLOR_BLACK,
@@ -562,7 +595,11 @@ export function useConfig() {
                         showOnlyAtModulo: false,
                         modulo: 12,
                         yOffset: 24,
-                        rotation: 0
+                        rotation: 0,
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30, // v3
+                        }
                     }
                 }
             },
@@ -608,9 +645,12 @@ export function useConfig() {
             })
         },
         bar: {
+            showTransition: true,
+            transitionDurationMs: 300,
             borderRadius: 2,
             useGradient: true,
             periodGap: 0.1,
+            innerGap: 0,
             border: {
                 useSerieColor: false,
                 strokeWidth: 0,
@@ -634,6 +674,8 @@ export function useConfig() {
             }
         },
         line: {
+            showTransition: true,
+            transitionDurationMs: 300,
             radius: 3,
             useGradient: true,
             strokeWidth: 3,
@@ -662,6 +704,8 @@ export function useConfig() {
             }
         },
         plot: {
+            showTransition: true,
+            transitionDurationMs: 300,
             radius: 3,
             useGradient: true,
             dot: {
@@ -698,22 +742,26 @@ export function useConfig() {
     }
 
     const vue_ui_donut = {
+        debug: false, // v3
         type: 'classic',
+        loading: false, // v3
+        pie: false, // v3
+        autoSize: true, // false = v2
         responsive: false,
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
-        events: {
-            datapointEnter: null,
-            datapointLeave: null,
-            datapointClick: null
+        useCssAnimation: false, // v3 (v2 = true)
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
         },
         serieToggleAnimation: {
             show: true,
             durationMs: 500,
         },
         startAnimation: {
-            show: true,
+            show: false, // v3 (v2 = true)
             durationMs: 1000,
             staggerMs: 50
         },
@@ -757,7 +805,7 @@ export function useConfig() {
                 width: 512,
                 height: 360,
                 layout: {
-                    curvedMarkers: false,
+                    curvedMarkers: true, // v2 = false
                     labels: {
                         dataLabels: {
                             show: true,
@@ -775,13 +823,15 @@ export function useConfig() {
                             color: COLOR_BLACK,
                             bold: true,
                             fontSize: FONT._18,
+                            minFontSize: MIN_FONT_SIZE, // v3
                             rounding: 0,
                             formatter: null
                         },
                         name: {
                             color: COLOR_BLACK,
                             bold: false,
-                            fontSize: FONT._14
+                            fontSize: FONT._14,
+                            minFontSize: MIN_FONT_SIZE, // v3
                         },
                         hollow: {
                             show: true,
@@ -824,7 +874,8 @@ export function useConfig() {
                         }
                     },
                     donut: {
-                        strokeWidth: 55,
+                        radiusRatio: 0.3, // v3 (clamped between 0.1 and 0.5)
+                        strokeWidth: 64, // v3 (v2 = 55)
                         borderWidth: 1,
                         useShadow: false,
                         shadowColor: COLOR_BLACK,
@@ -861,7 +912,14 @@ export function useConfig() {
     }
 
     const vue_ui_treemap = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         userOptions: USER_OPTIONS({
@@ -880,7 +938,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 height: 500,
                 width: 800,
-                padding: PADDING([0, 6, 12, 6]),
+                padding: PADDING([0, 0, 0, 0]),
                 layout: {
                     sorted: true,
                     rects: {
@@ -940,7 +998,14 @@ export function useConfig() {
     }
 
     const vue_ui_waffle = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         useBlurOnHover: true,
@@ -1029,10 +1094,17 @@ export function useConfig() {
     }
 
     const vue_ui_radar = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -1111,10 +1183,17 @@ export function useConfig() {
     }
 
     const vue_ui_quadrant = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         zoomAnimationFrames: 20,
         downsample: LTTB,
         style: {
@@ -1249,6 +1328,8 @@ export function useConfig() {
     }
 
     const vue_ui_gauge = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
         theme: '',
         customPalette: [],
@@ -1292,6 +1373,7 @@ export function useConfig() {
                         curved: true,
                         offsetRatio: 1.1,
                         fontSize: FONT._16,
+                        minFontSize: MIN_FONT_SIZE, // v3
                         useSerieColor: true,
                         color: COLOR_BLACK,
                         bold: false,
@@ -1343,6 +1425,8 @@ export function useConfig() {
     }
 
     const vue_ui_wheel = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
         theme: '',
         style: {
@@ -1396,12 +1480,17 @@ export function useConfig() {
     }
 
     const vue_ui_tiremarks = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         style: {
             fontFamily: 'inherit',
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
+                width: 312, // v3
+                height: 56, // v3
                 animation: {
                     use: true,
                     speed: 0.5,
@@ -1445,6 +1534,8 @@ export function useConfig() {
     }
 
     const vue_ui_chestnut = {
+        debug: false, // v3
+        loading: false, // v3
         theme: '',
         customPalette: [],
         style: {
@@ -1617,10 +1708,17 @@ export function useConfig() {
     }
 
     const vue_ui_onion = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         useStartAnimation: true,
         useBlurOnHover: true,
         style: {
@@ -1642,6 +1740,7 @@ export function useConfig() {
                     labels: {
                         show: true,
                         fontSize: FONT._14,
+                        minFontSize: MIN_FONT_SIZE, // v3
                         color: COLOR_BLACK,
                         roundingValue: 0,
                         roundingPercentage: 0,
@@ -1697,11 +1796,14 @@ export function useConfig() {
         }
     }
 
-    const vue_ui_vertical_bar = {
+    const vue_ui_vertical_bar = { // v3 renamed to _horizontal_ (yet still works)
+        debug: false, // v3
+        loading: false, // v3
+        autoSize: true, // v3
         responsive: false,
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         events: {
             datapointEnter: null,
             datapointLeave: null,
@@ -1729,7 +1831,7 @@ export function useConfig() {
                         dataLabels: {
                             color: COLOR_BLACK,
                             bold: true,
-                            fontSize: FONT._12,
+                            fontSize: FONT._14, // v3 increased
                             value: {
                                 show: true,
                                 roundingValue: 0,
@@ -1747,14 +1849,14 @@ export function useConfig() {
                             show: true,
                             color: COLOR_BLACK,
                             bold: false,
-                            fontSize: FONT._10,
+                            fontSize: FONT._14, // v3 increased
                             offsetX: 0
                         },
                         parentLabels: {
                             show: true,
                             color: COLOR_BLACK,
                             bold: false,
-                            fontSize: FONT._10,
+                            fontSize: FONT._14, // v3 increased
                             offsetX: 0
                         }
                     },
@@ -1763,9 +1865,10 @@ export function useConfig() {
                         opacity: 5
                     },
                     separators: {
-                        show: true,
+                        show: false,
                         color: COLOR_GREY_LIGHT,
-                        strokeWidth: 1
+                        strokeWidth: 1,
+                        fullWidth: true,
                     }
                 },
                 title: TITLE,
@@ -1818,16 +1921,28 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_horizontal_bar = vue_ui_vertical_bar;
+
     const vue_ui_heatmap = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         theme: '',
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
             color: COLOR_BLACK,
             layout: {
-                padding: PADDING([36, 12, 12, 48]),
+                height: 300, // v3
+                width: 1000, // v3
+                padding: PADDING([0, 0, 0, 0]),
                 cells: {
-                    height: 36,
+                    // height: 36, // v3 deprecated
                     rowTotal: {
                         value: {
                             show: false,
@@ -1840,6 +1955,10 @@ export function useConfig() {
                         value: {
                             show: false,
                             rotation: 0,
+                            autoRotate: { // v3
+                                enable: true, // v3
+                                angle: -30, // v3
+                            },
                             offsetX: 0,
                             offsetY: 0
                         },
@@ -1872,8 +1991,13 @@ export function useConfig() {
                     xAxis: {
                         show: true,
                         values: [],
+                        datetimeFormatter: AXIS_DATE_FORMATTER,
                         showOnlyAtModulo: null,
                         rotation: 0,
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30, // v3
+                        },
                         fontSize: FONT._10,
                         color: COLOR_BLACK,
                         bold: false,
@@ -1883,6 +2007,7 @@ export function useConfig() {
                     yAxis: {
                         show: true,
                         values: [],
+                        datetimeFormatter: AXIS_DATE_FORMATTER,
                         fontSize: FONT._10,
                         color: COLOR_BLACK,
                         bold: false,
@@ -1896,8 +2021,9 @@ export function useConfig() {
                 ...LEGEND,
                 fontSize: FONT._12,
                 roundingValue: 0,
-                position: POSITION.RIGHT,
-                scaleBorderRadius: 18
+                width: 24,
+                // position: POSITION.RIGHT, // v3 deprecated
+                // scaleBorderRadius: 18 // v3 deprecated
             },
             tooltip: {
                 ...TOOLTIP,
@@ -1927,10 +2053,17 @@ export function useConfig() {
     }
 
     const vue_ui_scatter = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: {
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         downsample: LTTB,
         style: {
             fontFamily: 'inherit',
@@ -1939,7 +2072,7 @@ export function useConfig() {
             layout: {
                 height: 316,
                 width: 512,
-                padding: PADDING([36, 48, 36, 48]),
+                padding: PADDING([0, 0, 0, 0]), // v3 modification
                 axis: {
                     show: true,
                     stroke: COLOR_GREY_LIGHT,
@@ -2083,10 +2216,17 @@ export function useConfig() {
     }
 
     const vue_ui_candlestick = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
         responsiveProportionalSizing: true,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
@@ -2094,7 +2234,7 @@ export function useConfig() {
             height: 316,
             width: 512,
             layout: {
-                padding: PADDING([36, 48, 36, 48]),
+                padding: PADDING([0, 0, 0, 0]),
                 selector: {
                     color: COLOR_GREY_LIGHT,
                     opacity: 10
@@ -2111,6 +2251,10 @@ export function useConfig() {
                             offsetY: 0,
                             bold: false,
                             rotation: 0,
+                            autoRotate: { // v3
+                                enable: true, // v3
+                                angle: -30 // v3
+                            },
                             datetimeFormatter: AXIS_DATE_FORMATTER
                         },
                     },
@@ -2195,17 +2339,24 @@ export function useConfig() {
     }
 
     const vue_ui_sparkline = {
+        debug: false, // v3
+        loading: false, // v3
         theme: '',
         responsive: false,
         type: SHAPE.LINE,
         downsample: LTTB,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         style: {
             chartWidth: 290,
             animation: {
                 show: true,
                 animationFrames: 360
             },
-            padding: PADDING([12, 0, 3, 0]),
+            padding: PADDING([12, 12, 3, 0]),
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
             scaleMin: null,
@@ -2247,7 +2398,8 @@ export function useConfig() {
                 valueType: 'latest',
                 prefix: '',
                 suffix: '',
-                formatter: null
+                formatter: null,
+                datetimeFormatter: AXIS_DATE_FORMATTER // v3
             },
             title: {
                 show: true,
@@ -2278,6 +2430,13 @@ export function useConfig() {
     }
 
     const vue_ui_sparkbar = {
+        debug: false, // v3
+        loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         style: {
@@ -2337,6 +2496,13 @@ export function useConfig() {
     }
 
     const vue_ui_sparkstackbar = {
+        debug: false, // v3
+        loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         style: {
@@ -2390,6 +2556,14 @@ export function useConfig() {
     }
 
     const vue_ui_sparkhistogram = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
+        events: {
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -2419,28 +2593,32 @@ export function useConfig() {
             labels: {
                 value: {
                     fontSize: FONT._14,
+                    minFontSize: MIN_FONT_SIZE, // v3
                     color: COLOR_BLACK,
                     bold: true,
                     rounding: 1,
                     prefix: '',
                     suffix: '',
                     offsetY: 0,
-                    formatter: null
+                    formatter: null,
                 },
                 valueLabel: {
                     fontSize: FONT._14,
+                    minFontSize: MIN_FONT_SIZE, // v3
                     color: COLOR_BLACK,
                     bold: false,
-                    rounding: 0
+                    rounding: 0,
                 },
                 timeLabel: {
                     fontSize: FONT._12,
+                    minFontSize: MIN_FONT_SIZE, // v3
                     color: COLOR_BLACK,
-                    bold: false
+                    bold: false,
                 }
             },
             selector: {
                 stroke: COLOR_BLUE,
+                fill: '#2D353C10',
                 strokeWidth: 2,
                 strokeDasharray: 0,
                 borderRadius: 2
@@ -2463,6 +2641,8 @@ export function useConfig() {
     }
 
     const vue_ui_sparkgauge = {
+        debug: false, // v3
+        loading: false, // v3
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -2510,11 +2690,16 @@ export function useConfig() {
     }
 
     const vue_ui_spark_trend = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         downsample: LTTB,
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,
+            height: 80,
+            width: 300,
             animation: {
                 show: true,
                 animationFrames: 20
@@ -2563,6 +2748,13 @@ export function useConfig() {
     }
 
     const vue_ui_quick_chart = {
+        debug: false, // v3
+        loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsive: false,
         theme: '',
         axisLabelsFontSize: FONT._12,
@@ -2578,10 +2770,12 @@ export function useConfig() {
         dataLabelRoundingPercentage: 1,
         dataLabelRoundingValue: 0,
         donutHideLabelUnderPercentage: 3,
+        donutCurvedMarkers: true, // v3
         donutLabelMarkerStrokeWidth: 1,
         donutRadiusRatio: 0.4,
         donutShowTotal: true,
         donutStrokeWidth: 2,
+        donutStroke: '#FFFFFF',
         donutThicknessRatio: 0.18,
         donutTotalLabelFontSize: FONT._24,
         donutTotalLabelOffsetY: 0,
@@ -2648,6 +2842,8 @@ export function useConfig() {
         tooltipFontSize: FONT._14,
         tooltipPosition: POSITION.CENTER,
         tooltipOffsetY: 24,
+        tooltipSmooth: true,
+        tooltipBackdropFilter: true,
         useCustomLegend: false,
         valuePrefix: '',
         valueSuffix: '',
@@ -2661,11 +2857,15 @@ export function useConfig() {
         xyHighlighterOpacity: 0.05,
         xyLabelsXFontSize: FONT._10,
         xyLabelsYFontSize: FONT._12,
-        xyPaddingBottom: 48,
-        xyPaddingLeft: 48,
+        xyPaddingBottom: 12,
+        xyPaddingLeft: 12,
         xyPaddingRight: 12,
-        xyPaddingTop: 24,
+        xyPaddingTop: 12,
         xyPeriodLabelsRotation: 0,
+        xyPeriodLabelsAutoRotate: { // v3
+            enable: true, // v3
+            angle: -30, // v3
+        },
         xyPeriods: [],
         datetimeFormatter: AXIS_DATE_FORMATTER,
         xyPeriodsShowOnlyAtModulo: false,
@@ -2688,7 +2888,14 @@ export function useConfig() {
     }
 
     const vue_ui_age_pyramid = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -2697,7 +2904,7 @@ export function useConfig() {
             height: 500,
             width: 500,
             layout: {
-                padding: PADDING([36, 12, 48, 12]),
+                padding: PADDING([12, 12, 36, 12]),
                 grid: {
                     show: true,
                     stroke: COLOR_GREY_LIGHT,
@@ -2719,7 +2926,12 @@ export function useConfig() {
                         bold: false,
                         scale: 1000,
                         translation: 'in thousands',
-                        formatter: null
+                        formatter: null,
+                        rotation: 0, // v3
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30 // v3
+                        }
                     },
                     yAxis: {
                         show: true,
@@ -2785,7 +2997,14 @@ export function useConfig() {
     }
 
     const vue_ui_relation_circle = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
@@ -2801,7 +3020,8 @@ export function useConfig() {
             },
             labels: {
                 color: COLOR_BLACK,
-                fontSize: FONT._10
+                fontSize: FONT._14,
+                minFontSize: MIN_FONT_SIZE, // v3
             },
             weightLabels: {
                 size: 8,
@@ -2837,6 +3057,9 @@ export function useConfig() {
     }
 
     const vue_ui_thermometer = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         customPalette: [],
         style: {
@@ -2845,10 +3068,15 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 height: 360,
+                width: 256, // v3
                 thermometer: {
                     width: 48
                 },
-                padding: PADDING([12, 64, 12, 64]),
+                padding: {
+                    // v3 left and right are deprecated
+                    top: 12,
+                    bottom: 12,
+                },
                 graduations: {
                     show: true,
                     sides: 'both',
@@ -2866,7 +3094,9 @@ export function useConfig() {
                     speedMs: 1000
                 },
                 label: {
+                    show: true, // v3
                     fontSize: FONT._20,
+                    minFontSize: MIN_FONT_SIZE, // v3
                     rounding: 1,
                     bold: true,
                     color: COLOR_BLACK,
@@ -2886,10 +3116,17 @@ export function useConfig() {
     }
 
     const vue_ui_rings = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: {
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         useBlurOnHover: true,
         style: {
             fontFamily: 'inherit',
@@ -2958,7 +3195,15 @@ export function useConfig() {
     }
 
     const vue_ui_donut_evolution = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         customPalette: [],
         style: {
             fontFamily: 'inherit',
@@ -3025,12 +3270,20 @@ export function useConfig() {
                 layout: {
                     height: 316,
                     width: 512,
-                    padding: PADDING([24, 48, 24, 48]),
+                    padding: PADDING([5, 10, 5, 10]),
                     grid: {
                         show: true,
                         stroke: COLOR_GREY_LIGHT,
                         strokeWidth: 0.7,
                         showVerticalLines: true,
+                        axis: {
+                            yLabel: '',
+                            yLabelOffsetX: 0,
+                            xLabel: '',
+                            xLabelOffsetY: 0,
+                            fontSize: FONT._14,
+                            color: COLOR_BLACK,
+                        },
                         yAxis: {
                             dataLabels: {
                                 show: true,
@@ -3051,6 +3304,10 @@ export function useConfig() {
                                 showOnlyFirstAndLast: false,
                                 color: COLOR_BLACK,
                                 rotation: 0,
+                                autoRotate: { // v3
+                                    enable: true, // v3
+                                    angle: -30, // v3
+                                },
                                 offsetY: 0
                             }
                         }
@@ -3110,6 +3367,14 @@ export function useConfig() {
     }
 
     const vue_ui_mood_radar = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
+        events: {
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         style: {
             fontFamily: 'inherit',
@@ -3189,6 +3454,13 @@ export function useConfig() {
     }
 
     const vue_ui_molecule = {
+        debug: false, // v3
+        loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         style: {
@@ -3233,17 +3505,24 @@ export function useConfig() {
     }
 
     const vue_ui_nested_donuts = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v3 (v2 = true)
         useBlurOnHover: true,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null // v3
+        },
         serieToggleAnimation: {
             show: true,
             durationMs: 500,
         },
         startAnimation: {
-            show: true,
+            show: false, // v3 (v2 = false)
             durationMs: 1000,
             staggerMs: 50
         },
@@ -3287,7 +3566,8 @@ export function useConfig() {
                             roundingPercentage: 0,
                             showDonutName: true,
                             boldDonutName: true,
-                            donutNameAbbreviation: true,
+                            curvedDonutName: true, // v3
+                            donutNameAbbreviation: false, // v2 = true
                             donutNameMaxAbbreviationSize: 3,
                             donutNameOffsetY: 0,
                             formatter: null
@@ -3340,9 +3620,17 @@ export function useConfig() {
     }
 
     const vue_ui_galaxy = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         useBlurOnHover: true,
         style: {
             fontFamily: 'inherit',
@@ -3416,7 +3704,14 @@ export function useConfig() {
     }
 
     const vue_ui_strip_plot = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
@@ -3437,8 +3732,9 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 height: 600,
-                stripWidth: 120,
-                padding: PADDING([24, 24, 64, 64]),
+                width: 600, // v3
+                // stripWidth: 120, v3 deprecated
+                padding: PADDING([12, 12, 12, 12]), // v3 modified
                 grid: {
                     show: true,
                     stroke: COLOR_GREY_MID,
@@ -3492,7 +3788,12 @@ export function useConfig() {
                         show: true,
                         color: COLOR_BLACK,
                         fontSize: FONT._14,
-                        offsetY: 0
+                        offsetY: 0,
+                        rotation: 0, // v3,
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30, // v3
+                        }
                     },
                     yAxisLabels: {
                         show: true,
@@ -3524,9 +3825,16 @@ export function useConfig() {
     }
 
     const vue_ui_dumbbell = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
-        useAnimation: true,
+        useAnimation: false, // v2 = true
         animationSpeed: 2,
         userOptions: USER_OPTIONS({
             pdf: true,
@@ -3542,11 +3850,17 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 width: 600,
-                rowHeight: 40,
-                padding: PADDING([12, 24, 12, 100]),
+                rowHeight: 48, // v3 modified
+                padding: PADDING([12, 24, 12, 12]), // v3 modified
                 plots: {
                     startColor: COLOR_RED,
                     endColor: COLOR_BLUE,
+                    evaluationColors: { // v3
+                        enable: false, // v3
+                        positive: '#2ca02c', // v3
+                        negative: '#d62728', // v3
+                        neutral: '#c7c7c7', // v3
+                    },
                     radius: 6,
                     stroke: COLOR_WHITE,
                     strokeWidth: 1,
@@ -3562,6 +3876,8 @@ export function useConfig() {
                 grid: {
                     strokeWidth: 1,
                     scaleSteps: 10,
+                    scaleMin: null, // v3
+                    scaleMax: null, // V3
                     horizontalGrid: {
                         show: true,
                         stroke: COLOR_GREY_MID,
@@ -3575,10 +3891,33 @@ export function useConfig() {
                         strokeDasharray: 0
                     }
                 },
+                comparisonLines: { // v3
+                    show: true,// v3
+                    strokeWidth: 1, // v3
+                    strokeDasharray: 4, // v3
+                    showRect: true, // v3
+                    rectColor: COLOR_BLACK, // v3
+                    rectOpacity: 5, // v3
+                    showLabel: true, // v3
+                    labelColor: COLOR_BLACK, // v3
+                    labelFontSize: FONT._12, // v3
+                },
+                highlighter: { // v3
+                    color: COLOR_BLACK, // v3
+                    opacity: 5, // v3
+                },
                 labels: {
                     prefix: '',
                     suffix: '',
                     formatter: null,
+                    axis: { // v3
+                        yLabel: '', // v3
+                        yLabelOffsetX: 0, // v3
+                        xLabel: '', // v3
+                        xLabelOffsetY: 0, // v3
+                        fontSize: FONT._14, // v3
+                        color: COLOR_BLACK, // v3
+                    },
                     yAxisLabels: {
                         show: true,
                         fontSize: FONT._14,
@@ -3586,7 +3925,8 @@ export function useConfig() {
                         offsetX: 0,
                         bold: true,
                         showProgression: true,
-                        rounding: 1
+                        rounding: 1,
+                        formatter: null // v3
                     },
                     xAxisLabels: {
                         show: true,
@@ -3594,7 +3934,12 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         offsetY: 0,
                         bold: false,
-                        rounding: 0
+                        rounding: 0,
+                        rotation: 0, // v3
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30, // v3
+                        }
                     },
                     startLabels: {
                         show: true,
@@ -3602,7 +3947,8 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         offsetY: 0,
                         rounding: 0,
-                        useStartColor: true
+                        useStartColor: true,
+                        useEvaluationColor: true, // v3
                     },
                     endLabels: {
                         show: true,
@@ -3610,13 +3956,17 @@ export function useConfig() {
                         color: COLOR_BLACK,
                         offsetY: 0,
                         rounding: 0,
-                        useEndColor: true
+                        useEndColor: true,
+                        useEvaluationColor: true, // v3
                     }
                 },
                 legend: {
                     ...LEGEND,
                     labelStart: 'start',
-                    labelEnd: 'end'
+                    labelEnd: 'end',
+                    labelPositive: 'positive', // v3
+                    labelNegative: 'negative', // v3
+                    labelNeutral: 'neutral' // v3
                 },
                 title: TITLE
             }
@@ -3639,8 +3989,17 @@ export function useConfig() {
     }
 
     const vue_ui_3d_bar = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
+        useCssAnimation: false, // v3
         style: {
             fontFamily: 'inherit',
             shape: SHAPE.BAR,
@@ -3840,10 +4199,17 @@ export function useConfig() {
     }
 
     const vue_ui_word_cloud = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         animationDelayMs: 20,
         strictPixelPadding: false, // If true, strict per-pixel padding is used (dilateWordMask); if false, just rectangular bounding box (or pad).
         userOptions: USER_OPTIONS({
@@ -3866,9 +4232,6 @@ export function useConfig() {
                 width: 512,
                 zoom: {
                     show: true,
-                    color: COLOR_GREY_MID, // deprecated
-                    highlightColor: COLOR_GREY_DARK, // deprecated
-                    useResetSlot: false // deprecated
                 },
                 words: {
                     maxFontSize: 100,
@@ -4040,6 +4403,14 @@ export function useConfig() {
     }
 
     const vue_ui_flow = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         userOptions: USER_OPTIONS({
@@ -4057,8 +4428,10 @@ export function useConfig() {
             fontFamily: 'inherit',
             chart: {
                 backgroundColor: COLOR_WHITE,
+                width: 1000, // v3
+                height: 600, // v3
                 color: COLOR_BLACK,
-                padding: PADDING([12, 12, 12, 12]),
+                padding: PADDING([12, 12, 12, 12]), // v3 update
                 title: TITLE,
                 tooltip: {
                     ...TOOLTIP,
@@ -4075,9 +4448,10 @@ export function useConfig() {
                 },
                 nodes: {
                     gap: 10,
-                    minHeight: 20,
+                    // minHeight: 20, // v3 deprecated
                     width: 40,
                     labels: {
+                        show: true, // v3
                         fontSize: FONT._14,
                         abbreviation: {
                             use: true,
@@ -4092,7 +4466,7 @@ export function useConfig() {
                     strokeWidth: 1
                 },
                 links: {
-                    width: 200,
+                    // width: 200, // v3 deprecated
                     opacity: 0.8,
                     stroke: COLOR_WHITE,
                     strokeWidth: 1
@@ -4112,10 +4486,17 @@ export function useConfig() {
     }
 
     const vue_ui_parallel_coordinate_plot = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsiveProportionalSizing: true,
         theme: '',
-        useCssAnimation: true,
+        useCssAnimation: false, // v3
         customPalette: [],
         userOptions: USER_OPTIONS({
             tooltip: true,
@@ -4134,7 +4515,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 height: 600,
                 width: 1000,
-                padding: PADDING([24, 24, 36, 36]),
+                padding: PADDING([0, 0, 0, 0]),
                 comments: {
                     show: true,
                     showInTooltip: true,
@@ -4159,6 +4540,11 @@ export function useConfig() {
                     labels: {
                         showAxisNames: true,
                         axisNames: [],
+                        axisNamesRotation: 0, // v3
+                        axisNamesAutoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30 // v3
+                        },
                         axisNamesColor: COLOR_BLACK,
                         axisNamesFontSize: FONT._16,
                         axisNamesBold: true,
@@ -4316,6 +4702,7 @@ export function useConfig() {
     }
 
     const vue_ui_kpi = {
+        debug: false, // v3
         animationFrames: 60,
         animationValueStart: 0,
         backgroundColor: COLOR_WHITE,
@@ -5071,6 +5458,8 @@ export function useConfig() {
     }
 
     const vue_ui_gizmo = {
+        debug: false, // v3
+        loading: false, // v3
         type: 'battery', // battery | gauge
         size: 64,
         stroke: COLOR_GREY_MID,
@@ -5084,6 +5473,9 @@ export function useConfig() {
     }
 
     const vue_ui_bullet = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         theme: '',
         userOptions: USER_OPTIONS({
             tooltip: false,
@@ -5128,6 +5520,7 @@ export function useConfig() {
                     }
                 },
                 target: {
+                    show: true, // v3
                     onTop: true,
                     color: COLOR_BLACK,
                     rounded: true,
@@ -5256,11 +5649,18 @@ export function useConfig() {
     }
 
     const vue_ui_history_plot = {
+        debug: false, // v3
+        loading: false, // v3
         responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         responsiveProportionalSizing: true,
         theme: '',
         customPalette: [],
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,
@@ -5293,7 +5693,7 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 height: 500,
                 width: 600,
-                padding: PADDING([12, 24, 48, 48]),
+                padding: PADDING([12, 12, 12, 12]),
                 grid: {
                     xAxis: {
                         show: true,
@@ -5329,6 +5729,10 @@ export function useConfig() {
                             rounding: 1,
                             offsetY: 0,
                             rotation: 0,
+                            autoRotate: { // v3
+                                enable: true, // v3
+                                angle: -30, // v3
+                            },
                             formatter: null,
                             prefix: '',
                             suffix: ''
@@ -5411,6 +5815,13 @@ export function useConfig() {
     }
 
     const vue_ui_circle_pack = {
+        debug: false, // v3
+        loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         userOptions: USER_OPTIONS({
@@ -5497,6 +5908,13 @@ export function useConfig() {
     }
 
     const vue_ui_world = {
+        debug: false, // v3
+        loading: false, // v3
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,
@@ -5574,10 +5992,17 @@ export function useConfig() {
     }
 
     const vue_ui_ridgeline = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false,
+        events: { // v3
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
-        responsive: false,
-        useCssAnimation: true,
+        useCssAnimation: false, // v2 = true
         userOptions: USER_OPTIONS({
             tooltip: false,
             pdf: true,
@@ -5628,12 +6053,6 @@ export function useConfig() {
                         },
                         chart: {
                             ...vue_ui_xy.chart,
-                            padding: {
-                                top: 24,
-                                right: 25,
-                                bottom: 24,
-                                left: 64
-                            },
                             tooltip: {
                                 ...vue_ui_xy.chart.tooltip,
                                 showPercentage: false
@@ -5707,6 +6126,10 @@ export function useConfig() {
                         prefix: '',
                         suffix: '',
                         rotation: 0,
+                        autoRotate: { // v3
+                            enable: true, // v3
+                            angle: -30 // v3
+                        },
                         values: [],
                         datetimeFormatter: AXIS_DATE_FORMATTER,
                         color: COLOR_BLACK,
@@ -5731,12 +6154,19 @@ export function useConfig() {
     }
 
     const vue_ui_chord = {
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false,
+        events: {
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
+        },
         theme: '',
         customPalette: [],
         enableRotation: true,
         initialRotation: 0,
-        useCssAnimation: true,
-        responsive: false,
+        useCssAnimation: false, // v2 = true
         userOptions: USER_OPTIONS({
             tooltip: false,
             pdf: true,
@@ -5822,7 +6252,8 @@ export function useConfig() {
         vue_ui_tiremarks,
         vue_ui_chestnut,
         vue_ui_onion,
-        vue_ui_vertical_bar,
+        vue_ui_vertical_bar, // deprecate in v4
+        vue_ui_horizontal_bar, // v3
         vue_ui_heatmap,
         vue_ui_scatter,
         vue_ui_candlestick,

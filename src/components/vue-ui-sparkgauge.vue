@@ -1,5 +1,12 @@
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    onMounted, 
+    ref, 
+    toRefs,
+    watch, 
+} from "vue";
 import { useNestedProp } from "../useNestedProp";
 import {
     applyDataLabel,
@@ -10,16 +17,18 @@ import {
     getMissingDatasetAttributes,
     interpolateColorHex, 
     objectIsEmpty,
+    treeShake,
     XMLNS
 } from "../lib";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 
-const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig()
+const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig();
 
 const props = defineProps({
     config: {
@@ -36,44 +45,40 @@ const props = defineProps({
     }
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && Object.keys(props.dataset).length;
-});
-
-onMounted(() => {
-    prepareChart();
-})
-
-function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
-        error({
-            componentName: "VueUiSparkgauge",
-            type: 'dataset'
-        })
-    } else {
-        getMissingDatasetAttributes({
-            datasetObject: props.dataset,
-            requiredAttributes: ['value', 'min', 'max']
-        }).forEach(attr => {
-            error({
-                componentName: 'VueUiSparkgauge',
-                type: 'datasetAttribute',
-                property: attr
-            });
-        });
-    }
-}
-
 const uid = ref(createUid());
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: {
+        value: 0,
+        min: -1,
+        max: 1,
+        title: ''
     },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            style: {
+                animation: { show: false },
+                background: '#99999930',
+                colors: {
+                    min: '#CACACA',
+                    max: '#6A6A6A'
+                },
+                track: {
+                    autoColor: true,
+                },
+                gutter: {
+                    color: '#6A6A6A80'
+                }
+            },
+        }
+    })
+})
 
 const { svgRef } = useChartAccessibility({ config: { text: props.dataset.title } });
 
@@ -94,8 +99,37 @@ function prepareConfig() {
     }
 }
 
+onMounted(() => {
+    prepareChart();
+})
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
+function prepareChart() {
+    if(objectIsEmpty(props.dataset)) {
+        error({
+            componentName: "VueUiSparkgauge",
+            type: 'dataset',
+            debug: debug.value
+        });
+    } else {
+        getMissingDatasetAttributes({
+            datasetObject: props.dataset,
+            requiredAttributes: ['value', 'min', 'max']
+        }).forEach(attr => {
+            error({
+                componentName: 'VueUiSparkgauge',
+                type: 'datasetAttribute',
+                property: attr,
+                debug: debug.value
+            });
+        });
+    }
+}
+
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
+    activeRating.value = FINAL_CONFIG.value.style.animation.show ? bounds.value.min : FINAL_DATASET.value.value;
     prepareChart();
 }, { deep: true });
 
@@ -105,11 +139,11 @@ const svg = computed(() => {
         width: 128,
         base: FINAL_CONFIG.value.style.basePosition
     }
-})
+});
 
 const bounds = computed(() => {
-    const min = props.dataset.min ?? 0;
-    const max = props.dataset.max ?? 0;
+    const min = FINAL_DATASET.value.min ?? 0;
+    const max = FINAL_DATASET.value.max ?? 0;
     const diff = max - min;
     return {
         min,
@@ -118,11 +152,11 @@ const bounds = computed(() => {
     }
 })
 
-const activeRating = ref(FINAL_CONFIG.value.style.animation.show ? bounds.value.min : props.dataset.value);
+const activeRating = ref(FINAL_CONFIG.value.style.animation.show ? bounds.value.min : FINAL_DATASET.value.value);
 
-watch(() => props.dataset.value, () => {
-    useAnimation(props.dataset.value || 0)
-})
+watch(() => FINAL_DATASET.value.value, () => {
+    useAnimation(FINAL_DATASET.value.value || 0);
+});
 
 const controlScore = computed(() => {
     if (activeRating.value > bounds.value.max) {
@@ -136,18 +170,18 @@ const controlScore = computed(() => {
 
 const animationTick = computed(() => {
     return bounds.value.diff / FINAL_CONFIG.value.style.animation.speedMs;
-})
+});
 
 onMounted(() => {
-    useAnimation(props.dataset.value || 0);
-})
+    useAnimation(FINAL_DATASET.value.value || 0);
+});
 
 function useAnimation(targetValue) {
     function animate() {
         if(activeRating.value < targetValue) {
             activeRating.value = Math.min(activeRating.value + animationTick.value, targetValue);
         } else if (activeRating.value > targetValue) {
-            activeRating.value = Math.max(activeRating.value - animationTick.value, targetValue)
+            activeRating.value = Math.max(activeRating.value - animationTick.value, targetValue);
         }
         
         if (activeRating.value !== targetValue) {
@@ -158,20 +192,23 @@ function useAnimation(targetValue) {
 }
 
 const nameLabel = computed(() => {
-    return props.dataset.title ?? ''
+    return FINAL_DATASET.value.title ?? '';
 });
 
 const valueRatio = computed(() => {
-
-    if(activeRating.value >= 0) {
-        return (controlScore.value - bounds.value.min) / bounds.value.diff
+    const diff = bounds.value.diff;
+    if (!isFinite(diff) || diff === 0) return 0;
+    const min = bounds.value.min;
+    const score = controlScore.value;
+    if (score >= 0) {
+        return (score - min) / diff;
     } else {
-        return (Math.abs(bounds.value.min) - Math.abs(controlScore.value)) / bounds.value.diff
+        return (Math.abs(min) - Math.abs(score)) / diff;
     }
-})
+});
 
 const currentColor = computed(() => {
-    return interpolateColorHex(FINAL_CONFIG.value.style.colors.min, FINAL_CONFIG.value.style.colors.max, bounds.value.min, bounds.value.max, activeRating.value)
+    return interpolateColorHex(FINAL_CONFIG.value.style.colors.min, FINAL_CONFIG.value.style.colors.max, bounds.value.min, bounds.value.max, activeRating.value);
 })
 
 const labelColor = computed(() => {
@@ -180,7 +217,7 @@ const labelColor = computed(() => {
     } else {
         return currentColor.value;
     }
-})
+});
 
 const trackColor = computed(() => {
     if (!FINAL_CONFIG.value.style.track.autoColor) {
@@ -188,7 +225,7 @@ const trackColor = computed(() => {
     } else {
         return currentColor.value;
     }
-})
+});
 </script>
 
 <template>
@@ -200,7 +237,6 @@ const trackColor = computed(() => {
     <svg
         ref="svgRef"
         :xmlns="XMLNS" 
-        v-if="isDataset" 
         :viewBox="`0 0 ${svg.width} ${svg.height}`" 
         :style="`overflow: visible; background:transparent; width:100%;`"
     >
@@ -208,7 +244,7 @@ const trackColor = computed(() => {
 
         <!-- BACKGROUND SLOT -->
         <foreignObject 
-            v-if="$slots['chart-background']"
+            v-if="$slots['chart-background'] && !loading"
             :x="0"
             :y="0"
             :width="svg.width"
@@ -248,7 +284,17 @@ const trackColor = computed(() => {
             :style="FINAL_CONFIG.style.animation.show ? `animation: vue-ui-sparkgauge-animation ${FINAL_CONFIG.style.animation.speedMs}ms ease-in;`: ''"
         />
         <!-- DATALABEL -->
+        <rect
+            v-if="loading"
+            :x="svg.width / 2 - (FINAL_CONFIG.style.dataLabel.fontSize / 2)"
+            :y="svg.base + 6 + FINAL_CONFIG.style.dataLabel.offsetY - (FINAL_CONFIG.style.dataLabel.fontSize)"
+            :width="FINAL_CONFIG.style.dataLabel.fontSize"
+            :height="FINAL_CONFIG.style.dataLabel.fontSize"
+            fill="#6A6A6A50"
+            :rx="3"
+        />
         <text
+            v-else
             text-anchor="middle"
             :x="svg.width / 2"
             :y="svg.base + 6 + FINAL_CONFIG.style.dataLabel.offsetY"
@@ -271,19 +317,6 @@ const trackColor = computed(() => {
         </text>
     </svg>
 
-    <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'gauge',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.background,
-                    gauge: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
-
     <!-- TITLE BOTTOM -->
     <div v-if="FINAL_CONFIG.style.title.show && nameLabel && FINAL_CONFIG.style.title.position === 'bottom'" class="vue-data-ui-sparkgauge-label" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;text-align:${FINAL_CONFIG.style.title.textAlign};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold': 'normal'};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold': 'normal'};color:${FINAL_CONFIG.style.title.color}`">
         {{ nameLabel }}
@@ -292,10 +325,17 @@ const trackColor = computed(() => {
     <div v-if="$slots.source" ref="source" dir="auto">
         <slot name="source" />
     </div>
+
+    <!-- v3 Skeleton loader -->
+    <BaseScanner v-if="loading" />
 </div>
 </template>
 
 <style>
+.vue-ui-sparkgauge {
+    position: relative;
+}
+
 @keyframes vue-ui-sparkgauge-animation {
     from {
         stroke-dashoffset: 169.5;

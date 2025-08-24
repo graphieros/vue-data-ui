@@ -1,24 +1,49 @@
 <script setup>
-import { ref, computed, watch, nextTick, defineAsyncComponent } from 'vue';
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    ref, 
+    toRefs,
+    watch, 
+} from 'vue';
 import WORLD_DATA from "../resources/worldGeo.js"
 import { useConfig } from '../useConfig';
-import { applyDataLabel, convertColorToHex, convertCustomPalette, createCsvContent, createUid, darkenHexColor, dataLabel, downloadCsv, hasDeepProperty, interpolateColorHex, isFunction, lightenHexColor, palette, XMLNS } from '../lib';
+import { 
+    applyDataLabel, 
+    convertColorToHex, 
+    convertCustomPalette, 
+    createCsvContent, 
+    createUid, 
+    darkenHexColor, 
+    dataLabel, 
+    downloadCsv, 
+    hasDeepProperty, 
+    interpolateColorHex, 
+    isFunction, 
+    lightenHexColor, 
+    palette, 
+    treeShake, 
+    XMLNS 
+} from '../lib';
+import { useLoading } from '../useLoading.js';
+import { usePrinter } from '../usePrinter';
 import { useNestedProp } from '../useNestedProp';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
-import { usePrinter } from '../usePrinter';
+import img from '../img.js';
 import geo from "../geoProjections";
 import Shape from '../atoms/Shape.vue';
-import img from '../img.js';
+import BaseScanner from '../atoms/BaseScanner.vue';
 
+const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
+const Legend = defineAsyncComponent(() => import('../atoms/Legend.vue'));
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const Legend = defineAsyncComponent(() => import('../atoms/Legend.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
-const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_world: DEFAULT_CONFIG } = useConfig();
 
@@ -41,7 +66,7 @@ const emit = defineEmits(['selectDatapoint', 'selectLegend'])
 
 const isDataset = computed({
     get() {
-        return !!props.dataset
+        return !!FINAL_DATASET.value
     },
     set(bool) {
         return bool
@@ -50,7 +75,7 @@ const isDataset = computed({
 
 const hasCategories = computed(() => {
     if (!isDataset) return false
-    return Object.values(props.dataset).some(d => Object.hasOwn(d, 'category'));
+    return Object.values(FINAL_DATASET.value).some(d => Object.hasOwn(d, 'category'));
 })
 
 const worldChart = ref(null);
@@ -108,14 +133,36 @@ function prepareConfig() {
     return mergedConfig;
 }
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    globe: {
+                        waterColor: '#8A8A8A'
+                    },
+                    territory: {
+                        stroke: '#6A6A6A',
+                        colors: {
+                            min: '#E0E0E0',
+                            max: '#E0E0E0'
+                        }
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
@@ -135,6 +182,13 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 })
+
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    }
+}, { immediate: true });
 
 const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
@@ -172,7 +226,7 @@ const viewBox = computed(() => {
     };
 })
 
-const values = computed(() => Object.values(props.dataset).map(d => d.value));
+const values = computed(() => Object.values(FINAL_DATASET.value).map(d => d.value));
 const min = computed(() => Math.min(...values.value));
 const max = computed(() => Math.max(...values.value));
 
@@ -223,7 +277,7 @@ function geoToPath(geometry) {
 }
 
 const categories = computed(() => {
-    const entries = Object.values(props.dataset).filter(d => !!d.category);
+    const entries = Object.values(FINAL_DATASET.value).filter(d => !!d.category);
     const uniqueCategoriesMap = {};
     entries.forEach(entry => {
         if (!uniqueCategoriesMap[entry.category]) {
@@ -249,7 +303,7 @@ const countries = computed(() => {
         if (!code || code === '-99') {
             code = feature.properties.iso_a3_eh
         }
-        const item = props.dataset[code]
+        const item = FINAL_DATASET.value[code]
         return {
             path: geoToPath(feature.geometry),
             name: feature.properties.name,
@@ -364,7 +418,26 @@ const tooltipPreviewSvg = computed(() => {
     `;
 });
 
-function useTooltip({ datapoint }) {
+function onTrapLeave({ datapoint, seriesIndex }) {
+    isTooltip.value = false;
+    selectedDatapoint.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
+    }
+}
+
+function onTrapClick({ datapoint, seriesIndex }) {
+    emit('selectDatapoint', datapoint);
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
+    }
+}
+
+function useTooltip({ datapoint, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
+    }
+
     selectedDatapoint.value = datapoint;
     dataTooltipSlot.value = { datapoint, config: FINAL_CONFIG.value, series: countries.value };
     isTooltip.value = true;
@@ -640,6 +713,7 @@ defineExpose({
         :class="`vue-ui-world ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+
         <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef" :color="FINAL_CONFIG.style.chart.color"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :active="isAnnotator" :svgRef="svgRef"
             @close="toggleAnnotator" />
@@ -761,14 +835,16 @@ defineExpose({
                     <circle :cx="viewBox.width / 2 + 20" :cy="viewBox.height / 2 + 20" :r="viewBox.height / 2 + 10"
                         :fill="`url(#atmo-realistic-${uid})`" pointer-events="none" :filter="`url(#blur-${uid})`" />
                 </template>
-                <template v-for="country in countries" :key="country.code">
+                <template v-for="(country, i) in countries" :key="country.code">
                     <path :d="country.path"
                         :fill="country.category && segregated.includes(country.category) ? FINAL_CONFIG.style.chart.territory.emptyColor : country.color"
                         :stroke="FINAL_CONFIG.style.chart.territory.stroke"
                         :stroke-width="selectedDatapoint && selectedDatapoint.uid === country.uid ? FINAL_CONFIG.style.chart.territory.strokeWidthSelected : FINAL_CONFIG.style.chart.territory.strokeWidth"
-                        @mouseenter="useTooltip({ datapoint: country })"
-                        @mouseleave="isTooltip = false; selectedDatapoint = null"
-                        @click="emit('selectDatapoint', country)" class="vue-ui-world-territory">
+                        @mouseenter="useTooltip({ datapoint: country, seriesIndex: i })"
+                        @mouseleave="onTrapLeave({ datapoint: country, seriesIndex: i })"
+                        @click="onTrapClick({ datapoint: country, seriesIndex: i })" 
+                        class="vue-ui-world-territory"
+                    >
                         <title v-if="!isTooltip || !mutableConfig.showTooltip">
                             {{ country.name }}
                             <template v-if="typeof country.value === 'number'">
@@ -819,15 +895,24 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <Tooltip :show="mutableConfig.showTooltip && isTooltip"
+        <Tooltip 
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color" :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :color="FINAL_CONFIG.style.chart.tooltip.color" 
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
-            :position="FINAL_CONFIG.style.chart.tooltip.position" :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
-            :parent="worldChart" :content="tooltipContent" :isCustom="useCustomFormat" :isFullscreen="isFullscreen">
+            :position="FINAL_CONFIG.style.chart.tooltip.position" 
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :parent="worldChart" 
+            :content="tooltipContent" 
+            :isCustom="useCustomFormat" 
+            :isFullscreen="isFullscreen"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
+        >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>
@@ -872,6 +957,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

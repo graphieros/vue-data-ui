@@ -109,74 +109,45 @@ function createDs(n, m = 100) {
 //     },
 // ])
 
-const dataset = ref([
+const dataset = ref(undefined)
+
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
     {
         name: "A",
-        series: [null, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, null],
+        series: [60, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, 120],
         type: "bar",
         dataLabels: false,
     },
     {
         name: "B",
-        series: [null, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, null],
+        series: [60, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, 87],
         type: "line",
         dataLabels: false,
+        shape: 'triangle',
+        useArea: true,
+        smooth: true,
+        useProgression: true
     },
     {
         name: "C",
-        series: [null, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, null],
+        series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
         type: "plot",
         dataLabels: false,
     },
-    // {
-    //     name: "A",
-    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "B",
-    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "A",
-    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "B",
-    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "A",
-    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "B",
-    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "A",
-    //     series: [null, 100, 112, 221, 119, 75, 213, 226, 243, 198, 156, 127, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-    // {
-    //     name: "B",
-    //     series: [null, 75, 119, 201, 109, 85, 203, 206, 223, 204, 146, 117, null],
-    //     type: "bar",
-    //     dataLabels: false,
-    // },
-])
+]
+    }, 2000)
+})
+
+// const dataset = ref([
+//     { name: 'A', series: [3], type: 'bar' },
+//     { name: 'B', series: [5], type: 'bar' },
+//     { name: 'C', series: [8], type: 'bar' },
+//     { name: 'D', series: [13], type: 'bar' },
+//     { name: 'E', series: [21], type: 'bar' },
+// ])
 
 // const dataset = ref([
 // {
@@ -357,9 +328,13 @@ function toggleProps() {
 // ]);
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'autoSize', def: false, type: 'checkbox'}, // v3 opt-in
+
     { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA'] },
     { key: 'responsive', def: false, type: 'checkbox' },
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox' },
 
     { key: 'chart.userOptions.show', def: true, type: 'checkbox', label: 'showUserOptions', category: 'general' },
     { key: 'chart.userOptions.buttons.pdf', def: true, type: 'checkbox' },
@@ -399,11 +374,16 @@ const model = ref([
 
     { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
+    { key: 'chart.zoom.preview.enable', def: true, type: 'checkbox'},
+    { key: 'chart.zoom.preview.stroke', def: '#1f77b4', type: 'color'},
+    { key: 'chart.zoom.preview.fill', def: '#1f77b420', type: 'color'},
+    { key: 'chart.zoom.preview.strokeDasharray', def: 0, type: 'number', min: 0, max: 12},
+    { key: 'chart.zoom.preview.strokeWidth', def: 2, type: 'number', min: 0, max: 12},
 
-    { key: 'chart.padding.top', def: 36, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
-    { key: 'chart.padding.right', def: 36, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
-    { key: 'chart.padding.bottom', def: 64, type: 'number', min: 0, max: 100, label: 'bottom', category: 'padding' },
-    { key: 'chart.padding.left', def: 48, type: 'number', min: 0, max: 100, label: 'left', category: 'padding' },
+    { key: 'chart.padding.top', def: 0, type: 'number', min: 0, max: 100, label: "top", category: 'padding' },
+    { key: 'chart.padding.right', def: 0, type: 'number', min: 0, max: 100, label: 'right', category: 'padding' },
+    { key: 'chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100, label: 'bottom', category: 'padding' },
+    { key: 'chart.padding.left', def: 0, type: 'number', min: 0, max: 100, label: 'left', category: 'padding' },
 
     { key: 'chart.highlighter.color', def: '#1A1A1A', type: 'color', label: 'highlighterColor', category: 'general' },
     { key: 'chart.highlighter.opacity', def: 5, type: 'range', min: 0, max: 100, label: 'highlighterOpacity', category: 'general' },
@@ -429,6 +409,7 @@ const model = ref([
     { key: 'chart.grid.showVerticalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
     { key: 'chart.grid.showHorizontalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
 
+    { key: 'chart.grid.position', def: 'middle', type: 'select', options: ['middle', 'start']},
     { key: 'chart.grid.frame.show', def: false, type: 'checkbox' },
     { key: 'chart.grid.frame.stroke', def: '#1A1A1A', type: 'color' },
     { key: 'chart.grid.frame.strokeWidth', def: 4, type: 'number', min: 0, max: 12 },
@@ -445,28 +426,33 @@ const model = ref([
     { key: 'chart.grid.labels.xAxisLabels.show', def: true, type: 'checkbox', label: 'showPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.color', def: '#1A1A1A', type: 'color', label: 'textColorPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.values', def: [], type: 'none', label: 'fontSize' },
-    { key: 'chart.grid.labels.xAxisLabels.fontSize', def: 14, type: 'number', min: 6, max: 30, label: 'fontSizePeriodLabels', category: 'grid' },
+    { key: 'chart.grid.labels.xAxisLabels.fontSize', def: 16, type: 'number', min: 6, max: 30, label: 'fontSizePeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.showOnlyFirstAndLast', def: false, type: 'checkbox', label: 'showOnlyFirstAndLast', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.yOffset', def: 24, type: 'number', min: -100, max: 100, label: 'offsetYPeriodLabels', category: 'grid' },
     { key: 'chart.grid.labels.xAxisLabels.rotation', def: 0, type: 'range', min: -360, max: 360, label: 'rotation', category: 'grid' },
-    { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 24, type: 'number', min: -100, max: 100 },
+    { key: 'chart.grid.labels.xAxisLabels.autoRotate.enable', def: true, type: 'checkbox'},
+    { key: 'chart.grid.labels.xAxisLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
+    { key: 'chart.grid.labels.axis.xLabelOffsetY', def: 0, type: 'number', min: -100, max: 100 },
+    { key: 'chart.grid.labels.axis.yLabelOffsetX', def: 0, type: 'number', min: -100, max: 100 },
 
     { key: 'chart.grid.labels.xAxisLabels.showOnlyAtModulo', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.xAxisLabels.modulo', def: 6, type: 'number' },
+    { key: 'chart.grid.labels.xAxisLabels.autoRotate', def: true, type: 'checkbox' },
 
     { key: 'chart.grid.labels.yAxis.position', def: 'right', type: 'select', options: ['left', 'right'] },
     { key: 'chart.grid.labels.yAxis.commonScaleSteps', def: 10, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.useIndividualScale', def: false, type: "checkbox" },
     { key: 'chart.grid.labels.yAxis.stacked', def: false, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.gap', def: 24, min: 0, max: 200, type: 'number' },
-    { key: 'chart.grid.labels.yAxis.labelWidth', def: 48, min: 0, max: 100, type: 'number' },
+    { key: 'chart.grid.labels.yAxis.labelWidth', def: 64, min: 0, max: 100, type: 'number' },
     { key: 'chart.grid.labels.yAxis.showBaseline', def: true, type: 'checkbox' },
     { key: 'chart.grid.labels.yAxis.scaleMin', def: null, type: 'number', min: -1000, max: 1000 },
     { key: 'chart.grid.labels.yAxis.scaleMax', def: null, type: 'number', min: -1000, max: 1000 },
     { key: 'chart.grid.labels.yAxis.groupColor', def: '#1A1A1A', type: 'color' },
     { key: 'chart.grid.labels.yAxis.scaleLabelOffsetX', def: 36, type: 'number', min: -100, max: 100 },
-    { key: 'chart.grid.labels.yAxis.scaleValueOffsetX', def: -20, type: 'number', min: -100, max: 100 },
-    { key: 'chart.grid.labels.yAxis.useNiceScale', def: true, type: 'checkbox'},
+    { key: 'chart.grid.labels.yAxis.scaleValueOffsetX', def: 0, type: 'number', min: -100, max: 100 },
+    { key: 'chart.grid.labels.yAxis.useNiceScale', def: false, type: 'checkbox'},
 
     { key: 'chart.grid.labels.yAxis.showCrosshairs', def: true, type: 'checkbox'},
     { key: 'chart.grid.labels.xAxis.showCrosshairs', def: true, type: 'checkbox'},
@@ -506,10 +492,12 @@ const model = ref([
     { key: 'chart.tooltip.roundingValue', def: 3, type: 'number', min: 0, max: 6, label: 'valueRounding', category: 'tooltip' },
     { key: 'chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'tooltip' },
     { key: 'chart.tooltip.fontSize', def: 14, type: 'range', min: 8, max: 48 },
-    { key: 'chart.tooltip.backgroundOpacity', def: 20, type: 'range', min: 0, max: 100 },
+    { key: 'chart.tooltip.backgroundOpacity', def: 90, type: 'range', min: 0, max: 100 },
     { key: 'chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right'] },
     { key: 'chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48 },
     { key: 'chart.tooltip.showTimeLabel', def: true, type: 'checkbox' },
+    { key: 'chart.tooltip.smooth', def: false, type: 'checkbox' },
+    { key: 'chart.tooltip.backdropFilter', def: false, type: 'checkbox' },
 
     { key: 'bar.borderRadius', def: 2, type: 'number', min: 0, max: 120, label: 'borderRadius', category: 'bar' },
     { key: 'bar.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'bar' },
@@ -524,10 +512,12 @@ const model = ref([
     { key: 'bar.serieName.useSerieColor', def: true, type: 'checkbox', label: ['serieName', 'textColor', 'is', 'series'], category: 'bar' },
     { key: 'bar.serieName.color', def: '#1A1A1A', type: 'color', label: ['serieName', 'is', 'textColor'], category: 'bar' },
     { key: 'bar.periodGap', def: 0.01, type: 'number', min: 0, max: 24 },
+    { key: 'bar.innerGap', def: 0.2, type: 'number', min: 0, max: 1},
     { key: 'bar.border.useSerieColor', def: false, type: 'checkbox' },
     { key: 'bar.border.stroke', def: '#FFFFFF', type: 'color' },
     { key: 'bar.border.strokeWidth', def: 1, type: 'number', min: 0, max: 12, step: 0.5 },
 
+    { key: 'line.showTransition', def: true, type: 'checkbox' },
     { key: 'line.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'line' },
     { key: 'line.useGradient', def: false, type: 'checkbox', label: 'useGradient', category: 'line' },
     { key: 'line.strokeWidth', def: 2, type: 'number', min: 1, max: 20, label: 'thickness', category: 'line' },
@@ -654,6 +644,8 @@ const monthValues = computed(() => {
     return arr
 })
 
+const selectedIndex = ref(null);
+
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     if (testCustomTooltip.value) {
@@ -678,6 +670,19 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex })
+                    selectedIndex.value = seriesIndex
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex })
+                    selectedIndex.value = null;
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex })
+                }
+            },
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
             theme: currentTheme.value,
             line: {
@@ -719,7 +724,7 @@ const config = computed(() => {
                 // Attempt a scale groups
                 annotations: [
                     {
-                        show: true,
+                        show: false,
                         yAxis: {
                             yTop: 125,
                             yBottom: 70,
@@ -766,17 +771,17 @@ const config = computed(() => {
                 },
                 userOptions: {
                     ...c.chart.userOptions,
-                    callbacks: {
-                        img: ({ domElement, imageUri, base64}) => {
-                            console.log(imageUri)
-                        },
-                        csv: (xls) => {
-                            console.log(xls)
-                        },
-                        pdf: ({ domElement, imageUri, base64}) => {
-                            console.log(imageUri)
-                        }
-                    },
+                    // callbacks: {
+                    //     img: ({ domElement, imageUri, base64}) => {
+                    //         console.log(imageUri)
+                    //     },
+                    //     csv: (xls) => {
+                    //         console.log(xls)
+                    //     },
+                    //     pdf: ({ domElement, imageUri, base64}) => {
+                    //         console.log(imageUri)
+                    //     }
+                    // },
                     print: {
                         ...c.chart.userOptions.print,
                         // onclone: (doc) => {
@@ -825,18 +830,22 @@ const config = computed(() => {
                         ...c.chart.grid.labels,
                         yAxis: {
                             ...c.chart.grid.labels.yAxis,
+                            serieNameFormatter: ({ value, config }) => {
+                                return value + '-TEST'
+                            }
                             // formatter: ({value}) => {
                             //     return `f - ${value}`
                             // }
                         },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
-                            // values: monthValues.value,
-                            values: new Array(13).fill(0).map((d,i) => {
-                                return `Some long name\nwith a value ${i}`
-                            }),
+                            values: monthValues.value,
+                            // values: new Array(13).fill(0).map((d,i) => {
+                            //     return `Some long name\nwith a value ${i}`
+                            // }),
+                            // rotation: -30,
                             datetimeFormatter: {
-                                enable: false,
+                                enable: true,
                                 locale: 'en',
                                 useUTC: false,
                                 januaryAsYear: true,
@@ -988,8 +997,12 @@ onMounted(async () => {
         <template #title>VueUiXy</template>
 
         <template #local>
-            <LocalVueUiXy :dataset="isPropsToggled ? alternateDataset : dataset"
-                :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend"
+            <LocalVueUiXy 
+                :dataset="isPropsToggled ? alternateDataset : dataset"
+                :config="isPropsToggled ? alternateConfig : config"
+                :selectedXIndex="selectedIndex"
+                :key="`local_${step}`" 
+                @selectLegend="selectLegend"
                 @selectX="selectX" ref="local">
                 <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
@@ -1038,8 +1051,9 @@ onMounted(async () => {
         <template #VDUI-local>
             <LocalVueDataUi  component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
+                :selectedXIndex="selectedIndex"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
-                <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <!-- <template #time-label="{ x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                     <g @click="() => selectTimeLabel({ x, y, fontSize, absoluteIndex })">
                         <text :x="x" :y="y" :font-size="fontSize" :text-anchor="textAnchor" :fill="fill">
                             {{ content }}
@@ -1049,7 +1063,7 @@ onMounted(async () => {
                             {{ content }}
                         </text>
                     </g>
-                </template>
+                </template> -->
 
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />

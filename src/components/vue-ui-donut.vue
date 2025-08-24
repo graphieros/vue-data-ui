@@ -1,7 +1,19 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount, useSlots, defineAsyncComponent, shallowRef } from "vue";
+import { 
+    ref, 
+    computed, 
+    nextTick, 
+    onMounted, 
+    watch, 
+    onBeforeUnmount, 
+    useSlots, 
+    defineAsyncComponent, 
+    shallowRef, 
+    toRefs,
+} from "vue";
 import {
     applyDataLabel,
+    autoFontSize,
     calcMarkerOffsetX,
     calcMarkerOffsetY,
     calcNutArrowPath,
@@ -10,6 +22,7 @@ import {
     convertCustomPalette,
     createCsvContent,
     createPolarAreas,
+    createTSpansFromLineBreaksOnY,
     createUid,
     dataLabel,
     downloadCsv,
@@ -24,27 +37,30 @@ import {
     palette,
     setOpacity,
     shiftHue,
+    setOpacityIfWithinBBox,
     themePalettes,
-    XMLNS
+    XMLNS,
+    treeShake
 } from '../lib';
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { usePrinter } from "../usePrinter";
+import { useLoading } from "../useLoading";
+import { useResponsive } from "../useResponsive";
+import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import img from "../img";
+import Shape from "../atoms/Shape.vue";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import Shape from "../atoms/Shape.vue";
-import img from "../img";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
@@ -68,14 +84,18 @@ const props = defineProps({
 
 const isDataset = computed({
     get() {
-        return !!props.dataset && props.dataset.length
+        return !!props.dataset && props.dataset.length;
     },
     set(bool) {
-        return bool
+        return bool;
     }
-})
+});
 
 const donutChart = shallowRef(null);
+const G = ref(null);
+const G_hollow = ref(null);
+const circle_hollow = ref(null);
+
 const chartTitle = shallowRef(null);
 const chartLegend = shallowRef(null);
 const resizeObserver = shallowRef(null);
@@ -86,8 +106,110 @@ const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
 
-onMounted(() => {
+const labels_value_fontSize = computed({
+    get: () => FINAL_CONFIG.value.style.chart.layout.labels.percentage.fontSize,
+    set: v => v
+});
+const labels_name_fontSize = computed({
+    get: () => FINAL_CONFIG.value.style.chart.layout.labels.name.fontSize,
+    set: v => v
+});
+
+
+let rafScheduled = false
+/**
+ * v3 - Auto size fonts, clamped between minFontSize and config font size, inside the viewBox
+ */
+const resizeAndReflow = () => {
+    if (!FINAL_CONFIG.value.autoSize || rafScheduled) return;
+    rafScheduled = true;
+
+    requestAnimationFrame(() => {
+        rafScheduled = false;
+
+        const cfg = FINAL_CONFIG.value;
+        const container = G.value;
+        const svg = svgRef.value;
+        if (!cfg.autoSize || !container || !svg) return;
+
+        const [x, y, w, h] = svg
+            .getAttribute('viewBox')
+            .split(' ')
+            .map(Number)
+
+        const bounds = { x, y, width: w, height: h };
+
+        const labelTypes = [
+            {
+                selector: '.vue-data-ui-datalabel-value',
+                baseSize: cfg.style.chart.layout.labels.percentage.fontSize,
+                minSize:  cfg.style.chart.layout.labels.percentage.minFontSize,
+                sizeRef:  labels_value_fontSize,
+            },
+            {
+                selector: '.vue-data-ui-datalabel-name',
+                baseSize: cfg.style.chart.layout.labels.name.fontSize,
+                minSize:  cfg.style.chart.layout.labels.name.minFontSize,
+                sizeRef:  labels_name_fontSize,
+            },
+        ];
+
+        // Early bail
+        const totalMatches = labelTypes
+            .map(lt => container.querySelectorAll(lt.selector).length)
+            .reduce((a, b) => a + b, 0);
+
+        if (totalMatches === 0) return;
+
+        labelTypes.forEach(({ selector, baseSize, minSize, sizeRef }) => {
+            container
+                .querySelectorAll(selector)
+                .forEach(el => {
+                    const final = autoFontSize({
+                        el,
+                        bounds,
+                        currentFontSize: baseSize,
+                        minFontSize: minSize,
+                        attempts: 200,
+                        padding: 1
+                    });
+                    sizeRef.value = final;
+                });
+            });
+        
+        // if (FINAL_CONFIG.value.autoSize && G_hollow.value && circle_hollow.value) {
+        //     setOpacityIfWithinBBox({
+        //         el: G_hollow.value,
+        //         container: circle_hollow.value,
+        //     });
+        // }
+    });
+}
+
+onMounted( async() => {
     prepareChart();
+    requestAnimationFrame(resizeAndReflow);
+});
+
+let ro
+onMounted(() => {
+    if (!donutChart.value) return;
+
+    ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+        const { width, height } = entry.contentRect
+        if (width > 0 && height > 0) {
+            resizeAndReflow();
+            break
+        }
+        }
+    });
+
+    ro.observe(donutChart.value.parentElement)
+});
+
+onBeforeUnmount(() => {
+    ro?.disconnect()
 });
 
 onBeforeUnmount(() => {
@@ -99,25 +221,32 @@ onBeforeUnmount(() => {
     }
 });
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiDonut',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
+        isDataset.value = false;
+        manualLoading.value = true; // v3
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
                 datasetObject: ds,
                 requiredAttributes: ['name', 'values']
             }).forEach(attr => {
-                isDataset.value = false;
                 error({
                     componentName: 'VueUiDonut',
                     type: 'datasetSerieAttribute',
                     property: attr,
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
+                isDataset.value = false;
+                manualLoading.value = true; // v3
             })
         })
         props.dataset.forEach((ds, i) => {
@@ -126,10 +255,16 @@ function prepareChart() {
                     componentName: 'VueUiDonut',
                     type: 'datasetAttributeEmpty',
                     property: 'name',
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
             }
         })
+    }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -140,12 +275,13 @@ function prepareChart() {
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
                 source: source.value,
                 noTitle: noTitle.value,
-                padding: padding.value
+                padding: FINAL_CONFIG.value.autoSize ? undefined : padding.value
             });
 
             requestAnimationFrame(() => {
                 svg.value.width = width;
                 svg.value.height = height;
+                resizeAndReflow()
             })
         });
 
@@ -215,13 +351,67 @@ function prepareConfig() {
     return finalConfig;
 }
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
+const FINAL_CONFIG = ref(prepareConfig());
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        {
+            name: '',
+            values: [3],
+            color: '#BABABA',
+        },
+        {
+            name: '',
+            values: [2],
+            color: '#AAAAAA',
+        },
+        {
+            name: '',
+            values: [1],
+            color: '#CACACA',
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            useCssAnimation: false,
+            table: { show: false },
+            startAnimation: {
+                show: false
+            },
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        labels: {
+                            dataLabels: { show: false },
+                            hollow: {
+                                average: { show: false },
+                                total: { show: false }
+                            },
+                            value: { show: false }
+                        }
+                    },
+                    legend: {
+                        backgroundColor: 'transparent',
+                        showValue: false,
+                        showPercentage: false
+                    },
+                    title: {
+                        color: '#1A1A1A',
+                        subtitle: {
+                            color: '#5A5A5A'
+                        }
+                    }
+                }
+            }
+        }
+    })
 });
 
 const isFirstLoad = ref(true);
@@ -243,11 +433,13 @@ function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
                     animatedValues.value = [...animatedValues.value];
                     if (p < 1) {
                         requestAnimationFrame(animate);
+                        requestAnimationFrame(resizeAndReflow)
                     } else {
                         animatedValues.value[i] = target;
                         animatedValues.value = [...animatedValues.value];
                         completed += 1;
                         if (completed === N) resolve();
+                        requestAnimationFrame(resizeAndReflow)
                     }
                 }
                 requestAnimationFrame(animate);
@@ -256,17 +448,35 @@ function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
     });
 }
 
-onMounted(async () => {
-    const finalValues = props.dataset.map(ds => ds.values.reduce((a, b) => a + b, 0));
-    if (FINAL_CONFIG.value.startAnimation.show) {
+const hasAnimated = ref(false);
+
+watch(
+    () => loading.value,
+    async (loadingNow) => {
+        if (loadingNow || hasAnimated.value) return;
+
+        // Avoid animating skeleton dataset
+        const isSkeleton = FINAL_DATASET.value === skeletonDataset;
+        const startAnimation = FINAL_CONFIG.value.startAnimation?.show;
+
+        if (!isSkeleton && startAnimation) {
+        hasAnimated.value = true;
+
+        const finalValues = FINAL_DATASET.value.map(ds =>
+            ds.values.reduce((a, b) => a + b, 0)
+        );
+
         await animateWithGhost(
             finalValues,
             FINAL_CONFIG.value.startAnimation.durationMs,
             FINAL_CONFIG.value.startAnimation.staggerMs
         );
-    }
-    isFirstLoad.value = false;
-});
+        }
+
+        isFirstLoad.value = false;
+    },
+    { immediate: true }
+);
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -280,7 +490,9 @@ function hideOptions() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -330,22 +542,36 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        dataLabels: {
+        show: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show,
+        },
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    };
+}, { immediate: true });
+
 const svg = ref({
     height: FINAL_CONFIG.value.style.chart.height,
     width: FINAL_CONFIG.value.style.chart.width
 });
 
 const donutThickness = computed(() => {
+    if (FINAL_CONFIG.value.pie) {
+        return minSize.value;
+    }
     const baseRatio = FINAL_CONFIG.value.style.chart.layout.donut.strokeWidth / 512;
     const resultSize = Math.min(svg.value.width, svg.value.height) * baseRatio;
     const adjusted = resultSize > minSize.value ? minSize.value : resultSize;
-    return Math.max(adjusted, 3);
+    return Math.max(adjusted, 12 * (1 + baseRatio));
 });
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
 
 const immutableSet = computed(() => {
-    return props.dataset
+    return FINAL_DATASET.value
         .map((serie, i) => {
             return {
                 name: serie.name,
@@ -361,9 +587,19 @@ const immutableSet = computed(() => {
         })
 });
 
+// v3 - Stop skeleton loader when props.dataset becomes valid
+watch(() => props.dataset, (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+        manualLoading.value = false;
+    }
+}, { immediate: true });
+
 const mutableSet = shallowRef(immutableSet.value)
 
-watch(() => immutableSet.value, (val) => mutableSet.value = val)
+watch(() => immutableSet.value, (val) => {
+    mutableSet.value = val;
+    requestAnimationFrame(resizeAndReflow);
+})
 
 function getData() {
     return immutableSet.value.map(ds => {
@@ -420,6 +656,7 @@ function segregate(index) {
                     mutableSet.value = mutableSet.value.map((ds, i) =>
                         index === i ? { ...ds, value: val } : ds
                     );
+                    requestAnimationFrame(resizeAndReflow);
                 },
                 onDone: () => {
                     setFinalUpState();
@@ -432,6 +669,7 @@ function segregate(index) {
             doAnimUp();
         } else {
             setFinalUpState();
+            requestAnimationFrame(resizeAndReflow);
         }
     } else if (segregated.value.length < immutableSet.value.length - 1) {
         function setFinalDownState() {
@@ -451,9 +689,11 @@ function segregate(index) {
                     mutableSet.value = mutableSet.value.map((ds, i) =>
                         index === i ? { ...ds, value: val } : ds
                     );
+                    requestAnimationFrame(resizeAndReflow);
                 },
                 onDone: () => {
                     setFinalDownState();
+                    requestAnimationFrame(resizeAndReflow);
                     isAnimating.value = false;
                 }
             });
@@ -474,10 +714,10 @@ function segregate(index) {
 }
 
 
-const _total = computed(() => props.dataset.reduce((sum, ds) => sum + ds.values.reduce((a, b) => a + b, 0), 0));
+const _total = computed(() => FINAL_DATASET.value.reduce((sum, ds) => sum + ds.values.reduce((a, b) => a + b, 0), 0));
 
 const donutSet = computed(() => {
-    if (isFirstLoad.value) {
+    if (isFirstLoad.value && !loading.value) {
         const arcs = animatedValues.value.map((v, i) => ({
             ...immutableSet.value[i],
             value: v,
@@ -515,7 +755,7 @@ const donutSet = computed(() => {
 });
 
 const legendSet = computed(() => {
-    return props.dataset
+    return FINAL_DATASET.value
         .map((serie, i) => {
             return {
                 name: serie.name,
@@ -528,7 +768,7 @@ const legendSet = computed(() => {
         .map((el, i) => {
             return {
                 ...el,
-                proportion: el.value / props.dataset.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
+                proportion: el.value / FINAL_DATASET.value.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
                 opacity: segregated.value.includes(i) ? 0.5 : 1,
                 segregate: () => !isAnimating.value && segregate(i),
                 isSegregated: segregated.value.includes(i)
@@ -548,9 +788,11 @@ const legendConfig = computed(() => {
 })
 
 const minSize = computed(() => {
-    const val = Math.min(svg.value.width / 3, svg.value.height / 3);
-    return val < 55 ? 55 : val;
-})
+    const ratio = FINAL_CONFIG.value.style.chart.layout.donut.radiusRatio;
+    const clampedRatio = Math.max(0.1, Math.min(0.50001, ratio));
+    const val = Math.min(svg.value.width * clampedRatio, svg.value.height * clampedRatio);
+    return Math.max(12, val);
+});
 
 const currentDonut = computed(() => {
     const d = makeDonut({ series: donutSet.value }, svg.value.width / 2, svg.value.height / 2, minSize.value, minSize.value, 1.99999, 2, 1, 360, 105.25, donutThickness.value);
@@ -788,7 +1030,7 @@ const dataTable = computed(() => {
         return [
             {
                 color: h.color,
-                name: h.name
+                name: h.name || '-'
             },
             table.value.body[i],
             isNaN(table.value.body[i] / total.value) ? "-" : (table.value.body[i] / total.value * 100).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage) + '%'
@@ -876,8 +1118,6 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
-const G = ref(null);
-
 function autoSize() {
     if (!G.value) return;
     const { x, y, width, height } = G.value.getBBox();
@@ -907,6 +1147,7 @@ defineExpose({
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height:100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`donut__${uid}`" @mouseenter="showOptions"
         @mouseleave="hideOptions">
+
         <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef" :color="FINAL_CONFIG.style.chart.color"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :active="isAnnotator" :svgRef="svgRef"
             @close="toggleAnnotator" />
@@ -978,7 +1219,7 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg ref="svgRef" :xmlns="XMLNS" v-if="isDataset"
+        <svg ref="svgRef" :xmlns="XMLNS"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-svg': true }"
             data-cy="donut-svg" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};${padding.css}`">
@@ -1103,7 +1344,7 @@ defineExpose({
                         <path v-for="(arc, i) in noGhostDonut" :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                             :d="polarAreas[i].path" fill="#FFFFFF" 
                             :style="{
-                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
                             }"
                         />
                         <g v-if="FINAL_CONFIG.style.chart.layout.donut.useShadow">
@@ -1113,7 +1354,8 @@ defineExpose({
                                 :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                                 :filter="`url(#drop_shadow_${uid})`" 
                                 :style="{
-                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
+
                                 }"
                             />
                         </g>
@@ -1126,7 +1368,7 @@ defineExpose({
                                 :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth"
                                 :filter="getBlurFilter(i)"
                                 :style="{
-                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                    transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,transformOrigin: 'center'
                                 }"
                             />
                         </g>
@@ -1136,7 +1378,7 @@ defineExpose({
                             :stroke="FINAL_CONFIG.style.chart.layout.donut.borderColorAuto ? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.donut.borderColor"
                             :stroke-width="FINAL_CONFIG.style.chart.layout.donut.borderWidth" :filter="getBlurFilter(i)"
                             :style="{
-                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`
+                                transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
                             }"
                         />
                     </g>
@@ -1175,7 +1417,17 @@ defineExpose({
                     :cy="svg.height / 2" :r="/* This might require adjustments */minSize <= 0 ? 10 : minSize"
                     :fill="`url(#gradient_${uid})`"
                 />
-    
+
+                <!-- V3 used for hollow content overflow detection -->
+                <circle 
+                    ref="circle_hollow"
+                    :style="{ pointerEvents: 'none'}"
+                    fill="none"
+                    :cx="svg.width / 2"
+                    :cy="svg.height / 2"
+                    :r="Math.max(0.1, donutThickness * 1.7)"
+                />
+
                 <!-- TOOLTIP TRAPS -->
                 <template v-if="total">
                     <g v-if="currentDonut.length > 1 || FINAL_CONFIG.type === 'classic'">
@@ -1204,61 +1456,67 @@ defineExpose({
     
                 <!-- HOLLOW LABELS (Classic donut only )-->
                 <template v-if="FINAL_CONFIG.type === 'classic'">
-                    <text data-cy="hollow-total-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
-                        text-anchor="middle" :x="svg.width / 2"
-                        :y="svg.height / 2 - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.bold ? 'bold' : ''}`">
-                        {{ FINAL_CONFIG.style.chart.layout.labels.hollow.total.text }}
-                    </text>
-                    <text data-cy="hollow-total-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
-                        text-anchor="middle" :x="svg.width / 2"
-                        :y="svg.height / 2 + FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.bold ? 'bold' : ''}`">
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.formatter,
-                            total,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix,
-                                v: total,
-                                s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
-                            }))
-                        }}
-                    </text>
-    
-                    <text data-cy="hollow-average-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
-                        text-anchor="middle" :x="svg.width / 2"
-                        :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.bold ? 'bold' : ''}`">
-                        {{ FINAL_CONFIG.style.chart.layout.labels.hollow.average.text }}
-                    </text>
-                    <text data-cy="hollow-average-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
-                        text-anchor="middle" :x="svg.width / 2"
-                        :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize + FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.offsetY"
-                        :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.bold ? 'bold' : ''}`">
-                        {{ isAnimating || isFirstLoad ? '--' : applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.formatter,
-                            average,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
-                                v: average,
-                                s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
-                            }))
-                        }}
-                    </text>
+                    <g ref="G_hollow" class="vue-data-ui-donut-hollow-labels">
+                        <text data-cy="hollow-total-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
+                            text-anchor="middle" :x="svg.width / 2"
+                            :y="svg.height / 2 - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.offsetY"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.bold ? 'bold' : ''}`">
+                            {{ FINAL_CONFIG.style.chart.layout.labels.hollow.total.text }}
+                        </text>
+                        <text data-cy="hollow-total-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.total.show"
+                            text-anchor="middle" :x="svg.width / 2"
+                            :y="svg.height / 2 + FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize - (FINAL_CONFIG.style.chart.layout.labels.hollow.average.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.total.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.offsetY"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.bold ? 'bold' : ''}`">
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.formatter,
+                                total,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.prefix,
+                                    v: total,
+                                    s: FINAL_CONFIG.style.chart.layout.labels.hollow.total.value.suffix
+                                }))
+                            }}
+                        </text>
+        
+                        <text data-cy="hollow-average-name" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
+                            text-anchor="middle" :x="svg.width / 2"
+                            :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.offsetY"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.bold ? 'bold' : ''}`">
+                            {{ FINAL_CONFIG.style.chart.layout.labels.hollow.average.text }}
+                        </text>
+                        <text data-cy="hollow-average-value" v-if="FINAL_CONFIG.style.chart.layout.labels.hollow.average.show"
+                            text-anchor="middle" :x="svg.width / 2"
+                            :y="svg.height / 2 + (FINAL_CONFIG.style.chart.layout.labels.hollow.total.show ? FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize : 0) + FINAL_CONFIG.style.chart.layout.labels.hollow.average.fontSize + FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.offsetY"
+                            :fill="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.bold ? 'bold' : ''}`">
+                            {{ isAnimating || isFirstLoad ? '--' : applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.formatter,
+                                average,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
+                                    v: average,
+                                    s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
+                                }))
+                            }}
+                        </text>
+                    </g>
                 </template>
     
                 <!-- DATALABELS -->
-                <g v-for="(arc, i) in noGhostDonut.filter(el => !el.ghost)" :filter="getBlurFilter(i)"
-                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }">
+                <g 
+                    v-for="(arc, i) in noGhostDonut.filter(el => !el.ghost)" 
+                    :filter="getBlurFilter(i)"
+                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
+                    :key="arc.seriesIndex"
+                >
                     <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useLabelSlots">
                         <foreignObject
                             :x="calcMarkerOffsetX(arc, true).anchor === 'end' ? calcMarkerOffsetX(arc).x - 120 : calcMarkerOffsetX(arc, true).anchor === 'middle' ? calcMarkerOffsetX(arc).x - 60 : calcMarkerOffsetX(arc).x"
@@ -1315,11 +1573,14 @@ defineExpose({
                             />
                         </template>
                         <template v-if="FINAL_CONFIG.type === 'classic'">
-                            <text data-cy="donut-label-value" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                            <text 
+                                data-cy="donut-label-value" 
+                                v-show="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                                class="vue-data-ui-datalabel-value"
                                 :text-anchor="calcMarkerOffsetX(arc, true, 12).anchor"
                                 :x="calcMarkerOffsetX(arc, true, 12).x" :y="calcMarkerOffsetY(arc)"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :font-size="labels_value_fontSize + 'px'"
                                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold' : ''}`"
                                 @click="selectDatapoint(arc, i)"
                                 @mouseenter="useTooltip({
@@ -1342,14 +1603,24 @@ defineExpose({
                                         { datapoint: arc }
                                     )})` : '' }}
                             </text>
-                            <text data-cy="donut-label-name"
-                                v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
+                            <text 
+                                data-cy="donut-label-name"
+                                v-show="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
+                                class="vue-data-ui-datalabel-name"
                                 :text-anchor="calcMarkerOffsetX(arc).anchor" :x="calcMarkerOffsetX(arc, true, 12).x"
-                                :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :y="calcMarkerOffsetY(arc) + labels_name_fontSize * 1.2"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize"
+                                :font-size="labels_name_fontSize + 'px'"
                                 :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold' : ''}`"
                                 @click="selectDatapoint(arc, i)"
+                                v-html="createTSpansFromLineBreaksOnY({
+                                    content: arc.name,
+                                    fontSize: labels_name_fontSize,
+                                    fill:FINAL_CONFIG.style.chart.layout.labels.name.color,
+                                    x: calcMarkerOffsetX(arc, true, 12).x,
+                                    y: calcMarkerOffsetY(arc) + labels_name_fontSize
+                                })"
+                            />
                                 @mouseenter="useTooltip({
                                     datapoint: arc,
                                     relativeIndex: i,
@@ -1357,17 +1628,18 @@ defineExpose({
                                     show: true
                                 })"
                                 @mouseleave="handleDatapointLeave({ datapoint: arc, seriesIndex: arc.seriesIndex })"
-                            >
-                                {{ arc.name }}
-                            </text>
+                            />
                         </template>
                         <template v-if="FINAL_CONFIG.type === 'polar'">
-                            <text data-cy="polar-label-value" v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
+                            <text 
+                                data-cy="polar-label-value"
+                                class="vue-data-ui-datalabel-value"
+                                v-if="isArcBigEnough(arc) && mutableConfig.dataLabels.show"
                                 :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
                                 :x="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
                                 :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.percentage.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :font-size="labels_value_fontSize"
                                 :style="{
                                     transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
                                     fontWeight: FINAL_CONFIG.style.chart.layout.labels.percentage.bold ? 'bold': 'normal'
@@ -1393,18 +1665,28 @@ defineExpose({
                                         { datapoint: arc }
                                     )})` : '' }}
                             </text>
-                            <text data-cy="polar-label-name"
+                            <text 
+                                data-cy="polar-label-name"
+                                class="vue-data-ui-datalabel-name"
                                 v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
                                 :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
                                 :x="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
-                                :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + FINAL_CONFIG.style.chart.layout.labels.percentage.fontSize"
+                                :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + labels_name_fontSize * 1.2"
                                 :fill="FINAL_CONFIG.style.chart.layout.labels.name.color"
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.name.fontSize"
+                                :font-size="labels_name_fontSize"
                                 :style="{
                                     transition: isFirstLoad || !FINAL_CONFIG.serieToggleAnimation.show ? 'none' : `all ${FINAL_CONFIG.serieToggleAnimation.durationMs}ms ease-in-out`,
                                     fontWeight: FINAL_CONFIG.style.chart.layout.labels.name.bold ? 'bold': 'normal'
                                 }"
                                 @click="selectDatapoint(arc, i)"
+                                v-html="createTSpansFromLineBreaksOnY({
+                                    content: arc.name,
+                                    fontSize: labels_value_fontSize,
+                                    fill:FINAL_CONFIG.style.chart.layout.labels.name.color,
+                                    x: offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x,
+                                    y: offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + labels_name_fontSize * 1.2
+                                })"    
+                            />
                                 @mouseenter="useTooltip({
                                     datapoint: arc,
                                     relativeIndex: i,
@@ -1412,9 +1694,7 @@ defineExpose({
                                     show: true
                                 })"
                                 @mouseleave="handleDatapointLeave({ datapoint: arc, seriesIndex: arc.seriesIndex })"
-                            >
-                                {{ arc.name }}
-                            </text>
+                            />
                         </template>
                     </g>
     
@@ -1455,17 +1735,6 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
         </div>
-
-        <Skeleton v-if="!isDataset" :config="{
-            type: 'donut',
-            style: {
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                donut: {
-                    color: '#CCCCCC',
-                    strokeWidth: donutThickness * 0.8
-                }
-            }
-        }" />
 
         <div ref="chartLegend">
             <Legend v-if="FINAL_CONFIG.style.chart.legend.show" :key="`legend_${legendStep}`" :legendSet="legendSet"
@@ -1516,16 +1785,31 @@ defineExpose({
             <slot name="source" />
         </div>
 
+        <div v-if="$slots.hollow" class="vue-ui-donut-hollow">
+            <slot name="hollow" v-bind="{
+                total, average, dataset: immutableSet
+            }"/>
+        </div>
+
         <!-- TOOLTIP -->
-        <Tooltip :show="mutableConfig.showTooltip && isTooltip"
+        <Tooltip 
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
-            :color="FINAL_CONFIG.style.chart.tooltip.color" :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :color="FINAL_CONFIG.style.chart.tooltip.color" 
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
             :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
-            :position="FINAL_CONFIG.style.chart.tooltip.position" :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
-            :parent="donutChart" :content="tooltipContent" :isCustom="useCustomFormat" :isFullscreen="isFullscreen">
+            :position="FINAL_CONFIG.style.chart.tooltip.position" 
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :parent="donutChart" 
+            :content="tooltipContent" 
+            :isCustom="useCustomFormat" 
+            :isFullscreen="isFullscreen"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
+        >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>
@@ -1578,6 +1862,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading"/>
     </div>
 </template>
 
@@ -1635,5 +1922,16 @@ defineExpose({
     position: absolute;
     top: 0;
     transform: translateY(-50%);
+}
+
+.vue-data-ui-donut-hollow-labels {
+    pointer-events: none;
+}
+
+.vue-ui-donut-hollow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
 }
 </style>

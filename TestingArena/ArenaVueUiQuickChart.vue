@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiQuickChart from '../src/components/vue-ui-quick-chart.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
@@ -123,6 +123,8 @@ function alterDataset() {
 const selectedSerie = ref('longArray');
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptionsButtons.pdf', def: true, type: 'checkbox'},
@@ -149,10 +151,12 @@ const model = ref([
     { key: 'dataLabelRoundingValue', def: 2, type: 'number', min: 0, max: 12},
     { key: 'donutHideLabelUnderPercentage', def: 3, type: 'number', min: 1, max: 20},
     { key: 'donutLabelMarkerStrokeWidth', def: 1, type: 'number', min: 0, max: 12, step: 0.5},
-    { key: 'donutRadiusRatio', def: 0.4, type: 'range', min: 0.1, max: 1, step: 0.01},
+    { key: 'donutRadiusRatio', def: 0.2, type: 'range', min: 0.1, max: 1, step: 0.01},
     { key: 'donutShowTotal', def: true, type: 'checkbox'},
     { key: 'donutStrokeWidth', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'donutThicknessRatio', def: 0.18, type: 'range', min: 0.01, max: 0.4, step: 0.01},
+    { key: 'donutStroke', def: '#FFFFFF', type: 'color'},
+
+    { key: 'donutThicknessRatio', def: 0.05, type: 'range', min: 0.01, max: 0.4, step: 0.01},
     { key: 'donutTotalLabelFontSize', def: 24, type: 'number', min: 8, max: 42},
     { key: 'donutTotalLabelText', def: 'Total', type: 'text'},
     { key: 'donutUseShadow', def: true, type: 'checkbox'},
@@ -191,13 +195,16 @@ const model = ref([
     { key: 'xyGridStrokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.5},
     { key: 'xyHighlighterColor', def: '#1A1A1A', type: 'color'},
     { key: 'xyHighlighterOpacity', def: 0.05, type: 'number', min: 0.05, max: 1, step: 0.01},
-    { key: 'xyLabelsXFontSize', def: 8, type: 'number', min: 8, max: 24},
-    { key: 'xyLabelsYFontSize', def: 12, type: 'number', min: 8, max: 24},
+    { key: 'xyLabelsXFontSize', def: 14, type: 'number', min: 8, max: 24},
+    { key: 'xyLabelsYFontSize', def: 14, type: 'number', min: 8, max: 24},
     { key: 'xyPaddingBottom', def: 48, type: 'number', min: 0, max: 100},
     { key: 'xyPaddingLeft', def: 48, type: 'number', min: 0, max: 100},
     { key: 'xyPaddingRight', def: 12, type: 'number', min: 0, max: 100},
     { key: 'xyPaddingTop', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'xyPeriodLabelsRotation', def: -33, type: 'number', min: -360, max: 360},
+    { key: 'xyPeriodLabelsRotation', def: 0, type: 'number', min: -360, max: 360},
+    { key: 'xyPeriodLabelsAutoRotate.enable', def: true, type: 'checkbox'},
+    { key: 'xyPeriodLabelsAutoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'xyPeriodsShowOnlyAtModulo', def: true, type: 'checkbox' },
     { key: 'xyPeriodsModulo', def: 12, type: 'number', min: 0, max: 12 },
 
@@ -238,7 +245,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const monthValues = computed(() => {
     const yearStart = 2026
@@ -256,16 +263,27 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            },
+        },
         formatter: ({value, config}) => {
             // console.log(config)
             return `f - ${value}`
         },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
-        // xyPeriods: monthValues.value,
-        xyPeriods: new Array(100).fill(0).map((el,i) => {
-            return `Some long label\nfor index ${i}`
-        }),
+        xyPeriods: monthValues.value,
+        // xyPeriods: new Array(100).fill(0).map((el,i) => {
+        //     return `Some long label\nfor index ${i}`
+        // }),
         datetimeFormatter: {
             enable: false
         }
@@ -274,7 +292,13 @@ const config = computed(() => {
 
 const step = ref(0)
 
-const dataset = computed(() => datasets.value[selectedSerie.value])
+const dataset = ref([]);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = datasets.value[selectedSerie.value]
+    }, 2000)
+})
 
 function selectLegend(legend) {
     console.log({ legend })

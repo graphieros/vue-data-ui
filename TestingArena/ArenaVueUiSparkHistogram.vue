@@ -1,11 +1,15 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiSparkHistogram from '../src/components/vue-ui-sparkhistogram.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref([
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
     {
         value: -1.2,
         valueLabel: "20.35%",
@@ -91,7 +95,9 @@ const dataset = ref([
         intensity: 0.2,
 
     },
-])
+]
+    }, 2000);
+})
 
 const alternateDataset = ref([
 {
@@ -148,7 +154,9 @@ function alterDataset() {
 
 
 const model = ref([
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
+    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.animation.show', def: true, type: 'checkbox'},
     { key: 'style.animation.speedMs', def: 500, type: 'range', min: 100, max: 1000},
@@ -205,12 +213,23 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex })
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex })
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex })
+            },
+        },
         style: {
             ...c.style,
             labels: {
@@ -218,7 +237,7 @@ const config = computed(() => {
                 value: {
                     ...c.style.labels.value,
                     formatter: ({value, config}) => {
-                        console.log(config)
+                        // console.log(config)
                         return `f - ${value}`
                     }
                 }
@@ -231,7 +250,7 @@ const config = computed(() => {
 const step = ref(0)
 
 function selectDatapoint(datapoint) {
-    console.log({ datapoint })
+    // console.log({ datapoint })
 }
 
 </script>
@@ -247,14 +266,18 @@ function selectDatapoint(datapoint) {
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
     <button @click="alterDataset">ALTER DATASET</button>
 
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiSparkHistogram :dataset="dataset" :config="{ ...config, responsive: true }"/>
+    </div>
+
     <Box comp="VueUiSparkHistogram" :dataset="dataset">
         <template #title>VueUiSparkHistogram</template>
 
         <template #local>
             <LocalVueUiSparkHistogram :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectDatapoint="selectDatapoint">
-                <template #chart-background>
+                <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-                </template>
+                </template> -->
                 <template #source>
                     <div style="width:100%;font-size:10px;text-align:left">
                         SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.

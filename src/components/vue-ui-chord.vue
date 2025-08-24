@@ -7,7 +7,8 @@ import {
     watch, 
     nextTick, 
     defineAsyncComponent,
-    shallowRef
+    shallowRef,
+    toRefs
 } from 'vue';
 import { 
     adaptColorToBackground, 
@@ -15,6 +16,7 @@ import {
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
+    createTSpansFromLineBreaksOnY, 
     createUid, 
     dataLabel, 
     downloadCsv, 
@@ -23,6 +25,8 @@ import {
     objectIsEmpty, 
     palette, 
     themePalettes, 
+    treeShake, 
+    wrapText, 
     XMLNS 
 } from '../lib';
 import { useConfig } from '../useConfig';
@@ -37,13 +41,14 @@ import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import Shape from '../atoms/Shape.vue';
 import img from '../img';
+import { useLoading } from '../useLoading';
+import BaseScanner from '../atoms/BaseScanner.vue';
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_chord: DEFAULT_CONFIG } = useConfig();
@@ -84,13 +89,51 @@ const loaded = ref(false);
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: {
+        matrix: [
+            [ 12000, 6000, 9000, 3000],
+            [ 2000, 10000, 2000, 6001], 
+            [ 8000, 1600, 8000, 8001], 
+            [ 1000, 1000, 1000, 7001]  
+        ],
+        labels: [],
+        colors: ['#DBDBDB', '#C4C4C4', '#ADADAD', '#969696']
     },
-    set: (newCfg) => {
-        return newCfg
-    }
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            useCssAnimation: false,
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    legend: {
+                        backgroundColor: 'transparent',
+                    },
+                    arcs: {
+                        stroke: '#6A6A6A',
+                        labels: {
+                            show: false,
+                        }
+                    },
+                    ribbons: {
+                        stroke: '#6A6A6A',
+                        underlayerOpacity: 0,
+                        labels: {
+                            show: false,
+                        }
+                    }
+                }
+            }
+        }
+    })
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -127,7 +170,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -138,27 +183,79 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
 }, { deep: true });
 
-function prepareChart() {
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
+watch(() => props.dataset, () => {
+    validateRawDataset();
+    prepareChart();
+    titleStep.value += 1;
+    tableStep.value += 1;
+    legendStep.value += 1;
+});
+
+function validateRawDataset() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiChord',
-            type: 'dataset'
-        })
-    } else {
-        getMissingDatasetAttributes({
-            datasetObject: props.dataset,
-            requiredAttributes: ['matrix']
-        }).forEach(attr => {
-            isDataset.value = false;
+            type: 'dataset',
+            debug: debug.value
+        });
+        isDataset.value = false;
+        manualLoading.value = true;
+        return;
+    }
+
+    const missing = getMissingDatasetAttributes({
+        datasetObject: props.dataset,
+        requiredAttributes: ['matrix']
+    });
+
+    if (missing.length) {
+        missing.forEach(attr => {
             error({
                 componentName: 'VueUiChord',
                 type: 'datasetAttribute',
-                property: attr
-            })
-        })
+                property: attr,
+                debug: debug.value
+            });
+        });
+        isDataset.value = false;
+        manualLoading.value = true;
+        return;
     }
 
-    isDataset.value && checkDataset();
+    const m = props.dataset.matrix;
+    if (!Array.isArray(m) || m.length < 2) {
+        console.warn(`VueUiChord: dataset.matrix requires a minimum of 2 datapoints, for example:
+        
+matrix:[
+    [1, 1],
+    [1, 1]
+]`);
+        isDataset.value = false;
+        manualLoading.value = true;
+        return;
+    }
+
+    const n = m.length;
+    const badIdx = m.findIndex(row => !Array.isArray(row) || row.length !== n);
+    if (badIdx !== -1) {
+        console.warn(
+            `VueUiChord - Invalid matrix: dataset.matrix at index ${badIdx} has ${Array.isArray(m[badIdx]) ? m[badIdx].length : 'NaN'} elements instead of the required ${n}
+
+dataset.matrix[${badIdx}] = [${Array.isArray(m[badIdx]) ? m[badIdx].toString() : 'invalid'}]`
+        );
+        isDataset.value = false;
+        manualLoading.value = true;
+        return;
+    }
+
+    isDataset.value = true;
+    manualLoading.value = false;
+}
+
+function prepareChart() {
+    validateRawDataset();
 
     if (FINAL_CONFIG.value.responsive) {
         const resizeHandler = throttle(() => {
@@ -200,15 +297,15 @@ function prepareChart() {
 }
 
 function checkDataset(){
-    if (!props.dataset || !Object.hasOwn(props.dataset, 'matrix') || props.dataset.matrix.length < 2) {
+    if (!FINAL_DATASET.value || !Object.hasOwn(FINAL_DATASET.value, 'matrix') || FINAL_DATASET.value.matrix.length < 2) {
         console.warn(`VueUiChord: dataset.matrix requires a minimum of 2 datapoints, for example:\n\nmatrix:[\n  [1, 1],\n  [1, 1]\n]`);
         isDataset.value = false;
         return;
     }
 
-    props.dataset.matrix.forEach((m, i) => {
-        if (m.length !== props.dataset.matrix.length) {
-            console.warn(`VueUiChord - Invalid matrix: dataset.matrix at index ${i} has ${m.length} elements instead of the required ${props.dataset.matrix.length}\n\ndataset.matrix[${i}] = [${m.toString()}] has a length of ${m.length} but should have the same length as the matrix itself (${props.dataset.matrix.length})`);
+    FINAL_DATASET.value.matrix.forEach((m, i) => {
+        if (m.length !== FINAL_DATASET.value.matrix.length) {
+            console.warn(`VueUiChord - Invalid matrix: dataset.matrix at index ${i} has ${m.length} elements instead of the required ${FINAL_DATASET.value.matrix.length}\n\ndataset.matrix[${i}] = [${m.toString()}] has a length of ${m.length} but should have the same length as the matrix itself (${FINAL_DATASET.value.matrix.length})`);
             isDataset.value = false;
         }
     });
@@ -245,19 +342,12 @@ const paddingAngle = computed(() => {
 });
 
 const formattedDataset = computed(() => {
-    if (!isDataset.value) {
-        return {
-            matrix: [],
-            labels: [],
-            colors: []
-        }
-    }
     return {
-        matrix: props.dataset.matrix ?? [[0]],
-        labels: props.dataset.labels ?? [''],
-        colors: props.dataset.colors && Array.isArray(props.dataset.colors) && props.dataset.colors.length
-            ? props.dataset.colors.map(c => convertColorToHex(c))
-            : props.dataset.matrix.map((_m, i) => {
+        matrix: FINAL_DATASET.value.matrix ?? [[0]],
+        labels: FINAL_DATASET.value.labels ?? [''],
+        colors: FINAL_DATASET.value.colors && Array.isArray(FINAL_DATASET.value.colors) && FINAL_DATASET.value.colors.length
+            ? FINAL_DATASET.value.colors.map(c => convertColorToHex(c))
+            : FINAL_DATASET.value.matrix.map((_m, i) => {
                 return customPalette.value[i] || palette[i] || palette[i % palette.length]
             })
     }
@@ -619,14 +709,48 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
-function selectGroup(group) {
+function selectGroup(group, index) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: group, seriesIndex: index });
+    }
     if (selectedLegendId.value) return;
     selectedGroup.value = group;
 }
 
-function selectRibbon(ribbon) {
+function onGroupLeave(group, index) {
+    selectedGroup.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: group, seriesIndex: index });
+    }
+}
+
+function onGroupClick(group, index) {
+    emit('selectGroup', group);
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: group, seriesIndex: index });
+    }
+}
+
+function selectRibbon(ribbon, index) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: ribbon, seriesIndex: index });
+    }
     if (selectedLegendId.value) return;
     selectedRibbon.value = ribbon;
+}
+
+function onRibbonLeave(ribbon, index) {
+    selectedRibbon.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: ribbon, seriesIndex: index });
+    }
+}
+
+function onRibbonClick(ribbon, index) {
+    emit('selectRibbon', ribbon);
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: ribbon, seriesIndex: index });
+    }
 }
 
 function getRibbonOpacity(ribbon) {
@@ -824,6 +948,15 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+function getArcLabel(group, index) {
+    return `${formattedDataset.value.labels[index]}${FINAL_CONFIG.value.style.chart.arcs.labels.showPercentage ? dataLabel({
+        p: ' (',
+        v: isNaN(group.proportion) ? 0 : group.proportion * 100,
+        s: '%)',
+        r: FINAL_CONFIG.value.style.chart.arcs.labels.roundingPercentage
+    }) : ''}`
+}
+
 defineExpose({
     getData,
     getImage,
@@ -932,7 +1065,6 @@ defineExpose({
         </UserOptions>
 
         <svg 
-            v-if="isDataset"
             :xmlns="XMLNS"
             ref="svgRef" 
             :viewBox="`0 0 ${svg.width} ${svg.height}`" 
@@ -989,9 +1121,9 @@ defineExpose({
                         :style="{
                             opacity: getGroupOpacity(g)
                         }" 
-                        @mouseenter="() => selectGroup(g)" 
-                        @mouseleave="selectedGroup = null"
-                        @click="emit('selectGroup', g)"
+                        @mouseenter="selectGroup(g, i)" 
+                        @mouseleave="onGroupLeave(g, i)"
+                        @click="onGroupClick(g, i)"
                     />
                     <path v-if="$slots.pattern"
                         :class="{'vue-ui-chord-arc': true, 'vue-ui-chord-arc-animated': FINAL_CONFIG.useCssAnimation && !loaded }" 
@@ -1016,7 +1148,7 @@ defineExpose({
 
                 <!-- Chord Ribbons -->
                 <g>
-                    <template v-for="c in (selectedGroup
+                    <template v-for="(c, i) in (selectedGroup
                         ? chordData.chords.filter(c => c.source.groupId === selectedGroup.id)
                         : selectedLegendId ? chordData.chords.filter(c => c.source.groupId === selectedLegendId)
                         : chordData.chords)" :key="`ribbon-${c.id}`">
@@ -1038,16 +1170,19 @@ defineExpose({
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :style="{ opacity: getRibbonOpacity(c) }" 
-                            @mouseenter="() => selectRibbon({
+                            @mouseenter="selectRibbon({
                                 ...c, 
                                 path: ribbonPath(c.source, c.target), 
                                 color: formattedDataset.colors[c.source.index]
-                            })"
-                            @click="emit('selectRibbon', {
+                            }, i)"
+                            @click="onRibbonClick({
                                 ...c,
                                 color: formattedDataset.colors[c.source.index]
-                            })"
-                            @mouseleave="selectedRibbon = null" 
+                            }, i)"
+                            @mouseleave="onRibbonLeave({
+                                ...c,
+                                color: formattedDataset.colors[c.source.index]
+                            }, i)" 
                         />
                         <path 
                             v-if="c.source.value && $slots.pattern" 
@@ -1152,6 +1287,7 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.chart.arcs.labels.show">
                     <template v-if="FINAL_CONFIG.style.chart.arcs.labels.curved">
                         <text 
+                            class="vue-ui-chord-label-curved"
                             v-for="(g, i) in chordData.groups" 
                             :key="`curved-label-${i}`"
                             :font-size="FINAL_CONFIG.style.chart.arcs.labels.fontSize"
@@ -1168,7 +1304,8 @@ defineExpose({
                         </text>
                     </template>
                     <template v-else-if="!selectedGroup && !selectedRibbon && !selectedLegendId">
-                        <text 
+                        <text
+                            class="vue-ui-chord-label-straight"
                             v-for="(g, i) in chordData.groups" 
                             :key="`label-${i}`" 
                             :transform="`
@@ -1180,14 +1317,15 @@ defineExpose({
                             :font-size="FINAL_CONFIG.style.chart.arcs.labels.fontSize"
                             :font-weight="FINAL_CONFIG.style.chart.arcs.labels.bold ? 'bold' : 'normal'"
                             :fill="FINAL_CONFIG.style.chart.arcs.labels.color"
-                        >
-                            {{ formattedDataset.labels[i] }}{{ FINAL_CONFIG.style.chart.arcs.labels.showPercentage ? dataLabel({
-                                    p: ' (',
-                                    v: isNaN(g.proportion) ? 0 : g.proportion * 100,
-                                    s: '%)',
-                                    r: FINAL_CONFIG.style.chart.arcs.labels.roundingPercentage 
-                                }) : '' }}
-                        </text>
+                            v-html="createTSpansFromLineBreaksOnY({
+                                content: wrapText(getArcLabel(g, i)),
+                                fontSize: FINAL_CONFIG.style.chart.arcs.labels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.arcs.labels.color,
+                                x: 0,
+                                y: 0
+                            })"
+                        />
+                        
                     </template>
                 </g>
             </g>
@@ -1197,16 +1335,6 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
-
-        <Skeleton v-if="!isDataset" :config="{
-            type: 'chord',
-            style: {
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                chord: {
-                    color: '#CCCCCC',
-                }
-            }
-        }" />
 
         <div ref="chartLegend">
             <Legend
@@ -1289,6 +1417,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

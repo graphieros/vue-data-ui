@@ -1,5 +1,12 @@
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    onMounted, 
+    ref, 
+    toRefs,
+    watch, 
+} from "vue";
 import {
     applyDataLabel,
     checkNaN,
@@ -13,20 +20,25 @@ import {
     palette,
     setOpacity,
     themePalettes,
+    treeShake,
     XMLNS
 } from "../lib.js";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
+import { throttle } from "../canvas-lib.js";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading.js";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive.js";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
+import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img.js";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_thermometer: DEFAULT_CONFIG } = useConfig();
@@ -46,6 +58,15 @@ const props = defineProps({
     }
 });
 
+const uid = ref(createUid());
+const thermoChart = ref(null);
+const step = ref(0);
+const titleStep = ref(0);
+const chartTitle = ref(null);
+const source = ref(null);
+const resizeObserver = ref(null);
+const observedEl = ref(null);
+
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
 });
@@ -54,11 +75,41 @@ onMounted(() => {
     prepareChart();
 });
 
+const FINAL_CONFIG = ref(prepareConfig());
+const baseWidth = ref(FINAL_CONFIG.value.style.chart.thermometer.width);
+const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
+const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: { value: 0, from: -100, to: 100, steps: 20, colors: { from: '#A1A1A1', to: '#CACACA' } },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    animation: { use: false },
+                    backgroundColor: '#99999930',
+                    graduations: {
+                        stroke: '#6A6A6A'
+                    }
+                }
+            }
+        }
+    })
+});
+
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiThermometer',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
     } else {
         getMissingDatasetAttributes({
@@ -69,24 +120,39 @@ function prepareChart() {
                 componentName: 'VueUiThermometer',
                 type: 'datasetAttribute',
                 property: attr,
+                debug: debug.value
             });
         });
     }
-}
 
-const uid = ref(createUid());
-const thermoChart = ref(null);
-const step = ref(0);
-const titleStep = ref(0);
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: thermoChart.value,
+                title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
+                source: source.value
+            });
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
+            requestAnimationFrame(() => {
+                HEIGHT.value = Math.max(0.1, height - 12);
+                WIDTH.value = width;
+                autoSizeLabels();
+            });
+        });
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        observedEl.value = thermoChart.value;
+        resizeObserver.value.observe(observedEl.value);
     }
-});
+    autoSizeLabels();
+}
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
@@ -112,6 +178,9 @@ function prepareConfig() {
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+    baseWidth.value = FINAL_CONFIG.value.style.chart.thermometer.width;
+    HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
+    WIDTH.value = FINAL_CONFIG.value.style.chart.width;
     prepareChart();
     titleStep.value += 1;
 }, { deep: true });
@@ -130,20 +199,9 @@ const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
-const baseWidth = computed(() => {
-    return FINAL_CONFIG.value.style.chart.thermometer.width;
-});
-
 const steps = computed(() => {
-    return props.dataset.steps || 10;
+    return FINAL_DATASET.value.steps || 10;
 })
-
-const usablePadding = ref({
-        top: FINAL_CONFIG.value.style.chart.padding.top,
-        left: FINAL_CONFIG.value.style.chart.padding.left,
-        right: FINAL_CONFIG.value.style.chart.padding.right,
-        bottom: FINAL_CONFIG.value.style.chart.padding.bottom
-});
 
 function generateColorRange(startColor, endColor, steps) {
     const colors = [];
@@ -181,15 +239,18 @@ function toHex(value) {
 }
 
 const drawingArea = computed(() => {
-    const width = baseWidth.value + usablePadding.value.left + usablePadding.value.right;
-    const height = FINAL_CONFIG.value.style.chart.height;
+    const width = Math.max(0.1, WIDTH.value);
+    const height = Math.max(0.1, HEIGHT.value);
+    const padding = FINAL_CONFIG.value.style.chart.padding;
     return {
-        width,
-        left: usablePadding.value.left,
-        right: width - usablePadding.value.right,
-        top: usablePadding.value.top,
-        bottom: height - usablePadding.value.bottom,
-        height,
+        width: width,
+        left: (width / 2) - FINAL_CONFIG.value.style.chart.thermometer.width / 2,
+        right:(width / 2) + FINAL_CONFIG.value.style.chart.thermometer.width / 2,
+        top: padding.top,
+        bottom: height - padding.bottom - padding.top,
+        height: height,
+        thermoHeight: height - padding.top - padding.bottom,
+        thermoWidth: FINAL_CONFIG.value.style.chart.thermometer.width,
     }
 });
 
@@ -198,10 +259,10 @@ const svg = computed(() => {
 });
 
 const temperature = computed(() => {
-    const from = checkNaN(props.dataset.from) < 0 ? Math.abs(checkNaN(props.dataset.from)) : checkNaN(props.dataset.from);
-    const to = checkNaN(props.dataset.to) < 0 ? Math.abs(checkNaN(props.dataset.to)) : checkNaN(props.dataset.to);
+    const from = checkNaN(FINAL_DATASET.value.from) < 0 ? Math.abs(checkNaN(FINAL_DATASET.value.from)) : checkNaN(FINAL_DATASET.value.from);
+    const to = checkNaN(FINAL_DATASET.value.to) < 0 ? Math.abs(checkNaN(FINAL_DATASET.value.to)) : checkNaN(FINAL_DATASET.value.to);
     let max = 0;
-    if (checkNaN(props.dataset.to) > 0) {
+    if (checkNaN(FINAL_DATASET.value.to) > 0) {
         max = from + to;
     } else {
         if (from > to) {
@@ -210,7 +271,7 @@ const temperature = computed(() => {
             max = to - from;
         }
     }
-    return (1 - (Math.abs(checkNaN(props.dataset.from)) + checkNaN(props.dataset.value)) / max )* (drawingArea.value.height - usablePadding.value.top - usablePadding.value.bottom)
+    return (1 - (Math.abs(checkNaN(FINAL_DATASET.value.from)) + checkNaN(FINAL_DATASET.value.value)) / max )* (drawingArea.value.thermoHeight)
 })
 
 const cssTemp = computed(() => {
@@ -218,7 +279,7 @@ const cssTemp = computed(() => {
 });
 
 const cssHeight = computed(() => {
-    return `${drawingArea.value.height - FINAL_CONFIG.value.style.chart.padding.bottom - usablePadding.value.top}px`;
+    return `${drawingArea.value.thermoHeight}px`;
 });
 
 const cssSpeed = computed(() => {
@@ -226,23 +287,23 @@ const cssSpeed = computed(() => {
 });
 
 const colors = computed(() => {
-    if (!props.dataset.colors) {
+    if (!FINAL_DATASET.value.colors) {
         return generateColorRange(customPalette.value[1] || palette[1], customPalette.value[0] || palette[0], (steps.value )|| 10)
     } else {
-        if (!props.dataset.colors.from) {
-            return generateColorRange(customPalette.value[0] || palette[0], convertColorToHex(props.dataset.colors.to), (steps.value )|| 10)
+        if (!FINAL_DATASET.value.colors.from) {
+            return generateColorRange(customPalette.value[0] || palette[0], convertColorToHex(FINAL_DATASET.value.colors.to), (steps.value )|| 10)
         }
-        if (!props.dataset.colors.to) {
-            return generateColorRange(convertColorToHex(props.dataset.colors.from), customPalette.value[1] || palette[1], (steps.value )|| 10)
+        if (!FINAL_DATASET.value.colors.to) {
+            return generateColorRange(convertColorToHex(FINAL_DATASET.value.colors.from), customPalette.value[1] || palette[1], (steps.value )|| 10)
         }
     }
-    return generateColorRange(convertColorToHex(props.dataset.colors.from) , convertColorToHex(props.dataset.colors.to), (steps.value )|| 10)
+    return generateColorRange(convertColorToHex(FINAL_DATASET.value.colors.from) , convertColorToHex(FINAL_DATASET.value.colors.to), (steps.value )|| 10)
 });
 
 const graduations = computed(() => {
     const grads = [];
     let colorIndex = 0;
-    const usableHeight = drawingArea.value.height - usablePadding.value.top - usablePadding.value.bottom;
+    const usableHeight = drawingArea.value.thermoHeight;
     for (let i = 0; i < usableHeight-1; i += (usableHeight / steps.value)) {
         grads.push({
             x: drawingArea.value.left,
@@ -251,7 +312,7 @@ const graduations = computed(() => {
             halfY: drawingArea.value.top + i + (usableHeight / steps.value / 2),
             qYMore: drawingArea.value.top + i + ((usableHeight / steps.value / 4) * 3),
             color: colors.value[colorIndex],
-            height: usableHeight / steps.value
+            height: Math.max(0.1, usableHeight / steps.value)
         });
         colorIndex += 1;
     }
@@ -284,6 +345,19 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const label_size = computed({
+    get: () => FINAL_CONFIG.value.style.chart.label.fontSize,
+    set: v => v
+});
+
+const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
+    svgRef,
+    fontSize: FINAL_CONFIG.value.style.chart.label.fontSize,
+    minFontSize: FINAL_CONFIG.value.style.chart.label.minFontSize,
+    sizeRef: label_size,
+    labelClass: '.vue-ui-thermometer-label'
+});
+
 defineExpose({
     getImage,
     generatePdf,
@@ -313,7 +387,7 @@ defineExpose({
         />
 
         <!-- TITLE AS DIV -->
-        <div v-if="FINAL_CONFIG.style.title.text" :style="`width:100%`">
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.title.text" :style="`width:100%`">
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
@@ -379,7 +453,6 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS" 
-            v-if="isDataset" 
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
             width="100%" 
             :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" 
@@ -402,15 +475,14 @@ defineExpose({
             </foreignObject>
             
             <defs>
-                <clipPath id="vueUiPill" clipPathUnits="objectBoundingBox">
-                    <rect 
-                        x="0"
-                        y="0"
-                        width="1"
-                        height="1"
-                        rx="0.5"
-                        ry="0.07"
-                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                <clipPath :id="`vueUiPill-${uid}`" clipPathUnits="userSpaceOnUse">
+                    <rect
+                        :x="drawingArea.left"
+                        :y="drawingArea.top"
+                        :width="drawingArea.thermoWidth"
+                        :height="drawingArea.thermoHeight"
+                        :rx="drawingArea.thermoWidth / 2"
+                        :ry="drawingArea.thermoWidth / 2"
                     />
                 </clipPath>
                 <linearGradient 
@@ -423,13 +495,13 @@ defineExpose({
                 </linearGradient>
             </defs>
 
-            <g clip-path="url(#vueUiPill)">
+            <g :clip-path="`url(#vueUiPill-${uid})`">
                 <rect
                     data-cy="pill-underlayer"
                     :x="drawingArea.left"
                     :y="drawingArea.top"
-                    :height="drawingArea.height - usablePadding.top - usablePadding.bottom"
-                    :width="drawingArea.width - usablePadding.left - usablePadding.right"
+                    :height="drawingArea.thermoHeight"
+                    :width="drawingArea.thermoWidth"
                     fill="#FFFFFF"
                 />
                 <g v-for="(graduation, i) in graduations" :key="`graduation_${i}`">
@@ -438,7 +510,7 @@ defineExpose({
                         :x="graduation.x"
                         :y="graduation.y"
                         :height="graduation.height"
-                        :width="drawingArea.width - FINAL_CONFIG.style.chart.padding.left - FINAL_CONFIG.style.chart.padding.right"
+                        :width="drawingArea.thermoWidth"
                         :fill="FINAL_CONFIG.style.chart.graduations.gradient.show ? `url(#vueUiThermometerGradient_${i}_${uid})` : graduation.color"
                         shape-rendering="crispEdges"
                     />
@@ -545,33 +617,45 @@ defineExpose({
                     :x="drawingArea.left"
                     :y="drawingArea.top"
                     :height="temperature"
-                    :width="drawingArea.width - FINAL_CONFIG.style.chart.padding.left - FINAL_CONFIG.style.chart.padding.right"
+                    :width="drawingArea.thermoWidth"
                     fill="#FFFFFF66"
                 />
             </g>
-            <text
-                data-cy="temperature-label"
-                :class="{'vue-ui-thermometer-temperature-value': FINAL_CONFIG.style.chart.animation.use }"
-                :y="temperature + drawingArea.top + (FINAL_CONFIG.style.chart.label.fontSize / 3)"
-                :x="drawingArea.left - 10"
-                text-anchor="end"
-                :fill="FINAL_CONFIG.style.chart.label.color"
-                :font-size="FINAL_CONFIG.style.chart.label.fontSize"
-                :font-weight="FINAL_CONFIG.style.chart.label.bold ? 'bold' : 'normal'"
-            >
-                {{ applyDataLabel(
-                    FINAL_CONFIG.style.chart.label.formatter,
-                    dataset.value,
-                    dataLabel({
-                        p: FINAL_CONFIG.style.chart.label.prefix, 
-                        v: dataset.value, 
-                        s: FINAL_CONFIG.style.chart.label.suffix, 
-                        r: FINAL_CONFIG.style.chart.label.rounding
-                    }),
-                    { datapoint: dataset }
-                    )
-                }}
-            </text>
+            <g v-if="FINAL_CONFIG.style.chart.label.show">
+                <rect 
+                    v-if="loading"
+                    :x="drawingArea.left - 60"
+                    :y="temperature + drawingArea.top - label_size / 2"
+                    :width="50"
+                    :height="label_size"
+                    fill="#6A6A6A40"
+                    rx="3"
+                />
+                <text
+                    v-else
+                    data-cy="temperature-label"
+                    :class="{'vue-ui-thermometer-temperature-value': FINAL_CONFIG.style.chart.animation.use, 'vue-ui-thermometer-label': true }"
+                    :y="temperature + drawingArea.top + (label_size / 3)"
+                    :x="drawingArea.left - 10"
+                    text-anchor="end"
+                    :fill="FINAL_CONFIG.style.chart.label.color"
+                    :font-size="label_size"
+                    :font-weight="FINAL_CONFIG.style.chart.label.bold ? 'bold' : 'normal'"
+                >
+                    {{ applyDataLabel(
+                        FINAL_CONFIG.style.chart.label.formatter,
+                        dataset.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.label.prefix, 
+                            v: dataset.value, 
+                            s: FINAL_CONFIG.style.chart.label.suffix, 
+                            r: FINAL_CONFIG.style.chart.label.rounding
+                        }),
+                        { datapoint: dataset }
+                        )
+                    }}
+                </text>
+            </g>
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -583,18 +667,8 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'thermometer',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    thermometer: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

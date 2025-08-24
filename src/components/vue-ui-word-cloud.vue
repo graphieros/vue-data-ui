@@ -1,38 +1,54 @@
 <script setup>
-import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent, shallowRef } from 'vue';
-import { checkNaN, createUid, createWordCloudDatasetFromPlainText, isFunction } from '../lib';
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs,
+    watch, 
+} from 'vue';
 import { debounce } from '../canvas-lib';
 import {
+    checkNaN, 
     createCsvContent,
+    createUid, 
+    createWordCloudDatasetFromPlainText, 
     dataLabel,
     downloadCsv,
     error,
     getMissingDatasetAttributes,
+    isFunction, 
     objectIsEmpty,
     palette,
     themePalettes,
+    treeShake,
     XMLNS
 } from '../lib';
 import { throttle } from '../canvas-lib';
-import { useNestedProp } from '../useNestedProp';
-import { usePrinter } from '../usePrinter';
-import { useResponsive } from '../useResponsive';
 import { useConfig } from '../useConfig';
+import { useLoading } from '../useLoading';
+import { usePrinter } from '../usePrinter';
+import { positionWords } from '../wordcloud';
+import { useNestedProp } from '../useNestedProp';
+import { useResponsive } from '../useResponsive';
 import { useUserOptionState } from '../useUserOptionState';
 import { useChartAccessibility } from '../useChartAccessibility';
-import { positionWords } from '../wordcloud';
-import usePanZoom from '../usePanZoom';
-import themes from "../themes.json";
-import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import img from '../img';
+import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
+import themes from "../themes.json";
+import usePanZoom from '../usePanZoom';
+import BaseScanner from '../atoms/BaseScanner.vue';
 
-const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
-const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
-const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
 
@@ -69,19 +85,88 @@ const titleStep = ref(0);
 const tableStep = ref(0);
 const isTooltip = ref(false);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        { name: "Lorem", value: 6 },
+        { name: "ipsum",value: 3 },
+        { name: "dolor",value: 1 },
+        { name: "sit",value: 3 },
+        { name: "amet",value: 3 },
+        { name: "consectetur",value: 2 },
+        { name: "adipiscing",value: 1 },
+        { name: "elit",value: 2 },
+        { name: "Vivamus",value: 2 },
+        { name: "pulvinar",value: 1 },
+        { name: "pretium",value: 1 },
+        { name: "venenatis",value: 2 },
+        { name: "Donec",value: 1},
+        { name: "imperdiet",value: 3 },
+        { name: "id",value: 1 },
+        { name: "porttitor",value: 2 },
+        { name: "tristique",value: 1 },
+        { name: "Aenean",value: 2 },
+        { name: "ac",value: 5 },
+        { name: "commodo",value: 2 },
+        { name: "justo",value: 2 },
+        { name: "Vestibulum",value: 2 },
+        { name: "placerat",value: 1 },
+        { name: "molestie",value: 1 },
+        { name: "nisl",value: 1 },
+        { name: "lacinia",value: 2 },
+        { name: "nulla",value: 1 },
+        { name: "posuere",value: 2 },
+        { name: "quis",value: 3 },
+        { name: "ullamcorper",value: 1 },
+        { name: "eu",value: 1 },
+        { name: "ex",value: 1 },
+        { name: "vitae",value: 3 },
+        { name: "facilisis",value: 1 },
+        { name: "Aliquam",value: 1 },
+        { name: "erat",value: 1 },
+        { name: "volutpat",value: 1 },
+        { name: "Proin",value: 1 },
+        { name: "nunc",value: 1 },
+        { name: "felis",value: 1 },
+        { name: "gravida",value: 3 },
+        { name: "sed",value: 1 },
+        { name: "orci",value: 1 },
+        { name: "Interdum",value: 1 },
+        { name: "et",value: 1 },
+        { name: "malesuada",value: 1 },
+        { name: "fames",value: 1 },
+        { name: "ante",value: 1 },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            useCssAnimation: false,
+            animationDelayMs: 0,
+            nodeCategories: {},
+            nodeCategoryColors: {},
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    words: {
+                        color: '#6A6A6A',
+                        usePalette: false,
+                    }
+                }
+            }
+        }
+    })
 });
 
 const drawableDataset = ref(setupWordCloud());
 
 function setupWordCloud() {
-    return typeof props.dataset === 'string' ? createWordCloudDatasetFromPlainText(props.dataset) : props.dataset.map((dp, i) => {
+    return typeof FINAL_DATASET.value === 'string' ? createWordCloudDatasetFromPlainText(FINAL_DATASET.value) : FINAL_DATASET.value.map((dp, i) => {
         return {
             ...dp,
             value: checkNaN(dp.value)
@@ -92,6 +177,7 @@ function setupWordCloud() {
 watch(() => props.dataset, () => {
     drawableDataset.value = setupWordCloud();
     generateWordCloud();
+    applyInitialViewBox();
 })
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -115,6 +201,36 @@ function prepareConfig() {
     }
 }
 
+const cloudOrigin = ref({ x: 0, y: 0 });
+
+function applyInitialViewBox() {
+    const box = {
+        x: 0,
+        y: 0,
+        width: Math.max(10, svg.value.width),
+        height: Math.max(10, svg.value.height),
+    };
+    setInitialViewBox(box);
+    cloudOrigin.value = {
+        x: box.x + box.width / 2,
+        y: box.y + box.height / 2,
+    };
+    resetZoom();
+}
+
+const debounceUpdateCloud = debounce(() => {
+    generateWordCloud()
+}, 10);
+
+const resizing = ref(false);
+
+watch(() => resizing.value, v => {
+    if (v === false) {
+        debounceUpdateCloud();
+        applyInitialViewBox();
+    }
+})
+
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
@@ -135,21 +251,19 @@ const svg = ref({
     bold: FINAL_CONFIG.value.style.chart.words.bold
 });
 
-const debounceUpdateCloud = debounce(() => {
-    generateWordCloud()
-}, 10);
-
 const handleResize = throttle(() => {
+    resizing.value = true;
     const { width, height } = useResponsive({
         chart: wordCloudChart.value,
         title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
         source: source.value
     });
 
-    requestAnimationFrame(() => {
-        svg.value.width = width;
-        svg.value.height = height;
-        nextTick(debounceUpdateCloud)
+    requestAnimationFrame(async () => {
+        svg.value.width = Math.max(10, width);
+        svg.value.height = Math.max(10, height - 12);
+        await nextTick();
+        resizing.value = false;
     });
 });
 
@@ -158,11 +272,14 @@ const observedEl = shallowRef(null);
 
 onMounted(prepareChart);
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiWordCloud',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value,
         });
     } else {
         drawableDataset.value.forEach((w, i) => {
@@ -175,11 +292,18 @@ function prepareChart() {
                     componentName: 'VueUiWordCloud',
                     type: 'datasetSerieAttribute',
                     property: attr,
-                    index: i
+                    index: i,
+                    debug: debug.value
                 });
             });
         });
     }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
+    }
+
     if (FINAL_CONFIG.value.responsive) {
 
         if (resizeObserver.value) {
@@ -193,6 +317,7 @@ function prepareChart() {
         observedEl.value = wordCloudChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
     }
+    applyInitialViewBox();
 }
 
 onBeforeUnmount(() => {
@@ -214,6 +339,14 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
 });
+
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    }
+}, { immediate: true });
 
 function measureTextSize(text, fontSize, fontFamily = "Arial") {
     // This invisible canvas is necessary to calculate the exact dimensions of words before painting them on the svg. Cool trick
@@ -357,7 +490,7 @@ function toggleAnnotator() {
 
 const active = computed(() => !isAnnotator.value && FINAL_CONFIG.value.style.chart.zoom.show)
 
-const { viewBox, resetZoom, isZoom } = usePanZoom(svgRef, {
+const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(svgRef, {
     x: 0,
     y: 0,
     width: svg.value.width <= 0 ? 10 : svg.value.width,
@@ -385,6 +518,7 @@ defineExpose({
     generateCsv,
     generatePdf,
     generateImage,
+    resetZoom,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
@@ -396,7 +530,24 @@ const useCustomFormat = ref(false);
 const tooltipContent = ref('');
 const dataTooltipSlot = ref(null);
 
-function useTooltip(word) {
+function onTrapLeave(word, index) {
+    selectedWord.value = null;
+    isTooltip.value = false;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: word, seriesIndex: index });
+    }
+}
+
+function onTrapClick(word, index) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: word, seriesIndex: index });
+    }
+}
+
+function useTooltip(word, index) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: word, seriesIndex: index })
+    }
     if (!mutableConfig.value.showTooltip) return;
     selectedWord.value = word.id;
     dataTooltipSlot.value = { datapoint: word, config: FINAL_CONFIG.value };
@@ -517,7 +668,6 @@ function useTooltip(word) {
         <svg
             ref="svgRef"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" 
-            v-if="isDataset"
             :xmlns="XMLNS"
             :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`"
             :style="`overflow:hidden;background:transparent;`"
@@ -538,8 +688,7 @@ function useTooltip(word) {
                 <slot name="chart-background"/>
             </foreignObject>
             
-            <g
-                :transform="`translate(${(svg.width <= 0 ? 10 : svg.width) / 2}, ${(svg.height <= 0 ? 10 : svg.height) / 2})`">
+            <g :transform="`translate(${cloudOrigin.x}, ${cloudOrigin.y})`">
                 <g v-for="(word, index) in positionedWords">
                     <rect
                         v-if="word.minX !== undefined"
@@ -550,8 +699,9 @@ function useTooltip(word) {
                         :height="word.maxY - word.minY"
                         fill="transparent"
                         pointer-events="visiblePainted"
-                        @mouseover="useTooltip(word)"
-                        @mouseleave="selectedWord = null; isTooltip = false"
+                        @mouseover="useTooltip(word, index)"
+                        @mouseleave="onTrapLeave(word, index)"
+                        @click="onTrapClick(word, index)"
                     />
                     <text
                         :fill="word.color" 
@@ -604,6 +754,8 @@ function useTooltip(word) {
             :parent="wordCloudChart"
             :content="tooltipContent"
             :isCustom="useCustomFormat"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -647,6 +799,9 @@ function useTooltip(word) {
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

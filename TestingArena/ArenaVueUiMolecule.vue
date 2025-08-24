@@ -9,7 +9,11 @@ import BaseIcon from "../src/atoms/BaseIcon.vue";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
-const dataset = ref([
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
     {
         name: "Root",
         details: "This is the root node",
@@ -144,9 +148,14 @@ const dataset = ref([
             },
         ]
     }
-])
+]
+    }, 2000)
+})
+
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
@@ -164,7 +173,7 @@ const model = ref([
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.nodes.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.nodes.strokeHovered', def: '#1A1A1A', type: 'color'},
@@ -236,6 +245,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log('enter event', { datapoint, seriesIndex });
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log('leave event', { datapoint, seriesIndex });
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log('click event', { datapoint, seriesIndex });
+                },
+            },
             theme: currentTheme.value,
             customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         }
@@ -280,9 +300,9 @@ onMounted(async () => {
                         <BaseIcon name="copyLeft" size="100%" style="position:absolute"/>
                     </div>
                 </template> -->
-                <template #chart-background>
+                <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-                </template>
+                </template> -->
                 <template #optionPdf>
                     PRINT PDF
                 </template>

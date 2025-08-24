@@ -8,29 +8,35 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild } = useArena()
 
-const dataset = ref({
-    value: -20,
-    target: -10,
-    segments: [
-        {
-            name: 'Low',
-            from: -100,
-            to: -30,
-            // color: '#4A4A4A'
-        },
-        {
-            name: 'Medium',
-            from: -30,
-            to: 0,
-            // color: '#6A6A6A'
-        },
-        {
-            name: 'High',
-            from: 0,
-            to: 100,
-            // color: '#8A8A8A'
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = {
+            value: -20,
+            target: -10,
+            segments: [
+                {
+                    name: 'Low',
+                    from: -100,
+                    to: -30,
+                    // color: '#4A4A4A'
+                },
+                {
+                    name: 'Medium',
+                    from: -30,
+                    to: 0,
+                    // color: '#6A6A6A'
+                },
+                {
+                    name: 'High',
+                    from: 0,
+                    to: 100,
+                    // color: '#8A8A8A'
+                }
+            ]
         }
-    ]
+    }, 2000)
 })
 
 function randomizeData(){
@@ -38,6 +44,8 @@ function randomizeData(){
 }
 
 const model = ref([
+    { key: 'userOptions.debug', def: true, type: 'checkbox' },
+    { key: 'userOptions.loading', def: false, type: 'checkbox' },
     { key: 'userOptions.show', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
@@ -116,7 +124,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -143,6 +151,14 @@ onMounted(async () => {
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiBullet :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }" ref="local"/>
+    </div>
+
     <Box>
         <template #title>VueUiBullet</template>
 

@@ -1,5 +1,13 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, watch, defineAsyncComponent } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onMounted, 
+    ref, 
+    toRefs,
+    watch, 
+} from "vue";
 import {
     applyDataLabel,
     convertColorToHex,
@@ -17,25 +25,29 @@ import {
     palette,
     sanitizeArray,
     themePalettes,
+    treeShake,
     XMLNS
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
+import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
 import img from "../img";
+import themes from "../themes.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
+const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
+const Legend = defineAsyncComponent(() => import('../atoms/Legend.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const Legend = defineAsyncComponent(() => import('../atoms/Legend.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
-const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_galaxy: DEFAULT_CONFIG } = useConfig();
 
@@ -54,19 +66,68 @@ const props = defineProps({
     },
 });
 
+const uid = ref(createUid());
+const galaxyChart = ref(null);
+const details = ref(null);
+const isTooltip = ref(false);
+const tooltipContent = ref("");
+const selectedSerie = ref(null);
+const step = ref(0);
+const titleStep = ref(0);
+const tableStep = ref(0);
+const legendStep = ref(0);
+const chartTitle = ref(null);
+const chartLegend = ref(null);
+const source = ref(null);
+const noTitle = ref(null);
+const resizeObserver = ref(null);
+const observedEl = ref(null);
+
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
 });
+
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        { name: '_', values: [21], color: '#DBDBDB'},
+        { name: '_', values: [13], color: '#C4C4C4'},
+        { name: '_', values: [8], color: '#ADADAD'},
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            useCssAnimation: false,
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    legend: {
+                        backgroundColor: 'transparent'
+                    }
+                }
+            }
+        }
+    })
+})
 
 onMounted(() => {
     prepareChart();
 });
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiGalaxy',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
     } else {
         props.dataset.forEach((ds, i) => {
@@ -78,32 +139,41 @@ function prepareChart() {
                     componentName: 'VueUiGalaxy',
                     type: 'datasetSerieAttribute',
                     property: attr,
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
             })
         })
     }
-}
 
-const uid = ref(createUid());
-const galaxyChart = ref(null);
-const details = ref(null);
-const isTooltip = ref(false);
-const tooltipContent = ref("");
-const selectedSerie = ref(null);
-const step = ref(0);
-const titleStep = ref(0);
-const tableStep = ref(0);
-const legendStep = ref(0);
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: galaxyChart.value,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                noTitle: noTitle.value,
+                source: source.value
+            });
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
+            requestAnimationFrame(() => {
+                WIDTH.value = Math.max(0.1, width);
+                HEIGHT.value = Math.max(0.1, height - 12);
+            });
+        });
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        observedEl.value = galaxyChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
     }
-});
+}
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -162,10 +232,17 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
-const svg = ref({
-    height: 180, // or 250 if non fibo
-    width: 250
-});
+const WIDTH = ref(250);
+const HEIGHT = ref(180);
+const X = ref(0);
+const Y = ref(0);
+
+const svg = computed(() => ({
+    width: WIDTH.value,
+    height: HEIGHT.value,
+    viewBox: `${X.value} ${Y.value} ${WIDTH.value} ${HEIGHT.value}`
+}));
+
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint']);
 
@@ -187,7 +264,7 @@ function segregate(datapoint) {
 }
 
 const immutableSet = computed(() => {
-    return props.dataset
+    return FINAL_DATASET.value
         .map((serie, i) => {
             return {
                 name: serie.name,
@@ -195,10 +272,14 @@ const immutableSet = computed(() => {
                 value: serie.values ? sanitizeArray(serie.values).reduce((a,b) => a + b, 0) : 0,
                 absoluteValues: sanitizeArray(serie.values),
                 id: createUid(),
-                seriesIndex: i
             }
         })
-        .sort((a,b) => b.value - a.value)
+        .sort((a,b) => b.value - a.value).map((d, i) => {
+            return {
+                ...d,
+                absoluteIndex: i
+            }
+        })
 });
 
 function getData() {
@@ -221,35 +302,62 @@ const segregatedSet = computed(() => {
     return immutableSet.value.filter(ds => !segregated.value.includes(ds.id))
 });
 
-const galaxySet = computed(() => {
+const effectivePadding = computed(() =>
+    (FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth +
+    FINAL_CONFIG.value.style.chart.layout.arcs.borderWidth) / 2 +
+    (FINAL_CONFIG.value.style.chart.layout.padding ?? 12)
+);
 
+const toSpiralPath = computed(() => {
+    return createSpiralPath({
+        maxPoints: maxPath.value,
+        a: FINAL_CONFIG.value.style.chart.layout.arcs.a ?? 6,
+        b: FINAL_CONFIG.value.style.chart.layout.arcs.b ?? 6,
+        angleStep: FINAL_CONFIG.value.style.chart.layout.arcs.angleStep ?? 0.07,
+        startX: svg.value.width / 2 + FINAL_CONFIG.value.style.chart.layout.arcs.offsetX,
+        startY: svg.value.height / 2 + FINAL_CONFIG.value.style.chart.layout.arcs.offsetY,
+        boxWidth: svg.value.width,
+        boxHeight: svg.value.height,
+        padding: effectivePadding.value
+    })
+});
+
+const galaxySet = computed(() => {
     const res = [];
-    let start = 0;
-    for(let i = 0; i < segregatedSet.value.length; i += 1) {
+    for (let i = 0; i < segregatedSet.value.length; i += 1) {
         const serie = segregatedSet.value[i];
-        let points = ((serie.value / total.value) * maxPath.value);
-        if (i > 0 && res.length) {
-            points += res[i-1].points
-        }
-        start += points;
+        const endPoints =
+        ((serie.value / total.value) * maxPath.value) +
+        (i > 0 && res.length ? res[i - 1].points : 0);
 
         res.push({
-            points,
+            points: endPoints,
             ...serie,
             seriesIndex: i,
             proportion: serie.value / total.value,
-            path: createSpiralPath({
-                points: points,
-                startX: 115 + FINAL_CONFIG.value.style.chart.layout.arcs.offsetX,
-                startY: 90 + FINAL_CONFIG.value.style.chart.layout.arcs.offsetY
-            })
-        })
+            path: toSpiralPath.value(endPoints)
+        });
     }
-
-    return res        
-        .filter((_, i) => !segregated.value.includes(_.id))
-        .toSorted((a,b) => b.points - a.points)
+    return res
+        .filter(dp => !segregated.value.includes(dp.id))
+        .toSorted((a, b) => b.points - a.points);
 });
+
+function getStrokeWidth(datapoint) {
+    const size = Math.min(WIDTH.value, HEIGHT.value);
+    
+    const mult = selectedSerie.value === datapoint.id && FINAL_CONFIG.value.style.chart.layout.arcs.hoverEffect.show ? FINAL_CONFIG.value.style.chart.layout.arcs.hoverEffect.multiplicator : 1;
+
+    const border = (FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth + FINAL_CONFIG.value.style.chart.layout.arcs.borderWidth) * mult;
+    const path = FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth * mult;
+    const blur =  (FINAL_CONFIG.value.style.chart.layout.arcs.strokeWidth / 2) * mult;
+
+    return {
+        border: border / 180 * size,
+        path: path / 180 * size,
+        blur: blur / 180 * size
+    }
+}
 
 const isFullscreen = ref(false)
 function toggleFullscreen(state) {
@@ -259,7 +367,26 @@ function toggleFullscreen(state) {
 
 const dataTooltipSlot = ref(null);
 
+function onTrapLeave(datapoint) {
+    isTooltip.value = false;
+    selectedSerie.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.absoluteIndex });
+    }
+}
+
+function onTrapClick(datapoint) {
+    emit('selectDatapoint', datapoint);
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: datapoint.absoluteIndex });
+    }
+}
+
 function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.absoluteIndex });
+    }
+
     dataTooltipSlot.value = {
         datapoint,
         seriesIndex,
@@ -327,7 +454,7 @@ const legendSet = computed(() => {
         .map((el, i) => {
             return {
                 ...el,
-                proportion: (el.value || 0) / props.dataset.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
+                proportion: (el.value || 0) / FINAL_DATASET.value.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
                 opacity: segregated.value.includes(el.id) ? 0.5 : 1,
                 shape: el.shape || 'circle',
                 segregate: () => segregate(el),
@@ -470,7 +597,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="galaxyChart" :class="`vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`galaxy_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div ref="galaxyChart" :class="`vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'} ${loading ? 'loading' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`galaxy_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -487,7 +614,7 @@ defineExpose({
             :style="`height:36px; width: 100%;background:transparent`"
         />
 
-        <div v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">            
+        <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text" :style="`width:100%;background:transparent;padding-bottom:24px`">            
             <Title
                 :key="`title_${titleStep}`"
                 :config="{
@@ -568,10 +695,9 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS" 
-            v-if="isDataset" 
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
             data-cy="galaxy-svg" 
-            :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            :viewBox="svg.viewBox" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <PackageVersion />
 
@@ -604,7 +730,7 @@ defineExpose({
                     :d="datapoint.path"
                     fill="none"
                     :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    :stroke-width="(FINAL_CONFIG.style.chart.layout.arcs.strokeWidth + FINAL_CONFIG.style.chart.layout.arcs.borderWidth) * (selectedSerie === datapoint.id && FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.show ? FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
+                    :stroke-width="getStrokeWidth(datapoint).border"
                     stroke-linecap="round"                    
                 />
                 <path
@@ -613,7 +739,7 @@ defineExpose({
                     :d="datapoint.path"
                     fill="none"
                     :stroke="datapoint.color"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.arcs.strokeWidth * (selectedSerie === datapoint.id && FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.show ? FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
+                    :stroke-width="getStrokeWidth(datapoint).path"
                     stroke-linecap="round"
                     :class="`${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
                 />
@@ -622,7 +748,7 @@ defineExpose({
                         :d="datapoint.path"
                         fill="none"
                         :stroke="FINAL_CONFIG.style.chart.layout.arcs.gradient.color"
-                        :stroke-width="(FINAL_CONFIG.style.chart.layout.arcs.strokeWidth / 2) * (selectedSerie === datapoint.id && FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.show ? FINAL_CONFIG.style.chart.layout.arcs.hoverEffect.multiplicator : 1)"
+                        :stroke-width="getStrokeWidth(datapoint).blur"
                         stroke-linecap="round"
                         :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
                     />
@@ -645,8 +771,8 @@ defineExpose({
                         seriesIndex: datapoint.seriesIndex,
                         show: true
                     })"
-                    @mouseleave="isTooltip = false; selectedSerie = null"
-                    @click="emit('selectDatapoint', datapoint)"
+                    @mouseleave="onTrapLeave(datapoint)"
+                    @click="onTrapClick(datapoint)"
                 />
             </g>
             <slot name="svg" :svg="svg"/>
@@ -656,57 +782,46 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'galaxy',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    galaxy: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
-
         <!-- LEGEND AS DIV -->
+        <div ref="chartLegend">
+            <Legend
+                v-if="FINAL_CONFIG.style.chart.legend.show"
+                :key="`legend_${legendStep}`"
+                :legendSet="legendSet"
+                :config="legendConfig"
+                @clickMarker="({legend}) => segregate(legend)"
+            >
+                <template #item="{ legend, index }">
+                    <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
+                        {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                            legend.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                                v: legend.value, 
+                                s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                r: FINAL_CONFIG.style.chart.legend.roundingValue
+                            }),
+                            { datapoint: legend, seriesIndex: index }
+                            )
+                        }}
+                        {{ 
+                            !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
+                            !segregated.includes(legend.id)
+                                ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / total) ? '-' : dataLabel({
+                                v: legend.value / total * 100,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                            })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                                : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                        }}
+                    </div>
+                </template>
+            </Legend>
+            
+            <slot name="legend" v-bind:legend="legendSet" />
+        </div>
 
-        <Legend
-            v-if="FINAL_CONFIG.style.chart.legend.show"
-            :key="`legend_${legendStep}`"
-            :legendSet="legendSet"
-            :config="legendConfig"
-            @clickMarker="({legend}) => segregate(legend)"
-        >
-            <template #item="{ legend, index }">
-                <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                    {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                        legend.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
-                            v: legend.value, 
-                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                            r: FINAL_CONFIG.style.chart.legend.roundingValue
-                        }),
-                        { datapoint: legend, seriesIndex: index }
-                        )
-                    }}
-                    {{ 
-                        !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
-                        !segregated.includes(legend.id)
-                            ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / total) ? '-' : dataLabel({
-                            v: legend.value / total * 100,
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                        })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                            : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                    }}
-                </div>
-            </template>
-        </Legend>
-        
-        <slot name="legend" v-bind:legend="legendSet" />
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
@@ -728,6 +843,8 @@ defineExpose({
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -769,6 +886,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
@@ -786,6 +906,11 @@ path {
     transform-origin: center;
     transition: stroke-width 0.1s ease-in-out !important;
 }
+
+.loading path {
+    transition: none !important;
+}
+
 @keyframes galaxy {
     0% {
         transform: scale(0.9,0.9);
@@ -819,6 +944,11 @@ path {
     filter: blur(3px) opacity(50%) grayscale(100%);
     transition: all 0.15s ease-in-out;
 }
+
+.loading .vue-ui-galaxy-blur {
+    transition: none !important;
+}
+
 .vue-data-ui-fullscreen--on {
     height: 80% !important;
     margin: 0 auto !important;

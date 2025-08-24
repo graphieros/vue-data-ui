@@ -6,50 +6,42 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import LocalPattern from "../src/atoms/vue-ui-pattern.vue";
 
-const dataset = ref([
-    {
-        name: 'Serie 1',
-        values: [1],
-        comment: 'This is a comment'
-    },
-    {
-        name: 'Serie  lorem ipsum thing',
-        values: [1],
-        comment: 'This is a comment'
-    },
-    {
-        name: 'Serie lorem other thing',
-        values: [1],
-        comment: 'This is a comment'
-    },
-    {
-        name: 'Serie 1',
-        values: [1],
-        comment: 'This is a comment'
-    },
-    {
-        name: 'Serie 2',
-        values: [1]
-    },
-    {
-        name: 'Serie 3',
-        values: [2],
-        comment: "This is another comment that is quite long to see how it fits on the chart and to see if it's nit overflowing."
-    },
-    // {
-    //     name: 'Serie 4',
-    //     values: [12.5]
-    // },
-    // {
-    //     name: 'Serie 5',
-    //     values: [6.125]
-    // },
-    // {
-    //     name: 'Serie 6',
-    //     values: [25],
-    //     comment: 'Some other comment'
-    // },
-]);
+// const dataset = ref([
+//     {
+//         name: 'A',
+//         values: [3]
+//     },
+//     {
+//         name: 'A',
+//         values: [2]
+//     },
+//     {
+//         name: 'A',
+//         values: [1]
+//     },
+// ]);
+
+// Test mutating loading state from outside
+const dataset = ref([])
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: 'A with a long name',
+                values: [3]
+            },
+            {
+                name: 'A',
+                values: [2]
+            },
+            {
+                name: 'A',
+                values: [1]
+            },
+        ]
+    }, 2000)
+})
 
 const alternateDataset = ref([
     { name: 'Alt 1', values: [20]},
@@ -81,9 +73,15 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'autoSize', def: true, type: 'checkbox'},
+    { key: 'startAnimation.show', def: false, type: 'checkbox'},
+    { key: 'pie', def: false, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
+
     { key: 'type', def: 'classic', type: 'select', options: ['classic', 'polar']},
     { key: 'style.chart.width', def: 512, type: 'number', min: 0, max: 512 },
-    { key: 'style.chart.height', def: 512, type: 'number', min: 0, max: 512 },
+    { key: 'style.chart.height', def: 360, type: 'number', min: 0, max: 512 },
 
     { key: 'serieToggleAnimation.show', def: true, type: 'checkbox'},
     { key: 'serieToggleAnimation.durationMs', def: 500, type: 'number', min: 0, max: 5000, step: 100},
@@ -104,12 +102,12 @@ const model = ref([
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
 
-    { key: 'useCssAnimation', def: true, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
+    { key: 'useCssAnimation', def: false, type: 'checkbox', label: 'useCssAnimation', category: 'general' },
     { key: 'useBlurOnHover', def: true, type: 'checkbox', label: "useBlurOnHover", category: 'general' },
     { key: 'style.fontFamily', def: 'inherit', type: 'text', label: "fontFamily", category: 'general' },
-    { key: 'style.chart.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'general' },
+    { key: 'style.chart.useGradient', def: false, type: 'checkbox', label: 'useGradient', category: 'general' },
     { key: 'style.chart.gradientIntensity', def: 40, min: 0, max: 100, type: 'range', label: 'gradientIntensity', category: 'general' },
-    { key: 'style.chart.backgroundColor', def: 'transparent', type: 'color', label: 'backgroundColor', category: 'general' },
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'general' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'general' },
 
     { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100},
@@ -125,12 +123,17 @@ const model = ref([
     { key: 'style.chart.layout.labels.dataLabels.suffix', def: '', type: 'text', label: 'suffix', category: 'labels' },
     { key: 'style.chart.layout.labels.value.show', def: true, type: 'checkbox', label: 'showValue', category: 'labels' },
     { key: 'style.chart.layout.labels.value.rounding', def: 0, type: 'number', min: 0, max: 6, label: 'valueRounding', category: 'labels' },
+
     { key: 'style.chart.layout.labels.percentage.color', def: '#1A1A1A', type: 'color', label: 'colorPercentage', category: 'labels' },
     { key: 'style.chart.layout.labels.percentage.bold', def: true, type: 'checkbox', label: 'bold', category: 'labels' },
-    { key: 'style.chart.layout.labels.percentage.fontSize', def: 18, min: 6, max: 48, type: 'number', label: 'fontSize', category: 'labels' },
+    { key: 'style.chart.layout.labels.percentage.fontSize', def: 14, min: 6, max: 48, type: 'number', label: 'fontSize', category: 'labels' },
+    { key: 'style.chart.layout.labels.percentage.minFontSize', def: 8, min: 6, max: 48, type: 'number', label: 'fontSize', category: 'labels' },
+
     { key: 'style.chart.layout.labels.name.color', def: '#1A1A1A', type: 'color', label: 'colorName', category: 'labels' },
     { key: 'style.chart.layout.labels.name.bold', def: false, type: 'checkbox', label: 'bold', category: 'labels' },
     { key: 'style.chart.layout.labels.name.fontSize', def: 14, type: 'number', min: 6, max: 36, label: 'fontSize', category: 'labels' },
+    { key: 'style.chart.layout.labels.name.minFontSize', def: 8, type: 'number', min: 6, max: 36, label: 'fontSize', category: 'labels' },
+
     { key: 'style.chart.layout.labels.hollow.show', def: true, type: 'checkbox', label: ['hollow', 'is', 'show'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.total.show', def: true, type: 'checkbox', label: ['hollow', 'total', 'is', 'show'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.total.bold', def: false, type: 'checkbox', label: ['hollow', 'total', 'is', 'bold'], category: 'labels' },
@@ -158,11 +161,13 @@ const model = ref([
     { key: 'style.chart.layout.labels.hollow.average.value.suffix', def: '', type: 'text', label: ['hollow', 'average', 'value', 'is', 'suffix'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.average.value.offsetY', def: 0, type: 'number', min: -100, max: 100, label: ['hollow', 'average', 'value', 'is', 'offsetY'], category: 'labels' },
     { key: 'style.chart.layout.labels.hollow.average.value.rounding', def: 0, type: 'number', min: 0, max: 6, label: ['hollow', 'average', 'value', 'is', 'rounding'], category: 'labels' },
+
     { key: 'style.chart.layout.donut.strokeWidth', def: 64, type: 'range', min: 3, max: 130, label: 'thickness', category: 'donut' },
     { key: 'style.chart.layout.donut.borderWidth', def: 1, type: 'range', min: 0, max: 36, label: ['border', 'is', 'thickness'], category: 'donut' },
-    { key: 'style.chart.layout.donut.useShadow', def: true,  type: 'checkbox' },
+    { key: 'style.chart.layout.donut.useShadow', def: false,  type: 'checkbox' },
     { key: 'style.chart.layout.donut.shadowColor', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.layout.donut.selectedColor', def: '#0000001A', type: 'color'},
+    { key: 'style.chart.layout.donut.radiusRatio', def: 0.3, type: 'number', min: 0.1, max: 0.5, step: 0.01},
 
     { key: 'style.chart.legend.show', def: true, type: 'checkbox', label: 'show', category: 'legend' },
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF20', type: 'color', label: 'backgroundColor', category: 'legend' },
@@ -245,7 +250,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -268,68 +273,57 @@ const config = computed(() => {
     } else {
         return {
             ...c,
-            events: {
-                datapointEnter: (e) => {
-                    console.log({e})
-                },
-                datapointLeave: (l) => {
-                    console.log({l})
-                },
-                datapointClick: (c) => {
-                    console.log({c})
-                }
-            },
-            style: {
-                ...c.style,
-                chart: {
-                    ...c.style.chart,
-                    layout: {
-                        ...c.style.chart.layout,
-                        labels: {
-                            ...c.style.chart.layout.labels,
-                            hollow: {
-                                ...c.style.chart.layout.labels.hollow,
-                                total: {
-                                    ...c.style.chart.layout.labels.hollow.total,
-                                    value: {
-                                        ...c.style.chart.layout.labels.hollow.total.value,
-                                        // formatter: ({value}) => {
-                                        //     return `f  - ${value}`
-                                        // }
-                                    }
-                                },
-                                average: {
-                                    ...c.style.chart.layout.labels.hollow.average,
-                                    value: {
-                                        ...c.style.chart.layout.labels.hollow.average.value,
-                                        // formatter: ({value}) => {
-                                        //     return `f  - ${value}`
-                                        // }
-                                    }
-                                },
-                            },
-                            value: {
-                                ...c.style.chart.layout.labels.value,
-                                // formatter: ({value, config}) => {
+            // style: {
+            //     ...c.style,
+            //     chart: {
+            //         ...c.style.chart,
+            //         layout: {
+            //             ...c.style.chart.layout,
+            //             labels: {
+            //                 ...c.style.chart.layout.labels,
+            //                 hollow: {
+            //                     ...c.style.chart.layout.labels.hollow,
+            //                     total: {
+            //                         ...c.style.chart.layout.labels.hollow.total,
+            //                         value: {
+            //                             ...c.style.chart.layout.labels.hollow.total.value,
+            //                             // formatter: ({value}) => {
+            //                             //     return `f  - ${value}`
+            //                             // }
+            //                         }
+            //                     },
+            //                     average: {
+            //                         ...c.style.chart.layout.labels.hollow.average,
+            //                         value: {
+            //                             ...c.style.chart.layout.labels.hollow.average.value,
+            //                             // formatter: ({value}) => {
+            //                             //     return `f  - ${value}`
+            //                             // }
+            //                         }
+            //                     },
+            //                 },
+            //                 value: {
+            //                     ...c.style.chart.layout.labels.value,
+            //                     // formatter: ({value, config}) => {
 
-                                //     return `f  - ${value}`
-                                // }
-                            },
-                            percentage: {
-                                // formatter: ({value}) => {
-                                //     return `f - ${value}`
-                                // }
-                            },
-                            dataLabels: {
-                                ...c.style.chart.layout.labels.dataLabels,
-                                // formatter: ({value}) => {
-                                //     return `f - ${value}`
-                                // }
-                            }
-                        }
-                    },
-                }
-            },
+            //                     //     return `f  - ${value}`
+            //                     // }
+            //                 },
+            //                 percentage: {
+            //                     // formatter: ({value}) => {
+            //                     //     return `f - ${value}`
+            //                     // }
+            //                 },
+            //                 dataLabels: {
+            //                     ...c.style.chart.layout.labels.dataLabels,
+            //                     // formatter: ({value}) => {
+            //                     //     return `f - ${value}`
+            //                     // }
+            //                 }
+            //             }
+            //         },
+            //     }
+            // },
             theme: currentTheme.value,
             // customPalette: ['#6376DD', "#DD3322", "#66DDAA"]
         }
@@ -370,6 +364,7 @@ onMounted(async () => {
     if (localDonut.value) {
         const img = await localDonut.value.getImage()
         console.log(img)
+        // localDonut.value.autoSize()
     }
 })
 
@@ -393,7 +388,7 @@ onMounted(async () => {
     <button @click="addDatapoint">ADD DATAPOINT</button>
 
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiDonut :key="`responsive_${step}`" :dataset="dataset" :config="{
+        <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="{
             ...config,
             responsive: true
         }">
@@ -418,22 +413,24 @@ onMounted(async () => {
                 Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
             </div>
         </template>
-    </LocalVueUiDonut>
+    </LocalVueDataUi>
     </div>
 
     <Box comp="VueUiDonut" :dataset="dataset">
         <template #title>VueUiDonut</template>
 
         <template #local>
-            <LocalVueUiDonut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localDonut">
-                <template #pattern="{ seriesIndex, patternId }">
+            <LocalVueUiDonut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : {
+                ...config,
+            }" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localDonut">
+                <!-- <template #pattern="{ seriesIndex, patternId }">
                     <VueUiPattern v-if="seriesIndex === 0" name="squares" :id="patternId"/>
                     <VueUiPattern v-if="seriesIndex === 1" name="hexagon-grid" :id="patternId" :scale="0.4" :strokeWidth="2"/>
                     <VueUiPattern v-if="seriesIndex === 2" name="hexagon-diamond" :id="patternId"/>
                     <VueUiPattern v-if="seriesIndex === 3" name="scales" :id="patternId"/>
                     <VueUiPattern v-if="seriesIndex === 4" name="zig-zag" :id="patternId" :scale="0.2" :strokeWidth="8"/>
                     <VueUiPattern v-if="seriesIndex === 5" name="redrum" :id="patternId" :scale="0.5" :strokeWidth="5"/>
-                </template>
+                </template> -->
 
                 <template #optionPdf>
                     PRINT PDF
@@ -453,27 +450,29 @@ onMounted(async () => {
                 <template template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                     <button @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">FULLSCREEN</button>
                 </template>
-                <template #svg="{ svg }">
-                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
-                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
-                </template>
                 <template #dataLabel="{ datapoint, isBlur, isVisible, isSafari, textAlign, flexAlign, percentage }">
                     <div :style="`background:${datapoint.color}`">
                         {{ datapoint.name }} : {{ percentage }}
                     </div>
                 </template>
-                <template #legend="{ legend }">
+                <!-- <template #legend="{ legend }">
                     #LEGEND
                     <div style="font-size: 8px">
                         {{ legend }}
                     </div>
-                </template>
+                </template> -->
+
+                <!-- <template #hollow="{ total, average, dataset }">
+                    <button>Total: {{ total }}</button>
+                </template> -->
+                
                 <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #BEFORE {{ series.name }}
                 </template>
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
+
                 <template #watermark="{ isPrinting }">
                     <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                         WATERMARK
@@ -483,7 +482,7 @@ onMounted(async () => {
         </template>
         
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiDonut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localVdui">
+            <LocalVueDataUi component="VueUiDonut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="localVdui">
                 <template #pattern="{ seriesIndex, patternId }">
                     <VueUiPattern v-if="seriesIndex === 0" name="squares" :id="patternId"/>
                     <VueUiPattern v-if="seriesIndex === 1" name="hexagon-grid" :id="patternId" :scale="0.4" :strokeWidth="2"/>

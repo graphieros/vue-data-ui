@@ -1,3 +1,4 @@
+*
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import LocalVueUiWorld from '../src/components/vue-ui-world.vue';
@@ -5,7 +6,11 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref({
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = {
   AFG: { value: 20, category: 'CAT1', color: 'red' },     // Afghanistan
   ALB: { value: 18, category: 'CAT2', color: 'blue' },     // Albania
   DZA: { value: 225 },    // Algeria
@@ -200,7 +205,9 @@ const dataset = ref({
   YEM: { value: 21 },     // Yemen
   ZMB: { value: 29 },     // Zambia
   ZWE: { value: 29 }      // Zimbabwe
-});
+}
+    }, 2000)
+})
 
 // const dataset = ref({
 //     USA: {value: 120, category: 'CAT1', color: 'red'},
@@ -210,6 +217,8 @@ const dataset = ref({
 // })
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'projection', def: 'globe', type: 'select', options: ['mercator', 'equirectangular', 'mollweide', 'robinson', 'winkelTripel', 'aitoff', 'hammer', 'bonne', 'sinusoidal', 'vanDerGrinten', 'gallPeters', 'globe', 'azimuthalEquidistant']},
 
     { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
@@ -254,12 +263,23 @@ const projections = ref([
     'winkelTripel'
 ])
 
-const currentProjection = ref('globe')
+const currentProjection = ref('mollweide')
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            },
+        },
         projection: currentProjection.value,
         style: {
             ...c.style,

@@ -1,7 +1,17 @@
 import { defineAsyncComponent } from "vue";
 import getVueDataUiConfig from "./getVueDataUiConfig";
 import getThemeConfig from "./getThemeConfig";
-import { getPalette, createWordCloudDatasetFromPlainText, abbreviate, createTSpans, createStraightPath, createSmoothPath, getCumulativeAverage, getCumulativeMedian } from "./lib";
+import { 
+    abbreviate, 
+    createSmoothPath, 
+    createStraightPath, 
+    createTSpans, 
+    createWordCloudDatasetFromPlainText,
+    formatSmallValue,
+    getCumulativeAverage, 
+    getCumulativeMedian,
+    getPalette,
+} from "./lib";
 import { lightenColor, darkenColor, shiftColorHue, mergeConfigs } from "./exposedLib";
 import { useObjectBindings } from "./useObjectBindings";
 
@@ -55,6 +65,7 @@ export const VueUiTimer = defineAsyncComponent(() => import("./components/vue-ui
 export const VueUiTiremarks = defineAsyncComponent(() => import("./components/vue-ui-tiremarks.vue"))
 export const VueUiTreemap = defineAsyncComponent(() => import("./components/vue-ui-treemap.vue"))
 export const VueUiVerticalBar = defineAsyncComponent(() => import("./components/vue-ui-vertical-bar.vue"))
+export const VueUiHorizontalBar = defineAsyncComponent(() => import("./components/vue-ui-vertical-bar.vue"))
 export const VueUiWaffle = defineAsyncComponent(() => import("./components/vue-ui-waffle.vue"))
 export const VueUiWheel = defineAsyncComponent(() => import("./components/vue-ui-wheel.vue"))
 export const VueUiWordCloud = defineAsyncComponent(() => import("./components/vue-ui-word-cloud.vue"))
@@ -78,6 +89,7 @@ export {
     createTSpans,
     createWordCloudDatasetFromPlainText,
     darkenColor,
+    formatSmallValue,
     getCumulativeAverage,
     getCumulativeMedian,
     getPalette,

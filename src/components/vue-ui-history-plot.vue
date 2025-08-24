@@ -1,6 +1,16 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick, defineAsyncComponent, shallowRef } from "vue";
-import { useConfig } from "../useConfig";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs,
+    watch, 
+    watchEffect, 
+} from "vue";
 import { 
     XMLNS,
     adaptColorToBackground,
@@ -23,23 +33,27 @@ import {
     palette, 
     themePalettes,
     translateSize,
+    treeShake,
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
 import { throttle } from "../canvas-lib";
+import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
@@ -79,6 +93,11 @@ const selectedDatapoint = ref(null);
 const useCustomFormat = ref(false);
 const source = ref(null);
 
+const xAxisLabel = ref(null);
+const yAxisLabel = ref(null);
+const xAxisScales = ref(null);
+const yAxisScales = ref(null);
+
 const isDataset = computed({
     get: () => {
         return !!props.dataset && props.dataset.length
@@ -92,12 +111,16 @@ const emit = defineEmits(['selectLegend', 'selectDatapoint'])
 
 onMounted(prepareChart);
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiHistoryPlot',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         });
+        manualLoading.value = true;
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
@@ -109,10 +132,16 @@ function prepareChart() {
                     componentName: 'VueUiHistoryPlot',
                     type: 'datasetSerieAttribute',
                     property: attr,
-                    index: i
+                    index: i,
+                    debug: debug.value
                 });
             });
         });
+    }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -267,20 +296,85 @@ function prepareConfig() {
     return finalConfig;
 }
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        {
+            name: '',
+            color: '#CACACA',
+            values: [
+                { label: '', x: 1, y: 9},
+                { label: '', x: 4, y: 1},
+                { label: '', x: 7, y: 9},
+                { label: '', x: 9, y: 4},
+            ]
+        }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    axes: {
+                        x: {
+                            scaleMin: 0,
+                            scaleMax: 10,
+                            labels: { show: false },
+                            name: { text: '' }
+                        },
+                        y: {
+                            scaleMin: 0,
+                            scaleMax: 10,
+                            labels: { show: false },
+                            name: { text: '' }
+                        },
+                    },
+                    grid: {
+                        xAxis: {
+                            stroke: '#6A6A6A'
+                        },
+                        horizontalLines: {
+                            stroke: '#6A6A6A50'
+                        },
+                        yAxis: {
+                            stroke: '#6A6A6A'
+                        },
+                        verticalLines: {
+                            stroke: '#6A6A6A50'
+                        },
+                    },
+                    legend: {
+                        backgroundColor: 'transparent'
+                    },
+                    paths: {
+                        useSerieColor: false,
+                        stroke: '#6A6A6A'
+                    },
+                    plots: {
+                        stroke: '#6A6A6A',
+                        indexLabels: { show: false },
+                        labels: { show: false }
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -299,6 +393,12 @@ watch(() => props.config, (_newCfg) => {
     // Reset mutable config
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+}, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -320,21 +420,77 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    }
+}, { immediate: true });
+
 const svg = ref({
     height: FINAL_CONFIG.value.style.chart.height,
     width: FINAL_CONFIG.value.style.chart.width
 });
 
+const WIDTH = computed(() => svg.value.width);
+const HEIGHT = computed(() => svg.value.height);
+
+function getOffsetX() {
+    let base = 0;
+    if (yAxisScales.value) {
+        const texts = Array.from(yAxisScales.value.querySelectorAll('text'));
+        base = texts.reduce((max, t) => {
+            const w = t.getComputedTextLength()
+            return w > max ? w : max
+        }, 0)
+    }
+    const yAxisLabelW = yAxisLabel.value ? yAxisLabel.value.getBoundingClientRect().width : 0;
+    return base + yAxisLabelW + (yAxisLabelW ? 24 : 0);
+}
+
+
+const xAxisScalesH = ref(0);
+
+const updateHeight = throttle((h) => {
+    xAxisScalesH.value = h;
+});
+
+watchEffect((onInvalidate) => {
+    const el = xAxisScales.value;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height);
+    });
+    observer.observe(el);
+    onInvalidate(() => observer.disconnect());
+});
+
+const offsetY = computed(() => {
+    let h = 0;
+    if (xAxisLabel.value) {
+        h = xAxisLabel.value.getBBox().height + (sizes.value.xAxisName / 2);
+    }
+    let tlH = 0;
+    if (xAxisScales.value) {
+        tlH = xAxisScalesH.value;
+    };
+    return h + tlH;
+})
+
 const drawingArea = computed(() => {
     const left = FINAL_CONFIG.value.style.chart.padding.left;
     const top = FINAL_CONFIG.value.style.chart.padding.top;
+    const offsetX = getOffsetX();
+    const plotRadius = FINAL_CONFIG.value.style.chart.plots.radius;
+
     return {
-        left,
-        top,
-        right: svg.value.width - FINAL_CONFIG.value.style.chart.padding.right,
-        bottom: svg.value.height - FINAL_CONFIG.value.style.chart.padding.bottom,
-        width: svg.value.width - left - FINAL_CONFIG.value.style.chart.padding.right,
-        height: svg.value.height - top - FINAL_CONFIG.value.style.chart.padding.bottom
+        left: left + offsetX + FINAL_CONFIG.value.style.chart.axes.y.name.offsetX,
+        top: top + plotRadius,
+        right: svg.value.width - FINAL_CONFIG.value.style.chart.padding.right - plotRadius - FINAL_CONFIG.value.style.chart.axes.y.name.offsetX,
+        bottom: svg.value.height - FINAL_CONFIG.value.style.chart.padding.bottom - offsetY.value - plotRadius - FINAL_CONFIG.value.style.chart.axes.x.name.offsetY,
+        width: svg.value.width - left - FINAL_CONFIG.value.style.chart.padding.right - offsetX - plotRadius - FINAL_CONFIG.value.style.chart.axes.y.name.offsetX,
+        height: svg.value.height - top - FINAL_CONFIG.value.style.chart.padding.bottom - offsetY.value - (plotRadius * 2) - FINAL_CONFIG.value.style.chart.axes.x.name.offsetY
     }
 });
 
@@ -349,8 +505,7 @@ const sizes = ref({
 });
 
 const formattedDataset = computed(() => {
-    if(!isDataset.value) return [];
-    return props.dataset.map((ds, i) => {
+    return FINAL_DATASET.value.map((ds, i) => {
         return {
             ...ds,
             color: ds.color ? convertColorToHex(ds.color) : customPalette.value[i] || palette[i] || palette[i % palette.length],
@@ -360,20 +515,16 @@ const formattedDataset = computed(() => {
 });
 
 const maxX = computed(() => {
-    if(!isDataset.value) return 1;
     return Math.max(...formattedDataset.value.filter((ds) => !segregated.value.includes(ds.seriesIndex)).flatMap(ds => ds.values.map(d => d.x)));
 });
 const minX = computed(() => {
-    if(!isDataset.value) return 1;
     const min = Math.min(...formattedDataset.value.filter((ds) => !segregated.value.includes(ds.seriesIndex)).flatMap(ds => ds.values.map(d => d.x)));
     return min < 0 ? min : 0;
 });
 const maxY = computed(() => {
-    if(!isDataset.value) return 1;
     return Math.max(...formattedDataset.value.filter((ds) => !segregated.value.includes(ds.seriesIndex)).flatMap(ds => ds.values.map(d => d.y)));
 });
 const minY = computed(() => {
-    if(!isDataset.value) return 1;
     const min = Math.min(...formattedDataset.value.filter((ds) => !segregated.value.includes(ds.seriesIndex)).flatMap(ds => ds.values.map(d => d.y)));
     return min < 0 ? min : 0;
 });
@@ -486,7 +637,10 @@ const legendConfig = computed(() => {
     }
 });
 
-function selectDatapoint(datapoint) {
+function selectDatapoint({datapoint, plotIndex, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: { ...datapoint, plotIndex, seriesIndex }, seriesIndex })
+    }
     emit('selectDatapoint', datapoint)
 }
 
@@ -505,7 +659,20 @@ function toggleFullscreen(state) {
 
 const dataTooltipSlot = ref(null);
 
+function onTrapLeave({ datapoint, plotIndex, seriesIndex }) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: { ...datapoint, plotIndex, seriesIndex }, seriesIndex })
+    }
+    isTooltip.value = false;
+    selectedDatapoint.value = null;
+}
+
 function useTooltip({ datapoint, plotIndex, seriesIndex }) {
+
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: { ...datapoint, plotIndex, seriesIndex }, seriesIndex })
+    }
+
     dataTooltipSlot.value = { datapoint, seriesIndex, plotIndex, config: FINAL_CONFIG.value, series: formattedDataset.value};
     selectedDatapoint.value = datapoint;
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
@@ -711,6 +878,23 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const dummyTimeLabels = computed(() => scales.value.tickX);
+const dummySlicer = computed(() => ({ start: 0, end: scales.value.tickX.length }))
+
+useTimeLabelCollision({
+    timeLabelsEls: xAxisScales,
+    timeLabels: dummyTimeLabels,
+    slicer: dummySlicer,
+    configRef: FINAL_CONFIG,
+    rotationPath: ['style', 'chart', 'axes', 'x', 'labels', 'rotation'],
+    autoRotatePath: ['style', 'chart', 'axes', 'x', 'labels', 'autoRotate', 'enable'],
+    isAutoSize: false,
+    width: WIDTH,
+    height: HEIGHT,
+    targetClass: '.vue-ui-history-plot-x-axis-scale',
+    rotation: FINAL_CONFIG.value.style.chart.axes.x.labels.autoRotate.angle
+})
+
 defineExpose({
     getData,
     getImage,
@@ -833,7 +1017,6 @@ defineExpose({
 
         <svg
             ref="svgRef"
-            v-if="isDataset"
             :xmlns="XMLNS"
             :viewBox="`0 0 ${svg.width < 0 ? 0.1 : svg.width} ${svg.height < 0 ? 0.1 : svg.height}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
@@ -877,12 +1060,25 @@ defineExpose({
                     stroke-linecap="round"
                 />
             </g>
-            <!-- Y AXIS LABELS -->
+
             <g v-if="FINAL_CONFIG.style.chart.axes.y.labels.show">
+                <line v-for="labelY in scales.tickY"
+                    :stroke="FINAL_CONFIG.style.chart.grid.verticalLines.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.verticalLines.strokeWidth"
+                    stroke-linecap="round"
+                    :x1="drawingArea.left - 5"
+                    :x2="drawingArea.left"
+                    :y1="labelY.y"
+                    :y2="labelY.y"
+                />
+            </g>
+
+            <!-- Y AXIS LABELS -->
+            <g v-if="FINAL_CONFIG.style.chart.axes.y.labels.show" ref="yAxisScales">
                 <text
                     data-cy="y-axis-label"
                     v-for="labelY in scales.tickY"
-                    :x="drawingArea.left + FINAL_CONFIG.style.chart.axes.y.labels.offsetX - 4"
+                    :x="drawingArea.left + FINAL_CONFIG.style.chart.axes.y.labels.offsetX - 4 - FINAL_CONFIG.style.chart.plots.radius"
                     :y="labelY.y + sizes.yAxisLabels / 3"
                     :fill="FINAL_CONFIG.style.chart.axes.y.labels.color"
                     :font-size="sizes.yAxisLabels"
@@ -905,9 +1101,10 @@ defineExpose({
 
             <!-- Y AXIS NAME -->
             <text
+                ref="yAxisLabel"
                 data-cy="axis-name-y"
                 v-if="FINAL_CONFIG.style.chart.axes.y.name.text"
-                :transform="`translate(${FINAL_CONFIG.style.chart.axes.y.name.offsetX + sizes.yAxisName}, ${(svg.height / 2) + FINAL_CONFIG.style.chart.axes.y.name.offsetY}), rotate(-90)`"
+                :transform="`translate(${sizes.yAxisName}, ${(svg.height / 2) + FINAL_CONFIG.style.chart.axes.y.name.offsetY}), rotate(-90)`"
                 :font-size="sizes.yAxisName"
                 :fill="FINAL_CONFIG.style.chart.axes.y.name.color"
                 :font-weight="FINAL_CONFIG.style.chart.axes.y.name.bold ? 'bold' : 'normal'"
@@ -931,12 +1128,25 @@ defineExpose({
                 />
             </g>
 
-            <!-- X AXIS LABELS -->
             <g v-if="FINAL_CONFIG.style.chart.axes.x.labels.show">
+                <line v-for="labelX in scales.tickX"
+                    :stroke="FINAL_CONFIG.style.chart.grid.verticalLines.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.verticalLines.strokeWidth"
+                    stroke-linecap="round"
+                    :x1="labelX.x"
+                    :x2="labelX.x"
+                    :y1="drawingArea.bottom"
+                    :y2="drawingArea.bottom + 5"
+                />
+            </g>
+
+            <!-- X AXIS LABELS -->
+            <g v-if="FINAL_CONFIG.style.chart.axes.x.labels.show" ref="xAxisScales">
                 <text
+                    class="vue-ui-history-plot-x-axis-scale"
                     data-cy="x-axis-label"
                     v-for="labelX in scales.tickX"
-                    :transform="`translate(${labelX.x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.axes.x.labels.offsetY + sizes.xAxisLabels}), rotate(${FINAL_CONFIG.style.chart.axes.x.labels.rotation})`"
+                    :transform="`translate(${labelX.x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.axes.x.labels.offsetY + sizes.xAxisLabels + FINAL_CONFIG.style.chart.plots.radius}), rotate(${FINAL_CONFIG.style.chart.axes.x.labels.rotation})`"
                     :fill="FINAL_CONFIG.style.chart.axes.x.labels.color"
                     :font-size="sizes.xAxisLabels"
                     :text-anchor="FINAL_CONFIG.style.chart.axes.x.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.axes.x.labels.rotation < 0 ? 'end' : 'middle'"
@@ -958,10 +1168,11 @@ defineExpose({
 
             <!-- X AXIS NAME -->
             <text
+                ref="xAxisLabel"
                 data-cy="axis-name-x"
                 v-if="FINAL_CONFIG.style.chart.axes.x.name.text"
                 :x="(svg.width / 2) + FINAL_CONFIG.style.chart.axes.x.name.offsetX"
-                :y="svg.height + FINAL_CONFIG.style.chart.axes.x.name.offsetY"
+                :y="svg.height"
                 :font-size="sizes.xAxisName"
                 :fill="FINAL_CONFIG.style.chart.axes.x.name.color"
                 :font-weight="FINAL_CONFIG.style.chart.axes.x.name.bold ? 'bold' : 'normal'"
@@ -1013,7 +1224,7 @@ defineExpose({
                         fill="none"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation && !loading }"
                     />
                     <path
                         data-cy="datapoint-path"
@@ -1023,7 +1234,7 @@ defineExpose({
                         fill="none"
                         stroke-linecap="round"
                         stroke-linejoin="round"
-                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation && !loading }"
                     />
                 </g>
 
@@ -1048,7 +1259,7 @@ defineExpose({
                     :r="sizes.plots"
                     :stroke="FINAL_CONFIG.style.chart.plots.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.plots.strokeWidth"
-                    :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                    :class="{ 'animated' : FINAL_CONFIG.useCssAnimation && !loading }"
                     :style="{
                         opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === plot.id ? 1 : 0.3,
                         transition: 'opacity 0.2s ease-in-out'
@@ -1067,7 +1278,7 @@ defineExpose({
                             :fill="FINAL_CONFIG.style.chart.plots.labels.color"
                             :font-weight="FINAL_CONFIG.style.chart.plots.labels.bold ? 'bold' : 'normal'"
                             text-anchor="middle"
-                            :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                            :class="{ 'animated' : FINAL_CONFIG.useCssAnimation && !loading }"
                             :style="{
                                 opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === plot.id ? 1 : 0.3,
                                 transition: 'opacity 0.2s ease-in-out'
@@ -1086,7 +1297,7 @@ defineExpose({
                             :fill="FINAL_CONFIG.style.chart.plots.labels.color"
                             :font-weight="FINAL_CONFIG.style.chart.plots.labels.bold ? 'bold' : 'normal'"
                             text-anchor="middle"
-                            :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                            :class="{ 'animated' : FINAL_CONFIG.useCssAnimation && !loading }"
                             :style="{
                                 opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === plot.id ? 1 : 0.3,
                                 transition: 'opacity 0.2s ease-in-out'
@@ -1113,7 +1324,7 @@ defineExpose({
                         :font-weight="FINAL_CONFIG.style.chart.plots.indexLabels.bold ? 'bold' : 'normal'"
                         :fill="FINAL_CONFIG.style.chart.plots.indexLabels.adaptColorToBackground ? adaptColorToBackground(ds.color) : FINAL_CONFIG.style.chart.plots.indexLabels.color"
                         text-anchor="middle"
-                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation }"
+                        :class="{ 'animated' : FINAL_CONFIG.useCssAnimation && !loading }"
                         :style="{
                             opacity: selectedDatapoint === null ? 1 : selectedDatapoint.id === label.id ? 1 : 0.3,
                             transition: 'opacity 0.2s ease-in-out'
@@ -1139,8 +1350,16 @@ defineExpose({
                         plotIndex: i,
                         seriesIndex: ds.seriesIndex,
                     })"
-                    @mouseleave="isTooltip = false; selectedDatapoint = null"
-                    @click="() => selectDatapoint(plot)"
+                    @mouseleave="onTrapLeave(({
+                        datapoint: plot,
+                        plotIndex: i,
+                        seriesIndex: ds.seriesIndex,
+                    }))"
+                    @click="selectDatapoint(({
+                        datapoint: plot,
+                        plotIndex: i,
+                        seriesIndex: ds.seriesIndex,
+                    }))"
                 />
             </g>
             <slot name="svg" :svg="svg"/>
@@ -1149,19 +1368,6 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
-
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'historyPlot',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    historyPlot: {
-                        color: '#CCCCCC',
-                    }
-                }
-            }"
-        />
 
         <div ref="chartLegend">
             <Legend
@@ -1200,6 +1406,8 @@ defineExpose({
             :content="tooltipContent"
             :isCustom="useCustomFormat"
             :isFullscreen="isFullscreen"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1241,6 +1449,8 @@ defineExpose({
             </template>
         </Accordion>
 
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
@@ -1251,6 +1461,7 @@ defineExpose({
 }
 
 .vue-ui-history-plot {
+    position: relative;
     user-select: none;
     width: 100%;
 }

@@ -20,6 +20,9 @@ const props = defineProps({
     zoom: {
         type: Number,
         default: 1.3
+    },
+    transition: {
+        type: String,
     }
 });
 
@@ -95,6 +98,7 @@ const d = computed(() => {
             @mouseover="emit('mouseover')"
             @mouseout="emit('mouseout')"
             @click="emit('click')"
+            :style="{ transition }"
         />
         <path
             class="vdui-shape-polygon"
@@ -106,6 +110,7 @@ const d = computed(() => {
             @mouseover="emit('mouseover')"
             @mouseout="emit('mouseout')"
             @click="emit('click')"
+            :style="{ transition }"
         />
         <polygon 
             class="vdui-shape-star"
@@ -117,6 +122,7 @@ const d = computed(() => {
             @mouseover="emit('mouseover')"
             @mouseout="emit('mouseout')"
             @click="emit('click')"
+            :style="{ transition }"
         />
     </g>
 </template>

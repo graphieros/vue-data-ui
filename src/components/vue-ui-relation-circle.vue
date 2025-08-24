@@ -1,7 +1,16 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef } from "vue";
 import { 
-adaptColorToBackground,
+    computed, 
+    defineAsyncComponent, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs, 
+    watch, 
+} from "vue";
+import { 
+    adaptColorToBackground,
     applyDataLabel,
     convertCustomPalette,
     createUid, 
@@ -12,23 +21,26 @@ adaptColorToBackground,
     palette,
     themePalettes,
     translateSize,
+    treeShake,
     XMLNS
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading.js";
+import { usePrinter } from "../usePrinter";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
 import img from "../img.js";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import themes from "../themes.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_relation_circle: DEFAULT_CONFIG } = useConfig()
 
@@ -59,13 +71,35 @@ const source = ref(null);
 const noTitle = ref(null);
 const titleStep = ref(0);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        { id: 'A', label: '_', relations: ['B', 'C', 'D', 'E', 'F', 'G'] },
+        { id: 'B', label: '_', relations: ['A'] },
+        { id: 'C', label: '_', relations: ['A'] },
+        { id: 'D', label: '_', relations: ['A'] },
+        { id: 'E', label: '_', relations: ['A'] },
+        { id: 'F', label: '_', relations: ['A'] },
+        { id: 'G', label: '_', relations: ['A'] },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            customPalette: new Array(7).fill('#CACACA'),
+            style: {
+                backgroundColor: '#99999930',
+                labels: { color: '#6A6A6A' },
+                circle: { stroke: '#6A6A6A' },
+                plot: { color: '#6A6A6A', useSerieColor: true },
+                links: { maxWidth: 2 }
+            }
+        }
+    })
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -92,9 +126,21 @@ function prepareConfig() {
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+    size.value = FINAL_CONFIG.value.style.size;
+    dataLabelSize.value = FINAL_CONFIG.value.style.weightLabels.size;
+    plotRadius.value = FINAL_CONFIG.value.style.plot.radius;
+    labelFontSize.value = FINAL_CONFIG.value.style.labels.fontSize;
+    svg.value.height = FINAL_CONFIG.value.style.size;
+    svg.value.width = FINAL_CONFIG.value.style.size;
     prepareChart();
     titleStep.value += 1;
 }, { deep: true });
+
+watch(() => props.dataset, (_) => {
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
+}, { deep: true })
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `relation_circle_${uid.value}`,
@@ -115,8 +161,26 @@ const relations = ref([]);
 const selectedPlot = ref({});
 const selectedRelations = ref([]);
 const selectedRotation = ref(0);
+
+
 const limitedDataset = computed(() => {
-    return props.dataset.slice(0, FINAL_CONFIG.value.style.limit)
+    return FINAL_DATASET.value
+        .slice(0, FINAL_CONFIG.value.style.limit)
+        .map(el => {
+        const relations = Array.isArray(el.relations) ? el.relations : [];
+        return {
+            ...el,
+            weights: Array.isArray(el.weights) ? el.weights : new Array(relations.length).fill(1),
+            relations
+        }
+    });
+});
+
+watch(limitedDataset, () => {
+    circles.value = [];
+    relations.value = [];
+    createPlots();
+    createRelations();
 });
 
 const size = ref(FINAL_CONFIG.value.style.size);
@@ -134,7 +198,7 @@ const radius = computed({
         return size.value * FINAL_CONFIG.value.style.circle.radiusProportion;
     },
     set(v) {
-        return v
+        return v;
     }
 })
 
@@ -163,12 +227,16 @@ onMounted(() => {
     chart.addEventListener("click", clickOutside);
 });
 
+const debug = computed(() => FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiRelationCircle',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
+        manualLoading.value = true;
     } else {
         props.dataset.forEach((ds, i) => {
             getMissingDatasetAttributes({
@@ -179,10 +247,15 @@ function prepareChart() {
                     componentName: 'VueUiRelationCircle',
                     type: 'datasetSerieAttribute',
                     property: attr,
-                    index: i
+                    index: i,
+                    debug: debug.value
                 })
             });
         });
+    }
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
@@ -196,13 +269,14 @@ function prepareChart() {
 
             requestAnimationFrame(() => {
                 size.value = Math.min(width, height);
-                svg.value.width = width;
-                svg.value.height = height;
+                svg.value.width = Math.max(0.1, width);
+                svg.value.height = Math.max(0.1, height - 12);
                 radius.value = size.value * FINAL_CONFIG.value.style.circle.radiusProportion;
                 circles.value = [];
                 relations.value = [];
                 createPlots();
                 createRelations();
+                autoSizeLabels();
 
                 if (FINAL_CONFIG.value.responsiveProportionalSizing) {
                     dataLabelSize.value = translateSize({
@@ -252,6 +326,7 @@ function prepareChart() {
         createPlots();
         createRelations();
     }
+    autoSizeLabels();
 }
 
 onBeforeUnmount(() => {
@@ -263,7 +338,15 @@ onBeforeUnmount(() => {
         }
         resizeObserver.value.disconnect();
     }
-})
+});
+
+const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
+    svgRef,
+    fontSize: FINAL_CONFIG.value.style.labels.fontSize,
+    minFontSize: FINAL_CONFIG.value.style.labels.minFontSize,
+    sizeRef: labelFontSize,
+    labelClass: '.vue-ui-relation-circle-legend'
+});
 
 function clickOutside(e) {
     const target = e.target;
@@ -433,7 +516,27 @@ function getTextRotation(plot) {
     }
 }
 
-function selectPlot(plot) {
+const hoverIndex = ref(null);
+
+function onTrapEnter(plot, index) {
+    hoverIndex.value = index;
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: plot, seriesIndex: index });
+    }
+}
+
+function onTrapLeave(plot, index) {
+    hoverIndex.value = null;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint: plot, seriesIndex: index });
+    }
+}
+
+function onTrapClick(plot, index) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: plot, seriesIndex: index});
+    }
+
     selectedRotation.value = 360 - plot.regAngle;
     if (selectedPlot.value.id && plot.id === selectedPlot.value.id) {
         selectedPlot.value = {};
@@ -568,7 +671,6 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS"
-            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             class="relation-circle"
@@ -719,48 +821,59 @@ defineExpose({
                 </g>
             </g>
 
-            <text v-for="(plot,i) in circles"
-                :data-cy="`relation-text-${i}`"
-                :key="`plot_text_${i}`" 
-                :text-anchor="getTextAnchor(plot)"
-                :transform="getTextRotation(plot)"
-                :x="getTextX(plot)" 
-                :y="plot.y + 5"
-                @click="selectPlot(plot)" 
-                class="vue-ui-relation-circle-legend" 
-                transform-origin="start"
-                :font-weight="selectedPlot.id === plot.id ? '900' : '400'"
-                :style="`font-family:${FINAL_CONFIG.style.fontFamily};${getTextOpacity(plot)}`"
-                :font-size="labelFontSize"
-                :fill="FINAL_CONFIG.style.labels.color"
-            >
-                {{plot.label}} ({{ 
-                    applyDataLabel(
-                        FINAL_CONFIG.style.weightLabels.formatter,
-                        plot.totalWeight,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.weightLabels.prefix,
-                            v: plot.totalWeight,
-                            s: FINAL_CONFIG.style.weightLabels.suffix,
-                            r: FINAL_CONFIG.style.weightLabels.rounding
-                        }),
-                        { ...plot }
-                    )
-                }})
-            </text>
+            
+                <text v-for="(plot,i) in circles"
+                    :data-cy="`relation-text-${i}`"
+                    :key="`plot_text_${i}`" 
+                    :text-anchor="getTextAnchor(plot)"
+                    :transform="getTextRotation(plot)"
+                    :x="getTextX(plot)" 
+                    :y="plot.y + 5"
+                    class="vue-ui-relation-circle-legend" 
+                    transform-origin="start"
+                    :font-weight="selectedPlot.id === plot.id ? '900' : '400'"
+                    :style="`font-family:${FINAL_CONFIG.style.fontFamily};${getTextOpacity(plot)}`"
+                    :font-size="labelFontSize"
+                    :fill="FINAL_CONFIG.style.labels.color"
+                    :text-decoration="i === hoverIndex ? 'underline' : undefined"
+                    @click="onTrapClick(plot, i)" 
+                    @mouseenter="onTrapEnter(plot, i)"
+                    @mouseleave="onTrapLeave(plot,i)"
+                >
+                    <template v-if="loading">
+                        --------
+                    </template>
+                    <template v-else>
+                        {{plot.label}} ({{ 
+                            applyDataLabel(
+                                FINAL_CONFIG.style.weightLabels.formatter,
+                                plot.totalWeight,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.weightLabels.prefix,
+                                    v: plot.totalWeight,
+                                    s: FINAL_CONFIG.style.weightLabels.suffix,
+                                    r: FINAL_CONFIG.style.weightLabels.rounding
+                                }),
+                                { ...plot }
+                            )
+                        }})
+                    </template>
+                </text>
 
             <circle v-for="(plot,i) in circles"
                 :data-cy="`relation-plot-${i}`"
                 :cx="plot.x" 
                 :cy="plot.y" 
                 :key="`plot_${i}`" 
-                :style="getCircleOpacity(plot)"
+                :style="`${getCircleOpacity(plot)}; transition: r 0.2s ease-in-out;`"
                 class="vue-ui-relation-circle-plot" 
                 :fill="FINAL_CONFIG.style.plot.useSerieColor ? plot.color : FINAL_CONFIG.style.plot.color" 
                 :stroke="FINAL_CONFIG.style.backgroundColor"
                 stroke-width="1"
-                @click="selectPlot(plot)" 
-                :r="plotRadius" 
+                :r="plotRadius * (i === hoverIndex ? 2 : 1)" 
+                @click="onTrapClick(plot, i)" 
+                @mouseenter="onTrapEnter(plot, i)"
+                @mouseleave="onTrapLeave(plot,i)"
             />
             <slot name="svg" :svg="svg"/>
         </svg>
@@ -773,19 +886,8 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'relationCircle',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                    relationCircle: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
-
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 

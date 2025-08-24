@@ -8,18 +8,52 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref({
-    matrix: [
-        [ 12000, 6000, 9000, 3000],
-        [ 2000, 10000, 2000, 6001], 
-        [ 8000, 1600, 8000, 8001], 
-        [ 1000, 1000, 1000, 7001]  
-    ],
-    labels: ['Group A', 'Group B with a long name', 'Group C', 'Group D'],
-    colors: []
-})
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = {
+            matrix: [
+                [ 12000, 2000, 9000, 3000],
+                [ 1000, 10000, 2000, 6001], 
+                [ 2000, 1600, 8000, 8001], 
+                [ 1000, 1000, 1000, 7001]  
+            ],
+            labels: ['Group A', 'Group B with a long name', 'Group C', 'Group D'],
+            colors: []
+        }
+    }, 2000)
+
+    // Test dataset reactivity and skeleton loader behavior
+    // setTimeout(() => {
+    //     dataset.value = {
+    //         matrix: [
+    //             [ 12000, 2000, 9000],
+    //             [ 1000, 10000, 2000], 
+    //             [ 2000, 1600], 
+    //         ],
+    //         labels: ['Group A', 'Group B with a long name', 'Group C'],
+    //         colors: []
+    //     }
+    // }, 4000)
+
+    // setTimeout(() => {
+    //     dataset.value = {
+    //         matrix: [
+    //             [ 12000, 2000, 9000, 3000],
+    //             [ 1000, 10000, 2000, 6001], 
+    //             [ 2000, 1600, 8000, 8001], 
+    //             [ 1000, 1000, 1000, 7001]  
+    //         ],
+    //         labels: ['Group A', 'Group B with a long name', 'Group C', 'Group D'],
+    //         colors: []
+    //     }
+    // }, 6000)
+});
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox' },
+    { key: 'loading', def: false, type: 'checkbox' },
     { key: 'responsive', def: false, type: 'checkbox' },
     { key: 'enableRotation', def: true, type: 'checkbox'},
     { key: 'initialRotation', def: 0, type: 'number', min: 0, max: 360},
@@ -99,6 +133,17 @@ const config = computed(()=> {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex })
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex })
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex })
+            },
+        },
         theme: currentTheme.value
     }
 })

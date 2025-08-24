@@ -8,24 +8,30 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref([
-    {
-        name: "Serie 1",
-        values: [55.123425162, 34, 21, 13, 8, 5, 8, 13, 21, 34, 55 ],
-    },
-    {
-        name: "Serie 2",
-        values: [1, 12, 24, 32, 5, 8, 13, 21, 34, 55, 89 ]
-    },
-    {
-        name: "Serie 3",
-        values: [16, 2, 3, 5, 28, 13, 21, 34, 55, 89, 134 ]
-    },
-    {
-        name: "Serie 4",
-        values: [5, null, 5, 5, 5, 5 ]
-    }
-]);
+const dataset = ref([])
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: "Serie 1",
+                values: [55.123425162, 34, 21, 13, 8, 5, 8, 13, 21, 34, 55, 26, 27, 28, 29, 29, 29, 31 ],
+            },
+            {
+                name: "Serie 2",
+                values: [1, 12, 24, 32, 5, 8, 13, 21, 34, 55, 89 ]
+            },
+            {
+                name: "Serie 3",
+                values: [16, 2, 3, 5, 28, 13, 21, 34, 55, 89, 134 ]
+            },
+            {
+                name: "Serie 4",
+                values: [5, null, 5, 5, 5, 5 ]
+            }
+        ]
+    }, 2000)
+})
 
 const monthValues = computed(() => {
   const yearStart = 2026
@@ -42,6 +48,8 @@ const monthValues = computed(() => {
 })
 
 const model = ref([
+    { key: 'loading', def: false, type: 'checkbox'},
+    { key: 'debug', def: true, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
@@ -58,14 +66,14 @@ const model = ref([
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.height', def: 316, type: 'number', min: 200, max: 800},
     { key: 'style.chart.layout.width', def: 500, type: 'number', min: 300, max: 1200},
-    { key: 'style.chart.layout.padding.top', def: 24, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.layout.padding.left', def: 64, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.layout.padding.right', def: 48, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.layout.padding.bottom', def: 24, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.layout.padding.top', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.layout.padding.left', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.layout.padding.right', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.layout.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.chart.layout.grid.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.grid.stroke', def: '#e1e5e8', type: 'color'},
     { key: 'style.chart.layout.grid.strokeWidth', def: 0.7, type: 'number', mon: 0.5, max: 12, step: 0.1 },
@@ -81,8 +89,18 @@ const model = ref([
     { key: 'style.chart.layout.grid.xAxis.dataLabels.fontSize', def: 8, type: 'number', min: 8, max: 24},
     { key: 'style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast', def: false, type: 'checkbox'},
     { key: 'style.chart.layout.grid.xAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.grid.xAxis.dataLabels.rotation', def: -20, type: 'number', min: -360, max: 360},
+    { key: 'style.chart.layout.grid.xAxis.dataLabels.rotation', def: 0, type: 'number', min: -360, max: 360},
+    { key: 'style.chart.layout.grid.xAxis.dataLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+
     { key: 'style.chart.layout.grid.xAxis.dataLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
+
+    { key: 'style.chart.layout.grid.axis.yLabel', def: 'THIS IS Y LABEL', type: 'text'},
+    { key: 'style.chart.layout.grid.axis.xLabel', def: 'THIS IS X LABEL', type: 'text'},
+    { key: 'style.chart.layout.grid.axis.yLabelOffsetX', def: 0, type:'number', min: 0, max: 100},
+    { key: 'style.chart.layout.grid.axis.xLabelOffsetY', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.layout.grid.axis.fontSize', def: 14, type: 'number', min: 8, max: 42},
+    { key: 'style.chart.layout.grid.axis.color', def: '#1A1A1A', type: 'color'},
+
     { key: 'style.chart.layout.line.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.line.stroke', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.layout.line.strokeWidth', def: 4, type: 'number', min: 0, max: 24},
@@ -131,8 +149,8 @@ const model = ref([
     { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.zoom.highlightColor', def: "#1A1A1A", type: 'color' },
     { key: 'style.chart.zoom.useResetSlot', def: false, type: 'checkbox'},
-    { key: 'style.chart.zoom.startIndex', def: 2, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.zoom.endIndex', def: 6, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100},
     { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
 ]);
@@ -147,12 +165,23 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)
     return {
         ...c,
+        // events: {
+        //     datapointEnter: ({ datapoint, seriesIndex }) => {
+        //         console.log('enter event', { datapoint, seriesIndex })
+        //     },
+        //     datapointLeave: ({ datapoint, seriesIndex }) => {
+        //         console.log('leave event', { datapoint, seriesIndex });
+        //     },
+        //     datapointClick: ({ datapoint, seriesIndex }) => {
+        //         console.log('click event', { datapoint, seriesIndex });
+        //     }
+        // },
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
         style: {
@@ -175,7 +204,7 @@ const config = computed(() => {
                                 ...c.style.chart.layout.grid.xAxis.dataLabels,
                                 values: monthValues.value,
                                 datetimeFormatter: {
-                                    enable: true,
+                                    enable: false,
                                 }
                             }
                         }
@@ -209,6 +238,15 @@ onMounted(async() => {
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiDonutEvolution component="VueUiDonut" :dataset="dataset" :config="{
+            ...config,
+            responsive: true
+        }">
+    </LocalVueUiDonutEvolution>
+    </div>
+
     <Box comp="VueUiDonutEvolution" :dataset="dataset">
         <template #title>VueUiDonutEvolution</template>
 

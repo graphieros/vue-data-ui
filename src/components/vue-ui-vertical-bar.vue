@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef, nextTick, toRefs } from "vue";
 import {
     applyDataLabel,
     checkNaN,
@@ -18,6 +18,7 @@ import {
     setOpacity,
     shiftHue,
     themePalettes,
+    treeShake,
     XMLNS,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
@@ -33,11 +34,12 @@ import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import img from "../img.js";
+import { useLoading } from "../useLoading.js";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
@@ -59,9 +61,14 @@ const props = defineProps({
     }
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
-})
+const isDataset = computed({
+    get() {
+        return !!props.dataset && props.dataset.length;
+    },
+    set(bool) {
+        return bool;
+    }
+});
 
 const uid = ref(createUid());
 const details = ref(null);
@@ -77,16 +84,81 @@ const source = ref(null);
 const noTitle = ref(null);
 const titleStep = ref(0);
 const legendStep = ref(0)
+const G = ref(null);
 
 const emit = defineEmits(['selectLegend']);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const skeletonSet = computed(() => {
+    const base = [
+        { name: '', value: 6, color: '#d9d9d9' },
+        { name: '', value: 5, color: '#d9d9d9' },
+        { name: '', value: 4, color: '#d9d9d9' },
+        { name: '', value: 3, color: '#d9d9d9' },
+        { name: '', value: 2, color: '#d9d9d9' },
+        { name: '', value: 1, color: '#d9d9d9' },
+    ]
+    return base;
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            recalculateHeight();
+            await autoSize();
+        })
     },
-    set: (newCfg) => {
-        return newCfg
-    }
+    skeletonDataset: skeletonSet.value,
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            useCssAnimation: false,
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        bars: {
+                            offsetX: 110,
+                            dataLabels: {
+                                color: 'transparent',
+                                value: {
+                                    prefix: '',
+                                    suffix: '',
+                                    formatter: null
+                                }
+                            },
+                            nameLabels: {
+                                color: 'transparent'
+                            }
+                        },
+                        separators: {
+                            color: '#7A7A7A'
+                        }
+                    },
+                    legend: {
+                        show: true,
+                        backgroundColor: 'transparent',
+                        color: 'transparent',
+                        prefix: '',
+                        suffix: '',
+                        formatter: null
+                    },
+                    title: {
+                        color: '#1A1A1A',
+                        subtitle: {
+                            color: '#5A5A5A'
+                        }
+                    }
+                }
+            }
+        }
+    })
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -136,7 +208,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -150,7 +224,12 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
-watch(() => props.dataset, recalculateHeight, { deep: true });
+watch(() => props.dataset, (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+        manualLoading.value = false;
+    }
+    recalculateHeight();
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-vertical-bar_${uid.value}`,
@@ -175,19 +254,90 @@ const breakpoint = computed(() => {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-onMounted(() => {
-    prepareChart();
+const viewBox = ref('0 0 10 10');
+
+const viewBoxParts = computed(() => {
+    const [x, y, w, h] = viewBox.value.split(' ').map(Number);
+    return { x, y, width: w, height: h };
 });
+
+onMounted(async () => {
+    await nextTick()
+    prepareChart()
+    autoSize()
+})
+
+async function autoSize() {
+    viewBox.value = `0 0 ${svg.value.width} ${drawableArea.value.fullHeight}`
+    if (!FINAL_CONFIG.value.autoSize || !G.value) return;
+    const parentLabels = G.value.querySelectorAll('.vue-ui-horizontal-bar-parent-label');
+    const childrenLabels = G.value.querySelectorAll('.vue-ui-horizontal-bar-child-label');
+
+    if (!!parentLabels && parentLabels.length) {
+        const maxW = Math.max(...Array.from(parentLabels).flatMap(pl => {
+            const texts = pl.querySelectorAll('text')
+            if (!texts.length) return 0
+            return Array.from(texts).map(t => t.getBBox().width)
+        }));
+        const maxC = Math.max(...Array.from(childrenLabels).flatMap(pl => {
+            const texts = pl.querySelectorAll('text')
+            if (!texts.length) return 0
+            return Array.from(texts).map(t => t.getBBox().width)
+        }));
+
+        Array.from(parentLabels).forEach(pl => {
+            const texts = pl.querySelectorAll('text')
+            Array.from(texts).forEach(async(t)=> {
+                t.setAttribute('x', 0);
+                t.setAttribute('x', checkNaN(-maxW - (maxC)));
+            })
+        })
+    }
+
+    await nextTick();
+    const bb = G.value ? G.value.getBBox() : 0;
+    const offX = FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.offsetX;
+    viewBox.value = [
+        bb.x + (-offX),
+        0,
+        bb.width + (offX * 2),
+        drawableArea.value.fullHeight
+    ].join(' ')
+}
+
+let ro;
+onMounted(() => {
+    if (!verticalBarChart.value) return;
+    ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+        const { width, height } = entry.contentRect
+        if (width > 0 && height > 0) {
+                Promise.resolve().then(async () => {
+                    recalculateHeight();
+                    await autoSize();
+                });
+                break;
+            }
+        }
+    });
+    ro.observe(verticalBarChart.value.parentElement)
+})
+
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const remainingHeight = ref(0);
 
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiVerticalBar',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         });
+        isDataset.value = false;
+        manualLoading.value = true; // v3
     }
 
-    barCount.value = props.dataset.flatMap(serie => {
+    barCount.value = FINAL_DATASET.value.flatMap(serie => {
         if(serie.children && serie.children.length > 0) {
             return serie.children.length;
         } else {
@@ -195,6 +345,11 @@ function prepareChart() {
         }
     }).reduce((a, b) => a + b, 0);
     observeTable();
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
+    }
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
@@ -206,9 +361,14 @@ function prepareChart() {
                 noTitle: noTitle.value
             });
 
-            requestAnimationFrame(() => {
+            remainingHeight.value = height / 3;
+
+            requestAnimationFrame(async () => {
                 baseWidth.value = width;
-                barHeight.value = height / barCount.value - (barGap.value * 2)
+                const totalGap = barGap.value * (barCount.value - 1);
+                barHeight.value = (height - totalGap) / barCount.value;
+                await nextTick();
+                autoSize();
             });
         });
 
@@ -222,6 +382,7 @@ function prepareChart() {
         resizeObserver.value = new ResizeObserver(handleResize);
         observedEl.value = verticalBarChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
+        FINAL_CONFIG.value.autoSize && autoSize();
     }
 }
 
@@ -235,6 +396,7 @@ onBeforeUnmount(() => {
 });
 
 function observeTable() {
+    if (loading.value) return;
     const observer = new ResizeObserver((entries) => {
         entries.forEach(entry => {
             isResponsive.value = entry.contentRect.width < breakpoint.value;
@@ -256,12 +418,13 @@ const isSortDown = computed(() => {
 
 const immutableDataset = computed(() => {
 
-    props.dataset.forEach((ds, i) => {
+    FINAL_DATASET.value.forEach((ds, i) => {
         if (!ds.value && !ds.children) {
             error({
                 componentName: 'VueUiVerticalBar',
                 type: 'datasetAttributeEmpty',
-                property: `value (index ${i})`
+                property: `value (index ${i})`,
+                debug: debug.value
             })
         }
         if (ds.children) {
@@ -269,7 +432,8 @@ const immutableDataset = computed(() => {
                 error({
                     componentName: 'VueUiVerticalBar',
                     type: 'datasetAttributeEmpty',
-                    property: `children (index ${i})`
+                    property: `children (index ${i})`,
+                    debug: debug.value
                 })
             } else {
                 ds.children.forEach((child, j) => {
@@ -279,7 +443,8 @@ const immutableDataset = computed(() => {
                             type: 'datasetSerieAttribute',
                             property: `name`,
                             key: 'children',
-                            index: j
+                            index: j,
+                            debug: debug.value
                         })
                     }
                 })
@@ -287,7 +452,7 @@ const immutableDataset = computed(() => {
         }
     })
 
-    return props.dataset
+    return FINAL_DATASET.value
         .map((serie, i) => {
             const id = `vertical_parent_${i}_${uid.value}`;
             const hasChildren = serie.children && serie.children.length > 0;
@@ -354,7 +519,7 @@ const barGap = ref(FINAL_CONFIG.value.style.chart.layout.bars.gap);
 const baseHeight = computed(() => {
     return (barHeight.value + barGap.value) * barCount.value
 });
-const baseWidth = ref(512);
+const baseWidth = ref(512)
 
 const svg = computed(() => {
     return {
@@ -362,8 +527,8 @@ const svg = computed(() => {
         height: baseHeight.value,
         padding: {
             top: 12,
-            left: 128 + FINAL_CONFIG.value.style.chart.layout.bars.offsetX,
-            right: 64 + FINAL_CONFIG.value.style.chart.layout.bars.paddingRight,
+            left: (FINAL_CONFIG.value.autoSize ? 0 : 128) + FINAL_CONFIG.value.style.chart.layout.bars.offsetX,
+            right: (FINAL_CONFIG.value.autoSize ? 0 : 64) + FINAL_CONFIG.value.style.chart.layout.bars.paddingRight,
             bottom: 12,
         }
     }
@@ -380,7 +545,7 @@ const drawableArea = computed(() => {
     }
 });
 
-function recalculateHeight() {
+async function recalculateHeight() {
     barCount.value = mutableDataset.value.flatMap(serie => {
         if(serie.children && serie.children.length > 0) {
             return serie.children.length;
@@ -388,17 +553,23 @@ function recalculateHeight() {
             return 1;
         }
     }).reduce((a, b) => a + b, 0);
+    if (FINAL_CONFIG.value.autoSize) {
+        await autoSize();
+    }
 }
 
 const segregated = ref([]);
 
-function segregate(id) {
+async function segregate(id) {
     if(segregated.value.includes(id)) {
         segregated.value = segregated.value.filter(el => el !== id);
     }else {
+        if (segregated.value.length === immutableDataset.value.length - 1) return;
         segregated.value.push(id)
     }
     recalculateHeight();
+    await nextTick();
+    FINAL_CONFIG.value.autoSize && autoSize();
     emit('selectLegend', mutableDataset.value);
 }
 
@@ -733,6 +904,7 @@ async function getImage({ scale = 2} = {}) {
 }
 
 defineExpose({
+    autoSize, // v3
     getData,
     getImage,
     recalculateHeight,
@@ -749,7 +921,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'} ${FINAL_CONFIG.responsive && FINAL_CONFIG.autoSize ? 'vue-ui-vertical-bar-autosize' : ''}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`padding-top:${FINAL_CONFIG.responsive && FINAL_CONFIG.autoSize ? `${remainingHeight / 2}px` : '0'}; font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? FINAL_CONFIG.autoSize ? `height:calc(100% - ${remainingHeight}px` : 'height: 100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -893,194 +1065,184 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS" 
-            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight}`"
+            :viewBox="viewBox"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
-            <PackageVersion />
+            <g ref="G" class="vue-data-ui-g">
+                <PackageVersion />
 
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.width <= 0 ? 10 : svg.width"
-                :height="drawableArea.fullHeight <= 0 ? 10 : drawableArea.fullHeight"
-                :style="{
-                    pointerEvents: 'none'
-                }"
-            >
-                <slot name="chart-background"/>
-            </foreignObject>
-            
-            <!-- defs -->
-            <linearGradient
-                    x1="0%" y1="0%" x2="100%" y2="0%"
-                    v-for="(bar, i) in bars"
-                    :id="`vertical_bar_gradient_${uid}_${i}`"
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="viewBoxParts.x"
+                    :y="0"
+                    :width="viewBoxParts.width"
+                    :height="viewBoxParts.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
                 >
-                    <stop offset="0%" :stop-color="bar.color" />
-                    <stop offset="100%" :stop-color="setOpacity(shiftHue(bar.color, 0.03), 100 - FINAL_CONFIG.style.chart.layout.bars.gradientIntensity)"/>
-            </linearGradient>
+                    <slot name="chart-background"/>
+                </foreignObject>
+                
+                <!-- defs -->
+                <linearGradient
+                        x1="0%" y1="0%" x2="100%" y2="0%"
+                        v-for="(bar, i) in bars"
+                        :id="`vertical_bar_gradient_${uid}_${i}`"
+                    >
+                        <stop offset="0%" :stop-color="bar.color" />
+                        <stop offset="100%" :stop-color="setOpacity(shiftHue(bar.color, 0.03), 100 - FINAL_CONFIG.style.chart.layout.bars.gradientIntensity)"/>
+                </linearGradient>
 
-            <g v-if="$slots.pattern">
-                <defs v-for="(bar) in bars">
-                    <slot name="pattern" v-bind="{ seriesIndex: bar.absoluteIndex, patternId: `pattern_${uid}_${bar.absoluteIndex}`}"/>
-                </defs>
-            </g>
+                <g v-if="$slots.pattern">
+                    <defs v-for="(bar) in bars">
+                        <slot name="pattern" v-bind="{ seriesIndex: bar.absoluteIndex, patternId: `pattern_${uid}_${bar.absoluteIndex}`}"/>
+                    </defs>
+                </g>
 
-            <g v-for="(serie, i) in bars">
-                <!-- UNDERLAYER -->
-                <rect
-                    data-cy="datapoint-underlayer"
-                    :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
-                    :y="drawableArea.top + ((barGap + barHeight) * i)"
-                    :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
-                    :height="barHeight <= 0 ? 0.0001 : barHeight"
-                    :fill="FINAL_CONFIG.style.chart.layout.bars.underlayerColor"
-                    :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
-                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
-                />
-            </g>
-            <g v-for="(serie, i) in bars"> 
-                <!-- BARS -->
-                <rect 
-                    data-cy="datapoint-bar"
-                    :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
-                    :y="drawableArea.top + ((barGap + barHeight) * i)"
-                    :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
-                    :height="barHeight <= 0 ? 0.0001 : barHeight"
-                    :fill="FINAL_CONFIG.style.chart.layout.bars.useGradient ? `url(#vertical_bar_gradient_${uid}_${i})` : setOpacity(serie.color, FINAL_CONFIG.style.chart.layout.bars.fillOpacity)"
-                    :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
-                    :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke ? serie.color : 'none'"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth : 0"
-                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
-                />
-                <rect v-if="$slots.pattern"
-                    :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
-                    :y="drawableArea.top + ((barGap + barHeight) * i)"
-                    :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
-                    :height="barHeight <= 0 ? 0.0001 : barHeight"
-                    :fill="`url(#pattern_${uid}_${serie.absoluteIndex})`"
-                    :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
-                    :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke ? serie.color : 'none'"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth : 0"
-                    :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
-                />
-
-                <!-- SEPARATORS -->
-                <line
-                    data-cy="datapoint-separator"
-                    v-if="(!serie.isChild || serie.isLastChild) && FINAL_CONFIG.style.chart.layout.separators.show && i !== bars.length -1"
-                    :x1="0"
-                    :x2="drawableArea.left"
-                    :y1="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
-                    :y2="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
-                    :stroke="FINAL_CONFIG.style.chart.layout.separators.color"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth"
-                    stroke-linecap="round"
+                <g v-for="(serie, i) in bars">
+                    <!-- UNDERLAYER -->
+                    <rect
+                        data-cy="datapoint-underlayer"
+                        :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
+                        :y="drawableArea.top + ((barGap + barHeight) * i)"
+                        :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
+                        :height="barHeight <= 0 ? 0.0001 : barHeight"
+                        :fill="FINAL_CONFIG.style.chart.layout.bars.underlayerColor"
+                        :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
+                        :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
                     />
-                    
-                <line
-                    v-if="hasNegative && FINAL_CONFIG.style.chart.layout.separators.show"
-                    :x1="drawableArea.left + drawableArea.width / 2"
-                    :x2="drawableArea.left + drawableArea.width / 2"
-                    :y1="drawableArea.top"
-                    :y2="drawableArea.bottom"
-                    :stroke="FINAL_CONFIG.style.chart.layout.separators.color"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth"
-                    stroke-linecap="round"
-                />
+                </g>
+                <g v-for="(serie, i) in bars"> 
+                    <!-- BARS -->
+                    <rect 
+                        data-cy="datapoint-bar"
+                        :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
+                        :y="drawableArea.top + ((barGap + barHeight) * i)"
+                        :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
+                        :height="barHeight <= 0 ? 0.0001 : barHeight"
+                        :fill="FINAL_CONFIG.style.chart.layout.bars.useGradient ? `url(#vertical_bar_gradient_${uid}_${i})` : setOpacity(serie.color, FINAL_CONFIG.style.chart.layout.bars.fillOpacity)"
+                        :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
+                        :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke ? serie.color : 'none'"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth : 0"
+                        :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
+                    />
+                    <rect v-if="$slots.pattern"
+                        :x="checkNaN(hasNegative ? drawableArea.left + (drawableArea.width / 2) - (serie.sign === 1 ? 0 : calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value)) : drawableArea.left)"
+                        :y="drawableArea.top + ((barGap + barHeight) * i)"
+                        :width="checkNaN(calcBarWidth(serie.value) <= 0 ? 0.0001 : calcBarWidth(serie.value))"
+                        :height="barHeight <= 0 ? 0.0001 : barHeight"
+                        :fill="`url(#pattern_${uid}_${serie.absoluteIndex})`"
+                        :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
+                        :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke ? serie.color : 'none'"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth : 0"
+                        :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
+                    />
 
-                <!-- DATALABELS -->
-                <text
-                    data-cy="datapoint-label"
-                    :x="!hasNegative ? calcDataLabelX(serie.value) + 3 + FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX : (drawableArea.left + (drawableArea.width / 2) + (serie.sign === 1 ? -12: 12) + (serie.sign === 1 ? -FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX : FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX))"
-                    :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize / 2"
-                    :text-anchor="!hasNegative || serie.sign === - 1 ? 'start' : 'end'"
-                    :font-size="FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.bars.dataLabels.color"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
-                >
-                    {{ makeDataLabel(serie.value, serie, i, serie.sign) }}
-                </text>
+                    <!-- SEPARATORS -->
+                    <line
+                        data-cy="datapoint-separator"
+                        v-if="(!serie.isChild || serie.isLastChild) && FINAL_CONFIG.style.chart.layout.separators.show && i !== bars.length -1"
+                        :x1="viewBoxParts.x"
+                        :x2="FINAL_CONFIG.style.chart.layout.separators.fullWidth ? (viewBoxParts.width - Math.abs(viewBoxParts.x)): drawableArea.left"
+                        :y1="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
+                        :y2="barHeight + (barGap / 2) + drawableArea.top + ((barGap + barHeight) * i)"
+                        :stroke="FINAL_CONFIG.style.chart.layout.separators.color"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth"
+                        stroke-linecap="round"
+                        :style="{ transition: 'none !important', animation: 'none !important'}"
+                    />
+                        
+                    <line
+                        v-if="hasNegative && FINAL_CONFIG.style.chart.layout.separators.show"
+                        :x1="drawableArea.left + drawableArea.width / 2"
+                        :x2="drawableArea.left + drawableArea.width / 2"
+                        :y1="drawableArea.top"
+                        :y2="drawableArea.bottom"
+                        :stroke="FINAL_CONFIG.style.chart.layout.separators.color"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth"
+                        stroke-linecap="round"
+                    />
 
-                <!-- CHILDREN | LONELY PARENTS NAMES -->
-                <text
-                    data-cy="datapoint-name"
-                    v-if="(serie.isChild || !serie.hasChildren) && FINAL_CONFIG.style.chart.layout.bars.nameLabels.show"
-                    text-anchor="end"
-                    :x="drawableArea.left - 3 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX"
-                    :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 2"
-                    :font-size="FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.bars.nameLabels.color"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.bars.nameLabels.bold ? 'bold' : 'normal'"
-                >
-                    {{ serie.name }}
-                </text>
+                    <!-- DATALABELS -->
+                    <g class="vue-ui-horizontal-bar-child-label">
+                        <text
+                            data-cy="datapoint-label"
+                            :x="!hasNegative ? calcDataLabelX(serie.value) + 3 + FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX : (drawableArea.left + (drawableArea.width / 2) + (serie.sign === 1 ? -12: 12) + (serie.sign === 1 ? -FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX : FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX))"
+                            :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize / 2"
+                            :text-anchor="!hasNegative || serie.sign === - 1 ? 'start' : 'end'"
+                            :font-size="FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.layout.bars.dataLabels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
+                        >
+                            {{ makeDataLabel(serie.value, serie, i, serie.sign) }}
+                        </text>
+    
+                        <!-- CHILDREN | LONELY PARENTS NAMES -->
+                        <text
+                            data-cy="datapoint-name"
+                            v-if="(serie.isChild || !serie.hasChildren) && FINAL_CONFIG.style.chart.layout.bars.nameLabels.show"
+                            text-anchor="end"
+                            :x="drawableArea.left - 3 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX"
+                            :y="drawableArea.top + ((barGap + barHeight) * i) + (barHeight / 2) + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 2"
+                            :font-size="FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.layout.bars.nameLabels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.bars.nameLabels.bold ? 'bold' : 'normal'"
+                        >
+                            {{ serie.name }}
+                        </text>
+                    </g>
 
-                <!-- PARENT NAMES -->
-                <text
-                    data-cy="datapoint-parent-name"
-                    v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"
-                    :x="3 + FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX"
-                    :y="getParentData(serie, i).y"
-                    :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.bars.parentLabels.bold ? 'bold' : 'normal'"
-                    text-anchor="start"
-                >
-                    {{ getParentData(serie, i).name }}
-                </text>
-                <text 
-                    data-cy="datapoint-parent-value"
-                    v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"
-                    :x="3 + FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX"
-                    :y="getParentData(serie, i).y + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize + 6"
-                    :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
-                    text-anchor="start"
-                >
-                    {{ makeDataLabel(getParentData(serie, i).value), getParentData(serie, i), i, serie.parentSign || serie.sign }}
-                </text>
+                    <!-- PARENT NAMES -->
+                    <g class="vue-ui-horizontal-bar-parent-label">
+                        <text
+                            data-cy="datapoint-parent-name"
+                            v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"
+                            :x="FINAL_CONFIG.autoSize ? undefined: viewBoxParts.x + FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX"
+                            :y="getParentData(serie, i).y"
+                            :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.bars.parentLabels.bold ? 'bold' : 'normal'"
+                            text-anchor="start"
+                        >
+                            {{ getParentData(serie, i).name }}
+                        </text>
+                        <text 
+                            data-cy="datapoint-parent-value"
+                            v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"
+                            :x="FINAL_CONFIG.autoSize ? undefined: viewBoxParts.x + FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX"
+                            :y="getParentData(serie, i).y + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize + 6"
+                            :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
+                            text-anchor="start"
+                        >
+                            {{ makeDataLabel(getParentData(serie, i).value), getParentData(serie, i), i, serie.parentSign || serie.sign }}
+                        </text>
+                    </g>
 
-                <!-- TOOLTIP TRAPS -->
-                <rect 
-                    data-cy="tooltip-trap"
-                    :x="0"
-                    :y="drawableArea.top + ((barGap + barHeight) * i) - (barGap/2)"
-                    :width="svg.width <= 0 ? 0.0001 : svg.width"
-                    :height="barHeight + barGap <= 0 ? 0.0001 : barHeight + barGap"
-                    :fill="selectedBarId === serie.id ? setOpacity(FINAL_CONFIG.style.chart.layout.highlighter.color, FINAL_CONFIG.style.chart.layout.highlighter.opacity) : 'transparent'"
-                    @mouseenter="useTooltip(serie, i)"
-                    @mouseleave="handleDatapointLeave({ datapoint: serie, seriesIndex: i })"
-                    @click="selectDatapoint({ datapoint: serie, seriesIndex: i })"
-                />
+                    <!-- TOOLTIP TRAPS -->
+                    <rect 
+                        data-cy="tooltip-trap"
+                        :x="viewBoxParts.x"
+                        :y="drawableArea.top + ((barGap + barHeight) * i) - (barGap/2)"
+                        :width="viewBoxParts.width"
+                        :height="barHeight + barGap <= 0 ? 0.0001 : barHeight + barGap"
+                        :fill="selectedBarId === serie.id ? setOpacity(FINAL_CONFIG.style.chart.layout.highlighter.color, FINAL_CONFIG.style.chart.layout.highlighter.opacity) : 'transparent'"
+                        @mouseenter="useTooltip(serie, i)"
+                        @mouseleave="handleDatapointLeave({ datapoint: serie, seriesIndex: i })"
+                        @click="selectDatapoint({ datapoint: serie, seriesIndex: i })"
+                    />
+                </g>
+                <slot name="svg" :svg="viewBoxParts"/>
             </g>
-            <slot name="svg" :svg="svg"/>
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
-
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'verticalBar',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    verticalBar: {
-                        axis: {
-                            color: '#CCCCCC'
-                        },
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
 
         <!-- LEGEND AS DIV : BOTTOM -->
         <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show && FINAL_CONFIG.style.chart.legend.position === 'bottom'">
@@ -1141,6 +1303,8 @@ defineExpose({
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="FINAL_CONFIG.style.chart.tooltip.customFormat && typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>  
@@ -1237,6 +1401,9 @@ defineExpose({
                 </div>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading"/>
     </div>
 </template>
 

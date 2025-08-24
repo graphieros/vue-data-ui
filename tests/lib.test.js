@@ -13,6 +13,7 @@ import {
     addVector,
     applyDataLabel,
     assignStackRatios,
+    autoFontSize,
     calcLinearProgression,
     calcMedian,
     calcPercentageTrend,
@@ -22,6 +23,7 @@ import {
     calculateNiceScale,
     calculateNiceScaleWithExactExtremes,
     checkArray,
+    checkFormatter,
     checkNaN,
     checkObj,
     closestDecimal,
@@ -29,29 +31,38 @@ import {
     convertCustomPalette,
     convertNameColorToHex,
     createArc,
+    createAreaWithCuts,
     createHalfCircleArc,
+    createIndividualArea,
+    createIndividualAreaWithCuts,
     createPolarAreas,
     createPolygonPath,
+    createSmoothAreaSegments,
     createSmoothPath,
+    createSmoothPathWithCuts,
     createSpiralPath,
     createStar,
+    createStraightPathWithCuts,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createTSpansFromLineBreaksOnY,
     createWordCloudDatasetFromPlainText,
-    checkFormatter,
     darkenHexColor,
     dataLabel,
     degreesToRadians,
     error,
     forceValidValue,
+    formatSmallValue,
     functionReturnsString,
     generateSpiralCoordinates,
+    getAreaSegments,
     getCloserPoint,
     getCumulativeAverage,
     getCumulativeMedian,
     getMissingDatasetAttributes,
+    getPathLengthFromCoordinates,
     getScaleFactorUsingArcSize,
+    getValidSegments,
     hasDeepProperty,
     hslToRgba,
     interpolateColorHex,
@@ -66,24 +77,18 @@ import {
     matrixTimes,
     niceNum,
     objectIsEmpty,
+    observeClassPresenceIn,
     placeHTMLElementAtSVGCoordinates,
     rotateMatrix,
     sanitizeArray,
     setOpacity,
+    setOpacityIfWithinBBox,
     shiftHue,
     sumByAttribute,
+    sumSeries,
     translateSize,
     treeShake,
-    getPathLengthFromCoordinates,
-    sumSeries,
-    getAreaSegments,
-    createAreaWithCuts,
-    createIndividualArea,
-    createIndividualAreaWithCuts,
-    getValidSegments,
-    createStraightPathWithCuts,
-    createSmoothPathWithCuts,
-    createSmoothAreaSegments
+    wrapText
 } from "../src/lib";
 
 describe("calcTrend", () => {
@@ -259,9 +264,12 @@ describe("treeShake", () => {
             key3: {
                 subkey: {
                     subsubkey: "subsubkey",
-                    withNull: null
+                    withNull: null,
+                    bool1: true,
+                    bool0: false
                 },
             },
+            key4: {}
         };
 
         const userConfig0 = {};
@@ -278,9 +286,14 @@ describe("treeShake", () => {
             key3: {
                 subkey: {
                     subsubkey: "test",
-                    withNull: null
+                    withNull: null,
+                    bool1: true,
+                    bool0: false
                 },
             },
+            key4: {
+                A: '1',
+            }
         };
 
         expect(treeShake({ defaultConfig, userConfig: userConfig0 })).toStrictEqual(
@@ -292,9 +305,12 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "subsubkey",
-                        withNull: null
+                        withNull: null,
+                        bool1: true,
+                        bool0: false
                     },
                 },
+                key4: {}
             }
         );
 
@@ -307,9 +323,12 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "subsubkey",
-                        withNull: null
+                        withNull: null,
+                        bool1: true,
+                        bool0: false
                     },
                 },
+                key4: {}
             }
         );
 
@@ -322,9 +341,12 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "subsubkey",
-                        withNull: null
+                        withNull: null,
+                        bool1: true,
+                        bool0: false
                     },
                 },
+                key4: {}
             }
         );
 
@@ -337,9 +359,14 @@ describe("treeShake", () => {
                 key3: {
                     subkey: {
                         subsubkey: "test",
-                        withNull: null
+                        withNull: null,
+                        bool1: true,
+                        bool0: false
                     },
                 },
+                key4: {
+                    A: '1',
+                }
             }
         );
     });
@@ -1202,64 +1229,24 @@ describe("error", () => {
     });
 });
 
-describe("generateSpiralCoordinates and createSpiralPath", () => {
+describe("createSpiralPath", () => {
     const config = {
-        points: 10,
+        maxPoints: 10,
         a: 6,
         b: 6,
         angleStep: 0.07,
         startX: 100,
         startY: 100,
+        boxWidth: 300,
+        boxHeight: 300,
+        padding: 12
     };
 
-    test("creates spiral coordinates", () => {
-        expect(generateSpiralCoordinates(config)).toStrictEqual([
-            {
-                x: 106,
-                y: 100,
-            },
-            {
-                x: 106.40427742162605,
-                y: 100.44903307990695,
-            },
-            {
-                x: 106.77307741409444,
-                y: 100.95447490416657,
-            },
-            {
-                x: 107.10050444089731,
-                y: 101.51341887288268,
-            },
-            {
-                x: 107.38090576622672,
-                y: 102.1224113809724,
-            },
-            {
-                x: 107.60891897406377,
-                y: 102.77747224038916,
-            },
-            {
-                x: 107.77951777146086,
-                y: 103.47411906006754,
-            },
-            {
-                x: 107.88805575597449,
-                y: 104.20739544025015,
-            },
-            {
-                x: 107.93030783908557,
-                y: 104.97190281253947,
-            },
-            {
-                x: 107.90250903129285,
-                y: 105.7618357326754,
-            },
-        ]);
-    });
-
     test("creates a spiral path", () => {
-        expect(createSpiralPath(config)).toStrictEqual(
-            "M106 100 C106.20213871081302 100.22451653995347, 106.58867741786025 100.70175399203677, 106.93679092749588 101.23394688852463 C106.93679092749588 101.23394688852463, 107.24070510356202 101.81791512692755, 107.49491237014524 102.44994181068077 C107.49491237014524 102.44994181068077, 107.69421837276232 103.12579565022835, 107.83378676371768 103.84075725015884 C107.83378676371768 103.84075725015884, 107.90918179753004 104.58964912639482, 107.91640843518921 105.36686927260743"
+        const path = createSpiralPath(config)(10);
+
+        expect(path).toStrictEqual(
+            "M53.76777573106551 -38 C63.45050303757455 -27.245343341576394, 81.96624838241718 -4.38500110238048, 98.64137296373207 21.10778387891686 C98.64137296373207 21.10778387891686, 113.19928757392643 49.080680239911175, 125.376171614387 79.35564343031365 C125.376171614387 79.35564343031365, 134.9232082316163 111.7299887552394, 141.60872959857008 145.9776505658255 C141.60872959857008 145.9776505658255, 145.22025729523827 181.8506201246352, 145.56642335870694 219.08055348392566"
         );
     });
 });
@@ -3548,7 +3535,7 @@ describe('createTSpansFromLineBreaksOnX', () => {
             x: 5,
             y: 10,
         });
-        const lineHeight = 12 * 1.3;
+        const lineHeight = 12;
         const expected = [
             `<tspan x=\"5\" y=\"10\" fill=\"#00f\">Line1</tspan>`,
             `<tspan x=\"5\" y=\"${10 + lineHeight}\" fill=\"#00f\">Line2</tspan>`
@@ -3576,7 +3563,7 @@ describe('createTSpansFromLineBreaksOnX', () => {
             x: 2,
             y: 3,
         });
-        const lineHeight = 15 * 1.3;
+        const lineHeight = 15;
         const expected = [
             `<tspan x=\"2\" y=\"3\" fill=\"green\">A</tspan>`,
             `<tspan x=\"2\" y=\"${3 + lineHeight}\" fill=\"green\">B</tspan>`,
@@ -3593,7 +3580,7 @@ describe('createTSpansFromLineBreaksOnX', () => {
             x: 0,
             y: 0,
         });
-        const lineHeight = 5 * 1.3;
+        const lineHeight = 5;
         const expected = [
             `<tspan x=\"0\" y=\"0\" fill=\"blue\">X</tspan>`,
             `<tspan x=\"0\" y=\"${0 + lineHeight}\" fill=\"blue\"></tspan>`,
@@ -3623,7 +3610,7 @@ describe('createTSpansFromLineBreaksOnY', () => {
             fill: '#00f',
             x: 0,
         });
-        const dy = fontSize * 1.3;
+        const dy = fontSize;
         const expected = [
             `<tspan x=\"0\" dy=\"0\" fill=\"#00f\">Line1</tspan>`,
             `<tspan x=\"0\" dy=\"${dy}\" fill=\"#00f\">Line2</tspan>`,
@@ -3650,7 +3637,7 @@ describe('createTSpansFromLineBreaksOnY', () => {
             fill: 'green',
             x: 1,
         });
-        const dy = fontSize * 1.3;
+        const dy = fontSize;
         const expected = [
             `<tspan x=\"1\" dy=\"0\" fill=\"green\">A</tspan>`,
             `<tspan x=\"1\" dy=\"${dy}\" fill=\"green\">B</tspan>`,
@@ -3667,7 +3654,7 @@ describe('createTSpansFromLineBreaksOnY', () => {
             fill: 'blue',
             x: 3,
         });
-        const dy = fontSize * 1.3;
+        const dy = fontSize;
         const expected = [
             `<tspan x=\"3\" dy=\"0\" fill=\"blue\">X</tspan>`,
             `<tspan x=\"3\" dy=\"${dy}\" fill=\"blue\"></tspan>`,
@@ -3676,3 +3663,386 @@ describe('createTSpansFromLineBreaksOnY', () => {
         expect(result).toBe(expected);
     });
 })
+
+describe('observeClassPresenceIn', () => {
+    // Stub MutationObserver so we control when it fires
+    class FakeMutationObserver {
+        constructor(cb) {
+            this.cb = cb
+            this.options = null
+            this.target = null
+        }
+        observe(target, options) {
+            this.target = target
+            this.options = options
+        }
+        disconnect() {
+            this.disconnected = true
+        }
+        // Simulate DOM mutations
+        simulate(mutations) {
+            this.cb(mutations)
+        }
+    }
+
+    let OldMO;
+    beforeEach(() => {
+        OldMO = global.MutationObserver;
+        global.MutationObserver = FakeMutationObserver;
+    })
+    afterEach(() => {
+        global.MutationObserver = OldMO;
+    })
+
+    // --- Fake container that can toggle “does it have .foo?” ---
+    function makeContainer(initialCount = 0) {
+        let count = initialCount;
+        return {
+            querySelectorAll(selector) {
+                // always just return an array of length `count`
+                return new Array(count).fill({ selector });
+            },
+            __setCount(n) { count = n },
+        }
+    }
+
+    test('logs error if cssClass is invalid', () => {
+        const spy = vi.spyOn(console, 'error').mockImplementation(() => { });
+        const c = makeContainer();
+        observeClassPresenceIn(c, '', () => { });
+        expect(spy).toHaveBeenCalledWith(
+            'Vue Data UI - observeClassPresenceIn: cssClass must be a non-empty string'
+        );
+        observeClassPresenceIn(c, '   ', () => { });
+        expect(spy).toHaveBeenCalledWith(
+            'Vue Data UI - observeClassPresenceIn: cssClass must be a non-empty string'
+        );
+        spy.mockRestore();
+    });
+
+    test('logs error if onNodesPresent is not a function', () => {
+        const spy = vi.spyOn(console, 'error').mockImplementation(() => { });
+        const c = makeContainer();
+        observeClassPresenceIn(c, 'foo', null);
+        expect(spy).toHaveBeenCalledWith(
+            'Vue Data UI - observeClassPresenceIn: onNodesPresent must be a function'
+        );
+        observeClassPresenceIn(c, 'foo', {});
+        expect(spy).toHaveBeenCalledWith(
+            'Vue Data UI - observeClassPresenceIn: onNodesPresent must be a function'
+        );
+        spy.mockRestore();
+    });
+
+    test('calls callback immediately if initial count > 0', () => {
+        const container = makeContainer(2);
+        const spy = vi.fn();
+        observeClassPresenceIn(container, 'foo', spy);
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not call callback initially if count = 0', () => {
+        const container = makeContainer(0);
+        const spy = vi.fn();
+        observeClassPresenceIn(container, 'foo', spy);
+        expect(spy).not.toHaveBeenCalled();
+    });
+
+    test('invokes callback only when elements first appear', () => {
+        const container = makeContainer(0);
+        const spy = vi.fn();
+        const observer = observeClassPresenceIn(container, 'foo', spy);
+
+        // Simulate adding the first node
+        container.__setCount(1);
+        observer.simulate([{ addedNodes: [{}], removedNodes: [] }]);
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        // Simulate adding more (still > 0): no extra call
+        container.__setCount(2);
+        observer.simulate([{ addedNodes: [{}], removedNodes: [] }]);
+        expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    test('calls again after removal then re-add', () => {
+        const container = makeContainer(0);
+        const spy = vi.fn();
+        const observer = observeClassPresenceIn(container, 'foo', spy);
+
+        // Add
+        container.__setCount(1);
+        observer.simulate([{ addedNodes: [{}], removedNodes: [] }]);
+        expect(spy).toHaveBeenCalledTimes(1);
+
+        // Remove
+        container.__setCount(0);
+        observer.simulate([{ addedNodes: [], removedNodes: [{}] }]);
+        // No call on remove
+
+        // Re-add
+        container.__setCount(1);
+        observer.simulate([{ addedNodes: [{}], removedNodes: [] }]);
+        expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    test('observer.disconnect() exists and works', () => {
+        const container = makeContainer(0);
+        const spy = vi.fn();
+        const observer = observeClassPresenceIn(container, 'foo', spy);
+        expect(typeof observer.disconnect).toBe('function');
+        expect(() => observer.disconnect()).not.toThrow();
+    });
+});
+
+describe('autoFontSize', () => {
+    function makeMocks({
+        bounds = { x: 0, y: 0, width: 100, height: 100 },
+        elementBBoxes = {},
+        ctm = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 },
+    }) {
+        const el = {
+            style: { fontSize: '' },
+            getBBox() {
+                const size = parseInt(this.style.fontSize, 10) || 0
+                const box = elementBBoxes[size]
+                if (!box) throw new Error(`no bbox for fontSize ${size}`)
+                return box;
+            },
+            getCTM() {
+                return ctm;
+            },
+        };
+        return { el, bounds };
+    }
+
+    test('returns 0 if el is missing or currentFontSize is zero', () => {
+        const goodBounds = { x: 0, y: 0, width: 10, height: 10 };
+        expect(
+            autoFontSize({ el: null, bounds: goodBounds, currentFontSize: 10 })
+        ).toBe(0);
+        expect(
+            autoFontSize({ el: {}, bounds: goodBounds, currentFontSize: 0 })
+        ).toBe(0);
+    });
+
+    test('fits at full size → no shrink', () => {
+        const { el, bounds } = makeMocks({
+            bounds: { x: 0, y: 0, width: 200, height: 50 },
+            elementBBoxes: {
+                14: { x: 10, y: 5, width: 140, height: 25 },
+            },
+        });
+
+        const result = autoFontSize({
+            el,
+            bounds,
+            currentFontSize: 14,
+            minFontSize: 6,
+            attempts: 10,
+            padding: 0,
+        });
+
+        expect(result).toBe(14);
+        expect(parseInt(el.style.fontSize, 10)).toBe(14);
+    })
+
+    test('shrinks down until fits', () => {
+        const { el, bounds } = makeMocks({
+            bounds: { x: 0, y: 0, width: 100, height: 100 },
+            elementBBoxes: {
+                14: { x: 0, y: 0, width: 120, height: 10 },
+                13: { x: 0, y: 0, width: 110, height: 10 },
+                12: { x: 5, y: 5, width: 90, height: 10 },
+            },
+        });
+
+        const result = autoFontSize({
+            el,
+            bounds,
+            currentFontSize: 14,
+            minFontSize: 8,
+            attempts: 10,
+            padding: 0,
+        });
+
+        expect(result).toBe(12);
+        expect(parseInt(el.style.fontSize, 10)).toBe(12);
+    })
+
+    test('stops at minFontSize if still overflowing', () => {
+        // simulate overflow at every size down to minFontSize=6
+        const elementBBoxes = {};
+        for (let s = 10; s >= 6; s--) {
+            elementBBoxes[s] = { x: 0, y: 0, width: s * 20, height: 10 }
+        }
+        const { el, bounds } = makeMocks({
+            bounds: { x: 0, y: 0, width: 100, height: 100 },
+            elementBBoxes,
+        });
+
+        const result = autoFontSize({
+            el,
+            bounds,
+            currentFontSize: 10,
+            minFontSize: 6,
+            attempts: 10,
+            padding: 0,
+        });
+
+        // it never fits, but we stop at the minimum rather than hide
+        expect(result).toBe(6);
+        expect(parseInt(el.style.fontSize, 10)).toBe(6);
+    });
+});
+
+describe('setOpacityIfWithinBBox', () => {
+    function mockBBox({ x, y, width, height }) {
+        return { x, y, width, height };
+    }
+
+    function createMockElement(bbox) {
+        return {
+            getBBox: () => bbox,
+            style: { opacity: '' },
+        };
+    }
+
+    test('does nothing if el is missing', () => {
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 100, height: 100 }));
+        expect(() => setOpacityIfWithinBBox({ el: null, container })).not.toThrow();
+    });
+
+    test('does nothing if container is missing', () => {
+        const el = createMockElement(mockBBox({ x: 10, y: 10, width: 10, height: 10 }));
+        expect(() => setOpacityIfWithinBBox({ el, container: null })).not.toThrow();
+    });
+
+    test('sets opacity to 1 if el is fully inside container (no padding)', () => {
+        const el = createMockElement(mockBBox({ x: 10, y: 10, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 100, height: 100 }));
+        setOpacityIfWithinBBox({ el, container, padding: 0 });
+        expect(el.style.opacity).toBe('1');
+    });
+
+    test('sets opacity to 0 if el overflows left edge', () => {
+        const el = createMockElement(mockBBox({ x: 0, y: 10, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 5, y: 0, width: 100, height: 100 }));
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('sets opacity to 0 if el overflows top edge', () => {
+        const el = createMockElement(mockBBox({ x: 10, y: 0, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 5, width: 100, height: 100 }));
+
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('sets opacity to 0 if el overflows right edge', () => {
+        const el = createMockElement(mockBBox({ x: 95, y: 10, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 100, height: 100 }));
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('sets opacity to 0 if el overflows bottom edge', () => {
+        const el = createMockElement(mockBBox({ x: 10, y: 95, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 100, height: 100 }));
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('respects custom padding', () => {
+        const el = createMockElement(mockBBox({ x: 5, y: 5, width: 10, height: 10 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 20, height: 20 }));
+        setOpacityIfWithinBBox({ el, container, padding: 6 });
+        expect(el.style.opacity).toBe('0');
+    });
+
+    test('defaults to padding = 1', () => {
+        const el = createMockElement(mockBBox({ x: 1, y: 1, width: 18, height: 18 }));
+        const container = createMockElement(mockBBox({ x: 0, y: 0, width: 20, height: 20 }));
+        setOpacityIfWithinBBox({ el, container });
+        expect(el.style.opacity).toBe('1');
+    });
+});
+
+describe('formatSmallValue()', () => {
+    test('returns "0" for zero values', () => {
+        expect(formatSmallValue({ value: 0 })).toBe('0')
+        expect(formatSmallValue({ value: 0, maxDecimals: 2 })).toBe('0')
+        const fb0 = vi.fn((v) => `X${v}`)
+        expect(formatSmallValue({ value: 0, fallbackFormatter: fb0 })).toBe('0')
+        expect(fb0).not.toHaveBeenCalled()
+    })
+
+    test('values ≥ 1 without fallbackFormatter are stringified', () => {
+        expect(formatSmallValue({ value: 1 })).toBe('1')
+        expect(formatSmallValue({ value: 1.61803 })).toBe('1.618')
+        expect(formatSmallValue({ value: 1.6181 })).toBe('1.6181')
+        expect(formatSmallValue({ value: 1.6181, maxDecimals: 2 })).toBe('1.62')
+        expect(formatSmallValue({ value: -99 })).toBe('-99')
+    })
+
+    test('values ≥ 1 use fallbackFormatter when provided', () => {
+        const fb1 = vi.fn((v) => `P${v.toFixed(1)}S`)
+        expect(formatSmallValue({ value: 1.618, fallbackFormatter: fb1 })).toBe('P1.6S')
+        expect(fb1).toHaveBeenCalledTimes(1)
+        expect(fb1).toHaveBeenCalledWith(1.618)
+    })
+
+    test('small positive values < 1 are formatted to the right number of decimals', () => {
+        expect(formatSmallValue({ value: 0.5 })).toBe('0.5')
+        expect(formatSmallValue({ value: 0.0123 })).toBe('0.012')
+        expect(formatSmallValue({ value: 0.0000123 })).toBe('0')
+    })
+
+    test('small negative values < 1 keep their sign and correct decimals', () => {
+        expect(formatSmallValue({ value: -0.05 })).toBe('-0.05')
+    })
+
+    test('respects custom maxDecimals for very small values', () => {
+        expect(formatSmallValue({ value: 0.00000123 })).toBe('0')
+        expect(formatSmallValue({ value: 0.00000123, maxDecimals: 2 })).toBe('0')
+        expect(formatSmallValue({ value: 0.00000123, maxDecimals: 6 })).toBe('0.000001')
+    })
+
+    test('fallbackFormatter is ignored for small values < 1', () => {
+        const fb2 = vi.fn((v) => 'SHOULD_NOT_BE_USED')
+        expect(formatSmallValue({ value: 0.1234, fallbackFormatter: fb2 })).toBe('0.12')
+        expect(fb2).not.toHaveBeenCalled()
+    })
+
+    test('exact boundary values (1 and -1) behave like ≥1 cases', () => {
+        expect(formatSmallValue({ value: 1 })).toBe('1')
+        expect(formatSmallValue({ value: -1 })).toBe('-1')
+        const fb3 = vi.fn((v) => `P${v}S`)
+        expect(formatSmallValue({ value: 1, fallbackFormatter: fb3 })).toBe('P1S')
+        expect(fb3).toHaveBeenCalledTimes(1)
+    })
+
+    test('preserves trailing zeros when removeTrailingZero is false for small values', () => {
+        expect(formatSmallValue({ value: 0.5, removeTrailingZero: false })).toBe('0.50')
+        expect(formatSmallValue({ value: 0.0000123, removeTrailingZero: false })).toBe('0.0000')
+    })
+})
+
+describe('wrapText', () => {
+    test('does not error on empy string', () => {
+        expect(wrapText('')).toBe('');
+    });
+
+    test('preserves the original string if under maxChar', () => {
+        expect(wrapText('Some normal text')).toBe('Some normal text');
+    });
+
+    test('adds a line break when the original string exceeds maxChar', () => {
+        expect(wrapText('Some text that is too long')).toBe('Some text that is\ntoo long');
+        expect(wrapText('Some normal text', 10)).toBe('Some\nnormal\ntext');
+    });
+
+    test('only wraps full words', () => {
+        expect(wrapText('ABCDEFGHIJKLMNOPQRSTUVWXYZ')).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    });
+});

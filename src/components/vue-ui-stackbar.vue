@@ -1,5 +1,17 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick, useSlots, defineAsyncComponent, shallowRef, onBeforeUnmount } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs ,
+    useSlots, 
+    watch, 
+    watchEffect,
+} from "vue";
 import { useConfig } from "../useConfig";
 import { 
     adaptColorToBackground,
@@ -25,29 +37,32 @@ import {
     palette, 
     sumSeries, 
     themePalettes, 
+    treeShake, 
     XMLNS, 
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
 import { throttle } from "../canvas-lib";
-import { useResponsive } from "../useResponsive";
 import { usePrinter } from "../usePrinter";
+import { useLoading } from "../useLoading.js";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
+import { useTimeLabels } from "../useTimeLabels";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
+import img from "../img";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import Shape from "../atoms/Shape.vue";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import Shape from "../atoms/Shape.vue";
-import { useTimeLabels } from "../useTimeLabels";
-import img from "../img";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
-const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_stackbar: DEFAULT_CONFIG } = useConfig();
 const slots = useSlots();
@@ -98,17 +113,89 @@ const tableStep = ref(0);
 const legendStep = ref(0);
 const slicerComponent = ref(null);
 
+const xAxisLabel = ref(null);
+const yAxisLabel = ref(null);
+const scaleLabels = ref(null);
+const timeLabelsEls = ref(null);
+const sumTop = ref(null);
+const sumRight = ref(null);
+
 onMounted(() => {
     prepareChart();
 })
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await setupSlicer();
+        })
     },
-    set: (newCfg) => {
-        return newCfg
-    }
+    skeletonDataset: [
+        {
+            name: '',
+            series: [2, 3, 5, 8, 13, 21],
+            color: '#BABABA'
+        },
+        {
+            name: '',
+            series: [1, 2, 3, 5, 8, 13],
+            color: '#CACACA'
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            useCssAnimation: false,
+            table: { show: false },
+            tooltip: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    bars: {
+                        totalValues: { show: false },
+                        dataLabels: { show: false },
+                    },
+                    grid: {
+                        scale: {
+                            scaleMin: 0,
+                            scaleMax: 40
+                        },
+                        x: { 
+                            axisColor: '#6A6A6A',
+                            linesColor: '#6A6A6A',
+                            axisName: { show: false },
+                            timeLabels: { show: false }
+                        },
+                        y: {
+                            axisColor: '#6A6A6A',
+                            linesColor: '#6A6A6A',
+                            axisName: { show: false },
+                            axisLabels: { show: false }
+                        }
+                    },
+                    legend: {
+                        backgroundColor: 'transparent'
+                    },
+                    padding: {
+                        left: 24,
+                        right: 24,
+                        bottom: 12
+                    },
+                    zoom: { 
+                        show: false,
+                        startIndex: null,
+                        endIndex: null
+                    }
+                }
+            }
+        }
+    })
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -184,7 +271,9 @@ const canHideSmallPercentages = computed(() => {
 })
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -198,6 +287,9 @@ watch(() => props.config, (_newCfg) => {
 }, { deep: true });
 
 watch(() => props.dataset, (_) => {
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
     refreshSlicer();
 }, { deep: true })
 
@@ -208,6 +300,17 @@ const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
+
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        dataLabels: {
+            show: FINAL_CONFIG.value.style.chart.bars.dataLabels.show,
+        },
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    }
+}, { immediate: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `stackbar_${uid.value}`,
@@ -237,12 +340,16 @@ onMounted(() => {
     prepareChart();
 });
 
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiStackbar',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         });
+        manualLoading.value = true;
     } else {
         props.dataset.forEach((datasetObject, index) => {
             getMissingDatasetAttributes({
@@ -254,11 +361,19 @@ function prepareChart() {
                     componentName: 'VueUiStackbar',
                     type: 'datasetSerieAttribute',
                     property: attr,
-                    index
-                })
+                    index,
+                    debug: debug.value
+                });
+                manualLoading.value = true;
             })
         })
     }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
+    }
+
     setTimeout(() => {
         isLoaded.value = true;
     }, 10)
@@ -276,7 +391,7 @@ function prepareChart() {
 
             requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
-                defaultSizes.value.height = height;
+                defaultSizes.value.height = height - 12;
                 clearTimeout(to.value);
                 to.value = setTimeout(() => {
                     isLoaded.value = true;
@@ -307,17 +422,111 @@ onBeforeUnmount(() => {
     }
 });
 
+function getOffsetX() {
+    let base = 0;
+    if (FINAL_CONFIG.value.orientation === 'vertical') {
+        if (scaleLabels.value) {
+            const texts = Array.from(scaleLabels.value.querySelectorAll('text'))
+            base = texts.reduce((max, t) => {
+                const w = t.getComputedTextLength()
+                return w > max ? w : max
+            }, 0)
+        }
+    }
+    if (FINAL_CONFIG.value.orientation === 'horizontal') {
+        if (timeLabelsEls.value) {
+            const texts = Array.from(timeLabelsEls.value.querySelectorAll('text'))
+            base = texts.reduce((max, t) => {
+                const w = t.getComputedTextLength()
+                return w > max ? w : max
+            }, 0)
+        }
+    }
+
+    const yAxisLabelW = yAxisLabel.value
+        ? yAxisLabel.value.getBoundingClientRect().width
+        : 0
+
+    return base + yAxisLabelW + (yAxisLabelW ? 24 : 0);
+}
+
+const labelsXHeight = ref(0);
+const offsetRight = ref(0);
+
+const updateHeight = throttle((h) => {
+    labelsXHeight.value = h;
+}, 100);
+
+watchEffect((onInvalidate) => {
+    const el = FINAL_CONFIG.value.orientation === 'vertical' ? timeLabelsEls.value : scaleLabels.value;
+    if (!el) return
+
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height)
+    })
+    observer.observe(el)
+    onInvalidate(() => observer.disconnect())
+});
+
+const updateOffsetRight = throttle((w) => {
+    offsetRight.value = w + FINAL_CONFIG.value.style.chart.bars.totalValues.fontSize
+}, 100);
+
+watchEffect((onInvalidate) => {
+    if (FINAL_CONFIG.value.orientation === 'vertical') return;
+
+    const el = sumRight.value;
+    if (!el) return
+
+    const observer = new ResizeObserver(entries => {
+        updateOffsetRight(entries[0].contentRect.width)
+    })
+    observer.observe(el)
+    onInvalidate(() => observer.disconnect())
+});
+
+onBeforeUnmount(() => {
+    labelsXHeight.value = 0;
+    offsetRight.value = 0;
+});
+
+const offsetY = computed(() => {
+    let h = 0;
+        if (xAxisLabel.value) {
+            h = xAxisLabel.value.getBBox().height;
+        }
+        let tlH = 0;
+        if (FINAL_CONFIG.value.orientation === 'vertical') {
+            if (timeLabelsEls.value) {
+                tlH = labelsXHeight.value;
+            }
+        }
+        if (FINAL_CONFIG.value.orientation === 'horizontal') {
+            if (scaleLabels.value) {
+                tlH = labelsXHeight.value;
+            }
+        }
+        return h + tlH;
+});
+
 const drawingArea = computed(() => {
     const { height: H, width: W } = defaultSizes.value;
     const { right: PR } = defaultSizes.value.paddingRatio;
 
-    const top = FINAL_CONFIG.value.style.chart.padding.top;
-    const right = W - (W * PR);
-    const bottom = H - FINAL_CONFIG.value.style.chart.padding.bottom;
-    const left = FINAL_CONFIG.value.style.chart.padding.left;
+    let topOffset = FINAL_CONFIG.value.style.chart.bars.totalValues.show && props.dataset && props.dataset.length > 1 ? FINAL_CONFIG.value.style.chart.bars.totalValues.fontSize * 1.3 : 0;
+    let offsetX = 0;
 
-    const width = W - left - (W * PR);
-    const height = H - top - FINAL_CONFIG.value.style.chart.padding.bottom;
+    if (FINAL_CONFIG.value.style.chart.grid.y.axisLabels.show) {
+        offsetX = getOffsetX()
+    }
+
+    const top = FINAL_CONFIG.value.style.chart.padding.top + topOffset
+    const right = W - (W * PR) - offsetRight.value;
+    const bottom = H - FINAL_CONFIG.value.style.chart.padding.bottom - offsetY.value - topOffset;
+    const left = FINAL_CONFIG.value.style.chart.padding.left + offsetX;
+
+    const width = W - left - (W * PR) - offsetRight.value;
+    const height = H - top - FINAL_CONFIG.value.style.chart.padding.bottom - offsetY.value - topOffset;
 
     return {
         chartHeight: H,
@@ -326,13 +535,13 @@ const drawingArea = computed(() => {
         right,
         bottom,
         left,
-        width,
-        height: height < 0 ? 0 : height,
+        width : Math.max(0, width),
+        height: Math.max(0, height),
     }
 });
 
 const unmutableDataset = computed(() => {
-    return props.dataset.map((ds, i) => {
+    return FINAL_DATASET.value.map((ds, i) => {
         const color = convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
         return {
             ...ds,
@@ -355,7 +564,7 @@ const maxSeries = computed(() => {
 
 const slicer = ref({
     start: 0,
-    end: Math.max(...props.dataset.map(ds => ds.series.length))
+    end: Math.max(...FINAL_DATASET.value.map(ds => ds.series.length))
 });
 
 function refreshSlicer() {
@@ -363,28 +572,28 @@ function refreshSlicer() {
 }
 
 async function setupSlicer() {
-    if ((FINAL_CONFIG.value.style.chart.zoom.startIndex !== null || FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) && slicerComponent.value) {
-        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setStartValue(FINAL_CONFIG.value.style.chart.zoom.startIndex);
+    await nextTick();
+    await nextTick();
+
+    const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
+    const comp = slicerComponent.value;
+    const maxLength = Math.max(...FINAL_DATASET.value.map(ds => ds.series.length));
+
+    if ((startIndex != null || endIndex != null) && comp) {
+        if (startIndex != null) {
+        comp.setStartValue(startIndex);
         }
-        if (FINAL_CONFIG.value.style.chart.zoom.endIndex !== null) {
-            await nextTick();
-            await nextTick();
-            slicerComponent.value && slicerComponent.value.setEndValue(validSlicerEnd(FINAL_CONFIG.value.style.chart.zoom.endIndex + 1));
+        if (endIndex != null) {
+        comp.setEndValue(validSlicerEnd(endIndex + 1));
         }
     } else {
-        slicer.value = {
-            start: 0,
-            end: Math.max(...props.dataset.map(ds => ds.series.length))
-        };
+        slicer.value = { start: 0, end: maxLength };
         slicerStep.value += 1;
     }
 }
 
 function validSlicerEnd(v) {
-    const max = Math.max(...props.dataset.map(ds => ds.series.length));
+    const max = Math.max(...FINAL_DATASET.value.map(ds => ds.series.length));
     if (v > max) {
         return max;
     }
@@ -471,7 +680,7 @@ const timeLabels = computed(() => {
 });
 
 const formattedDataset = computed(() => {
-    if (!isDataset.value) return [];
+    if (!isDataset.value && !loading.value) return [];
 
     let cumulativeY = Array(maxSeries.value).fill(0);
     let cumulativeX = Array(maxSeries.value).fill(0);
@@ -598,7 +807,6 @@ const totalLabels = computed(() => {
     });
 });
 
-
 function barDataLabel(val, datapoint, index, dpIndex, signed) {
 
     const appliedValue = signed === - 1 ? (val >= 0 ? -val : val) : val
@@ -639,16 +847,15 @@ function selectDatapoint(index) {
         }
     });
 
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index + slicer.value.start })
+    }
+
     emit('selectDatapoint', { datapoint, period: timeLabels.value[index] });
 }
 
-function useTooltip(seriesIndex) {
-    trapIndex.value = seriesIndex;
-    isTooltip.value = true;
-
-    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
-
-    const datapoint = JSON.parse(JSON.stringify(formattedDataset.value)).map(fd => {
+function getDatapoint(seriesIndex) {
+    return JSON.parse(JSON.stringify(formattedDataset.value)).map(fd => {
         return {
             name: fd.name,
             absoluteIndex: fd.absoluteIndex,
@@ -658,6 +865,27 @@ function useTooltip(seriesIndex) {
             id: fd.id
         }
     });
+}
+
+function onTrapLeave(i) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        const datapoint = getDatapoint(i);
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: i + slicer.value.start });
+    }
+    isTooltip.value = null;
+    trapIndex.value = null;
+}
+
+function useTooltip(seriesIndex) {
+    trapIndex.value = seriesIndex;
+    isTooltip.value = true;
+
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const datapoint = getDatapoint(seriesIndex);
+
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: seriesIndex + slicer.value.start });
+    }
 
     dataTooltipSlot.value = {
         datapoint,
@@ -721,6 +949,22 @@ function useTooltip(seriesIndex) {
         tooltipContent.value = `<div>${html}</div>`;
     }
 }
+
+const WIDTH = computed(() => defaultSizes.value.width);
+const HEIGHT = computed(() => defaultSizes.value.height);
+
+useTimeLabelCollision({
+    timeLabelsEls: FINAL_CONFIG.value.orientation === 'vertical' ? timeLabelsEls : scaleLabels,
+    timeLabels,
+    slicer,
+    configRef: FINAL_CONFIG,
+    rotationPath: ['style', 'chart', 'grid', 'x', 'timeLabels', 'rotation'],
+    autoRotatePath: ['style', 'chart', 'grid', 'x', 'timeLabels', 'autoRotate', 'enable'],
+    isAutoSize: false,
+    width: WIDTH,
+    height: HEIGHT,
+    rotation: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.autoRotate.angle
+});
 
 function toggleFullscreen(state) {
     isFullscreen.value = state;
@@ -883,7 +1127,7 @@ function isLabelDisplayed(value, proportion) {
         return proportion * 100 >= FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderPercentage;
     } else {
         if (canHideSmallPercentages.value) {
-            if (canHideSmallValues.value) {
+            if (canHideSmallValues.value && debug.value) {
                 console.warn('Vue Data UI - VueUiStackbar - You cannot set both dataLabels.hideUnderPercentage and dataLabels.hideUnderValue. Note that dataLabels.hideUnderPercentage takes precedence in this case.')
             }
             return value > maxCurrentValue.value * FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderPercentage / 100;
@@ -1028,9 +1272,9 @@ defineExpose({
 
         <svg
             ref="svgRef"
-            v-if="isDataset"
             :xmlns="XMLNS"
             :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`"
+            :class="{ 'vue-data-ui-loading' : loading }"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <PackageVersion />
@@ -1223,10 +1467,11 @@ defineExpose({
 
             <!-- X AXIS LABEL -->
             <text
+                ref="xAxisLabel"
                 data-cy="axis-label-x"
                 v-if="FINAL_CONFIG.style.chart.grid.x.axisName.show && FINAL_CONFIG.style.chart.grid.x.axisName.text"
                 :x="drawingArea.left + (drawingArea.width / 2)"
-                :y="drawingArea.chartHeight + FINAL_CONFIG.style.chart.grid.x.axisName.offsetY"
+                :y="drawingArea.chartHeight - 3"
                 :font-size="FINAL_CONFIG.style.chart.grid.x.axisName.fontSize"
                 :fill="FINAL_CONFIG.style.chart.grid.x.axisName.color"
                 :font-weight="FINAL_CONFIG.style.chart.grid.x.axisName.bold ? 'bold': 'normal'"
@@ -1237,9 +1482,10 @@ defineExpose({
 
             <!-- Y AXIS LABEL -->
             <text
+                ref="yAxisLabel"
                 data-cy="axis-label-y"
                 v-if="FINAL_CONFIG.style.chart.grid.y.axisName.show && FINAL_CONFIG.style.chart.grid.y.axisName.text"
-                :transform="`translate(${FINAL_CONFIG.style.chart.grid.y.axisName.fontSize + FINAL_CONFIG.style.chart.grid.y.axisName.offsetX}, ${drawingArea.top + (drawingArea.height / 2)}) rotate(-90)`"
+                :transform="`translate(${FINAL_CONFIG.style.chart.grid.y.axisName.fontSize}, ${drawingArea.top + (drawingArea.height / 2)}) rotate(-90)`"
                 :font-size="FINAL_CONFIG.style.chart.grid.y.axisName.fontSize"
                 :fill="FINAL_CONFIG.style.chart.grid.y.axisName.color"
                 :font-weight="FINAL_CONFIG.style.chart.grid.y.axisName.bold ? 'bold': 'normal'"
@@ -1271,13 +1517,13 @@ defineExpose({
                 </g>
 
                 <!-- RECT TOTAL LABELS -->
-                <g v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
+                <g ref="sumTop" v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
                     <template v-for="(total, i) in totalLabels">
                         <text
                             data-cy="label-total"
                             v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
                             :x="drawingArea.left + (barSlot * i) + barSlot / 2"
-                            :y="drawingArea.top - FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
+                            :y="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
                             text-anchor="middle"
                             :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
                             :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
@@ -1311,7 +1557,7 @@ defineExpose({
                     </template>
                 </g>
                 <!-- RECT TOTAL LABELS -->
-                <g v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
+                <g ref="sumRight" v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
                     <template v-for="(total, i) in totalLabels">
                         <text
                             data-cy="label-total"
@@ -1331,204 +1577,214 @@ defineExpose({
 
             <!-- SCALE LABELS (vertical mode) -->
             <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'vertical'">
-                <line
-                    data-cy="scale-line-y"
-                    v-for="(yLabel, i) in yLabels"
-                    :x1="drawingArea.left"
-                    :x2="drawingArea.left - 6"
-                    :y1="yLabel.y"
-                    :y2="yLabel.y"
-                    :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
-                    :stroke-width="1"
-                />
-                <text
-                    data-cy="scale-label-y"
-                    v-for="(yLabel, i) in yLabels"
-                    :x="yLabel.x"
-                    :y="yLabel.y + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
-                    :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                    :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                    text-anchor="end"
-                >
-                    {{ 
-                        applyDataLabel(
-                            FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
-                            yLabel.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
-                                v: yLabel.value,
-                                s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
-                                r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
-                            }),
-                            { datapoint: yLabel }
-                        )
-                    }}
-                </text>
+                <g ref="scaleLabels">
+                    <line
+                        data-cy="scale-line-y"
+                        v-for="(yLabel, i) in yLabels"
+                        :x1="drawingArea.left"
+                        :x2="drawingArea.left - 6"
+                        :y1="yLabel.y"
+                        :y2="yLabel.y"
+                        :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
+                        :stroke-width="1"
+                    />
+                    <text
+                        data-cy="scale-label-y"
+                        v-for="(yLabel, i) in yLabels"
+                        :x="yLabel.x"
+                        :y="yLabel.y + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                        :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                        text-anchor="end"
+                    >
+                        {{ 
+                            applyDataLabel(
+                                FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
+                                yLabel.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
+                                    v: yLabel.value,
+                                    s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
+                                    r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
+                                }),
+                                { datapoint: yLabel }
+                            )
+                        }}
+                    </text>
+                </g>
             </template>
 
             <!-- SCALE LABELS (horizontal mode) -->
             <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'horizontal'">
-                <line
-                    data-cy="scale-line-y"
-                    v-for="(yLabel, i) in yLabels"
-                    :x1="yLabel.horizontal_x"
-                    :x2="yLabel.horizontal_x"
-                    :y1="drawingArea.bottom"
-                    :y2="drawingArea.bottom + 6"
-                    :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
-                    :stroke-width="1"
-                    stroke-linecap="round"
-                />
-                <text
-                    data-cy="scale-label-y"
-                    v-for="(yLabel, i) in yLabels"
-                    :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                    :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                    :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
-                    :transform="`translate(${yLabel.horizontal_x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
-                >
-                    {{ 
-                        applyDataLabel(
-                            FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
-                            yLabel.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
-                                v: yLabel.value,
-                                s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
-                                r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
-                            }),
-                            { datapoint: yLabel }
-                        )
-                    }}
-                </text>
+                <g ref="scaleLabels">
+                    <line
+                        data-cy="scale-line-y"
+                        v-for="(yLabel, i) in yLabels"
+                        :x1="yLabel.horizontal_x"
+                        :x2="yLabel.horizontal_x"
+                        :y1="drawingArea.bottom"
+                        :y2="drawingArea.bottom + 6"
+                        :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
+                        :stroke-width="1"
+                        stroke-linecap="round"
+                    />
+                    <text
+                        data-cy="scale-label-y"
+                        class="vue-data-ui-time-label"
+                        v-for="(yLabel, i) in yLabels"
+                        :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                        :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
+                        :transform="`translate(${yLabel.horizontal_x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
+                    >
+                        {{ 
+                            applyDataLabel(
+                                FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
+                                yLabel.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
+                                    v: yLabel.value,
+                                    s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
+                                    r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
+                                }),
+                                { datapoint: yLabel }
+                            )
+                        }}
+                    </text>
+                </g>
             </template>
 
             <!-- TIME LABELS VERTICAL-->
             <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'vertical'">
-                <g v-if="$slots['time-label']">
-                    <g v-for="(timeLabel, i) in timeLabels">
-                        <slot name="time-label" v-bind="{
-                            x: drawingArea.left + (barSlot * i) + barSlot / 2,
-                            y: drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY,
-                            fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
-                            fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
-                            transform: `translate(${drawingArea.left + (barSlot * i) + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`,
-                            absoluteIndex: timeLabel.absoluteIndex,
-                            content: timeLabel.text,
-                            textAnchor: FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle',
-                            show: true
-                        }"/>
-                    </g>
-                </g>
-                <g v-else>
-                    <g v-for="(timeLabel, i) in timeLabels">
-                        <text
-                            v-if="!String(timeLabel.text).includes('\n')"
-                            :key="i"
-                            data-cy="time-label"
-                            :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
-                                ? 'start'
-                                : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
-                                ? 'end'
-                                : 'middle'"
-                            :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
-                            :font-weight="FINAL_CONFIG.style.chart.grid.x.timeLabels.bold ? 'bold' : 'normal'"
-                            :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
-                            :transform="`translate(${drawingArea.left + barSlot * i + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
-                            style="cursor: pointer"
-                            @click="() => selectTimeLabel(timeLabel, i)"
-                        >
-    
-                            {{ timeLabel.text }}
-                        </text>
-                        <text
-                            v-else
-                            :key="i + '-multi'"
-                            data-cy="time-label"
-                            :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
-                                ? 'start'
-                                : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
-                                ? 'end'
-                                : 'middle'"
-                            :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
-                            :transform="`
-                                translate(
-                                ${drawingArea.left + barSlot * i + barSlot / 2},
-                                ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}
-                                ),
-                                rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})
-                            `"
-                            style="cursor: pointer"
-                            v-html="createTSpansFromLineBreaksOnX({
-                                content: String(timeLabel.text),
+                <g ref="timeLabelsEls">
+                    <g v-if="$slots['time-label']">
+                        <g v-for="(timeLabel, i) in timeLabels">
+                            <slot name="time-label" v-bind="{
+                                x: drawingArea.left + (barSlot * i) + barSlot / 2,
+                                y: drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY,
                                 fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
                                 fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
-                                x: 0,
-                                y: 0
-                            })"
-                            @click="() => selectTimeLabel(timeLabel, i)"
-                        />
+                                transform: `translate(${drawingArea.left + (barSlot * i) + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`,
+                                absoluteIndex: timeLabel.absoluteIndex,
+                                content: timeLabel.text,
+                                textAnchor: FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle',
+                                show: true
+                            }"/>
+                        </g>
+                    </g>
+                    <g v-else>
+                        <g v-for="(timeLabel, i) in timeLabels">
+                            <text
+                                v-if="!String(timeLabel.text).includes('\n')"
+                                class="vue-data-ui-time-label"
+                                :key="i"
+                                data-cy="time-label"
+                                :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
+                                    ? 'start'
+                                    : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
+                                    ? 'end'
+                                    : 'middle'"
+                                :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                                :font-weight="FINAL_CONFIG.style.chart.grid.x.timeLabels.bold ? 'bold' : 'normal'"
+                                :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
+                                :transform="`translate(${drawingArea.left + barSlot * i + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
+                                style="cursor: pointer"
+                                @click="() => selectTimeLabel(timeLabel, i)"
+                            >
+        
+                                {{ timeLabel.text }}
+                            </text>
+                            <text
+                                v-else
+                                :key="i + '-multi'"
+                                data-cy="time-label"
+                                :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
+                                    ? 'start'
+                                    : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
+                                    ? 'end'
+                                    : 'middle'"
+                                :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
+                                :transform="`
+                                    translate(
+                                    ${drawingArea.left + barSlot * i + barSlot / 2},
+                                    ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}
+                                    ),
+                                    rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})
+                                `"
+                                style="cursor: pointer"
+                                v-html="createTSpansFromLineBreaksOnX({
+                                    content: String(timeLabel.text),
+                                    fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
+                                    fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
+                                    x: 0,
+                                    y: 0
+                                })"
+                                @click="() => selectTimeLabel(timeLabel, i)"
+                            />
+                        </g>
                     </g>
                 </g>
             </template>
 
             <!-- TIME LABELS HORIZONTAL -->
             <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'horizontal'">
-                <g v-if="$slots['time-label']">
-                    <g v-for="(timeLabel, i) in timeLabels">
-                        <slot name="time-label" v-bind="{
-                            x: drawingArea.left - 8,
-                            y: drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3,
-                            fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
-                            fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
-                            transform: null,
-                            absoluteIndex: timeLabel.absoluteIndex,
-                            content: timeLabel.text,
-                            textAnchor: 'end',
-                            show: true
-                        }" />
-                    </g>
-                </g>
-                <g v-else>
-                    <g v-for="(timeLabel, i) in timeLabels">
-                        <text
-                            v-if="!String(timeLabel.text).includes('\n')"
-                            data-cy="time-label"
-                            text-anchor="end"
-                            :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
-                            :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                            :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                            :x="drawingArea.left - 8"
-                            :y="drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
-                            :style="{
-                                cursor: 'pointer'
-                            }"
-                            @click="() => selectTimeLabel(timeLabel, i)"
-                        >
-                            {{ timeLabel.text }}
-                        </text>
-                        <text
-                            v-else
-                            data-cy="time-label"
-                            text-anchor="end"
-                            :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
-                            :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                            :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                            :x="drawingArea.left - 8"
-                            :y="drawingArea.top + barSlot * i + barSlot / 2 + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
-                            style="cursor: pointer"
-                            @click="() => selectTimeLabel(timeLabel, i)"
-                            v-html="createTSpansFromLineBreaksOnY({
-                                content: String(timeLabel.text),
-                                fontSize: FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize,
-                                fill: FINAL_CONFIG.style.chart.grid.y.axisLabels.color,
+                <g ref="timeLabelsEls">
+                    <g v-if="$slots['time-label']">
+                        <g v-for="(timeLabel, i) in timeLabels">
+                            <slot name="time-label" v-bind="{
                                 x: drawingArea.left - 8,
-                                y: 0
-                            })"
-                        />
+                                y: drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3,
+                                fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
+                                transform: null,
+                                absoluteIndex: timeLabel.absoluteIndex,
+                                content: timeLabel.text,
+                                textAnchor: 'end',
+                                show: true
+                            }" />
+                        </g>
+                    </g>
+                    <g v-else>
+                        <g v-for="(timeLabel, i) in timeLabels">
+                            <text
+                                v-if="!String(timeLabel.text).includes('\n')"
+                                data-cy="time-label"
+                                text-anchor="end"
+                                :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                                :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                                :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                                :x="drawingArea.left - 8"
+                                :y="drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                                :style="{
+                                    cursor: 'pointer'
+                                }"
+                                @click="() => selectTimeLabel(timeLabel, i)"
+                            >
+                                {{ timeLabel.text }}
+                            </text>
+                            <text
+                                v-else
+                                data-cy="time-label"
+                                text-anchor="end"
+                                :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                                :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                                :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                                :x="drawingArea.left - 8"
+                                :y="drawingArea.top + barSlot * i + barSlot / 2 + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                                style="cursor: pointer"
+                                @click="() => selectTimeLabel(timeLabel, i)"
+                                v-html="createTSpansFromLineBreaksOnY({
+                                    content: String(timeLabel.text),
+                                    fontSize: FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize,
+                                    fill: FINAL_CONFIG.style.chart.grid.y.axisLabels.color,
+                                    x: drawingArea.left - 8,
+                                    y: 0
+                                })"
+                            />
+                        </g>
                     </g>
                 </g>
             </template>
@@ -1542,9 +1798,9 @@ defineExpose({
                     :y="drawingArea.top"
                     :width="barSlot"
                     :height="drawingArea.height < 0 ? 0 : drawingArea.height"
-                    @click="selectDatapoint(i)"
-                    @mouseenter="useTooltip(i)"
-                    @mouseleave="trapIndex = null; isTooltip = false"
+                    @click="() => selectDatapoint(i)"
+                    @mouseenter="() => useTooltip(i)"
+                    @mouseleave="() => onTrapLeave(i)"
                     :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
                     :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
                 />
@@ -1559,9 +1815,9 @@ defineExpose({
                     :y="drawingArea.top + (i * barSlot)"
                     :width="drawingArea.width < 0 ? 0 : drawingArea.width"
                     :height="barSlot"
-                    @click="selectDatapoint(i)"
-                    @mouseenter="useTooltip(i)"
-                    @mouseleave="trapIndex = null; isTooltip = false"
+                    @click="() => selectDatapoint(i)"
+                    @mouseenter="() => useTooltip(i)"
+                    @mouseleave="() => onTrapLeave(i)"
                     :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
                     :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
                 />
@@ -1573,22 +1829,6 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
-
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'bar',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    bar: {
-                        axis: {
-                            color: '#CCCCCC'
-                        },
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
 
         <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-dom-to-png-ignore>    
             <Slicer 
@@ -1637,6 +1877,8 @@ defineExpose({
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1647,7 +1889,7 @@ defineExpose({
         </Tooltip>
 
         <div ref="chartLegend">
-            <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig"
+            <Legend v-if="FINAL_CONFIG.style.chart.legend.show" :legendSet="legendSet" :config="legendConfig"
                 @clickMarker="({ legend }) => legend.segregate()">
                 <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
                     <Shape
@@ -1660,7 +1902,7 @@ defineExpose({
                 </template>
 
                 <template #item="{ legend }">
-                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
                         {{ legend.name }}
                     </div>
                 </template>
@@ -1708,10 +1950,13 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 @import "../vue-data-ui.css";
 .vue-ui-stackbar * {
     transition: unset;
@@ -1743,6 +1988,13 @@ defineExpose({
     to {
         transform: scale(1,1);
         opacity: 1;
+    }
+}
+
+.vue-data-ui-loading {
+    rect, line, text {
+        animation: none !important;
+        transition: none !important;
     }
 }
 </style>

@@ -79,6 +79,9 @@ describe('<VueUiStripPlot />', () => {
                     'id',
                     'name',
                     'parentId',
+                    'parentName',
+                    'parentIndex',
+                    'plotIndex',
                     'value',
                     'x',
                     'y'

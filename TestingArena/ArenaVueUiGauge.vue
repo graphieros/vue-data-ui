@@ -7,18 +7,22 @@ import convertArrayToObject from "./convertModel";
 
 const source = ref({
     base: 100,
-    value: 0,
+    value: 50,
     series: [
-        { from: -100, to: -70, name: 'series 1', nameOffsetRatio: 1},
+        { from: -100, to: -70, name: 'series 1 is long\nand on 2 lines', nameOffsetRatio: 1},
         { from: -70, to: -35, name: 'series 2', nameOffsetRatio: 1 },
         { from: -35, to: 0, name: 'series 3', nameOffsetRatio: 1  },
         { from: 0, to: 50, name: 'series 4', nameOffsetRatio: 1  },
-        { from: 50, to: 100, name: 'series 5'  }
+        { from: 50, to: 100, name: 'series 5 is long too'  }
     ]
 })
 
-const dataset = computed(() => {
-    return source.value
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = source.value;
+    }, 2000)
 })
 
 const alternateDataset = ref({
@@ -51,13 +55,15 @@ function alterDataset() {
 }
 
 
-// onMounted(() => {
-//     setTimeout(() => {
-//         source.value.value = 50
-//     }, 2000)
-// })
+onMounted(() => {
+    setTimeout(() => {
+        source.value.value = 25
+    }, 4000)
+})
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -122,7 +128,7 @@ const model = ref([
     { key: 'translations.base', def: 'Base population'},
 
     { key: 'style.chart.layout.segmentNames.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.layout.segmentNames.curved', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.segmentNames.curved', def: false, type: 'checkbox'},
     { key: 'style.chart.layout.segmentNames.offsetRatio', def: 1.1, type: 'range', min: 0.5, max: 1.3, step: 0.01},
     { key: 'style.chart.layout.segmentNames.fontSize', def: 16, type: 'number', min: 8, max: 42},
     { key: 'style.chart.layout.segmentNames.useSerieColor', def: true, type: 'checkbox'},
@@ -159,7 +165,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)

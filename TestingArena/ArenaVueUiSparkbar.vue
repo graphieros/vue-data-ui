@@ -1,41 +1,47 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import LocalVueUiSparkbar from '../src/components/vue-ui-sparkbar.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
-const dataset = ref([
-    {
-        name: "quality",
-        value: 200,
-        rounding: 2,
-        suffix: "%",
-        prefix: 'P',
-        target: 1000,
-        // formatter: ({value, config}) => {
-        //     return `f1 - ${value}`
-        // }
-    },
-    {
-        name: "popularity",
-        value: 2.0412,
-        rounding: 2,
-        suffix: "%",
-        prefix: 'P',
-        target: 2.3,
-        // formatter: ({value}) => {
-        //     return `f2 - ${value}`
-        // }
-    },
-    {
-        name: "maintenance",
-        value: 33.3291,
-        rounding: 2,
-        suffix: "%",
-        prefix: 'P'
-    },
-]);
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
+            {
+                name: "quality",
+                value: 200,
+                rounding: 2,
+                suffix: "%",
+                prefix: 'P',
+                target: 1000,
+                // formatter: ({value, config}) => {
+                //     return `f1 - ${value}`
+                // }
+            },
+            {
+                name: "popularity",
+                value: 2.0412,
+                rounding: 2,
+                suffix: "%",
+                prefix: 'P',
+                target: 2.3,
+                // formatter: ({value}) => {
+                //     return `f2 - ${value}`
+                // }
+            },
+            {
+                name: "maintenance",
+                value: 33.3291,
+                rounding: 2,
+                suffix: "%",
+                prefix: 'P'
+            },
+        ]
+    }, 2000);
+})
 
 function addDatapoint() {
     dataset.value.push({
@@ -75,6 +81,8 @@ function toggleProps() {
 }
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.animation.show', def:  true, type: 'checkbox'},
@@ -90,7 +98,7 @@ const model = ref([
     { key: 'style.bar.gradient.intensity', def: 40, type: 'range', min: 0, max: 100},
     { key: 'style.bar.gradient.underlayerColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.labels.fontSize', def: 16, type: 'number', min: 8, max: 48},
-    { key: 'style.labels.name.position', def: 'top', type: 'select', options: ['left', 'top', 'top-left', 'top-center', 'top-right', 'right']},
+    { key: 'style.labels.name.position', def: 'top-left', type: 'select', options: ['left', 'top', 'top-left', 'top-center', 'top-right', 'right']},
     { key: 'style.labels.name.width', def: '100%', type: 'text'},
     { key: 'style.labels.name.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.labels.name.bold', def: false, type: 'checkbox'},
@@ -123,10 +131,25 @@ const themeOptions = ref([
 const currentTheme = ref(themeOptions.value[6])
 
 const config = computed(() => {
-    return {
+    const c = {
         ...convertArrayToObject(model.value),
         theme: currentTheme.value,
         customPalette: ['#6376DD', "#DD3322", "#66DDAA"],
+    }
+
+    return {
+        ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            },
+        }
     }
 });
 

@@ -8,15 +8,24 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
-const dataset = ref({
-    "1": 96,
-    "2": 64,
-    "3": 128,
-    "4": 256,
-    "5": 384
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = {
+            "1": 96,
+            "2": 64,
+            "3": 128,
+            "4": 256,
+            "5": 384
+        }
+    }, 2000);
 })
 
 const model = ref([
+    { key: 'debug', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
+    { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
@@ -33,7 +42,7 @@ const model = ref([
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.grid.show', def: true, type: 'checkbox'}, // not applied ?
     { key: 'style.chart.layout.grid.stroke', def: '#e1e5e8', type: 'color'},
@@ -95,12 +104,23 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[0])
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        events: {
+            datapointEnter: ({ datapoint, seriesIndex }) => {
+                console.log('enter event', { datapoint, seriesIndex });
+            },
+            datapointLeave: ({ datapoint, seriesIndex }) => {
+                console.log('leave event', { datapoint, seriesIndex });
+            },
+            datapointClick: ({ datapoint, seriesIndex }) => {
+                console.log('click event', { datapoint, seriesIndex });
+            },
+        },
         style: {
             ...c.style,
             chart: {
@@ -140,14 +160,19 @@ onMounted(async () => {
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
+
+    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+        <LocalVueUiMoodRadar :dataset="dataset" :config="{ ...config, responsive: true }"/>
+    </div>
+
     <Box comp="VueUiMoodRadar" :dataset="dataset">
         <template #title>VueUiMoodRadar</template>
 
         <template #local>
             <LocalVueUiMoodRadar :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
-                <template #chart-background>
+                <!-- <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-                </template>
+                </template> -->
                 <template #optionPdf>
                     PRINT PDF
                 </template>

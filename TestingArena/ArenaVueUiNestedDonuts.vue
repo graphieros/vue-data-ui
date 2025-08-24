@@ -8,9 +8,13 @@ import { useArena } from "../src/useArena";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
-const dataset = ref([
+const dataset = ref([])
+onMounted(() => {
+    dataset.value = undefined;
+    setTimeout(() => {
+        dataset.value = [
     {
-        name: "Group 1",
+        name: "Group 1 is too long",
         series: [
             {
                 name: 'Serie 1',
@@ -43,7 +47,9 @@ const dataset = ref([
             },
         ]
     },
-])
+]
+    }, 2000)
+})
 
 function addDatapoint() {
     dataset.value[0].series.push({
@@ -53,6 +59,7 @@ function addDatapoint() {
 }
 
 const model = ref([
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -65,12 +72,14 @@ const model = ref([
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
 
+    { key: 'startAnimation.show', def: true, type: 'checkbox'},
+
     { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
     { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
-    { key: 'useCssAnimation', def: true, type: 'checkbox'},
+    { key: 'useCssAnimation', def: false, type: 'checkbox'},
     { key: 'useBlurOnHover', def: true, type: 'checkbox'},
     { key: 'style.fontFamily', def: 'inherit', type: 'text'},
     { key: 'style.chart.useGradient', def: true, type: 'checkbox'},
@@ -103,9 +112,10 @@ const model = ref([
     { key: 'style.chart.layout.labels.dataLabels.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.layout.labels.dataLabels.showDonutName', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.dataLabels.boldDonutName', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.labels.dataLabels.donutNameAbbreviation', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.dataLabels.donutNameAbbreviation', def: false, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.dataLabels.curvedDonutName', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.dataLabels.donutNameMaxAbbreviationSize', def: 3, type: 'number', min: 1, max: 12},
-    { key: 'style.chart.layout.labels.dataLabels.donutNameOffsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.layout.labels.dataLabels.donutNameOffsetY', def: -6, type: 'number', min: -100, max: 100},
     { key: 'style.chart.layout.donut.strokeWidth', def: 200, type: 'number', min: 50, max: 400},
     { key: 'style.chart.layout.donut.borderWidth', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.layout.donut.useShadow', def: true, type: 'checkbox' },
@@ -195,6 +205,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            events: {
+                datapointEnter: ({ datapoint, seriesIndex }) => {
+                    console.log({ datapoint, seriesIndex })
+                },
+                datapointLeave: ({ datapoint, seriesIndex }) => {
+                    console.log({ datapoint, seriesIndex })
+                },
+                datapointClick: ({ datapoint, seriesIndex }) => {
+                    console.log({ datapoint, seriesIndex })
+                },
+            },
             style: {
                 ...c.style,
                 chart: {

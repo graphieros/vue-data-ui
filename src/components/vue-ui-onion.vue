@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount, defineAsyncComponent, shallowRef } from "vue";
+import { ref, computed, nextTick, onMounted, watch, onBeforeUnmount, defineAsyncComponent, shallowRef, toRefs } from "vue";
 import {
     applyDataLabel,
+    autoFontSize,
     convertColorToHex, 
     convertCustomPalette, 
     createCsvContent, 
@@ -14,6 +15,7 @@ import {
     objectIsEmpty,
     palette,
     themePalettes,
+    treeShake,
     XMLNS
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
@@ -27,12 +29,14 @@ import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import img from "../img.js";
+import { useLoading } from "../useLoading.js";
+import BaseScanner from "../atoms/BaseScanner.vue";
+import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
@@ -71,14 +75,47 @@ const noTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
+const resizing = ref(false);
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+            anim()
+        })
     },
-    set: (newCfg) => {
-        return newCfg
-    }
+    skeletonDataset: [
+        { name: "_", percentage: 50, value: 1, color: '#DBDBDB'},
+        { name: "_", percentage: 50, value: 1, color: '#C4C4C4'},
+        { name: "_", percentage: 50, value: 1, color: '#ADADAD'},
+        { name: "_", percentage: 50, value: 1, color: '#969696'},
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        gutter: {
+                            color: '#99999950'
+                        },
+                        labels: { show: false }
+                    },
+                    legend: {
+                        backgroundColor: 'transparent'
+                    }
+                }
+            }
+        }
+    })
 });
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -103,7 +140,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -134,6 +173,14 @@ const mutableConfig = ref({
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
 
+// v3 - Essential to make shifting between loading config and final config work
+watch(FINAL_CONFIG, () => {
+    mutableConfig.value = {
+        showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    }
+}, { immediate: true });
+
 const svg = ref({
     height: 512,
     width: 512,
@@ -153,18 +200,45 @@ onMounted(() => {
     prepareChart();
 });
 
+const labels_font_size = computed({
+    get: () => FINAL_CONFIG.value.style.chart.layout.labels.fontSize,
+    set: v => v
+});
+
+const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
+    svgRef,
+    fontSize: FINAL_CONFIG.value.style.chart.layout.labels.fontSize,
+    minFontSize: FINAL_CONFIG.value.style.chart.layout.labels.minFontSize,
+    sizeRef: labels_font_size,
+    labelClass: '.vue-ui-onion-label'
+});
+
+const debug = computed(() => FINAL_CONFIG.value.debug);
+let to = null
+
 function prepareChart() {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiOnion',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
+        manualLoading.value = true;
+    }
+
+    // v3
+    if (!objectIsEmpty(props.dataset)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
     }
 
     if (FINAL_CONFIG.value.responsive) {
         const paddingRatio = 64 / 512;
         const handleResize = throttle(() => {
-            const { width, height } = useResponsive({
+            if (to) {
+                clearTimeout(to)
+            }
+            resizing.value = true;
+            let { width, height } = useResponsive({
                 chart: onionChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
@@ -172,7 +246,9 @@ function prepareChart() {
                 noTitle: noTitle.value
             });
 
-            requestAnimationFrame(() => {
+            height -= 12
+
+            requestAnimationFrame(async () => {
                 svg.value.width = width;
                 svg.value.height = height;
                 svg.value.padding.top = Math.max(width, height) * paddingRatio;
@@ -180,6 +256,10 @@ function prepareChart() {
                 svg.value.padding.bottom = Math.max(width, height) * paddingRatio;
                 svg.value.padding.left = Math.max(width, height) * paddingRatio;
                 svg.value.minRadius = Math.min(width, height) * paddingRatio;
+                to = setTimeout(() => {
+                    resizing.value = false;
+                    autoSizeLabels();
+                }, 0)
             });
         });
 
@@ -194,6 +274,7 @@ function prepareChart() {
         observedEl.value = onionChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
     }
+    requestAnimationFrame(autoSizeLabels);
 }
 
 onBeforeUnmount(() => {
@@ -222,7 +303,7 @@ const drawableArea = computed(() => {
 
 const immutableDataset = computed(() => {
 
-    props.dataset.forEach((ds, i) => {
+    FINAL_DATASET.value.forEach((ds, i) => {
         if([null, undefined].includes(ds.name)){
             error({
                 componentName: 'VueUiOnion',
@@ -241,7 +322,7 @@ const immutableDataset = computed(() => {
         }
     })
 
-    return props.dataset.map((onion, i) => {
+    return FINAL_DATASET.value.map((onion, i) => {
         const id = `onion_serie_${i}_${uid.value}`;
         return {
             ...onion,
@@ -265,10 +346,16 @@ const raf = ref(null)
 const maxPercentage = computed(() => Math.max(...immutableDataset.value.map(ds => ds.percentage)))
 const isLoaded = ref(false);
 
-watch(() => immutableDataset.value, anim, { immediate: true })
+watch(() => immutableDataset.value, anim, { immediate: true, deep: true })
+
+watch(() => props.dataset, (_) => {
+    if (Array.isArray(_) && _.length > 0) {
+        manualLoading.value = false;
+    }
+}, { deep: true })
 
 function anim() {
-    if (isAnimated.value && !isLoaded.value) {
+    if (isAnimated.value && !isLoaded.value && !loading.value) {
         animDataset.value = immutableDataset.value.map(ds => {
             return {
                 ...ds,
@@ -443,9 +530,27 @@ function toggleFullscreen(state) {
     step.value += 1;
 }
 
+function onTrapClick({ datapoint }) {
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: datapoint.absoluteIndex });
+    }
+}
+
+function onTrapLeave({ datapoint }) {
+    selectedSerie.value = undefined;
+    isTooltip.value = false;
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.absoluteIndex });
+    }
+}
+
 const dataTooltipSlot = ref(null);
 
 function useTooltip({ datapoint, seriesIndex, show = true }) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.absoluteIndex });
+    }
+
     const absoluteIndex = datapoint.absoluteIndex;
     selectedSerie.value = seriesIndex;
 
@@ -643,8 +748,7 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS"
-            v-if="isDataset"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'resizing': resizing }"
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
@@ -678,7 +782,12 @@ defineExpose({
                 :stroke-dashoffset="onion.path.fullOffset"
                 stroke-linecap="round"
                 :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
-                style="transform:rotate(-90deg);transform-origin: 50% 50%"
+                :style="{
+                    transform: 'rotate(-90deg)',
+                    transformOrigin: '50% 50%',
+                    transition: resizing || loading ? 'none' : 'all 0.3s ease-in-out !important',
+                    animation: resizing || loading ? 'none' : 'xyAnimation 0.5s ease-in'
+                }"
             />
             
             <!-- TRACKS -->
@@ -695,7 +804,12 @@ defineExpose({
                 :stroke-dashoffset="onion.path.dashOffset"
                 :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
                 stroke-linecap="round"
-                style="transform:rotate(-90deg);transform-origin: 50% 50%"
+                :style="{
+                    transform: 'rotate(-90deg)',
+                    transformOrigin: '50% 50%',
+                    transition: resizing || loading ? 'none' : 'all 0.3s ease-in-out !important',
+                    animation: resizing || loading ? 'none' : 'xyAnimation 0.5s ease-in'
+                }"
             />
 
             <!-- GRADIENT -->
@@ -718,7 +832,12 @@ defineExpose({
                     stroke-linecap="round"
                     :stroke-dasharray="onion.path.dashArray"
                     :stroke-dashoffset="onion.path.dashOffset"
-                    style="transform:rotate(-90deg);transform-origin: 50% 50%;"
+                    :style="{
+                        transform: 'rotate(-90deg)',
+                        transformOrigin: '50% 50%',
+                        transition: resizing || loading ? 'none' : 'all 0.3s ease-in-out !important',
+                        animation: resizing || loading ? 'none' : 'xyAnimation 0.5s ease-in'
+                    }"
                 />
             </g>
             
@@ -737,13 +856,17 @@ defineExpose({
                 :stroke-dashoffset="onion.path.fullOffset"
                 stroke-linecap="round"
                 class="vue-ui-onion-path"
-                style="transform:rotate(-90deg);transform-origin: 50% 50%"
+                :style="{
+                    transform: 'rotate(-90deg)',
+                    transformOrigin: '50% 50%',
+                }"
                 @mouseenter="useTooltip({
                     datapoint: onion,
                     show: true,
                     seriesIndex: i,
                 })"
-                @mouseleave="selectedSerie = undefined; isTooltip = false"
+                @mouseleave="onTrapLeave({ datapoint: onion })"
+                @click="onTrapClick({ datapoint: onion })"
             />
 
             <!-- LABELS -->
@@ -755,9 +878,11 @@ defineExpose({
                         show: true,
                         seriesIndex: i,
                     })"
-                    @mouseleave="selectedSerie = undefined; isTooltip = false"
+                    @mouseleave="onTrapLeave({ datapoint: onion })"
+                    @click="onTrapClick({ datapoint: onion })"
                 >                
                     <text
+                        class="vue-ui-onion-label"
                         data-cy="onion-label"
                         v-if="!segregated.includes(onion.id)"
                         :x="svg.width / 2 - onionSkin.gutter * 0.8 + FINAL_CONFIG.style.chart.layout.labels.offsetX"
@@ -804,19 +929,6 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'onion',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    onion: {
-                        color: FINAL_CONFIG.style.chart.layout.gutter.color
-                    }
-                }
-            }"
-        />
-
         <!-- LEGEND AS DIV -->
         <div ref="chartLegend">
             <Legend
@@ -827,7 +939,7 @@ defineExpose({
                 @clickMarker="({legend}) => segregate(legend.id)"
             >
                 <template #item="{ legend }">
-                    <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                    <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
                         {{ legend.name ? legend.name + ': ' : '' }} {{ (legend.percentage || 0).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage) }}%
                     </div>
                 </template>
@@ -855,6 +967,8 @@ defineExpose({
             :content="tooltipContent"
             :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -896,6 +1010,9 @@ defineExpose({
                 </DataTable>
             </template>
         </Accordion>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
@@ -910,11 +1027,10 @@ defineExpose({
     position: relative;
 }
 
-circle {
+/* circle {
     animation: xyAnimation 0.5s ease-in-out;
-    transform-origin: center;
-    transition: all 0.3s ease-in-out !important;
-}
+} */
+
 @keyframes xyAnimation {
     0% {
         transform: scale(0.9,0.9) rotate(-90g);

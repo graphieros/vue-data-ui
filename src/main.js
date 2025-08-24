@@ -41,6 +41,7 @@ import {
     VueUiTiremarks,
     VueUiTreemap,
     VueUiVerticalBar,
+    VueUiHorizontalBar, // v3 renaming
     VueUiWaffle, 
     VueUiWheel,
     VueUiXy,
@@ -111,6 +112,7 @@ app.component("VueUiThermometer", VueUiThermometer);
 app.component("VueUiTiremarks", VueUiTiremarks);
 app.component("VueUiTreemap", VueUiTreemap);
 app.component("VueUiVerticalBar", VueUiVerticalBar);
+app.component("VueUiHorizontalBar", VueUiHorizontalBar); // v3 renaming
 app.component("VueUiWaffle", VueUiWaffle);
 app.component("VueUiWheel", VueUiWheel);
 app.component("VueUiXy", VueUiXy);

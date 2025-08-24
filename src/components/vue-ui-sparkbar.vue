@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, nextTick, useSlots, defineAsyncComponent } from "vue";
+import { ref, computed, onMounted, watch, nextTick, useSlots, defineAsyncComponent, toRefs } from "vue";
 import {
     applyDataLabel,
     convertColorToHex,
@@ -13,14 +13,16 @@ import {
     setOpacity,
     shiftHue,
     themePalettes,
+    treeShake,
     XMLNS
 } from "../lib";
 import { useNestedProp } from "../useNestedProp";
 import { useConfig } from "../useConfig";
 import themes from "../themes.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
+import { useLoading } from "../useLoading";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 
 const { vue_ui_sparkbar: DEFAULT_CONFIG } = useConfig();
 
@@ -54,20 +56,41 @@ onMounted(() => {
     }
 });
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
-});
-
 const uid = ref(createUid());
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        { name: '_', value: 21, target: 25, color: '#808080' },
+        { name: '_', value: 13, target: 25, color: '#ADADAD' },
+        { name: '_', value: 8, target: 25, color: '#DBDBDB' },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            style: {
+                backgroundColor: '#99999930',
+                animation: { show: false },
+                layout: { independant: true },
+                gutter: {
+                    backgroundColor: '#6A6A6A',
+                    opacity: 50
+                },
+                bar: {
+                    gradient: {
+                        underlayerColor: '#6A6A6A'
+                    }
+                }
+            }
+        }
+    })
 });
+
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -95,7 +118,7 @@ const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 })
 
-const safeDatasetCopy = ref(props.dataset.map(d => {
+const safeDatasetCopy = ref(FINAL_DATASET.value.map(d => {
     return {
         ...d,
         value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
@@ -109,17 +132,18 @@ onMounted(async () => {
     if(objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiSparkbar',
-            type: 'dataset'
+            type: 'dataset',
+            debug: debug.value
         })
     }
     useAnimation();
-})
+});
 
 function useAnimation() {
     if (FINAL_CONFIG.value.style.animation.show) {
         const chunks = FINAL_CONFIG.value.style.animation.animationFrames;
-        const chunkSet = props.dataset.map((d, i) => d.value / chunks);
-        const total = props.dataset.map(d => d.value || 0).reduce((a, b) => a + b, 0);
+        const chunkSet = FINAL_DATASET.value.map((d, i) => d.value / chunks);
+        const total = FINAL_DATASET.value.map(d => d.value || 0).reduce((a, b) => a + b, 0);
         let start = 0;
 
         function animate() {
@@ -133,7 +157,7 @@ function useAnimation() {
                 });
                 rafId.value = requestAnimationFrame(animate)
             } else {
-                safeDatasetCopy.value = props.dataset.map(d => {
+                safeDatasetCopy.value = FINAL_DATASET.value.map(d => {
                     return {
                         ...d,
                         value: d.value || 0,
@@ -146,10 +170,10 @@ function useAnimation() {
     }
 }
 
-watch(() => props.dataset, async (v) => {
+watch(() => FINAL_DATASET.value, async (v) => {
     cancelAnimationFrame(rafId.value);
 
-    safeDatasetCopy.value = props.dataset.map(d => {
+    safeDatasetCopy.value = FINAL_DATASET.value.map(d => {
     return {
         ...d,
         value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
@@ -166,11 +190,11 @@ const svg = ref({
 });
 
 const max = computed(() => {
-    return Math.max(...props.dataset.map(d => d.value));
+    return Math.max(...FINAL_DATASET.value.map(d => d.value));
 });
 
 const drawableDataset = computed(() => {
-    props.dataset.forEach((ds, i) => {
+    FINAL_DATASET.value.forEach((ds, i) => {
         getMissingDatasetAttributes({
             datasetObject: ds,
             requiredAttributes: ['name', 'value']
@@ -179,7 +203,8 @@ const drawableDataset = computed(() => {
                 componentName: 'VueUiSparkbar',
                 type: 'datasetSerieAttribute',
                 property: attr,
-                index: i
+                index: i,
+                debug: debug.value
             });
         });
     })
@@ -227,7 +252,22 @@ function getTarget(bar) {
 const emits = defineEmits(['selectDatapoint'])
 
 function selectDatapoint(datapoint, index) {
-    emits("selectDatapoint", { datapoint, index })
+    emits("selectDatapoint", { datapoint, index });
+    if (FINAL_CONFIG.value.events.datapointClick) {
+        FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex: index })
+    }
+}
+
+function onTrapEnter(datapoint, index) {
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: index });
+    }
+}
+
+function onTrapLeave(datapoint, index) {
+    if (FINAL_CONFIG.value.events.datapointLeave) {
+        FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: index });
+    }
 }
 
 </script>
@@ -237,6 +277,7 @@ function selectDatapoint(datapoint, index) {
         class="vue-ui-sparkbar"
         :style="{
             width: '100%',
+            position: 'relative',
             fontFamily: FINAL_CONFIG.style.fontFamily,
             background: props.backgroundOpacity !== null ? setOpacity(FINAL_CONFIG.style.backgroundColor, props.backgroundOpacity) : FINAL_CONFIG.style.backgroundColor
         }"
@@ -281,9 +322,15 @@ function selectDatapoint(datapoint, index) {
             </div>
         </div>
         <template v-for="(bar, i) in drawableDataset">
-            <div data-cy="datapoint-wrapper" v-if="isDataset" :style="`display:flex !important;${['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? `flex-direction: ${FINAL_CONFIG.style.labels.name.position === 'right' ? 'row-reverse' : 'row'} !important` : 'flex-direction:column !important'};gap:${FINAL_CONFIG.style.gap}px !important;align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`" @click="() => selectDatapoint(bar, i)">
+            <div 
+                data-cy="datapoint-wrapper" 
+                :style="`display:flex !important;${['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? `flex-direction: ${FINAL_CONFIG.style.labels.name.position === 'right' ? 'row-reverse' : 'row'} !important` : 'flex-direction:column !important'};gap:${FINAL_CONFIG.style.gap}px !important;align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`" 
+                @click="selectDatapoint(bar, i)"
+                @mouseenter="onTrapEnter(bar, i)"
+                @mouseleave="onTrapLeave(bar, i)"
+            >
                 <!-- CUSTOM DATALABEL -->
-                <slot name="data-label" v-bind="{ bar: {
+                <slot v-if="!loading" name="data-label" v-bind="{ bar: {
                     ...bar,
                     target: getTarget(bar),
                     valueLabel: applyDataLabel(
@@ -311,52 +358,79 @@ function selectDatapoint(datapoint, index) {
                 }}"/>
 
                 <!-- DEFAULT DATALABEL -->
-                <div 
-                    v-if="!$slots['data-label']" 
+                <div
+                    v-if="!$slots['data-label'] || loading"
                     :style="{
+                        display: 'flex',
+                        justifyContent: (
+                        ['right', 'top-right'].includes(FINAL_CONFIG.style.labels.name.position) ? 'flex-end' :
+                        ['top-center'].includes(FINAL_CONFIG.style.labels.name.position) ? 'center' :
+                        'flex-start'
+                        ),
+                        alignItems: 'center',
                         width: FINAL_CONFIG.style.labels.name.width,
                         color: FINAL_CONFIG.style.labels.name.color,
                         fontSize: FINAL_CONFIG.style.labels.fontSize + 'px',
                         fontWeight: FINAL_CONFIG.style.labels.name.bold ? 'bold' : 'normal',
-                        textAlign: ['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? 'left' : ['top', 'top-left'].includes(FINAL_CONFIG.style.labels.name.position) ? 'left' : FINAL_CONFIG.style.labels.name.position === 'top-center' ? 'center' : 'right' 
+                        flexWrap: 'wrap'
                     }"
-                >
-                    <span :data-cy="`sparkbar-name-${i}`">{{ bar.name }}</span>
-                    <span 
-                        :data-cy="`sparkbar-value-${i}`"
-                        v-if="FINAL_CONFIG.style.labels.value.show"
-                        :style="`font-weight:${FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'}`"
-                    >: {{ applyDataLabel(
-                        bar.formatter,
-                        bar.value,
-                        dataLabel({
-                            p: bar.prefix || '',
-                            v: bar.value,
-                            s: bar.suffix || '',
-                            r: bar.rounding || 0
-                        }),
-                        { datapoint: bar, seriesIndex: i }
-                        ) 
-                    }}
-                    </span>
-                    <span
-                        :data-cy="`sparkbar-target-value-${i}`"
-                        v-if="FINAL_CONFIG.style.layout.showTargetValue"
+                    >
+                    <template v-if="loading">
+                        <div
+                            class="vue-ui-sparkbar-skeleton-name"
+                            :style="{
+                                width: '60px',
+                                height: FINAL_CONFIG.style.labels.fontSize + 'px',
+                                borderRadius: FINAL_CONFIG.style.labels.fontSize / 4 + 'px',
+                                display: 'flex',
+                                alignItems:'center',
+                                justifyContent: 'space-between',
+                                marginTop: '5px'
+                            }"
                         >
-                        {{ ' ' + FINAL_CONFIG.style.layout.targetValueText }}  
-                        {{ applyDataLabel(
+                            <div :style="{ height: '100%', width: '40px', borderRadius: FINAL_CONFIG.style.labels.fontSize / 4 + 'px', backgroundColor: '#6A6A6A80'}"/>
+                            <div :style="{ height: '100%', width: '15px', borderRadius: FINAL_CONFIG.style.labels.fontSize / 4 + 'px', backgroundColor: '#6A6A6A80'}"/>
+                        </div>
+                    </template>
+
+                    <template v-else>
+                        <span :data-cy="`sparkbar-name-${i}`">{{ bar.name }}</span>
+                        <span 
+                            :data-cy="`sparkbar-value-${i}`"
+                            v-if="FINAL_CONFIG.style.labels.value.show"
+                            :style="`font-weight:${FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'}`"
+                        >: {{ applyDataLabel(
                             bar.formatter,
-                            getTarget(bar),
+                            bar.value,
                             dataLabel({
                                 p: bar.prefix || '',
-                                v: getTarget(bar),
+                                v: bar.value,
                                 s: bar.suffix || '',
                                 r: bar.rounding || 0
                             }),
                             { datapoint: bar, seriesIndex: i }
-                            )
+                            ) 
                         }}
-                    </span>
+                        </span>
+                        <span
+                            :data-cy="`sparkbar-target-value-${i}`"
+                            v-if="FINAL_CONFIG.style.layout.showTargetValue"
+                            >
+                            {{ ' ' + FINAL_CONFIG.style.layout.targetValueText }}  
+                            {{ applyDataLabel(
+                                bar.formatter,
+                                getTarget(bar),
+                                dataLabel({
+                                    p: bar.prefix || '',
+                                    v: getTarget(bar),
+                                    s: bar.suffix || '',
+                                    r: bar.rounding || 0
+                                }),
+                                { datapoint: bar, seriesIndex: i }
+                                )
+                            }}
+                        </span>
+                    </template>
                 </div>
 
                 <!-- BAR -->
@@ -386,17 +460,7 @@ function selectDatapoint(datapoint, index) {
             <slot name="source" />
         </div>
 
-        <Skeleton
-            v-if="!isDataset"
-            :config="{
-                type: 'sparkbar',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                    sparkbar: {
-                        color: '#CCCCCC'
-                    }
-                }
-            }"
-        />
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent } from "vue";
+import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, toRefs } from "vue";
 import { useConfig } from "../useConfig";
-import { XMLNS, createUid, error, getMissingDatasetAttributes, objectIsEmpty } from "../lib";
+import { XMLNS, createUid, error, getMissingDatasetAttributes, objectIsEmpty, treeShake } from "../lib";
 import { useNestedProp } from "../useNestedProp";
 import { convertColorToHex } from "../lib";
 import { lightenHexColor } from "../lib";
@@ -15,10 +15,13 @@ import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
+import { throttle } from "../canvas-lib";
+import { useResponsive } from "../useResponsive";
+import { useLoading } from "../useLoading";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_bullet: DEFAULT_CONFIG } = useConfig();
@@ -42,11 +45,14 @@ const bulletChart = ref(null);
 const chartTitle = ref(null);
 const titleStep = ref(0);
 const chartLegend = ref(null);
+const source = ref(null);
 const step = ref(0);
+const resizeObserver = ref(null);
+const observedEl = ref(null);
 
 const isDataset = computed({
     get: () => {
-        return props.dataset.hasOwnProperty('value')
+        return FINAL_DATASET.value.hasOwnProperty('value')
     },
     set: (bool) => {
         return bool
@@ -54,7 +60,7 @@ const isDataset = computed({
 })
 
 const hasSegments = computed(() => {
-    if(!props.dataset.segments) {
+    if(!FINAL_DATASET.value.segments) {
         console.warn(`VueUiBullet: dataset segments is empty. Provide segments with this datastructure:\n
 segments: [
     {
@@ -69,7 +75,7 @@ segments: [
         isDataset.value = false;
         return false;
     }
-    if(!Array.isArray(props.dataset.segments)) {
+    if(!Array.isArray(FINAL_DATASET.value.segments)) {
         console.warn(`VueUiBullet: dataset segments must be an array of objects with this datastructure:\n
 segments: [
     {
@@ -84,7 +90,7 @@ segments: [
         isDataset.value = false;
         return false;
     }
-    if (!props.dataset.segments.length) {
+    if (!FINAL_DATASET.value.segments.length) {
         console.warn(`VueUiBullet: dataset segments is empty. Provide segments with this datastructure:\n
 segments: [
     {
@@ -102,17 +108,19 @@ segments: [
     return true;
 })
 
-onMounted(prepareChart);
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
-    if(objectIsEmpty(props.dataset)) {
+    if(objectIsEmpty(FINAL_DATASET.value)) {
         error({
             componentName: 'VueUiBullet',
-            type: 'dataset'
-        })
+            type: 'dataset',
+            debug: debug.value
+        });
+        manualLoading.value = true;
     } else {
         if (hasSegments.value) {
-            props.dataset.segments.forEach((segment, i) => {
+            FINAL_DATASET.value.segments.forEach((segment, i) => {
                 getMissingDatasetAttributes({
                     datasetObject: segment,
                     requiredAttributes: ['name', 'from', 'to']
@@ -122,19 +130,55 @@ function prepareChart() {
                         componentName: 'VueUiBullet segment',
                         type: 'datasetSerieAttribute',
                         property: attr,
-                        index: i
+                        index: i,
+                        debug: debug.value
                     })
                 })
             })
         } else {
             isDataset.value = false;
+            manualLoading.value = true;
         }
     }
 
-    if (FINAL_CONFIG.value.style.chart.animation.show) {
-        useAnimation(props.dataset.value || 0);
+    // v3
+    if (!objectIsEmpty(FINAL_DATASET.value)) {
+        manualLoading.value = FINAL_CONFIG.value.loading;
+    }
+
+    if (FINAL_CONFIG.value.responsive) {
+        const handleResize = throttle(() => {
+            const { width, height } = useResponsive({
+                chart: bulletChart.value,
+                title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+                legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
+                source: source.value
+            });
+
+            requestAnimationFrame(() => {
+                defaultSizes.value.width = width;
+                defaultSizes.value.height = height - 12;
+            })
+        });
+
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+        }
+
+        resizeObserver.value = new ResizeObserver(handleResize);
+        observedEl.value = bulletChart.value.parentNode;
+        resizeObserver.value.observe(observedEl.value);
+    }
+
+    if (FINAL_CONFIG.value.style.chart.animation.show && !loading.value) {
+        useAnimation(FINAL_DATASET.value.value || 0);
     }
 }
+
+onMounted(prepareChart);
 
 const uid = ref(createUid());
 
@@ -155,49 +199,102 @@ function prepareConfig() {
     }
 }
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
+const FINAL_CONFIG = ref(prepareConfig());
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: {
+        value: 100,
+        target: 100,
+        segments: [
+            {
+                name: '',
+                from: 0,
+                to: 33,
+                color: '#AAAAAA'
+            },
+            {
+                name: '',
+                from: 33,
+                to: 66,
+                color: '#BABABA'
+            },
+            {
+                name: '',
+                from: 66,
+                to: 100,
+                color: '#CACACA'
+            }
+        ]
     },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    segments: {
+                        dataLabels: { show: false },
+                        ticks: {
+                            stroke: '#8A8A8A',
+                        }
+                    },
+                    valueBar: {
+                        label: { show: false }
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
 }, { deep: true });
 
+const defaultSizes = ref({
+    width: FINAL_CONFIG.value.style.chart.width,
+    height: FINAL_CONFIG.value.style.chart.height
+});
+
+const WIDTH = computed(() => defaultSizes.value.width);
+const HEIGHT = computed(() => defaultSizes.value.height)
+
 const svg = computed(() => {
-    const height = FINAL_CONFIG.value.style.chart.height;
-    const width = FINAL_CONFIG.value.style.chart.width;
+    const height = HEIGHT.value;
+    const width = WIDTH.value;
     const left = FINAL_CONFIG.value.style.chart.padding.left;
     const right = width - FINAL_CONFIG.value.style.chart.padding.right;
     const top = FINAL_CONFIG.value.style.chart.padding.top;
     const bottom = height - FINAL_CONFIG.value.style.chart.padding.bottom;
     return {
-        height,
-        width,
+        height: Math.max(0.001, height),
+        width: Math.max(0.001, width),
         left,
         right,
         top,
         bottom,
-        chartWidth: right - left,
-        chartHeight: bottom - top
+        chartWidth: Math.max(0.001, right - left),
+        chartHeight: Math.max(0.001, bottom - top)
     }
 })
 
 const segmentColors = computed(() => {
     if(!hasSegments.value) return [];
     const arr = [];
-    for(let i = 0; i < props.dataset.segments.length; i += 1) {
-        arr.push(lightenHexColor(FINAL_CONFIG.value.style.chart.segments.baseColor, i / (props.dataset.segments.length)))
+    for(let i = 0; i < FINAL_DATASET.value.segments.length; i += 1) {
+        arr.push(lightenHexColor(FINAL_CONFIG.value.style.chart.segments.baseColor, i / (FINAL_DATASET.value.segments.length)))
     }
     return arr;
 })
@@ -205,15 +302,18 @@ const segmentColors = computed(() => {
 const minMax = computed(() => {
     if (!hasSegments.value) return {min: 0, max: 1};
     return {
-        min: Math.min(...props.dataset.segments.map(s => s.from)),
-        max: Math.max(...props.dataset.segments.map(s => s.to)),
+        min: Math.min(...FINAL_DATASET.value.segments.map(s => s.from)),
+        max: Math.max(...FINAL_DATASET.value.segments.map(s => s.to)),
     }
 })
 
 const activeValue = ref(getActiveValue());
 
-watch(() => props.dataset, (v) => {
-    if (FINAL_CONFIG.value.style.chart.animation.show) {
+watch(() => FINAL_DATASET.value, (v) => {
+    if (v.hasOwnProperty('value')) {
+        manualLoading.value = false;
+    }
+    if (FINAL_CONFIG.value.style.chart.animation.show && !loading.value) {
         useAnimation(v.value || 0);
     } else {
         activeValue.value = v.value || 0
@@ -221,10 +321,10 @@ watch(() => props.dataset, (v) => {
 }, { deep: true })
 
 function getActiveValue() {
-    if (FINAL_CONFIG.value.style.chart.animation.show) {
+    if (FINAL_CONFIG.value.style.chart.animation.show && !loading.value) {
         return minMax.value.min;
     } else {
-        return props.dataset.value || 0;
+        return FINAL_DATASET.value.value || 0;
     }
 }
 
@@ -257,7 +357,7 @@ const segments = computed(() => {
     const absMin = scale.min >= 0 ? 0 : Math.abs(scale.min);
 
     const target = {
-        x: svg.value.left + (((props.dataset.target + absMin) / (scale.max + absMin)) * svg.value.chartWidth) - FINAL_CONFIG.value.style.chart.target.width / 2
+        x: svg.value.left + (((FINAL_DATASET.value.target + absMin) / (scale.max + absMin)) * svg.value.chartWidth) - FINAL_CONFIG.value.style.chart.target.width / 2
     }
     const value = {
         width: ((activeValue.value + absMin) / (scale.max + absMin)) * svg.value.chartWidth
@@ -274,7 +374,7 @@ const segments = computed(() => {
         target,
         value,
         ticks,
-        chunks: props.dataset.segments.map((segment, i) => {
+        chunks: FINAL_DATASET.value.segments.map((segment, i) => {
             return {
                 ...segment,
                 color: segment.color ? convertColorToHex(segment.color) : segmentColors.value[i],
@@ -476,7 +576,6 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS"
-            v-if="isDataset"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-ui-bullet-svg': true }"
             :viewBox="`0 0 ${svg.width} ${svg.height}`"
             :style="`width: 100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
@@ -509,11 +608,12 @@ defineExpose({
                     :fill="segment.color"
                     :stroke-width="1"
                     :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    :style="{ transition: 'x 0.3s ease-in-out, width 0.3s ease-in-out' }"
                 />
                 <!-- TARGET BELOW-->
                 <rect
                     data-cy="vue-ui-bullet-target-below"
-                    v-if="!FINAL_CONFIG.style.chart.target.onTop"
+                    v-if="!FINAL_CONFIG.style.chart.target.onTop && FINAL_CONFIG.style.chart.target.show"
                     :x="segments.target.x"
                     :y="svg.top + (svg.chartHeight - ((svg.chartHeight * FINAL_CONFIG.style.chart.target.heightRatio))) / 2"
                     :height="svg.chartHeight * FINAL_CONFIG.style.chart.target.heightRatio"
@@ -561,7 +661,7 @@ defineExpose({
                 <!-- TARGET ON TOP-->
                 <rect
                     data-cy="vue-ui-bullet-target-top"
-                    v-if="FINAL_CONFIG.style.chart.target.onTop"
+                    v-if="FINAL_CONFIG.style.chart.target.onTop && FINAL_CONFIG.style.chart.target.show"
                     :x="segments.target.x"
                     :y="svg.top + (svg.chartHeight - ((svg.chartHeight * FINAL_CONFIG.style.chart.target.heightRatio))) / 2"
                     :height="svg.chartHeight * FINAL_CONFIG.style.chart.target.heightRatio"
@@ -570,6 +670,7 @@ defineExpose({
                     :fill="FINAL_CONFIG.style.chart.target.color"
                     :stroke="FINAL_CONFIG.style.chart.target.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.target.strokeWidth"
+                    :style="{ transition: 'x 0.3s ease-in-out' }"
                 />
                 <!-- TICK LABELS -->
                 <g v-if="FINAL_CONFIG.style.chart.segments.dataLabels.show">
@@ -619,19 +720,6 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <Skeleton 
-            v-if="!isDataset"
-            :config="{
-                type: 'bullet',
-                style: {
-                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                    bullet: {
-                        color: '#CCCCCC',
-                    }
-                }
-            }"
-        />
-
         <div ref="chartLegend">
             <Legend 
                 v-if="FINAL_CONFIG.style.chart.legend.show"
@@ -640,7 +728,7 @@ defineExpose({
                 :config="legendConfig"
             >
                 <template #item="{ legend }">
-                    <div class="vue-ui-bullet-legend-item" dir="auto">
+                    <div class="vue-ui-bullet-legend-item" dir="auto" v-if="!loading">
                         <span style="margin-right:2px">{{ legend.name }}:</span>
                         <span>{{ legend.value }}</span>
                     </div>
@@ -652,6 +740,9 @@ defineExpose({
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>
+
+        <!-- v3 Skeleton loader -->
+        <BaseScanner v-if="loading" />
     </div>
 </template>
 
