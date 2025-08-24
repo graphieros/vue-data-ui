@@ -53,7 +53,7 @@ Available components
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
 - [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
 - [VueUiTreemap](https://vue-data-ui.graphieros.com/docs#vue-ui-treemap)
-- [VueUiVerticalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-vertical-bar) // Renamed as VueUiHorizontalBar in v3
+- [VueUiHorizontalBar](https://vue-data-ui.graphieros.com/docs#vue-ui-horizontal-bar)
 - [VueUiWaffle](https://vue-data-ui.graphieros.com/docs#vue-ui-waffle)
 - [VueUiWheel](https://vue-data-ui.graphieros.com/docs#vue-ui-wheel)
 - [VueUiWordCloud](https://vue-data-ui.graphieros.com/docs#vue-ui-word-cloud)
@@ -171,18 +171,20 @@ Types are available in the 'vue-data-ui.d.ts' file under the types directory of 
 
 ## Vue Data UI version2 -> version3 migration
 
-Vue Data UI v3 is easy to migrate to:
-
-- If a component has new v3 features, it contains the `config.autoSize` attribute, set to `true` by default
-- To restore v2 behavior set config.autoSize to `false`
+Vue Data UI v3 does not contain breaking changes.
+However, some charts have their padding configs modified, which can lead to excessive padding with a v2 config.
 
 ### Version 3 features
-
-- `config.autoSize` (default: true) set to true, sets up the chart layout automatically, hides or shows some data labels when they can be
 
 - `config.loading` (default: false) toggle loading state manually, to display a beautiful skeleton loader which uses the same chart component and shares layout features derived from your config. This skeleton loader is also triggered automatically if the provided dataset is undefined.
 
 - `config.debug` (default: false) set to true to show warning messages during development, turn off for production.
+
+- smart label resizing and auto-rotating features
+
+- more charts support responsive mode
+
+- config event callbacks
 
 ## Nuxt
 
@@ -300,7 +302,7 @@ The following charts bear these slots:
 - VueUiSparkStackbar
 - VueUiStackbar
 - VueUiTreemap
-- VueUiVerticalBar
+- VueUiHorizontalBar
 - VueUiWordCloud
 - VueUiXy \*
 - VueUiXyCanvas
@@ -472,7 +474,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiThermometer`            | `VueUiThermometerDataset`                  | `VueUiThermometerConfig`            | `generatePdf`, `generateImage` , `getImage`                                                                                                                                           | `#svg`, `#watermark`, `#chart-background`                                                                                                             | ❌             | ✅     |
 | `VueUiTiremarks`              | `VueUiTiremarksDataset`                    | `VueUiTiremarksConfig`              | `generatePdf`, `generateImage` , `getImage`                                                                                                                                           | `#svg`, `#legend`, `#watermark`, `#chart-background`                                                                                                  | ❌             | ✅     |
 | `VueUiTreemap`                | `VueUiTreemapDatasetItem[]`                | `VueUiTreemapConfig`                | `@selectLegend`, `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`                                            | `#svg`, `#rect`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#breadcrumb-label`, `#breadcrumb-arrow`                               | ✅             | ✅     |
-| `VueUiVerticalBar`            | `VueUiVerticalBarDatasetItem[]`            | `VueUiWheelConfig`                  | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleSort`, `toggleTooltip` , `getImage`                                                  | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#pattern`                                                 | ✅             | ✅     |
+| `VueUiHorizontalBar`          | `VueUiHorizontalBarDatasetItem[]`          | `VueUiWheelConfig`                  | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleSort`, `toggleTooltip` , `getImage`                                                  | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#pattern`                                                 | ✅             | ✅     |
 | `VueUiWaffle`                 | `VueUiWaffleDatasetItem[]`                 | `VueUiWaffleConfig`                 | `@selectLegend`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`                                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#pattern`                                                                      | ✅             | ✅     |
 | `VueUiWheel`                  | `VueUiWheelDataset`                        | `VueUiWheelConfig`                  | `generatePdf`, `generateImage` , `getImage`                                                                                                                                           | `#svg`, `#watermark`, `#chart-background`                                                                                                             | ❌             | ✅     |
 | `VueUiWordCloud`              | `VueUiWordCloudDatasetItem[] / string`     | `VueUiWordCloudConfig`              | `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTooltip` , `getImage`                                                                                                | `#svg`, `#reset-action`, `#watermark`, `#tooltip-before`, `#tooltip-after`, `#chart-background`                                                       | ✅             | ✅     |
@@ -658,7 +660,7 @@ User options actions available per chart:
 | VueUiThermometer            | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
 | VueUiTiremarks              | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
 | VueUiTreemap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiVerticalBar            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen, optionAnnotator                |
+| VueUiHorizontalBar          | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen, optionAnnotator                |
 | VueUiWaffle                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiWheel                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
 | VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
@@ -706,7 +708,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiTableSparkline
 - VueUiThermometer
 - VueUiTreemap
-- VueUiVerticalBar
+- VueUiHorizontalBar
 - VueUiWaffle
 - VueUiWordCloud
 - VueUiWorld
@@ -723,25 +725,25 @@ However the folowing charts can be made fully responsive, making them better to 
 
 | Component                   | Responsive feature implemented |
 | --------------------------- | ------------------------------ |
-| VueUi3dBar                  | -                              |
+| VueUi3dBar                  | ✅                             |
 | VueUiAgePyramid             | ✅                             |
 | VueUiAgePyramid             | ✅                             |
-| VueUiBullet                 | -                              |
+| VueUiBullet                 | ✅                             |
 | VueUiCarouselTable          | -                              |
 | VueUiChestnut               | -                              |
 | VueUiChord                  | ✅                             |
-| VueUiCirclePack             | -                              |
+| VueUiCirclePack             | ✅ (built-in)                  |
 | VueUiDonut                  | ✅                             |
-| VueUiDonutEvolution         | -                              |
+| VueUiDonutEvolution         | ✅                             |
 | VueUiDumbbell               | ✅                             |
-| VueUiFlow                   | -                              |
+| VueUiFlow                   | ✅                             |
 | VueUiFunnel                 | ✅                             |
-| VueUiGalaxy                 | -                              |
+| VueUiGalaxy                 | ✅                             |
 | VueUiGauge                  | ✅                             |
-| VueUiHeatmap                | -                              |
+| VueUiHeatmap                | ✅                             |
 | VueUiHistoryPlot            | ✅                             |
 | VueUiMolecule               | -                              |
-| VueUiMoodRadar              | -                              |
+| VueUiMoodRadar              | ✅                             |
 | VueUiNestedDonuts           | ✅                             |
 | VueUiOnion                  | ✅                             |
 | VueUiParallelCoordinatePlot | ✅                             |
@@ -752,9 +754,9 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiRidgeline              | ✅                             |
 | VueUiRings                  | ✅                             |
 | VueUiScatter                | ✅                             |
-| VueUiSparkHistogram         | -                              |
+| VueUiSparkHistogram         | ✅                             |
 | VueUiSparkStackbar          | -                              |
-| VueUiSparkTrend             | -                              |
+| VueUiSparkTrend             | ✅                             |
 | VueUiSparkbar               | -                              |
 | VueUiSparkgauge             | -                              |
 | VueUiSparkline              | ✅                             |
@@ -762,11 +764,11 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiStripPlot              | ✅                             |
 | VueUiTableHeatmap           | -                              |
 | VueUiTableSparkline         | -                              |
-| VueUiThermometer            | -                              |
+| VueUiThermometer            | ✅                             |
 | VueUiTimer                  | ✅                             |
-| VueUiTiremarks              | -                              |
+| VueUiTiremarks              | ✅                             |
 | VueUiTreemap                | ✅                             |
-| VueUiVerticalBar            | ✅                             |
+| VueUiHorizontalBar          | ✅                             |
 | VueUiWaffle                 | ✅                             |
 | VueUiWheel                  | ✅                             |
 | VueUiWordCloud              | ✅                             |
@@ -792,12 +794,12 @@ The following charts use the LTTB algorithm (Largest-Triangle-Three-Bucket) beyo
 
 | Component       | Default Threshold | Remark                                                    |
 | --------------- | ----------------- | --------------------------------------------------------- |
-| VueUiXy         | 500               |                                                           |
+| VueUiXy         | 1095              |                                                           |
 | VueUiXyCanvas   | 10000             | Since this chart uses canvas, threhsold can be set higher |
-| VueUiQuadrant   | 500               |                                                           |
-| VueUiScatter    | 500               |                                                           |
-| VueUiSparkline  | 500               |                                                           |
-| VueUiSparkTrend | 500               |                                                           |
+| VueUiQuadrant   | 1095              |                                                           |
+| VueUiScatter    | 1095              |                                                           |
+| VueUiSparkline  | 1095              |                                                           |
+| VueUiSparkTrend | 1095              |                                                           |
 
 The downsample threshold for each component can be set in the config prop passed to components:
 
@@ -873,7 +875,7 @@ The #pattern slot is available on the following components:
 - VueUiRidgeline
 - VueUiRings
 - VueUiStackbar
-- VueUiVerticalBar
+- VueUiHorizontalBar
 - VueUiWaffle
 - VueUiWorld
 - VueUiXy
