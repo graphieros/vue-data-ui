@@ -834,11 +834,6 @@ export default {
                     legend: {
                         color: textColor,
                     },
-                    padding: {
-                        left: 72,
-                        bottom: 24,
-                        top: 36
-                    },
                     title: {
                         text: title,
                         color: textColor,
