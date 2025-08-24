@@ -3367,13 +3367,13 @@ export function useConfig() {
     }
 
     const vue_ui_mood_radar = {
-        debug: false, // null
-        loading: false, // null
-        responsive: false, // null
+        debug: false, // v3
+        loading: false, // v3
+        responsive: false, // v3
         events: {
-            datapointEnter: null, // null
-            datapointLeave: null, // null
-            datapointClick: null, // null
+            datapointEnter: null, // v3
+            datapointLeave: null, // v3
+            datapointClick: null, // v3
         },
         theme: '',
         style: {
