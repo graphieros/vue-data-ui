@@ -913,9 +913,11 @@ async function setupSlicer() {
 
     if ((startIndex != null || endIndex != null) && comp) {
         if (startIndex != null) {
+            slicer.value.start = startIndex;
             comp.setStartValue(startIndex);
         }
         if (endIndex != null) {
+            slicer.value.end = endIndex + 1
             comp.setEndValue(validSlicerEnd(endIndex + 1));
         }
     } else {
