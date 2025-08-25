@@ -6046,6 +6046,7 @@ export function useConfig() {
                         responsive: true,
                         line: {
                             ...vue_ui_xy.line,
+                            showTransition: false,
                             labels: {
                                 ...vue_ui_xy.line.labels,
                                 show: true
