@@ -90,6 +90,7 @@ const noTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
+const readyTeleport = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -218,6 +219,7 @@ function prepareChart() {
 }
 
 onMounted(() => {
+    readyTeleport.value = true;
     prepareChart();
 });
 
@@ -760,6 +762,8 @@ defineExpose({
             />
         </div>
 
+        <div :id="`legend-top-${uid}`" />
+
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
@@ -963,29 +967,33 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
+        <div :id="`legend-bottom-${uid}`" />
+
         <!-- LEGEND -->
-        <div ref="chartLegend">
-            <Legend
-                v-if="FINAL_CONFIG.style.chart.legend.show"
-                :key="`legend_${legendStep}`"
-                :legendSet="legendSet"
-                :config="legendConfig"
-                @clickMarker="({i}) => segregate(i)"
-            >
-                <template #item="{ legend, index }">
-                    <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`" v-if="!loading">
-                        {{ legend.name }}: {{ 
-                            dataLabel({
-                                v: legend.totalProportion * 100,
-                                s: '%',
-                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                            })
-                        }}
-                    </div>
-                </template>
-            </Legend>
-            <slot v-else name="legend" v-bind:legend="legendSet"></slot>
-        </div>
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div ref="chartLegend">
+                <Legend
+                    v-if="FINAL_CONFIG.style.chart.legend.show"
+                    :key="`legend_${legendStep}`"
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    @clickMarker="({i}) => segregate(i)"
+                >
+                    <template #item="{ legend, index }">
+                        <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`" v-if="!loading">
+                            {{ legend.name }}: {{ 
+                                dataLabel({
+                                    v: legend.totalProportion * 100,
+                                    s: '%',
+                                    r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                                })
+                            }}
+                        </div>
+                    </template>
+                </Legend>
+                <slot v-else name="legend" v-bind:legend="legendSet"></slot>
+            </div>
+        </Teleport>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />

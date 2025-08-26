@@ -88,6 +88,7 @@ const legendStep = ref(0);
 const loaded = ref(false);
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
+const readyTeleport = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -314,6 +315,7 @@ function checkDataset(){
 const loadingTimeout = ref(null);
 
 onMounted(() => {
+    readyTeleport.value = true;
     prepareChart();
 });
 
@@ -1010,6 +1012,8 @@ defineExpose({
             }" />
         </div>
 
+        <div :id="`legend-top-${uid}`" />
+
         <UserOptions ref="details" :key="`user_option_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
@@ -1336,38 +1340,43 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <div ref="chartLegend">
-            <Legend
-                v-if="FINAL_CONFIG.style.chart.legend.show"
-                :key="`legend_${legendStep}`"
-                :legendSet="legendSet"
-                :config="legendConfig"
-                @clickMarker="({ legend }) => selectLegendItem(legend.id)"
-            >
-                <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
-                    <Shape 
-                        :shape="legend.shape" 
-                        :radius="30" 
-                        stroke="none" 
-                        :plot="{ x: 30, y: 30 }"
-                        :fill="`url(#pattern_${uid}_${index})`" 
-                    />
-                </template>
-                <template #item="{ legend }">
-                    <div 
-                        data-cy="legend-item"
-                        :style="{
-                            opacity: selectedLegendId ? selectedLegendId === legend.id ? 1 : 0.3 : 1
-                        }"
-                        @click="legend.select()"
-                    >
-                        {{ legend.name }}
-                    </div>
-                </template>
-            </Legend>
-            <slot name="legend" v-bind:legend="legendSet" />
-        </div>
+        <div :id="`legend-bottom-${uid}`" />
 
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div ref="chartLegend">
+                <Legend
+                    v-if="FINAL_CONFIG.style.chart.legend.show"
+                    :key="`legend_${legendStep}`"
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    @clickMarker="({ legend }) => selectLegendItem(legend.id)"
+                >
+                    <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
+                        <Shape 
+                            :shape="legend.shape" 
+                            :radius="30" 
+                            stroke="none" 
+                            :plot="{ x: 30, y: 30 }"
+                            :fill="`url(#pattern_${uid}_${index})`" 
+                        />
+                    </template>
+                    <template #item="{ legend }">
+                        <div 
+                            data-cy="legend-item"
+                            :style="{
+                                opacity: selectedLegendId ? selectedLegendId === legend.id ? 1 : 0.3 : 1
+                            }"
+                            @click="legend.select()"
+                        >
+                            {{ legend.name }}
+                        </div>
+                    </template>
+                </Legend>
+                <slot name="legend" v-bind:legend="legendSet" />
+            </div>
+        </Teleport>
+        
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>

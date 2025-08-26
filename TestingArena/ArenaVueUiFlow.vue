@@ -169,6 +169,9 @@ const model = ref([
     { key: 'style.chart.padding.left', def: 12, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.padding.right', def: 12, type: 'number', min: 0, max: 100 },
     { key: 'style.chart.padding.bottom', def: 12, type: 'number', min: 0, max: 100 },
+
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+
     { key: 'style.chart.title.text', def: 'Lorem ipsum dolor', type: 'text' },
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 42 },

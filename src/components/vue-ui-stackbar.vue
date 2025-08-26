@@ -112,6 +112,7 @@ const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
 const slicerComponent = ref(null);
+const readyTeleport = ref(false);
 
 const xAxisLabel = ref(null);
 const yAxisLabel = ref(null);
@@ -121,6 +122,7 @@ const sumTop = ref(null);
 const sumRight = ref(null);
 
 onMounted(() => {
+    readyTeleport.value = true;
     prepareChart();
 })
 
@@ -1204,6 +1206,8 @@ defineExpose({
             />
         </div>
 
+        <div :id="`legend-top-${uid}`" />
+
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
@@ -1888,28 +1892,33 @@ defineExpose({
             </template>
         </Tooltip>
 
-        <div ref="chartLegend">
-            <Legend v-if="FINAL_CONFIG.style.chart.legend.show" :legendSet="legendSet" :config="legendConfig"
-                @clickMarker="({ legend }) => legend.segregate()">
-                <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
-                    <Shape
-                        :shape="legend.shape"
-                        :radius="30"
-                        stroke="none"
-                        :plot="{ x: 30, y: 30}"
-                        :fill="`url(#pattern_${uid}_${index})`"
-                    />
-                </template>
+        <div :id="`legend-bottom-${uid}`" />
 
-                <template #item="{ legend }">
-                    <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
-                        {{ legend.name }}
-                    </div>
-                </template>
-            </Legend>
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div ref="chartLegend">
+                <Legend v-if="FINAL_CONFIG.style.chart.legend.show" :legendSet="legendSet" :config="legendConfig"
+                    @clickMarker="({ legend }) => legend.segregate()">
+                    <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
+                        <Shape
+                            :shape="legend.shape"
+                            :radius="30"
+                            stroke="none"
+                            :plot="{ x: 30, y: 30}"
+                            :fill="`url(#pattern_${uid}_${index})`"
+                        />
+                    </template>
     
-            <slot v-else name="legend" v-bind:legend="legendSet" />
-        </div>
+                    <template #item="{ legend }">
+                        <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
+                            {{ legend.name }}
+                        </div>
+                    </template>
+                </Legend>
+        
+                <slot v-else name="legend" v-bind:legend="legendSet" />
+            </div>
+        </Teleport>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />

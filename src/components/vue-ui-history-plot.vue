@@ -92,6 +92,7 @@ const isFullscreen = ref(false);
 const selectedDatapoint = ref(null);
 const useCustomFormat = ref(false);
 const source = ref(null);
+const readyTeleport = ref(false);
 
 const xAxisLabel = ref(null);
 const yAxisLabel = ref(null);
@@ -109,7 +110,10 @@ const isDataset = computed({
 
 const emit = defineEmits(['selectLegend', 'selectDatapoint'])
 
-onMounted(prepareChart);
+onMounted(() => {
+    readyTeleport.value = true;
+    prepareChart();
+});
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
@@ -953,6 +957,8 @@ defineExpose({
             />
         </div>
 
+        <div :id="`legend-top-${uid}`" />
+
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
@@ -1369,23 +1375,28 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <div ref="chartLegend">
-            <Legend
-                v-if="FINAL_CONFIG.style.chart.legend.show && isDataset"
-                :key="`legend_${legendStep}`"
-                :legendSet="legendSet"
-                :config="legendConfig"
-                @clickMarker="({ legend }) => { segregate(legend.seriesIndex); selectLegend(legend) }"
-            >
-                <template #item="{ legend, index }">
-                    <div :data-cy="`legend-item-${index}`" @click="legend.segregate(); selectLegend(legend)" :style="`opacity:${segregated.includes(legend.seriesIndex) ? 0.5 : 1}`">
-                        {{ legend.name }}
-                    </div>
-                </template>
-            </Legend>
-    
-            <slot v-else name="legend" v-bind:legend="legendSet"/>
-        </div>
+        <div :id="`legend-bottom-${uid}`" />
+
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div ref="chartLegend">
+                <Legend
+                    v-if="FINAL_CONFIG.style.chart.legend.show && isDataset"
+                    :key="`legend_${legendStep}`"
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    @clickMarker="({ legend }) => { segregate(legend.seriesIndex); selectLegend(legend) }"
+                >
+                    <template #item="{ legend, index }">
+                        <div :data-cy="`legend-item-${index}`" @click="legend.segregate(); selectLegend(legend)" :style="`opacity:${segregated.includes(legend.seriesIndex) ? 0.5 : 1}`">
+                            {{ legend.name }}
+                        </div>
+                    </template>
+                </Legend>
+        
+                <slot v-else name="legend" v-bind:legend="legendSet"/>
+            </div>
+        </Teleport>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />

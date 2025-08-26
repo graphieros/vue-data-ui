@@ -79,6 +79,8 @@ const model = ref([
     { key: 'style.chart.legend.show', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.legend.roundingValue', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 300, type: 'number', min: 300, max: 800},
     { key: 'table.columnNames.series', def: 'Series', type: 'text'},

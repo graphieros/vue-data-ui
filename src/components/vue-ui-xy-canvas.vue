@@ -105,6 +105,7 @@ const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
 const mouseY = ref(null);
+const readyTeleport = ref(false);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -1343,6 +1344,7 @@ const observedEl = shallowRef(null);
 const resizeObserver = shallowRef(null);
 
 onMounted(() => {
+    readyTeleport.value = true;
     prepareChart();
 });
 
@@ -1599,6 +1601,8 @@ defineExpose({
             }
         }" />
         </div>
+
+        <div :id="`legend-top-${uid}`" />
         
         <UserOptions
             ref="details"
@@ -1760,19 +1764,24 @@ defineExpose({
                 </template>
             </Slicer>
         </div>
-    
-        <div ref="chartLegend">
-            <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig" :key="`legend_${legendStep}`"
-                @clickMarker="({ i }) => segregate(i)">
-                <template #item="{ legend, index }">
-                    <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
-                        {{ legend.name }}
-                    </div>
-                </template>
-            </Legend>
-    
-            <slot v-else name="legend" v-bind:legend="legendSet" />
-        </div>
+
+        <div :id="`legend-bottom-${uid}`" />
+
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">        
+            <div ref="chartLegend">
+                <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig" :key="`legend_${legendStep}`"
+                    @clickMarker="({ i }) => segregate(i)">
+                    <template #item="{ legend, index }">
+                        <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
+                            {{ legend.name }}
+                        </div>
+                    </template>
+                </Legend>
+        
+                <slot v-else name="legend" v-bind:legend="legendSet" />
+            </div>
+        </Teleport>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>

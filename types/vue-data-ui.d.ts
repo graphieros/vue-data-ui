@@ -458,6 +458,7 @@ declare module "vue-data-ui" {
                     roundingPercentage?: number;
                     showValue?: boolean;
                     showPercentage?: boolean;
+                    position?: 'bottom' | 'top';
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -621,6 +622,7 @@ declare module "vue-data-ui" {
                     roundingPercentage?: number;
                     showValue?: boolean;
                     showPercentage?: boolean;
+                    position?: 'bottom' | 'top';
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -1199,6 +1201,7 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     roundingPercentage?: number;
                     roundingValue?: number;
+                    position?: 'bottom' | 'top';
                 };
             };
         };
@@ -1537,6 +1540,7 @@ declare module "vue-data-ui" {
                     roundingValue?: number;
                     showValue?: boolean;
                     showPercentage?: boolean;
+                    position?: 'bottom' | 'top';
                 };
             };
         };
@@ -1769,6 +1773,7 @@ declare module "vue-data-ui" {
                     roundingPercentage?: number;
                     showValue?: boolean;
                     showPercentage?: boolean;
+                    position?: 'bottom' | 'top';
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -2910,6 +2915,7 @@ declare module "vue-data-ui" {
             legend?: ChartBaseLegend & {
                 backgroundColor?: string;
                 roundingValue?: number;
+                position?: 'bottom' | 'top';
             };
             tooltip?: ChartTooltip & {
                 roundingValue?: number;
@@ -3358,6 +3364,7 @@ declare module "vue-data-ui" {
                 color?: string;
                 show?: boolean;
                 fontSize?: number;
+                position?: 'bottom' | 'top';
             };
             title?: {
                 show?: boolean;
@@ -3715,6 +3722,7 @@ declare module "vue-data-ui" {
                     roundingPercentage?: number;
                     showPercentage?: boolean;
                     showValue?: boolean;
+                    position?: 'bottom' | 'top';
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -3896,6 +3904,7 @@ declare module "vue-data-ui" {
                     roundingPercentage?: number;
                     showValue?: boolean;
                     showPercentage?: boolean;
+                    position?: 'bottom' | 'bottom';
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -4095,6 +4104,7 @@ declare module "vue-data-ui" {
                     roundingPercentage?: number;
                     showValue?: boolean;
                     showPercentage?: boolean;
+                    position?: 'bottom' | 'top';
                 };
             };
         };
@@ -4237,6 +4247,7 @@ declare module "vue-data-ui" {
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
                     roundingPercentage?: number;
+                    position?: 'bottom' | 'top';
                 };
             };
         };
@@ -4464,6 +4475,7 @@ declare module "vue-data-ui" {
                 };
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
+                    position?: 'bottom' | 'top'
                 };
             };
         };
@@ -4942,6 +4954,7 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     roundingValue?: number;
                     roundingPercentage?: number;
+                    position?: 'bottom' | 'top';
                 };
                 tooltip?: ChartTooltip & {
                     showValue?: boolean;
@@ -6024,6 +6037,7 @@ declare module "vue-data-ui" {
         legendFontSize?: number;
         legendIcon?: VueUiIconName;
         legendIconSize?: number;
+        legendPosition?: 'bottom' | 'top';
         lineAnimated?: boolean;
         lineSmooth?: boolean;
         lineStrokeWidth?: number;
@@ -6574,6 +6588,7 @@ declare module "vue-data-ui" {
                     labelPositive?: string; // v3
                     labelNegative?: string; // v3
                     labelNeutral?: string; // v3
+                    position?: 'bottom' | 'top';
                 };
                 title?: ChartTitle;
             };
@@ -6802,6 +6817,7 @@ declare module "vue-data-ui" {
                     show?: boolean;
                     fontSize?: number;
                     bold?: boolean;
+                    position?: 'bottom' | 'top';
                 };
                 title?: ChartTitle;
                 grid?: {
@@ -6989,6 +7005,7 @@ declare module "vue-data-ui" {
                 color?: string;
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
+                    position?: 'bottom' | 'top';
                 };
                 tooltip?: ChartTooltip & {
                     showPercentage?: boolean;
@@ -7195,6 +7212,7 @@ declare module "vue-data-ui" {
                 title?: ChartTitle;
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
+                    position?: 'bottom' | 'top';
                 };
                 tooltip?: ChartTooltip & {
                     customFormat?:
@@ -7543,6 +7561,7 @@ declare module "vue-data-ui" {
                 title?: ChartTitle;
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
+                    position?: 'bottom' | 'top';
                 };
                 zoom?: ChartZoom;
                 tooltip?: ChartTooltip & {
@@ -7776,6 +7795,7 @@ declare module "vue-data-ui" {
                 title?: ChartTitle;
                 legend?: ChartBaseLegend & {
                     roundingValue?: number;
+                    position?: 'bottom' | 'top';
                 };
             };
         }
@@ -8077,6 +8097,7 @@ declare module "vue-data-ui" {
                 };
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
+                    position?: 'bottom' | 'top';
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {
@@ -8356,6 +8377,7 @@ declare module "vue-data-ui" {
                 title?: ChartTitle;
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
+                    position?: 'bottom' | 'top';
                 };
             }
         };
@@ -8663,6 +8685,7 @@ declare module "vue-data-ui" {
                 color?: string;
                 legend?: ChartBaseLegend & {
                     backgroundColor?: string;
+                    position?: 'bottom' | 'top';
                 };
                 title?: ChartTitle;
                 arcs?: {

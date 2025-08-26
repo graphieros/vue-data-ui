@@ -142,6 +142,7 @@ const userOptionsVisible = ref(true);
 const svgRef = ref(null);
 const tagRefs = ref({});
 const textMeasurer = ref(null);
+const readyTeleport = ref(false);
 
 const selectedSerieIndex = ref(null);
 
@@ -197,6 +198,7 @@ const fontSizes = ref({
 const plotRadii = ref({ plot: 3, line: 3 });
 
 onMounted(() => {
+    readyTeleport.value = true;
     if (props.dataset.length) {
         props.dataset.forEach((ds, i) => {
             if ([null, undefined].includes(ds.series)) {
@@ -2535,6 +2537,8 @@ defineExpose({
             }" />
         </div>
 
+        <div :id="`legend-top-${uniqueId}`" />
+
         <UserOptions ref="defails" :key="`user_options_${step}`"
             v-if="FINAL_CONFIG.chart.userOptions.show && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.chart.backgroundColor" :color="FINAL_CONFIG.chart.color"
@@ -3758,38 +3762,41 @@ defineExpose({
             </Slicer>
         </template>
 
+        <div :id="`legend-bottom-${uniqueId}`" />
 
-        <!-- LEGEND AS OUTSIDE DIV -->
-        <div ref="chartLegend" data-cy="xy-div-legend" v-if="FINAL_CONFIG.chart.legend.show" class="vue-ui-xy-legend"
-            :style="`font-size:${FINAL_CONFIG.chart.legend.fontSize}px`">
-            <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`"
-                :key="`div_legend_item_${i}`" @click="segregate(legendItem)"
-                :class="{ 'vue-ui-xy-legend-item-alone': absoluteDataset.length === 1 , 'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated': segregatedSeries.includes(legendItem.id) }">
-                <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
-                    <rect x="0" y="7.5" rx="1.5" :stroke="FINAL_CONFIG.chart.backgroundColor" :stroke-width="0.5"
-                        height="3" width="20" :fill="legendItem.color" />
-                    <Shape :plot="{ x: 10, y: 9 }" :radius="4" :color="legendItem.color"
-                        :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
-                        :stroke="FINAL_CONFIG.chart.backgroundColor" :strokeWidth="0.5" />
-                </svg>
-                <svg v-else-if="icons[legendItem.type] === 'bar'" viewBox="0 0 40 40" height="14" width="14">
-                    <rect v-if="icons[legendItem.type] === 'bar' && $slots.pattern" x="0" y="0" rx="1" height="40"
-                        width="40" stroke="none" :fill="legendItem.color" />
-                    <rect v-if="icons[legendItem.type] === 'bar'" x="0" y="0" rx="1" height="40" width="40"
-                        stroke="none"
-                        :fill="$slots.pattern ? `url(#pattern_${uniqueId}_${legendItem.slotAbsoluteIndex})` : legendItem.color" />
-                </svg>
-                <svg v-else viewBox="0 0 12 12" height="14" width="14">
-                    <Shape :plot="{ x: 6, y: 6 }" :radius="5" :color="legendItem.color"
-                        :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'" />
-                </svg>
-                <span :style="`color:${FINAL_CONFIG.chart.legend.color}`">{{ legendItem.name }}</span>
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.chart.legend.position === 'top' ? `#legend-top-${uniqueId}` : `#legend-bottom-${uniqueId}`">
+            <div ref="chartLegend" data-cy="xy-div-legend" v-if="FINAL_CONFIG.chart.legend.show" class="vue-ui-xy-legend"
+                :style="`font-size:${FINAL_CONFIG.chart.legend.fontSize}px`">
+                <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`"
+                    :key="`div_legend_item_${i}`" @click="segregate(legendItem)"
+                    :class="{ 'vue-ui-xy-legend-item-alone': absoluteDataset.length === 1 , 'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated': segregatedSeries.includes(legendItem.id) }">
+                    <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
+                        <rect x="0" y="7.5" rx="1.5" :stroke="FINAL_CONFIG.chart.backgroundColor" :stroke-width="0.5"
+                            height="3" width="20" :fill="legendItem.color" />
+                        <Shape :plot="{ x: 10, y: 9 }" :radius="4" :color="legendItem.color"
+                            :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
+                            :stroke="FINAL_CONFIG.chart.backgroundColor" :strokeWidth="0.5" />
+                    </svg>
+                    <svg v-else-if="icons[legendItem.type] === 'bar'" viewBox="0 0 40 40" height="14" width="14">
+                        <rect v-if="icons[legendItem.type] === 'bar' && $slots.pattern" x="0" y="0" rx="1" height="40"
+                            width="40" stroke="none" :fill="legendItem.color" />
+                        <rect v-if="icons[legendItem.type] === 'bar'" x="0" y="0" rx="1" height="40" width="40"
+                            stroke="none"
+                            :fill="$slots.pattern ? `url(#pattern_${uniqueId}_${legendItem.slotAbsoluteIndex})` : legendItem.color" />
+                    </svg>
+                    <svg v-else viewBox="0 0 12 12" height="14" width="14">
+                        <Shape :plot="{ x: 6, y: 6 }" :radius="5" :color="legendItem.color"
+                            :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'" />
+                    </svg>
+                    <span :style="`color:${FINAL_CONFIG.chart.legend.color}`">{{ legendItem.name }}</span>
+                </div>
             </div>
-        </div>
+            <div v-else ref="chartLegend">
+                <slot name="legend" v-bind:legend="absoluteDataset" />
+            </div>
+        </Teleport>
 
-        <div v-else ref="chartLegend">
-            <slot name="legend" v-bind:legend="absoluteDataset" />
-        </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />

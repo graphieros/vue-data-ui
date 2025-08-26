@@ -166,6 +166,8 @@ const model = ref([
     { key: 'legendFontSize', def: 12, type: 'number', min: 8, max: 48},
     { key: 'legendIcon', def: 'starFill', type: 'text'},
     { key: 'legendIconSize', def: 12, type: 'number', min: 8, max: 48},
+    { key: 'legendPosition', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+
     { key: 'lineSmooth', def: true, type: 'checkbox'},
     { key: 'lineAnimated', def: false, type: 'checkbox' },
     { key: 'lineStrokeWidth', def: 2, type:'number', min: 0.5, max: 12, step: 0.5},

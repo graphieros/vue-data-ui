@@ -131,6 +131,7 @@ const model = ref([
     { key: 'style.chart.legend.roundingValue', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.chart.legend.showValue', def: true, type: 'chexkbox'},
     { key: 'style.chart.legend.showPercentage', def: false, type: 'chexkbox'},
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
 
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},

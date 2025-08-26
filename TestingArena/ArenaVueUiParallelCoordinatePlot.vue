@@ -131,6 +131,8 @@ const model = ref([
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.legend.fontSize', def: 16, type: 'number', min: 8, max: 42 },
     { key: 'style.chart.legend.bold', def: false, type: 'checkbox' },
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox' },
     { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },

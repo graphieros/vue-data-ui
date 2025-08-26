@@ -245,6 +245,8 @@ const model = ref([
     { key: 'style.chart.globe.waterColor', def: '#1F77B4', type: 'color'},
 
     { key: 'style.chart.tooltip.showMinimap', def: true, type: 'checkbox'},
+
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']}
 ]);
 
 const projections = ref([

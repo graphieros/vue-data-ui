@@ -147,6 +147,7 @@ const model = ref([
 
     { key: 'style.chart.legend.showValue', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.showPercentage', def: false, type: 'checkbox'},
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
 ])
 
 const testCustomTooltip = ref(false);

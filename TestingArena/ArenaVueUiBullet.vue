@@ -74,6 +74,8 @@ const model = ref([
     { key: 'style.chart.animation.show', def: true, type: 'checkbox' },
     { key: 'style.chart.animation.animationFrames', def: 60, type:'range', min: 30, max: 255 },
 
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+
     { key: 'style.chart.segments.baseColor', def: '#9A9A9A', type: 'color' },
     { key: 'style.chart.segments.dataLabels.show', def: true, type: 'checkbox' },
     { key: 'style.chart.segments.dataLabels.color', def: '#1A1A1A', type: 'color' },

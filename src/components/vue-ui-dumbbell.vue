@@ -87,6 +87,7 @@ const noTitle = ref(null);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
+const readyTeleport = ref(false);
 
 const yAxisLabel = ref(null);
 const serieLabels = ref(null);
@@ -203,6 +204,7 @@ const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
 onMounted(() => {
+    readyTeleport.value = true;
     prepareChart();
 });
 
@@ -872,6 +874,8 @@ defineExpose({
             />
         </div>
 
+        <div :id="`legend-top-${uid}`" />
+
         <UserOptions
             ref="details"
             :key="`user_option_${step}`"
@@ -1314,29 +1318,34 @@ defineExpose({
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
-        
-        <div ref="chartLegend">
-            <Legend
-                v-if="FINAL_CONFIG.style.chart.legend.show && isDataset"
-                :key="`legend_${legendStep}`"
-                :legendSet="legendSet"
-                :config="legendConfig"
-                :clickable="false"
-            >
-                <template #item="{ legend }">
-                    <div :style="`display:flex;align-items:center;gap:4px;font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px`">
-                        <svg :xmlns="XMLNS" viewBox="0 0 20 20" :height="FINAL_CONFIG.style.chart.legend.fontSize" :width="FINAL_CONFIG.style.chart.legend.fontSize">
-                            <circle :cx="10" :cy="10" :r="9" :fill="legend.color"/>
-                        </svg>
-                        <template v-if="!loading">
-                            {{ legend.name }}
-                        </template>
-                    </div>
-                </template>
-            </Legend>
-            <slot v-else name="legend" v-bind:legend="legendSet" />
-        </div>
 
+        <div :id="`legend-bottom-${uid}`" />
+
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div ref="chartLegend">
+                <Legend
+                    v-if="FINAL_CONFIG.style.chart.legend.show && isDataset"
+                    :key="`legend_${legendStep}`"
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    :clickable="false"
+                >
+                    <template #item="{ legend }">
+                        <div :style="`display:flex;align-items:center;gap:4px;font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px`">
+                            <svg :xmlns="XMLNS" viewBox="0 0 20 20" :height="FINAL_CONFIG.style.chart.legend.fontSize" :width="FINAL_CONFIG.style.chart.legend.fontSize">
+                                <circle :cx="10" :cy="10" :r="9" :fill="legend.color"/>
+                            </svg>
+                            <template v-if="!loading">
+                                {{ legend.name }}
+                            </template>
+                        </div>
+                    </template>
+                </Legend>
+                <slot v-else name="legend" v-bind:legend="legendSet" />
+            </div>
+        </Teleport>
+        
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>

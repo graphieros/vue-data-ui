@@ -88,6 +88,7 @@ const noTitle = ref(null);
 const segregated = ref([]);
 const step = ref(0);
 const slicerStep = ref(0);
+const readyTeleport = ref(false);
 
 const timeLabelsEls = ref(null);
 const scaleLabels = ref(null);
@@ -287,6 +288,7 @@ const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
 onMounted(() => {
+    readyTeleport.value = true;
     prepareChart();
 })
 
@@ -1319,6 +1321,9 @@ defineExpose({
         <div ref="quickChartTitle" class="vue-ui-quick-chart-title" v-if="FINAL_CONFIG.title" :style="`background:transparent;color:${FINAL_CONFIG.color};font-size:${FINAL_CONFIG.titleFontSize}px;font-weight:${FINAL_CONFIG.titleBold ? 'bold': 'normal'};text-align:${FINAL_CONFIG.titleTextAlign}`">
             {{ FINAL_CONFIG.title }}
         </div>
+
+        <div :id="`legend-top-${uid}`"/>
+
         <svg
             ref="svgRef"
             v-if="chartType"
@@ -2049,98 +2054,104 @@ defineExpose({
                 </template>
             </Slicer>
         </div>
+
+        <div :id="`legend-bottom-${uid}`"/>
+
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.legendPosition === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div
+                v-if="FINAL_CONFIG.showLegend"
+                ref="quickChartLegend"
+                class="vue-ui-quick-chart-legend" 
+                :style="`background:transparent;color:${FINAL_CONFIG.color}`"
+            >
+                <template v-if="chartType === detector.chartType.DONUT">
+                    <div 
+                        class="vue-ui-quick-chart-legend-item" 
+                        v-for="(legendItem, i) in donut.legend" 
+                        @click="segregateDonut(legendItem, donut.dataset); emit('selectLegend', legendItem)"
+                        :style="`cursor: ${donut.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
+                    >
+                        <template v-if="FINAL_CONFIG.useCustomLegend">
+                            <slot name="legend" v-bind="{ legend: legendItem }"/>
+                        </template>
+    
+                        <template v-else>
+                            <BaseIcon :name="FINAL_CONFIG.legendIcon" :stroke="legendItem.color" :size="FINAL_CONFIG.legendIconSize"/>
+                            <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
+                                {{ legendItem.name }}
+                            </span>
+                            <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px;font-variant-numeric:tabular-nums`">
+                                {{ segregated.includes(legendItem.id) ? '-' : applyDataLabel(
+                                    FINAL_CONFIG.formatter,
+                                    legendItem.absoluteValue,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.valuePrefix,
+                                        v: legendItem.absoluteValue,
+                                        s: FINAL_CONFIG.valueSuffix,
+                                        r: FINAL_CONFIG.dataLabelRoundingValue,
+                                    }),
+                                    { datapoint: legendItem, seriesIndex: i}
+                                    ) 
+                                }}
+                            </span>
+                            <span v-if="segregated.includes(legendItem.id)" :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
+                                ( - % )
+                            </span>
+                            <span v-else-if="isSegregatingDonut" :style="`font-size:${FINAL_CONFIG.legendFontSize}px; font-variant-numeric: tabular-nums;`">
+                                ( - % )
+                            </span>
+                            <span v-else :style="`font-size:${FINAL_CONFIG.legendFontSize}px; font-variant-numeric: tabular-nums;`">
+                                ({{ dataLabel({
+                                    v: legendItem.value / donut.total * 100,
+                                    s: '%',
+                                    r: FINAL_CONFIG.dataLabelRoundingPercentage
+                                }) }})
+                            </span>
+                        </template>
+                    </div>
+                </template>
+    
+                <template v-if="chartType === detector.chartType.LINE">
+                    <div 
+                        class="vue-ui-quick-chart-legend-item" 
+                        v-for="(legendItem, i) in line.legend"
+                        @click="segregate(legendItem.id, line.legend.length - 1); emit('selectLegend', legendItem)"
+                        :style="`cursor: ${line.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
+                    >
+                        <template v-if="FINAL_CONFIG.useCustomLegend">
+                            <slot name="legend" v-bind="{ legend: legendItem }"/>
+                        </template>
+                        <template v-else>
+                            <BaseIcon :name="FINAL_CONFIG.legendIcon" :stroke="legendItem.color" :size="FINAL_CONFIG.legendIconSize"/>
+                            <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
+                                {{ legendItem.name }}
+                            </span>
+                        </template>
+                    </div>
+                </template>
+    
+                <template v-if="chartType === detector.chartType.BAR">
+                    <div 
+                        class="vue-ui-quick-chart-legend-item" 
+                        v-for="(legendItem, i) in bar.legend"
+                        @click="segregate(legendItem.id, bar.legend.length - 1); emit('selectLegend', legendItem)"
+                        :style="`cursor: ${bar.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
+                    >
+                        <template v-if="FINAL_CONFIG.useCustomLegend">
+                            <slot name="legend" v-bind="{ legend: legendItem }"/>
+                        </template>
+                        <template v-else>
+                            <BaseIcon :name="FINAL_CONFIG.legendIcon" :stroke="legendItem.color" :size="FINAL_CONFIG.legendIconSize"/>
+                            <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
+                                {{ legendItem.name }}
+                            </span>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </Teleport>
         
-        <div
-            v-if="FINAL_CONFIG.showLegend"
-            ref="quickChartLegend"
-            class="vue-ui-quick-chart-legend" 
-            :style="`background:transparent;color:${FINAL_CONFIG.color}`"
-        >
-            <template v-if="chartType === detector.chartType.DONUT">
-                <div 
-                    class="vue-ui-quick-chart-legend-item" 
-                    v-for="(legendItem, i) in donut.legend" 
-                    @click="segregateDonut(legendItem, donut.dataset); emit('selectLegend', legendItem)"
-                    :style="`cursor: ${donut.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
-                >
-                    <template v-if="FINAL_CONFIG.useCustomLegend">
-                        <slot name="legend" v-bind="{ legend: legendItem }"/>
-                    </template>
-
-                    <template v-else>
-                        <BaseIcon :name="FINAL_CONFIG.legendIcon" :stroke="legendItem.color" :size="FINAL_CONFIG.legendIconSize"/>
-                        <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
-                            {{ legendItem.name }}
-                        </span>
-                        <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px;font-variant-numeric:tabular-nums`">
-                            {{ segregated.includes(legendItem.id) ? '-' : applyDataLabel(
-                                FINAL_CONFIG.formatter,
-                                legendItem.absoluteValue,
-                                dataLabel({
-                                    p: FINAL_CONFIG.valuePrefix,
-                                    v: legendItem.absoluteValue,
-                                    s: FINAL_CONFIG.valueSuffix,
-                                    r: FINAL_CONFIG.dataLabelRoundingValue,
-                                }),
-                                { datapoint: legendItem, seriesIndex: i}
-                                ) 
-                            }}
-                        </span>
-                        <span v-if="segregated.includes(legendItem.id)" :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
-                            ( - % )
-                        </span>
-                        <span v-else-if="isSegregatingDonut" :style="`font-size:${FINAL_CONFIG.legendFontSize}px; font-variant-numeric: tabular-nums;`">
-                            ( - % )
-                        </span>
-                        <span v-else :style="`font-size:${FINAL_CONFIG.legendFontSize}px; font-variant-numeric: tabular-nums;`">
-                            ({{ dataLabel({
-                                v: legendItem.value / donut.total * 100,
-                                s: '%',
-                                r: FINAL_CONFIG.dataLabelRoundingPercentage
-                            }) }})
-                        </span>
-                    </template>
-                </div>
-            </template>
-
-            <template v-if="chartType === detector.chartType.LINE">
-                <div 
-                    class="vue-ui-quick-chart-legend-item" 
-                    v-for="(legendItem, i) in line.legend"
-                    @click="segregate(legendItem.id, line.legend.length - 1); emit('selectLegend', legendItem)"
-                    :style="`cursor: ${line.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
-                >
-                    <template v-if="FINAL_CONFIG.useCustomLegend">
-                        <slot name="legend" v-bind="{ legend: legendItem }"/>
-                    </template>
-                    <template v-else>
-                        <BaseIcon :name="FINAL_CONFIG.legendIcon" :stroke="legendItem.color" :size="FINAL_CONFIG.legendIconSize"/>
-                        <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
-                            {{ legendItem.name }}
-                        </span>
-                    </template>
-                </div>
-            </template>
-
-            <template v-if="chartType === detector.chartType.BAR">
-                <div 
-                    class="vue-ui-quick-chart-legend-item" 
-                    v-for="(legendItem, i) in bar.legend"
-                    @click="segregate(legendItem.id, bar.legend.length - 1); emit('selectLegend', legendItem)"
-                    :style="`cursor: ${bar.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
-                >
-                    <template v-if="FINAL_CONFIG.useCustomLegend">
-                        <slot name="legend" v-bind="{ legend: legendItem }"/>
-                    </template>
-                    <template v-else>
-                        <BaseIcon :name="FINAL_CONFIG.legendIcon" :stroke="legendItem.color" :size="FINAL_CONFIG.legendIconSize"/>
-                        <span :style="`font-size:${FINAL_CONFIG.legendFontSize}px`">
-                            {{ legendItem.name }}
-                        </span>
-                    </template>
-                </div>
-            </template>
-        </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />

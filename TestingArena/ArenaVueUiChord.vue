@@ -80,6 +80,7 @@ const model = ref([
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.legend.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'style.chart.legend.bold', def: false, type: 'checkbox'},
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
 
     { key: 'style.chart.arcs.innerRadiusRatio', def: 1, type: 'number', min: 0.1, max: 1.5, step: 0.1 },
     { key: 'style.chart.arcs.outerRadiusRatio', def: 1, type: 'number', min: 0.1, max: 1.5, step: 0.1 },

@@ -101,6 +101,8 @@ const model = ref([
     { key: 'style.chart.axes.y.name.offsetY', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.axes.y.name.bold', def: false, type: 'checkbox' },
 
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+
     { key: 'style.chart.plots.radius', def: 16, type: 'range', min: 8, max: 42},
     { key: 'style.chart.plots.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.plots.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
