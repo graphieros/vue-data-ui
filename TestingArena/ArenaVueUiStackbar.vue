@@ -116,6 +116,7 @@ const model = ref([
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.legend.fontSize', def: 14, type: 'number', min: 8, max: 42},
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
 
     { key: 'style.chart.zoom.show', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.color', def: '#CCCCCC', type: 'color'},

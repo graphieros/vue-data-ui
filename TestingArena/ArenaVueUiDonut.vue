@@ -178,6 +178,7 @@ const model = ref([
     { key: 'style.chart.legend.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'legend' },
     { key: 'style.chart.legend.showPercentage', def: true, type: 'checkbox'},
     { key: 'style.chart.legend.showValue', def: true, type: 'checkbox'},
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
 
     { key: 'style.chart.title.text', def: 'Title', type: 'text', label: 'textContent', category: 'title' },
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'title' },

@@ -74,6 +74,7 @@ const chartLegend = ref(null);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
 const source = ref(null);
+const readyTeleport = ref(false);
 
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
@@ -135,6 +136,7 @@ const { loading, FINAL_DATASET } = useLoading({
 });
 
 onMounted(() => {
+    readyTeleport.value = true;
     prepareChart();
 })
 
@@ -517,6 +519,8 @@ defineExpose({
             }" />
         </div>
 
+        <div :id="`legend-top-${uid}`" />
+
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
@@ -774,52 +778,57 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <div ref="chartLegend">
-            <Legend 
-                v-if="FINAL_CONFIG.style.chart.legend.show" 
-                :legendSet="convertedDataset" 
-                :config="legendConfig"
-                :key="`legend_${legendStep}`"
-                style="display: flex; row-gap: 6px">
-                <template #item="{ legend, index }">
-                    <div @click="() => selectKey(legend.key)" style="
-                display: flex;
-                flex-direction: row;
-                gap: 3px;
-                align-items: center;
-                margin: 3px 0;
-            ">
-                        <BaseIcon :strokeWidth="1" v-if="legend.key == 1" name="moodSad"
-                            :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
-                        <BaseIcon :strokeWidth="1" v-if="legend.key == 2" name="moodFlat"
-                            :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
-                        <BaseIcon :strokeWidth="1" v-if="legend.key == 3" name="moodNeutral"
-                            :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
-                        <BaseIcon :strokeWidth="1" v-if="legend.key == 4" name="smiley"
-                            :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
-                        <BaseIcon :strokeWidth="1" v-if="legend.key == 5" name="moodHappy"
-                            :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
-                        <span v-if="!loading" style="font-weight: bold">{{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.dataLabel.formatter,
-                            legend.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.dataLabel.prefix,
-                                v: legend.value,
-                                s: FINAL_CONFIG.style.chart.layout.dataLabel.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue
-                            }),
-                            { datapoint: legend, seriesIndex: index }
-                        ) }}</span><span v-if="!loading">({{ dataLabel({
-                            v: legend.proportion * 100,
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                        })}})</span>
-                    </div>
-                </template>
-            </Legend>
-    
-            <slot name="legend" v-bind:legend="convertedDataset"></slot>
-        </div>
+        <div :id="`legend-bottom-${uid}`" />
+
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div ref="chartLegend">
+                <Legend 
+                    v-if="FINAL_CONFIG.style.chart.legend.show" 
+                    :legendSet="convertedDataset" 
+                    :config="legendConfig"
+                    :key="`legend_${legendStep}`"
+                    style="display: flex; row-gap: 6px">
+                    <template #item="{ legend, index }">
+                        <div @click="() => selectKey(legend.key)" style="
+                    display: flex;
+                    flex-direction: row;
+                    gap: 3px;
+                    align-items: center;
+                    margin: 3px 0;
+                ">
+                            <BaseIcon :strokeWidth="1" v-if="legend.key == 1" name="moodSad"
+                                :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
+                            <BaseIcon :strokeWidth="1" v-if="legend.key == 2" name="moodFlat"
+                                :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
+                            <BaseIcon :strokeWidth="1" v-if="legend.key == 3" name="moodNeutral"
+                                :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
+                            <BaseIcon :strokeWidth="1" v-if="legend.key == 4" name="smiley"
+                                :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
+                            <BaseIcon :strokeWidth="1" v-if="legend.key == 5" name="moodHappy"
+                                :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
+                            <span v-if="!loading" style="font-weight: bold">{{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.dataLabel.formatter,
+                                legend.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.dataLabel.prefix,
+                                    v: legend.value,
+                                    s: FINAL_CONFIG.style.chart.layout.dataLabel.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue
+                                }),
+                                { datapoint: legend, seriesIndex: index }
+                            ) }}</span><span v-if="!loading">({{ dataLabel({
+                                v: legend.proportion * 100,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                            })}})</span>
+                        </div>
+                    </template>
+                </Legend>
+        
+                <slot name="legend" v-bind:legend="convertedDataset"></slot>
+            </div>
+        </Teleport>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />

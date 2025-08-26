@@ -120,7 +120,7 @@ const model = ref([
     { key: 'style.chart.legend.bold', def: false, type: 'checkbox', label: 'bold', category: 'legend' },
     { key: 'style.chart.legend.roundingValue', def: 0, type: 'number', min: 0, max: 6, label: ['rounding', 'is', 'value'], category: 'legend' },
     { key: 'style.chart.legend.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: 'percentageRounding', category: 'legend' },
-    { key: 'style.chart.legend.offsetY', def: 0, type: 'number', min: -100, max: 100}, // DEPRECATED (used with useDiv set to false)
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
 
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox' },
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },

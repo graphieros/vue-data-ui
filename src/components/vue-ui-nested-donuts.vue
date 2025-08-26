@@ -99,6 +99,7 @@ const legendStep = ref(0);
 const isFirstLoad = ref(true);
 const animatedValues = ref([]);
 const ghostSlices = ref([]);
+const readyTeleport = ref(false);
 
 const isFullscreen = ref(false);
 function toggleFullscreen(state) {
@@ -368,6 +369,7 @@ async function triggerAnim() {
 }
 
 onMounted(async () => {
+    readyTeleport.value = true;
     prepareChart();
     await triggerAnim();
 });
@@ -1279,6 +1281,8 @@ defineExpose({
             }" />
         </div>
 
+        <div :id="`legend-top-${uid}`" />
+
         <!-- OPTIONS -->
         <UserOptions ref="details" :key="`user_option_${step}`" v-if="
             FINAL_CONFIG.userOptions.show &&
@@ -1645,50 +1649,54 @@ defineExpose({
             </template>
         </Tooltip>
 
-        <!-- LEGENDS -->
-        <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show"
-            :class="{ 'vue-ui-nested-donuts-legend': legendSets.length > 1 }">
-            <Legend v-for="(legendSet, i) in legendSets" :key="`legend_${i}_${legendStep}`" :legendSet="legendSet"
-                :config="legendConfig" @clickMarker="({ legend }) => segregateDonut(legend)">
-                <template #legendTitle="{ titleSet }">
-                    <div class="vue-ui-nested-donuts-legend-title" v-if="titleSet[0] && titleSet[0].arcOf">
-                        {{ titleSet[0].arcOf }}
-                    </div>
-                </template>
-                <template #item="{ legend, index }">
-                    <div data-cy="legend-item" @click="segregateDonut(legend)"
-                        :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                        {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}}
-                        {{
-                            !FINAL_CONFIG.style.chart.legend.showValue ? '' : 
-                            applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                                legend.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
-                                    v: legend.value,
-                                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                    r: FINAL_CONFIG.style.chart.legend.roundingValue,
-                                }),
-                                { datapoint: legend, seriesIndex: index }
-                            )
-                        }}
-                        {{ 
-                            !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
-                            !segregated.includes(legend.id) 
-                                ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / legend.total)
-                                    ? "-"
-                                    : dataLabel({
-                                        v: (legend.value / legend.total) * 100,
-                                        s: "%",
-                                        r: FINAL_CONFIG.style.chart.legend.roundingPercentage,
-                                    })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                                : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                        }}
-                    </div>
-                </template>
-            </Legend>
-        </div>
+        <div :id="`legend-bottom-${uid}`" />
+
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show"
+                :class="{ 'vue-ui-nested-donuts-legend': legendSets.length > 1 }">
+                <Legend v-for="(legendSet, i) in legendSets" :key="`legend_${i}_${legendStep}`" :legendSet="legendSet"
+                    :config="legendConfig" @clickMarker="({ legend }) => segregateDonut(legend)">
+                    <template #legendTitle="{ titleSet }">
+                        <div class="vue-ui-nested-donuts-legend-title" v-if="titleSet[0] && titleSet[0].arcOf">
+                            {{ titleSet[0].arcOf }}
+                        </div>
+                    </template>
+                    <template #item="{ legend, index }">
+                        <div data-cy="legend-item" @click="segregateDonut(legend)"
+                            :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
+                            {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}}
+                            {{
+                                !FINAL_CONFIG.style.chart.legend.showValue ? '' : 
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                    legend.value,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                        v: legend.value,
+                                        s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                        r: FINAL_CONFIG.style.chart.legend.roundingValue,
+                                    }),
+                                    { datapoint: legend, seriesIndex: index }
+                                )
+                            }}
+                            {{ 
+                                !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
+                                !segregated.includes(legend.id) 
+                                    ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / legend.total)
+                                        ? "-"
+                                        : dataLabel({
+                                            v: (legend.value / legend.total) * 100,
+                                            s: "%",
+                                            r: FINAL_CONFIG.style.chart.legend.roundingPercentage,
+                                        })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                                    : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                            }}
+                        </div>
+                    </template>
+                </Legend>
+            </div>
+        </Teleport>
 
         <div ref="chartLegend" v-if="!FINAL_CONFIG.style.chart.legend.show">
             <slot name="legend" v-bind:legend="legendSets"></slot>

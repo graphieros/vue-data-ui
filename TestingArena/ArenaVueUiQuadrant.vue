@@ -192,6 +192,8 @@ const model = ref([
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: "style.chart.legend.color", def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.legend.fontSize', def: 14, type: 'range', min: 8, max: 48},
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakdpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},

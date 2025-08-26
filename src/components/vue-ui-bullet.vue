@@ -49,6 +49,7 @@ const source = ref(null);
 const step = ref(0);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
+const readyTeleport = ref(false);
 
 const isDataset = computed({
     get: () => {
@@ -178,7 +179,10 @@ function prepareChart() {
     }
 }
 
-onMounted(prepareChart);
+onMounted(() => {
+    readyTeleport.value = true;
+    prepareChart();
+});
 
 const uid = ref(createUid());
 
@@ -525,6 +529,8 @@ defineExpose({
             />
         </div>
 
+        <div :id="`legend-top-${uid}`" />
+
         <UserOptions
             ref="details"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
@@ -720,22 +726,27 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <div ref="chartLegend">
-            <Legend 
-                v-if="FINAL_CONFIG.style.chart.legend.show"
-                :clickable="false"
-                :legendSet="legendSet"
-                :config="legendConfig"
-            >
-                <template #item="{ legend }">
-                    <div class="vue-ui-bullet-legend-item" dir="auto" v-if="!loading">
-                        <span style="margin-right:2px">{{ legend.name }}:</span>
-                        <span>{{ legend.value }}</span>
-                    </div>
-                </template>
-            </Legend>
-            <slot name="legend" v-bind:legend="legendSet" />
-        </div>
+        <div :id="`legend-bottom-${uid}`" />
+
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div ref="chartLegend">
+                <Legend 
+                    v-if="FINAL_CONFIG.style.chart.legend.show"
+                    :clickable="false"
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                >
+                    <template #item="{ legend }">
+                        <div class="vue-ui-bullet-legend-item" dir="auto" v-if="!loading">
+                            <span style="margin-right:2px">{{ legend.name }}:</span>
+                            <span>{{ legend.value }}</span>
+                        </div>
+                    </template>
+                </Legend>
+                <slot name="legend" v-bind:legend="legendSet" />
+            </div>
+        </Teleport>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />

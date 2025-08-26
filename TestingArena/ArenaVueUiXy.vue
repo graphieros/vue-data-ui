@@ -116,13 +116,13 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = [
     {
-        name: "A",
+        name: "Serie A with a long name",
         series: [60, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, 120],
         type: "bar",
         dataLabels: false,
     },
     {
-        name: "B",
+        name: "Serie B with a long name",
         series: [60, 75, 119, 201, 109, 85, null, 206, 223, 204, 146, 117, 87],
         type: "line",
         dataLabels: false,
@@ -132,7 +132,7 @@ onMounted(() => {
         useProgression: true
     },
     {
-        name: "C",
+        name: "Serie C with a long name",
         series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
         type: "plot",
         dataLabels: false,
@@ -469,6 +469,7 @@ const model = ref([
     { key: 'chart.legend.show', def: true, type: 'checkbox', label: 'show', category: 'legend' },
     { key: 'chart.legend.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'legend' },
     { key: 'chart.legend.fontSize', def: 16, type: 'number', min: 10, max: 36, label: 'fontSize', category: 'legend' },
+    { key: 'chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
 
     { key: 'chart.title.show', def: true, type: 'checkbox', label: 'show', category: 'title' },
     { key: 'chart.title.text', def: 'Title', type: 'text', label: 'textContent', category: 'title' },

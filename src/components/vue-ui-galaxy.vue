@@ -82,6 +82,7 @@ const source = ref(null);
 const noTitle = ref(null);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
+const readyTeleport = ref(false);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -117,6 +118,7 @@ const { loading, FINAL_DATASET } = useLoading({
 })
 
 onMounted(() => {
+    readyTeleport.value = true;
     prepareChart();
 });
 
@@ -630,6 +632,8 @@ defineExpose({
             />
         </div>
 
+        <div :id="`legend-top-${uid}`" />
+
         <!-- OPTIONS -->
         <UserOptions
             ref="details"
@@ -782,46 +786,49 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <!-- LEGEND AS DIV -->
-        <div ref="chartLegend">
-            <Legend
-                v-if="FINAL_CONFIG.style.chart.legend.show"
-                :key="`legend_${legendStep}`"
-                :legendSet="legendSet"
-                :config="legendConfig"
-                @clickMarker="({legend}) => segregate(legend)"
-            >
-                <template #item="{ legend, index }">
-                    <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
-                        {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                            legend.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
-                                v: legend.value, 
-                                s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                r: FINAL_CONFIG.style.chart.legend.roundingValue
-                            }),
-                            { datapoint: legend, seriesIndex: index }
-                            )
-                        }}
-                        {{ 
-                            !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
-                            !segregated.includes(legend.id)
-                                ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / total) ? '-' : dataLabel({
-                                v: legend.value / total * 100,
-                                s: '%',
-                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                            })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                                : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                        }}
-                    </div>
-                </template>
-            </Legend>
-            
-            <slot name="legend" v-bind:legend="legendSet" />
-        </div>
+        <div :id="`legend-bottom-${uid}`" />
 
+        <!-- LEGEND -->
+        <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
+            <div ref="chartLegend">
+                <Legend
+                    v-if="FINAL_CONFIG.style.chart.legend.show"
+                    :key="`legend_${legendStep}`"
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    @clickMarker="({legend}) => segregate(legend)"
+                >
+                    <template #item="{ legend, index }">
+                        <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
+                            {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                legend.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
+                                    v: legend.value, 
+                                    s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                    r: FINAL_CONFIG.style.chart.legend.roundingValue
+                                }),
+                                { datapoint: legend, seriesIndex: index }
+                                )
+                            }}
+                            {{ 
+                                !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
+                                !segregated.includes(legend.id)
+                                    ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / total) ? '-' : dataLabel({
+                                    v: legend.value / total * 100,
+                                    s: '%',
+                                    r: FINAL_CONFIG.style.chart.legend.roundingPercentage
+                                })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                                    : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
+                            }}
+                        </div>
+                    </template>
+                </Legend>
+                
+                <slot name="legend" v-bind:legend="legendSet" />
+            </div>
+        </Teleport>
 
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
