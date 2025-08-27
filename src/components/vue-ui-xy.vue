@@ -709,53 +709,29 @@ const gridVerticalLines = computed(() => {
 });
 
 const crosshairsX = computed(() => {
-    if (!FINAL_CONFIG.value.chart.grid.labels.xAxis.showCrosshairs) {
-        return '';
-    }
+    if (!FINAL_CONFIG.value.chart.grid.labels.xAxis.showCrosshairs) return '';
 
-    const {
-        showOnlyAtModulo,
-        showOnlyFirstAndLast,
-        modulo: _modulo
-    } = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels
+    const segmentWidth = drawingArea.value.width / maxSeries.value;
+    const size = FINAL_CONFIG.value.chart.grid.labels.xAxis.crosshairSize;
+    const alwaysAtZero = FINAL_CONFIG.value.chart.grid.labels.xAxis.crosshairsAlwaysAtZero;
 
-    const modulo = timeLabels.value.length ? Math.min(_modulo, [...new Set(timeLabels.value.map(t => t.text))].length) : _modulo;
-    const interval = Math.floor((slicer.value.end - slicer.value.start) / modulo)
-
-    return timeLabels.value
+    return displayedTimeLabels.value
         .map((label, i) => {
-            if (!label) return null
+        if (!label || !label.text) return null;
 
-            const cond1 = showOnlyAtModulo && maxSeries.value <= modulo
-            const cond2 = !showOnlyFirstAndLast && !showOnlyAtModulo
-            const cond3 = showOnlyFirstAndLast && !showOnlyAtModulo && (i === 0 || i === timeLabels.value.length - 1)
-            const cond4 = showOnlyFirstAndLast && !showOnlyAtModulo && selectedSerieIndex.value === i
-            const cond5 = !showOnlyFirstAndLast && showOnlyAtModulo && (i % interval === 0)
+        const x = drawingArea.value.left + segmentWidth * i + segmentWidth / 2;
+        const y1 = alwaysAtZero
+            ? zero.value - (zero.value === drawingArea.value.bottom ? 0 : size / 2)
+            : drawingArea.value.bottom;
+        const y2 = alwaysAtZero
+            ? zero.value + (size / (zero.value === drawingArea.value.bottom ? 1 : 2))
+            : drawingArea.value.bottom + size;
 
-            if (!(cond1 || cond2 || cond3 || cond4 || cond5)) {
-                return null
-            }
-
-            const segmentWidth = drawingArea.value.width / maxSeries.value
-            const x = drawingArea.value.left + segmentWidth * i + segmentWidth / 2
-
-            const size = FINAL_CONFIG.value.chart.grid.labels.xAxis.crosshairSize
-            const alwaysAtZero = FINAL_CONFIG.value.chart.grid.labels.xAxis.crosshairsAlwaysAtZero
-
-            const y1 = alwaysAtZero
-                ? zero.value - (zero.value === drawingArea.value.bottom ? 0 : size / 2)
-                : drawingArea.value.bottom
-
-            const y2 = alwaysAtZero
-                ? zero.value + (size / (zero.value === drawingArea.value.bottom ? 1 : 2))
-                : drawingArea.value.bottom + size
-
-            return `M${x},${y1} L${x},${y2}`
+        return `M${x},${y1} L${x},${y2}`;
         })
-        .filter(seg => seg !== null)
-        .join(' ')
-})
-
+        .filter(Boolean)
+        .join(' ');
+});
 
 function usesSelectTimeLabelEvent() {
     return !!instance?.vnode.props?.onSelectTimeLabel
@@ -823,6 +799,62 @@ const modulo = computed(() => {
     const m = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.modulo;
     if (!timeLabels.value.length) return m;
     return Math.min(m, [...new Set(timeLabels.value.map(t => t.text))].length);
+});
+
+const displayedTimeLabels = computed(() => {
+    const cfg = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels;
+    const vis = timeLabels.value || [];
+
+    if (cfg.showOnlyFirstAndLast) {
+        if (vis.length <= 2) return vis;
+        const sel = selectedSerieIndex.value;
+        return vis.map((l, i) =>
+        (i === 0 || i === vis.length - 1 || (sel != null && i === sel))
+            ? l
+            : { ...l, text: '' }
+        );
+    }
+
+    if (!cfg.showOnlyAtModulo) return vis;
+
+    const mod = Math.max(1, (modulo.value || 1));
+    if (maxSeries.value <= mod) return vis;
+
+    const base  = mod;
+    const all   = allTimeLabels.value || [];
+    const start = slicer.value.start ?? 0;
+
+    const candidates = [];
+    for (let i = 0; i < vis.length; i += 1) {
+        const cur = vis[i]?.text ?? '';
+        if (!cur) continue;
+        const prevAbs = start + i - 1 >= 0 ? (all[start + i - 1]?.text ?? '') : null;
+        if (cur !== prevAbs) candidates.push(i);
+    }
+    if (!candidates.length) return vis.map(l => ({ ...l, text: '' }));
+
+    const C = candidates.length;
+    const minK = Math.max(2, Math.min(base - 3, C));
+    const maxK = Math.min(C, base + 3);
+    let bestK = Math.min(base, C), bestScore = Infinity;
+    for (let k = minK; k <= maxK; k += 1) {
+        const remainder = (C - 1) % (k - 1);
+        const drift = Math.abs(k - base);
+        const score = remainder * 10 + drift;
+        if (score < bestScore) { bestScore = score; bestK = k; }
+    }
+
+    const picked = new Set();
+    if (bestK <= 1) {
+        picked.add(candidates[Math.round((C - 1) / 2)]);
+    } else {
+        const step = (C - 1) / (bestK - 1);
+        for (let j = 0; j < bestK; j += 1) {
+        picked.add(candidates[Math.round(j * step)]);
+        }
+    }
+
+    return vis.map((l, i) => (picked.has(i) ? l : { ...l, text: '' }));
 });
 
 function selectTimeLabel(label, relativeIndex) {
@@ -3407,7 +3439,7 @@ defineExpose({
                     <!-- TIME LABELS -->
                     <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show" ref="timeLabelsEls">
                         <template v-if="$slots['time-label']">
-                            <template v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
+                            <template v-for="(label, i) in displayedTimeLabels" :key="`time_label_${i}`">
                                 <slot name="time-label" v-bind="{
                                     x: drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2),
                                     y: drawingArea.bottom,
@@ -3417,17 +3449,14 @@ defineExpose({
                                     absoluteIndex: label.absoluteIndex,
                                     content: label.text,
                                     textAnchor: FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle',
-                                    show: (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= modulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                        (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length - 1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                        (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) ||
-                                        (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0))
+                                    show: label && label.text
                                 }" />
                             </template>
                         </template>
                         <template v-else>
-                            <g v-for="(label, i) in timeLabels" :key="`time_label_${i}`">
+                            <g v-for="(label, i) in displayedTimeLabels" :key="`time_label_${i}`">
                                 <template
-                                    v-if="(label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && maxSeries <= modulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && (i === 0 || i === timeLabels.length - 1) && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && selectedSerieIndex === i && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo) || (label && !FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyFirstAndLast && FINAL_CONFIG.chart.grid.labels.xAxisLabels.showOnlyAtModulo && (i % Math.floor((slicer.end - slicer.start) / modulo) === 0))">
+                                    v-if="label && label.text">
                                     <!-- SINGLE LINE LABEL -->
                                     <text v-if="!String(label.text).includes('\n')" class="vue-data-ui-time-label"
                                         data-cy="time-label"
