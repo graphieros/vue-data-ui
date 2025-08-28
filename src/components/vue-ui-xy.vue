@@ -2500,6 +2500,42 @@ useTimeLabelCollision({
     rotation: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.autoRotate.angle
 });
 
+const useCustomFormatTimeTag = ref(false);
+
+const timeTagContent = computed(() => {
+    if ([null, undefined].includes(selectedSerieIndex.value) && [null, undefined].includes(selectedMinimapIndex.value)) return ''
+
+    const index = (selectedSerieIndex.value != null ? selectedSerieIndex.value : 0) || (selectedMinimapIndex.value != null ? selectedMinimapIndex.value : 0);
+
+    const customFormat = FINAL_CONFIG.value.chart.timeTag.customFormat;
+    useCustomFormatTimeTag.value = false;
+
+    if (isFunction(customFormat)) {
+        try {
+            const customFormatString = customFormat({
+                absoluteIndex: index + slicer.value.start,
+                seriesIndex: index,
+                datapoint: selectedSeries.value,
+                bars: barSet.value,
+                lines: lineSet.value,
+                plots: plotSet.value,
+                config: FINAL_CONFIG.value
+            });
+            if (typeof customFormatString === 'string') {
+                useCustomFormatTimeTag.value = true;
+                return customFormatString
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied on timeTag.');
+            useCustomFormatTimeTag.value = false;
+        }
+    }
+
+    if (!useCustomFormatTimeTag.value) {
+        return ![null, undefined].includes(timeLabels.value[index] ) ? timeLabels.value[index].text : ''
+    }
+});
+
 // Force reflow when component is mounted in a hidden div
 
 watch(() => props.dataset, (_) => {
@@ -2539,24 +2575,24 @@ watch(() => props.config, (_) => {
 const isActuallyVisible = ref(false)
 
 function recomputeVisibility() {
-  const el = chart.value?.parentNode
-  if (!el) { isActuallyVisible.value = false; return }
-  const r = el.getBoundingClientRect()
-  isActuallyVisible.value = r.width > 2 && r.height > 2
+    const el = chart.value?.parentNode
+    if (!el) { isActuallyVisible.value = false; return }
+    const r = el.getBoundingClientRect()
+    isActuallyVisible.value = r.width > 2 && r.height > 2
 }
 
 onMounted(() => {
-  recomputeVisibility()
-  const ro = new ResizeObserver(() => {
     recomputeVisibility()
-    if (isActuallyVisible.value) {
-      // re-measure and re-init once we have size
-      prepareChart()
-      normalizeSlicerWindow()
-      setupSlicer()
-    }
-  })
-  if (chart.value?.parentNode) ro.observe(chart.value.parentNode)
+    const ro = new ResizeObserver(() => {
+        recomputeVisibility()
+        if (isActuallyVisible.value) {
+        // re-measure and re-init once we have size
+        prepareChart()
+        normalizeSlicerWindow()
+        setupSlicer()
+        }
+    })
+    if (chart.value?.parentNode) ro.observe(chart.value.parentNode)
 })
 
 // v3 - Essential to make shifting between loading config and final config work
@@ -3584,15 +3620,9 @@ defineExpose({
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) - 100 + (drawingArea.width / maxSeries / 2)"
                             :y="drawingArea.bottom" width="200" height="40" style="overflow: visible !important;">
                             <div class="vue-ui-xy-time-tag"
-                                :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${FINAL_CONFIG.chart.timeTag.backgroundColor};color:${FINAL_CONFIG.chart.timeTag.color};font-size:${FINAL_CONFIG.chart.timeTag.fontSize}px`">
-                                {{ (timeLabels[(selectedSerieIndex !== null ? selectedSerieIndex : 0) ||
-                                    (selectedMinimapIndex !== null ?
-                                        selectedMinimapIndex : 0)] ? timeLabels[(selectedSerieIndex !== null ? selectedSerieIndex : 0) ||
-                                    (selectedMinimapIndex !== null ?
-                                        selectedMinimapIndex : 0)].text : '') || ((selectedSerieIndex !== null ? selectedSerieIndex :
-                                0) ||
-                                (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) }}
-                            </div>
+                                :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${FINAL_CONFIG.chart.timeTag.backgroundColor};color:${FINAL_CONFIG.chart.timeTag.color};font-size:${FINAL_CONFIG.chart.timeTag.fontSize}px`"
+                                v-html="timeTagContent"
+                            />
                         </foreignObject>
                         <circle
                             :cx="drawingArea.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) + (drawingArea.width / maxSeries / 2)"

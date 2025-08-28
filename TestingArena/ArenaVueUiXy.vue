@@ -625,7 +625,7 @@ const model = ref([
     { key: 'chart.zoom.enableRangeHandles', def: true, type: 'chexkbox' },
     { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox' },
 
-    { key: 'chart.zoom.minimap.show', def: false, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color' },
     { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
@@ -1130,6 +1130,12 @@ const config = computed(() => {
                                 }
                             }
                         }
+                    }
+                },
+                timeTag: {
+                    ...c.chart.timeTag,
+                    customFormat: ({ absoluteIndex }) => {
+                        return absoluteIndex.toString();
                     }
                 }
             }

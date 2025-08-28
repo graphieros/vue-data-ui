@@ -124,6 +124,7 @@ const startValue = ref(props.min);
 const endValue = ref(props.max);
 const hasMinimap = computed(() => !!props.minimap.length);
 const uid = ref(createUid());
+const isRanging = ref(false);
 
 const wrapperWidth = ref(0);
 
@@ -164,18 +165,11 @@ onMounted(() => {
 
 let _commitTimeout = null;
 
-function scheduleCommit() {
-    clearTimeout(_commitTimeout);
-    _commitTimeout = setTimeout(() => {
-        emit('update:start', Number(startValue.value));
-        emit('update:end',   Number(endValue.value));
-    }, 150);
-}
-
 function commitImmediately() {
     clearTimeout(_commitTimeout);
     emit('update:start', Number(startValue.value));
     emit('update:end',   Number(endValue.value));
+    isRanging.value = false;
 }
 
 const endpoint = computed(() => {
@@ -233,11 +227,6 @@ const availableTraps = computed(() => {
 function reset() {
     emit('reset');
 }
-
-const previewIndices = ref({
-    start: startValue.value,
-    end: endValue.value
-});
 
 watch(
     () => props.min,
@@ -355,12 +344,14 @@ function coerceInput(eOrVal) {
 }
 
 function setStartValue(eOrVal) {
+    isRanging.value = true;
     const n = coerceInput(eOrVal);
     if (!Number.isFinite(n)) return;
     start.value = n;
 }
 
 function setEndValue(eOrVal) {
+    isRanging.value = true;
     const n = coerceInput(eOrVal);
     if (!Number.isFinite(n)) return;
     end.value = n;
@@ -661,6 +652,9 @@ defineExpose({
                             :y="0"
                             :rx="minimapSelectionRadius"
                             :fill="borderColor"
+                            :style="{
+                                opacity: isDragging || isRanging ? 0 : 1
+                            }"
                         />
 
                         <rect

@@ -533,7 +533,8 @@ export function useConfig() {
                 circleMarker: {
                     radius: 3,
                     color: COLOR_BLACK
-                }
+                },
+                customFormat: null
             },
             grid: {
                 stroke: COLOR_GREY_LIGHT,
