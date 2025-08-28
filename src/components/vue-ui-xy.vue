@@ -53,6 +53,7 @@ import {
     createSmoothAreaSegments,
     createIndividualArea,
     treeShake,
+    buildInterLineAreas,
 } from '../lib';
 import { throttle } from '../canvas-lib.js';
 import { useConfig } from '../useConfig';
@@ -335,6 +336,8 @@ const isDataset = computed({
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 // v3 - Skeleton loader management
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
@@ -820,8 +823,8 @@ const displayedTimeLabels = computed(() => {
     const mod = Math.max(1, (modulo.value || 1));
     if (maxSeries.value <= mod) return vis;
 
-    const base  = mod;
-    const all   = allTimeLabels.value || [];
+    const base = mod;
+    const all = allTimeLabels.value || [];
     const start = slicer.value.start ?? 0;
 
     const candidates = [];
@@ -878,8 +881,8 @@ function selectTimeLabel(label, relativeIndex) {
 }
 
 const maxSeries = computed(() => {
-  const len = safeInt((slicer.value.end ?? 0) - (slicer.value.start ?? 0))
-  return Math.max(1, len)
+    const len = safeInt((slicer.value.end ?? 0) - (slicer.value.start ?? 0))
+    return Math.max(1, len)
 })
 
 function selectMinimapIndex(i) {
@@ -1941,6 +1944,43 @@ const allScales = computed(() => {
     });
 });
 
+const interLineAreas = computed(() => {
+    const il = FINAL_CONFIG.value.line.interLine || {};
+    const pairs  = il.pairs || [];
+    const colors = il.colors || [];
+
+    if (!pairs.length) return [];
+
+    const out = [];
+    pairs.forEach((pair, i) => {
+        const [nameA, nameB] = Array.isArray(pair) ? pair : [pair.a, pair.b];
+        if (!nameA || !nameB) return;
+
+        const A = lineSet.value.find(s => s.name === nameA);
+        const B = lineSet.value.find(s => s.name === nameB);
+        if (!A || !B || A.type !== 'line' || B.type !== 'line') return;
+
+        const colorLineA = (colors?.[i]?.[0]) ?? A.color;
+        const colorLineB = (colors?.[i]?.[1]) ?? B.color;
+
+        const areas = buildInterLineAreas({
+            lineA: A.plots,
+            lineB: B.plots,
+            smoothA: !!A.smooth,
+            smoothB: !!B.smooth,
+            colorLineA,
+            colorLineB,
+            sampleStepPx: 2,
+            cutNullValues: FINAL_CONFIG.value.line.cutNullValues
+        });
+
+        areas.forEach((a, j) => {
+            out.push({ ...a, key: `inter_${nameA}_${nameB}_${i}_${j}` });
+        });
+    });
+    return out;
+});
+
 /******************************************************************************************/
 
 const dataTooltipSlot = computed(() => {
@@ -2258,8 +2298,6 @@ function convertSizes() {
         fallback: 1
     })
 }
-
-const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 function prepareChart() {
     if (objectIsEmpty(props.dataset)) {
@@ -2874,7 +2912,7 @@ defineExpose({
                     <!-- ZERO LINE (AFTER BAR DATASETS, BEFORE LABELS) -->
                     <template v-if="!mutableConfig.useIndividualScale && FINAL_CONFIG.chart.grid.labels.zeroLine.show">
                         <line data-cy="xy-grid-line-x" :stroke="FINAL_CONFIG.chart.grid.stroke" stroke-width="1"
-                            :x1="drawingArea.left + xPadding" :x2="drawingArea.right - xPadding"
+                            :x1="drawingArea.left + xPadding" :x2="drawingArea.right"
                             :y1="forceValidValue(zero)" :y2="forceValidValue(zero)" stroke-linecap="round"
                             :style="{ animation: 'none !important' }" />
                     </template>
@@ -2957,8 +2995,8 @@ defineExpose({
                             <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
                                 <line data-cy="axis-y-tick"
                                     v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max && FINAL_CONFIG.chart.grid.labels.yAxis.showCrosshairs"
-                                    :x1="drawingArea.left"
-                                    :x2="drawingArea.left - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
+                                    :x1="drawingArea.left + xPadding"
+                                    :x2="drawingArea.left + xPadding - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
                                     :y1="forceValidValue(yLabel.y)" :y2="forceValidValue(yLabel.y)"
                                     :stroke="FINAL_CONFIG.chart.grid.stroke" stroke-width="1" stroke-linecap="round"
                                     :style="{ animation: 'none !important' }" />
@@ -3056,6 +3094,20 @@ defineExpose({
                         <slot v-for="(serie, i) in safeDataset" :key="`serie_pattern_slot_${i}`" name="pattern"
                             v-bind="{ ...serie, seriesIndex: serie.slotAbsoluteIndex, patternId: `pattern_${uniqueId}_${i}` }" />
                     </defs>
+
+                    <!-- INTERLINE AREAS (non stack mode only) -->
+                    <g v-if="interLineAreas.length && !mutableConfig.isStacked">
+                        <path
+                            v-for="area in interLineAreas"
+                            :key="area.key"
+                            :d="area.d"
+                            :fill="area.color"
+                            :fill-opacity="FINAL_CONFIG.line.interLine.fillOpacity"
+                            stroke="none"
+                            pointer-events="none"
+                            :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"
+                        />
+                    </g>
 
                     <!-- LINES -->
                     <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`"

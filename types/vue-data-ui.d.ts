@@ -3439,6 +3439,11 @@ declare module "vue-data-ui" {
             useGradient?: boolean;
             strokeWidth?: number;
             cutNullValues?: boolean;
+            interLine?: {
+                pairs?: [string, string][];
+                colors?: [string | undefined, string | undefined][];
+                fillOpacity?: number;
+            };
             dot?: {
                 hideAboveMaxSerieLength?: number;
                 useSerieColor?: boolean;

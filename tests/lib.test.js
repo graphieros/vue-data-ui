@@ -14,6 +14,7 @@ import {
     applyDataLabel,
     assignStackRatios,
     autoFontSize,
+    buildInterLineAreas,
     calcLinearProgression,
     calcMedian,
     calcPercentageTrend,
@@ -4044,5 +4045,152 @@ describe('wrapText', () => {
 
     test('only wraps full words', () => {
         expect(wrapText('ABCDEFGHIJKLMNOPQRSTUVWXYZ')).toBe('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    });
+});
+
+const GREEN = '#00FF00';
+const RED = '#FF0000';
+
+function allClosed(areas) {
+    return areas.every(a => a.d.startsWith('M') && a.d.trim().endsWith('Z'));
+}
+
+describe('buildInterLineAreas', () => {
+    test('returns [] for invalid inputs', () => {
+        expect(buildInterLineAreas({})).toEqual([]);
+        expect(buildInterLineAreas({
+            lineA: [],
+            lineB: [],
+            colorLineA: GREEN,
+            colorLineB: RED
+        })).toEqual([]);
+    });
+
+    test('straight lines, no crossing: A always above ⇒ uses colorLineA', () => {
+        const A = [{ x: 0, y: 0, value: 1 }, { x: 10, y: 0, value: 1 }];
+        const B = [{ x: 0, y: 10, value: 1 }, { x: 10, y: 10, value: 1 }];
+        const areas = buildInterLineAreas({
+            lineA: A, lineB: B,
+            colorLineA: GREEN, colorLineB: RED,
+            smoothA: false, smoothB: false,
+            sampleStepPx: 2, merge: true
+        });
+        expect(areas.length).toBeGreaterThan(0);
+        expect(areas.every(a => a.color === GREEN)).toBe(true);
+        expect(allClosed(areas)).toBe(true);
+    });
+
+    test('straight lines, one crossing: color flips from B to A across the crossing', () => {
+        const A = [{ x: 0, y: 12, value: 1 }, { x: 10, y: 0, value: 1 }];
+        const B = [{ x: 0, y: 0, value: 1 }, { x: 10, y: 12, value: 1 }];
+        const areas = buildInterLineAreas({
+            lineA: A, lineB: B,
+            colorLineA: GREEN, colorLineB: RED,
+            smoothA: false, smoothB: false,
+            sampleStepPx: 2, merge: true
+        });
+        expect(areas.length).toBe(2);
+        expect(areas[0].color).toBe(RED);
+        expect(areas[1].color).toBe(GREEN);
+        expect(allClosed(areas)).toBe(true);
+    });
+
+    test('smooth lines behave like straight lines for color / region logic', () => {
+        const A = [{ x: 0, y: 12, value: 1 }, { x: 10, y: 0, value: 1 }];
+        const B = [{ x: 0, y: 0, value: 1 }, { x: 10, y: 12, value: 1 }];
+        const smoothAreas = buildInterLineAreas({
+            lineA: A, lineB: B,
+            colorLineA: GREEN, colorLineB: RED,
+            smoothA: true, smoothB: true,
+            sampleStepPx: 2, merge: true
+        });
+        expect(smoothAreas.length).toBe(2);
+        expect(smoothAreas[0].color).toBe(RED);
+        expect(smoothAreas[1].color).toBe(GREEN);
+        expect(allClosed(smoothAreas)).toBe(true);
+    });
+
+    test('mixed smoothness (A smooth, B straight) still yields correct colors', () => {
+        const A = [{ x: 0, y: 12, value: 1 }, { x: 10, y: 0, value: 1 }];
+        const B = [{ x: 0, y: 0, value: 1 }, { x: 10, y: 12, value: 1 }];
+        const areas = buildInterLineAreas({
+            lineA: A, lineB: B,
+            colorLineA: GREEN, colorLineB: RED,
+            smoothA: true, smoothB: false,
+            sampleStepPx: 2, merge: true
+        });
+        expect(areas.length).toBe(2);
+        expect(areas[0].color).toBe(RED);
+        expect(areas[1].color).toBe(GREEN);
+        expect(allClosed(areas)).toBe(true);
+    });
+
+    test('cutNullValues=true drops trailing single point segments', () => {
+        const A = [
+            { x: 0, y: 0, value: 1 },
+            { x: 4, y: 0, value: 1 },
+            { x: 5, y: 0, value: null },
+            { x: 6, y: 0, value: 1 }, 
+        ];
+        const B = [
+            { x: 0, y: 10, value: 1 },
+            { x: 4, y: 10, value: 1 },
+            { x: 5, y: 10, value: null },
+            { x: 6, y: 10, value: 1 },
+        ];
+        const withCuts = buildInterLineAreas({
+            lineA: A, lineB: B,
+            colorLineA: GREEN, colorLineB: RED,
+            cutNullValues: true,
+            merge: false,
+            sampleStepPx: 2
+        });
+        const noCuts = buildInterLineAreas({
+            lineA: A, lineB: B,
+            colorLineA: GREEN, colorLineB: RED,
+            cutNullValues: false,
+            merge: false,
+            sampleStepPx: 2
+        });
+        expect(withCuts.length).toBeGreaterThanOrEqual(1);
+        expect(noCuts.length).toBeGreaterThan(withCuts.length);
+        const allClosed = (arr) => arr.every(a => a.d.startsWith('M') && a.d.trim().endsWith('Z'));
+        expect(allClosed(withCuts)).toBe(true);
+        expect(allClosed(noCuts)).toBe(true);
+    });
+
+    test('merge=false yields more/smaller polygons than merge=true', () => {
+        const A = [{ x: 0, y: 2, value: 1 }, { x: 20, y: 2, value: 1 }];
+        const B = [{ x: 0, y: 10, value: 1 }, { x: 20, y: 10, value: 1 }];
+        const perInterval = buildInterLineAreas({
+            lineA: A, lineB: B,
+            colorLineA: GREEN, colorLineB: RED,
+            smoothA: false, smoothB: false,
+            sampleStepPx: 2, merge: false
+        });
+        const merged = buildInterLineAreas({
+            lineA: A, lineB: B,
+            colorLineA: GREEN, colorLineB: RED,
+            smoothA: false, smoothB: false,
+            sampleStepPx: 2, merge: true
+        });
+        expect(perInterval.length).toBeGreaterThan(merged.length);
+        expect(merged.length).toBeGreaterThan(0);
+        expect(perInterval.every(a => a.color === GREEN)).toBe(true);
+        expect(merged.every(a => a.color === GREEN)).toBe(true);
+        expect(allClosed(perInterval)).toBe(true);
+        expect(allClosed(merged)).toBe(true);
+    });
+
+    test('paths are valid SVG polygons for a simple case', () => {
+        const A = [{ x: 0, y: 0, value: 1 }, { x: 10, y: 0, value: 1 }];
+        const B = [{ x: 0, y: 5, value: 1 }, { x: 10, y: 5, value: 1 }];
+        const areas = buildInterLineAreas({
+            lineA: A, lineB: B,
+            colorLineA: GREEN, colorLineB: RED,
+            sampleStepPx: 2, merge: true
+        });
+        expect(areas.length).toBeGreaterThan(0);
+        expect(allClosed(areas)).toBe(true);
     });
 });

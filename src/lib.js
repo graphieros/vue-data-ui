@@ -2961,6 +2961,279 @@ export function wrapText(str, maxChars = 20) {
     return result;
 }
 
+/**
+ * Build SVG polygons representing the filled area(s) between two lines.
+ * - Works with straight or smoothed (monotone cubic) lines.
+ * - Samples both lines on a common X grid (pixel step).
+ * - Optionally merges consecutive intervals with the same nature
+ *   into larger polygons (fewer path nodes).
+ *
+ * @param {{
+*   lineA: Array<{x:number,y:number,value?:number|null}>,
+*   lineB: Array<{x:number,y:number,value?:number|null}>,
+*   colorLineA: string,
+*   colorLineB: string,
+*   smoothA?: boolean,
+*   smoothB?: boolean, 
+*   sampleStepPx?: number,
+*   cutNullValues?: boolean,
+*   merge?: boolean
+* }} opts
+* @returns {Array<{ d: string, color: string }>}
+*/
+export function buildInterLineAreas(opts) {
+    const {
+        lineA,
+        lineB,
+        colorLineA, // fill when A is above
+        colorLineB, // fill when B is above
+        smoothA = false,
+        smoothB = false,
+        sampleStepPx = 2,
+        cutNullValues = true, // break across gaps
+        merge = true // merge into large polygons
+    } = opts || {};
+
+    if (!Array.isArray(lineA) || !Array.isArray(lineB) || !lineA.length || !lineB.length) {
+        return [];
+    }
+
+    const isNum = (n) => Number.isFinite(n);
+
+    function getSegments(points) {
+        if (!cutNullValues) return [points.filter(p => p && isNum(p.x) && isNum(p.y))];
+        const segs = [];
+        let curr = [];
+        for (const p of points) {
+            const ok = p && isNum(p.x) && isNum(p.y) && !(p.value == null);
+            if (ok) {
+                curr.push({ x: p.x, y: p.y });
+            } else {
+                if (curr.length > 1) segs.push(curr);
+                curr = [];
+            }
+        }
+        if (curr.length > 1) segs.push(curr);
+        return segs;
+    }
+
+    function computeTangents(seg) {
+        const n = seg.length - 1;
+        const dx = new Array(n), dy = new Array(n), slopes = new Array(n), m = new Array(seg.length);
+        for (let i = 0; i < n; i += 1) {
+            dx[i] = seg[i + 1].x - seg[i].x;
+            dy[i] = seg[i + 1].y - seg[i].y;
+            slopes[i] = dy[i] / dx[i];
+        }
+        m[0] = slopes[0];
+        m[n] = slopes[n - 1];
+        for (let i = 1; i < n; i += 1) {
+            if (slopes[i - 1] * slopes[i] <= 0) {
+                m[i] = 0;
+            } else {
+                m[i] = (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+            }
+        }
+        return m;
+    }
+
+    function evalMonotone(p0, p1, m0, m1, x) {
+        const x0 = p0.x, x1 = p1.x, y0 = p0.y, y1 = p1.y;
+        const h = x1 - x0;
+        if (h === 0) return y0;
+        const t = (x - x0) / h, t2 = t * t, t3 = t2 * t;
+        const h00 = 2 * t3 - 3 * t2 + 1;
+        const h10 = t3 - 2 * t2 + t;
+        const h01 = -2 * t3 + 3 * t2;
+        const h11 = t3 - t2;
+        return h00 * y0 + h10 * (m0 * h) + h01 * y1 + h11 * (m1 * h);
+    }
+
+    // Sample a polyline or smoothed line on a uniform X grid
+    function sampleLine(points, smooth) {
+        const segments = getSegments(points);
+        if (!segments.length) return [];
+
+        // global bounds
+        let xmin = Infinity, xmax = -Infinity;
+        for (const seg of segments) {
+            xmin = Math.min(xmin, seg[0].x);
+            xmax = Math.max(xmax, seg[seg.length - 1].x);
+        }
+        if (!isNum(xmin) || !isNum(xmax) || xmax <= xmin) return [];
+
+        const step = Math.max(1, sampleStepPx);
+        const xs = [];
+        for (let x = xmin; x <= xmax; x += step) xs.push(x);
+        if (xs[xs.length - 1] < xmax) xs.push(xmax);
+
+        const out = [];
+        for (const x of xs) {
+            let y = null;
+            let covered = false;
+
+            for (const seg of segments) {
+                const last = seg.length - 1;
+                if (x < seg[0].x - 1e-9 || x > seg[last].x + 1e-9) continue;
+
+                // locate local segment
+                for (let i = 0; i < last; i += 1) {
+                    const p0 = seg[i], p1 = seg[i + 1];
+                    if (x + 1e-9 < p0.x || x - 1e-9 > p1.x) continue;
+
+                    if (!smooth) {
+                        const t = (x - p0.x) / (p1.x - p0.x || 1);
+                        y = p0.y + t * (p1.y - p0.y);
+                    } else {
+                        const m = seg.__tangents || (seg.__tangents = computeTangents(seg));
+                        y = evalMonotone(p0, p1, m[i], m[i + 1], x);
+                    }
+                    covered = true;
+                    break;
+                }
+                if (covered) break;
+            }
+
+            if (y == null) {
+                out.push({ x, y: null, hole: true });
+            } else {
+                out.push({ x, y, hole: false });
+            }
+        }
+        return out;
+    }
+
+    function lerp(a, b, t) { return a + t * (b - a); }
+
+    // Refine by inserting exact crossing points so top only changes at sample boundaries
+    function refineWithCrossings(sA, sB) {
+        const A = [], B = [];
+        const N = Math.min(sA.length, sB.length);
+        for (let i = 0; i < N - 1; i += 1) {
+            const A0 = sA[i], A1 = sA[i + 1];
+            const B0 = sB[i], B1 = sB[i + 1];
+
+            // propagate current sample
+            A.push(A0); B.push(B0);
+
+            // skip if any hole on this interval
+            if (A0.hole || A1.hole || B0.hole || B1.hole || A0.y == null || A1.y == null || B0.y == null || B1.y == null) {
+                continue;
+            }
+
+            const d0 = A0.y - B0.y;
+            const d1 = A1.y - B1.y;
+
+            if ((d0 > 0 && d1 < 0) || (d0 < 0 && d1 > 0)) {
+                const t = d0 / (d0 - d1);
+                const xc = lerp(A0.x, A1.x, t);
+                const yc = lerp(A0.y, A1.y, t); // equal for both
+                const crossA = { x: xc, y: yc, hole: false };
+                const crossB = { x: xc, y: yc, hole: false };
+                A.push(crossA);
+                B.push(crossB);
+            }
+        }
+        // add the last samples
+        if (N > 0) { A.push(sA[N - 1]); B.push(sB[N - 1]); }
+        return { A, B };
+    }
+
+    // Build small per-interval polygons (no merge)
+    function buildPerIntervalPolys(sA, sB) {
+        const out = [];
+        const N = Math.min(sA.length, sB.length);
+        for (let i = 0; i < N - 1; i += 1) {
+            const A0 = sA[i], A1 = sA[i + 1];
+            const B0 = sB[i], B1 = sB[i + 1];
+            if (A0.hole || A1.hole || B0.hole || B1.hole || A0.y == null || A1.y == null || B0.y == null || B1.y == null) continue;
+
+            const d0 = A0.y - B0.y;
+            const d1 = A1.y - B1.y;
+
+            // after refinement, a sign change cannot happen across an interval
+            const top0 = d0 <= 0 ? A0 : B0;
+            const top1 = d1 <= 0 ? A1 : B1;
+            const bot1 = d1 <= 0 ? B1 : A1;
+            const bot0 = d0 <= 0 ? B0 : A0;
+            const color = d0 <= 0 ? colorLineA : colorLineB;
+
+            const d = [
+                `M${top0.x},${top0.y}`,
+                `L${top1.x},${top1.y}`,
+                `L${bot1.x},${bot1.y}`,
+                `L${bot0.x},${bot0.y}`,
+                `Z`
+            ].join(' ');
+            out.push({ d, color });
+        }
+        return out;
+    }
+
+    // Build merged polygons for consecutive same-top runs
+    function buildMergedPolys(sA, sB) {
+        const out = [];
+        const N = Math.min(sA.length, sB.length);
+        if (N < 2) return out;
+
+        let i = 0;
+        while (i < N - 1) {
+            // skip holes
+            while (i < N - 1) {
+                const A0 = sA[i], B0 = sB[i], A1 = sA[i + 1], B1 = sB[i + 1];
+                if (!A0.hole && !B0.hole && !A1.hole && !B1.hole && A0.y != null && B0.y != null && A1.y != null && B1.y != null) break;
+                i += 1;
+            }
+            if (i >= N - 1) break;
+
+            const start = i;
+            const sign = Math.sign((sB[i].y - sA[i].y) || 0) || 1; // default "A above" when equal
+
+            // extend run while top stays same and no holes
+            i += 1;
+            while (i < N - 1) {
+                const A0 = sA[i], B0 = sB[i], A1 = sA[i + 1], B1 = sB[i + 1];
+                if (A0.hole || B0.hole || A1.hole || B1.hole || A0.y == null || B0.y == null || A1.y == null || B1.y == null) break;
+                const s = Math.sign((B0.y - A0.y) || 0) || 1;
+                if (s !== sign) break;
+                i += 1;
+            }
+            const end = i + 0; // inclusive end index for vertices
+
+            // collect polygon points
+            const top = sign >= 0 ? sA : sB;
+            const bot = sign >= 0 ? sB : sA;
+            const color = sign >= 0 ? colorLineA : colorLineB;
+
+            const topPts = [];
+            for (let k = start; k <= end; k += 1) {
+                topPts.push(`${top[k].x},${top[k].y}`)
+            };
+
+            const botPts = [];
+            for (let k = end; k >= start; k -= 1) {
+                botPts.push(`${bot[k].x},${bot[k].y}`)
+            };
+
+            const d = `M${topPts[0]} L${topPts.slice(1).join(' L')} L${botPts.join(' L')} Z`;
+            out.push({ d, color });
+        }
+
+        return out;
+    }
+
+    const sampledA = sampleLine(lineA, smoothA);
+    const sampledB = sampleLine(lineB, smoothB);
+
+    // insert crossing points so top is constant between consecutive samples
+    const { A: refinedA, B: refinedB } = refineWithCrossings(sampledA, sampledB);
+
+    return merge
+        ? buildMergedPolys(refinedA, refinedB)
+        : buildPerIntervalPolys(refinedA, refinedB);
+}
+
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -2969,6 +3242,7 @@ const lib = {
     applyDataLabel,
     assignStackRatios,
     autoFontSize,
+    buildInterLineAreas,
     calcLinearProgression,
     calcMarkerOffsetX,
     calcMarkerOffsetY,

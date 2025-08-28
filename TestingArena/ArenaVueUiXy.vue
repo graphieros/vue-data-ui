@@ -377,20 +377,21 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = [
     {
-        name: "Serie A with a long name",
-        series: [60, 100, 112, 221, 119, 75, null, -226, -243, 198, 156, 127, 120],
-        type: "bar",
+        name: "Serie A",
+        series: [60, 100, 112, 221, 119, 75, 199, -226, -243, 198, 156, 127, 120],
+        type: "line",
         dataLabels: false,
+        smooth: false
     },
     {
-        name: "Serie B with a long name",
-        series: createDs(258),
+        name: "Serie B",
+        series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
         type: "line",
         dataLabels: false,
         shape: 'triangle',
-        useArea: true,
-        smooth: true,
-        useProgression: true
+        // useArea: true,
+        smooth: false,
+        // useProgression: true
     },
     {
         name: "Serie C with a long name",
@@ -670,7 +671,7 @@ const model = ref([
     { key: 'chart.grid.showVerticalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
     { key: 'chart.grid.showHorizontalLines', def: true, type: 'checkbox', label: 'verticalLines', category: 'grid' },
 
-    { key: 'chart.grid.position', def: 'start', type: 'select', options: ['middle', 'start']},
+    { key: 'chart.grid.position', def: 'middle', type: 'select', options: ['middle', 'start']},
     { key: 'chart.grid.frame.show', def: false, type: 'checkbox' },
     { key: 'chart.grid.frame.stroke', def: '#1A1A1A', type: 'color' },
     { key: 'chart.grid.frame.strokeWidth', def: 4, type: 'number', min: 0, max: 12 },
@@ -798,6 +799,8 @@ const model = ref([
 
     { key: 'line.tag.followValue', def: true, type: 'checkbox' },
     { key: 'line.tag.fontSize', def: 14, type: 'number' },
+
+    { key: 'line.interLine.fillOpacity', def: 0.25, type: 'range', min: 0, max: 1, step: 0.01},
 
     { key: 'plot.radius', def: 6, type: 'number', min: 0, max: 20, label: 'radius', category: 'plot' },
     { key: 'plot.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'plot' },
@@ -949,6 +952,12 @@ const config = computed(() => {
             theme: currentTheme.value,
             line: {
                 ...c.line,
+                interLine: {
+                    ...c.line.interLine,
+                    pairs: [
+                        ['Serie A', 'Serie B']
+                    ]
+                },
                 labels: {
                     ...c.line.labels,
                     // formatter: ({value, config}) => {

@@ -684,6 +684,11 @@ export function useConfig() {
             useGradient: true,
             strokeWidth: 3,
             cutNullValues: false,
+            interLine: {
+                pairs: [],
+                colors: [],
+                fillOpacity: 0.25,
+            },
             dot: {
                 hideAboveMaxSerieLength: 62,
                 useSerieColor: true,
