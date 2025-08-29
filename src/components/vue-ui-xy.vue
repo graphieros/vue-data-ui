@@ -154,8 +154,6 @@ const svg = computed(() => {
     }
 });
 
-const lttbThreshold = props.config.downsample ? props.config.downsample.threshold ? props.config.downsample.threshold : 500 : 500;
-
 function safeInt(n) { return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0 }
 function safeDiv(a, b, fallback = 0) {
     return (Number.isFinite(a) && Number.isFinite(b) && Math.abs(b) > 1e-9) ? (a / b) : fallback
@@ -425,7 +423,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 
 const maxX = computed({
     get: () => {
-        return Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: lttbThreshold }).length));
+        return Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold }).length));
     },
     set: (v) => v
 });

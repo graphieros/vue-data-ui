@@ -280,52 +280,80 @@ onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
+const absLen  = computed(() => Math.max(1, props.max - props.min));
+const miniLen = computed(() => Math.max(1, props.minimap.length));
+const scaleAbsToMini = computed(() => miniLen.value / absLen.value);
+
+function absToMiniStart(i) {
+  const v = Math.floor((i - props.min) * scaleAbsToMini.value);
+    return Math.min(Math.max(0, v), miniLen.value);
+}
+
+function absToMiniEnd(i) {
+  const v = Math.ceil((i - props.min) * scaleAbsToMini.value);
+    return Math.min(Math.max(0, v), miniLen.value);
+}
+
+const startMini = computed(() => absToMiniStart(startValue.value));
+const endMini   = computed(() => absToMiniEnd(endValue.value));
+
 const unitWidthX = computed(() => {
     if(!props.minimap.length) return 0;
     return svgMinimap.value.width / props.minimap.length;
 });
 
 const minimapLine = computed(() => {
-    if(!props.minimap.length) return [];
+    if (!props.minimap.length) return [];
     const max = Math.max(...props.minimap);
     const min = Math.min(...props.minimap) - 10;
     const diff = max - (min > 0 ? 0 : min);
-    const points = props.minimap.map((dp, i) => {
-        const normalizedVal = dp - min;
-        return {
-            x: svgMinimap.value.width / (props.minimap.length) * (i) + (unitWidthX.value / 2),
-            y: svgMinimap.value.height - (normalizedVal / diff * (svgMinimap.value.height * 0.9))
-        };
-    });
+
+    const points = props.minimap.map((dp, i) => ({
+        x: (svgMinimap.value.width / props.minimap.length) * i + (unitWidthX.value / 2),
+        y: svgMinimap.value.height - ((dp - min) / diff) * (svgMinimap.value.height * 0.9),
+    }));
+
+    const s = startMini.value;
+    const e = Math.max(s + 1, endMini.value);
+
     const fullSet = props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points);
-    const sliced = [...points].slice(props.valueStart, props.valueEnd);
+    const sliced = points.slice(s, e);
     const selectionSet = props.smoothMinimap ? createSmoothPath(sliced) : createStraightPath(sliced);
+
     return {
         fullSet,
         selectionSet,
         sliced,
-        firstPlot: points[props.valueStart],
-        lastPlot: points[props.valueEnd - 1]
+        firstPlot: points[s],
+        lastPlot : points[Math.max(0, e - 1)],
     };
 });
 
 const selectionRectCoordinates = computed(() => {
+    const s = startMini.value;
+    const e = Math.max(s + 1, endMini.value);
     return {
-        x: unitWidthX.value * startValue.value + (unitWidthX.value / 2),
-        width: svgMinimap.value.width * ((endValue.value - startValue.value) / props.max) - unitWidthX.value
+        x: unitWidthX.value * s + (unitWidthX.value / 2),
+        width: unitWidthX.value * (e - s) - unitWidthX.value,
     };
 });
 
 const selectedTrap = ref(props.minimapSelectedIndex);
 
 watch(() => props.minimapSelectedIndex, (v) => {
-    selectedTrap.value = v + props.valueStart;
+    if ([null, undefined].includes(v)) { 
+        selectedTrap.value = null; 
+        return; 
+    }
+    selectedTrap.value = absToMiniStart(props.valueStart) + v;
 }, { immediate: true });
 
 function trapMouse(trap) {
     selectedTrap.value = trap;
-    if (trap >= props.valueStart && trap < props.valueEnd) {
-        emit('trapMouse', trap - props.valueStart);
+    const s = startMini.value;
+    const e = endMini.value;
+    if (trap >= s && trap < e) {
+        emit('trapMouse', trap - s);
     }
 }
 
@@ -715,7 +743,7 @@ defineExpose({
                                     stroke-linecap="round"
                                     stroke-dasharray="2"
                                     stroke-width="1"
-                                    v-if="selectedTrap === trap && trap >= valueStart && trap < valueEnd"
+                                    v-if="selectedTrap === trap && trap >= startMini && trap < endMini"
                                 />
                             </g>
                         </template>
@@ -730,7 +758,7 @@ defineExpose({
                             fill="transparent"
                             style="pointer-events: all !important;"
                             :style="{
-                                cursor: trap >= valueStart && trap < valueEnd && enableSelectionDrag ? isMouseDown ? 'grabbing' : 'grab' : 'default',
+                                cursor: trap >= startMini && trap < endMini && enableSelectionDrag ? isMouseDown ? 'grabbing' : 'grab' : 'default',
                             }"
                             @mousedown="isMouseDown = true"
                             @mouseup="isMouseDown = false"
