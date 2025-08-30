@@ -143,6 +143,15 @@ const model = ref([
     { key: 'style.layout.marginalBars.useGradient', def: true, type: 'checkbox'},
     { key: 'style.layout.marginalBars.showLines', def: true, type: 'checkbox'},
     { key: 'style.layout.marginalBars.linesStrokeWidth', def: 1, type: 'number', min: 0.5, max: 12, step: 0.5},
+    
+    { key: 'style.layout.marginalBars.highlighter.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.marginalBars.highlighter.opacity', def: 0.1, type: 'range', min: 0, max: 1, step: 0.01},
+    { key: 'style.layout.marginalBars.highlighter.color', def: '#1A1A1A', type: 'color'},
+    { key: 'style.layout.marginalBars.highlighter.stroke', def: '#1A1A1A', type: 'color'},
+    { key: 'style.layout.marginalBars.highlighter.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.1},
+    { key: 'style.layout.marginalBars.highlighter.strokeDasharray', def: 2, type: 'number', min: 0, max: 12},
+    { key: 'style.layout.marginalBars.highlighter.highlightBothAxes', def: false, type: 'checkbox'},
+
     { key: 'style.layout.plots.radius', def: 2, type: 'number', min: 0, max: 24},
     { key: 'style.layout.plots.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.layout.plots.strokeWidth', def: 0.3, type: 'range', min: 0.1, max: 12, step: 0.1},
@@ -353,9 +362,9 @@ onMounted(async () => {
             responsive: true
         }">
 
-        <template #chart-background>
+        <!-- <template #chart-background>
             <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-        </template>
+        </template> -->
 
         <template #watermark="{ isPrinting }">
             <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">

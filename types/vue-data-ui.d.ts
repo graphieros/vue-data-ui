@@ -2874,6 +2874,15 @@ declare module "vue-data-ui" {
                     useGradient?: boolean;
                     showLines?: boolean;
                     linesStrokeWidth?: number;
+                    highlighter?: {
+                        show?: boolean;
+                        opacity?: number;
+                        color?: string;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        strokeDasharray?: number;
+                        highlightBothAxes?: boolean;
+                    }
                 };
                 correlation?: {
                     show?: boolean;

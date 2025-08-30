@@ -2107,7 +2107,16 @@ export function useConfig() {
                     borderRadius: 2,
                     useGradient: true,
                     showLines: false,
-                    linesStrokeWidth: 1
+                    linesStrokeWidth: 1,
+                    highlighter: {
+                        show: true,
+                        opacity: 0.1,
+                        color: COLOR_BLACK,
+                        stroke: COLOR_BLACK,
+                        strokeWidth: 0.5,
+                        strokeDasharray: 2,
+                        highlightBothAxes: false,
+                    }
                 },
                 plots: {
                     radius: 2,

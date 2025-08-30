@@ -92,6 +92,8 @@ const tableStep = ref(0);
 const legendStep = ref(0);
 const segregated = ref([]);
 const readyTeleport = ref(false);
+const selectedMarginalX = ref(null);
+const selectedMarginalY = ref(null);
 
 const xAxisLabelLeft = ref(null);
 const xAxisLabelRight = ref(null);
@@ -923,6 +925,25 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+function onMarginalXEnter(index) {
+    selectedMarginalX.value = index;
+    if (FINAL_CONFIG.value.style.layout.marginalBars.highlighter.highlightBothAxes) {
+        selectedMarginalY.value = marginalBars.value.y.length - 2 - index;
+    }
+}
+
+function onMarginalYEnter(index) {
+    selectedMarginalY.value = index;
+    if (FINAL_CONFIG.value.style.layout.marginalBars.highlighter.highlightBothAxes) {
+        selectedMarginalX.value = index;
+    }
+}
+
+function onMarginalLeave() {
+    selectedMarginalX.value = null;
+    selectedMarginalY.value = null;
+}
+
 defineExpose({
     getData,
     getImage,
@@ -1043,6 +1064,7 @@ defineExpose({
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'animated': FINAL_CONFIG.useCssAnimation }"
             :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.color}`"
+            @mouseleave="onMarginalLeave"
         >
             <PackageVersion />
 
@@ -1082,6 +1104,184 @@ defineExpose({
                     :stroke-width="FINAL_CONFIG.style.layout.axis.strokeWidth"
                     stroke-linecap="round"
                 />
+            </g>
+
+            <!-- MARGINAL BARS -->
+            <g v-if="FINAL_CONFIG.style.layout.marginalBars.show">
+                <defs>
+                    <linearGradient :id="`marginal_x_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.marginalBars.fill"/>
+                        <stop offset="100%" :stop-color="FINAL_CONFIG.style.backgroundColor"/>
+                    </linearGradient>
+                    <linearGradient :id="`marginal_y_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
+                        <stop offset="0%" :stop-color="FINAL_CONFIG.style.backgroundColor"/>
+                        <stop offset="100%" :stop-color="FINAL_CONFIG.style.layout.marginalBars.fill"/>
+                    </linearGradient>
+                </defs>
+                <g v-for="(x, i) in marginalBars.x">
+                    <rect
+                        data-cy="marginal-bar-x"
+                        v-if="x && marginalBars.avgX[i]"
+                        :x="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
+                        :y="drawingArea.top - FINAL_CONFIG.style.layout.marginalBars.offset - x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size"
+                        :width="drawingArea.width / scale <= 0 ? 0.0001 : drawingArea.width / scale"
+                        :height="x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size <= 0 ? 0.0001 : x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size"
+                        :fill="FINAL_CONFIG.style.layout.marginalBars.useGradient ? `url(#marginal_x_${uid})` : FINAL_CONFIG.style.layout.marginalBars.fill"
+                        :style="`opacity:${FINAL_CONFIG.style.layout.marginalBars.opacity}`"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.layout.marginalBars.strokeWidth"
+                        :rx="FINAL_CONFIG.style.layout.marginalBars.borderRadius"
+                        style="pointer-events: none"
+                    />
+                    <!-- MARGINAL MOUSE TRAP (X) -->
+                    <rect
+                        v-if="marginalBars.avgX[i]"
+                        :x="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
+                        :y="drawingArea.top - FINAL_CONFIG.style.layout.marginalBars.offset - FINAL_CONFIG.style.layout.marginalBars.size"
+                        :width="drawingArea.width / scale <= 0 ? 0.0001 : drawingArea.width / scale"
+                        :height="Math.max(0.1, FINAL_CONFIG.style.layout.marginalBars.size)"
+                        fill="transparent"
+                        @mouseenter="onMarginalXEnter(i)"
+                        @mouseleave="onMarginalLeave()"
+                    />
+                    <!-- MARGINAL HIGHLIGHTER (X) -->
+                    <template  v-if="marginalBars.avgX[i] && selectedMarginalX != null && selectedMarginalX === i">
+                        <g style="pointer-events: none;">
+                            <rect 
+                                :x="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
+                                :y="drawingArea.top"
+                                :width="drawingArea.width / scale <= 0 ? 0.0001 : drawingArea.width / scale"
+                                :height="drawingArea.height"
+                                :fill="FINAL_CONFIG.style.layout.marginalBars.highlighter.color"
+                                :fill-opacity="FINAL_CONFIG.style.layout.marginalBars.highlighter.opacity"
+                            />
+                            <line
+                                :x1="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
+                                :x2="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
+                                :y1="0"
+                                :y2="drawingArea.top + drawingArea.height"
+                                :stroke="FINAL_CONFIG.style.layout.marginalBars.highlighter.stroke"
+                                :stroke-dasharray="FINAL_CONFIG.style.layout.marginalBars.highlighter.strokeDasharray"
+                                :stroke-width="FINAL_CONFIG.style.layout.marginalBars.highlighter.strokeWidth"
+                                :style="{ transition: 'none !important', animation: 'none !important' }"
+                            />
+                            <line
+                                :x1="marginalBars.avgX[i] - (drawingArea.width / scale / 2) + (drawingArea.width / scale <= 0 ? 0.0001 : drawingArea.width / scale)"
+                                :x2="marginalBars.avgX[i] - (drawingArea.width / scale / 2) + (drawingArea.width / scale <= 0 ? 0.0001 : drawingArea.width / scale)"
+                                :y1="0"
+                                :y2="drawingArea.top + drawingArea.height"
+                                :stroke="FINAL_CONFIG.style.layout.marginalBars.highlighter.stroke"
+                                :stroke-dasharray="FINAL_CONFIG.style.layout.marginalBars.highlighter.strokeDasharray"
+                                :stroke-width="FINAL_CONFIG.style.layout.marginalBars.highlighter.strokeWidth"
+                                :style="{ transition: 'none !important', animation: 'none !important' }"
+                            />
+                        </g>
+                    </template>
+                </g>
+                <g v-for="(y, i) in marginalBars.y">
+                    <rect
+                        data-cy="marginal-bar-y"
+                        v-if="y && marginalBars.avgY[i]"
+                        :x="drawingArea.right + FINAL_CONFIG.style.layout.marginalBars.offset"
+                        :y="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
+                        :height="drawingArea.height / scale <= 0 ? 0.0001 : drawingArea.height / scale"
+                        :width="y / marginalBars.maxY * FINAL_CONFIG.style.layout.marginalBars.size <= 0 ? 0.0001 : y / marginalBars.maxY * FINAL_CONFIG.style.layout.marginalBars.size"
+                        :fill="FINAL_CONFIG.style.layout.marginalBars.useGradient ? `url(#marginal_y_${uid})` : FINAL_CONFIG.style.layout.marginalBars.fill"
+                        :style="`opacity:${FINAL_CONFIG.style.layout.marginalBars.opacity}`"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        :stroke-width="FINAL_CONFIG.style.layout.marginalBars.strokeWidth"
+                        :rx="FINAL_CONFIG.style.layout.marginalBars.borderRadius"
+                        style="pointer-events: none"
+                    />
+                    <!-- MARGINAL MOUSE TRAP (Y) -->
+                    <rect
+                        v-if="marginalBars.avgY[i]"
+                        :x="drawingArea.right + FINAL_CONFIG.style.layout.marginalBars.offset"
+                        :y="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
+                        :width="Math.max(0.1, FINAL_CONFIG.style.layout.marginalBars.size)"
+                        :height="drawingArea.height / scale <= 0 ? 0.0001 : drawingArea.height / scale"
+                        fill="transparent"
+                        @mouseenter="onMarginalYEnter(i)"
+                        @mouseleave="onMarginalLeave()"
+                    />
+                    <!-- MARGINAL HIGHLIGHTER (X) -->
+                    <template v-if="marginalBars.avgY[i] && selectedMarginalY != null && selectedMarginalY === i">
+                        <g style="pointer-events: none;">
+                            <rect 
+                                :x="drawingArea.left"
+                                :y="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
+                                :width="drawingArea.width"
+                                :height="drawingArea.height / scale <= 0 ? 0.0001 : drawingArea.height / scale"
+                                :fill="FINAL_CONFIG.style.layout.marginalBars.highlighter.color"
+                                :fill-opacity="FINAL_CONFIG.style.layout.marginalBars.highlighter.opacity"
+                            />
+                            <line
+                                :x1="drawingArea.left"
+                                :x2="svg.width"
+                                :y1="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
+                                :y2="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
+                                :stroke="FINAL_CONFIG.style.layout.marginalBars.highlighter.stroke"
+                                :stroke-dasharray="FINAL_CONFIG.style.layout.marginalBars.highlighter.strokeDasharray"
+                                :stroke-width="FINAL_CONFIG.style.layout.marginalBars.highlighter.strokeWidth"
+                                :style="{ transition: 'none !important', animation: 'none !important' }"
+                            />
+                            <line
+                                :x1="drawingArea.left"
+                                :x2="svg.width"
+                                :y1="marginalBars.avgY[i] - (drawingArea.height / scale / 2) + (drawingArea.height / scale <= 0 ? 0.0001 : drawingArea.height / scale)"
+                                :y2="marginalBars.avgY[i] - (drawingArea.height / scale / 2) + (drawingArea.height / scale <= 0 ? 0.0001 : drawingArea.height / scale)"
+                                :stroke="FINAL_CONFIG.style.layout.marginalBars.highlighter.stroke"
+                                :stroke-dasharray="FINAL_CONFIG.style.layout.marginalBars.highlighter.strokeDasharray"
+                                :stroke-width="FINAL_CONFIG.style.layout.marginalBars.highlighter.strokeWidth"
+                                :style="{ transition: 'none !important', animation: 'none !important' }"
+                            />
+                        </g>
+                    </template>
+                </g>
+                <g v-if="FINAL_CONFIG.style.layout.marginalBars.showLines" style="pointer-events: none;">
+                    <template v-for="line in marginalLines">                   
+                        <path
+                            data-cy="marginal-line-x-wrapper"
+                            v-if="!segregated.includes(line.id)"
+                            :d="`M ${line.dX}`"
+                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth + 1"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                        />
+                        <path
+                            data-cy="marginal-line-x"
+                            v-if="!segregated.includes(line.id)"
+                            :d="`M ${line.dX}`"
+                            :stroke="line.color"
+                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                        />
+                        <path
+                            data-cy="marginal-line-y-wrapper"
+                            v-if="!segregated.includes(line.id)"
+                            :d="`M ${line.dY}`"
+                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth + 1"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                        />
+                        <path
+                            data-cy="marginal-line-y"
+                            v-if="!segregated.includes(line.id)"
+                            :d="`M ${line.dY}`"
+                            :stroke="line.color"
+                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                        />
+                    </template>
+                </g>
             </g>
 
             <!-- GIFT WRAP -->
@@ -1132,94 +1332,6 @@ defineExpose({
                         @mouseleave="onTrapLeave(plot, i)"
                         @click="onTrapClick(plot, i)"
                     />
-                </g>
-            </g>
-
-            <!-- MARGINAL BARS -->
-            <g v-if="FINAL_CONFIG.style.layout.marginalBars.show">
-                <defs>
-                    <linearGradient :id="`marginal_x_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.marginalBars.fill"/>
-                        <stop offset="100%" :stop-color="FINAL_CONFIG.style.backgroundColor"/>
-                    </linearGradient>
-                    <linearGradient :id="`marginal_y_${uid}`" x1="0%" x2="100%" y1="0%" y2="0%">
-                        <stop offset="0%" :stop-color="FINAL_CONFIG.style.backgroundColor"/>
-                        <stop offset="100%" :stop-color="FINAL_CONFIG.style.layout.marginalBars.fill"/>
-                    </linearGradient>
-                </defs>
-                <g v-for="(x, i) in marginalBars.x">
-                    <rect
-                        data-cy="marginal-bar-x"
-                        v-if="x && marginalBars.avgX[i]"
-                        :x="marginalBars.avgX[i] - (drawingArea.width / scale / 2)"
-                        :y="drawingArea.top - FINAL_CONFIG.style.layout.marginalBars.offset - x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size"
-                        :width="drawingArea.width / scale <= 0 ? 0.0001 : drawingArea.width / scale"
-                        :height="x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size <= 0 ? 0.0001 : x / marginalBars.maxX * FINAL_CONFIG.style.layout.marginalBars.size"
-                        :fill="FINAL_CONFIG.style.layout.marginalBars.useGradient ? `url(#marginal_x_${uid})` : FINAL_CONFIG.style.layout.marginalBars.fill"
-                        :style="`opacity:${FINAL_CONFIG.style.layout.marginalBars.opacity}`"
-                        :stroke="FINAL_CONFIG.style.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.layout.marginalBars.strokeWidth"
-                        :rx="FINAL_CONFIG.style.layout.marginalBars.borderRadius"
-                    />
-                </g>
-                <g v-for="(y, i) in marginalBars.y">
-                    <rect
-                        data-cy="marginal-bar-y"
-                        v-if="y && marginalBars.avgY[i]"
-                        :x="drawingArea.right + FINAL_CONFIG.style.layout.marginalBars.offset"
-                        :y="marginalBars.avgY[i] - (drawingArea.height / scale / 2)"
-                        :height="drawingArea.height / scale <= 0 ? 0.0001 : drawingArea.height / scale"
-                        :width="y / marginalBars.maxY * FINAL_CONFIG.style.layout.marginalBars.size <= 0 ? 0.0001 : y / marginalBars.maxY * FINAL_CONFIG.style.layout.marginalBars.size"
-                        :fill="FINAL_CONFIG.style.layout.marginalBars.useGradient ? `url(#marginal_y_${uid})` : FINAL_CONFIG.style.layout.marginalBars.fill"
-                        :style="`opacity:${FINAL_CONFIG.style.layout.marginalBars.opacity}`"
-                        :stroke="FINAL_CONFIG.style.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.layout.marginalBars.strokeWidth"
-                        :rx="FINAL_CONFIG.style.layout.marginalBars.borderRadius"
-                    />
-                </g>
-                <g v-if="FINAL_CONFIG.style.layout.marginalBars.showLines">
-                    <template v-for="line in marginalLines">                   
-                        <path
-                            data-cy="marginal-line-x-wrapper"
-                            v-if="!segregated.includes(line.id)"
-                            :d="`M ${line.dX}`"
-                            :stroke="FINAL_CONFIG.style.backgroundColor"
-                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth + 1"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            fill="none"
-                        />
-                        <path
-                            data-cy="marginal-line-x"
-                            v-if="!segregated.includes(line.id)"
-                            :d="`M ${line.dX}`"
-                            :stroke="line.color"
-                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            fill="none"
-                        />
-                        <path
-                            data-cy="marginal-line-y-wrapper"
-                            v-if="!segregated.includes(line.id)"
-                            :d="`M ${line.dY}`"
-                            :stroke="FINAL_CONFIG.style.backgroundColor"
-                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth + 1"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            fill="none"
-                        />
-                        <path
-                            data-cy="marginal-line-y"
-                            v-if="!segregated.includes(line.id)"
-                            :d="`M ${line.dY}`"
-                            :stroke="line.color"
-                            :stroke-width="FINAL_CONFIG.style.layout.marginalBars.linesStrokeWidth"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            fill="none"
-                        />
-                    </template>
                 </g>
             </g>
 
