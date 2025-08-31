@@ -641,6 +641,7 @@ export function useConfig() {
                 showPercentage: true,
                 roundingValue: 0,
                 roundingPercentage: 0,
+                useDefaultTimeFormat: true,
                 timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is used
             },
             userOptions: USER_OPTIONS({

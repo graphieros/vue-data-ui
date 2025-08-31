@@ -3437,6 +3437,7 @@ declare module "vue-data-ui" {
                     >
                 ) => string);
                 showTimeLabel?: boolean;
+                useDefaultTimeFormat?: boolean;
                 timeFormat?: string;
             };
             userOptions?: ChartUserOptions;

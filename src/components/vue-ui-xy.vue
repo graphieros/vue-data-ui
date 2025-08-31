@@ -2098,7 +2098,7 @@ const tooltipContent = computed(() => {
     } else {
         if (time && time.text && FINAL_CONFIG.value.chart.tooltip.showTimeLabel) {
             const precise = preciseTimeFormatter.value(selectedSerieIndex.value + slicer.value.start, FINAL_CONFIG.value.chart.tooltip.timeFormat);
-            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable ? precise : time.text}</div>`;
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.tooltip.useDefaultTimeFormat ? precise : time.text}</div>`;
         }
         selectedSeries.value.forEach(s => {
             if (isSafeValue(s.value)) {
