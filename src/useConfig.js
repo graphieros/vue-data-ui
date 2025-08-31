@@ -496,7 +496,10 @@ export function useConfig() {
                     stroke: '#6A6A6A',
                     strokeWidth: 2,
                     strokeDasharray: 0,
-                }
+                },
+                useDefaultFormat: true,
+                timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is enabled
+                customFormat: null // overrides all if callback => string
             },
             padding: PADDING([12, 12, 6, 6]),
             highlighter: {
@@ -534,7 +537,9 @@ export function useConfig() {
                     radius: 3,
                     color: COLOR_BLACK
                 },
-                customFormat: null
+                useDefaultFormat: true,
+                timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is enabled
+                customFormat: null // overrides all if callback => string
             },
             grid: {
                 stroke: COLOR_GREY_LIGHT,
@@ -635,7 +640,8 @@ export function useConfig() {
                 showValue: true,
                 showPercentage: true,
                 roundingValue: 0,
-                roundingPercentage: 0
+                roundingPercentage: 0,
+                timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is used
             },
             userOptions: USER_OPTIONS({
                 tooltip: true,

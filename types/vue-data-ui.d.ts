@@ -3272,6 +3272,20 @@ declare module "vue-data-ui" {
                     strokeWidth?: number;
                     strokeDasharray?: number;
                 };
+                useDefaultFormat?: boolean;
+                timeFormat?: string;
+                customFormat?:
+                | null
+                | ((
+                    params: VueUiTooltipParams<
+                        VueUiXyDatapointItem[],
+                        VueUiXySeries,
+                        VueUiXyConfig,
+                        VueUiXyDatasetBarItem[],
+                        VueUiXyDatasetLineItem[],
+                        VueUiXyDatasetPlotItem[]
+                    >
+                ) => string);
             };
             padding?: ChartPadding;
             annotations?: VueUiXyAnnotation[];
@@ -3291,6 +3305,8 @@ declare module "vue-data-ui" {
                     radius?: number;
                     color?: string;
                 };
+                useDefaultFormat?: boolean;
+                timeFormat?: string;
                 customFormat?:
                 | null
                 | ((
@@ -3421,6 +3437,7 @@ declare module "vue-data-ui" {
                     >
                 ) => string);
                 showTimeLabel?: boolean;
+                timeFormat?: string;
             };
             userOptions?: ChartUserOptions;
         };

@@ -69,6 +69,8 @@ import Slicer from '../atoms/Slicer.vue';
 import Shape from '../atoms/Shape.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
+import { useDateTime } from '../useDateTime.js';
+import locales from '../locales/locales.json';
 
 const props = defineProps({
     config: {
@@ -1993,6 +1995,78 @@ const dataTooltipSlot = computed(() => {
     }
 });
 
+const preciseTimeFormatter = computed(() => {
+    const xl = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter
+
+    const dt = useDateTime({
+        useUTC: xl.useUTC,
+        locale: locales[xl.locale] || { months:[], shortMonths:[], days:[], shortDays:[] },
+        januaryAsYear: xl.januaryAsYear
+    });
+
+    return (absIndex, fmt) => {
+        const values = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values
+        const ts = values?.[absIndex]
+        if (ts == null) return ''
+        return dt.formatDate(new Date(ts), fmt)
+    }
+});
+
+const preciseAllTimeLabels = computed(() => {
+    const values = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values || []
+    return values.map((_, i) => ({
+        text: preciseTimeFormatter.value(i, FINAL_CONFIG.value.chart.zoom.timeFormat),
+        absoluteIndex: i
+    }))
+})
+
+// Simple Slicer labels
+const useSlicerCustomFormat = ref(false);
+const slicerLabels = computed(() => {
+    let left = '', right = '';
+    if (FINAL_CONFIG.value.chart.zoom.preview.enable) {
+        return { left, right };
+    }
+    useSlicerCustomFormat.value = false;
+    const customFormat = FINAL_CONFIG.value.chart.zoom.customFormat;
+    if (isFunction(customFormat)) {
+        try {
+            const customLeft = customFormat({
+                absoluteIndex: slicer.value.start,
+                seriesIndex: slicer.value.start,
+                datapoint: selectedSeries.value
+            });
+            const customRight = customFormat({
+                absoluteIndex: slicer.value.end - 1,
+                seriesIndex: slicer.value.end - 1,
+                datapoint: selectedSeries.value
+            });
+            if (typeof customLeft === 'string' && typeof customRight === 'string') {
+                left = customLeft;
+                right = customRight;
+                useSlicerCustomFormat.value = true;
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied on zoom labels.');
+            useSlicerCustomFormat.value = false;
+        }
+    }
+
+    if (!useSlicerCustomFormat.value) {
+        left = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable
+        ? (preciseAllTimeLabels.value[slicer.value.start]?.text || '')
+        : (timeLabels.value[0]?.text || '');
+
+        const endAbs = Math.max(slicer.value.start, slicer.value.end - 1)
+
+        right = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable
+        ? (preciseAllTimeLabels.value[endAbs]?.text || '')
+        : (timeLabels.value.at(-1)?.text || '')        
+    }
+
+    return { left, right };
+});
+
 const tooltipContent = computed(() => {
     let html = "";
 
@@ -2023,7 +2097,8 @@ const tooltipContent = computed(() => {
         })
     } else {
         if (time && time.text && FINAL_CONFIG.value.chart.tooltip.showTimeLabel) {
-            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.chart.tooltip.borderColor}; width:100%">${time.text}</div>`;
+            const precise = preciseTimeFormatter.value(selectedSerieIndex.value + slicer.value.start, FINAL_CONFIG.value.chart.tooltip.timeFormat);
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable ? precise : time.text}</div>`;
         }
         selectedSeries.value.forEach(s => {
             if (isSafeValue(s.value)) {
@@ -2530,7 +2605,15 @@ const timeTagContent = computed(() => {
     }
 
     if (!useCustomFormatTimeTag.value) {
-        return ![null, undefined].includes(timeLabels.value[index] ) ? timeLabels.value[index].text : ''
+        if (![null, undefined].includes(timeLabels.value[index])) {
+            if (FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.timeTag.useDefaultFormat) {
+                return preciseTimeFormatter.value(index + slicer.value.start, FINAL_CONFIG.value.chart.timeTag.timeFormat);
+            } else {
+                return timeLabels.value[index].text;
+            }
+        } else {
+            return '';
+        }
     }
 });
 
@@ -3617,7 +3700,9 @@ defineExpose({
                         <foreignObject
                             :x="drawingArea.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) - 100 + (drawingArea.width / maxSeries / 2)"
                             :y="drawingArea.bottom" width="200" height="40" style="overflow: visible !important;">
-                            <div class="vue-ui-xy-time-tag"
+                            <div 
+                                data-cy="time-tag"
+                                class="vue-ui-xy-time-tag"
                                 :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${FINAL_CONFIG.chart.timeTag.backgroundColor};color:${FINAL_CONFIG.chart.timeTag.color};font-size:${FINAL_CONFIG.chart.timeTag.fontSize}px`"
                                 v-html="timeTagContent"
                             />
@@ -3630,7 +3715,7 @@ defineExpose({
                 </g>
 
                 <!-- ZOOM PREVIEW -->
-                <rect v-if="isPrecog" v-bind="precogRect"/>
+                <rect v-if="isPrecog" v-bind="precogRect" :data-start="slicer.start" :data-end="slicer.end"/>
 
                 <slot name="svg" :svg="svg" />
             </g>
@@ -3813,10 +3898,25 @@ defineExpose({
         </template>
 
         <template v-if="FINAL_CONFIG.chart.zoom.preview.enable">
-            <SlicerPreview ref="chartSlicer" v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
-                :key="`slicer_${slicerStep}`" :background="FINAL_CONFIG.chart.zoom.color"
+            <SlicerPreview 
+                ref="chartSlicer" 
+                v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
+                :key="`slicer_${slicerStep}`"
+                :max="maxX" 
+                :min="0"
+                :valueStart="slicer.start" 
+                :valueEnd="slicer.end" 
+                v-model:start="slicer.start" 
+                v-model:end="slicer.end"
+                :selectedSeries="selectedSeries"
+                :customFormat="FINAL_CONFIG.chart.zoom.customFormat"
+                :background="FINAL_CONFIG.chart.zoom.color"
                 :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
-                :labelLeft="timeLabels[0]? timeLabels[0].text : ''" :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" :textColor="FINAL_CONFIG.chart.color"
+                :labelLeft="timeLabels[0]? timeLabels[0].text : ''" 
+                :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" 
+                :textColor="FINAL_CONFIG.chart.color"
+                :usePreciseLabels="FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.chart.zoom.useDefaultFormat"
+                :preciseLabels="preciseAllTimeLabels"
                 :inputColor="FINAL_CONFIG.chart.zoom.color" :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
                 :borderColor="FINAL_CONFIG.chart.backgroundColor" :minimap="minimap"
                 :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
@@ -3826,8 +3926,7 @@ defineExpose({
                 :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
                 :minimapSelectedIndex="selectedSerieIndex"
                 :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
-                :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" :max="maxX" :min="0"
-                :valueStart="slicer.start" :valueEnd="slicer.end" v-model:start="slicer.start" v-model:end="slicer.end"
+                :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
                 :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
                 :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.downsample.threshold }).length))"
                 :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
@@ -3845,12 +3944,25 @@ defineExpose({
             </SlicerPreview>
         </template>
         <template v-else>
-            <Slicer ref="chartSlicer" v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
-                :key="`slicer_${slicerStep}`" :background="FINAL_CONFIG.chart.zoom.color"
-                :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
-                :labelLeft="timeLabels[0]? timeLabels[0].text : ''" :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" :textColor="FINAL_CONFIG.chart.color"
-                :inputColor="FINAL_CONFIG.chart.zoom.color" :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
-                :borderColor="FINAL_CONFIG.chart.backgroundColor" :minimap="minimap"
+            <Slicer ref="chartSlicer" 
+                v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
+                :key="`slicer_${slicerStep}`" 
+                :max="maxX" 
+                :min="0"
+                :valueStart="slicer.start" 
+                :valueEnd="slicer.end" 
+                v-model:start="slicer.start" 
+                v-model:end="slicer.end"
+                :background="FINAL_CONFIG.chart.zoom.color"
+                :fontSize="FINAL_CONFIG.chart.zoom.fontSize" 
+                :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
+                :labelLeft="slicerLabels.left" 
+                :labelRight="slicerLabels.right" 
+                :textColor="FINAL_CONFIG.chart.color"
+                :inputColor="FINAL_CONFIG.chart.zoom.color" 
+                :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
+                :borderColor="FINAL_CONFIG.chart.backgroundColor" 
+                :minimap="minimap"
                 :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
                 :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
                 :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
@@ -3858,8 +3970,7 @@ defineExpose({
                 :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
                 :minimapSelectedIndex="selectedSerieIndex"
                 :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
-                :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" :max="maxX" :min="0"
-                :valueStart="slicer.start" :valueEnd="slicer.end" v-model:start="slicer.start" v-model:end="slicer.end"
+                :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
                 :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
                 :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.downsample.threshold }).length))"
                 :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"

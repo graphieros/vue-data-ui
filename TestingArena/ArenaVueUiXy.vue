@@ -289,6 +289,18 @@ function createDs(n, m = 100) {
     return arr
 }
 
+function generateDayTimestamps(length) {
+    const result = [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < length; i += 1) {
+        result.push(new Date(start.getTime() + i * 24 * 60 * 60 * 1000).getTime());
+    }
+
+    return result;
+}
+
 // const to = ref(null);
 // const raf = ref(null);
 // const ds = ref(createDs(12));
@@ -378,27 +390,27 @@ onMounted(() => {
         dataset.value = [
     {
         name: "Serie A",
-        series: [60, 100, 112, 221, 119, 75, 199, -226, -243, 198, 156, 127, 120],
+        series: createDs(100),
         type: "line",
         dataLabels: false,
         smooth: false
     },
-    {
-        name: "Serie B",
-        series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
-        type: "line",
-        dataLabels: false,
-        shape: 'triangle',
-        // useArea: true,
-        smooth: false,
-        // useProgression: true
-    },
-    {
-        name: "Serie C with a long name",
-        series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
-        type: "plot",
-        dataLabels: false,
-    },
+    // {
+    //     name: "Serie B",
+    //     series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
+    //     type: "line",
+    //     dataLabels: false,
+    //     shape: 'triangle',
+    //     // useArea: true,
+    //     smooth: false,
+    //     // useProgression: true
+    // },
+    // {
+    //     name: "Serie C with a long name",
+    //     series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
+    //     type: "plot",
+    //     dataLabels: false,
+    // },
 ]
     }, 2000)
 })
@@ -592,6 +604,7 @@ function toggleProps() {
 const model = ref([
     { key: 'debug', def: true, type: 'checkbox'},
     { key: 'autoSize', def: false, type: 'checkbox'}, // v3 opt-in
+    // { key: 'downsample.threshold', def: 100, type: 'number'},
 
     { key: 'locale', def: '', type: 'select', options: ['', 'en-US', 'en-GB', 'fr-FR', 'de-DE', 'ar-SA'] },
     { key: 'responsive', def: false, type: 'checkbox' },
@@ -625,7 +638,7 @@ const model = ref([
     { key: 'chart.zoom.enableRangeHandles', def: true, type: 'chexkbox' },
     { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox' },
 
-    { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.show', def: false, type: 'checkbox' },
     { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color' },
     { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
@@ -1110,14 +1123,14 @@ const config = computed(() => {
                         },
                         xAxisLabels: {
                             ...c.chart.grid.labels.xAxisLabels,
-                            values: dates,
+                            values: generateDayTimestamps(1000),
                             // values: new Array(13).fill(0).map((d,i) => {
                             //     return `Some long name\nwith a value ${i}`
                             // }),
                             // rotation: -30,
                             datetimeFormatter: {
                                 enable: true,
-                                locale: 'en',
+                                locale: 'fr',
                                 useUTC: false,
                                 januaryAsYear: true,
                                 options: { 
@@ -1132,11 +1145,20 @@ const config = computed(() => {
                         }
                     }
                 },
+                zoom: {
+                    ...c.chart.zoom,
+                    useDefaultFormat: true,
+                    // customFormat: ({ absoluteIndex }) => {
+                    //     return String(absoluteIndex) + 'TEST'
+                    // }
+                },
                 timeTag: {
                     ...c.chart.timeTag,
-                    customFormat: ({ absoluteIndex }) => {
-                        return absoluteIndex.toString();
-                    }
+                    useDefaultFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss',
+                    // customFormat: ({ absoluteIndex }) => {
+                    //     return String(absoluteIndex) + 'TEST'
+                    // }
                 }
             }
         }

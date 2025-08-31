@@ -4,6 +4,26 @@ import { testCommonFeatures } from "../../cypress/fixtures";
 
 const { config, dataset } = components.find((c) => c.name === "VueUiXy");
 
+function generateDayTimestamps(length) {
+    const result = [];
+    const start = new Date(2026, 0, 1);
+    start.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < length; i += 1) {
+        result.push(new Date(start.getTime() + i * 24 * 60 * 60 * 1000).getTime());
+    }
+
+    return result;
+}
+
+function createDs(n, m = 100) {
+    const arr = [];
+    for (let i = 0; i < n; i += 1) {
+        arr.push(Math.random() * m * - 1)
+    }
+    return arr
+}
+
 describe("<VueUiXy />", () => {
 	it("renders default", () => {
 		cy.mount(VueUiXy, {
@@ -213,4 +233,114 @@ describe("<VueUiXy />", () => {
 				});
 		});
 	});
+
+	const config2 = {
+		chart: {
+			grid: {
+				labels: {
+					xAxisLabels: {
+						datetimeFormatter: {
+							enable: true
+						},
+						values: generateDayTimestamps(365)
+					}
+				}
+			},
+			timeTag: {
+				show: true,
+				useDefaultFormat: false
+			}
+		}
+	}
+
+	const dataset2 = [
+		{
+			name: 'Series A',
+			type: 'line',
+			series: createDs(365)
+		}
+	]
+
+	it("uses zoom slicer (preview) with formatted labels", () => {
+		cy.mount(VueUiXy, {
+			props: {
+				dataset: dataset2,
+				config: {
+					...config2,
+					chart: {
+						...config2.chart,
+						zoom: {
+							useDefaultFormat: false,
+						}
+					}
+				},
+			},
+		}).then(() => {
+			cy.get('[data-cy="slicer-handle-left"]').trigger('mousedown', { force: true });
+			cy.get('[data-cy="slicer-label-left"]').contains('2026-01-01 00:00:00');
+			cy.get('[data-cy="slicer-label-right"]').contains('2026-12-31 00:00:00');
+		})
+	})
+
+	it("uses zoom slicer (preview) with customFormat labels", () => {
+		cy.mount(VueUiXy, {
+			props: {
+				dataset: dataset2,
+				config: {
+					...config2,
+					chart: {
+						...config2.chart,
+						zoom: {
+							customFormat: ({ absoluteIndex }) => {
+								return String(absoluteIndex) + ' - CUSTOM'
+							}
+						}
+					}
+				},
+			},
+		}).then(() => {
+			cy.get('[data-cy="slicer-handle-left"]').trigger('mousedown', { force: true });
+			cy.get('[data-cy="slicer-label-left"]').contains('0 - CUSTOM');
+			cy.get('[data-cy="slicer-label-right"]').contains('364 - CUSTOM');
+		})
+	})
+
+	it("displays time tag with time format", () => {
+		cy.mount(VueUiXy, {
+			props: {
+				dataset: dataset2,
+				config: {
+					...config2,
+				},
+			},
+		}).then(() => {
+			cy.get('[data-cy="xy-svg"]').trigger('mouseenter', { force: true });
+			cy.get('[data-cy="xy-svg"]').trigger('mousemove', { force: true });
+			cy.get('[data-cy="time-tag"]').should('be.visible').and('contain', "2026-06-25 01:00:00")
+		})
+	})
+
+	it("displays time tag with customFormat", () => {
+		cy.mount(VueUiXy, {
+			props: {
+				dataset: dataset2,
+				config: {
+					...config2,
+					chart: {
+						...config2.chart,
+						timeTag: {
+							show: true,
+							customFormat: ({ absoluteIndex }) => {
+								return String(absoluteIndex) + ' - CUSTOM';
+							}
+						}
+					}
+				},
+			},
+		}).then(() => {
+			cy.get('[data-cy="xy-svg"]').trigger('mouseenter', { force: true });
+			cy.get('[data-cy="xy-svg"]').trigger('mousemove', { force: true });
+			cy.get('[data-cy="time-tag"]').should('be.visible').and('contain', "175 - CUSTOM")
+		})
+	})
 });

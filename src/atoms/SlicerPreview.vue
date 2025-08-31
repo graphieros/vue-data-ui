@@ -3,7 +3,7 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onUpdated, 
 import BaseIcon from './BaseIcon.vue';
 import { useResponsive } from '../useResponsive';
 import { throttle } from '../canvas-lib';
-import { XMLNS, adaptColorToBackground, createSmoothPath, createStraightPath, createUid } from '../lib';
+import { XMLNS, adaptColorToBackground, createSmoothPath, createStraightPath, createUid, isFunction } from '../lib';
 
 const props = defineProps({
     background: { 
@@ -116,6 +116,22 @@ const props = defineProps({
     isPreview: { 
         type: Boolean, 
         default: false 
+    },
+    preciseLabels: {
+        type: Array,
+        default() {
+            return []
+        }
+    },
+    usePreciseLabels: {
+        type: Boolean,
+        default: false
+    },
+    selectedSeries: {
+        type: Object,
+    },
+    customFormat: {
+        type: [Function, null]
     }
 });
 
@@ -573,9 +589,42 @@ watch(() => props.labelRight, () => {
     nextTick(setTooltipRight);
 }, { deep: true });
 
+const useCustomFormat = ref(false);
+
 const labels = computed(() => {
-    const left = props.timeLabels.find(t => t.absoluteIndex === startValue.value);
-    const right = props.timeLabels.find(t => t.absoluteIndex === endValue.value - 1);
+    let left = { text: '' }, right = { text: '' };
+    useCustomFormat.value = false;
+
+    if (isFunction(props.customFormat)) {
+        try {
+            const customLeft = props.customFormat({
+                absoluteIndex: startValue.value,
+                seriesIndex: startValue.value,
+                datapoint: props.selectedSeries
+            });
+            const customRight = props.customFormat({
+                absoluteIndex: endValue.value - 1,
+                seriesIndex: endValue.value - 1,
+                datapoint: props.selectedSeries
+            });
+            if (typeof customLeft === 'string' && typeof customRight === 'string') {
+                left.text = customLeft;
+                right.text = customRight;
+                useCustomFormat.value = true;
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied on zoom labels.');
+            useCustomFormat.value = false;
+        }
+    }
+
+    if (!useCustomFormat.value) {
+        left = props.usePreciseLabels ? props.preciseLabels.find(t => t.absoluteIndex === startValue.value) : props.timeLabels.find(t => t.absoluteIndex === startValue.value);
+
+        right = props.usePreciseLabels ? props.preciseLabels.find(t => t.absoluteIndex === endValue.value - 1) : props.timeLabels.find(t => t.absoluteIndex === endValue.value - 1);
+    }
+
+
     return {
         left: left ? left.text : '',
         right: right ? right.text : ''
