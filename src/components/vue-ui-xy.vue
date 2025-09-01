@@ -2575,8 +2575,85 @@ useTimeLabelCollision({
 
 const useCustomFormatTimeTag = ref(false);
 
+const timeTagEl = ref(null);
+const timeTagInnerW = ref(200)
+
+const activeIndex = computed(() =>
+    (selectedSerieIndex.value ?? selectedMinimapIndex.value ?? 0)
+)
+
+function timeTagMeasuredW() {
+    const w = Math.ceil(timeTagInnerW.value || 200)
+    return Math.min(Math.max(w, 1), 200)
+}
+
+function timeTagX() {
+    const w = timeTagMeasuredW();
+    const W_FO = 200;
+    const sectionsX = Math.max(1, maxSeries.value);
+    const sectionX = drawingArea.value.width / sectionsX;
+    const centerX = drawingArea.value.left + activeIndex.value * sectionX + sectionX / 2;
+    const desiredX = centerX - w / 2 - (W_FO - w) / 2;
+    const minX = drawingArea.value.left - (W_FO - w) / 2;
+    const maxX = drawingArea.value.right - (W_FO + w) / 2;
+    const clamped = Math.max(minX, Math.min(desiredX, maxX));
+    return checkNaN(clamped);
+}
+
+onMounted(() => {
+    let observedTimeTagEl = null;
+    let raf = null;
+
+    const setW = (w) => {
+        cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(() => {
+            timeTagInnerW.value = Math.min(Math.max(Math.ceil(w || 0), 1), 200);
+        });
+    }
+
+    const ro = new ResizeObserver((entries) => {
+        let entry = entries.find(e => e.target === observedTimeTagEl) || entries[0];
+        if (!entry) return;
+        setW(entry.contentRect.width || 200)
+    });
+
+    const stop = watchEffect((onInvalidate) => {
+        const el = timeTagEl.value;
+        if (observedTimeTagEl && observedTimeTagEl !== el) {
+            ro.unobserve(observedTimeTagEl);
+            observedTimeTagEl = null;
+        }
+
+        if (el && el !== observedTimeTagEl) {
+            nextTick(() => {
+                if (el.offsetParent === null) return;
+                setW(el.offsetWidth || el.getBoundingClientRect().width || 200)
+            })
+            ro.observe(el);
+            observedTimeTagEl = el;
+        }
+
+        onInvalidate(() => {
+            if (observedTimeTagEl) {
+                ro.unobserve(observedTimeTagEl);
+                observedTimeTagEl = null;
+            }
+        });
+    });
+
+    onBeforeUnmount(() => {
+        try {
+            if (observedTimeTagEl) ro.unobserve(observedTimeTagEl);
+            ro.disconnect();
+            stop();
+        } catch {
+            // ignore
+        }
+    });
+});
+
 const timeTagContent = computed(() => {
-    if ([null, undefined].includes(selectedSerieIndex.value) && [null, undefined].includes(selectedMinimapIndex.value)) return ''
+    if ([null, undefined].includes(selectedSerieIndex.value) && [null, undefined].includes(selectedMinimapIndex.value)) return '';
 
     const index = (selectedSerieIndex.value != null ? selectedSerieIndex.value : 0) || (selectedMinimapIndex.value != null ? selectedMinimapIndex.value : 0);
 
@@ -3698,9 +3775,10 @@ defineExpose({
                     <g v-if="FINAL_CONFIG.chart.timeTag.show && (![null, undefined].includes(selectedSerieIndex) || ![null, undefined].includes(selectedMinimapIndex))"
                         style="pointer-events:none">
                         <foreignObject
-                            :x="drawingArea.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) - 100 + (drawingArea.width / maxSeries / 2)"
+                            :x="timeTagX()"
                             :y="drawingArea.bottom" width="200" height="40" style="overflow: visible !important;">
                             <div 
+                                ref="timeTagEl"
                                 data-cy="time-tag"
                                 class="vue-ui-xy-time-tag"
                                 :style="`width: fit-content;margin: 0 auto;text-align:center;padding:3px 12px;background:${FINAL_CONFIG.chart.timeTag.backgroundColor};color:${FINAL_CONFIG.chart.timeTag.color};font-size:${FINAL_CONFIG.chart.timeTag.fontSize}px`"

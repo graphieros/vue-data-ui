@@ -1154,7 +1154,7 @@ const config = computed(() => {
                 },
                 timeTag: {
                     ...c.chart.timeTag,
-                    useDefaultFormat: true,
+                    useDefaultFormat: false,
                     timeFormat: 'yyyy-MM-dd HH:mm:ss',
                     // customFormat: ({ absoluteIndex }) => {
                     //     return String(absoluteIndex) + 'TEST'
