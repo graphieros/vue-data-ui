@@ -2849,12 +2849,9 @@ export function useConfig() {
             annotator: 'Toggle annotator'
         },
         userOptionsPrint: {
-            allowTaint: false,
-            backgroundColor: COLOR_WHITE,
-            useCORS: false,
-            onclone: null,
+            overflowTolerance: 0.2,
+            orientation: 'auto',
             scale: 2,
-            logging: false,
         },
         userOptionsCallbacks: {
             tooltip: null,

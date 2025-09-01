@@ -6147,12 +6147,9 @@ declare module "vue-data-ui" {
             annotator?: string;
         };
         userOptionsPrint?: {
-            allowTaint?: boolean;
-            backgroundColor?: string;
-            useCORS?: boolean;
-            onclone?: null | ((doc: Document) => void),
             scale?: number;
-            logging?: boolean;
+            overflowTolerance?: number;
+            orientation?: 'auto' | 'l' | 'p';
         };
         userOptionsCallbacks?: {
             tooltip?: null | (() => void);
