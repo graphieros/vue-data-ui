@@ -2783,8 +2783,7 @@ export function autoFontSize({
     if (!el || !currentFontSize) return 0;
 
     let fontSize = currentFontSize;
-
-    el.style.fontSize = fontSize;
+    el.setAttribute('font-size', fontSize);
 
     const { x, y, width: W, height: H } = bounds;
     const cLeft = x + padding;
@@ -2807,7 +2806,7 @@ export function autoFontSize({
 
     while (tries-- > 0 && fontSize > minFontSize) {
         fontSize--;
-        el.style.fontSize = fontSize;
+        el.setAttribute('font-size', fontSize);
         er = el.getBBox();
         if (
             er.x >= cLeft + padding &&
@@ -2820,7 +2819,7 @@ export function autoFontSize({
     }
     if (fontSize < minFontSize) {
         fontSize = 0;
-        el.style.fontSize = 0;
+        el.setAttribute('font-size', fontSize);
     }
     return fontSize;
 }

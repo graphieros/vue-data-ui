@@ -65,7 +65,7 @@ export function useAutoSizeLabelsInsideViewbox({
         let current = startSize;
         let tries = 0;
         while (tries < attempts) {
-            el.style.fontSize = `${current}px`;
+            el.setAttribute('font-size', current);
             if (fitsWithinBounds(el, bounds, padding)) break;
             if (current <= minSize) break;
             current -= 0.5;
@@ -110,8 +110,7 @@ export function useAutoSizeLabelsInsideViewbox({
                 });
 
                 const final = shrinkToFit(el, bounds, initial, minSize, 120, 1);
-
-                el.style.fontSize = `${final}px`;
+                el.setAttribute('font-size', final);
                 sizeRef.value = final;
             });
         });

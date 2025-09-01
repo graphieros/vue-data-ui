@@ -3803,14 +3803,21 @@ describe('autoFontSize', () => {
     }) {
         const el = {
             style: { fontSize: '' },
+            setAttribute(name, value) {
+                if (name === 'font-size') {
+                    this.style.fontSize = String(value)
+                } else {
+                    // no-op for other attributes in this test context
+                }
+            },
             getBBox() {
                 const size = parseInt(this.style.fontSize, 10) || 0
                 const box = elementBBoxes[size]
                 if (!box) throw new Error(`no bbox for fontSize ${size}`)
-                return box;
+                return box
             },
             getCTM() {
-                return ctm;
+                return ctm
             },
         };
         return { el, bounds };
@@ -3835,7 +3842,7 @@ describe('autoFontSize', () => {
         });
 
         const result = autoFontSize({
-            el,
+            el: el,
             bounds,
             currentFontSize: 14,
             minFontSize: 6,
@@ -3844,8 +3851,8 @@ describe('autoFontSize', () => {
         });
 
         expect(result).toBe(14);
-        expect(parseInt(el.style.fontSize, 10)).toBe(14);
-    })
+        expect(parseInt((el).style.fontSize, 10)).toBe(14);
+    });
 
     test('shrinks down until fits', () => {
         const { el, bounds } = makeMocks({
@@ -3858,7 +3865,7 @@ describe('autoFontSize', () => {
         });
 
         const result = autoFontSize({
-            el,
+            el: el,
             bounds,
             currentFontSize: 14,
             minFontSize: 8,
@@ -3867,13 +3874,12 @@ describe('autoFontSize', () => {
         });
 
         expect(result).toBe(12);
-        expect(parseInt(el.style.fontSize, 10)).toBe(12);
-    })
+        expect(parseInt((el).style.fontSize, 10)).toBe(12);
+    });
 
     test('stops at minFontSize if still overflowing', () => {
-        // simulate overflow at every size down to minFontSize=6
         const elementBBoxes = {};
-        for (let s = 10; s >= 6; s--) {
+        for (let s = 10; s >= 6; s -= 1) {
             elementBBoxes[s] = { x: 0, y: 0, width: s * 20, height: 10 }
         }
         const { el, bounds } = makeMocks({
@@ -3882,7 +3888,7 @@ describe('autoFontSize', () => {
         });
 
         const result = autoFontSize({
-            el,
+            el: el,
             bounds,
             currentFontSize: 10,
             minFontSize: 6,
@@ -3890,9 +3896,8 @@ describe('autoFontSize', () => {
             padding: 0,
         });
 
-        // it never fits, but we stop at the minimum rather than hide
-        expect(result).toBe(6);
-        expect(parseInt(el.style.fontSize, 10)).toBe(6);
+        expect(result).toBe(6)
+        expect(parseInt((el).style.fontSize, 10)).toBe(6)
     });
 });
 
@@ -4130,7 +4135,7 @@ describe('buildInterLineAreas', () => {
             { x: 0, y: 0, value: 1 },
             { x: 4, y: 0, value: 1 },
             { x: 5, y: 0, value: null },
-            { x: 6, y: 0, value: 1 }, 
+            { x: 6, y: 0, value: 1 },
         ];
         const B = [
             { x: 0, y: 10, value: 1 },
