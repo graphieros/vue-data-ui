@@ -2540,23 +2540,27 @@ function prepareChart() {
     }
 }
 
+function setClientPosition(e) {
+    clientPosition.value = {
+        x: e.clientX,
+        y: e.clientY
+    }
+}
+
 onMounted(() => {
     prepareChart();
     setupSlicer();
-    document.addEventListener("mousemove", (e) => {
-        clientPosition.value = {
-            x: e.clientX,
-            y: e.clientY
-        }
-    });
+    document.addEventListener("mousemove", setClientPosition);
     document.addEventListener('scroll', hideTags);
 });
 
 onBeforeUnmount(() => {
     document.removeEventListener('scroll', hideTags);
+    document.removeEventListener("mousemove", setClientPosition);
     if (resizeObserver.value) {
         resizeObserver.value.unobserve(observedEl.value);
         resizeObserver.value.disconnect();
+        resizeObserver.value = null;
     }
 });
 
@@ -2744,10 +2748,10 @@ onMounted(() => {
     const ro = new ResizeObserver(() => {
         recomputeVisibility()
         if (isActuallyVisible.value) {
-        // re-measure and re-init once we have size
-        prepareChart()
-        normalizeSlicerWindow()
-        setupSlicer()
+            // re-measure and re-init once we have size
+            prepareChart()
+            normalizeSlicerWindow()
+            setupSlicer()
         }
     })
     if (chart.value?.parentNode) ro.observe(chart.value.parentNode)
@@ -2755,7 +2759,7 @@ onMounted(() => {
 
 // v3 - Essential to make shifting between loading config and final config work
 watch(FINAL_CONFIG, () => {
-    seedMutableFromConfig()
+    seedMutableFromConfig();
 }, { immediate: true });
 
 defineExpose({
@@ -3049,7 +3053,8 @@ defineExpose({
                                     :fill="FINAL_CONFIG.bar.useGradient ? plot.value >= 0 ? `url(#rectGradient_pos_${i}_${uniqueId})` : `url(#rectGradient_neg_${i}_${uniqueId})` : serie.color"
                                     :stroke="FINAL_CONFIG.bar.border.useSerieColor ? serie.color : FINAL_CONFIG.bar.border.stroke"
                                     :stroke-width="FINAL_CONFIG.bar.border.strokeWidth"
-                                    :style="{ transition: loading || !FINAL_CONFIG.bar.showTransition ? undefined: `all ${FINAL_CONFIG.bar.transitionDurationMs}ms ease-in-out`}"
+                                    :style="{ 
+                                        transition: loading || !FINAL_CONFIG.bar.showTransition ? undefined: `all ${FINAL_CONFIG.bar.transitionDurationMs}ms ease-in-out`}"
                                 />
                                 <rect 
                                     data-cy="datapoint-bar" 
