@@ -207,12 +207,9 @@ export function useConfig() {
             },
             buttonTitles,
             print: {
-                allowTaint: false,
-                backgroundColor: COLOR_WHITE,
-                useCORS: false,
-                onclone: null,
                 scale: 2,
-                logging: false
+                orientation: 'auto', // 'auto' | 'l' | 'p'
+                overflowTolerance: 0.2,
             }
         }
     }

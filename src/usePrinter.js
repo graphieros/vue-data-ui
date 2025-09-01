@@ -21,7 +21,9 @@ export function usePrinter({
                     await pdf({
                         domElement: document.getElementById(elementId),
                         fileName,
-                        options
+                        orientation: options.orientation,
+                        overflowTolerance: options.overflowTolerance,
+                        scale: options.scale
                     });
                 } catch (error) {
                     console.error("Error generating PDF:", error);
