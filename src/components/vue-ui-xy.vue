@@ -423,9 +423,28 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     })
 });
 
+function memoizeByArrayRef(fn) {
+    const wm = new WeakMap();
+    return (arr, ...rest) => {
+        let m = wm.get(arr);
+        const key = JSON.stringify(rest);
+        if (m && m.has(key)) return m.get(key);
+        const out = fn(arr, ...rest);
+        if (!m) { m = new Map(); wm.set(arr, m); }
+        m.set(key, out);
+        return out;
+    };
+}
+
+const lttbMemo = memoizeByArrayRef((series, threshold) => {
+    return largestTriangleThreeBucketsArray({ data: series, threshold });
+});
+
+const lttb = (series) => lttbMemo(series, FINAL_CONFIG.value.downsample.threshold);
+
 const maxX = computed({
     get: () => {
-        return Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold }).length));
+        return Math.max(...FINAL_DATASET.value.map(datapoint => lttb(datapoint.series).length));
     },
     set: (v) => v
 });
@@ -444,9 +463,7 @@ function setPrecog(side, val) {
 function normalizeSlicerWindow() {
     const maxLen = Math.max(
         1,
-        ...FINAL_DATASET.value.map(dp => largestTriangleThreeBucketsArray({
-        data: dp.series, threshold: FINAL_CONFIG.value.downsample.threshold
-        }).length)
+        ...FINAL_DATASET.value.map(dp => lttb(dp.series).length)
     )
 
     let s = Math.max(0, Math.min(slicer.value.start ?? 0, maxLen - 1))
@@ -553,15 +570,12 @@ const safeDataset = computed(() => {
     if (!useSafeValues.value) return FINAL_DATASET.value;
 
     return FINAL_DATASET.value.map((datapoint, i) => {
-        const LTTD = largestTriangleThreeBucketsArray({
-            data: datapoint.series,
-            threshold: FINAL_CONFIG.value.downsample.threshold
-        })
+        const LTTB = lttb(datapoint.series);
         const id = `uniqueId_${i}`;
         return {
             ...datapoint,
             slotAbsoluteIndex: i,
-            series: LTTD.map(d => {
+            series: LTTB.map(d => {
                 return isSafeValue(d) ? d : null
             }).slice(slicer.value.start, slicer.value.end),
             color: convertColorToHex(datapoint.color ? datapoint.color : customPalette.value[i] ? customPalette.value[i] : palette[i]),
@@ -804,42 +818,68 @@ const modulo = computed(() => {
     return Math.min(m, [...new Set(timeLabels.value.map(t => t.text))].length);
 });
 
-const displayedTimeLabels = computed(() => {
-    const cfg = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels;
-    const vis = timeLabels.value || [];
+function memoizeDisplayedTimeLabels(fn) {
+    let prevKey = null;
+    let prevVal = null;
+    return (...args) => {
+        const key = JSON.stringify(args);
+        if (key === prevKey) return prevVal;
+        prevKey = key;
+        prevVal = fn(...args);
+        return prevVal;
+    };
+}
 
-    if (cfg.showOnlyFirstAndLast) {
-        if (vis.length <= 2) return vis;
-        const sel = selectedSerieIndex.value;
-        return vis.map((l, i) =>
-        (i === 0 || i === vis.length - 1 || (sel != null && i === sel))
-            ? l
-            : { ...l, text: '' }
-        );
+const _buildDisplayedTimeLabels = memoizeDisplayedTimeLabels((
+    showOnlyFirstAndLast,
+    showOnlyAtModulo,
+    moduloBase,
+    visTexts,
+    allTexts,
+    startAbs,
+    selIdx,
+    maxSeriesCount
+    ) => {
+    if (showOnlyFirstAndLast) {
+        if (visTexts.length <= 2) {
+            return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
+        }
+        const out = visTexts.map((t, i) => {
+            const keep = (i === 0) || (i === visTexts.length - 1) || (selIdx != null && i === selIdx);
+            return { text: keep ? t : '', absoluteIndex: i };
+        });
+        return out;
     }
 
-    if (!cfg.showOnlyAtModulo) return vis;
+    if (!showOnlyAtModulo) {
+        return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
+    }
 
-    const mod = Math.max(1, (modulo.value || 1));
-    if (maxSeries.value <= mod) return vis;
-
-    const base = mod;
-    const all = allTimeLabels.value || [];
-    const start = slicer.value.start ?? 0;
+    const mod = Math.max(1, moduloBase || 1);
+    if (maxSeriesCount <= mod) {
+        return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
+    }
 
     const candidates = [];
-    for (let i = 0; i < vis.length; i += 1) {
-        const cur = vis[i]?.text ?? '';
+    for (let i = 0; i < visTexts.length; i += 1) {
+        const cur = visTexts[i] ?? '';
         if (!cur) continue;
-        const prevAbs = start + i - 1 >= 0 ? (all[start + i - 1]?.text ?? '') : null;
+        const prevAbs = startAbs + i - 1 >= 0 ? (allTexts[startAbs + i - 1] ?? '') : null;
         if (cur !== prevAbs) candidates.push(i);
     }
-    if (!candidates.length) return vis.map(l => ({ ...l, text: '' }));
+
+    if (!candidates.length) {
+        return visTexts.map((_t, i) => ({ text: '', absoluteIndex: i }));
+    }
 
     const C = candidates.length;
+    const base = mod;
     const minK = Math.max(2, Math.min(base - 3, C));
     const maxK = Math.min(C, base + 3);
-    let bestK = Math.min(base, C), bestScore = Infinity;
+
+    let bestK = Math.min(base, C);
+    let bestScore = Infinity;
+
     for (let k = minK; k <= maxK; k += 1) {
         const remainder = (C - 1) % (k - 1);
         const drift = Math.abs(k - base);
@@ -857,7 +897,32 @@ const displayedTimeLabels = computed(() => {
         }
     }
 
-    return vis.map((l, i) => (picked.has(i) ? l : { ...l, text: '' }));
+    return visTexts.map((t, i) => ({
+        text: picked.has(i) ? t : '',
+        absoluteIndex: i
+    }));
+});
+
+const displayedTimeLabels = computed(() => {
+    const cfg = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels;
+    const vis = timeLabels.value || [];
+    const all = allTimeLabels.value || [];
+    const start = slicer.value.start ?? 0;
+    const sel = selectedSerieIndex.value;
+    const maxS = maxSeries.value;
+    const visTexts = vis.map(l => l?.text ?? '');
+    const allTexts = all.map(l => l?.text ?? '');
+
+    return _buildDisplayedTimeLabels(
+        !!cfg.showOnlyFirstAndLast,
+        !!cfg.showOnlyAtModulo,
+        Math.max(1, modulo.value || 1),
+        visTexts,
+        allTexts,
+        start,
+        sel,
+        maxS
+    );
 });
 
 function selectTimeLabel(label, relativeIndex) {
@@ -918,7 +983,7 @@ function fillArray(len, src) {
 }
 
 function validSlicerEnd(v) {
-    const _max = Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold }).length));
+    const _max = Math.max(...FINAL_DATASET.value.map(datapoint => lttb(datapoint.series).length));
     if (v > _max) {
         return _max;
     }
@@ -939,14 +1004,7 @@ async function setupSlicer() {
     const { startIndex, endIndex } = FINAL_CONFIG.value.chart.zoom;
     const comp = chartSlicer.value;
 
-    const max = Math.max(
-        ...FINAL_DATASET.value.map(dp =>
-        largestTriangleThreeBucketsArray({
-            data: dp.series,
-            threshold: FINAL_CONFIG.value.downsample.threshold
-        }).length
-        )
-    );
+    const max = Math.max(...FINAL_DATASET.value.map(dp => lttb(dp.series).length));
 
     if ((startIndex != null || endIndex != null) && comp) {
         if (startIndex != null) {
@@ -1043,26 +1101,52 @@ function calcIndividualRectY(plot) {
 
 const hoveredIndex = ref(null);
 
+let RAF_MOUSE_MOVE = 0;
+
+function pointInRect(x, y, r) {
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+}
+
 function onSvgMouseMove(e) {
     if (isAnnotator.value) return;
-    const rect  = svgRef.value.getBoundingClientRect();
-    const viewBox = svgRef.value.viewBox.baseVal;
-    const scaleX  = viewBox.width  / rect.width;
-    const svgX    = (e.clientX - rect.left) * scaleX;
-    const localX = svgX - drawingArea.value.left;
-    const slotW = drawingArea.value.width / maxSeries.value;
-    const idx   = Math.floor(localX / slotW);
-    if (idx >= 0 && idx < maxSeries.value) {
-        if (hoveredIndex.value !== idx) {
-        hoveredIndex.value = idx;
-        toggleTooltipVisibility(true, idx);
+
+    // cancel any pending raf so a stale one cannot re-open the tooltip
+    if (RAF_MOUSE_MOVE) cancelAnimationFrame(RAF_MOUSE_MOVE);
+
+    const rect = svgRef.value?.getBoundingClientRect();
+
+    RAF_MOUSE_MOVE = requestAnimationFrame(() => {
+        RAF_MOUSE_MOVE = 0;
+
+        // Mouse may have already left by the time this runs :E
+        if (!rect || !pointInRect(e.clientX, e.clientY, rect)) {
+            onSvgMouseLeave();
+            return;
         }
-    } else {
-        onSvgMouseLeave();
-    }
+
+        const viewBox = svgRef.value.viewBox.baseVal;
+        const scaleX = viewBox.width / rect.width;
+        const svgX = (e.clientX - rect.left) * scaleX;
+        const localX = svgX - drawingArea.value.left;
+        const slotW = drawingArea.value.width / maxSeries.value;
+        const idx = Math.floor(localX / slotW);
+
+        if (idx >= 0 && idx < maxSeries.value) {
+        if (hoveredIndex.value !== idx) {
+            hoveredIndex.value = idx;
+            toggleTooltipVisibility(true, idx);
+        }
+        } else {
+            onSvgMouseLeave();
+        }
+    });
 }
 
 function onSvgMouseLeave() {
+    if (RAF_MOUSE_MOVE) {
+        cancelAnimationFrame(RAF_MOUSE_MOVE);
+        RAF_MOUSE_MOVE = 0;
+    }
     hoveredIndex.value = null;
     toggleTooltipVisibility(false, null);
 }
@@ -1178,10 +1262,7 @@ const datasetWithIds = computed(() => {
     return FINAL_DATASET.value.map((datapoint, i) => {
         return {
             ...datapoint,
-            series: largestTriangleThreeBucketsArray({
-                data: datapoint.series,
-                threshold: FINAL_CONFIG.value.downsample.threshold
-            }),
+            series: lttb(datapoint.series),
             id: `uniqueId_${i}`
         }
     });
@@ -2550,13 +2631,13 @@ function setClientPosition(e) {
 onMounted(() => {
     prepareChart();
     setupSlicer();
-    document.addEventListener("mousemove", setClientPosition);
-    document.addEventListener('scroll', hideTags);
+    document.addEventListener("mousemove", setClientPosition, { passive: true });
+    document.addEventListener('scroll', hideTags, { passive: true });
 });
 
 onBeforeUnmount(() => {
-    document.removeEventListener('scroll', hideTags);
-    document.removeEventListener("mousemove", setClientPosition);
+    document.removeEventListener('scroll', hideTags, { passive: true });
+    document.removeEventListener("mousemove", setClientPosition, { passive: true });
     if (resizeObserver.value) {
         resizeObserver.value.unobserve(observedEl.value);
         resizeObserver.value.disconnect();
@@ -2704,10 +2785,7 @@ watch(() => props.dataset, (_) => {
     if (Array.isArray(_) && _.length > 0) {
         manualLoading.value = false;
     }
-    maxX.value = Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({
-        data: datapoint.series,
-        threshold: FINAL_CONFIG.value.downsample.threshold
-    }).length));
+    maxX.value = Math.max(...FINAL_DATASET.value.map(datapoint => lttb(datapoint.series).length));
 
     slicer.value = {
         start: 0,
@@ -2977,7 +3055,7 @@ defineExpose({
                     </template>
 
                     <!-- DEFS LINES -->
-                    <template v-for="(serie, i) in lineSet" :key="`def_line_${i}`">
+                    <template v-for="(serie, i) in lineSet" :key="`def_line_${serie.id}`">
                         <defs :data-cy="`xy-def-line-${i}`">
                             <radialGradient :id="`lineGradient_${i}_${uniqueId}`" cx="50%" cy="50%" r="50%" fx="50%"
                                 fy="50%">
@@ -3039,7 +3117,7 @@ defineExpose({
 
                     <!-- BARS -->
                     <template v-if="barSet.length">
-                        <g v-for="(serie, i) in barSet" :key="`serie_bar_${i}`" :class="`serie_bar_${i}`"
+                        <g v-for="(serie, i) in barSet" :key="`serie_bar_${serie.id}`" :class="`serie_bar_${i}`"
                             :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                             <g v-for="(plot, j) in serie.plots" :key="`bar_plot_${i}_${j}`">
                                 <rect 
@@ -3220,7 +3298,7 @@ defineExpose({
                     </g>
 
                     <!-- PLOTS -->
-                    <g v-for="(serie, i) in plotSet" :key="`serie_plot_${i}`" :class="`serie_plot_${i}`"
+                    <g v-for="(serie, i) in plotSet" :key="`serie_plot_${serie.id}`" :class="`serie_plot_${i}`"
                         :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <g data-cy="datapoint-plot" v-for="(plot, j) in serie.plots" :key="`circle_plot_${i}_${j}`">
                             <Shape 
@@ -3273,7 +3351,7 @@ defineExpose({
                     </g>
 
                     <!-- LINE COATINGS -->
-                    <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`"
+                    <g v-for="(serie, i) in lineSet" :key="`serie_line_${serie.id}`" :class="`serie_line_${i}`"
                         :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
                         <path data-cy="datapoint-line-coating-smooth"
                             v-if="serie.smooth && serie.plots.length > 1 && !!serie.curve" :d="`M${serie.curve}`"
@@ -3290,7 +3368,7 @@ defineExpose({
                     </g>
 
                     <defs v-if="$slots.pattern">
-                        <slot v-for="(serie, i) in safeDataset" :key="`serie_pattern_slot_${i}`" name="pattern"
+                        <slot v-for="(serie, i) in safeDataset" :key="`serie_pattern_slot_${serie.id}`" name="pattern"
                             v-bind="{ ...serie, seriesIndex: serie.slotAbsoluteIndex, patternId: `pattern_${uniqueId}_${i}` }" />
                     </defs>
 
@@ -3309,7 +3387,7 @@ defineExpose({
                     </g>
 
                     <!-- LINES -->
-                    <g v-for="(serie, i) in lineSet" :key="`serie_line_${i}`" :class="`serie_line_${i}`"
+                    <g v-for="(serie, i) in lineSet" :key="`serie_line_above_${serie.id}`" :class="`serie_line_${i}`"
                         :style="`opacity:${selectedScale ? selectedScale === serie.groupId ? 1 : 0.2 : 1};transition:opacity 0.2s ease-in-out`">
 
                         <g v-if="serie.useArea && serie.plots.length > 1">
@@ -3398,7 +3476,7 @@ defineExpose({
                     <!-- X LABELS BAR -->
                     <g
                         v-if="(FINAL_CONFIG.bar.labels.show || FINAL_CONFIG.bar.serieName.show) && mutableConfig.dataLabels.show">
-                        <template v-for="(serie, i) in barSet" :key="`xLabel_bar_${i}`" :class="`xLabel_bar_${i}`">
+                        <template v-for="(serie, i) in barSet" :key="`xLabel_bar_${serie.id}`" :class="`xLabel_bar_${i}`">
                             <template v-for="(plot, j) in serie.plots" :key="`xLabel_bar_${i}_${j}`">
                                 <text data-cy="datapoint-bar-label"
                                     v-if="plot && (!Object.hasOwn(serie, 'dataLabels') || ((serie.dataLabels === true || (selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j)))) && FINAL_CONFIG.bar.labels.show"
@@ -3440,7 +3518,7 @@ defineExpose({
 
                     <!-- X LABELS PLOT -->
                     <g v-if="FINAL_CONFIG.plot.labels.show && mutableConfig.dataLabels.show">
-                        <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`">
+                        <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${serie.id}`" :class="`xLabel_plot_${i}`">
                             <template v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                                 <text data-cy="datapoint-plot-label"
                                     v-if="plot && !Object.hasOwn(serie, 'dataLabels') || (serie.dataLabels === true || (selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j))"
@@ -3467,7 +3545,7 @@ defineExpose({
                         </template>
                     </g>
                     <g v-else>
-                        <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`">
+                        <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${serie.id}`" :class="`xLabel_plot_${i}`">
                             <template v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                                 <!-- PLOT TAGS (fixed) -->
                                 <template v-if="!FINAL_CONFIG.plot.tag.followValue">
@@ -3516,7 +3594,7 @@ defineExpose({
 
                     <!-- X LABELS LINE -->
                     <g v-if="FINAL_CONFIG.line.labels.show && mutableConfig.dataLabels.show">
-                        <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`">
+                        <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${serie.id}`" :class="`xLabel_line_${i}`">
                             <template v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                                 <text data-cy="datapoint-line-label"
                                     v-if="plot && !Object.hasOwn(serie, 'dataLabels') || (serie.dataLabels === true || (selectedSerieIndex !== null && selectedSerieIndex === j) || (selectedMinimapIndex !== null && selectedMinimapIndex === j))"
@@ -3546,7 +3624,7 @@ defineExpose({
                     </g>
 
                     <g v-else>
-                        <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`">
+                        <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${serie.id}`" :class="`xLabel_line_${i}`">
                             <template v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                                 <!-- LINE TAGS (fixed) -->
                                 <template v-if="!FINAL_CONFIG.line.tag.followValue">
@@ -3594,7 +3672,7 @@ defineExpose({
                     </g>
 
                     <!-- SERIE NAME TAGS : LINES -->
-                    <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${i}`" :class="`xLabel_line_${i}`">
+                    <template v-for="(serie, i) in lineSet" :key="`xLabel_line_${serie.id}`" :class="`xLabel_line_${i}`">
                         <template v-for="(plot, j) in serie.plots" :key="`xLabel_line_${i}_${j}`">
                             <text v-if="plot && j === 0 && serie.showSerieName && serie.showSerieName === 'start'"
                                 :x="plot.x - fontSizes.plotLabels" :y="plot.y" :font-size="fontSizes.plotLabels"
@@ -3623,7 +3701,7 @@ defineExpose({
                     </template>
 
                     <!-- SERIE NAME TAGS : PLOTS -->
-                    <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${i}`" :class="`xLabel_plot_${i}`">
+                    <template v-for="(serie, i) in plotSet" :key="`xLabel_plot_${serie.id}`" :class="`xLabel_plot_${i}`">
                         <template v-for="(plot, j) in serie.plots" :key="`xLabel_plot_${i}_${j}`">
                             <text v-if="plot && j === 0 && serie.showSerieName && serie.showSerieName === 'start'"
                                 :x="plot.x - fontSizes.plotLabels" :y="plot.y" :font-size="fontSizes.plotLabels"
@@ -3690,7 +3768,7 @@ defineExpose({
                     <!-- TIME LABELS -->
                     <g v-if="FINAL_CONFIG.chart.grid.labels.xAxisLabels.show" ref="timeLabelsEls">
                         <template v-if="$slots['time-label']">
-                            <template v-for="(label, i) in displayedTimeLabels" :key="`time_label_${i}`">
+                            <template v-for="(label, i) in displayedTimeLabels" :key="`time_label_${label.id}`">
                                 <slot name="time-label" v-bind="{
                                     x: drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2),
                                     y: drawingArea.bottom,
@@ -3809,7 +3887,7 @@ defineExpose({
         </div>
 
         <!-- LINE: TAGS FOLLOWING VALUE -->
-        <template v-for="(serie, i) in lineSet" :key="`tag_line_${i}`">
+        <template v-for="(serie, i) in lineSet" :key="`tag_line_${serie.id}`">
             <template v-for="(plot, j) in serie.plots" :key="`tag_line_${i}_${j}`">
                 <div :ref="el => setTagRef(i, j, el, 'right', 'line')" class="vue-ui-xy-tag" data-tag="right"
                     v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'end' && FINAL_CONFIG.line.tag.followValue"
@@ -3895,7 +3973,7 @@ defineExpose({
         </template>
 
         <!-- PLOT: TAGS FOLLOWING VALUE -->
-        <template v-for="(serie, i) in plotSet" :key="`tag_plot_${i}`">
+        <template v-for="(serie, i) in plotSet" :key="`tag_plot_${serie.id}`">
             <template v-for="(plot, j) in serie.plots" :key="`tag_plot_${i}_${j}`">
                 <div :ref="el => setTagRef(i, j, el, 'right', 'plot')" class="vue-ui-xy-tag" data-tag="right"
                     v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag && serie.useTag === 'end' && FINAL_CONFIG.plot.tag.followValue"
@@ -4011,7 +4089,7 @@ defineExpose({
                 :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
                 :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
                 :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
-                :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.downsample.threshold }).length))"
+                :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => lttb(datapoint.series).length))"
                 :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
                 :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag" 
                 @reset="refreshSlicer"
@@ -4055,7 +4133,7 @@ defineExpose({
                 :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
                 :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
                 :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
-                :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.downsample.threshold }).length))"
+                :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => lttb(datapoint.series).length))"
                 :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
                 :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag" @reset="refreshSlicer"
                 @trapMouse="selectMinimapIndex">

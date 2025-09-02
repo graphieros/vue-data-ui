@@ -176,7 +176,7 @@ describe("<VueUiXy />", () => {
 				});
 
 			cy.log("@selectX");
-			cy.get('.vue-ui-xy').trigger('click', { force: true, x: 50, y: 100})
+			cy.get('.vue-ui-xy').trigger('mouseenter').trigger('click', { x: 40, y: 200})
 				.then(() => {
 					expect(wrapper.emitted("selectX")).to.deep.equal([
 						[
@@ -338,8 +338,8 @@ describe("<VueUiXy />", () => {
 				},
 			},
 		}).then(() => {
-			cy.get('[data-cy="xy-svg"]').trigger('mouseenter', { force: true });
-			cy.get('[data-cy="xy-svg"]').trigger('mousemove', { force: true });
+			cy.get('[data-cy="xy-svg"]').trigger('mouseenter');
+			cy.get('[data-cy="xy-svg"]').trigger('mousemove');
 			cy.get('[data-cy="time-tag"]').should('be.visible').and('contain', "175 - CUSTOM")
 		})
 	})
