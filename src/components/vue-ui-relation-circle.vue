@@ -276,7 +276,7 @@ function prepareChart() {
                 relations.value = [];
                 createPlots();
                 createRelations();
-                // autoSizeLabels();
+                autoSizeLabels();
 
                 if (FINAL_CONFIG.value.responsiveProportionalSizing) {
                     dataLabelSize.value = translateSize({
@@ -326,7 +326,7 @@ function prepareChart() {
         createPlots();
         createRelations();
     }
-    // autoSizeLabels();
+    autoSizeLabels();
 }
 
 onBeforeUnmount(() => {
@@ -340,13 +340,13 @@ onBeforeUnmount(() => {
     }
 });
 
-// const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
-//     svgRef,
-//     fontSize: FINAL_CONFIG.value.style.labels.fontSize,
-//     minFontSize: FINAL_CONFIG.value.style.labels.minFontSize,
-//     sizeRef: labelFontSize,
-//     labelClass: '.vue-ui-relation-circle-legend'
-// });
+const { autoSizeLabels } = useAutoSizeLabelsInsideViewbox({
+    svgRef,
+    fontSize: FINAL_CONFIG.value.style.labels.fontSize,
+    minFontSize: FINAL_CONFIG.value.style.labels.minFontSize,
+    sizeRef: labelFontSize,
+    labelClass: '.vue-ui-relation-circle-legend'
+});
 
 function clickOutside(e) {
     const target = e.target;

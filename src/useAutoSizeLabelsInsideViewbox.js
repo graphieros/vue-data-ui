@@ -10,50 +10,8 @@ export function useAutoSizeLabelsInsideViewbox({
 }) {
     let rafScheduled = null;
 
-    function minOf(arr) {
-        let m = arr[0];
-        for (let i = 1; i < arr.length; i += 1) if (arr[i] < m) m = arr[i];
-        return m;
-    }
-    function maxOf(arr) {
-        let m = arr[0];
-        for (let i = 1; i < arr.length; i += 1) if (arr[i] > m) m = arr[i];
-        return m;
-    }
-
-    function getTransformedBBox(el) {
-        const svg = el.ownerSVGElement;
-        if (!svg) return { x: 0, y: 0, width: 0, height: 0 };
-
-        const b = el.getBBox();
-        const m = el.getCTM();
-
-        const corners = [
-            { x: b.x, y: b.y },
-            { x: b.x + b.width, y: b.y },
-            { x: b.x, y: b.y + b.height },
-            { x: b.x + b.width, y: b.y + b.height }
-        ].map((p) => {
-            const pt = svg.createSVGPoint();
-            pt.x = p.x;
-            pt.y = p.y;
-            const t = m ? pt.matrixTransform(m) : pt;
-            return { x: t.x, y: t.y };
-        });
-
-        const xs = corners.map((p) => p.x);
-        const ys = corners.map((p) => p.y);
-
-        const minX = minOf(xs);
-        const maxX = maxOf(xs);
-        const minY = minOf(ys);
-        const maxY = maxOf(ys);
-
-        return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
-    }
-
     function fitsWithinBounds(el, bounds, padding = 1) {
-        const { x, y, width, height } = getTransformedBBox(el);
+        const { x, y, width, height } = el.getBBox();
         const leftOK = x >= bounds.x + padding;
         const rightOK = x + width <= bounds.x + bounds.width - padding;
         const topOK = y >= bounds.y + padding;
