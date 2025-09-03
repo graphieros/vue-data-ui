@@ -285,12 +285,20 @@ async function setupSlicer() {
     const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
     const comp = slicerComponent.value;
 
+    slicer.value = { start: 0, max: maxLength.value };
+
     if ((startIndex != null || endIndex != null) && comp) {
         if (startIndex != null) {
-        comp.setStartValue(startIndex);
+            comp.setStartValue(startIndex);
+        } else {
+            slicer.value.start = 0;
+            comp.setStartValue(0);
         }
         if (endIndex != null) {
-        comp.setEndValue(validSlicerEnd(endIndex + 1));
+            comp.setEndValue(validSlicerEnd(endIndex + 1));
+        } else {
+            slicer.value.end = maxLength.value;
+            comp.setEndValue(maxLength.value);
         }
     } else {
         slicer.value = {

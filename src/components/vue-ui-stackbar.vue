@@ -581,12 +581,20 @@ async function setupSlicer() {
     const comp = slicerComponent.value;
     const maxLength = Math.max(...FINAL_DATASET.value.map(ds => ds.series.length));
 
+    slicer.value = { start: 0, end: maxLength };
+
     if ((startIndex != null || endIndex != null) && comp) {
         if (startIndex != null) {
-        comp.setStartValue(startIndex);
+            comp.setStartValue(startIndex);
+        } else {
+            slicer.value.start = 0;
+            comp.setStartValue(0);
         }
         if (endIndex != null) {
-        comp.setEndValue(validSlicerEnd(endIndex + 1));
+            comp.setEndValue(validSlicerEnd(endIndex + 1));
+        } else {
+            slicer.value.end = maxLength;
+            comp.setEndValue(maxLength);
         }
     } else {
         slicer.value = { start: 0, end: maxLength };
