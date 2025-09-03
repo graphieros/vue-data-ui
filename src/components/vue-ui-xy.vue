@@ -1006,14 +1006,22 @@ async function setupSlicer() {
 
     const max = Math.max(...FINAL_DATASET.value.map(dp => lttb(dp.series).length));
 
+    slicer.value = { start: 0, end: max };
+
     if ((startIndex != null || endIndex != null) && comp) {
         if (startIndex != null) {
             slicer.value.start = startIndex;
             comp.setStartValue(startIndex);
+        } else {
+            slicer.value.start = 0;
+            comp.setStartValue(0);
         }
         if (endIndex != null) {
             slicer.value.end = endIndex + 1
             comp.setEndValue(validSlicerEnd(endIndex + 1));
+        } else {
+            slicer.value.end = max;
+            comp.setEndValue(max);
         }
     } else {
         slicer.value = { start: 0, end: max };
@@ -2103,6 +2111,7 @@ const preciseAllTimeLabels = computed(() => {
 
 // Simple Slicer labels
 const useSlicerCustomFormat = ref(false);
+
 const slicerLabels = computed(() => {
     let left = '', right = '';
     if (FINAL_CONFIG.value.chart.zoom.preview.enable) {
@@ -2134,13 +2143,13 @@ const slicerLabels = computed(() => {
     }
 
     if (!useSlicerCustomFormat.value) {
-        left = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable
+        left = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.zoom.useDefaultFormat
         ? (preciseAllTimeLabels.value[slicer.value.start]?.text || '')
         : (timeLabels.value[0]?.text || '');
 
         const endAbs = Math.max(slicer.value.start, slicer.value.end - 1)
 
-        right = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable
+        right = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.zoom.useDefaultFormat
         ? (preciseAllTimeLabels.value[endAbs]?.text || '')
         : (timeLabels.value.at(-1)?.text || '')        
     }

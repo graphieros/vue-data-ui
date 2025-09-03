@@ -647,7 +647,7 @@ const model = ref([
     { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color' },
     { key: 'chart.zoom.minimap.verticalHandles', def: false, type: 'checkbox' },
 
-    { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
+    { key: 'chart.zoom.startIndex', def: 50, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.preview.enable', def: true, type: 'checkbox'},
     { key: 'chart.zoom.preview.stroke', def: '#1f77b4', type: 'color'},
@@ -1148,6 +1148,7 @@ const config = computed(() => {
                 zoom: {
                     ...c.chart.zoom,
                     useDefaultFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss',
                     // customFormat: ({ absoluteIndex }) => {
                     //     return String(absoluteIndex) + 'TEST'
                     // }
