@@ -19,13 +19,18 @@ export function useTimeLabels({
 }) {
     const out = [];
     if (!xl.enable || values.length === 0) {
-        for (let i = sliceStart; i < sliceEnd; i++) {
+        for (let i = sliceStart; i < sliceEnd; i += 1) {
             out.push({ text: String(values[i] ?? i), absoluteIndex: i });
         }
         return out;
     }
 
-    const window = values.slice(sliceStart, sliceEnd);
+    const formattedValues = values.map(v => {
+        const f = new Date(v).getTime();
+        return isNaN(f) ? v : f
+    });
+
+    const window = formattedValues.slice(sliceStart, sliceEnd);
     if (window.length === 0) return [];
     const minX = window[0], maxX = window[window.length - 1];
     const dt = useDateTime({
