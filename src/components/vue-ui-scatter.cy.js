@@ -53,4 +53,36 @@ describe('<VueUiScatter />', () => {
 			cy.get('[data-cy="correlation-label"]').should('exist').and('be.visible').and('have.length', dataset.length).and('contain', 1);
 		});
 	});
+
+	it('uses performance mode', () => {
+		cy.mount(VueUiScatter, {
+			props: {
+				dataset,
+				config: {
+					...config,
+					usePerformanceMode: true
+				}
+			}
+		}).then(() => {
+			cy.get('[data-cy="performance-path"]')
+				.should('exist')
+				.and('be.visible')
+				.and('have.length', 2);
+
+			testCommonFeatures({
+				userOptions: true,
+				title: true,
+				subtitle: true,
+				dataTable: true,
+				legend: true,
+				tooltipCallback: () => {
+					cy.get('[data-cy="performance-trap"]')
+						.trigger('mousemove', { force: true, x: 38, y: 9 });
+				}
+			});
+			cy.get('[data-cy="performance-selected-plot"]')
+				.should('exist')
+				.and('be.visible');
+		})
+	})
 });

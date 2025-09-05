@@ -2798,6 +2798,7 @@ declare module "vue-data-ui" {
         };
         theme?: Theme;
         customPalette?: string[];
+        usePerformanceMode?: boolean;
         useCssAnimation?: boolean;
         downsample?: {
             threshold?: number;

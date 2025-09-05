@@ -224,6 +224,11 @@ watch(() => props.config, (_newCfg) => {
     // Reset mutable config
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.tooltip.show;
+
+    if (debug.value && FINAL_CONFIG.value.usePerformanceMode) {
+        console.warn('VueUiScatter : You are using performance mode\n\n- downsampling is disabled in this mode, all plots are rendered\n\n- plot significance is not active in this mode (all plots have the same opacity) \n\n- Depending on plot density, shapes might not display a border (stroke) to avoid fuzziness \n\nℹ️ To remove this warning, set config.debug to false.')
+    }
+
 }, { deep: true });
 
 watch(() => props.dataset, (_) => {
@@ -407,7 +412,7 @@ const datasetWithId = computed(() => {
             ...ds,
             values: largestTriangleThreeBuckets({
                 data: ds.values,
-                threshold: FINAL_CONFIG.value.downsample.threshold
+                threshold: FINAL_CONFIG.value.usePerformanceMode ? ds.values.length + 1 : FINAL_CONFIG.value.downsample.threshold
             }),
             id,
             color: ds.color ? ds.color : (customPalette.value[i] || palette[i] || palette[i % palette.length]),
@@ -944,6 +949,206 @@ function onMarginalLeave() {
     selectedMarginalY.value = null;
 }
 
+const SHAPES_RADIUS_SCALE = {
+    circle: 1,
+    square: 1,
+    diamond: 1,
+    triangle: 1.2,
+    star: 1.3,
+    pentagon: 1.3,
+    hexagon: 1.3
+}
+
+const f = v => v.toFixed(3);
+
+// Performance mode: single path per series :)
+function makeSinglePathPlots({ shape = 'circle', cx, cy, r }) {
+    if (!FINAL_CONFIG.value.usePerformanceMode) return '';
+
+    const radius = SHAPES_RADIUS_SCALE[shape] * r;
+    switch (shape) {
+        case 'circle': {
+            const x1 = f(cx - radius);
+            const y1 = f(cy);
+            const x2 = f(cx + radius);
+            const rr = f(radius);
+            return `M ${x1} ${y1} A ${rr} ${rr} 0 1 0 ${x2} ${y1} A ${rr} ${rr} 0 1 0 ${x1} ${y1} Z`;
+        }
+        case 'square': {
+            const x0 = f(cx - radius);
+            const y0 = f(cy - radius);
+            const x1 = f(cx + radius);
+            const y1 = f(cy + radius);
+            return `M ${x0} ${y0} L ${x1} ${y0} L ${x1} ${y1} L ${x0} ${y1} Z`;
+        }
+        case 'diamond': {
+            const cxF = f(cx);
+            const cyF = f(cy);
+            return `M ${cxF} ${f(cy - radius)} L ${f(cx + radius)} ${cyF} L ${cxF} ${f(cy + radius)} L ${f(cx - radius)} ${cyF} Z`;
+        }
+        case 'triangle': { 
+            const h = radius * Math.sqrt(3);
+            const xA = cx, yA = cy - (2 / 3) * h;
+            const xB = cx - radius, yB = cy + (1 / 3) * h;
+            const xC = cx + radius, yC = yB;
+            return `M ${f(xA)} ${f(yA)} L ${f(xB)} ${f(yB)} L ${f(xC)} ${f(yC)} Z`;
+        }
+        case 'star': {
+            const outer = radius;
+            const inner = radius * 0.5;
+            const pts = [];
+            for (let i = 0; i < 10; i += 1) {
+                const ang = (-90 + i * 36) * Math.PI / 180;
+                const rr = (i % 2 === 0) ? outer : inner;
+                pts.push([cx + rr * Math.cos(ang), cy + rr * Math.sin(ang)]);
+            }
+            let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
+            for (let i = 1; i < pts.length; i += 1) {
+                d += ` L ${f(pts[i][0])} ${f(pts[i][1])}`;
+            }
+            return d + ' Z';
+        }
+        case 'pentagon': {
+            const n = 5;
+            const pts = [];
+            for (let i = 0; i < n; i += 1) {
+                const ang = (-90 + i * (360 / n)) * Math.PI / 180;
+                pts.push([cx + radius * Math.cos(ang), cy + radius * Math.sin(ang)]);
+            }
+            let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
+            for (let i = 1; i < n; i += 1) d += ` L ${f(pts[i][0])} ${f(pts[i][1])}`;
+            return d + ' Z';
+        }
+        case 'hexagon': {
+            const n = 6;
+            const pts = [];
+            for (let i = 0; i < n; i += 1) {
+                const ang = (-60 + i * (360 / n)) * Math.PI / 180;
+                pts.push([cx + radius * Math.cos(ang), cy + radius * Math.sin(ang)]);
+            }
+            let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
+            for (let i = 1; i < n; i += 1) d += ` L ${f(pts[i][0])} ${f(pts[i][1])}`;
+            return d + ' Z';
+        }
+        default: {
+            const x1 = f(cx - radius);
+            const y1 = f(cy);
+            const x2 = f(cx + radius);
+            const rr = f(radius);
+            return `M ${x1} ${y1} A ${rr} ${rr} 0 1 0 ${x2} ${y1} A ${rr} ${rr} 0 1 0 ${x1} ${y1} Z`;
+        }
+    }
+}
+
+const seriesPaths = computed(() => {
+    if (!FINAL_CONFIG.value.usePerformanceMode) return [''];
+
+    const { left, right, top, bottom } = drawingArea.value;
+
+    const area = Math.max(1, (right - left) * (bottom - top));
+    const density = (n) => (n / area) * 10000;
+
+    const DENSE_THRESHOLD = 2.5;
+    const COUNT_THRESHOLD = 1000;
+
+    const baseStroke = FINAL_CONFIG.value.style.layout.plots.stroke;
+    const baseStrokeWidth = FINAL_CONFIG.value.style.layout.plots.strokeWidth;
+    const baseOpacity = FINAL_CONFIG.value.style.layout.plots.opacity;
+
+    return drawableDataset.value.map(ds => {
+        const parts = [];
+
+        for (const p of ds.plots) {
+        const x = p.x, y = p.y;
+        if (x < left || x > right || y < top || y > bottom) continue;
+            const r = Math.max(FINAL_CONFIG.value.style.layout.plots.radius, p.weight);
+            parts.push(makeSinglePathPlots({
+                shape: ds.shape || 'circle',
+                cx: x,
+                cy: y,
+                r
+            }));
+        }
+
+        if (!parts.length) return null;
+
+        const tooDense = density(ds.plots.length) > DENSE_THRESHOLD || ds.plots.length > COUNT_THRESHOLD;
+
+        return {
+            id: ds.id,
+            d: parts.join(''),
+            fill: setOpacity(ds.color, baseOpacity * 100),
+            stroke: tooDense ? 'none' : baseStroke,
+            strokeWidth: tooDense ? 0 : baseStrokeWidth,
+            strokeOpacity: 1
+        };
+    }).filter(Boolean);
+});
+
+function onTrapMoveFactory() {
+    if (!FINAL_CONFIG.value.usePerformanceMode) return () => null;
+
+    return (evt) => {
+        const svgEl = svgRef.value;
+        if (!svgEl) return;
+
+        const pt = svgEl.createSVGPoint();
+        pt.x = evt.clientX; pt.y = evt.clientY;
+        const ctm = svgEl.getScreenCTM();
+        if (!ctm) return;
+        const inv = ctm.inverse();
+        const p = pt.matrixTransform(inv);
+
+        const hoverRadius = 8;
+        const r2 = hoverRadius * hoverRadius;
+
+        let best = null;
+        let bestD2 = Infinity;
+        let sIdx = -1;
+
+        drawableDataset.value.forEach((ds, i) => {
+            ds.plots.forEach(plot => {
+                const dx = plot.x - p.x;
+                const dy = plot.y - p.y;
+                const d2 = dx * dx + dy * dy;
+                if (d2 <= r2 && d2 < bestD2) {
+                    bestD2 = d2;
+                    best = plot; sIdx = i;
+                }
+            });
+        });
+
+        if (best) {
+            if (selectedPlotId.value !== best.id) {
+                selectedPlotId.value = best.id;
+                onTrapEnter(best, sIdx);
+            }
+        } else if (selectedPlotId.value) {
+            const prev = selectedPlot.value;
+            selectedPlotId.value = undefined;
+            onTrapLeave(prev, sIdx);
+        }
+    };
+}
+
+const onPathMouseMove = onTrapMoveFactory();
+
+function onPathMouseLeave() {
+    if (selectedPlotId.value) {
+        const prev = selectedPlot.value;
+        selectedPlotId.value = undefined;
+        onTrapLeave(prev, null);
+    }
+}
+function onPathClick(_e) {
+    const sp = selectedPlot.value;
+    if (sp) {
+        const i = drawableDataset.value.findIndex(ds => ds.id === sp.clusterId);
+        onTrapClick(sp, i >= 0 ? i : 0);
+    }
+}
+
+
 defineExpose({
     getData,
     getImage,
@@ -1301,39 +1506,85 @@ defineExpose({
             </g>
 
             <!-- PLOTS -->
-            <g v-for="(ds, i) in drawableDataset">
-                <g v-if="!ds.shape || ds.shape === 'circle'">
-                    <circle 
-                        v-for="(plot, j) in ds.plots"
-                        data-cy="atom-shape"
-                        :cx="plot.x"
-                        :cy="plot.y"
-                        :r="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
-                        :fill="setOpacity(ds.color, FINAL_CONFIG.style.layout.plots.opacity * 100)"
-                        :stroke="FINAL_CONFIG.style.layout.plots.stroke"
-                        :stroke-width="FINAL_CONFIG.style.layout.plots.strokeWidth"
-                        :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
-                        @mouseover="onTrapEnter(plot, i)"
-                        @mouseleave="onTrapLeave(plot, i)"
-                        @click="onTrapClick(plot, i)"
+            <template v-if="!FINAL_CONFIG.usePerformanceMode">
+                <g v-for="(ds, i) in drawableDataset">
+                    <g v-if="!ds.shape || ds.shape === 'circle'">
+                        <circle 
+                            v-for="(plot, j) in ds.plots"
+                            data-cy="atom-shape"
+                            :cx="plot.x"
+                            :cy="plot.y"
+                            :r="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
+                            :fill="setOpacity(ds.color, FINAL_CONFIG.style.layout.plots.opacity * 100)"
+                            :stroke="FINAL_CONFIG.style.layout.plots.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.plots.strokeWidth"
+                            :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
+                            @mouseover="onTrapEnter(plot, i)"
+                            @mouseleave="onTrapLeave(plot, i)"
+                            @click="onTrapClick(plot, i)"
+                        />
+                    </g>
+                    <g v-else>
+                        <Shape
+                            v-for="(plot, j) in ds.plots"
+                            :plot="{x: plot.x, y: plot.y }"
+                            :radius="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
+                            :shape="ds.shape"
+                            :color="setOpacity(ds.color, FINAL_CONFIG.style.layout.plots.opacity * 100)"
+                            :stroke="FINAL_CONFIG.style.layout.plots.stroke"
+                            :strokeWidth="FINAL_CONFIG.style.layout.plots.strokeWidth"
+                            :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
+                            @mouseover="onTrapEnter(plot, i)"
+                            @mouseleave="onTrapLeave(plot, i)"
+                            @click="onTrapClick(plot, i)"
+                        />
+                    </g>
+                </g>
+            </template>
+
+            <!-- PLOTS (PERFORMANCE MODE : ONE PATH PER SERIES) -->
+            <template v-if="FINAL_CONFIG.usePerformanceMode">
+                <g :clip-path="`url(#clip_path_${uid})`">
+                    <path
+                        data-cy="performance-path"
+                        v-for="sp in seriesPaths"
+                        :key="sp.id"
+                        :d="sp.d"
+                        :fill="sp.fill"
+                        :stroke="sp.stroke"
+                        :stroke-width="sp.strokeWidth"
+                        :stroke-opacity="sp.strokeOpacity"
+                        vector-effect="non-scaling-stroke"
+                        paint-order="fill"
                     />
                 </g>
-                <g v-else>
+
+                <!-- SINGLE SELECTED PLOT -->
+                <g v-if="selectedPlot && FINAL_CONFIG.style.layout.plots.selectors.show" style="pointer-events:none">
                     <Shape
-                        v-for="(plot, j) in ds.plots"
-                        :plot="{x: plot.x, y: plot.y }"
-                        :radius="selectedPlotId && selectedPlotId === plot.id ? plot.weight * 2 : plot.weight"
-                        :shape="ds.shape"
-                        :color="setOpacity(ds.color, FINAL_CONFIG.style.layout.plots.opacity * 100)"
+                        data-cy="performance-selected-plot"
+                        :shape="selectedPlot.shape || 'circle'"
+                        :color="selectedPlot.color"
+                        :plot="{ x: selectedPlot.x, y: selectedPlot.y }"
+                        :radius="Math.max((4 * SHAPES_RADIUS_SCALE[selectedPlot.shape || 'circle']), selectedPlot.weight * 2)"
                         :stroke="FINAL_CONFIG.style.layout.plots.stroke"
                         :strokeWidth="FINAL_CONFIG.style.layout.plots.strokeWidth"
-                        :style="`opacity:${selectedPlotId && selectedPlotId === plot.id ? 1 : FINAL_CONFIG.style.layout.plots.significance.useDistanceOpacity ? (1 - (Math.abs(plot.deviation) / maxDeviation)) : FINAL_CONFIG.style.layout.plots.significance.show && Math.abs(plot.deviation) > FINAL_CONFIG.style.layout.plots.significance.deviationThreshold ? FINAL_CONFIG.style.layout.plots.significance.opacity : 1}`"
-                        @mouseover="onTrapEnter(plot, i)"
-                        @mouseleave="onTrapLeave(plot, i)"
-                        @click="onTrapClick(plot, i)"
                     />
                 </g>
-            </g>
+
+                <!-- MOUSE TRAP -->
+                <rect
+                    data-cy="performance-trap"
+                    :x="drawingArea.left"
+                    :y="drawingArea.top"
+                    :width="Math.max(0.0001, drawingArea.width)"
+                    :height="Math.max(0.0001, drawingArea.height)"
+                    fill="transparent"
+                    @mousemove="onPathMouseMove"
+                    @mouseleave="onPathMouseLeave"
+                    @click="onPathClick"
+                />
+            </template>
 
             <!-- SELECTORS -->
             <g v-if="selectedPlot && FINAL_CONFIG.style.layout.plots.selectors.show" style="pointer-events: none !important;">

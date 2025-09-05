@@ -10,10 +10,10 @@ const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const scat1 = computed(() => {
     const arr = [];
-    for (let i = -100; i < 100; i += 1) {
+    for (let i = -5000; i < 5000; i += 1) {
         arr.push({
-            x: Math.random() * (Math.random() > 0.3 ? i / 3 : -i / 5),
-            y: Math.random() * i / 20,
+            x: Math.random() * (Math.random() > 0.5 ? i / 3 : -i / 3),
+            y: Math.random() * (Math.random() > 0.5 ? i / 3 : -i / 3),
             name: `plot_${i}_cluster_1`
         });
     }
@@ -22,10 +22,10 @@ const scat1 = computed(() => {
 
 const scat2 = computed(() => {
     const arr = [];
-    for (let i = -100; i < 100; i += 1) {
+    for (let i = -500; i < 500; i += 1) {
         arr.push({
-            x: Math.random() * (Math.random() > 0.1 ? i / 10 : -i / 10),
-            y: Math.random() * i / 10,
+            x: Math.random() * (Math.random() > 0.5 ? i / 4 : -i / 4),
+            y: Math.random() * (Math.random() > 0.5 ? i / 4 : -i / 4),
             name: `plot_${i}_cluster_2`,
         });
     }
@@ -38,16 +38,15 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = [
             {
-                name: "Cluster 1",
-                values: scat1.value,
-                shape: "star",
-            },
-            {
                 name: "Cluster 2",
                 values: scat2.value,
-                shape: "triangle",
-                color: 'orange'
-            }
+                shape: "circle",
+            },
+            // {
+            //     name: "Cluster 1",
+            //     values: scat1.value,
+            //     shape: "star",
+            // },
         ]
     }, 2000)
 })
@@ -103,6 +102,7 @@ function alterDataset() {
 const model = ref([
     { key: 'debug', def: true, type: 'checkbox'},
     { key: 'loading', def: false, type: 'checkbox'},
+    { key: 'usePerformanceMode', def: true, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -162,7 +162,7 @@ const model = ref([
     { key: 'style.layout.plots.significance.opacity', def: 0.3, type: 'number', min: 0, max: 1, step: 0.01},
     { key: 'style.layout.plots.deviation.translation', def: 'deviation', type: 'text'},
     { key: 'style.layout.plots.deviation.roundingValue', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.layout.plots.giftWrap.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.plots.giftWrap.show', def: false, type: 'checkbox'},
     { key: 'style.layout.plots.giftWrap.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
     { key: 'style.layout.plots.giftWrap.strokeDasharray', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.layout.plots.giftWrap.fillOpacity', def: 0.2, type: 'number', min: 0, max: 1, step: 0.01},
@@ -175,13 +175,13 @@ const model = ref([
     { key: 'style.layout.plots.selectors.labels.rounding', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.layout.plots.selectors.labels.bold', def: false, type: 'checkbox'},
     { key: 'style.layout.plots.selectors.labels.showName', def: true, type: "checkbox"},
-    { key: 'style.layout.plots.selectors.labels.prefix', def: 'P', type: 'text'},
-    { key: 'style.layout.plots.selectors.labels.suffix', def: 'S', type: 'text'},
+    { key: 'style.layout.plots.selectors.labels.prefix', def: '', type: 'text'},
+    { key: 'style.layout.plots.selectors.labels.suffix', def: '', type: 'text'},
     { key: 'style.layout.plots.selectors.markers.radius', def: 1.5, type: 'number', min: 0, max: 12, step: 0.5},
     { key: 'style.layout.plots.selectors.markers.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.layout.plots.selectors.markers.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.5},
     { key: 'style.layout.plots.selectors.markers.fill', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.correlation.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.correlation.show', def: false, type: 'checkbox'},
     { key: 'style.layout.correlation.strokeDasharray', def: 2, type: 'number', min: 0, max: 100},
     { key: 'style.layout.correlation.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
     { key: 'style.layout.correlation.label.show', def: true, type: 'checkbox'},
@@ -308,18 +308,18 @@ const config = computed(() => {
                             ...c.style.layout.plots.selectors,
                             labels: {
                                 ...c.style.layout.plots.selectors.labels,
-                                x: {
-                                    formatter: ({value, config}) => {
-                                        // console.log(config)
-                                        return `X | ${value}`
-                                    }
-                                },
-                                y: {
-                                    formatter: ({value, config}) => {
-                                        // console.log(config)
-                                        return `Y | ${value}`
-                                    }
-                                }
+                                // x: {
+                                //     formatter: ({value, config}) => {
+                                //         // console.log(config)
+                                //         return `X | ${value}`
+                                //     }
+                                // },
+                                // y: {
+                                //     formatter: ({value, config}) => {
+                                //         // console.log(config)
+                                //         return `Y | ${value}`
+                                //     }
+                                // }
                             }
                         }
                     }

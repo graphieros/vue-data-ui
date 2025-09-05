@@ -2087,6 +2087,7 @@ export function useConfig() {
         customPalette: [],
         useCssAnimation: false, // v2 = true
         downsample: LTTB,
+        usePerformanceMode: false,
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_WHITE,

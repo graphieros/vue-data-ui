@@ -314,8 +314,8 @@ describe("<VueUiXy />", () => {
 				},
 			},
 		}).then(() => {
-			cy.get('[data-cy="xy-svg"]').trigger('mouseenter', { force: true });
-			cy.get('[data-cy="xy-svg"]').trigger('mousemove', { force: true });
+			cy.get('[data-cy="xy-svg"]').trigger('mouseenter');
+			cy.get('[data-cy="xy-svg"]').trigger('mousemove');
 			cy.get('[data-cy="time-tag"]').should('be.visible').and('contain', "2026-06-25 01:00:00")
 		})
 	})
