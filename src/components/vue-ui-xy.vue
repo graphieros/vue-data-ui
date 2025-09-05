@@ -4169,11 +4169,26 @@ defineExpose({
                             :stroke="FINAL_CONFIG.chart.backgroundColor" :strokeWidth="0.5" />
                     </svg>
                     <svg v-else-if="icons[legendItem.type] === 'bar'" viewBox="0 0 40 40" height="14" width="14">
-                        <rect v-if="icons[legendItem.type] === 'bar' && $slots.pattern" x="0" y="0" rx="1" height="40"
-                            width="40" stroke="none" :fill="legendItem.color" />
-                        <rect v-if="icons[legendItem.type] === 'bar'" x="0" y="0" rx="1" height="40" width="40"
+                        <rect 
+                            v-if="icons[legendItem.type] === 'bar' && $slots.pattern" 
+                            x="4" 
+                            y="4" 
+                            rx="1" 
+                            height="32"
+                            width="32" 
+                            stroke="none" 
+                            :fill="legendItem.color" 
+                        />
+                        <rect 
+                            v-if="icons[legendItem.type] === 'bar'" 
+                            x="4" 
+                            y="4" 
+                            rx="1" 
+                            height="32" 
+                            width="32"
                             stroke="none"
-                            :fill="$slots.pattern ? `url(#pattern_${uniqueId}_${legendItem.slotAbsoluteIndex})` : legendItem.color" />
+                            :fill="$slots.pattern ? `url(#pattern_${uniqueId}_${legendItem.slotAbsoluteIndex})` : legendItem.color" 
+                        />
                     </svg>
                     <svg v-else viewBox="0 0 12 12" height="14" width="14">
                         <Shape :plot="{ x: 6, y: 6 }" :radius="5" :color="legendItem.color"

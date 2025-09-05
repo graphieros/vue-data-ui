@@ -42,12 +42,12 @@ function handleClick(legend, i) {
     >
         <slot name="legendTitle" :titleSet="legendSet"></slot>
         <div v-for="(legend, i) in legendSet" :key="`legend_${i}`" :class="{ 'vue-data-ui-legend-item': true, 'active': clickable }">
-            <svg @click="handleClick(legend, i)" v-if="legend.shape" :height="config.fontSize" :width="config.fontSize" viewBox="-8 -8 76 76" :style="`overflow: visible;opacity:${legend.opacity}`">
+            <svg @click="handleClick(legend, i)" v-if="legend.shape" :height="config.fontSize" :width="config.fontSize" :viewBox="legend.shape && legend.shape === 'star' ? '-10 -10 80 80' : '0 0 60 60'" :style="`overflow: visible;opacity:${legend.opacity}`">
                 <Shape
                     :shape="legend.shape"
                     :radius="30"
                     stroke="none"
-                    :plot="{ x: 30, y: 30 }"
+                    :plot="{ x: 30, y: legend.shape === 'triangle' ? 36 : 30 }"
                     :fill="legend.color"
                 />
                 <slot name="legend-pattern" v-bind="{ legend, index: isValidUserValue(legend.absoluteIndex) ? legend.absoluteIndex : i}"/>
