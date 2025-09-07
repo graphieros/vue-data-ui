@@ -37,6 +37,7 @@ import { useLoading } from "../useLoading";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useTimeLabels } from "../useTimeLabels";
+import { useTableResponsive } from "../useTableResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import { useChartAccessibility } from "../useChartAccessibility";
@@ -91,7 +92,6 @@ const hoveredCell = ref(undefined);
 const selectedClone = ref(null);
 const step = ref(0);
 const tableContainer = ref(null);
-const isTableResponsive = ref(false);
 const titleStep = ref(0);
 const datapoints = ref(null);
 const tableUnit = ref(null);
@@ -253,26 +253,6 @@ const breakpoint = computed(() => {
     return FINAL_CONFIG.value.table.responsiveBreakpoint
 });
 
-const tableObserver = shallowRef(null);
-
-function observeTable() {
-    if (tableObserver.value) {
-        tableObserver.value.disconnect();
-    }
-    tableObserver.value = new ResizeObserver((entries) => {
-        entries.forEach(entry => {
-            isTableResponsive.value = entry.contentRect.width < breakpoint.value;
-        });
-    });
-    tableContainer.value && tableObserver.value.observe(tableContainer.value);
-}
-
-onBeforeUnmount(() => {
-    if (tableObserver.value) {
-        tableObserver.value.disconnect();
-    }
-})
-
 const resizeObserver = ref(null);
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
@@ -321,8 +301,6 @@ function prepareChart() {
         observedEl.value = heatmapChart.value.parentNode;
         resizeObserver.value.observe(observedEl.value);
     }
-
-    observeTable();
 }
 
 onBeforeUnmount(() => {
@@ -832,16 +810,19 @@ const tableComponent = computed(() => {
     }
 });
 
-watch(() => mutableConfig.value.showTable, v => {
+watch(() => mutableConfig.value.showTable, async (v) => {
     if (FINAL_CONFIG.value.table.show) return;
     if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+        await nextTick();
         tableUnit.value.open()
     } else {
         if ('close' in tableUnit.value) {
             tableUnit.value.close()
         }
     }
-})
+});
+
+const { isResponsive: isTableResponsive } = useTableResponsive(tableContainer, breakpoint);
 
 defineExpose({
     getData,

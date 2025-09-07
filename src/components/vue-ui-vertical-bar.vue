@@ -27,6 +27,7 @@ import { useLoading } from "../useLoading.js";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
 import { useNestedProp } from "../useNestedProp";
+import { useTableResponsive } from "../useTableResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
 import themes from "../themes.json";
@@ -249,7 +250,7 @@ const customPalette = computed(() => {
 })
 
 const tableContainer = ref(null)
-const isResponsive = ref(false)
+
 const breakpoint = computed(() => {
     return FINAL_CONFIG.value.table.responsiveBreakpoint
 });
@@ -347,7 +348,6 @@ function prepareChart() {
             return 1;
         }
     }).reduce((a, b) => a + b, 0);
-    observeTable();
 
     // v3
     if (!objectIsEmpty(props.dataset)) {
@@ -398,22 +398,11 @@ onBeforeUnmount(() => {
     }
 });
 
-function observeTable() {
-    if (loading.value) return;
-    const observer = new ResizeObserver((entries) => {
-        entries.forEach(entry => {
-            isResponsive.value = entry.contentRect.width < breakpoint.value;
-        })
-    })
-    observer.observe(tableContainer.value)
-}
-
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     sortDesc: FINAL_CONFIG.value.style.chart.layout.bars.sort === "desc",
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
 });
-
 
 const isSortDown = computed(() => {
     return mutableConfig.value.sortDesc;
@@ -947,7 +936,9 @@ watch(() => mutableConfig.value.showTable, v => {
             tableUnit.value.close()
         }
     }
-})
+});
+
+const { isResponsive } = useTableResponsive(tableContainer, breakpoint);
 
 defineExpose({
     autoSize, // v3

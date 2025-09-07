@@ -37,6 +37,7 @@ import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
 import { useNestedProp } from "../useNestedProp";
+import { useTableResponsive } from "../useTableResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import img from "../img";
@@ -248,7 +249,7 @@ watch(FINAL_CONFIG, () => {
 }, { immediate: true });
 
 const tableContainer = ref(null)
-const isResponsive = ref(false)
+
 const breakpoint = computed(() => {
     return FINAL_CONFIG.value.table.responsiveBreakpoint
 })
@@ -546,33 +547,9 @@ function isArcBigEnough(arc) {
     return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.dataLabels.hideUnderValue;
 }
 
-const tableObserver = shallowRef(null);
-
-function observeTable() {
-    if (tableObserver.value) {
-        tableObserver.value.disconnect();
-    }
-
-    tableObserver.value = new ResizeObserver((entries) => {
-        entries.forEach(entry => {
-            isResponsive.value = entry.contentRect.width < breakpoint.value;
-        })
-    })
-
-    if (tableContainer.value) {
-        tableObserver.value.observe(tableContainer.value);
-    }
-}
-
 onMounted(() => {
     prepareChart();
 });
-
-onBeforeUnmount(() => {
-    if (tableObserver.value) {
-        tableObserver.value.disconnect();
-    }
-})
 
 const debug = computed(() => FINAL_CONFIG.value.debug);
 
@@ -587,7 +564,6 @@ function prepareChart() {
 
     const height = totalBranches.value * (svg.value.branchSize + svg.value.gap) + svg.value.padding.top + svg.value.padding.bottom;
     svg.value.height = height;
-    observeTable()
 }
 
 const table = computed(() => {
@@ -725,16 +701,19 @@ const tableComponent = computed(() => {
     }
 });
 
-watch(() => mutableConfig.value.showTable, v => {
+watch(() => mutableConfig.value.showTable, async (v) => {
     if (FINAL_CONFIG.value.table.show) return;
     if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
-        tableUnit.value.open()
+        await nextTick();
+        tableUnit.value.open();
     } else {
         if ('close' in tableUnit.value) {
             tableUnit.value.close()
         }
     }
 })
+
+const { isResponsive } = useTableResponsive(tableContainer, breakpoint);
 
 defineExpose({
     getData,
