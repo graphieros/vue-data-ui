@@ -191,7 +191,10 @@ const model = ref([
     { key: 'style.chart.links.opacity', def: 0.8, type: 'number', min: 0, max: 1, step: 0.1 },
     { key: 'style.chart.links.stroke', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.links.strokeWidth', def: 1, type: 'number', min: 0, max: 12 },
-    { key: 'style.chart.links.width', def: 200, type: 'number', min: 40, max: 300 }
+    { key: 'style.chart.links.width', def: 200, type: 'number', min: 40, max: 300 },
+
+    { key: 'table.show', def: false, type: 'checkbox' },
+    { key: 'table.useDialog', def: true, type: 'checkbox' },
 ])
 
 const themeOptions = ref([

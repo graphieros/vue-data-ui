@@ -156,7 +156,10 @@ const model = ref([
     { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 48},
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
+
     { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
+
     { key: 'table.responsiveBreakpoint', def: 300, type: 'number', min: 300, max: 800},
     { key: 'table.columnNames.series', def: 'Series', type: 'text'},
     { key: 'table.columnNames.start', def: 'Start value', type: 'text'},

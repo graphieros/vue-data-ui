@@ -188,7 +188,6 @@ const model = ref([
     { key: 'style.chart.paddingProportions.right', def: 0.05, type: 'number', min: 0, max: 3, step: 0.01 },
     { key: 'style.chart.paddingProportions.left', def: 0.1, type: 'number', min: 0, max: 3, step: 0.01 },
     { key: 'style.chart.paddingProportions.bottom', def: 0.1, type: 'number', min: 0, max: 3, step: 0.01 },
-    { key: 'table.show', def: false, type: 'checkbox' },
     { key: 'table.rounding', def: 1, type: 'number', min: 0, max: 6 },
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
     { key: 'table.columnNames.period', def: 'Period', type: 'text' },
@@ -199,6 +198,8 @@ const model = ref([
     { key: 'table.td.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'table.td.color', def: '#1A1A1A', type: 'color' },
     { key: 'table.td.outline', def: 'none', type: 'text' },
+    { key: 'table.show', def: false, type: 'checkbox' },
+    { key: 'table.useDialog', def: true, type: 'checkbox' },
 
 ])
 const step = ref(0)

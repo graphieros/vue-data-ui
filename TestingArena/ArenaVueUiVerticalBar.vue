@@ -201,7 +201,6 @@ const model = ref([
     { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
     { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
-    { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColorHeader', category: 'table' },
     { key: 'table.th.color', def: '#1A1A1A', type: 'color', label: 'textColorHeader', category: 'table' },
@@ -213,6 +212,8 @@ const model = ref([
     { key: 'table.td.roundingPercentage', def: 0, type: 'number', min: 0, max: 6, label: ['rounding', 'is', 'percentage'], category: 'table' },
     { key: 'table.td.prefix', def: 'P', type: 'text'},
     { key: 'table.td.suffix', def: 'S', type: 'text'},
+    { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'}
 ])
 
 const testCustomTooltip = ref(false);

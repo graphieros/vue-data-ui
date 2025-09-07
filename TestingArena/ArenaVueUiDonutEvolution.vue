@@ -133,7 +133,6 @@ const model = ref([
     { key: 'style.chart.legend.showPercentage', def: false, type: 'chexkbox'},
     { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
 
-    { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.columnNames.period', def: 'Period', type: 'text'},
     { key: 'table.columnNames.total', def: 'Total', type: 'text'},
@@ -154,6 +153,9 @@ const model = ref([
     { key: 'style.chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100},
     { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
+
+    { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
 ]);
 
 const themeOptions = ref([

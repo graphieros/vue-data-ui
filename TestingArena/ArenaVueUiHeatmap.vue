@@ -175,6 +175,7 @@ const model = ref([
     { key: 'style.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
     { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.colNames.xAxis', def: 'X AXIS', type: 'text'},
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},

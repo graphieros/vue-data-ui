@@ -830,7 +830,7 @@ const model = ref([
     { key: 'plot.tag.followValue', def: true, type: 'checkbox' },
     { key: 'plot.tag.fontSize', def: 14, type: 'number' },
 
-    { key: 'showTable', def: false, type: 'checkbox', label: 'show', category: 'table' },
+
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 350, max: 800, label: 'responsiveBreakpoint', category: 'table' },
     { key: 'table.rounding', def: 0, type: 'number', min: 0, max: 6, label: 'rounding', category: 'table' },
     { key: 'table.sparkline', def: true, type: 'checkbox', label: 'sparkline', category: 'table' },
@@ -842,7 +842,11 @@ const model = ref([
     { key: 'table.td.backgroundColor', def: '#FAFAFA', type: 'color', label: 'backgroundColorRow', category: 'table' },
     { key: 'table.td.color', def: '#1A1A1A', type: 'color', label: 'textColorRow', category: 'table' },
     { key: 'table.td.outline', def: '', type: 'text', label: 'outlineRow', category: 'table' },
-    { key: 'table.showSum', def: false, type: 'checkbox' },
+    { key: 'table.showSum', def: true, type: 'checkbox' },
+    { key: 'table.useDefaultTimeFormat', def: true, type: 'checkbox' },
+    
+    { key: 'showTable', def: false, type: 'checkbox', label: 'show', category: 'table' },
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
 
     { key: 'chart.comments.show', def: true, type: 'checkbox' },
     { key: 'chart.comments.showInTooltip', def: true, type: 'checkbox' },

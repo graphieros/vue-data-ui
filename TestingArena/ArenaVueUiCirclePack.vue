@@ -234,6 +234,9 @@ const model = ref([
     { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
+
+    { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
 ]);
 
 const themeOptions = ref([

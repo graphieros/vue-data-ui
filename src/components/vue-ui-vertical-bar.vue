@@ -22,26 +22,27 @@ import {
     XMLNS,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
+import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading.js";
 import { usePrinter } from "../usePrinter";
 import { useResponsive } from "../useResponsive";
-import { useConfig } from "../useConfig";
+import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
 import themes from "../themes.json";
-import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
+import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import img from "../img.js";
-import { useLoading } from "../useLoading.js";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
-const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_vertical_bar: DEFAULT_CONFIG } = useConfig();
 const slots = useSlots();
@@ -85,6 +86,7 @@ const noTitle = ref(null);
 const titleStep = ref(0);
 const legendStep = ref(0)
 const G = ref(null);
+const tableUnit = ref(null);
 
 const emit = defineEmits(['selectLegend']);
 
@@ -109,6 +111,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     callback: () => {
         Promise.resolve().then(async () => {
             recalculateHeight();
+            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
             await autoSize();
         })
     },
@@ -903,6 +906,49 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const tableComponent = computed(() => {
+    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
+    const open = mutableConfig.value.showTable;
+    return {
+        component: useDialog ? BaseDraggableDialog : Accordion,
+        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        props: useDialog ? {
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            headerColor: FINAL_CONFIG.value.table.th.color,
+            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+            isFullscreen: isFullscreen.value,
+            fullscreenParent: verticalBarChart.value,
+            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+        } : {
+            hideDetails: true,
+            config: {
+                open,
+                maxHeight: 10000,
+                body: {
+                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
+                    color: FINAL_CONFIG.value.style.chart.color
+                },
+                head: {
+                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
+                    color: FINAL_CONFIG.value.style.chart.color
+                }
+            }
+        }
+    }
+});
+
+watch(() => mutableConfig.value.showTable, v => {
+    if (FINAL_CONFIG.value.table.show) return;
+    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+        tableUnit.value.open()
+    } else {
+        if ('close' in tableUnit.value) {
+            tableUnit.value.close()
+        }
+    }
+})
+
 defineExpose({
     autoSize, // v3
     getData,
@@ -1314,28 +1360,30 @@ defineExpose({
             </template>
         </Tooltip>
 
-        <!-- DATA TABLE -->
-        <Accordion hideDetails v-if="isDataset" :config="{
-            open: mutableConfig.showTable,
-            maxHeight: 10000,
-            body: {
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                color: FINAL_CONFIG.style.chart.color,
-            },
-            head: {
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                color: FINAL_CONFIG.style.chart.color,
-            }
-        }">
+        <component
+            v-if="isDataset"
+            :is="tableComponent.component"
+            v-bind="tableComponent.props"
+            ref="tableUnit"
+            @close="mutableConfig.showTable = false"
+        >
+            <template #title v-if="FINAL_CONFIG.table.useDialog">
+                {{ tableComponent.title }}
+            </template>
+            <template #actions v-if="FINAL_CONFIG.table.useDialog">
+                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                    <BaseIcon name="excel" :stroke="tableComponent.props.color"/>
+                </button>
+            </template>
             <template #content>
-                <div ref="tableContainer" class="vue-ui-vertical-bar-table atom-data-table">        
+                <div ref="tableContainer" class="vue-ui-vertical-bar-table atom-data-table" :style="`${FINAL_CONFIG.table.useDialog ? '' : 'max-height: 300px; margin-top: 24px'}`">        
                     <div :style="`width:100%;padding-top: 36px;position:relative`">
-                        <div data-cy="data-table-close" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                        <div v-if="!FINAL_CONFIG.table.useDialog" data-cy="data-table-close" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div> 
                         <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">
                             <table class="vue-ui-data-table">
-                                <caption :style="{backgroundColor: FINAL_CONFIG.table.th.backgroundColor, color: FINAL_CONFIG.table.th.color, outline: FINAL_CONFIG.table.th.outline }" class="vue-ui-data-table__caption">
+                                <caption v-if="!FINAL_CONFIG.table.useDialog" :style="{backgroundColor: FINAL_CONFIG.table.th.backgroundColor, color: FINAL_CONFIG.table.th.color, outline: FINAL_CONFIG.table.th.outline }" class="vue-ui-data-table__caption">
                                     {{ FINAL_CONFIG.style.chart.title.text }} <span v-if="FINAL_CONFIG.style.chart.title.subtitle.text">{{  FINAL_CONFIG.style.chart.title.subtitle.text }}</span>
                                 </caption>
                                 <thead data-cy="vertical-bar-thead">
@@ -1400,7 +1448,7 @@ defineExpose({
                 </div>
                 </div>
             </template>
-        </Accordion>
+        </component>
 
         <!-- v3 Skeleton loader -->
         <BaseScanner v-if="loading"/>
@@ -1449,9 +1497,7 @@ path, line, rect, circle, polygon {
 
 .vue-ui-vertical-bar-table {
     width: 100%;
-    max-height: 300px;
     overflow: auto;
-    margin-top: 24px;
     position: relative;
 }
 

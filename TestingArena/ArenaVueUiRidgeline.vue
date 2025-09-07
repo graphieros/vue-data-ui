@@ -149,19 +149,22 @@ const model = ref([
     { key: 'style.chart.yAxis.labels.fontSize', def: 16, type: 'number', min: 8, max: 48},
     { key: 'style.chart.yAxis.labels.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.yAxis.labels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.yAxis.labels.offsetX', def: 0, type: 'number', min: -100, max: 100}
+    { key: 'style.chart.yAxis.labels.offsetX', def: 0, type: 'number', min: -100, max: 100},
+
+    { key: 'table.show', def: false, type: 'checkbox' },
+    { key: 'table.useDialog', def: true, type: 'checkbox' },
 ])
 
 const monthValues = computed(() => {
-  const yearStart = 2026
-  const arr = []
+    const yearStart = 2026
+    const arr = []
 
-  for (let i = 0; i < 13; i++) {
-    const d = new Date(yearStart, i, 1)
-    arr.push(d.getTime())
-  }
+    for (let i = 0; i < 13; i += 1) {
+        const d = new Date(yearStart, i, 1)
+        arr.push(d.getTime())
+    }
 
-  return arr
+    return arr
 })
 
 const config = computed(() => {

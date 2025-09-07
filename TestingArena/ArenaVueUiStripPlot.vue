@@ -195,6 +195,8 @@ const model = ref([
     { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
     { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
+
     { key: 'table.responsiveBreakpoint', def: 300, type: 'number', min: 300, max: 800},
     { key: 'table.columnNames.series', def: 'Series', def: 'text'},
     { key: 'table.columnNames.value', def: 'Value', def: 'text'},

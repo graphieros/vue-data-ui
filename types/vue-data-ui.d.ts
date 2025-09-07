@@ -479,6 +479,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -646,6 +647,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -934,6 +936,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell;
@@ -1095,6 +1098,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -1209,6 +1213,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -1548,6 +1553,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 period?: string;
@@ -1798,6 +1804,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -2569,6 +2576,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell;
@@ -2733,6 +2741,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -2948,6 +2957,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -3129,6 +3139,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             colNames?: {
                 xAxis?: string;
@@ -3515,6 +3526,7 @@ declare module "vue-data-ui" {
             };
         };
         table?: {
+            useDialog?: boolean;
             rounding?: number;
             responsiveBreakpoint?: number;
             sparkline?: boolean;
@@ -3525,6 +3537,8 @@ declare module "vue-data-ui" {
             };
             th?: ChartTableCell;
             td?: ChartTableCell;
+            useDefaultTimeFormat?: boolean;
+            timeFormat?: string;
         };
         showTable?: boolean;
     };
@@ -3778,6 +3792,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -3956,6 +3971,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -4140,6 +4156,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -4282,6 +4299,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -4510,6 +4528,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -4863,6 +4882,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell & {
                 translations?: {
@@ -5005,6 +5025,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -5209,6 +5230,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -6301,6 +6323,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -6621,6 +6644,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -6732,6 +6756,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -6933,6 +6958,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             rounding?: number;
             responsiveBreakpoint?: number;
             columnNames?: {
@@ -7086,6 +7112,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 source?: string;
@@ -7256,6 +7283,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 series?: string;
@@ -7565,6 +7593,7 @@ declare module "vue-data-ui" {
         orientation?: "vertical" | "horizontal";
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             columnNames?: {
                 period?: string;
@@ -7870,6 +7899,7 @@ declare module "vue-data-ui" {
         useCssAnimation?: boolean;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -7991,6 +8021,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -8230,6 +8261,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell;
@@ -8409,6 +8441,7 @@ declare module "vue-data-ui" {
         };
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -8490,6 +8523,7 @@ declare module "vue-data-ui" {
         useCssAnimation?: boolean;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell & {
@@ -8700,6 +8734,7 @@ declare module "vue-data-ui" {
         userOptions?: ChartUserOptions;
         table?: {
             show?: boolean;
+            useDialog?: boolean;
             responsiveBreakpoint?: number;
             th?: ChartTableCell;
             td?: ChartTableCell;

@@ -388,7 +388,10 @@ const model = ref([
     { key: 'style.chart.layout.title.subtitle.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.layout.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 48},
     { key: 'style.chart.layout.title.subtitle.offsetY', def: 0, type: 'number', min: -100, max: 100},
+
     { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
+    
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'table.th.color', def: '#1A1A1A', type: 'color'},

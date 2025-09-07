@@ -114,7 +114,10 @@ const model = ref([
     { key: 'style.chart.ribbons.labels.marker.show', def: true, type: 'checkbox'},
     { key: 'style.chart.ribbons.labels.marker.radius', def: 3, type: 'number', min: 0, max: 12},
     { key: 'style.chart.ribbons.labels.marker.stroke', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.ribbons.labels.marker.strokeWidth', def: 1, type: 'number', min: 0, max: 12}
+    { key: 'style.chart.ribbons.labels.marker.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
+
+    { key: 'table.show', def: false, type: 'checkbox' },
+    { key: 'table.useDialog', def: true, type: 'checkbox' },
 ])
 
 const themeOptions = ref([

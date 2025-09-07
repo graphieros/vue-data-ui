@@ -196,7 +196,10 @@ const model = ref([
     { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
 
     { key: 'style.chart.zoom.speed', def: 1, type: 'number', min: 0, max: 2, step: 0.01},
+
     { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
+
     { key: 'table.responsiveBreakpoint', def: 400, type:'number', min: 300, max: 800},
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'table.th.color', def: '#1A1A1A', type: 'color'},

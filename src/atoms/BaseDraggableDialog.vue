@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onUnmounted, nextTick } from "vue";
+import { ref, reactive, computed, onUnmounted, nextTick, onMounted } from "vue";
 import BaseIcon from "./BaseIcon.vue";
 import { XMLNS } from "../lib";
 
@@ -10,18 +10,24 @@ const props = defineProps({
     headerColor: { type: String },
     fullscreenParent: { type: HTMLElement },
     isFullscreen: { type: Boolean, default: false },
-    withPadding: { type: Boolean, default: false }
+    withPadding: { type: Boolean, default: false },
+    forcedWidth: { type: Number, default: 400 }
 });
 
 const emit = defineEmits(["close"]);
 
 const isOpen = ref(false);
 const hasBeenOpened = ref(false);
+const instanceKey = ref(0);
+
+function bringToFront() {
+    instanceKey.value += 1;
+}
 
 const modal = reactive({
     left: window.innerWidth / 2 - 200,
     top: window.innerHeight / 2 - 120,
-    width: 400,
+    width: props.forcedWidth,
     height: 400,
     dragging: false,
     resizing: false,
@@ -62,7 +68,8 @@ const modalStyle = computed(() => ({
     boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
     zIndex: 9999,
     overflow: "visible",
-    borderRadius: "2px"
+    borderRadius: "2px",
+    "--dlg-color": props.color 
 }));
 
 function getPointer(e) {
@@ -74,6 +81,7 @@ function getPointer(e) {
 
 function initDrag(e) {
     e.preventDefault?.();
+    bringToFront();
     modal.dragging = true;
     const pointer = getPointer(e);
     modal.dragOffsetX = pointer.x - modal.left;
@@ -106,6 +114,7 @@ function endDrag() {
 
 function initResize(e) {
     e.preventDefault?.();
+    bringToFront();
     modal.resizing = true;
     const pointer = getPointer(e);
     modal.pointerStartX = pointer.x;
@@ -138,6 +147,7 @@ function endResize() {
 
 function initResizeLeft(e) {
     e.preventDefault?.();
+    bringToFront();
     modal.resizing = true;
     const pointer = getPointer(e);
     modal.pointerStartX = pointer.x;
@@ -177,20 +187,40 @@ function endResizeLeft() {
     document.removeEventListener("touchend", endResizeLeft);
 }
 
+onMounted(() => {
+    document.addEventListener('keydown', onEscape);
+});
+
+function onEscape(e) {
+    if (e.key && e.key === 'Escape') {
+        close();
+    }
+}
+
 onUnmounted(() => {
     endDrag();
     endResize();
     endResizeLeft();
+    document.removeEventListener('keydown', onEscape);
 });
 </script>
 
 <template>
-    <Teleport :to="isFullscreen ? fullscreenParent : 'body'">
-        <div v-if="isOpen" data-cy="draggable-dialog" class="modal vue-ui-draggable-dialog" :style="modalStyle" @click.stop>
-            <div class="modal-header" :style="{
-                backgroundColor: headerBg,
-                color: headerColor
-            }">
+    <Teleport :to="isFullscreen ? fullscreenParent : 'body'" :key="instanceKey">
+        <div 
+            v-if="isOpen" 
+            data-cy="draggable-dialog" 
+            class="modal vue-ui-draggable-dialog" 
+            :style="modalStyle"
+            @click.stop
+        >
+            <div 
+                class="modal-header"
+                :style="{
+                    backgroundColor: headerBg,
+                    color: headerColor
+                }"
+            >
                 <span class="drag-handle" @mousedown.stop.prevent="initDrag" @touchstart.stop.prevent="initDrag">
                     <svg
                         :xmlns="XMLNS"
@@ -216,12 +246,15 @@ onUnmounted(() => {
                 <span class="modal-title">
                     <slot name="title"/>
                 </span>
-                <button data-cy="draggable-dialog-close" class="close" @click="close">
-                    <BaseIcon name="close" :stroke="headerColor"/>
-                </button>
+                <div class="draggable-dialog-actions">
+                    <slot name="actions"/>
+                    <button data-cy="draggable-dialog-close" class="close" @click="close">
+                        <BaseIcon name="close" :stroke="headerColor"/>
+                    </button>
+                </div>
             </div>
             <div :class="{ 'modal-body': !withPadding, 'modal-body-pad': withPadding}">
-                <slot />
+                <slot name="content" />
             </div>
             <div class="resize-handle" @mousedown.stop.prevent="initResize" @touchstart.stop.prevent="initResize" />
             <div
@@ -241,6 +274,14 @@ onUnmounted(() => {
     padding: 0.5em 0 0.5em 0.5em;
     border-radius: 2px 2px 0 0;
     position: relative;
+}
+
+.draggable-dialog-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    align-items:center;
+    justify-content:center;
 }
 
 .drag-handle {
@@ -272,6 +313,7 @@ onUnmounted(() => {
 .modal-body {
     width: 100%;
     height: 80%;
+    overflow: auto;
     transition: all 0.2s ease-in-out;
 }
 
@@ -298,8 +340,8 @@ onUnmounted(() => {
     display: block;
     width: 14px;
     height: 14px;
-    border-right: 2px solid v-bind(color);
-    border-bottom: 2px solid v-bind(color);
+    border-right: 2px solid var(--dlg-color);
+    border-bottom: 2px solid var(--dlg-color);
     position: absolute;
     right: 3px;
     bottom: 3px;
@@ -316,11 +358,34 @@ onUnmounted(() => {
     width: 14px;
     height: 14px;
     border-right: 0px solid transparent;
-    border-left: 2px solid v-bind(color);
-    border-bottom: 2px solid v-bind(color);
+    border-left: 2px solid var(--dlg-color);
+    border-bottom: 2px solid var(--dlg-color);
     position: absolute;
     left: 3px;
     bottom: 3px;
     border-radius: 2px;
+}
+</style>
+
+<style>
+.vue-ui-user-options-button {
+    all: unset;
+    padding: 3px;
+    border-radius: 3px;
+    height: auto;
+    border: 1px solid transparent;
+    background: inherit;
+    display: flex;
+    align-items:center;
+    justify-content: center;
+    white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+}
+.vue-ui-user-options-button:hover {
+    background: rgba(0,0,0,0.05) !important;
+}
+.vue-ui-user-options-button:focus-visible {
+    outline: 1px solid #CCCCCC;
 }
 </style>

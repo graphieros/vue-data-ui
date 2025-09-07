@@ -235,7 +235,9 @@ const model = ref([
     { key: 'style.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
     { key: 'style.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48 },
 
-    { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
+    { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
+
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'table.th.color', def: '#1A1A1A', type: 'color' },

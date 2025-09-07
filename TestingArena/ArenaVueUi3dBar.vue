@@ -145,7 +145,10 @@ const model = ref([
     { key: 'style.chart.dataLabel.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.dataLabel.fontSize', def: 12, type: 'number'},
     { key: 'style.chart.dataLabel.rounding', def: 1, type: 'number', min: 0, max: 12},
+
     { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
+
     { key: 'table.responsiveBreakpoint', def: 300, type: 'number', min: 300, max: 800},
     { key: 'table.ccolumnNames.series', def: 'Series', type: 'text'},
     { key: 'table.ccolumnNames.value', def: 'Value', type: 'text'},
@@ -207,7 +210,7 @@ const config = computed(() => {
 
 const step = ref(0)
 
-const selectedDataset = ref('stacked') // simple | stacked
+const selectedDataset = ref('simple') // simple | stacked
 
 const dataset = computed(() => datasets.value[selectedDataset.value])
 

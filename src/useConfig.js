@@ -28,27 +28,6 @@ export function useConfig() {
 
     const MIN_FONT_SIZE = FONT._6;
 
-    // -------------------------
-    // COMBOS TO APPLY
-
-    /**
-     * Sets background and text color.
-     * 
-     * @param {string} [backgroundColor] - Background color (default is #FFFFFF).
-     * @param {string} [color] - Text color (default is #2D353C).
-     * @returns {{backgroundColor: string, color: string}} An object with the background color and text color.
-     */
-    const BG_AND_COLOR = (backgroundColor = COLOR_WHITE, color = COLOR_BLACK) => {
-        return { backgroundColor, color }
-    }
-
-    const PREFIX_SUFFIX = {
-        prefix: '',
-        suffix: ''
-    }
-
-    // --------------------------
-
     const SHAPE = {
         LINE: 'line',
         SQUARE: 'square',
@@ -281,6 +260,7 @@ export function useConfig() {
         orientation: 'vertical', // or 'horizontal'
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 period: 'Period',
                 total: 'Total'
@@ -741,6 +721,7 @@ export function useConfig() {
             }
         },
         table: {
+            useDialog: false,
             responsiveBreakpoint: 400,
             rounding: 0,
             sparkline: true,
@@ -750,7 +731,9 @@ export function useConfig() {
                 total: 'Total'
             },
             th: TABLE_TH,
-            td: TABLE_TD
+            td: TABLE_TD,
+            useDefaultTimeFormat: true,
+            timeFormat: 'yyyy-MM-dd HH:mm:ss'
         },
         showTable: false
     }
@@ -796,6 +779,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -999,6 +983,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 value: 'Value',
@@ -1096,6 +1081,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 value: 'Value',
@@ -1177,6 +1163,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -1325,6 +1312,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -1690,6 +1678,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             th: {
                 ...TABLE_TH,
                 translations: {
@@ -1804,6 +1793,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -1925,6 +1915,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -2063,6 +2054,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             colNames: {
                 xAxis: 'X'
             },
@@ -2233,6 +2225,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -2362,6 +2355,7 @@ export function useConfig() {
         table: {
             ...TABLE,
             th: TABLE_TH,
+            useDialog: false,
             td: {
                 ...TABLE_TD,
                 roundingValue: 2,
@@ -3022,6 +3016,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: TABLE_TD
         }
@@ -3212,6 +3207,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 value: 'Value',
@@ -3386,6 +3382,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 period: 'Period',
                 total: 'Total'
@@ -3473,6 +3470,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 value: 'Value',
@@ -3528,6 +3526,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: TABLE_TD,
             translations: {
@@ -3640,6 +3639,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 value: 'Value',
@@ -3725,6 +3725,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 value: 'Value',
@@ -3848,6 +3849,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 value: 'Value'
@@ -4010,6 +4012,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 start: 'Start value',
@@ -4100,6 +4103,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 value: 'Value',
@@ -4288,6 +4292,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Word',
                 value: 'Value'
@@ -4432,6 +4437,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             rounding: 1,
             columnNames: {
                 period: 'Period',
@@ -4516,6 +4522,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 source: 'Source',
                 target: 'Target',
@@ -4622,6 +4629,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             columnNames: {
                 series: 'Series',
                 item: 'Item'
@@ -5607,6 +5615,7 @@ export function useConfig() {
         useCssAnimation: true,
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -5719,6 +5728,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -5883,6 +5893,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: TABLE_TD,
             columnNames: {
@@ -6027,6 +6038,7 @@ export function useConfig() {
         },
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -6065,6 +6077,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: {
                 ...TABLE_TD,
@@ -6230,6 +6243,7 @@ export function useConfig() {
         }),
         table: {
             ...TABLE,
+            useDialog: false,
             th: TABLE_TH,
             td: TABLE_TD,
         },

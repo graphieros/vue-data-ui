@@ -14,6 +14,7 @@ const props = defineProps({
     body: Array,
     title: String,
     config: Object,
+    withCloseButton: { type: Boolean, default: true }
 });
 
 const { backgroundColor:thbg, color:thc, outline:tho } = props.config.th;
@@ -42,8 +43,15 @@ const emit = defineEmits(['close'])
 </script>
 
 <template>
-    <div ref="tableContainer" style="width: 100%; container-type: inline-size; position:relative;padding-top: 36px;overflow:auto" :class="{'atom-data-table': true, 'vue-ui-responsive': isResponsive}">
-        <div data-cy="data-table-close" data-dom-to-png-ignore role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${thbg};`" @click="emit('close')" @keypress.enter="emit('close')">
+    <div 
+        ref="tableContainer" 
+        :style="`width: 100%; container-type: inline-size; position:relative;${withCloseButton ? 'padding-top: 36px;' : ''}overflow:auto`" 
+        :class="{
+            'atom-data-table': true, 
+            'vue-ui-responsive': isResponsive
+        }"
+    >
+        <div v-if="withCloseButton" data-cy="data-table-close" data-dom-to-png-ignore role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${thbg};`" @click="emit('close')" @keypress.enter="emit('close')">
             <BaseIcon name="close" :stroke="thc" :stroke-width="2" />
         </div>
         <table data-cy="vue-data-ui-table-data" class="vue-ui-data-table">
@@ -52,7 +60,14 @@ const emit = defineEmits(['close'])
         </caption>
             <thead>
                 <tr role="row" style="font-variant-numeric: tabular-nums" class="vue-ui-data-table__thead-row" :style="{backgroundColor: thbg, color: thc }">
-                    <th role="cell" :style="{outline: tho}" v-for="(th, i) in head" :key="`th_${i}`">
+                    <th 
+                        role="cell" 
+                        :style="{
+                            outline: tho,
+                        }" 
+                        v-for="(th, i) in head" 
+                        :key="`th_${i}`"
+                    >
                         <div style="display: flex; align-items:center; justify-content:center; justify-content:flex-end;padding-right: 3px; gap:3px;">
                             <div style="width:12px; height: 12px">
                                 <svg height="12" width="12" v-if="th.color" viewBox="0 0 20 20" style="background: none;">

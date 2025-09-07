@@ -226,16 +226,18 @@ const model = ref([
     { key: 'style.chart.grid.y.axisLabels.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.grid.y.axisLabels.rounding', def: 2, type: 'number', min: 0, max: 6},
 
-    { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 6},
-
+    
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
-
+    
     { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
     { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
     { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
-
+    
+    { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 6},
+    { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
 ])
 
 const themeOptions = ref([

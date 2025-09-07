@@ -1,5 +1,13 @@
 <script setup>
-import { ref, computed, onMounted, nextTick, watch, defineAsyncComponent, toRefs } from "vue";
+import { 
+    ref, 
+    computed, 
+    onMounted, 
+    nextTick, 
+    watch, 
+    defineAsyncComponent, 
+    toRefs 
+} from "vue";
 import {
     abbreviate,
     adaptColorToBackground,
@@ -19,26 +27,28 @@ import {
     treeShake,
     XMLNS,
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
+import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
+import { usePrinter } from "../usePrinter";
+import { useLoading } from "../useLoading";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
-import { throttle } from "../canvas-lib";
-import { useResponsive } from "../useResponsive";
-import { useLoading } from "../useLoading";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
-const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_flow: DEFAULT_CONFIG } = useConfig();
 
@@ -69,6 +79,7 @@ const source = ref(null);
 const responsiveObserver = ref(null);
 const observedEl = ref(null);
 const readyTeleport = ref(false);
+const tableUnit = ref(null);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -770,10 +781,12 @@ const dataTable = computed(() => {
             {
                 color: el.sourceColor,
                 name: el.source,
+                shape: 'square'
             },
             {
                 color: el.targetColor,
                 name: el.target,
+                shape: 'square'
             },
             dataLabel({
                 p: FINAL_CONFIG.value.style.chart.nodes.labels.prefix,
@@ -910,6 +923,49 @@ async function getImage({ scale = 2} = {}) {
         aspectRatio
     }
 }
+
+const tableComponent = computed(() => {
+    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
+    const open = mutableConfig.value.showTable;
+    return {
+        component: useDialog ? BaseDraggableDialog : Accordion,
+        title: `${FINAL_CONFIG.value.style.chart.title.text}${FINAL_CONFIG.value.style.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.chart.title.subtitle.text}` : ''}`,
+        props: useDialog ? {
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            headerColor: FINAL_CONFIG.value.table.th.color,
+            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+            isFullscreen: isFullscreen.value,
+            fullscreenParent: flowChart.value,
+            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+        } : {
+            hideDetails: true,
+            config: {
+                open,
+                maxHeight: 10000,
+                body: {
+                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
+                    color: FINAL_CONFIG.value.style.chart.color
+                },
+                head: {
+                    backgroundColor: FINAL_CONFIG.value.style.chart.backgroundColor,
+                    color: FINAL_CONFIG.value.style.chart.color
+                }
+            }
+        }
+    }
+});
+
+watch(() => mutableConfig.value.showTable, v => {
+    if (FINAL_CONFIG.value.table.show) return;
+    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+        tableUnit.value.open()
+    } else {
+        if ('close' in tableUnit.value) {
+            tableUnit.value.close()
+        }
+    }
+})
 
 defineExpose({
     getData,
@@ -1169,24 +1225,31 @@ defineExpose({
             </template>
         </Tooltip>
 
-        <Accordion hideDetails v-if="isDataset" :config="{
-            open: mutableConfig.showTable,
-            maxHeight: 10000,
-            body: {
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                color: FINAL_CONFIG.style.chart.color,
-            },
-            head: {
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                color: FINAL_CONFIG.style.chart.color,
-            },
-        }">
+        <component
+            v-if="isDataset"
+            :is="tableComponent.component"
+            v-bind="tableComponent.props"
+            ref="tableUnit"
+            @close="mutableConfig.showTable = false"
+        >
+            <template #title v-if="FINAL_CONFIG.table.useDialog">
+                {{ tableComponent.title }}
+            </template>
+            <template #actions v-if="FINAL_CONFIG.table.useDialog">
+                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                    <BaseIcon name="excel" :stroke="tableComponent.props.color"/>
+                </button>
+            </template>
             <template #content>
-                <DataTable :colNames="dataTable.colNames" :head="dataTable.head" :body="dataTable.body"
-                    :config="dataTable.config" :title="`${FINAL_CONFIG.style.chart.title.text}${FINAL_CONFIG.style.chart.title.subtitle.text
-                            ? ` : ${FINAL_CONFIG.style.chart.title.subtitle.text}`
-                            : ''
-                        }`" @close="mutableConfig.showTable = false">
+                <DataTable 
+                    :colNames="dataTable.colNames" 
+                    :head="dataTable.head" 
+                    :body="dataTable.body"
+                    :config="dataTable.config" 
+                    :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
+                    :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                    @close="mutableConfig.showTable = false"
+                >
                     <template #th="{ th }">
                         <div v-html="th" style="display: flex; align-items: center"></div>
                     </template>
@@ -1195,7 +1258,7 @@ defineExpose({
                     </template>
                 </DataTable>
             </template>
-        </Accordion>
+        </component>
 
         <!-- v3 Skeleton loader -->
         <BaseScanner v-if="loading"/>

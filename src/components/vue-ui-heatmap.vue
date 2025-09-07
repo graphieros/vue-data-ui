@@ -1,5 +1,17 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent, onBeforeUnmount, shallowRef, watchEffect, reactive, toRefs } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    reactive, 
+    ref, 
+    shallowRef, 
+    toRefs,
+    watch, 
+    watchEffect, 
+} from "vue";
 import { 
     adaptColorToBackground, 
     applyDataLabel,
@@ -18,28 +30,29 @@ import {
     treeShake,
     XMLNS
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useConfig } from "../useConfig";
-import { useUserOptionState } from "../useUserOptionState";
-import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
-import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import img from "../img";
 import { throttle } from "../canvas-lib";
-import { useResponsive } from "../useResponsive";
-import { useTimeLabelCollision } from "../useTimeLabelCollider";
-import { useTimeLabels } from "../useTimeLabels";
-import vFitText from "../directives/vFitText";
+import { useConfig } from "../useConfig";
+import { usePrinter } from "../usePrinter";
 import { useLoading } from "../useLoading";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
+import { useTimeLabels } from "../useTimeLabels";
+import { useUserOptionState } from "../useUserOptionState";
+import { useTimeLabelCollision } from "../useTimeLabelCollider";
+import { useChartAccessibility } from "../useChartAccessibility";
+import img from "../img";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import themes from "../themes.json";
+import vFitText from "../directives/vFitText";
+import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
 
-const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
-const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
-const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
+const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
+const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_heatmap: DEFAULT_CONFIG } = useConfig()
 
@@ -81,6 +94,7 @@ const tableContainer = ref(null);
 const isTableResponsive = ref(false);
 const titleStep = ref(0);
 const datapoints = ref(null);
+const tableUnit = ref(null);
 
 const chartTitle = ref(null);
 const noTitle = ref(null);
@@ -786,6 +800,49 @@ useTimeLabelCollision({
     height: HEIGHT
 });
 
+const tableComponent = computed(() => {
+    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.table.show;
+    const open = mutableConfig.value.showTable;
+    return {
+        component: useDialog ? BaseDraggableDialog : Accordion,
+        title: `${FINAL_CONFIG.value.style.title.text}${FINAL_CONFIG.value.style.title.subtitle.text ? `: ${FINAL_CONFIG.value.style.title.subtitle.text}` : ''}`,
+        props: useDialog ? {
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            headerColor: FINAL_CONFIG.value.table.th.color,
+            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+            isFullscreen: isFullscreen.value,
+            fullscreenParent: heatmapChart.value,
+            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+        } : {
+            hideDetails: true,
+            config: {
+                open,
+                maxHeight: 10000,
+                body: {
+                    backgroundColor: FINAL_CONFIG.value.style.backgroundColor,
+                    color: FINAL_CONFIG.value.style.color
+                },
+                head: {
+                    backgroundColor: FINAL_CONFIG.value.style.backgroundColor,
+                    color: FINAL_CONFIG.value.style.color
+                }
+            }
+        }
+    }
+});
+
+watch(() => mutableConfig.value.showTable, v => {
+    if (FINAL_CONFIG.value.table.show) return;
+    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+        tableUnit.value.open()
+    } else {
+        if ('close' in tableUnit.value) {
+            tableUnit.value.close()
+        }
+    }
+})
+
 defineExpose({
     getData,
     getImage,
@@ -1268,28 +1325,33 @@ defineExpose({
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
         </Tooltip>
-        
-        <!-- DATA TABLE -->
-        <Accordion hideDetails v-if="isDataset" :config="{
-            open: mutableConfig.showTable,
-            maxHeight: 10000,
-            body: {
-                backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                color: FINAL_CONFIG.style.color,
-            },
-            head: {
-                backgroundColor: FINAL_CONFIG.style.backgroundColor,
-                color: FINAL_CONFIG.style.color,
-            }
-        }">
+
+        <component
+            v-if="isDataset"
+            :is="tableComponent.component"
+            v-bind="tableComponent.props"
+            ref="tableUnit"
+            @close="mutableConfig.showTable = false"
+        >
+            <template #title v-if="FINAL_CONFIG.table.useDialog">
+                {{ tableComponent.title }}
+            </template>
+            <template #actions v-if="FINAL_CONFIG.table.useDialog">
+                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                    <BaseIcon name="excel" :stroke="tableComponent.props.color"/>
+                </button>
+            </template>
             <template #content>
-                <div ref="tableContainer" class="vue-ui-heatmap-table atom-data-table">
-                    <div :style="`width:100%;overflow-x:auto;padding-top:36px;position:relative`" :class="{'vue-ui-responsive' : isTableResponsive}">
-                        <div data-cy="data-table-close" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                <div ref="tableContainer" class="vue-ui-heatmap-table atom-data-table" :style="`${FINAL_CONFIG.table.useDialog ? '' : 'max-height: 300px; margin-top: 24px;'}`">
+                    <div 
+                        :style="`width:100%;overflow-x:auto;position:relative;${FINAL_CONFIG.table.useDialog ? '' : 'padding-top:36px'};`" 
+                        :class="{'vue-ui-responsive' : isTableResponsive}"
+                    >
+                        <div v-if="!FINAL_CONFIG.table.useDialog" data-cy="data-table-close" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div> 
                         <table class="vue-ui-data-table">
-                            <caption :style="`backgroundColor:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color};outline:${FINAL_CONFIG.table.th.outline}`">
+                            <caption v-if="!FINAL_CONFIG.table.useDialog" :style="`backgroundColor:${FINAL_CONFIG.table.th.backgroundColor};color:${FINAL_CONFIG.table.th.color};outline:${FINAL_CONFIG.table.th.outline}`">
                                 {{ FINAL_CONFIG.style.title.text }} <span v-if="FINAL_CONFIG.style.title.subtitle.text">{{  FINAL_CONFIG.style.title.subtitle.text }}</span>
                             </caption>
                             <thead>
@@ -1318,7 +1380,7 @@ defineExpose({
                     </div>
                 </div>
             </template>
-        </Accordion>
+        </component>
 
         <!-- v3 Skeleton loader -->
         <BaseScanner v-if="loading"/>
@@ -1374,9 +1436,7 @@ defineExpose({
 
 .vue-ui-heatmap-table {
     width: 100%;
-    max-height: 300px;
     overflow: auto;
-    margin-top: 24px;
     position: relative;
 }
 

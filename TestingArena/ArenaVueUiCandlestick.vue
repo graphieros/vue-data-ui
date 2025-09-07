@@ -168,7 +168,7 @@ const model = ref([
     { key: 'translations.low', def: 'Low', type: 'text'},
     { key: 'translations.last', def: 'Last', type: 'text'},
     { key: 'translations.volume', def: 'Volume', type: 'text'},
-    { key: 'table.show', def: false, type: 'checkbox', label: 'show', category: 'table' },
+
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'table.th.color', def: '#1A1A1A', type: 'color' },
@@ -179,6 +179,9 @@ const model = ref([
     { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 6 },
     { key: 'table.td.prefix', def: 'P', type: 'text'},
     { key: 'table.td.suffix', def: 'S', type: 'text'},
+    
+    { key: 'table.show', def: false, type: 'checkbox' },
+    { key: 'table.useDialog', def: true, type: 'checkbox' },
 ])
 
 const testCustomTooltip = ref(false);

@@ -195,6 +195,8 @@ const model = ref([
     { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
 
     { key: 'table.show', def: false, type: 'checkbox'},
+    { key: 'table.useDialog', def: true, type: 'checkbox'},
+
     { key: 'table.responsiveBreakdpoint', def: 400, type: 'number', min: 300, max: 800},
     { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'table.th.color', def: '#1A1A1A', type: 'color'},

@@ -246,7 +246,10 @@ const model = ref([
 
     { key: 'style.chart.tooltip.showMinimap', def: true, type: 'checkbox'},
 
-    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']}
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+
+    { key: 'table.show', def: false, type: 'checkbox' },
+    { key: 'table.useDialog', def: true, type: 'checkbox' },
 ]);
 
 const projections = ref([

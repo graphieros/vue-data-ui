@@ -59,6 +59,7 @@ import { throttle } from '../canvas-lib.js';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter.js';
 import { useLoading } from '../useLoading.js';
+import { useDateTime } from '../useDateTime.js';
 import { useNestedProp } from '../useNestedProp';
 import { useTimeLabels } from '../useTimeLabels.js';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
@@ -69,8 +70,8 @@ import Slicer from '../atoms/Slicer.vue';
 import Shape from '../atoms/Shape.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
-import { useDateTime } from '../useDateTime.js';
 import locales from '../locales/locales.json';
+import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 
 const props = defineProps({
     config: {
@@ -96,9 +97,9 @@ const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const TableSparkline = defineAsyncComponent(() => import('./vue-ui-table-sparkline.vue'));
-const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
+const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const emit = defineEmits(['selectTimeLabel', 'selectX', 'selectLegend']);
 const SLOTS = useSlots();
@@ -146,6 +147,7 @@ const svgRef = ref(null);
 const tagRefs = ref({});
 const textMeasurer = ref(null);
 const readyTeleport = ref(false);
+const tableUnit = ref(null);
 
 const selectedSerieIndex = ref(null);
 
@@ -162,32 +164,6 @@ function safeDiv(a, b, fallback = 0) {
 }
 
 const mutableInitialized = ref(false)
-
-const mutableConfig = ref({
-    dataLabels: { show: true },
-    showTooltip: true,
-    showTable: false,
-    isStacked: false,
-    useIndividualScale: false
-});
-
-function seedMutableFromConfig() {
-    if (!mutableInitialized.value) {
-        mutableConfig.value = {
-            dataLabels: { show: true },
-            showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
-            showTable: FINAL_CONFIG.value.showTable === true,
-            isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
-            useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
-        };
-        mutableInitialized.value = true;
-    } else {
-        mutableConfig.value.isStacked = FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked;
-        if (mutableConfig.value.useIndividualScale == null) {
-            mutableConfig.value.useIndividualScale = FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale;
-        }
-    }
-}
 
 const fontSizes = ref({
     xAxis: 18,
@@ -337,6 +313,32 @@ const isDataset = computed({
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const mutableConfig = ref({
+    dataLabels: { show: true },
+    showTooltip: true,
+    showTable: false,
+    isStacked: false,
+    useIndividualScale: false
+});
+
+function seedMutableFromConfig() {
+    if (!mutableInitialized.value) {
+        mutableConfig.value = {
+            dataLabels: { show: true },
+            showTooltip: FINAL_CONFIG.value.chart.tooltip.show === true,
+            showTable: FINAL_CONFIG.value.showTable === true,
+            isStacked: FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked,
+            useIndividualScale: FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale
+        };
+        mutableInitialized.value = true;
+    } else {
+        mutableConfig.value.isStacked = FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked;
+        if (mutableConfig.value.useIndividualScale == null) {
+            mutableConfig.value.useIndividualScale = FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale;
+        }
+    }
+}
+
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 // v3 - Skeleton loader management
@@ -347,6 +349,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     callback: () => {
         Promise.resolve().then(async () => {
             await setupSlicer();
+            mutableConfig.value.showTable = FINAL_CONFIG.value.showTable;
         })
     },
     skeletonDataset: [
@@ -1298,7 +1301,7 @@ const tableSparklineConfig = computed(() => {
         fontFamily: FINAL_CONFIG.value.chart.fontFamily,
         prefix: FINAL_CONFIG.value.chart.labels.prefix,
         suffix: FINAL_CONFIG.value.chart.labels.suffix,
-        colNames: timeLabels.value.map(tl => tl.text),
+        colNames: timeLabels.value.map((tl, i) => FINAL_CONFIG.value.table.useDefaultTimeFormat ? tl.text : preciseTimeFormatter.value(i + slicer.value.start, FINAL_CONFIG.value.table.timeFormat)),
         thead: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
             color: FINAL_CONFIG.value.table.th.color,
@@ -1311,6 +1314,9 @@ const tableSparklineConfig = computed(() => {
         },
         userOptions: {
             show: false
+        },
+        sparkline: {
+            animation: { show: false }
         }
     }
 });
@@ -2289,8 +2295,9 @@ const table = computed(() => {
         }
     });
     const body = [];
+
     timeLabels.value.forEach((t, i) => {
-        const row = [t.text];
+        const row = FINAL_CONFIG.value.table.useDefaultTimeFormat ? [t.text] : [preciseTimeFormatter.value(i + slicer.value.start, FINAL_CONFIG.value.table.timeFormat)];
         relativeDataset.value.forEach(s => {
             row.push(canShowValue(s.absoluteValues[i]) ? Number(s.absoluteValues[i].toFixed(FINAL_CONFIG.value.table.rounding)) : '')
         });
@@ -2314,7 +2321,8 @@ const dataTable = computed(() => {
         }).reduce((a, b) => a + b, 0)
 
         body.push([
-            timeLabels.value[i].text ?? '-']
+            FINAL_CONFIG.value.table.useDefaultTimeFormat ?
+            timeLabels.value[i].text ?? '-' : preciseTimeFormatter.value(i + slicer.value.start, FINAL_CONFIG.value.table.timeFormat)]
             .concat(relativeDataset.value
                 .map(ds => {
                     return applyDataLabel(
@@ -2848,6 +2856,49 @@ onMounted(() => {
 watch(FINAL_CONFIG, () => {
     seedMutableFromConfig();
 }, { immediate: true });
+
+const tableComponent = computed(() => {
+    const useDialog = FINAL_CONFIG.value.table.useDialog && !FINAL_CONFIG.value.showTable;
+    const open = mutableConfig.value.showTable;
+    return {
+        component: useDialog ? BaseDraggableDialog : Accordion,
+        title: `${FINAL_CONFIG.value.chart.title.text}${FINAL_CONFIG.value.chart.title.subtitle.text ? `: ${FINAL_CONFIG.value.chart.title.subtitle.text}` : ''}`,
+        props: useDialog ? {
+            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+            color: FINAL_CONFIG.value.table.th.color,
+            headerColor: FINAL_CONFIG.value.table.th.color,
+            headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
+            isFullscreen: isFullscreen.value,
+            fullscreenParent: chart.value,
+            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+        } : {
+            hideDetails: true,
+            config: {
+                open,
+                maxHeight: 10000,
+                body: {
+                    backgroundColor: FINAL_CONFIG.value.chart.backgroundColor,
+                    color: FINAL_CONFIG.value.chart.color
+                },
+                head: {
+                    backgroundColor: FINAL_CONFIG.value.chart.backgroundColor,
+                    color: FINAL_CONFIG.value.chart.color
+                }
+            }
+        }
+    }
+});
+
+watch(() => mutableConfig.value.showTable, v => {
+    if (FINAL_CONFIG.value.showTable) return;
+    if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
+        tableUnit.value.open()
+    } else {
+        if ('close' in tableUnit.value) {
+            tableUnit.value.close()
+        }
+    }
+})
 
 defineExpose({
     getData,
@@ -4234,21 +4285,17 @@ defineExpose({
             </template>
         </Tooltip>
 
-        <!-- DATA TABLE -->
-        <Accordion hideDetails v-if="isDataset" :config="{
-            open: mutableConfig.showTable,
-            maxHeight: 10000,
-            body: {
-                backgroundColor: FINAL_CONFIG.chart.backgroundColor,
-                color: FINAL_CONFIG.chart.color
-            },
-            head: {
-                backgroundColor: FINAL_CONFIG.chart.backgroundColor,
-                color: FINAL_CONFIG.chart.color
-            }
-        }">
+        <component v-if="isDataset" :is="tableComponent.component" v-bind="tableComponent.props" ref="tableUnit" @close="mutableConfig.showTable = false">
+            <template #title v-if="FINAL_CONFIG.table.useDialog">
+                {{ tableComponent.title }}
+            </template>
+            <template #actions v-if="FINAL_CONFIG.table.useDialog">
+                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.chart.userOptions.callbacks.csv)">
+                    <BaseIcon name="excel" :stroke="tableComponent.props.color"/>
+                </button>
+            </template>
             <template #content>
-                <div :style="`${isPrinting ? '' : 'max-height:400px'};overflow:auto;width:100%;margin-top:48px`">
+                <div :style="`${isPrinting || FINAL_CONFIG.table.useDialog ? '' : 'max-height:400px'};${FINAL_CONFIG.table.useDialog ? 'height: fit-content; ' : ''};overflow:auto;width:100%;${FINAL_CONFIG.table.useDialog ? '' : 'margin-top:48px'}`">
                     <div style="display: flex; flex-direction:row; gap: 6px; align-items:center; padding-left: 6px"
                         data-dom-to-png-ignore>
                         <input type="checkbox" v-model="showSparklineTable">
@@ -4258,10 +4305,17 @@ defineExpose({
                     </div>
                     <TableSparkline v-if="showSparklineTable" :key="`sparkline_${segregateStep}`"
                         :dataset="tableSparklineDataset" :config="tableSparklineConfig" />
-                    <DataTable v-else :key="`table_${tableStep}`" :colNames="dataTable.colNames" :head="dataTable.head"
-                        :body="dataTable.body" :config="dataTable.config"
-                        :title="`${FINAL_CONFIG.chart.title.text}${FINAL_CONFIG.chart.title.subtitle.text ? ` : ${FINAL_CONFIG.chart.title.subtitle.text}` : ''}`"
-                        @close="mutableConfig.showTable = false">
+                    <DataTable 
+                        v-else
+                        :key="`table_${tableStep}`" 
+                        :colNames="dataTable.colNames" 
+                        :head="dataTable.head"
+                        :body="dataTable.body" 
+                        :config="dataTable.config"
+                        :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
+                        :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                        @close="mutableConfig.showTable = false"
+                    >
                         <template #th="{ th }">
                             <div v-html="th" />
                         </template>
@@ -4276,7 +4330,7 @@ defineExpose({
                     </DataTable>
                 </div>
             </template>
-        </Accordion>
+        </component>
 
         <!-- v3 Skeleton loader -->
         <BaseScanner v-if="loading" />
