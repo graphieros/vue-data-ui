@@ -2179,7 +2179,7 @@ export function useConfig() {
                 },
                 dataLabels: {
                     xAxis: {
-                        name: 'xAxis',
+                        name: '',
                         show: true,
                         fontSize: FONT._10,
                         color: COLOR_BLACK,
@@ -2189,7 +2189,7 @@ export function useConfig() {
                         roundingValue: 0
                     },
                     yAxis: {
-                        name: 'yAxis',
+                        name: '',
                         show: true,
                         fontSize: FONT._10,
                         color: COLOR_BLACK,
