@@ -66,6 +66,8 @@ const builtInComponents = {
     VueUiHistoryPlot : defineAsyncComponent(() => import('../components/vue-ui-history-plot.vue')),
     VueUiCirclePack : defineAsyncComponent(() => import('../components/vue-ui-circle-pack.vue')),
     VueUiWorld : defineAsyncComponent(() => import('../components/vue-ui-world.vue')),
+    VueUiChord: defineAsyncComponent(() => import('../components/vue-ui-chord.vue')),
+    VueUiRidgeline: defineAsyncComponent(() => import('../components/vue-ui-ridgeline.vue')),
 };
 
 const { vue_ui_dashboard: DEFAULT_CONFIG } = useConfig();
