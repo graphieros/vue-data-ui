@@ -103,6 +103,7 @@ const animatedValues = ref([]);
 const ghostSlices = ref([]);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
+const userOptionsRef = ref(null);
 
 const isFullscreen = ref(false);
 function toggleFullscreen(state) {
@@ -1284,7 +1285,14 @@ watch(() => mutableConfig.value.showTable, v => {
             tableUnit.value.close()
         }
     }
-})
+});
+
+function closeTable() {
+    mutableConfig.value.showTable = false;
+    if (userOptionsRef.value) {
+        userOptionsRef.value.setTableIconState(false);
+    }
+}
 
 defineExpose({
     autoSize,
@@ -1330,30 +1338,48 @@ defineExpose({
         <div :id="`legend-top-${uid}`" />
 
         <!-- OPTIONS -->
-        <UserOptions ref="details" :key="`user_option_${step}`" v-if="
-            FINAL_CONFIG.userOptions.show &&
-            isDataset &&
-            (keepUserOptionState ? true : userOptionsVisible)
-        " :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
-            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip &&
-                FINAL_CONFIG.style.chart.tooltip.show
-                " :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+        <UserOptions 
+            ref="userOptionsRef" 
+            :key="`user_option_${step}`" 
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)" 
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :color="FINAL_CONFIG.style.chart.color"
+            :isPrinting="isPrinting" 
+            :isImaging="isImaging" 
+            :uid="uid" 
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show" 
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" 
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img" 
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
-            :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :chartElement="nestedDonutsChart" :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator" :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip" 
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :chartElement="nestedDonutsChart" 
+            :position="FINAL_CONFIG.userOptions.position"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" 
+            :isAnnotation="isAnnotator" 
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
-            @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"
-            @generateImage="generateImage" @toggleTable="toggleTable" @toggleLabels="toggleLabels"
-            @toggleTooltip="toggleTooltip" @toggleAnnotator="toggleAnnotator" :style="{
+            :tableDialog="FINAL_CONFIG.table.useDialog"
+            @toggleFullscreen="toggleFullscreen" 
+            @generatePdf="generatePdf" 
+            @generateCsv="generateCsv"
+            @generateImage="generateImage" 
+            @toggleTable="toggleTable" 
+            @toggleLabels="toggleLabels"
+            @toggleTooltip="toggleTooltip" 
+            @toggleAnnotator="toggleAnnotator" 
+            :style="{
                 visibility: keepUserOptionState
                     ? userOptionsVisible
                         ? 'visible'
                         : 'hidden'
                     : 'visible',
-            }">
+            }"
+        >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
@@ -1757,7 +1783,7 @@ defineExpose({
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
-            @close="mutableConfig.showTable = false"
+            @close="closeTable"
         >
             <template #title v-if="FINAL_CONFIG.table.useDialog">
                 {{ tableComponent.title }}
@@ -1776,7 +1802,7 @@ defineExpose({
                     :config="dataTable.config" 
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
-                    @close="mutableConfig.showTable = false"
+                    @close="closeTable"
                 >
                     <template #th="{ th }">
                         <div v-html="th" style="display: flex; align-items: center"></div>

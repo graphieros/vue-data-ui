@@ -73,7 +73,6 @@ const isDataset = computed({
 });
 
 const uid = ref(createUid());
-const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const barCount = ref(0);
@@ -88,6 +87,7 @@ const titleStep = ref(0);
 const legendStep = ref(0)
 const G = ref(null);
 const tableUnit = ref(null);
+const userOptionsRef = ref(null);
 
 const emit = defineEmits(['selectLegend']);
 
@@ -940,6 +940,13 @@ watch(() => mutableConfig.value.showTable, v => {
 
 const { isResponsive } = useTableResponsive(tableContainer, breakpoint);
 
+function closeTable() {
+    mutableConfig.value.showTable = false;
+    if (userOptionsRef.value) {
+        userOptionsRef.value.setTableIconState(false);
+    }
+}
+
 defineExpose({
     autoSize, // v3
     getData,
@@ -993,7 +1000,7 @@ defineExpose({
 
         <!-- OPTIONS -->
         <UserOptions
-            ref="details"
+            ref="userOptionsRef"
             :key="`user_options_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
@@ -1017,6 +1024,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :tableDialog="FINAL_CONFIG.table.useDialog"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -1356,7 +1364,7 @@ defineExpose({
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
-            @close="mutableConfig.showTable = false"
+            @close="closeTable"
         >
             <template #title v-if="FINAL_CONFIG.table.useDialog">
                 {{ tableComponent.title }}
@@ -1369,7 +1377,7 @@ defineExpose({
             <template #content>
                 <div ref="tableContainer" class="vue-ui-vertical-bar-table atom-data-table" :style="`${FINAL_CONFIG.table.useDialog ? '' : 'max-height: 300px; margin-top: 24px'}`">        
                     <div :style="`width:100%;padding-top: 36px;position:relative`">
-                        <div v-if="!FINAL_CONFIG.table.useDialog" data-cy="data-table-close" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                        <div v-if="!FINAL_CONFIG.table.useDialog" data-cy="data-table-close" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="closeTable" @keypress.enter="closeTable">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div> 
                         <div style="width: 100%; container-type: inline-size;" :class="{'vue-ui-responsive': isResponsive}">

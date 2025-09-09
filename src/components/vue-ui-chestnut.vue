@@ -3,10 +3,8 @@ import {
     computed, 
     defineAsyncComponent, 
     nextTick, 
-    onBeforeUnmount, 
     onMounted, 
     ref, 
-    shallowRef, 
     toRefs,
     watch, 
 } from "vue";
@@ -74,9 +72,9 @@ const isDataset = computed(() => {
 
 const uid = ref(createUid());
 const chestnutChart = ref(null);
-const details = ref(null);
 const step = ref(0);
 const tableUnit = ref(null);
+const userOptionsRef = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -715,6 +713,13 @@ watch(() => mutableConfig.value.showTable, async (v) => {
 
 const { isResponsive } = useTableResponsive(tableContainer, breakpoint);
 
+function closeTable() {
+    mutableConfig.value.showTable = false;
+    if (userOptionsRef.value) {
+        userOptionsRef.value.setTableIconState(false);
+    }
+}
+
 defineExpose({
     getData,
     getImage,
@@ -754,7 +759,7 @@ defineExpose({
 
         <!-- OPTIONS -->
         <UserOptions
-            ref="details"
+            ref="userOptionsRef"
             :key="`user_options_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
@@ -775,6 +780,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :tableDialog="FINAL_CONFIG.table.useDialog"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -1483,7 +1489,7 @@ defineExpose({
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
-            @close="mutableConfig.showTable = false"
+            @close="closeTable"
         >
             <template #title v-if="FINAL_CONFIG.table.useDialog">
                 {{ tableComponent.title }}
@@ -1496,7 +1502,7 @@ defineExpose({
             <template #content>
                 <div ref="tableContainer" class="vue-ui-chestnut-table" :style="`${FINAL_CONFIG.table.useDialog ? '' : 'max-height: 300px;margin-top:24px'}`">
                     <div :style="`${FINAL_CONFIG.table.useDialog ? '' : 'padding-top:36px;'}position: relative`">
-                        <div v-if="!FINAL_CONFIG.table.useDialog" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="mutableConfig.showTable = false" @keypress.enter="mutableConfig.showTable = false">
+                        <div v-if="!FINAL_CONFIG.table.useDialog" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="closeTable" @keypress.enter="closeTable">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div>        
                         <div style="width: 100%" :class="{'vue-ui-responsive': isResponsive}">

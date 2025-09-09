@@ -117,6 +117,7 @@ const xAxisLabel = ref(null);
 const yAxisLabel = ref(null);
 const timeLabelsEls = ref(null);
 const scaleLabels = ref(null);
+const userOptionsRef = ref(null);
 
 const resizeObserver = ref(null);
 const observedEl = ref(null);
@@ -2900,6 +2901,13 @@ watch(() => mutableConfig.value.showTable, v => {
     }
 })
 
+function closeTable() {
+    mutableConfig.value.showTable = false;
+    if (userOptionsRef.value) {
+        userOptionsRef.value.setTableIconState(false);
+    }
+}
+
 defineExpose({
     getData,
     getImage,
@@ -2945,7 +2953,7 @@ defineExpose({
 
         <div :id="`legend-top-${uniqueId}`" />
 
-        <UserOptions ref="defails" :key="`user_options_${step}`"
+        <UserOptions ref="userOptionsRef" :key="`user_options_${step}`"
             v-if="FINAL_CONFIG.chart.userOptions.show && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.chart.backgroundColor" :color="FINAL_CONFIG.chart.color"
             :isPrinting="isPrinting" :isImaging="isImaging" :uid="uniqueId"
@@ -2960,6 +2968,7 @@ defineExpose({
             :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.chart.userOptions.buttonTitles }"
             :hasAnnotator="FINAL_CONFIG.chart.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.chart.userOptions.callbacks"
+            :tableDialog="FINAL_CONFIG.table.useDialog"
             :printScale="FINAL_CONFIG.chart.userOptions.print.scale" @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf" @generateCsv="generateCsv" @generateImage="generateImage"
             @toggleTable="toggleTable" @toggleLabels="toggleLabels" @toggleStack="toggleStack"
@@ -4285,7 +4294,7 @@ defineExpose({
             </template>
         </Tooltip>
 
-        <component v-if="isDataset" :is="tableComponent.component" v-bind="tableComponent.props" ref="tableUnit" @close="mutableConfig.showTable = false">
+        <component v-if="isDataset" :is="tableComponent.component" v-bind="tableComponent.props" ref="tableUnit" @close="closeTable">
             <template #title v-if="FINAL_CONFIG.table.useDialog">
                 {{ tableComponent.title }}
             </template>
@@ -4314,7 +4323,7 @@ defineExpose({
                         :config="dataTable.config"
                         :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                         :withCloseButton="!FINAL_CONFIG.table.useDialog"
-                        @close="mutableConfig.showTable = false"
+                        @close="closeTable"
                     >
                         <template #th="{ th }">
                             <div v-html="th" />

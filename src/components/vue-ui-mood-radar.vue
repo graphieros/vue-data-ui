@@ -64,7 +64,6 @@ const props = defineProps({
 
 const uid = ref(createUid());
 const moodRadarChart = ref(null);
-const details = ref(null);
 const selectedKey = ref(null);
 const noTitle = ref(null);
 const titleStep = ref(0);
@@ -77,6 +76,7 @@ const observedEl = ref(null);
 const source = ref(null);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
+const userOptionsRef = ref(null);
 
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
@@ -521,7 +521,14 @@ watch(() => mutableConfig.value.showTable, v => {
             tableUnit.value.close()
         }
     }
-})
+});
+
+function closeTable() {
+    mutableConfig.value.showTable = false;
+    if (userOptionsRef.value) {
+        userOptionsRef.value.setTableIconState(false);
+    }
+}
 
 defineExpose({
     getData,
@@ -574,7 +581,7 @@ defineExpose({
 
         <!-- OPTIONS -->
         <UserOptions
-            ref="details"
+            ref="userOptionsRef"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
@@ -594,6 +601,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :tableDialog="FINAL_CONFIG.table.useDialog"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -890,7 +898,7 @@ defineExpose({
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
-            @close="mutableConfig.showTable = false"
+            @close="closeTable"
         >
             <template #title v-if="FINAL_CONFIG.table.useDialog">
                 {{ tableComponent.title }}
@@ -908,7 +916,7 @@ defineExpose({
                     :config="dataTable.config"
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
-                    @close="mutableConfig.showTable = false"
+                    @close="closeTable"
                 >
                     <template #th="{th}">
                         <div v-html="th" style="display:flex;align-items:center"></div>

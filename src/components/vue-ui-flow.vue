@@ -80,6 +80,7 @@ const responsiveObserver = ref(null);
 const observedEl = ref(null);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
+const userOptionsRef = ref(null);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -965,7 +966,14 @@ watch(() => mutableConfig.value.showTable, v => {
             tableUnit.value.close()
         }
     }
-})
+});
+
+function closeTable() {
+    mutableConfig.value.showTable = false;
+    if (userOptionsRef.value) {
+        userOptionsRef.value.setTableIconState(false);
+    }
+}
 
 defineExpose({
     getData,
@@ -1010,25 +1018,39 @@ defineExpose({
 
         <div :id="`legend-top-${uid}`" />
 
-        <UserOptions ref="details" :key="`user_option_${step}`" v-if="
-            FINAL_CONFIG.userOptions.show &&
-            isDataset &&
-            (keepUserOptionState ? true : userOptionsVisible)
-        " :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
-            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+        <UserOptions 
+            ref="userOptionsRef" 
+            :key="`user_option_${step}`" 
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)" 
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :color="FINAL_CONFIG.style.chart.color"
+            :isPrinting="isPrinting" 
+            :isImaging="isImaging" 
+            :uid="uid" 
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv" 
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="flowChart"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :isFullscreen="isFullscreen"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" 
+            :chartElement="flowChart"
             :position="FINAL_CONFIG.userOptions.position" 
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
-            :isAnnotation="isAnnotator" :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show &&
-                FINAL_CONFIG.userOptions.buttons.tooltip
-                " :isTooltip="mutableConfig.showTooltip" @toggleTooltip="toggleTooltip" @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf" @generateCsv="generateCsv" @generateImage="generateImage"
-            @toggleTable="toggleTable" @toggleAnnotator="toggleAnnotator" :style="{
+            :isAnnotation="isAnnotator" 
+            :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show && FINAL_CONFIG.userOptions.buttons.tooltip" 
+            :isTooltip="mutableConfig.showTooltip"
+            :tableDialog="FINAL_CONFIG.table.useDialog"
+            @toggleTooltip="toggleTooltip" 
+            @toggleFullscreen="toggleFullscreen"
+            @generatePdf="generatePdf" 
+            @generateCsv="generateCsv" 
+            @generateImage="generateImage"
+            @toggleTable="toggleTable" 
+            @toggleAnnotator="toggleAnnotator" 
+            :style="{
                 visibility: keepUserOptionState
                     ? userOptionsVisible
                         ? 'visible'
@@ -1230,7 +1252,7 @@ defineExpose({
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
-            @close="mutableConfig.showTable = false"
+            @close="closeTable"
         >
             <template #title v-if="FINAL_CONFIG.table.useDialog">
                 {{ tableComponent.title }}
@@ -1248,7 +1270,7 @@ defineExpose({
                     :config="dataTable.config" 
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
-                    @close="mutableConfig.showTable = false"
+                    @close="closeTable"
                 >
                     <template #th="{ th }">
                         <div v-html="th" style="display: flex; align-items: center"></div>

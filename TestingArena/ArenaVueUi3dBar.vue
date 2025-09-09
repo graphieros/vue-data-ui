@@ -210,7 +210,7 @@ const config = computed(() => {
 
 const step = ref(0)
 
-const selectedDataset = ref('simple') // simple | stacked
+const selectedDataset = ref('stacked') // simple | stacked
 
 const dataset = computed(() => datasets.value[selectedDataset.value])
 

@@ -91,6 +91,7 @@ const tableStep = ref(0);
 const legendStep = ref(0);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
+const userOptionsRef = ref(null);
 
 const yAxisLabel = ref(null);
 const serieLabels = ref(null);
@@ -870,7 +871,14 @@ watch(() => mutableConfig.value.showTable, v => {
             tableUnit.value.close()
         }
     }
-})
+});
+
+function closeTable() {
+    mutableConfig.value.showTable = false;
+    if (userOptionsRef.value) {
+        userOptionsRef.value.setTableIconState(false);
+    }
+}
 
 defineExpose({
     getData,
@@ -923,7 +931,7 @@ defineExpose({
         <div :id="`legend-top-${uid}`" />
 
         <UserOptions
-            ref="details"
+            ref="userOptionsRef"
             :key="`user_option_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
@@ -944,6 +952,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :tableDialog="FINAL_CONFIG.table.useDialog"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -1401,7 +1410,7 @@ defineExpose({
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
-            @close="mutableConfig.showTable = false"
+            @close="closeTable"
         >
             <template #title v-if="FINAL_CONFIG.table.useDialog">
                 {{ tableComponent.title }}
@@ -1420,7 +1429,7 @@ defineExpose({
                     :config="dataTable.config"
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
-                    @close="mutableConfig.showTable = false"
+                    @close="closeTable"
                 >
                     <template #th="{ th }">
                         <div v-html="th" style="display:flex;align-items:center"></div>

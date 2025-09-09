@@ -132,6 +132,10 @@ const props = defineProps({
     printScale: {
         type: Number,
         default: 2
+    },
+    tableDialog: {
+        type: Boolean,
+        default: false,
     }
 });
 
@@ -168,6 +172,14 @@ function toggleTable() {
         emit('toggleTable');
     }
 }
+
+function setTableIconState(state) {
+    isTableOpen.value = state;
+}
+
+defineExpose({
+    setTableIconState
+})
 
 const isOpen = ref(false);
 const preventClose = ref(true);
@@ -380,7 +392,8 @@ const isInfo = ref({
                     <slot name="optionTable"/>
                 </template>
                 <template v-else>
-                    <BaseIcon :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-if="tableDialog" :name="isTableOpen ? 'tableDialogClose' : 'tableDialogOpen'" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-else :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.table && !$slots.optionTable" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.table, 'button-info-left-visible': position === 'left' && isInfo.table }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.table }}

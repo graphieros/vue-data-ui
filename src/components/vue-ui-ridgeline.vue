@@ -106,6 +106,7 @@ const dialog = ref(null);
 const parentHeight = ref(0);
 const timeLabelsEls = ref(null);
 const tableUnit = ref(null);
+const userOptionsRef = ref(null);
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -945,7 +946,14 @@ watch(() => mutableConfig.value.showTable, v => {
             tableUnit.value.close()
         }
     }
-})
+});
+
+function closeTable() {
+    mutableConfig.value.showTable = false;
+    if (userOptionsRef.value) {
+        userOptionsRef.value.setTableIconState(false);
+    }
+}
 
 defineExpose({
     getData,
@@ -997,21 +1005,40 @@ defineExpose({
         </div>
 
         <!-- USER OPTIONS -->
-        <UserOptions ref="details" :key="`user_option_${step}`"
+        <UserOptions 
+            ref="userOptionsRef" 
+            :key="`user_option_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
-            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uid" :hasTooltip="false" :callbacks="FINAL_CONFIG.userOptions.callbacks" 
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasXls="FINAL_CONFIG.userOptions.buttons.csv" :hasTable="FINAL_CONFIG.userOptions.buttons.table"
-            :hasLabel="false" :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :color="FINAL_CONFIG.style.chart.color"
+            :isPrinting="isPrinting" 
+            :isImaging="isImaging" 
+            :uid="uid" 
+            :hasTooltip="false" 
+            :callbacks="FINAL_CONFIG.userOptions.callbacks" 
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" 
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv" 
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table"
+            :hasLabel="false" 
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
             :isFullscreen="isFullscreen"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
-            :chartElement="ridgelineChart" :position="FINAL_CONFIG.userOptions.position" :isTooltip="false"
+            :chartElement="ridgelineChart" 
+            :position="FINAL_CONFIG.userOptions.position" 
+            :isTooltip="false"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator" :style="{
-                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
-            }" @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf" @generateCsv="generateCsv"
-            @generateImage="generateImage" @toggleTable="toggleTable" @toggleAnnotator="toggleAnnotator">
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" 
+            :isAnnotation="isAnnotator"
+            :tableDialog="FINAL_CONFIG.table.useDialog"
+            :style="{ visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible' }" 
+            @toggleFullscreen="toggleFullscreen" 
+            @generatePdf="generatePdf" 
+            @generateCsv="generateCsv"
+            @generateImage="generateImage" 
+            @toggleTable="toggleTable" 
+            @toggleAnnotator="toggleAnnotator"
+        >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }" />
             </template>
@@ -1327,7 +1354,7 @@ defineExpose({
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
-            @close="mutableConfig.showTable = false"
+            @close="closeTable"
         >
             <template #title v-if="FINAL_CONFIG.table.useDialog">
                 {{ tableComponent.title }}
@@ -1346,7 +1373,7 @@ defineExpose({
                     :config="dataTable.config"
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
-                    @close="mutableConfig.showTable = false">
+                    @close="closeTable">
                     <template #th="{ th }">
                         <div v-html="th" />
                     </template>
