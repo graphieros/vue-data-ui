@@ -1412,7 +1412,9 @@ declare module "vue-data-ui" {
         | "world"
         | "eye"
         | "chartRidgeline"
-        | "chartChord";
+        | "chartChord"
+        | "tableDialogOpen"
+        | "tableDialogClose";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
