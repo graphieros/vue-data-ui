@@ -57,6 +57,7 @@ import ArenaVueUiWorld from "../TestingArena/ArenaVueUiWorld.vue";
 import ArenaVueUiTable from "../TestingArena/ArenaVueUiTable.vue";
 import ArenaVueUiRidgeline from "../TestingArena/ArenaVueUiRidgeline.vue";
 import ArenaVueUiChord from "../TestingArena/ArenaVueUiChord.vue"
+import ArenaVueUiDashboard from "../TestingArena/ArenaVueUiDashboard.vue";
 
 
   /**
@@ -122,10 +123,11 @@ const mapping = ref({
   VueUiTable: markRaw(ArenaVueUiTable), 
   VueUiRidgeline: markRaw(ArenaVueUiRidgeline), 
   VueUiChord: markRaw(ArenaVueUiChord), 
+  VueUiDashboard: markRaw(ArenaVueUiDashboard)
 })
 
 const options = computed(() => Object.keys(mapping.value));
-const selectedComponent = ref('VueUiWorld');
+const selectedComponent = ref('VueUiDashboard');
 
 /**
  * Legacy testing arena where some non chart components can be tested

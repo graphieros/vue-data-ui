@@ -5026,7 +5026,7 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 aspectRatio: '1/1.4141',
-                border: `1px solid ${COLOR_GREY_LIGHT}`
+                border: 'none'
             },
             item: {
                 backgroundColor: COLOR_WHITE,
@@ -5034,10 +5034,33 @@ export function useConfig() {
             },
             resizeHandles: {
                 backgroundColor: COLOR_BLACK,
-                border: 'none'
+            },
+        },
+        userOptions: {
+            show: true,
+            showOnChartHover: false,
+            keepStateOnChartLeave: true,
+            position: 'right',
+            buttons: {
+                pdf: true,
+                img: true,
+                annotator: true,
+            },
+            callbacks: {
+                pdf: null,
+                img: null,
+                annotator: null,
+            },
+            buttonTitles: {
+                pdf: 'Download PDF',
+                img: 'Download PNG',
+                annotator: 'Toggle annotator'
+            },
+            print: {
+                scale: 2,
+                filename: '',
             }
         },
-        allowPrint: true
     }
 
     const vue_ui_skeleton = {

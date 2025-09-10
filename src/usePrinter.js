@@ -23,7 +23,8 @@ export function usePrinter({
                         fileName,
                         orientation: options.orientation,
                         overflowTolerance: options.overflowTolerance,
-                        scale: options.scale
+                        scale: options.scale,
+                        aspectRatio: options.aspectRatio ?? null
                     });
                 } catch (error) {
                     console.error("Error generating PDF:", error);

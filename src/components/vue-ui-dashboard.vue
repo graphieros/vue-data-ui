@@ -4,6 +4,11 @@ import pdf from '../pdf';
 import { useNestedProp } from "../useNestedProp";
 import { useConfig } from '../useConfig';
 import { createUid } from '../lib';
+import BaseIcon from '../atoms/BaseIcon.vue';
+import { usePrinter } from '../usePrinter';
+import UserOptions from '../atoms/UserOptions.vue';
+import { useUserOptionState } from '../useUserOptionState';
+import PenAndPaper from '../atoms/PenAndPaper.vue';
 
 const builtInComponents = {
     VueDataUi : defineAsyncComponent(() => import("../components/vue-data-ui.vue")),
@@ -72,6 +77,10 @@ const builtInComponents = {
 
 const { vue_ui_dashboard: DEFAULT_CONFIG } = useConfig();
 
+const dashboardRef = ref(null);
+const userOptionsRef = ref(null);
+const svgRef = ref(null);
+
 const props = defineProps({
     dataset: Array,
     config: Object
@@ -92,11 +101,25 @@ function toggleLock() {
     isLocked.value = !isLocked.value;
 }
 
+watch(() => props.config, () => {
+    isLocked.value = FINAL_CONFIG.value.locked;
+    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+})
+
 const gridSize = 1;
-const items = ref(props.dataset.map((item, i) => ({
-    ...item,
-    index: i
-})));
+
+function setItems() {
+    return props.dataset.map((item, i) => ({
+        ...item,
+        index: i
+    }))
+}
+
+const items = ref(setItems());
+
+watch(() => props.dataset, () => {
+    items.value = setItems();
+})
 
 const resolvedItems = computed(() =>
     items.value.map(item => ({
@@ -114,7 +137,6 @@ const resizeStart = ref({ x: 0, y: 0 });
 const dashboardContainer = ref(null);
 const isDragOrResize = ref(false);
 const changeIndex = ref(null);
-const isPrinting = ref(false);
 const isPaused = ref(false);
 
 function handleInteraction(event) {
@@ -131,15 +153,14 @@ function handleInteractionEnd(event) {
     }
 }
 
-function generatePdf(){
-    isPrinting.value = true;
-    pdf({
-        domElement: document.getElementById(`vue-ui-dashboard_${uid.value}`),
-        fileName: 'vue-ui-dashboard'
-    }).finally(() => {
-        isPrinting.value = false;
-    });
-}
+const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
+    elementId: `vue-ui-dashboard_${uid.value}`,
+    fileName: FINAL_CONFIG.value.userOptions.print.filename || 'dashboard',
+    options: {
+        ...FINAL_CONFIG.value.userOptions.print,
+        aspectRatio: FINAL_CONFIG.value.style.board.aspectRatio
+    },
+});
 
 function startDrag (index) {
     if(isLocked.value) return;
@@ -190,31 +211,31 @@ function startResize(index, direction) {
 
 function checkDirection(item, deltaX, deltaY) {
     if (resizing.value.direction.includes('top')) {
-            const newHeight = item.height - (deltaY / dashboardContainer.value.offsetHeight) * 100;
+        const newHeight = item.height - (deltaY / dashboardContainer.value.offsetHeight) * 100;
+        if (newHeight >= gridSize) {
+            item.top += (deltaY / dashboardContainer.value.offsetHeight) * 100;
+            item.height = newHeight;
+        }
+    }
+    if (resizing.value.direction.includes('bottom')) {
+        const newHeight = item.height + (deltaY / dashboardContainer.value.offsetHeight) * 100;
             if (newHeight >= gridSize) {
-                item.top += (deltaY / dashboardContainer.value.offsetHeight) * 100;
-                item.height = newHeight;
-            }
+            item.height = newHeight;
         }
-        if (resizing.value.direction.includes('bottom')) {
-            const newHeight = item.height + (deltaY / dashboardContainer.value.offsetHeight) * 100;
-                if (newHeight >= gridSize) {
-                item.height = newHeight;
-            }
+    }
+    if (resizing.value.direction.includes('left')) {
+        const newWidth = item.width - (deltaX / dashboardContainer.value.offsetWidth) * 100;
+        if (newWidth >= gridSize) {
+            item.left += (deltaX / dashboardContainer.value.offsetWidth) * 100;
+            item.width = newWidth;
         }
-        if (resizing.value.direction.includes('left')) {
-            const newWidth = item.width - (deltaX / dashboardContainer.value.offsetWidth) * 100;
-            if (newWidth >= gridSize) {
-                item.left += (deltaX / dashboardContainer.value.offsetWidth) * 100;
-                item.width = newWidth;
-            }
+    }
+    if (resizing.value.direction.includes('right')) {
+        const newWidth = item.width + (deltaX / dashboardContainer.value.offsetWidth) * 100;
+        if (newWidth >= gridSize) {
+            item.width = newWidth;
         }
-        if (resizing.value.direction.includes('right')) {
-            const newWidth = item.width + (deltaX / dashboardContainer.value.offsetWidth) * 100;
-            if (newWidth >= gridSize) {
-                item.width = newWidth;
-            }
-        }
+    }
 }
 
 function onMouseMove(event) {
@@ -362,6 +383,21 @@ function getItemsPositions() {
     return items.value;
 }
 
+const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
+
+const isAnnotator = ref(false);
+function toggleAnnotator() {
+    isAnnotator.value = !isAnnotator.value;
+}
+
+function showOptions() {
+    setUserOptionsVisibility(true);
+}
+
+function hideOptions() {
+    setUserOptionsVisibility(false);
+}
+
 defineExpose({
     generatePdf,
     getItemsPositions,
@@ -371,25 +407,22 @@ defineExpose({
 
 <template>
     <div
+        :id="`vue-ui-dashboard_${uid}`" 
         @mousedown="handleInteraction"
         @mouseup="handleInteractionEnd"
         @touchstart="handleInteraction"
         @touchend="handleInteractionEnd"
+        @mouseenter="showOptions"
+        @mouseleave="hideOptions"
+        ref="dashboardRef"
+        :style="{
+            position: 'relative'
+        }"
     >
-        <div data-dom-to-png-ignore style="width: 100%; display:flex; justify-content: end;" v-if="FINAL_CONFIG.allowPrint">
-            <button class="vue-ui-dashboard-button" @click="generatePdf" :disabled="isPrinting" style="margin-top:12px" :style="`color:${FINAL_CONFIG.style.board.color}`">
-                <svg class="vue-ui-dashboard-print-icon" xmlns="http://www.w3.org/2000/svg" v-if="isPrinting" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" :stroke="FINAL_CONFIG.style.board.color" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M18 16v.01" />
-                    <path d="M6 16v.01" />
-                    <path d="M12 5v.01" />
-                    <path d="M12 12v.01" />
-                    <path d="M12 1a4 4 0 0 1 2.001 7.464l.001 .072a3.998 3.998 0 0 1 1.987 3.758l.22 .128a3.978 3.978 0 0 1 1.591 -.417l.2 -.005a4 4 0 1 1 -3.994 3.77l-.28 -.16c-.522 .25 -1.108 .39 -1.726 .39c-.619 0 -1.205 -.14 -1.728 -.391l-.279 .16l.007 .231a4 4 0 1 1 -2.212 -3.579l.222 -.129a3.998 3.998 0 0 1 1.988 -3.756l.002 -.071a4 4 0 0 1 -1.995 -3.265l-.005 -.2a4 4 0 0 1 4 -4z" />
-                </svg>
-                <span v-else>PDF</span>
-            </button>
-        </div>
-        <div class="vue-ui-dashboard-container" ref="dashboardContainer" :id="`vue-ui-dashboard_${uid}`" :style="`border:${borderBoard}; background:${boardColor}; aspect-ratio:${aspectRatio}`">
+        <div 
+            class="vue-ui-dashboard-container" 
+            ref="dashboardContainer" 
+            :style="`outline:${borderBoard}; background:${boardColor}; aspect-ratio:${aspectRatio};${isAnnotator ? 'pointer-events:none' : ''}`">
             <div 
                 class="vue-ui-dashboard-grid-container" 
                 ref="container" 
@@ -463,6 +496,72 @@ defineExpose({
                 </div>
             </div>
         </div>
+
+        <svg
+            :style="{
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                zIndex: 2
+            }"
+            ref="svgRef"
+        />
+
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator && dashboardContainer && svgRef" 
+            :color="FINAL_CONFIG.style.board.color"
+            :backgroundColor="FINAL_CONFIG.style.board.backgroundColor" 
+            :active="isAnnotator" 
+            :svgRef="svgRef"
+            @close="toggleAnnotator"
+            :style="{
+                zIndex: 2
+            }"
+        />
+
+        <UserOptions
+            v-if="((FINAL_CONFIG.allowPrint /* deprecated, but still ok */) || FINAL_CONFIG.userOptions.show) && (FINAL_CONFIG.userOptions.buttons.pdf || FINAL_CONFIG.userOptions.buttons.img)"
+            ref="userOptionsRef"
+            :backgroundColor="FINAL_CONFIG.style.board.backgroundColor"
+            :color="FINAL_CONFIG.style.board.color"
+            :isPrinting="isPrinting"
+            :isImaging="isImaging"
+            :uid="uid"
+            :position="FINAL_CONFIG.userOptions.position" 
+            :hasTooltip="false"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasXls="false"
+            :hasTable="false"
+            :hasLabel="false"
+            :hasFullscreen="false"
+            :chartElement="dashboardContainer"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" 
+            :isAnnotation="isAnnotator"
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            @generatePdf="generatePdf" 
+            @generateImage="generateImage"
+            @toggleAnnotator="toggleAnnotator"
+            :style="{ visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible', zIndex: 2 }"
+        >
+            <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
+                <slot name="menuIcon" v-bind="{ isOpen, color }" />
+            </template>
+            <template #optionPdf v-if="$slots.optionPdf">
+                <slot name="optionPdf" />
+            </template>
+            <template #optionImg v-if="$slots.optionImg">
+                <slot name="optionImg" />
+            </template>
+            <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
+                <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            </template>
+        </UserOptions>
     </div>
 </template>
 
@@ -513,6 +612,7 @@ defineExpose({
     background: v-bind(handleColor);
     opacity: 0;
     transition: opacity 0.1s ease-in-out;
+    z-index: 2;
 }
 
 .vue-ui-dashboard-resize-handle:hover {
@@ -544,20 +644,29 @@ defineExpose({
 }
 
 .vue-ui-dashboard-button {
-    margin: 6px 0;
+    all: unset;
+    padding: 3px;
     border-radius: 3px;
-    height: 30px;
-    border: 1px solid #b9bfc4;
+    height: auto;
+    border: 1px solid transparent;
     background: inherit;
     display: flex;
     align-items:center;
     justify-content: center;
-    font-family: inherit;
+    width: fit-content;
+    white-space: nowrap;
     cursor: pointer;
+    position: relative;
+    opacity: 0.9;
+    transition: opacity 0.2s ease-in-out;
 }
 .vue-ui-dashboard-button:hover {
-    background: rgba(0,0,0,0.05);
+   opacity: 1;
 }
+.vue-ui-dashboard-button:focus-visible {
+    outline: 1px solid #CCCCCC;
+}
+
 .vue-ui-dashboard-print-icon {
     animation: smartspin 0.5s infinite linear;
 }

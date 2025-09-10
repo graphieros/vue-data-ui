@@ -6,6 +6,7 @@ export default async function pdf({
     scale = 2,
     orientation = "auto", // 'auto' | 'portrait' | 'landscape'
     overflowTolerance = 0.2, // up to +n% height overflow gets squeezed onto 1 page
+    aspectRatio = null // example: '1/14141'
 }) {
     if (!domElement) return Promise.reject("No domElement provided");
 
@@ -22,6 +23,32 @@ export default async function pdf({
 
     const A4_PORTRAIT = { width: 595.28, height: 841.89 };
     const A4_LANDSCAPE = { width: 841.89, height: 595.28 };
+
+    const BASE_DIM = 1000;
+    function parseAspectRatio(ar) {
+        if (ar == null) return null;
+        if (typeof ar === "number" && ar > 0) return { w: 1, h: ar };
+        if (typeof ar === "string") {
+            const parts = ar.split("/").map((s) => s.trim());
+            if (parts.length === 2) {
+                const w = Number(parts[0]);
+                const h = Number(parts[1]);
+                if (w > 0 && h > 0) return { w, h };
+            } else if (parts.length === 1) {
+                const n = Number(parts[0]);
+                if (n > 0) return { w: 1, h: n };
+            }
+        }
+        return null;
+    }
+
+    const parsedAR = parseAspectRatio(aspectRatio);
+    const CUSTOM_PORTRAIT = parsedAR
+        ? { width: BASE_DIM, height: BASE_DIM * (parsedAR.h / parsedAR.w) }
+        : null;
+    const CUSTOM_LANDSCAPE = parsedAR
+        ? { width: CUSTOM_PORTRAIT.height, height: CUSTOM_PORTRAIT.width }
+        : null;
 
     if (isSafari) {
         // Warming up in Safari, because it never works on the first try
@@ -52,19 +79,21 @@ export default async function pdf({
                         : "l"
                     : orientation;
 
-            const a4 =
-                chosenOrientation === "l" ? A4_LANDSCAPE : A4_PORTRAIT;
+            const page =
+                chosenOrientation === "l" 
+                ? parsedAR ? CUSTOM_LANDSCAPE : A4_LANDSCAPE 
+                : parsedAR ? CUSTOM_PORTRAIT : A4_PORTRAIT;
 
-            const ratioToWidth = a4.width / contentWidth;
-            const ratioToHeight = a4.height / contentHeight;
+            const ratioToWidth = page.width / contentWidth;
+            const ratioToHeight = page.height / contentHeight;
             const scaledHeightAtWidth = contentHeight * ratioToWidth;
 
             let mode = "single"; // 'single' | 'multi'
             let ratio;
 
-            if (scaledHeightAtWidth <= a4.height + EPS) {
+            if (scaledHeightAtWidth <= page.height + EPS) {
                 ratio = ratioToWidth;
-            } else if (scaledHeightAtWidth <= a4.height * (1 + overflowTolerance)) {
+            } else if (scaledHeightAtWidth <= page.height * (1 + overflowTolerance)) {
                 ratio = Math.min(ratioToWidth, ratioToHeight);
             } else {
                 mode = "multi";
@@ -74,19 +103,19 @@ export default async function pdf({
             const imgWidth = contentWidth * ratio;
             const imgHeight = contentHeight * ratio;
 
-            const x = (a4.width - imgWidth) / 2;
+            const x = (page.width - imgWidth) / 2;
 
             const pdf = new JsPDF({
                 orientation: chosenOrientation,
                 unit: "pt",
-                format: "a4"
+                format: parsedAR ? [page.width, page.height] : "a4"
             });
 
             if (mode === "single") {
-                const y = (a4.height - imgHeight) / 2;
+                const y = (page.height - imgHeight) / 2;
                 pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight, "", "FAST");
             } else {
-                const pageHeightInImagePx = a4.height / ratio;
+                const pageHeightInImagePx = page.height / ratio;
 
                 let leftHeight = contentHeight;
                 let positionY = 0;
@@ -103,7 +132,7 @@ export default async function pdf({
                         "FAST"
                     );
                     leftHeight -= pageHeightInImagePx;
-                    positionY -= a4.height;
+                    positionY -= page.height;
                     if (leftHeight > EPS) pdf.addPage();
                 }
             }
