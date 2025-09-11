@@ -21,8 +21,10 @@ const model= ref([
 
     { key: 'userOptions.show', def: true, type: 'checkbox' },
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    
+
 ])
+
+// TODO: add xy with zoom and fix bubbling fuckup
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -35,6 +37,14 @@ const config = computed(() => {
 })
 
 const step = ref(0)
+
+const xyDataset = ref([
+  {
+    name: 'Series A',
+    type: 'line',
+    series: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 134, 233, 377, 610]
+  }
+])
 
 const gaugeDataset = ref({
   base: 0,
@@ -99,14 +109,43 @@ const dataset = ref([
         left: 50,
         top: 4,
         component: "VueUiOnion",
-        props: { config: { userOptions: { show: false }, responsive: false }, dataset: onionDataset.value },
+        props: { 
+          config: { 
+            userOptions: { show: false }, 
+            responsive: false,
+            style: {
+              chart: {
+                title: {
+                  text: 'Title',
+                  subtitle: {
+                    text: 'Subtitle'
+                  }
+                }
+              }
+            } 
+          },
+          dataset: onionDataset.value },
+    },
+    {
+      id: 4,
+      width: 40,
+      height: 20,
+      left: 10,
+      top: 30,
+      component: "VueUiXy",
+      props: {
+        dataset: xyDataset.value,
+        config: {
+          responsive: false,
+        }
+      }
     },
     {
         id: 3,
         width: 20,
         height: 5,
         left: 10,
-        top: 50,
+        top: 70,
         component: markRaw(SomeTest),
         props: { str: 'SOME TEST' },
     },
@@ -115,6 +154,12 @@ const dataset = ref([
 </script>
 
 <template>
+  
+  <div style="width: 800px; height: 800px; resize: both; overflow: auto; background: white">    
+    <LocalVueUiDashboard :dataset="dataset" :config="config">
+    </LocalVueUiDashboard>
+  </div>
+
     <Box>
         <template #title>VueUiDashboard</template>
         
