@@ -505,7 +505,7 @@ defineExpose({
                 position: 'absolute',
                 top: 0,
                 left: 0,
-                zIndex: 2
+                zIndex: resolvedItems.length + 1
             }"
             ref="svgRef"
         />
@@ -518,7 +518,7 @@ defineExpose({
             :svgRef="svgRef"
             @close="toggleAnnotator"
             :style="{
-                zIndex: 2
+                zIndex: resolvedItems.length + 1
             }"
         />
 
@@ -547,7 +547,7 @@ defineExpose({
             @generatePdf="generatePdf" 
             @generateImage="generateImage"
             @toggleAnnotator="toggleAnnotator"
-            :style="{ visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible', zIndex: 2 }"
+            :style="{ visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible', zIndex: resolvedItems.length + 1 }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }" />
@@ -661,7 +661,7 @@ defineExpose({
     transition: opacity 0.2s ease-in-out;
 }
 .vue-ui-dashboard-button:hover {
-   opacity: 1;
+    opacity: 1;
 }
 .vue-ui-dashboard-button:focus-visible {
     outline: 1px solid #CCCCCC;
@@ -676,6 +676,21 @@ defineExpose({
     }
     to {
         transform: rotate(360deg);
+    }
+}
+
+/** Override legend font size to make it responsive */
+.vue-ui-dashboard-container {
+    container-type: inline-size;
+    --legend-font-size: clamp(6px, 1.2cqw, 24px);
+    --title-font-size: clamp(8px, 2cqw, 28px);
+    --subtitle-font-size: clamp(6px, 1.5cqw, 24px);
+}
+
+@supports not (font-size: 1cqw) {
+    .vue-ui-dashboard-container {
+        --title-font-size: clamp(8px, 2cqw, 28px);
+        --subtitle-font-size: clamp(6px, 1.5cqw, 24px);
     }
 }
 </style>
