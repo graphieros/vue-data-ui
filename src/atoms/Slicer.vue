@@ -372,6 +372,11 @@ const startDragging = (event) => {
     if (!props.enableSelectionDrag) return;
 
     const isTouch = event.type === 'touchstart';
+
+    if(!isTouch) {
+        event.stopPropagation();
+    }
+    
     const touch0 =
         isTouch && event.targetTouches && event.targetTouches[0] ? event.targetTouches[0] : null;
     const target = isTouch ? (touch0 ? touch0.target : null) : event.target;

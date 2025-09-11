@@ -436,6 +436,11 @@ const startDragging = (event) => {
     if (!props.enableSelectionDrag) return;
 
     const isTouch = event.type === 'touchstart';
+
+    if(!isTouch) {
+        event.stopPropagation();
+    }
+
     const touch0 = isTouch && event.targetTouches && event.targetTouches[0] ? event.targetTouches[0] : null;
     const target = isTouch ? (touch0 ? touch0.target : null) : event.target;
 
@@ -445,10 +450,10 @@ const startDragging = (event) => {
     isDragging.value = true;
     initialMouseX.value = isTouch ? (touch0 ? touch0.clientX : 0) : event.clientX;
 
-    activeMoveEvent    = isTouch ? 'touchmove' : 'mousemove';
-    activeEndEvent     = isTouch ? 'touchend'  : 'mouseup';
-    activeMoveHandler  = isTouch ? handleTouchDragging : handleDragging;
-    activeEndHandler   = isTouch ? stopTouchDragging   : stopDragging;
+    activeMoveEvent = isTouch ? 'touchmove' : 'mousemove';
+    activeEndEvent = isTouch ? 'touchend'  : 'mouseup';
+    activeMoveHandler = isTouch ? handleTouchDragging : handleDragging;
+    activeEndHandler = isTouch ? stopTouchDragging   : stopDragging;
 
     window.addEventListener(activeMoveEvent, activeMoveHandler, { passive: false });
     window.addEventListener(activeEndEvent,  activeEndHandler);
