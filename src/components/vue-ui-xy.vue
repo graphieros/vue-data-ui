@@ -242,7 +242,7 @@ function prepareConfig() {
         mergedConfig.chart.grid.labels.yAxis.groupColor = null;
     }
 
-    if (props.config && props.config.chart.annotations && Array.isArray(props.config.chart.annotations) && props.config.chart.annotations.length) {
+    if (props.config && hasDeepProperty(props.config, 'chart.annotations') && Array.isArray(props.config.chart.annotations) && props.config.chart.annotations.length) {
         mergedConfig.chart.annotations = props.config.chart.annotations.map(annotation => {
             return useNestedProp({
                 defaultConfig: DEFAULT_CONFIG.chart.annotations[0],
@@ -2936,7 +2936,6 @@ defineExpose({
         <div ref="noTitle" v-if="hasOptionsNoTitle" class="vue-data-ui-no-title-space"
             :style="`height:36px; width: 100%; background:transparent`" />
 
-        <!-- TITLE AS OUTSIDE DIV -->
         <div ref="chartTitle" class="vue-ui-xy-title" v-if="FINAL_CONFIG.chart.title.show"
             :style="`font-family:${FINAL_CONFIG.chart.fontFamily}`">
             <Title :key="`title_${titleStep}`" :config="{
@@ -4216,19 +4215,26 @@ defineExpose({
 
         <!-- LEGEND -->
         <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.chart.legend.position === 'top' ? `#legend-top-${uniqueId}` : `#legend-bottom-${uniqueId}`">
-            <div ref="chartLegend" data-cy="xy-div-legend" v-if="FINAL_CONFIG.chart.legend.show" class="vue-ui-xy-legend"
-                :style="`font-size:${FINAL_CONFIG.chart.legend.fontSize}px`">
+            <div 
+                ref="chartLegend" 
+                data-cy="xy-div-legend" 
+                v-if="FINAL_CONFIG.chart.legend.show" 
+                class="vue-ui-xy-legend"
+                :style="{
+                    fontSize: `var(--legend-font-size, ${(FINAL_CONFIG.chart.legend.fontSize ?? 14)}px)`
+                }"
+            >
                 <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`"
                     :key="`div_legend_item_${i}`" @click="segregate(legendItem)"
                     :class="{ 'vue-ui-xy-legend-item-alone': absoluteDataset.length === 1 , 'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated': segregatedSeries.includes(legendItem.id) }">
-                    <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="14" width="20">
+                    <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="1em" width="1.43em">
                         <rect x="0" y="7.5" rx="1.5" :stroke="FINAL_CONFIG.chart.backgroundColor" :stroke-width="0.5"
                             height="3" width="20" :fill="legendItem.color" />
                         <Shape :plot="{ x: 10, y: 9 }" :radius="4" :color="legendItem.color"
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'"
                             :stroke="FINAL_CONFIG.chart.backgroundColor" :strokeWidth="0.5" />
                     </svg>
-                    <svg v-else-if="icons[legendItem.type] === 'bar'" viewBox="0 0 40 40" height="14" width="14">
+                    <svg v-else-if="icons[legendItem.type] === 'bar'" viewBox="0 0 40 40" height="1em" width="1em">
                         <rect 
                             v-if="icons[legendItem.type] === 'bar' && $slots.pattern" 
                             x="4" 
@@ -4250,7 +4256,7 @@ defineExpose({
                             :fill="$slots.pattern ? `url(#pattern_${uniqueId}_${legendItem.slotAbsoluteIndex})` : legendItem.color" 
                         />
                     </svg>
-                    <svg v-else viewBox="0 0 12 12" height="14" width="14">
+                    <svg v-else viewBox="0 0 12 12" height="1em" width="1em">
                         <Shape :plot="{ x: 6, y: 6 }" :radius="5" :color="legendItem.color"
                             :shape="['triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star'].includes(legendItem.shape) ? legendItem.shape : 'circle'" />
                     </svg>
