@@ -219,13 +219,41 @@ onMounted(() => {
     }, 3000)
 })
 
+const config = ref({
+  style: {
+    exportMenu: {
+      show: true,
+    }
+  }
+})
+
+function pageChange(data) {
+  console.log(data)
+}
+
+const table = ref(null);
+
+function nav(dir) {
+  if (table.value) {
+    table.value.navigate(dir)
+  }
+}
+
+onMounted(() => {
+  if (table.value) {
+    console.log(table.value.getCurrentPageData())
+  }
+})
+
 </script>
 
 <template>
+  <button @click="nav('previous')">PREV</button>
+  <button @click="nav('next')">NEXT</button>
     <div style="background: white">
-        <LocalVueUiTable :dataset="dataset"/>
-        <LocalVueDataUi component="VueUiTable" :dataset="dataset"/>
-        <VueUiTable :dataset="dataset"/>
-        <VueDataUi component="VueUiTable" :dataset="dataset"/>
+        <LocalVueUiTable ref="table" :dataset="dataset" :config="config" @page-change="pageChange"/>
+        <LocalVueDataUi component="VueUiTable" :dataset="dataset" :config="config"/>
+        <VueUiTable :dataset="dataset" :config="config"/>
+        <VueDataUi component="VueUiTable" :dataset="dataset" :config="config"/>
     </div>
 </template>

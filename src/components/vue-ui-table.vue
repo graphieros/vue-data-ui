@@ -1,6 +1,6 @@
 <template>
     <div class="vue-ui-table-main" :style="`font-family: ${FINAL_CONFIG.fontFamily}`">
-        <div class="vue-ui-table-export-hub">
+        <div class="vue-ui-table-export-hub" v-if="FINAL_CONFIG.style.exportMenu.show">
             <button @click="isExportRequest = !isExportRequest" v-html="icons.export"
                 :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color}`" />
             <div class="vue-ui-table-export-hub-dropdown" :data-is-open="isExportRequest || 'false'"
@@ -40,7 +40,10 @@
         <div class="vue-ui-table__wrapper" :style="`max-height:${FINAL_CONFIG.maxHeight}px`" ref="tableWrapper">
             <table class="vue-ui-table">
                 <!-- TABLE HEAD -->
-                <thead id="tableHead">
+                <thead id="tableHead" class="vue-ui-table__head" :style="{
+                    background: FINAL_CONFIG.style.th.backgroundColor,
+                    boxShadow: `-1px 0 0 ${FINAL_CONFIG.style.th.backgroundColor}`
+                }">
                     <!-- HEADERS -->
                     <tr>
                         <th class="invisible-cell"></th>
@@ -395,7 +398,7 @@
             {{ FINAL_CONFIG.translations.totalRows }} : {{ dataset.body.length }} |
             {{ FINAL_CONFIG.translations.paginatorLabel }} :
             <select id="paginatorSelector" v-model.number="itemsPerPage" v-if="bodyCopy.length > 10"
-                @change="resetSelection"
+                @change="resetSelection(); onPageChange();"
                 :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border}`">
                 <template v-for="(option, i) in paginatorOptions">
                     <option :key="`paginator_option_${i}`"
@@ -572,6 +575,7 @@ export default {
         }
     },
     components: { VueUiXy, VueUiDonut },
+    emits: ['page-change'],
     data() {
         const uid = `vue-ui-table-${Math.random()}`;
         return {
@@ -1245,15 +1249,35 @@ export default {
                 return this.multiselects[index].length === this.getDropdownOptions(index).length;
             }
         },
+        getCurrentPageData() {
+            return {
+                totalPages: this.pages.length,
+                itemsPerPage: this.itemsPerPage,
+                currentPage: this.currentPage,
+                currentPageData: this.visibleRows.map(r => r.td)
+            }
+        },
+        onPageChange() {
+            this.$emit('page-change', this.getCurrentPageData());
+        },
         navigate(direction) {
             this.resetSelection();
             if (direction === 'next' && this.currentPage < this.pages.length) {
+                if (this.currentPage + 1 > this.pages.length - 1) {
+                    return;
+                }
                 this.currentPage += 1;
             } else if (direction === 'previous' && this.currentPage >= 1) {
                 this.currentPage -= 1;
             } else {
+                if (direction - 1 < 0 || direction > this.pages.length || direction === 'previous') {
+                    return;
+                }
                 this.currentPage = direction - 1;
             }
+
+            this.onPageChange();
+
             const table = this.$refs.tableWrapper;
             table.scrollTo({
                 top: 0,
@@ -1700,6 +1724,7 @@ export default {
             } else {
                 this.currentPage = Number(event.target.value);
             }
+            this.onPageChange();
         },
 
         // DONUTS
@@ -2176,6 +2201,7 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main td.vue-ui-table-td-iteration {
+    min-width: 48px;
     font-size: 12px;
     font-variant-numeric: tabular-nums;
     text-align: right;
@@ -2310,9 +2336,9 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main .vue-ui-table-export-hub {
-    left: 5px;
+    left: 20px;
     position: absolute;
-    top: 0;
+    top: 3px;
     z-index: 1001;
 }
 

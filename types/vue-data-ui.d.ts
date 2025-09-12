@@ -5554,6 +5554,7 @@ declare module "vue-data-ui" {
                 };
             };
             exportMenu?: {
+                show?: boolean;
                 backgroundColor?: string;
                 color?: string;
                 buttons?: {
@@ -5645,6 +5646,13 @@ declare module "vue-data-ui" {
         };
         useChart?: boolean;
     };
+
+    export type VueUiTablePageChangeEvent = {
+        totalPages: number;
+        itemsPerPage: number;
+        currentPage: number;
+        currentPageData: Array<Array<string | number>>
+    }
 
     export const VueUiTable: DefineComponent<{
         config?: VueUiTableConfig;

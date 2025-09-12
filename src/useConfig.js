@@ -5327,6 +5327,7 @@ export function useConfig() {
                 }
             },
             exportMenu: {
+                show: true,
                 backgroundColor: COLOR_GREY_LIGHT,
                 color: COLOR_BLACK,
                 buttons: {
