@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onUpdated, watchEffect } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onUpdated } from 'vue';
 import BaseIcon from './BaseIcon.vue';
 import { useResponsive } from '../useResponsive';
 import { throttle } from '../canvas-lib';

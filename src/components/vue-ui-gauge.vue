@@ -19,9 +19,7 @@ import {
     XMLNS,
     calcMarkerOffsetX,
     treeShake,
-    autoFontSize,
     createTSpansFromLineBreaksOnX,
-    createTSpansFromLineBreaksOnY,
     checkNaN,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";

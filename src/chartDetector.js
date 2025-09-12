@@ -75,9 +75,6 @@ export function detectChart({dataset, barLineSwitch = 6, debug = true}) {
 
         }
     }
-    
-    // IS MATRIX
-    const isMatrix = !isSimpleArray(dataset) ? false : [...new Set(dataset.flatMap(d => Array.isArray(d)))][0];
 
     return {
         dataset,
@@ -86,7 +83,6 @@ export function detectChart({dataset, barLineSwitch = 6, debug = true}) {
         maxSeriesLength
     }
 }
-
 
 // UTILS
 

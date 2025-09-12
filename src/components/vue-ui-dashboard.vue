@@ -1,10 +1,8 @@
 <script setup>
 import { ref, watch, computed, defineAsyncComponent } from 'vue';
-import pdf from '../pdf';
 import { useNestedProp } from "../useNestedProp";
 import { useConfig } from '../useConfig';
 import { createUid } from '../lib';
-import BaseIcon from '../atoms/BaseIcon.vue';
 import { usePrinter } from '../usePrinter';
 import UserOptions from '../atoms/UserOptions.vue';
 import { useUserOptionState } from '../useUserOptionState';

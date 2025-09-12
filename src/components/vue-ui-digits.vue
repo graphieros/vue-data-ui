@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import Digit from '../atoms/Digit.vue';
 import { useNestedProp } from "../useNestedProp";
 import { XMLNS } from "../lib";

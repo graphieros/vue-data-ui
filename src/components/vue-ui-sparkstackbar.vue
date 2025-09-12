@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, useSlots, defineAsyncComponent, toRefs, nextTick } from "vue";
+import { ref, computed, onMounted, watch, useSlots, defineAsyncComponent, toRefs } from "vue";
 import {
     applyDataLabel,
     convertColorToHex, 

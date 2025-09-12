@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, nextTick } from "vue";
+import { ref, onMounted, onBeforeUnmount, computed } from "vue";
 import vClickOutside from '../directives/vClickOutside';
 import BaseIcon from "./BaseIcon.vue";
 import img from "../img";
