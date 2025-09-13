@@ -1770,7 +1770,8 @@ defineExpose({
         />
     
             <!-- TOOLTIP -->
-            <Tooltip :show="mutableConfig.showTooltip && isTooltip"
+            <Tooltip 
+                :show="mutableConfig.showTooltip && isTooltip"
                 :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor" 
                 :color="FINAL_CONFIG.style.chart.tooltip.color"
                 :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize" 
@@ -1786,6 +1787,8 @@ defineExpose({
                 :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
                 :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
                 :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
+                :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
+                :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
             >
                 <template #tooltip-before>
                     <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>

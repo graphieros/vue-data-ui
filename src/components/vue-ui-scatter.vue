@@ -1947,6 +1947,8 @@ defineExpose({
             :isCustom="FINAL_CONFIG.style.tooltip.customFormat && typeof FINAL_CONFIG.style.tooltip.customFormat === 'function'"
             :smooth="FINAL_CONFIG.style.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.tooltip.backdropFilter"
+            :smoothForce="FINAL_CONFIG.style.tooltip.smoothForce"
+            :smoothSnapThreshold="FINAL_CONFIG.style.tooltip.smoothSnapThreshold"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>

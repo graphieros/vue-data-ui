@@ -1699,7 +1699,8 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <Tooltip :show="mutableConfig.showTooltip && isTooltip"
+        <Tooltip 
+            :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
             :color="FINAL_CONFIG.style.chart.tooltip.color"
             :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
@@ -1707,11 +1708,16 @@ defineExpose({
             :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
             :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
             :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
-            :position="FINAL_CONFIG.style.chart.tooltip.position" :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
-            :parent="nestedDonutsChart" :content="tooltipContent" :isFullscreen="isFullscreen"
+            :position="FINAL_CONFIG.style.chart.tooltip.position" 
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :parent="nestedDonutsChart" 
+            :content="tooltipContent" 
+            :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.style.chart.tooltip.customFormat)"
             :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
+            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
+            :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
