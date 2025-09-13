@@ -1,121 +1,136 @@
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onUpdated } from 'vue';
-import BaseIcon from './BaseIcon.vue';
-import { useResponsive } from '../useResponsive';
+import { 
+    computed, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    onUpdated,
+    ref, 
+    watch, 
+} from 'vue';
+import { 
+    adaptColorToBackground, 
+    createSmoothPath, 
+    createStraightPath, 
+    createUid, 
+    isFunction,
+    XMLNS,
+} from '../lib';
 import { throttle } from '../canvas-lib';
-import { XMLNS, adaptColorToBackground, createSmoothPath, createStraightPath, createUid, isFunction } from '../lib';
+import { useResponsive } from '../useResponsive';
+import BaseIcon from './BaseIcon.vue';
 
 const props = defineProps({
-    background: { 
-        type: String, 
-        default: '#FFFFFF' 
+    background: {
+        type: String,
+        default: '#FFFFFF'
     },
-    borderColor: { 
-        type: String, 
-        default: '#FFFFFF' 
+    borderColor: {
+        type: String,
+        default: '#FFFFFF'
     },
-    fontSize: { 
-        type: Number, 
-        default: 14 
+    fontSize: {
+        type: Number,
+        default: 14
     },
-    labelLeft: { 
-        type: [String, Number], 
-        default: '' 
+    labelLeft: {
+        type: [String, Number],
+        default: ''
     },
-    labelRight: { 
-        type: [String, Number], 
-        default: '' 
+    labelRight: {
+        type: [String, Number],
+        default: ''
     },
-    textColor: { 
-        type: String, 
-        default: '#1A1A1A' 
+    textColor: {
+        type: String,
+        default: '#1A1A1A'
     },
-    inputColor: { 
-        type: String, 
-        default: '#1A1A1A' 
+    inputColor: {
+        type: String,
+        default: '#1A1A1A'
     },
-    max: { 
-        type: Number, 
-        default: 0 
+    max: {
+        type: Number,
+        default: 0
     },
-    min: { 
-        type: Number, 
-        default: 0 
+    min: {
+        type: Number,
+        default: 0
     },
-    selectColor: { 
-        type: String, 
-        default: '#4A4A4A' 
+    selectColor: {
+        type: String,
+        default: '#4A4A4A'
     },
-    useResetSlot: { 
-        type: Boolean, 
-        default: false 
+    useResetSlot: {
+        type: Boolean,
+        default: false
     },
-    valueStart: { 
-        type: [Number, String], 
-        default: 0 
+    valueStart: {
+        type: [Number, String],
+        default: 0
     },
-    valueEnd: { 
-        type: [Number, String], 
-        default: 0 
+    valueEnd: {
+        type: [Number, String],
+        default: 0
     },
-    minimap: { 
-        type: Array, 
-        default: [] 
+    minimap: {
+        type: Array,
+        default: []
     },
-    smoothMinimap: { 
-        type: Boolean, 
-        default: false 
+    smoothMinimap: {
+        type: Boolean,
+        default: false
     },
-    minimapSelectedColor: { 
-        type: String, 
-        default: '#1f77b4' 
+    minimapSelectedColor: {
+        type: String,
+        default: '#1f77b4'
     },
-    minimapSelectionRadius: { 
-        type: Number, 
-        default: 12 
+    minimapSelectionRadius: {
+        type: Number,
+        default: 12
     },
-    minimapLineColor: { 
-        type: String, 
-        default: '#2D353C' 
+    minimapLineColor: {
+        type: String,
+        default: '#2D353C'
     },
-    minimapSelectedColorOpacity: { 
-        type: Number, 
-        default: 0.2 
+    minimapSelectedColorOpacity: {
+        type: Number,
+        default: 0.2
     },
-    minimapSelectedIndex: { 
-        type: Number, 
-        default: null 
+    minimapSelectedIndex: {
+        type: Number,
+        default: null
     },
-    minimapIndicatorColor: { 
-        type: String, 
-        default: '#2D353C' 
+    minimapIndicatorColor: {
+        type: String,
+        default: '#2D353C'
     },
-    refreshStartPoint: { 
-        type: Number, 
-        default: 0 
+    refreshStartPoint: {
+        type: Number,
+        default: 0
     },
-    refreshEndPoint: { 
-        type: Number, 
-        default: null 
+    refreshEndPoint: {
+        type: Number,
+        default: null
     },
-    enableRangeHandles: { 
-        type: Boolean, 
-        default: false 
+    enableRangeHandles: {
+        type: Boolean,
+        default: false
     },
-    enableSelectionDrag: { 
-        type: Boolean, 
-        default: true 
+    enableSelectionDrag: {
+        type: Boolean,
+        default: true
     },
-    verticalHandles: { 
-        type: Boolean, 
-        default: false 
+    verticalHandles: {
+        type: Boolean,
+        default: false
     },
-    timeLabels: { 
-        type: Array 
+    timeLabels: {
+        type: Array
     },
-    isPreview: { 
-        type: Boolean, 
-        default: false 
+    isPreview: {
+        type: Boolean,
+        default: false
     },
     preciseLabels: {
         type: Array,
@@ -184,7 +199,7 @@ let _commitTimeout = null;
 function commitImmediately() {
     clearTimeout(_commitTimeout);
     emit('update:start', Number(startValue.value));
-    emit('update:end',   Number(endValue.value));
+    emit('update:end', Number(endValue.value));
     isRanging.value = false;
 }
 
@@ -192,18 +207,18 @@ const endpoint = computed(() => {
     return props.refreshEndPoint === null ? props.max : props.refreshEndPoint;
 });
 
-const emit = defineEmits(['futureStart','futureEnd', 'update:start', 'update:end', 'reset', 'trapMouse']);
+const emit = defineEmits(['futureStart', 'futureEnd', 'update:start', 'update:end', 'reset', 'trapMouse']);
 
 const highlightStyle = computed(() => {
     const range = props.max - props.min;
     const startPercent = ((startValue.value - props.min) / range) * 100;
     const endPercent = ((endValue.value - props.min) / range) * 100;
     const centerPercent = (startPercent + endPercent) / 2;
-    const centerAdjust = overflowsRight.value 
+    const centerAdjust = overflowsRight.value
         ? `calc(${centerPercent}% - ${mergeTooltip.value.width}px)`
-        : overflowsLeft.value 
-        ? `calc(${centerPercent}%)`
-        : `calc(${centerPercent}% - ${mergeTooltip.value.width / 2}px)`;
+        : overflowsLeft.value
+            ? `calc(${centerPercent}%)`
+            : `calc(${centerPercent}% - ${mergeTooltip.value.width / 2}px)`;
 
     return {
         left: `${startPercent}%`,
@@ -296,25 +311,25 @@ onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
-const absLen  = computed(() => Math.max(1, props.max - props.min));
+const absLen = computed(() => Math.max(1, props.max - props.min));
 const miniLen = computed(() => Math.max(1, props.minimap.length));
 const scaleAbsToMini = computed(() => miniLen.value / absLen.value);
 
 function absToMiniStart(i) {
-  const v = Math.floor((i - props.min) * scaleAbsToMini.value);
+    const v = Math.floor((i - props.min) * scaleAbsToMini.value);
     return Math.min(Math.max(0, v), miniLen.value);
 }
 
 function absToMiniEnd(i) {
-  const v = Math.ceil((i - props.min) * scaleAbsToMini.value);
+    const v = Math.ceil((i - props.min) * scaleAbsToMini.value);
     return Math.min(Math.max(0, v), miniLen.value);
 }
 
 const startMini = computed(() => absToMiniStart(startValue.value));
-const endMini   = computed(() => absToMiniEnd(endValue.value));
+const endMini = computed(() => absToMiniEnd(endValue.value));
 
 const unitWidthX = computed(() => {
-    if(!props.minimap.length) return 0;
+    if (!props.minimap.length) return 0;
     return svgMinimap.value.width / props.minimap.length;
 });
 
@@ -341,7 +356,7 @@ const minimapLine = computed(() => {
         selectionSet,
         sliced,
         firstPlot: points[s],
-        lastPlot : points[Math.max(0, e - 1)],
+        lastPlot: points[Math.max(0, e - 1)],
     };
 });
 
@@ -357,9 +372,9 @@ const selectionRectCoordinates = computed(() => {
 const selectedTrap = ref(props.minimapSelectedIndex);
 
 watch(() => props.minimapSelectedIndex, (v) => {
-    if ([null, undefined].includes(v)) { 
-        selectedTrap.value = null; 
-        return; 
+    if ([null, undefined].includes(v)) {
+        selectedTrap.value = null;
+        return;
     }
     selectedTrap.value = absToMiniStart(props.valueStart) + v;
 }, { immediate: true });
@@ -413,31 +428,36 @@ const dragThreshold = computed(() => {
 });
 
 const selectionWidth = computed(() => {
-  return ((wrapperWidth.value - 48) / (props.max - props.min)) * currentRange.value;
+    return ((wrapperWidth.value - 48) / (props.max - props.min)) * currentRange.value;
 });
 
-const RA_SPECIAL_MAGIC_NUMBER = ref(2.5);
+const TRACK_PADDING = 48;
 
-const flooredDatapointsToWidth = computed(() => {
-    const w = wrapperWidth.value - 48;
-    return Math.ceil(
-        (props.max - props.min) /
-        ((w - selectionWidth.value) / RA_SPECIAL_MAGIC_NUMBER.value)
-    );
+const usablePx = computed(() => {
+    return Math.max(1, wrapperWidth.value - TRACK_PADDING - selectionWidth.value);
 });
+
+const usableSteps = computed(() => {
+    return Math.max(1, (props.max - props.min) - currentRange.value);
+});
+
+const indicesPerPixel = computed(() => usableSteps.value / usablePx.value);
+const dragStartX = ref(0);
+const dragStartStart = ref(0);
+const dragStartEnd = ref(0);
+const ippAtStart = ref(0);
 
 let activeMoveEvent = null;
-let activeEndEvent  = null;
+let activeEndEvent = null;
 let activeMoveHandler = null;
-let activeEndHandler  = null;
+let activeEndHandler = null;
 
 const startDragging = (event) => {
     showTooltip.value = true;
     if (!props.enableSelectionDrag) return;
 
     const isTouch = event.type === 'touchstart';
-
-    if(!isTouch) {
+    if (!isTouch) {
         event.stopPropagation();
     }
 
@@ -448,15 +468,21 @@ const startDragging = (event) => {
     if (target.classList && target.classList.contains('range-handle')) return;
 
     isDragging.value = true;
-    initialMouseX.value = isTouch ? (touch0 ? touch0.clientX : 0) : event.clientX;
+
+    const x = isTouch ? (touch0 ? touch0.clientX : 0) : event.clientX;
+    initialMouseX.value = x;
+    dragStartX.value = x;
+    dragStartStart.value = startValue.value;
+    dragStartEnd.value = endValue.value;
+    ippAtStart.value = indicesPerPixel.value;
 
     activeMoveEvent = isTouch ? 'touchmove' : 'mousemove';
-    activeEndEvent = isTouch ? 'touchend'  : 'mouseup';
+    activeEndEvent = isTouch ? 'touchend' : 'mouseup';
     activeMoveHandler = isTouch ? handleTouchDragging : handleDragging;
-    activeEndHandler = isTouch ? stopTouchDragging   : stopDragging;
+    activeEndHandler = isTouch ? stopTouchDragging : stopDragging;
 
     window.addEventListener(activeMoveEvent, activeMoveHandler, { passive: false });
-    window.addEventListener(activeEndEvent,  activeEndHandler);
+    window.addEventListener(activeEndEvent, activeEndHandler);
 };
 
 function handleDragging(event) {
@@ -470,10 +496,7 @@ function handleTouchDragging(event) {
 
     const target = event.target;
     if (!(target instanceof Element)) return;
-
-    // Allow scrolling when the touch is outside the component
     if (!zoomWrapper.value.contains(target)) return;
-
     if (target.classList && target.classList.contains('range-handle')) return;
 
     event.preventDefault();
@@ -486,26 +509,20 @@ function handleTouchDragging(event) {
 
 function updateDragging(currentX) {
     if (!isDragging.value) return;
-    const deltaX = currentX - initialMouseX.value;
-    if (Math.abs(deltaX) > dragThreshold.value) {
-        if (deltaX > 0) {
-            const v = Math.min(props.max, endValue.value + flooredDatapointsToWidth.value);
-            end.value = v;
-            start.value = v - currentRange.value;
-        } else {
-            const u = Math.max(props.min, startValue.value - flooredDatapointsToWidth.value);
-            start.value = u;
-            end.value = u + currentRange.value;
-        }
-        initialMouseX.value = currentX;
-    }
+    const dx = currentX - dragStartX.value;
+    const shift = dx * ippAtStart.value;
+    let newStart = Math.round(dragStartStart.value + shift);
+    newStart = Math.max(props.min, Math.min(newStart, props.max - currentRange.value));
+    const newEnd = newStart + currentRange.value;
+    start.value = newStart;
+    end.value = newEnd;
 }
 
 function stopDragging() {
     endDragging();
 }
 
-function stopTouchDragging () {
+function stopTouchDragging() {
     endDragging();
 }
 
@@ -565,19 +582,17 @@ watch([startValue, endValue], async () => {
         return;
     }
 
-    const leftRect  = tooltipLeft.value.getBoundingClientRect();
+    const leftRect = tooltipLeft.value.getBoundingClientRect();
     const rightRect = tooltipRight.value.getBoundingClientRect();
-
     tooltipsCollide.value = (leftRect.x + leftRect.width) > rightRect.x;
-
-    const leftCenter  = leftRect.x + leftRect.width / 2;
+    const leftCenter = leftRect.x + leftRect.width / 2;
     const rightCenter = rightRect.x + rightRect.width / 2;
-    const totalWidth  = leftRect.width + rightRect.width;
-    const centerX     = (leftCenter + rightCenter) / 2;
+    const totalWidth = leftRect.width + rightRect.width;
+    const centerX = (leftCenter + rightCenter) / 2;
 
     mergeTooltip.value = {
         width: totalWidth,
-        left : centerX - totalWidth / 2
+        left: centerX - totalWidth / 2
     };
 });
 
@@ -662,100 +677,113 @@ defineExpose({
 <template>
     <div 
         data-cy="slicer" 
-        data-dom-to-png-ignore
+        data-dom-to-png-ignore 
         style="padding: 0 24px" 
-        class="vue-data-ui-zoom"
+        class="vue-data-ui-zoom" 
         ref="zoomWrapper"
-        @mousedown="startDragging"
+        @mousedown="startDragging" 
         @touchstart="startDragging"
     >
-        <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1; pointer-events: none;">
-            <div v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint" style="width: 100%; position: relative">
+        <div 
+            class="vue-data-ui-slicer-labels" 
+            style="position: relative; z-index: 1; pointer-events: none;"
+        >
+            <div 
+                v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint"
+                style="width: 100%; position: relative"
+            >
                 <button 
                     v-if="!useResetSlot" 
-                    data-cy="slicer-reset" tabindex="0" 
-                    role="button" 
-                    class="vue-data-ui-refresh-button"
+                    data-cy="slicer-reset" 
+                    tabindex="0" 
+                    role="button"
+                    class="vue-data-ui-refresh-button" 
                     :style="{
                         top: hasMinimap ? '36px' : '-16px',
                         pointerEvents: 'all !important'
-                    }"
-                    @click="reset">
+                    }" 
+                    @click="reset"
+                >
                     <BaseIcon name="refresh" :stroke="textColor" />
                 </button>
                 <slot v-else name="reset-action" :reset="reset" />
             </div>
         </div>
 
-        <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
+        <div 
+            class="double-range-slider" 
+            ref="minimapWrapper" 
+            style="z-index: 0" @mouseenter="showTooltip = true"
+            @mouseleave="showTooltip = false"
+        >
             <template v-if="hasMinimap">
-                <div class="minimap"  style="width: 100%" data-cy="minimap">
-                    <svg data-cy="slicer-minimap-svg" :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
+                <div class="minimap" style="width: 100%" data-cy="minimap">
+                    <svg 
+                        data-cy="slicer-minimap-svg" 
+                        :xmlns="XMLNS"
+                        :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`"
+                    >
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" :stop-color="`${minimapLineColor}50`"/>
-                                <stop offset="100%" stop-color="transparent"/>
+                                <stop offset="0%" :stop-color="`${minimapLineColor}50`" />
+                                <stop offset="100%" stop-color="transparent" />
                             </linearGradient>
                         </defs>
-                        
+
                         <path 
                             :d="`M${minimapLine.fullSet}`" 
                             :stroke="`${minimapLineColor}`" 
                             fill="none"
                             stroke-width="1" 
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            style="opacity: 1"
+                            stroke-linecap="round" 
+                            stroke-linejoin="round" 
+                            style="opacity: 1" 
                         />
-                        
+
                         <!-- SELECTION RECT -->
-                        <rect
-                            data-cy="slicer-minimap-selection-rect"
+                        <rect 
+                            data-cy="slicer-minimap-selection-rect" 
                             :x="selectionRectCoordinates.x"
+                            :y="0" 
                             :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
-                            :height="Math.max(svgMinimap.height, 0)"
-                            :y="0"
+                            :height="Math.max(svgMinimap.height, 0)" 
                             :fill="borderColor"
-                            :rx="minimapSelectionRadius"
-                            stroke="none"
+                            :rx="minimapSelectionRadius" 
+                            stroke="none" 
                         />
 
-                        <path 
-                            :d="`M${unitWidthX / 2},${Math.max(svgMinimap.height, 0)} ${minimapLine.fullSet} L${svgMinimap.width - (unitWidthX / 2)},${Math.max(svgMinimap.height, 0)}Z`" 
+                        <path
+                            :d="`M${unitWidthX / 2},${Math.max(svgMinimap.height, 0)} ${minimapLine.fullSet} L${svgMinimap.width - (unitWidthX / 2)},${Math.max(svgMinimap.height, 0)}Z`"
                             :fill="`url(#${uid})`"
-                            stroke="none"
-                            style="opacity: 1"
+                            stroke="none" 
+                            style="opacity: 1" 
                         />
 
-                        <rect
+                        <rect 
                             :x="selectionRectCoordinates.x"
+                            :y="0" 
                             :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
-                            :height="Math.max(svgMinimap.height, 0)"
-                            :y="0"
+                            :height="Math.max(svgMinimap.height, 0)" 
                             :rx="minimapSelectionRadius"
-                            :fill="borderColor"
-                            :style="{
-                                opacity: isDragging || isRanging ? 0 : 1
-                            }"
+                            :fill="borderColor" 
+                            :style="{ opacity: isDragging || isRanging ? 0 : 1 }" 
                         />
 
-                        <rect
+                        <rect 
                             :x="selectionRectCoordinates.x"
+                            :y="0" 
                             :width="selectionRectCoordinates.width < 0 ? 0 : selectionRectCoordinates.width"
-                            :height="Math.max(svgMinimap.height, 0)"
-                            :y="0"
+                            :height="Math.max(svgMinimap.height, 0)" 
                             :fill="minimapSelectedColor"
-                            :rx="minimapSelectionRadius"
-                            :style="{
-                                opacity: minimapSelectedColorOpacity
-                            }"
+                            :rx="minimapSelectionRadius" 
+                            :style="{ opacity: minimapSelectedColorOpacity }" 
                         />
 
-                        <path 
-                            :d="`M${minimapLine.sliced[0].x},${Math.max(svgMinimap.height, 0)} ${minimapLine.selectionSet} L${minimapLine.sliced.at(-1).x},${Math.max(svgMinimap.height, 0)}Z`" 
-                            :fill="`url(#${uid})`"
-                            stroke="none"
-                            style="opacity: 1"
+                        <path
+                            :d="`M${minimapLine.sliced[0].x},${Math.max(svgMinimap.height, 0)} ${minimapLine.selectionSet} L${minimapLine.sliced.at(-1).x},${Math.max(svgMinimap.height, 0)}Z`"
+                            :fill="`url(#${uid})`" 
+                            stroke="none" 
+                            style="opacity: 1" 
                         />
 
                         <path 
@@ -763,127 +791,135 @@ defineExpose({
                             :stroke="`${minimapLineColor}`" 
                             fill="transparent"
                             stroke-width="2" 
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            stroke-linecap="round" 
+                            stroke-linejoin="round" 
                         />
 
-                        <circle
-                            :cx="minimapLine.firstPlot.x"
-                            :cy="minimapLine.firstPlot.y"
+                        <circle 
+                            :cx="minimapLine.firstPlot.x" 
+                            :cy="minimapLine.firstPlot.y" 
                             stroke-width="0.5"
-                            :stroke="borderColor"
-                            r="3"
-                            :fill="minimapLineColor"
+                            :stroke="borderColor" 
+                            r="3" 
+                            :fill="minimapLineColor" 
                         />
 
-                        <circle
-                            :cx="minimapLine.lastPlot.x"
-                            :cy="minimapLine.lastPlot.y"
+                        <circle 
+                            :cx="minimapLine.lastPlot.x" 
+                            :cy="minimapLine.lastPlot.y" 
                             stroke-width="0.5"
-                            :stroke="borderColor"
-                            r="3"
-                            :fill="minimapLineColor"
+                            :stroke="borderColor" 
+                            r="3" 
+                            :fill="minimapLineColor" 
                         />
 
                         <!-- SELECTION INDICATOR -->
                         <template v-if="selectedTrap !== null">
                             <g v-for="(trap, i) in availableTraps">
-                                <line
-                                    :x1="unitWidthX * i + (unitWidthX / 2)"
+                                <line 
+                                    :x1="unitWidthX * i + (unitWidthX / 2)" 
                                     :x2="unitWidthX * i + (unitWidthX / 2)"
-                                    :y1="0"
-                                    :y2="Math.max(svgMinimap.height, 0)"
+                                    :y1="0" 
+                                    :y2="Math.max(svgMinimap.height, 0)" 
                                     :stroke="minimapIndicatorColor"
-                                    stroke-linecap="round"
-                                    stroke-dasharray="2"
+                                    stroke-linecap="round" 
+                                    stroke-dasharray="2" 
                                     stroke-width="1"
-                                    v-if="selectedTrap === trap && trap >= startMini && trap < endMini"
+                                    v-if="selectedTrap === trap && trap >= startMini && trap < endMini" 
                                 />
                             </g>
                         </template>
 
                         <!-- TOOLTIP TRAPS -->
                         <rect 
-                            v-for="(trap, i) in availableTraps"
-                            :x="unitWidthX * i"
+                            v-for="(trap, i) in availableTraps" 
+                            :x="unitWidthX * i" 
                             :y="0"
-                            :height="Math.max(svgMinimap.height, 0)"
+                            :height="Math.max(svgMinimap.height, 0)" 
                             :width="unitWidthX < 0 ? 0 : unitWidthX"
-                            fill="transparent"
-                            style="pointer-events: all !important;"
-                            :style="{
-                                cursor: trap >= startMini && trap < endMini && enableSelectionDrag ? isMouseDown ? 'grabbing' : 'grab' : 'default',
-                            }"
-                            @mousedown="isMouseDown = true"
+                            fill="transparent" 
+                            style="pointer-events: all !important;" 
+                            :style="{ cursor: trap >= startMini && trap < endMini && enableSelectionDrag ? isMouseDown ? 'grabbing' : 'grab' : 'default' }" 
+                            @mousedown="isMouseDown = true" 
                             @mouseup="isMouseDown = false"
-                            @mouseenter="trapMouse(trap)"
-                            @mouseleave="selectedTrap = null; emit('trapMouse', null)"
+                            @mouseenter="trapMouse(trap)" 
+                            @mouseleave="selectedTrap = null; emit('trapMouse', null)" 
                         />
                     </svg>
                 </div>
             </template>
+
             <div class="slider-track"></div>
+
             <div 
-                data-cy="slicer-range-highlight"
+                data-cy="slicer-range-highlight" 
                 :class="{
                     'range-highlight': true,
                     'move': enableSelectionDrag
                 }" 
-                @mousedown="isMouseDown = true"
-                @mouseup="isMouseDown = false"
+                @mousedown="isMouseDown = true" 
+                @mouseup="isMouseDown = false" 
                 :style="{
                     ...highlightStyle,
                     cursor: isMouseDown ? 'grabbing' : 'grab'
-                }"
+                }" 
             />
-            
-            <input
-                v-if="enableRangeHandles"
-                data-cy="slicer-handle-left"
+
+            <input 
+                v-if="enableRangeHandles" 
+                data-cy="slicer-handle-left" 
                 ref="rangeStart"
-                :key="`range-min${inputStep}`"
+                :key="`range-min${inputStep}`" 
                 type="range"
-                :class="{'range-left': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles}"
-                :min="min"
-                :max="max"
-                v-model.number="start"                
-                @input="setStartValue($event)"       
-                @change="commitImmediately"       
-                @keyup.enter="commitImmediately"     
-                @blur="commitImmediately"           
+                :class="{ 
+                    'range-left': true, 
+                    'range-handle': true, 
+                    'range-minimap': hasMinimap && verticalHandles 
+                }"
+                :min="min" 
+                :max="max" 
+                v-model.number="start" 
+                @input="setStartValue($event)" 
+                @change="commitImmediately"
+                @keyup.enter="commitImmediately" 
+                @blur="commitImmediately" 
                 @mouseenter="setLeftLabelZIndex('start')"
-                @pointermove="start = +$event.target.value"
-                @pointerup="commitImmediately"
+                @pointermove="start = +$event.target.value" 
+                @pointerup="commitImmediately" 
             />
 
-            <input
-                v-if="enableRangeHandles"
-                data-cy="slicer-handle-right"
-                ref="rangeEnd"
+            <input 
+                v-if="enableRangeHandles" 
+                data-cy="slicer-handle-right" 
+                ref="rangeEnd" 
                 type="range"
-                :class="{'range-right': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles}"
-                :min="min"
-                :max="max"
-                v-model.number="end"                
-                @input="setEndValue($event)"       
-                @change="commitImmediately"       
-                @keyup.enter="commitImmediately"    
-                @blur="commitImmediately"            
+                :class="{ 
+                    'range-right': true, 
+                    'range-handle': true, 
+                    'range-minimap': hasMinimap && verticalHandles 
+                }"
+                :min="min" 
+                :max="max" 
+                v-model.number="end" 
+                @input="setEndValue($event)" 
+                @change="commitImmediately"
+                @keyup.enter="commitImmediately" 
+                @blur="commitImmediately" 
                 @mouseenter="setLeftLabelZIndex('end')"
-                @pointermove="end = +$event.target.value"
-                @pointerup="commitImmediately"
+                @pointermove="end = +$event.target.value" 
+                @pointerup="commitImmediately" 
             />
 
-            <div
-                v-if="labels.left"
-                data-cy="slicer-label-left"
-                ref="tooltipLeft"
+            <div 
+                v-if="labels.left" 
+                data-cy="slicer-label-left" 
+                ref="tooltipLeft" 
                 :class="{
                     'range-tooltip': true,
                     'range-tooltip-visible': showTooltip,
                     'range-tooltip-arrow': highlightStyle.arrowLeft && !verticalHandles,
                     'range-tooltip-arrow-left': !highlightStyle.arrowLeft && !verticalHandles
-                }"
+                }" 
                 :style="{
                     left: highlightStyle.tooltipLeft,
                     color: adaptColorToBackground(selectColor),
@@ -896,17 +932,17 @@ defineExpose({
                 {{ labels.left }}
             </div>
 
-            <div
+            <div 
                 v-if="(tooltipsCollide || labels.left === labels.right) && (labels.left || labels.right)"
-                data-cy="slicer-label-merged"
-                ref="tooltipMerge"
+                data-cy="slicer-label-merged" 
+                ref="tooltipMerge" 
                 :class="{
                     'range-tooltip': true,
                     'range-tooltip-visible': showTooltip,
                     'range-tooltip-arrow': true,
                     'range-tooltip-arrow-left': !highlightStyle.arrowLeft && !verticalHandles,
                     'range-tooltip-arrow-right': !highlightStyle.arrowRight && !verticalHandles
-                }"
+                }" 
                 :style="{
                     left: highlightStyle.tooltipCenter,
                     width: mergeTooltip.width + 'px',
@@ -918,17 +954,17 @@ defineExpose({
             >
                 {{ labels.left === labels.right ? labels.left : `${labels.left} - ${labels.right}` }}
             </div>
-            
-            <div
-                v-if="labels.right"
-                data-cy="slicer-label-right"
-                ref="tooltipRight"
+
+            <div 
+                v-if="labels.right" 
+                data-cy="slicer-label-right" 
+                ref="tooltipRight" 
                 :class="{
                     'range-tooltip': true,
                     'range-tooltip-visible': showTooltip,
                     'range-tooltip-arrow': highlightStyle.arrowRight && !verticalHandles,
                     'range-tooltip-arrow-right': !highlightStyle.arrowRight && !verticalHandles
-                }"
+                }" 
                 :style="{
                     left: highlightStyle.tooltipRight,
                     color: adaptColorToBackground(selectColor),
@@ -957,7 +993,8 @@ defineExpose({
     pointer-events: none;
     position: absolute;
     top: calc(-50% - 12px);
-    svg{
+
+    svg {
         position: absolute;
         overflow: visible;
         top: 0;
@@ -974,7 +1011,7 @@ input[type="range"] {
     background: transparent;
     pointer-events: none;
     z-index: 3;
-    top:6px;
+    top: 6px;
     height: 8px;
 }
 
@@ -995,6 +1032,7 @@ input[type="range"]::-webkit-slider-thumb {
     z-index: 2;
     outline: 2px solid v-bind(borderColor);
     transition: all 0.2s ease-in-out;
+
     &:active,
     &:hover {
         box-shadow: 0 0 0 10px v-bind(selectColorOpaque);
@@ -1009,7 +1047,7 @@ input[type="range"].range-minimap::-webkit-slider-thumb {
     margin-top: -36px;
     border-right: 1px solid v-bind(selectColor);
     border-left: 1px solid v-bind(selectColor);
-    cursor:ew-resize;
+    cursor: ew-resize;
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -1023,6 +1061,7 @@ input[type="range"]::-moz-range-thumb {
     z-index: 2;
     outline: 2px solid v-bind(borderColor);
     transition: all 0.2s ease-in-out;
+
     &:active,
     &:hover {
         box-shadow: 0 0 0 10px v-bind(selectColorOpaque);
@@ -1037,7 +1076,7 @@ input[type="range"].range-minimap::-moz-range-thumb {
     border-right: 1px solid v-bind(selectColor);
     border-left: 1px solid v-bind(selectColor);
     cursor: ew-resize;
-    transform: translateY(-20px); 
+    transform: translateY(-20px);
     pointer-events: auto;
 }
 
@@ -1052,6 +1091,7 @@ input[type="range"]::-ms-thumb {
     z-index: 2;
     outline: 2px solid v-bind(borderColor);
     transition: all 0.2s ease-in-out;
+
     &:active,
     &:hover {
         box-shadow: 0 0 0 10px v-bind(selectColorOpaque);
@@ -1100,9 +1140,11 @@ input[type="range"]::-ms-thumb {
     cursor: pointer;
     transition: transform 0.2s ease-in-out !important;
     transform-origin: center;
+
     &:focus {
         outline: 1px solid v-bind(slicerColor);
     }
+
     &:hover {
         transform: translateX(-50%) rotate(-90deg)
     }
@@ -1134,12 +1176,12 @@ input[type="range"]::-ms-thumb {
     border-radius: 3px;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
-    text-align:center;
+    text-align: center;
     pointer-events: none;
     position: absolute;
     top: -100%;
     width: fit-content;
-    white-space:nowrap;
+    white-space: nowrap;
 }
 
 .range-tooltip-arrow,
