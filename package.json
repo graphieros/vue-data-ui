@@ -88,7 +88,9 @@
     "test:w": "vitest --watch",
     "test:e2e": "npx cypress open",
     "simple-build": "npm run clean && vite build --mode production && node copy-types.cjs",
-    "preprod": "node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node copy-docs.cjs && node post-build.cjs"
+    "preprod": "node del-dev-dep.cjs && npm run clean && vite build --mode production && node copy-types.cjs && node copy-docs.cjs && node post-build.cjs",
+    "cy-all": "npx cypress run --component",
+    "cy": "node run-cy.cjs"
   },
   "peerDependencies": {
     "vue": ">=3.3.0",
