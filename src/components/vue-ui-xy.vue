@@ -505,7 +505,7 @@ const precogRect = computed(() => {
         ['stroke-linejoin']: 'round',
         style: {
             pointerEvents: 'none',
-            transition: 'all 0.1s ease-in-out',
+            transition: 'none !important',
             animation: 'none !important'
         }
     }
@@ -3944,7 +3944,12 @@ defineExpose({
                 </g>
 
                 <!-- ZOOM PREVIEW -->
-                <rect v-if="isPrecog" v-bind="precogRect" :data-start="slicer.start" :data-end="slicer.end"/>
+                <rect 
+                    v-if="isPrecog" 
+                    v-bind="precogRect" 
+                    :data-start="slicer.start" 
+                    :data-end="slicer.end"
+                />
 
                 <slot name="svg" :svg="svg" />
             </g>
@@ -4291,6 +4296,8 @@ defineExpose({
             :isCustom="FINAL_CONFIG.chart.tooltip.customFormat && typeof FINAL_CONFIG.chart.tooltip.customFormat === 'function'"
             :smooth="FINAL_CONFIG.chart.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.chart.tooltip.backdropFilter"
+            :smoothForce="FINAL_CONFIG.chart.tooltip.smoothForce"
+            :smoothSnapThreshold="FINAL_CONFIG.chart.tooltip.smoothSnapThreshold"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>

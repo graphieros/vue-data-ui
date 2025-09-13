@@ -1,9 +1,23 @@
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, onUpdated } from 'vue';
-import BaseIcon from './BaseIcon.vue';
-import { useResponsive } from '../useResponsive';
+import { 
+    computed, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    onUpdated,
+    ref, 
+    watch, 
+} from 'vue';
+import { 
+    adaptColorToBackground, 
+    createSmoothPath, 
+    createStraightPath, 
+    createUid,
+    XMLNS,
+} from '../lib';
 import { throttle } from '../canvas-lib';
-import { XMLNS, adaptColorToBackground, createSmoothPath, createStraightPath, createUid } from '../lib';
+import { useResponsive } from '../useResponsive';
+import BaseIcon from './BaseIcon.vue';
 
 const props = defineProps({
     background: {
@@ -355,12 +369,22 @@ const selectionWidth = computed(() => {
     return ((wrapperWidth.value - 48) / (props.max - props.min)) * currentRange.value;
 });
 
-const RA_SPECIAL_MAGIC_NUMBER = ref(2.5);
+const TRACK_PADDING = 48;
 
-const flooredDatapointsToWidth = computed(() => {
-    const w = wrapperWidth.value - 48;
-    return Math.ceil((props.max - props.min) / ((w - selectionWidth.value) / RA_SPECIAL_MAGIC_NUMBER.value));
+const usablePx = computed(() => {
+    return Math.max(1, wrapperWidth.value - TRACK_PADDING - selectionWidth.value);
 });
+
+const usableSteps = computed(() => {
+    return Math.max(1, (props.max - props.min) - currentRange.value);
+});
+
+const indicesPerPixel = computed(() => usableSteps.value / usablePx.value);
+
+const dragStartX = ref(0);
+const dragStartStart = ref(0);
+const dragStartEnd = ref(0);
+const ippAtStart = ref(0);
 
 let activeMoveEvent = null;
 let activeEndEvent = null;
@@ -372,28 +396,30 @@ const startDragging = (event) => {
     if (!props.enableSelectionDrag) return;
 
     const isTouch = event.type === 'touchstart';
+    if (!isTouch) event.stopPropagation();
 
-    if(!isTouch) {
-        event.stopPropagation();
-    }
-    
-    const touch0 =
-        isTouch && event.targetTouches && event.targetTouches[0] ? event.targetTouches[0] : null;
+    const touch0 = isTouch && event.targetTouches && event.targetTouches[0] ? event.targetTouches[0] : null;
     const target = isTouch ? (touch0 ? touch0.target : null) : event.target;
 
     if (!target || !(target instanceof Element)) return;
     if (target.classList && target.classList.contains('range-handle')) return;
 
     isDragging.value = true;
-    initialMouseX.value = isTouch ? (touch0 ? touch0.clientX : 0) : event.clientX;
 
-    activeMoveEvent = isTouch ? 'touchmove' : 'mousemove';
-    activeEndEvent = isTouch ? 'touchend' : 'mouseup';
+    const x = isTouch ? (touch0 ? touch0.clientX : 0) : event.clientX;
+    initialMouseX.value = x;
+    dragStartX.value = x;
+    dragStartStart.value = Number(startValue.value);
+    dragStartEnd.value = Number(endValue.value);
+    ippAtStart.value = indicesPerPixel.value;
+
+    activeMoveEvent   = isTouch ? 'touchmove' : 'mousemove';
+    activeEndEvent    = isTouch ? 'touchend'  : 'mouseup';
     activeMoveHandler = isTouch ? handleTouchDragging : handleDragging;
-    activeEndHandler = isTouch ? stopTouchDragging : stopDragging;
+    activeEndHandler  = isTouch ? stopTouchDragging   : stopDragging;
 
     window.addEventListener(activeMoveEvent, activeMoveHandler, { passive: false });
-    window.addEventListener(activeEndEvent, activeEndHandler);
+    window.addEventListener(activeEndEvent,  activeEndHandler);
 };
 
 function handleDragging(event) {
@@ -420,27 +446,14 @@ function handleTouchDragging(event) {
 
 function updateDragging(currentX) {
     if (!isDragging.value) return;
-
-    const deltaX = currentX - initialMouseX.value;
-
-    if (Math.abs(deltaX) > dragThreshold.value) {
-        if (deltaX > 0) {
-        if (Number(endValue.value) + 1 <= props.max) {
-            const v = Math.min(props.max, Number(endValue.value) + flooredDatapointsToWidth.value);
-            setEndValue(v);
-            setStartValue(v - currentRange.value);
-        }
-        } else {
-        if (Number(startValue.value) - 1 >= props.min) {
-            const v = Math.max(props.min, Number(startValue.value) - flooredDatapointsToWidth.value);
-            setStartValue(v);
-            setEndValue(v + currentRange.value);
-        }
-        }
-        initialMouseX.value = currentX;
-    }
+    const dx = currentX - dragStartX.value;
+    const shift = dx * ippAtStart.value;
+    let newStart = Math.round(dragStartStart.value + shift);
+    newStart = Math.max(props.min, Math.min(newStart, props.max - currentRange.value));
+    const newEnd = newStart + currentRange.value;
+    setStartValue(newStart);
+    setEndValue(newEnd);
 }
-
 function stopDragging() {
     endDragging();
 }
@@ -571,28 +584,49 @@ onBeforeUnmount(() => {
         @touchstart="startDragging"
         @touchend="showTooltip = false"
     >
-        <div class="vue-data-ui-slicer-labels" style="position: relative; z-index: 1; pointer-events: none;">
-            <div v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint" style="width: 100%; position: relative">
+        <div 
+            class="vue-data-ui-slicer-labels" 
+            style="position: relative; z-index: 1; pointer-events: none;"
+        >
+            <div 
+                v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint" 
+                style="width: 100%; position: relative"
+            >
                 <button 
                     v-if="!useResetSlot" 
-                    data-cy="slicer-reset" tabindex="0" 
+                    data-cy="slicer-reset" 
+                    tabindex="0" 
                     role="button" 
                     class="vue-data-ui-refresh-button"
                     :style="{
                         top: hasMinimap ? '36px' : '-16px',
                         pointerEvents: 'all !important'
                     }"
-                    @click="reset">
+                    @click="reset"
+                >
                     <BaseIcon name="refresh" :stroke="textColor" />
                 </button>
                 <slot v-else name="reset-action" :reset="reset" />
             </div>
         </div>
 
-        <div class="double-range-slider" ref="minimapWrapper" style="z-index: 0" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
+        <div 
+            class="double-range-slider" 
+            ref="minimapWrapper" 
+            style="z-index: 0" 
+            @mouseenter="showTooltip = true" 
+            @mouseleave="showTooltip = false"
+        >
             <template v-if="hasMinimap">
-                <div class="minimap"  style="width: 100%" data-cy="minimap">
-                    <svg data-cy="slicer-minimap-svg" :xmlns="XMLNS" :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`">
+                <div 
+                    class="minimap"  
+                    style="width: 100%" data-cy="minimap"
+                >
+                    <svg 
+                        data-cy="slicer-minimap-svg" 
+                        :xmlns="XMLNS" 
+                        :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`"
+                    >
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
                                 <stop offset="0%" :stop-color="`${minimapLineColor}50`"/>

@@ -2173,6 +2173,8 @@ defineExpose({
             :isFullscreen="isFullscreen"
             :isCustom="isFunction(FINAL_CONFIG.tooltipCustomFormat)"
             :smooth="FINAL_CONFIG.tooltipSmooth"
+            :smoothForce="FINAL_CONFIG.tooltipSmoothForce"
+            :smoothSnapThreshold="FINAL_CONFIG.tooltipSmoothSnapThreshold"
             :backdropFilter="FINAL_CONFIG.tooltipBackdropFilter"
         >
             <template #tooltip-before>

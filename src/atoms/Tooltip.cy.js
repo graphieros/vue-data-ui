@@ -33,7 +33,8 @@ describe('<Tooltip />', () => {
 
   it('follows the mouse', () => {
     cy.get('body').trigger('mousemove', { clientX: 200, clientY: 200, force: true})
-    cy.get('[data-cy="tooltip"]').should('have.css', 'top', '224px')
-    cy.get('[data-cy="tooltip"]').should('have.css', 'left', '200px')
+    cy.get('[data-cy="tooltip"]').should('have.css', 'top', '0px')
+    cy.get('[data-cy="tooltip"]').should('have.css', 'left', '0px')
+    cy.get('[data-cy="tooltip"]').should('have.css', 'transform', 'matrix(1, 0, 0, 1, 200, 224)')
   })
 })

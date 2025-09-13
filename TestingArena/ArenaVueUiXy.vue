@@ -647,7 +647,7 @@ const model = ref([
     { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color' },
     { key: 'chart.zoom.minimap.verticalHandles', def: false, type: 'checkbox' },
 
-    { key: 'chart.zoom.startIndex', def: 50, type: 'number', min: 0, max: 100 },
+    { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.preview.enable', def: true, type: 'checkbox'},
     { key: 'chart.zoom.preview.stroke', def: '#1f77b4', type: 'color'},
@@ -774,6 +774,8 @@ const model = ref([
     { key: 'chart.tooltip.showTimeLabel', def: true, type: 'checkbox' },
     { key: 'chart.tooltip.smooth', def: true, type: 'checkbox' },
     { key: 'chart.tooltip.backdropFilter', def: false, type: 'checkbox' },
+    { key: 'chart.tooltip.smoothForce', def: 0.18, type: 'number', min: 0.1, max: 1, step:0.01 },
+    { key: 'chart.tooltip.smoothSnapThreshold', def: 0.25, type: 'number', min: 0.1, max: 1, step:0.01 },
 
     { key: 'bar.borderRadius', def: 2, type: 'number', min: 0, max: 120, label: 'borderRadius', category: 'bar' },
     { key: 'bar.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'bar' },
@@ -1153,17 +1155,17 @@ const config = computed(() => {
                     ...c.chart.zoom,
                     useDefaultFormat: true,
                     timeFormat: 'yyyy-MM-dd HH:mm:ss',
-                    // customFormat: ({ absoluteIndex }) => {
-                    //     return String(absoluteIndex) + 'TEST'
-                    // }
+                    customFormat: ({ absoluteIndex }) => {
+                        return String(absoluteIndex) + 'TEST'
+                    }
                 },
                 timeTag: {
                     ...c.chart.timeTag,
                     useDefaultFormat: false,
                     timeFormat: 'yyyy-MM-dd HH:mm:ss',
-                    // customFormat: ({ absoluteIndex }) => {
-                    //     return String(absoluteIndex) + 'TEST'
-                    // }
+                    customFormat: ({ absoluteIndex }) => {
+                        return String(absoluteIndex) + 'TEST'
+                    }
                 }
             }
         }
@@ -1521,5 +1523,266 @@ onMounted(async () => {
             {{ config }}
         </template>
     </Box>
+
+    <!-- UNCOMMENT TO TEST PERF -->
+
+    <!-- <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap: 12px">
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+        <LocalVueUiXy 
+            :dataset="isPropsToggled ? alternateDataset : dataset"
+            :config="isPropsToggled ? alternateConfig : config"
+            :selectedXIndex="selectedIndex"
+            :key="`local_${step}`" 
+            @selectLegend="selectLegend"
+            @selectX="selectX">
+        </LocalVueUiXy>
+    </div> -->
 
 </template>

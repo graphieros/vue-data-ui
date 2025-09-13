@@ -130,10 +130,10 @@ describe("<Slicer />", () => {
                 .trigger('mousedown', { force: true })
                 .trigger('mousemove', {force: true, clientX: 400 })
 
-            cy.wrap(slicer).should('have.property', 'start', 3);
-            cy.wrap(slicer).should('have.property', 'end', 11);
-            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', '____ 3 ____')
-            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', '____ 10 ____')
+            cy.wrap(slicer).should('have.property', 'start', 12);
+            cy.wrap(slicer).should('have.property', 'end', 20);
+            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', '____ 12 ____')
+            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', '____ 19 ____')
         })
     })
 
@@ -153,10 +153,10 @@ describe("<Slicer />", () => {
                 .trigger('mousedown', { force: true })
                 .trigger('mousemove', {force: true, clientX: 400 })
 
-            cy.wrap(slicer).should('have.property', 'start', 3);
-            cy.wrap(slicer).should('have.property', 'end', 11);
-            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', '____ 3 ____')
-            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', '____ 10 ____')
+            cy.wrap(slicer).should('have.property', 'start', 12);
+            cy.wrap(slicer).should('have.property', 'end', 20);
+            cy.get('[data-cy="slicer-label-left"]').as('left').should('exist').and('be.visible').and('contain', '____ 12 ____')
+            cy.get('[data-cy="slicer-label-right"]').as('right').should('exist').and('be.visible').and('contain', '____ 19 ____')
         })
     })
 
@@ -175,7 +175,7 @@ describe("<Slicer />", () => {
                 .trigger('mousedown', { force: true })
                 .trigger('mousemove', {force: true, clientX: 400 })
 
-            cy.get('[data-cy="slicer-label-merged"]').should('be.visible').and('contain', '____ 3 ____')
+            cy.get('[data-cy="slicer-label-merged"]').should('be.visible').and('contain', '____ 17 ____')
             cy.get('[data-cy="slicer-label-left"]').should('not.be.visible')
             cy.get('[data-cy="slicer-label-right"]').should('not.be.visible')
         })
@@ -196,7 +196,7 @@ describe("<Slicer />", () => {
                 .trigger('mousedown', { force: true })
                 .trigger('mousemove', {force: true, clientX: 400 })
 
-            cy.get('[data-cy="slicer-label-merged"]').should('be.visible').and('contain', '____ 3 ____ - ____ 4 ____');
+            cy.get('[data-cy="slicer-label-merged"]').should('be.visible').and('contain', '____ 16 ____ - ____ 17 ____');
             cy.get('[data-cy="slicer-label-left"]').should('not.be.visible')
             cy.get('[data-cy="slicer-label-right"]').should('not.be.visible')
         })

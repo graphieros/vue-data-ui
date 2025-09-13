@@ -293,6 +293,8 @@ declare module "vue-data-ui" {
         offsetY?: number;
         smooth?: boolean;
         backdropFilter?: boolean;
+        smoothForce?: number;
+        smoothSnapThreshold?: number;
     };
 
     export type ZoomMinimap = {
@@ -6143,6 +6145,8 @@ declare module "vue-data-ui" {
         tooltipPosition?: TooltipPosition;
         tooltipOffsetY?: number;
         tooltipSmooth?: boolean;
+        tooltipSmoothForce?: number;
+        tooltipSmoothSnapThreshold?: number;
         tooltipBackdropFilter?: boolean;
         useCustomLegend?: boolean;
         valuePrefix?: string;
