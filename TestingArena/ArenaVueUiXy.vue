@@ -284,7 +284,7 @@ const dates = [
 function createDs(n, m = 100) {
     const arr = [];
     for (let i = 0; i < n; i += 1) {
-        arr.push(Math.random() * m * - 1)
+        arr.push(Math.random() * m * 1)
     }
     return arr
 }
@@ -393,7 +393,8 @@ onMounted(() => {
         series: createDs(100),
         type: "line",
         dataLabels: false,
-        smooth: false
+        smooth: true,
+        useArea: true,
     },
     // {
     //     name: "Serie B",
@@ -1236,6 +1237,24 @@ onMounted(async () => {
             ...config,
             responsive: true,
         }" @selectTimeLabel="selectTimeLabel">
+
+            <template #area-gradient="{ series, id }">
+                <linearGradient :id="id" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" :stop-color="series.color"/>
+                    <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+                </linearGradient>
+            </template>
+
+            <template #bar-gradient="{ series, positiveId, negativeId }">
+                <linearGradient :id="positiveId" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" :stop-color="series.color"/>
+                    <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient :id="negativeId" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+                    <stop offset="100%" :stop-color="series.color"/>
+                </linearGradient>
+            </template>
 
             <!-- <template #pattern="{ seriesIndex, patternId }">
                 <pattern v-if="seriesIndex === 0" :id="patternId" width="70" height="8" patternTransform="scale(2)"

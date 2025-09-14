@@ -3098,16 +3098,21 @@ defineExpose({
                     <!-- DEFS BARS -->
                     <template v-for="(serie, i) in barSet" :key="`def_rect_${i}`">
                         <defs :data-cy="`xy-def-bar-${i}`">
-                            <linearGradient :id="`rectGradient_pos_${i}_${uniqueId}`" x2="0%" y2="100%">
-                                <stop offset="0%" :stop-color="serie.color" />
-                                <stop offset="62%" :stop-color="`${shiftHue(serie.color, 0.02)}`" />
-                                <stop offset="100%" :stop-color="`${shiftHue(serie.color, 0.05)}`" />
-                            </linearGradient>
-                            <linearGradient :id="`rectGradient_neg_${i}_${uniqueId}`" x2="0%" y2="100%">
-                                <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.05)}`" />
-                                <stop offset="38%" :stop-color="`${shiftHue(serie.color, 0.02)}`" />
-                                <stop offset="100%" :stop-color="serie.color" />
-                            </linearGradient>
+                            <template v-if="$slots['bar-gradient']">
+                                <slot name="bar-gradient" v-bind="{ series: serie, positiveId: `rectGradient_pos_${i}_${uniqueId}`, negativeId: `rectGradient_neg_${i}_${uniqueId}` }"/>
+                            </template>
+                            <template v-else>
+                                <linearGradient :id="`rectGradient_pos_${i}_${uniqueId}`" x2="0%" y2="100%">
+                                    <stop offset="0%" :stop-color="serie.color" />
+                                    <stop offset="62%" :stop-color="`${shiftHue(serie.color, 0.02)}`" />
+                                    <stop offset="100%" :stop-color="`${shiftHue(serie.color, 0.05)}`" />
+                                </linearGradient>
+                                <linearGradient :id="`rectGradient_neg_${i}_${uniqueId}`" x2="0%" y2="100%">
+                                    <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.05)}`" />
+                                    <stop offset="38%" :stop-color="`${shiftHue(serie.color, 0.02)}`" />
+                                    <stop offset="100%" :stop-color="serie.color" />
+                                </linearGradient>
+                            </template>
                         </defs>
                     </template>
 
@@ -3130,7 +3135,8 @@ defineExpose({
                                 <stop offset="0%" :stop-color="`${shiftHue(serie.color, 0.05)}`" />
                                 <stop offset="100%" :stop-color="serie.color" />
                             </radialGradient>
-                            <linearGradient :id="`areaGradient_${i}_${uniqueId}`" x1="0%" x2="100%" y1="0%" y2="0%">
+                            <slot v-if="$slots['area-gradient']" name="area-gradient" v-bind="{ series: serie, id: `areaGradient_${i}_${uniqueId}` }"/>
+                            <linearGradient v-else :id="`areaGradient_${i}_${uniqueId}`" x1="0%" x2="100%" y1="0%" y2="0%">
                                 <stop offset="0%"
                                     :stop-color="`${setOpacity(shiftHue(serie.color, 0.03), FINAL_CONFIG.line.area.opacity)}`" />
                                 <stop offset="100%"
