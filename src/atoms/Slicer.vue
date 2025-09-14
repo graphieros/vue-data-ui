@@ -361,10 +361,6 @@ const currentRange = computed(() => {
 const isDragging = ref(false);
 let initialMouseX = ref(null);
 
-const dragThreshold = computed(() => {
-    return (wrapperWidth.value - 48) / (props.max - props.min);
-});
-
 const selectionWidth = computed(() => {
     return ((wrapperWidth.value - 48) / (props.max - props.min)) * currentRange.value;
 });
