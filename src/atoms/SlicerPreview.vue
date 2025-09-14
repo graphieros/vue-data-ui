@@ -402,19 +402,32 @@ function coerceInput(eOrVal) {
     return Number.isFinite(n) ? n : NaN;
 }
 
+let rafStart = 0;
 function setStartValue(eOrVal) {
     isRanging.value = true;
     const n = coerceInput(eOrVal);
     if (!Number.isFinite(n)) return;
-    start.value = n;
+    cancelAnimationFrame(rafStart);
+    rafStart = requestAnimationFrame(() => {
+        start.value = n;
+    });
 }
 
+let rafEnd = 0;
 function setEndValue(eOrVal) {
     isRanging.value = true;
     const n = coerceInput(eOrVal);
     if (!Number.isFinite(n)) return;
-    end.value = n;
+    cancelAnimationFrame(rafEnd);
+    rafEnd = requestAnimationFrame(() => {
+        end.value = n;
+    });
 }
+
+onBeforeUnmount(() => {
+    cancelAnimationFrame(rafStart);
+    cancelAnimationFrame(rafEnd);
+});
 
 const currentRange = computed(() => {
     return props.valueEnd - props.valueStart;
@@ -422,10 +435,6 @@ const currentRange = computed(() => {
 
 const isDragging = ref(false);
 let initialMouseX = ref(null);
-
-const dragThreshold = computed(() => {
-    return (wrapperWidth.value - 48) / (props.max - props.min);
-});
 
 const selectionWidth = computed(() => {
     return ((wrapperWidth.value - 48) / (props.max - props.min)) * currentRange.value;
@@ -884,7 +893,6 @@ defineExpose({
                 @keyup.enter="commitImmediately" 
                 @blur="commitImmediately" 
                 @mouseenter="setLeftLabelZIndex('start')"
-                @pointermove="start = +$event.target.value" 
                 @pointerup="commitImmediately" 
             />
 
@@ -906,7 +914,6 @@ defineExpose({
                 @keyup.enter="commitImmediately" 
                 @blur="commitImmediately" 
                 @mouseenter="setLeftLabelZIndex('end')"
-                @pointermove="end = +$event.target.value" 
                 @pointerup="commitImmediately" 
             />
 
