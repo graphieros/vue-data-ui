@@ -1314,7 +1314,7 @@ defineExpose({
         </div>
 
         <component
-            v-if="isDataset && hasStack"
+            v-if="isDataset && hasStack && FINAL_CONFIG.userOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"

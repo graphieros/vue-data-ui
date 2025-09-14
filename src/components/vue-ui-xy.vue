@@ -2895,7 +2895,7 @@ watch(() => mutableConfig.value.showTable, v => {
     if (v && FINAL_CONFIG.value.table.useDialog && tableUnit.value) {
         tableUnit.value.open()
     } else {
-        if ('close' in tableUnit.value) {
+        if (tableUnit.value && tableUnit.value.close) {
             tableUnit.value.close()
         }
     }
@@ -4307,7 +4307,14 @@ defineExpose({
             </template>
         </Tooltip>
 
-        <component v-if="isDataset" :is="tableComponent.component" v-bind="tableComponent.props" ref="tableUnit" @close="closeTable">
+        <!-- DATA TABLE -->
+        <component 
+            v-if="isDataset && FINAL_CONFIG.chart.userOptions.buttons.table" 
+            :is="tableComponent.component" 
+            v-bind="tableComponent.props" 
+            ref="tableUnit" 
+            @close="closeTable"
+        >
             <template #title v-if="FINAL_CONFIG.table.useDialog">
                 {{ tableComponent.title }}
             </template>

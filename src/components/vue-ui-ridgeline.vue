@@ -1350,7 +1350,7 @@ defineExpose({
         </div>
 
         <component
-            v-if="isDataset"
+            v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
             :is="tableComponent.component"
             v-bind="tableComponent.props"
             ref="tableUnit"
