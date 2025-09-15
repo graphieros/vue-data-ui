@@ -1510,7 +1510,7 @@ defineExpose({
                                         text-anchor="middle"
                                         method="align"
                                         spacing="auto"
-                                        side="right"
+                                    
                                     >
                                         {{
                                         FINAL_CONFIG.style.chart.layout.labels.dataLabels.donutNameAbbreviation
