@@ -34,6 +34,15 @@
                             <span>{{ FINAL_CONFIG.translations.exportPageButton }}</span>
                         </button>
                     </div>
+                    <div class="vue-ui-table-dialog-field">
+                        <label class="label vue-ui-table-dialog-input-label">
+                            {{ FINAL_CONFIG.translations.filename }}
+                            <input ref="filenameInputRef" @keydown.space.stop pattern=".*" class="vue-ui-table-dialog-input" type="text" v-model="filename"/>
+                        </label>
+                        <button class="vue-ui-table-dialog-field-button" @click="filename = ''">
+                            <BaseIcon name="close" :stroke="FINAL_CONFIG.style.exportMenu.color" :size="18"/>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -557,6 +566,7 @@ import {
 import { useConfig } from "../useConfig";
 import VueUiXy from "./vue-ui-xy.vue";
 import VueUiDonut from "./vue-ui-donut.vue";
+import BaseIcon from "../atoms/BaseIcon.vue";
 
 export default {
     name: "vue-ui-table",
@@ -574,7 +584,7 @@ export default {
             }
         }
     },
-    components: { VueUiXy, VueUiDonut },
+    components: { VueUiXy, VueUiDonut, BaseIcon },
     emits: ['page-change'],
     data() {
         const uid = `vue-ui-table-${Math.random()}`;
@@ -669,6 +679,7 @@ export default {
                     type: head.type, // this attribute is mandatory
                 }
             }),
+            filename: '',
         }
     },
     mounted() {
@@ -692,8 +703,17 @@ export default {
                 e.preventDefault();
             }
         })
+        this.filename = this.FINAL_CONFIG.style.exportMenu.filename;
     },
     watch: {
+        isExportRequest: function (bool) {
+            if (bool) {
+                const filenameInput = this.$refs.filenameInputRef;
+                if (filenameInput) {
+                    filenameInput.focus();
+                }
+            }
+        },
         showChart: function (hasChart) {
             if (hasChart) {
                 this.$nextTick(() => {
@@ -1104,7 +1124,7 @@ export default {
             const body = selection === 'all' ? this.bodyCopy.map(b => b.td) : this.visibleRows.map(r => r.td);
             const table = [head].concat(body);
             const csvContent = this.createCsvContent(table);
-            this.downloadCsv({ csvContent, title: 'vue-ui-table' })
+            this.downloadCsv({ csvContent, title: this.filename })
         },
         calcLinearProgression,
         closeAllDropdowns() {
@@ -2388,7 +2408,36 @@ button.th-reset:not(:disabled) {
     justify-content: flex-start;
 }
 
-.vue-ui-table-main .vue-ui-table-export-hub-option-wrapper .label {
+.vue-ui-table-main .vue-ui-table-dialog-field {
+    width: calc(100% - 12px);
+    padding-right: 12px;
+    align-items:center;
+    position: relative;
+}
+
+.vue-ui-table-dialog-field {
+    width: 100%;
+}
+
+input.vue-ui-table-dialog-input {
+    width: calc(100% - 44px);
+    padding-right: 44px;
+}
+
+.vue-ui-table-dialog-field-button {
+    background: transparent;
+    border: none !important;
+    box-shadow: none;
+    outline: none;
+    position: absolute;
+    right: 4px;
+    top: 26px;
+    min-width: 36px !important;
+    width: 36px;
+}
+
+.vue-ui-table-main .vue-ui-table-export-hub-option-wrapper .label,
+.vue-ui-table-main .vue-ui-table-dialog-field .label {
     font-size: 12px;
     line-height: 12px;
     margin-bottom: 6px;
@@ -2441,5 +2490,8 @@ button.th-reset:not(:disabled) {
         transform: scale(0, 0);
         opacity: 0;
     }
+}
+input {
+    font-family: inherit !important;
 }
 </style>

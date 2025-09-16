@@ -233,7 +233,7 @@ export function useConfig() {
         startIndex: null,
         endIndex: null,
         enableRangeHandles: true,
-        enableSelectionDrag: true
+        enableSelectionDrag: true,
     }
 
     const MINIMAP = {
@@ -245,6 +245,8 @@ export function useConfig() {
         selectionRadius: 2,
         indicatorColor: COLOR_BLACK,
         verticalHandles: false,
+        compact: true,
+        merged: false,
     }
 
     const vue_ui_stackbar = {
@@ -2913,7 +2915,7 @@ export function useConfig() {
         zoomStartIndex: null,
         zoomEndIndex: null,
         zoomEnableRangeHandles: true,
-        zoomEnableSelectionDrag: true
+        zoomEnableSelectionDrag: true,
     }
 
     const vue_ui_age_pyramid = {
@@ -5337,7 +5339,8 @@ export function useConfig() {
                 buttons: {
                     backgroundColor: COLOR_WHITE_ALMOST,
                     color: COLOR_BLACK
-                }
+                },
+                filename: ''
             },
             closeButtons: {
                 backgroundColor: 'transparent',
@@ -5419,7 +5422,8 @@ export function useConfig() {
             sum: 'Sum',
             to: 'To',
             total: 'Total',
-            totalRows: 'Total rows'
+            totalRows: 'Total rows',
+            filename: 'File name'
         },
         useChart: true
     }
