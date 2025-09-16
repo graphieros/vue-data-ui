@@ -284,7 +284,7 @@ const dates = [
 function createDs(n, m = 100) {
     const arr = [];
     for (let i = 0; i < n; i += 1) {
-        if (i > 20 && i < 30) {
+        if ([10, 11, 13, 14, 15, 20, 22, 23, 25].includes(i)) {
             arr.push(null);
         } else {
             arr.push(Math.random() * m * (Math.random() > 0.3 ? 1 : -1))
@@ -394,7 +394,7 @@ onMounted(() => {
         dataset.value = [
     {
         name: "Serie A",
-        series: createDs(12),
+        series: createDs(35),
         type: "bar",
         dataLabels: false,
         smooth: true,
@@ -402,16 +402,16 @@ onMounted(() => {
     },
     {
         name: "Serie A",
-        series: createDs(12),
-        type: "bar",
+        series: createDs(35),
+        type: "line",
         dataLabels: false,
         smooth: true,
         useArea: true,
     },
     {
         name: "Serie B",
-        series: createDs(12),
-        type: "line",
+        series: createDs(35),
+        type: "bar",
         dataLabels: false,
         smooth: true,
         useArea: true,
@@ -660,7 +660,7 @@ const model = ref([
     { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox' },
 
     { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox' },
-    { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.smooth', def: false, type: 'checkbox' },
     { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color' },
     { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'chart.zoom.minimap.lineColor', def: '#1A1A1A', type: 'color' },
@@ -670,9 +670,9 @@ const model = ref([
     { key: 'chart.zoom.minimap.compact', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.merged', def: false, type: 'checkbox' },
 
-    { key: 'chart.zoom.startIndex', def: 5, type: 'number', min: 0, max: 100 },
-    { key: 'chart.zoom.endIndex', def: 8, type: 'number', min: 0, max: 100 },
-    { key: 'chart.zoom.preview.enable', def: false, type: 'checkbox'},
+    { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
+    { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
+    { key: 'chart.zoom.preview.enable', def: true, type: 'checkbox'},
     { key: 'chart.zoom.preview.stroke', def: '#1f77b4', type: 'color'},
     { key: 'chart.zoom.preview.fill', def: '#1f77b420', type: 'color'},
     { key: 'chart.zoom.preview.strokeDasharray', def: 0, type: 'number', min: 0, max: 12},

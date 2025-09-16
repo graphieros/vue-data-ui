@@ -4188,6 +4188,7 @@ defineExpose({
                 :allMinimaps="allMinimaps"
                 :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
                 :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
+                :cutNullValues="FINAL_CONFIG.line.cutNullValues"
                 @reset="refreshSlicer"
                 @trapMouse="selectMinimapIndex"
                 @futureStart="v => setPrecog('start', v)"
@@ -4236,6 +4237,7 @@ defineExpose({
                 :allMinimaps="allMinimaps"
                 :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
                 :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
+                :cutNullValues="FINAL_CONFIG.line.cutNullValues"
                 @reset="refreshSlicer"
                 @trapMouse="selectMinimapIndex">
                 <template #reset-action="{ reset }">

@@ -11,11 +11,13 @@ import {
 import { 
     adaptColorToBackground, 
     createSmoothPath, 
+    createSmoothPathWithCuts, 
     createStraightPath, 
+    createStraightPathWithCuts, 
     createUid,
     XMLNS,
 } from '../lib';
-import { throttle } from '../canvas-lib';
+import { debounce, throttle } from '../canvas-lib';
 import { useResponsive } from '../useResponsive';
 import BaseIcon from './BaseIcon.vue';
 
@@ -141,6 +143,10 @@ const props = defineProps({
     minimapFrameColor: {
         type: String,
         default: '#e1e5e8'
+    },
+    cutNullValues: {
+        type: Boolean,
+        default: false,
     }
 });
 
@@ -301,20 +307,6 @@ function reset() {
     emit('reset');
 }
 
-function onStartInput() {
-    if (Number(startValue.value) > Number(endValue.value) - 1) {
-        startValue.value = Number(endValue.value) - 1;
-    }
-    emit('update:start', Number(startValue.value));
-}
-
-function onEndInput() {
-    if (Number(endValue.value) < Number(startValue.value) + 1) {
-        endValue.value = Number(startValue.value) + 1;
-    }
-    emit('update:end', Number(endValue.value));
-}
-
 watch(
     () => props.min,
     (newMin) => {
@@ -462,23 +454,27 @@ function makeSmartMapY(min, max, H) {
     };
 }
 
-function makeMiniChart(ds) {
+function makeMiniChart(ds, smooth = false) {
     if (!ds || !ds.length) {
         return {
-        fullSet: '',
-        selectionSet: '',
-        sliced: [],
-        firstPlot: null,
-        lastPlot: null,
-        hasFull: false,
-        hasSelection: false,
+            fullSet: '',
+            points: [],
+            selectionSet: '',
+            sliced: [],
+            firstPlot: null,
+            lastPlot: null,
+            hasFull: false,
+            hasSelection: false,
+            fullMarkers: [],
+            selectionMarkers: [],
         };
     }
 
     const H = Math.max(1, svgMinimap.value.height);
+
     const finite = ds.filter(Number.isFinite);
-    const seriesMin = Math.min(...finite);
-    const seriesMax = Math.max(...finite);
+    const seriesMin = finite.length ? Math.min(...finite) : 0;
+    const seriesMax = finite.length ? Math.max(...finite) : 0;
 
     const mapYSeries = makeSmartMapY(seriesMin, seriesMax, H);
 
@@ -486,37 +482,56 @@ function makeMiniChart(ds) {
     const s = Math.min(Math.max(0, startMini.value), Math.max(0, len - 1));
     const e = Math.min(len, Math.max(s + 1, endMini.value));
 
-    const points = ds.map((dp, i) => ({
-        x: unitWidthX.value * i + (props.minimapCompact ? 0 : unitWidthX.value / 2),
-        y: mapYSeries(dp),
-        v: dp,
-        y0:
-        seriesMin < 0 && seriesMax > 0
-            ? mapYSeries(0)
-            : mapYSeries(0)
-    }));
+    const points = ds.map((dp, i) => {
+        const valid = Number.isFinite(dp);
+        const x = unitWidthX.value * i + (props.minimapCompact ? 0 : unitWidthX.value / 2);
+        const y0 =
+            seriesMin < 0 && seriesMax > 0
+                ? mapYSeries(0)
+                : mapYSeries(0);
+
+        return {
+            x,
+            y: valid ? mapYSeries(dp) : NaN,
+            v: dp,
+            value: valid ? dp : null,
+            y0,
+            i,
+        };
+    });
+
+    const isValid = (idx) => idx >= 0 && idx < points.length && Number.isFinite(points[idx]?.value);
+
+    const fullMarkers = points.filter((p) => Number.isFinite(p.value) && !isValid(p.i - 1) && !isValid(p.i + 1));
+    const selectionMarkers = fullMarkers.filter((p) => p.i >= s && p.i < e);
 
     const sliced = points.slice(s, e);
 
     const fullSet =
         points.length >= 2
-        ? (props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points))
-        : '';
+            ? (props.smoothMinimap || smooth
+                ? (props.cutNullValues ? createSmoothPathWithCuts(points) : createSmoothPath(points))
+                : (props.cutNullValues ? createStraightPathWithCuts(points) : createStraightPath(points)))
+            : '';
 
     const selectionSet =
         sliced.length >= 2
-        ? (props.smoothMinimap ? createSmoothPath(sliced) : createStraightPath(sliced))
-        : '';
+            ? (props.smoothMinimap || smooth
+                ? (props.cutNullValues ? createSmoothPathWithCuts(sliced) : createSmoothPath(sliced))
+                : (props.cutNullValues ? createStraightPathWithCuts(sliced) : createStraightPath(sliced)))
+            : '';
 
     return {
         fullSet,
+        points,
         selectionSet,
         sliced,
-        points,
         firstPlot: points[s] || null,
         lastPlot: points[Math.max(0, e - 1)] || null,
         hasFull: points.length >= 2,
         hasSelection: sliced.length >= 2,
+        fullMarkers,
+        selectionMarkers,
     };
 }
 
@@ -536,7 +551,7 @@ const minimapLine = computed(() => {
 const allMinimapLines = computed(() => {
     if (!props.allMinimaps.length) return [];
     return props.allMinimaps.map((ds, idx) => {
-        const line = makeMiniChart(ds?.series || []);
+        const line = makeMiniChart(ds?.series || [], !!ds.smooth);
         const k = ds?.id ?? ds?.name ?? idx;
         return {
             key: typeof k === 'object' ? JSON.stringify(k) : String(k),
@@ -560,19 +575,26 @@ const selectionRectCoordinates = computed(() => {
 
 const selectedTrap = ref(props.minimapSelectedIndex);
 
-watch(
-    () => props.minimapSelectedIndex,
-    (v) => {
-        selectedTrap.value = v == null ? null : absToMiniStart(props.valueStart) + v;
-    },
-    { immediate: true }
-);
+function setSelectedTrap(v) {
+    selectedTrap.value = absToMiniStart(props.valueStart) + v;
+}
+
+const setSelectedTrapDebounced = debounce(setSelectedTrap, 60);
+
+watch(() => props.minimapSelectedIndex, (newVal, oldVal) => {
+    if ([null, undefined].includes(newVal)) {
+        selectedTrap.value = null;
+        return;
+    }
+    if (newVal === oldVal) return;
+    setSelectedTrapDebounced(newVal);
+}, { immediate: true });
 
 function trapMouse(trap) {
     selectedTrap.value = trap;
     const s = startMini.value;
     const e = endMini.value;
-    if (trap >= s && trap < e) {
+    if (trap >= s && trap < e && !isMouseDown.value) {
         emit('trapMouse', trap - s);
     }
 }
@@ -823,6 +845,25 @@ function absToMiniEnd(i) {
 const startMini = computed(() => absToMiniStart(startValue.value));
 const endMini   = computed(() => absToMiniEnd(endValue.value));
 
+const selectionIndicator = computed(() => {
+    if (!availableTraps.value.length) return null
+    if (selectedTrap.value >= startMini.value && selectedTrap.value < endMini.value) {
+        const i = selectedTrap.value;
+        return {
+            x1: unitWidthX.value * i + (props.minimapCompact ? 0: unitWidthX.value / 2),
+            x2: unitWidthX.value * i + (props.minimapCompact ? 0: unitWidthX.value / 2),
+            y1: 0,
+            y2: Math.max(svgMinimap.value.height, 0),
+            stroke: props.minimapIndicatorColor,
+            ['stroke-linecap']: 'round',
+            ['stroke-dasharray']: 2,
+            ['stroke-width']: 1,
+        }
+    } else {
+        return null
+    }
+})
+
 </script>
 
 <template>
@@ -914,7 +955,7 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                             <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
                                 <template v-for="(r, j) in dp.points">
                                     <rect 
-                                        v-if="dp.isVisible"
+                                        v-if="dp.isVisible && !isNaN(r.y)"
                                         :x="getBarX(r.x, i, j)"
                                         :width="getBarWidth(i, j)"
                                         :y="r.v >= 0 ? r.y : r.y0"
@@ -930,6 +971,19 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                                     :d="`M ${dp.fullSet}`" 
                                     fill="none"
                                     :stroke="dp.color"
+                                    style="opacity: 0.6"
+                                />
+
+                                <circle
+                                    v-for="m in dp.fullMarkers"
+                                    v-if="dp.isVisible"
+                                    :key="`sel-dot-under-${dp.key}-${m.i}`"
+                                    :cx="m.x"
+                                    :cy="m.y"
+                                    r="2"
+                                    :fill="dp.color"
+                                    :stroke="borderColor"
+                                    stroke-width="0.5"
                                     style="opacity: 0.6"
                                 />
                             </g>
@@ -969,20 +1023,8 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                         />
 
                         <!-- SELECTION INDICATOR -->
-                        <template v-if="selectedTrap !== null">
-                            <g v-for="(trap, i) in availableTraps">
-                                <line
-                                    :x1="unitWidthX * i + (minimapCompact ? 0 : unitWidthX / 2)"
-                                    :x2="unitWidthX * i + (minimapCompact ? 0 : unitWidthX / 2)"
-                                    :y1="0"
-                                    :y2="Math.max(svgMinimap.height, 0)"
-                                    :stroke="minimapIndicatorColor"
-                                    stroke-linecap="round"
-                                    stroke-dasharray="2"
-                                    stroke-width="1"
-                                    v-if="selectedTrap === trap && trap >= startMini && trap < endMini"
-                                />
-                            </g>
+                        <template v-if="selectedTrap !== null && !isMouseDown">
+                            <line v-bind="selectionIndicator"/>
                         </template>
 
                         <line
@@ -1023,7 +1065,7 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                             <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
                                 <template v-for="(r, j) in dp.points">
                                     <rect 
-                                        v-if="dp.isVisible"
+                                        v-if="dp.isVisible && !isNaN(r.y)"
                                         :x="getBarX(r.x, i, j)"
                                         :width="getBarWidth(i, j)"
                                         :y="r.v >= 0 ? r.y : r.y0"
@@ -1077,7 +1119,7 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                         <!-- MERGED (circles) -->
                         <template v-if="minimapMerged">
                             <circle
-                                v-if="minimapLine && minimapLine.firstPlot"
+                                v-if="minimapLine && minimapLine.firstPlot && minimapLine.firstPlot.value !== null"
                                 :cx="minimapLine.firstPlot.x"
                                 :cy="minimapLine.firstPlot.y"
                                 stroke-width="0.5"
@@ -1086,14 +1128,14 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                                 :fill="minimapLineColor"
                             />
                             <circle
-                                v-if="minimapLine && minimapLine.firstPlot"
+                                v-if="minimapLine && minimapLine.firstPlot && minimapLine.firstPlot.value !== null"
                                 :cx="minimapLine.firstPlot.x"
                                 :cy="minimapLine.firstPlot.y"
                                 r="2"
                                 :fill="borderColor"
                             />
                             <circle
-                                v-if="minimapLine && minimapLine.lastPlot"
+                                v-if="minimapLine && minimapLine.lastPlot && minimapLine.lastPlot.value !== null"
                                 :cx="minimapLine.lastPlot.x"
                                 :cy="minimapLine.lastPlot.y"
                                 stroke-width="0.5"
@@ -1102,7 +1144,7 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                                 :fill="minimapLineColor"
                             />
                             <circle
-                                v-if="minimapLine && minimapLine.lastPlot"
+                                v-if="minimapLine && minimapLine.lastPlot && minimapLine.lastPlot.value !== null"
                                 :cx="minimapLine.lastPlot.x"
                                 :cy="minimapLine.lastPlot.y"
                                 r="2"
@@ -1113,7 +1155,19 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                         <g v-else>
                             <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
                                 <circle
-                                    v-if="dp && dp.firstPlot && dp.isVisible"
+                                    v-for="m in dp.selectionMarkers"
+                                    v-if="dp.isVisible"
+                                    :key="`sel-dot-${dp.key}-${m.i}`"
+                                    :cx="m.x"
+                                    :cy="m.y"
+                                    r="2.5"
+                                    :fill="dp.color"
+                                    :stroke="borderColor"
+                                    stroke-width="0.5"
+                                />
+
+                                <circle
+                                    v-if="dp && dp.firstPlot && dp.isVisible && dp.firstPlot.value !== null"
                                     :cx="dp.firstPlot.x"
                                     :cy="dp.firstPlot.y"
                                     stroke-width="0.5"
@@ -1121,15 +1175,16 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                                     r="4"
                                     :fill="dp.color"
                                 />
+
                                 <circle
-                                    v-if="dp && dp.firstPlot && dp.isVisible"
+                                    v-if="dp && dp.firstPlot && dp.isVisible && dp.firstPlot.value !== null"
                                     :cx="dp.firstPlot.x"
                                     :cy="dp.firstPlot.y"
                                     r="2"
                                     :fill="borderColor"
                                 />
                                 <circle
-                                    v-if="dp && dp.lastPlot && dp.isVisible"
+                                    v-if="dp && dp.lastPlot && dp.isVisible && dp.lastPlot.value !== null"
                                     :cx="dp.lastPlot.x"
                                     :cy="dp.lastPlot.y"
                                     stroke-width="0.5"
@@ -1138,7 +1193,7 @@ const endMini   = computed(() => absToMiniEnd(endValue.value));
                                     :fill="dp.color"
                                 />
                                 <circle
-                                    v-if="dp && dp.lastPlot && dp.isVisible"
+                                    v-if="dp && dp.lastPlot && dp.isVisible && dp.lastPlot.value !== null"
                                     :cx="dp.lastPlot.x"
                                     :cy="dp.lastPlot.y"
                                     r="2"
