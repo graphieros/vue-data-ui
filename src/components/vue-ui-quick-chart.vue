@@ -784,6 +784,7 @@ const line = computed(() => {
         ds = [
             {
                 values: formattedDataset.value.dataset.slice(slicer.value.start, slicer.value.end),
+                absoluteValues: formattedDataset.value.dataset,
                 absoluteIndices: formattedDataset.value.dataset.map((d, i) => i).slice(slicer.value.start, slicer.value.end),
                 name: FINAL_CONFIG.value.title,
                 color: customPalette.value[FINAL_CONFIG.value.paletteStartIndex] || palette[FINAL_CONFIG.value.paletteStartIndex],
@@ -805,6 +806,7 @@ const line = computed(() => {
                 ...d,
                 color: d.COLOR ? convertColorToHex(d.COLOR) : customPalette.value[i + (FINAL_CONFIG.value.paletteStartIndex)] || palette[i + (FINAL_CONFIG.value.paletteStartIndex)] || palette[(i + FINAL_CONFIG.value.paletteStartIndex) % palette.length],
                 values: d.values.slice(slicer.value.start, slicer.value.end),
+                absoluteValues: d.values,
                 absoluteIndices: d.values.map((d,i) => i).slice(slicer.value.start, slicer.value.end)
             }
         })
@@ -948,7 +950,7 @@ const line = computed(() => {
         killTooltip,
         selectDatapoint
     }
-})
+});
 
 const bar = computed(() => {
     if(chartType.value !== detector.chartType.BAR) return null;
@@ -982,6 +984,7 @@ const bar = computed(() => {
         ds = [
             {
                 values: formattedDataset.value.dataset.slice(slicer.value.start, slicer.value.end),
+                absoluteValues: formattedDataset.value.dataset,
                 absoluteIndices: formattedDataset.value.dataset.map((_,i) => i).slice(slicer.value.start, slicer.value.end),
                 name: FINAL_CONFIG.value.title,
                 color: customPalette.value[FINAL_CONFIG.value.paletteStartIndex] || palette[FINAL_CONFIG.value.paletteStartIndex],
@@ -1003,6 +1006,7 @@ const bar = computed(() => {
                 ...d,
                 color: d.COLOR ? convertColorToHex(d.COLOR) : customPalette.value[i + (FINAL_CONFIG.value.paletteStartIndex)] || palette[i + (FINAL_CONFIG.value.paletteStartIndex)] || palette[(i + FINAL_CONFIG.value.paletteStartIndex) % palette.length],
                 values: d.values.slice(slicer.value.start, slicer.value.end),
+                absoluteValues: d.values,
                 absoluteIndices: d.values.map((_,i) => i).slice(slicer.value.start, slicer.value.end)
             }
         });
@@ -1157,6 +1161,7 @@ const bar = computed(() => {
     return {
         absoluteZero,
         dataset: drawableDataset.filter(d => !segregated.value.includes(d.id)),
+        absoluteDataset: drawableDataset,
         legend,
         drawingArea,
         extremes,
@@ -1167,6 +1172,30 @@ const bar = computed(() => {
         selectDatapoint
     }
 });
+
+const allMinimaps = computed(() => {
+    if (chartType.value === detector.chartType.LINE) {
+        return line.value.legend.map(ds => {
+            const _min = Math.min(...ds.absoluteValues.map(v => v ?? 0))
+            return {
+                ...ds,
+                isVisible: !segregated.value.includes(ds.id),
+                type: 'line',
+                series: ds.absoluteValues
+            }
+        })
+    } else if (chartType.value === detector.chartType.BAR) {
+        return bar.value.absoluteDataset.map(ds => {
+            const _min = Math.min(...ds.absoluteValues.map(v => v ?? 0))
+            return {
+                ...ds,
+                isVisible: !segregated.value.includes(ds.id),
+                type: 'bar',
+                series: ds.absoluteValues
+            }
+        })
+    }
+})
 
 const timeLabels = computed(() => {
     return useTimeLabels({
@@ -2046,6 +2075,10 @@ defineExpose({
                 :refreshEndPoint="FINAL_CONFIG.zoomEndIndex !== null ? FINAL_CONFIG.zoomEndIndex + 1 : formattedDataset.maxSeriesLength"
                 :enableRangeHandles="FINAL_CONFIG.zoomEnableRangeHandles"
                 :enableSelectionDrag="FINAL_CONFIG.zoomEnableSelectionDrag"
+                :minimapCompact="FINAL_CONFIG.zoomMinimap.compact"
+                :minimapMerged="FINAL_CONFIG.zoomMinimap.merged"
+                :allMinimaps="allMinimaps"
+                :minimapFrameColor="FINAL_CONFIG.zoomMinimap.frameColor"
                 @reset="refreshSlicer"
                 @trapMouse="setCommonSelectedIndex"
             >

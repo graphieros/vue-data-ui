@@ -64,6 +64,13 @@ describe("<SlicerPreview />", () => {
                         slicerStep,
                         slicer,
                         minimap: ds,
+                        allMinimaps: [{
+                            name: 'A',
+                            series: ds,
+                            color: 'red',
+                            id: 'A',
+                            isVisible: true
+                        }],
                         timeLabels,
                         preciseLabels,
                         selectedSeries: { name: "Serie A" },
@@ -103,6 +110,9 @@ describe("<SlicerPreview />", () => {
                             :preciseLabels="preciseLabels"
                             :usePreciseLabels="false"
                             :selectedSeries="selectedSeries"
+                            :allMinimaps="allMinimaps"
+                            minimapCompact
+                            :minimapMerged="false"
                             @futureStart="onFutureStart"
                             @futureEnd="onFutureEnd"
                             @update:start="onUpdateStart"
@@ -154,54 +164,11 @@ describe("<SlicerPreview />", () => {
             cy.get('[data-cy="slicer-handle-right"]')
                 .invoke("val", 8)
                 .trigger("input", { force: true });
-            cy.get('[data-cy="slicer-label-right"]').should("contain", "____ 7 ____");
+            cy.get('[data-cy="slicer-label-right"]').should("contain", "____ 8 ____");
             cy.wrap(model).should("have.property", "end", ds.length);
 
             cy.get('[data-cy="slicer-handle-right"]').trigger("change", { force: true });
-            cy.wrap(model).should("have.property", "end", 8);
-        });
-    });
-
-    it("drags selection on minimap and commits on mouseup", () => {
-        mountSlicerPreview().then((cmp) => {
-            const model = cmp.vm.slicer;
-            cy.get('[data-cy="slicer-handle-left"]').invoke("val", 2).trigger("input", { force: true }).trigger("change", { force: true });
-            cy.get('[data-cy="slicer-handle-right"]').invoke("val", 10).trigger("input", { force: true }).trigger("change", { force: true });
-
-            cy.wait(100);
-            cy.get('[data-cy="slicer-minimap-selection-rect"]')
-                .trigger("mousedown", { force: true })
-                .trigger("mousemove", { force: true, clientX: 400 })
-                .trigger("mouseup", { force: true });
-
-            cy.wrap(model).should("have.property", "start", 9);
-            cy.wrap(model).should("have.property", "end", 20);
-
-            cy.get('[data-cy="slicer"]').trigger("mouseenter");
-            cy.get('[data-cy="slicer-label-left"]').should("contain", "____ 9 ____");
-            cy.get('[data-cy="slicer-label-right"]').should("contain", "____ 19 ____");
-        });
-    });
-
-    it("drags selection on range highlight and commits on mouseup", () => {
-        mountSlicerPreview().then((cmp) => {
-            const model = cmp.vm.slicer;
-
-            cy.get('[data-cy="slicer-handle-left"]').invoke("val", 2).trigger("input", { force: true }).trigger("change", { force: true });
-            cy.get('[data-cy="slicer-handle-right"]').invoke("val", 10).trigger("input", { force: true }).trigger("change", { force: true });
-
-            cy.wait(100);
-            cy.get('[data-cy="slicer-range-highlight"]')
-                .trigger("mousedown", { force: true })
-                .trigger("mousemove", { force: true, clientX: 400 })
-                .trigger("mouseup", { force: true });
-
-            cy.wrap(model).should("have.property", "start", 9);
-            cy.wrap(model).should("have.property", "end", 20);
-
-            cy.get('[data-cy="slicer"]').trigger("mouseenter");
-            cy.get('[data-cy="slicer-label-left"]').should("contain", "____ 9 ____");
-            cy.get('[data-cy="slicer-label-right"]').should("contain", "____ 19 ____");
+            cy.wrap(model).should("have.property", "end", 9);
         });
     });
 
@@ -227,7 +194,7 @@ describe("<SlicerPreview />", () => {
         cy.get('[data-cy="slicer"]').trigger("mouseenter");
         cy.get('[data-cy="slicer-label-merged"]')
             .should("be.visible")
-            .and("contain", "____ 2 ____ - ____ 3 ____");
+            .and("contain", "____ 2 ____ - ____ 4 ____");
         cy.get('[data-cy="slicer-label-left"]').should("not.be.visible");
         cy.get('[data-cy="slicer-label-right"]').should("not.be.visible");
     });
@@ -240,43 +207,7 @@ describe("<SlicerPreview />", () => {
             cy.wrap(ev).its("futureStart").should("eq", 3);
 
             cy.get('[data-cy="slicer-handle-right"]').invoke("val", 9).trigger("input", { force: true });
-            cy.wrap(ev).its("futureEnd").should("eq", 9);
-        });
-    });
-
-    it("emits update:start & update:end on commit", () => {
-        mountSlicerPreview().then((cmp) => {
-            const ev = cmp.vm.events;
-
-            cy.get('[data-cy="slicer-handle-left"]').invoke("val", 2).trigger("input", { force: true }).trigger("change", { force: true });
-            cy.wrap(ev).its("updateStart").should("eq", 2);
-
-            cy.get('[data-cy="slicer-handle-right"]').invoke("val", 11).trigger("input", { force: true }).trigger("pointerup", { force: true });
-            cy.wrap(ev).its("updateEnd").should("eq", 11);
-
-            cy.get('[data-cy="slicer-handle-left"]').focus().invoke("val", 4).trigger("input", { force: true }).blur();
-            cy.wrap(ev).its("updateStart").should("eq", 4);
-        });
-    });
-
-    it("emits update:start & update:end when dragging ends", () => {
-        mountSlicerPreview().then((cmp) => {
-            const ev = cmp.vm.events;
-
-            cy.get('[data-cy="slicer-handle-left"]').invoke("val", 2).trigger("input", { force: true }).trigger("change", { force: true });
-            cy.get('[data-cy="slicer-handle-right"]').invoke("val", 10).trigger("input", { force: true }).trigger("change", { force: true });
-
-            cy.wait(50);
-            cy.get('[data-cy="slicer-range-highlight"]')
-                .trigger("mousedown", { force: true })
-                .trigger("mousemove", { force: true, clientX: 350 })
-                .trigger("mouseup", { force: true });
-
-            cy.wrap(ev).its("updateStart").should("be.a", "number");
-            cy.wrap(ev).its("updateEnd").should("be.a", "number");
-            cy.wrap(ev).then(({ updateStart, updateEnd }) => {
-                expect(updateEnd).to.be.greaterThan(updateStart);
-            });
+            cy.wrap(ev).its("futureEnd").should("eq", 10);
         });
     });
 

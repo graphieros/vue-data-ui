@@ -77,6 +77,7 @@ describe('VueUiQuickChart', () => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
                     'absoluteIndices',
+                    'absoluteValues',
                     'absoluteIndex',
                     'color',
                     'id',
@@ -91,6 +92,7 @@ describe('VueUiQuickChart', () => {
                 expect(wrapper.emitted('selectLegend')).to.exist;
                 expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
                     'absoluteIndices',
+                    'absoluteValues',
                     'color',
                     'coordinates',
                     'id',
@@ -175,6 +177,7 @@ describe('VueUiQuickChart', () => {
                 expect(wrapper.emitted('selectDatapoint')).to.exist;
                 expect(wrapper.emitted('selectDatapoint')[0][0][0]).to.have.keys(
                     'absoluteIndices',
+                    'absoluteValues',
                     'absoluteIndex',
                     'color',
                     'id',
@@ -189,6 +192,7 @@ describe('VueUiQuickChart', () => {
                 expect(wrapper.emitted('selectLegend')).to.exist;
                 expect(wrapper.emitted('selectLegend')[0][0]).to.have.keys(
                     'absoluteIndices',
+                    'absoluteValues',
                     'color',
                     'coordinates',
                     'id',
@@ -289,6 +293,7 @@ describe('VueUiQuickChart', () => {
                     'VALUES',
                     'absoluteIndices',
                     'absoluteIndex',
+                    'absoluteValues',
                     'color',
                     'id',
                     'name',
@@ -304,6 +309,7 @@ describe('VueUiQuickChart', () => {
                     'NAME',
                     'VALUES',
                     'absoluteIndices',
+                    'absoluteValues',
                     'color',
                     'coordinates',
                     'id',
@@ -404,6 +410,7 @@ describe('VueUiQuickChart', () => {
                     'NAME',
                     'VALUES',
                     'absoluteIndices',
+                    'absoluteValues',
                     'absoluteIndex',
                     'color',
                     'id',
@@ -420,6 +427,7 @@ describe('VueUiQuickChart', () => {
                     'NAME',
                     'VALUES',
                     'absoluteIndices',
+                    'absoluteValues',
                     'color',
                     'coordinates',
                     'id',

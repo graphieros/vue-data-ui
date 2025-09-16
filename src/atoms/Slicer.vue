@@ -123,6 +123,24 @@ const props = defineProps({
     verticalHandles: {
         type: Boolean,
         default: false,
+    },
+    minimapCompact: {
+        type: Boolean,
+        default: false,
+    },
+    allMinimaps: {
+        type: Array,
+        default() {
+            return []
+        }
+    },
+    minimapMerged: {
+        type: Boolean,
+        default: false
+    },
+    minimapFrameColor: {
+        type: String,
+        default: '#e1e5e8'
     }
 });
 
@@ -131,6 +149,7 @@ const startValue = ref(props.min);
 const endValue = ref(props.max);
 const hasMinimap = computed(() => !!props.minimap.length);
 const uid = ref(createUid());
+const useMini = computed(() => hasMinimap.value && props.minimapCompact);
 
 const wrapperWidth = ref(0);
 
@@ -155,47 +174,114 @@ const endpoint = computed(() => {
 
 const emit = defineEmits(['update:start', 'update:end', 'reset', 'trapMouse']);
 
+const startPercent = computed(() => {
+    if (useMini.value) {
+        const denom = Math.max(1, absLen.value - 1);
+        return (startForInput.value / denom) * 100;
+    }
+    const range = Math.max(1, props.max - props.min);
+    return ((startValue.value - props.min) / range) * 100;
+});
+
+const endPercent = computed(() => {
+    if (useMini.value) {
+        const denom = Math.max(1, absLen.value - 1);
+        return (endForInput.value / denom) * 100;
+    }
+    const range = Math.max(1, props.max - props.min);
+    return ((endValue.value - props.min) / range) * 100;
+});
+
+const centerPercent = computed(() => (startPercent.value + endPercent.value) / 2);
+
+const overflowsLeft = computed(() => {
+    if (!zoomWrapper.value) return false;
+    const w = zoomWrapper.value.getBoundingClientRect().width;
+    const x = (startPercent.value / 100) * w;
+    return x - tooltipLeftWidth.value / 2 < 0;
+});
+
+const overflowsRight = computed(() => {
+    if (!zoomWrapper.value) return false;
+    const w = zoomWrapper.value.getBoundingClientRect().width;
+    const x = (endPercent.value / 100) * w;
+    return x + tooltipRightWidth.value / 2 > w;
+});
+
 const highlightStyle = computed(() => {
-    const range = props.max - props.min;
-    const startPercent = ((startValue.value - props.min) / range) * 100;
-    const endPercent = ((endValue.value - props.min) / range) * 100;
-    const centerPercent = (startPercent + endPercent) / 2;
-    const centerAdjust = overflowsRight.value 
-        ? `calc(${centerPercent}% - ${mergeTooltip.value.width}px)`
-        : overflowsLeft.value 
-        ? `calc(${centerPercent}%)`
-        : `calc(${centerPercent}% - ${mergeTooltip.value.width / 2}px)`;
+    const centerAdjust = overflowsRight.value
+        ? `calc(${centerPercent.value}% - ${mergeTooltip.value.width}px - 2px)`
+        : overflowsLeft.value
+        ? `calc(${centerPercent.value}% - 8px)`
+        : `calc(${centerPercent.value}% - ${mergeTooltip.value.width / 2}px - 4px)`;
 
     return {
-        left: `${startPercent}%`,
-        width: `${endPercent - startPercent}%`,
+        left: `${startPercent.value}%`,
+        width: `${Math.max(0, endPercent.value - startPercent.value)}%`,
         background: props.selectColor,
-        tooltipLeft: `calc(${startPercent}% - ${overflowsLeft.value ? 0 : tooltipLeftWidth.value / 2}px)`,
-        tooltipRight: `calc(${endPercent}% - ${overflowsRight.value ? tooltipRightWidth.value : tooltipRightWidth.value / 2}px)`,
+        tooltipLeft: `calc(${startPercent.value}% - ${overflowsLeft.value ? 9 : tooltipLeftWidth.value / 2 + 3.5}px)`,
+        tooltipRight: `calc(${endPercent.value}% - ${overflowsRight.value ? tooltipRightWidth.value - 9 : tooltipRightWidth.value / 2 - 3.5}px)`,
         tooltipCenter: centerAdjust,
         arrowLeft: !overflowsLeft.value,
         arrowRight: !overflowsRight.value
     };
 });
 
-const overflowsLeft = computed(() => {
-    if (!zoomWrapper.value) return false;
-    return (
-        zoomWrapper.value.getBoundingClientRect().width *
-        ((startValue.value - props.min) / (props.max - props.min)) -
-        tooltipLeftWidth.value / 2 <
-        0
-    );
+const gridLenMinus1 = computed(() => Math.max(0, (maxSeries.value || 1) - 1));
+const absLenMinus1 = computed(() => Math.max(0, (absLen.value   || 1) - 1));
+
+function miniToGrid(iMini) {
+    if (absLenMinus1.value === 0) return 0;
+    return Math.round((iMini / absLenMinus1.value) * gridLenMinus1.value);
+}
+function gridToMini(iGrid) {
+    if (gridLenMinus1.value === 0) return 0;
+    return Math.round((iGrid / gridLenMinus1.value) * absLenMinus1.value);
+}
+
+const miniToAbsStart = (i) => Math.floor(props.min + i);
+const miniToAbsExclusiveEnd = (i) => Math.ceil(props.min + i);
+
+const startForInput = computed({
+    get() {
+        return useMini.value ? miniToGrid(startMini.value) : Number(startValue.value);
+    },
+    set(v) {
+        if (useMini.value) {
+            const proposedGrid = Math.round(+v || 0);
+            const maxAllowedGrid = Math.max(0, miniToGrid(Math.max(0, endMini.value - 1)));
+            const clampedGrid = Math.min(Math.max(0, proposedGrid), maxAllowedGrid);
+            const miniIdx = gridToMini(clampedGrid);
+            setStartValue(miniToAbsStart(miniIdx));
+        } else {
+            let proposed = Math.round(+v || 0);
+            const maxAllowed = Number(endValue.value) - 1;
+            const clamped = Math.min(Math.max(props.min, proposed), maxAllowed);
+            setStartValue(clamped);
+        }
+    }
 });
 
-const overflowsRight = computed(() => {
-    if (!zoomWrapper.value) return false;
-    return (
-        zoomWrapper.value.getBoundingClientRect().width *
-        ((endValue.value - props.min) / (props.max - props.min)) +
-        tooltipRightWidth.value / 2 >
-        zoomWrapper.value.getBoundingClientRect().width
-    );
+const endForInput = computed({
+    get() {
+        return useMini.value
+        ? miniToGrid(Math.max(startMini.value, endMini.value - 1))
+        : Number(endValue.value);
+    },
+    set(v) {
+        if (useMini.value) {
+            const proposedGridInc   = Math.round(+v || 0);
+            const minAllowedGridInc = miniToGrid(startMini.value);
+            const clampedGridInc    = Math.max(proposedGridInc, minAllowedGridInc);
+            const miniInc           = gridToMini(clampedGridInc);
+            setEndValue(miniToAbsExclusiveEnd(miniInc + 1));
+        } else {
+            let proposed = Math.round(+v || 0);
+            const minAllowed = Number(startValue.value) + 1;
+            const clamped = Math.max(minAllowed, Math.min(proposed, props.max));
+            setEndValue(clamped);
+        }
+    }
 });
 
 const slicerColor = computed(() => props.inputColor);
@@ -205,7 +291,7 @@ const borderColor = computed(() => props.borderColor);
 
 const availableTraps = computed(() => {
     const arr = [];
-    for (let i = 0; i < props.minimap.length; i += 1) {
+    for (let i = 0; i < props.max; i += 1) {
         arr.push(i);
     }
     return arr;
@@ -281,39 +367,194 @@ onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
 });
 
-const unitWidthX = computed(() => {
-    if (!props.minimap.length) return 0;
-    return svgMinimap.value.width / props.minimap.length;
+const maxSeries = computed(() => {
+    return Math.max(...props.allMinimaps.map(d => d.series.length), props.minimap.length || 0);
 });
 
-const minimapLine = computed(() => {
-    if (!props.minimap.length) return [];
-    const max = Math.max(...props.minimap);
-    const min = Math.min(...props.minimap) - 10;
-    const diff = max - (min > 0 ? 0 : min);
-    const points = props.minimap.map((dp, i) => {
-        const normalizedVal = dp - min;
+const unitWidthX = computed(() => {
+    if (!maxSeries.value) return 0;
+    const denom = Math.max(1, maxSeries.value - (props.minimapCompact ? 1 : 0));
+    return svgMinimap.value.width / denom;
+});
+
+
+const globalRange = computed(() => {
+    const vals = [];
+    if (Array.isArray(props.minimap) && props.minimap.length) {
+        vals.push(...props.minimap.filter(Number.isFinite));
+    }
+    if (Array.isArray(props.allMinimaps) && props.allMinimaps.length) {
+        for (const ds of props.allMinimaps) {
+        if (!ds?.isVisible) continue;
+        if (Array.isArray(ds?.series)) vals.push(...ds.series.filter(Number.isFinite));
+        }
+    }
+    if (!vals.length) return { min: 0, max: 1 };
+    return { min: Math.min(...vals), max: Math.max(...vals) };
+});
+
+const allMin = computed(() => globalRange.value.min);
+const allMax = computed(() => globalRange.value.max);
+
+const scaleMin = computed(() => {
+    if (allMin.value < 0 && allMax.value > 0) return allMin.value;
+    if (allMax.value <= 0) return allMin.value;
+    return 0;
+});
+
+const absMaxMag = computed(() => Math.max(1e-9, Math.max(Math.abs(allMin.value), Math.abs(allMax.value))));
+
+const hasBothSigns = computed(() => allMin.value < 0 && allMax.value > 0);
+
+const mapY = (val) => {
+    const H = Math.max(1, svgMinimap.value.height);
+    if (hasBothSigns.value) {
+        const M = absMaxMag.value;
+        const r = Math.max(-1, Math.min(1, val / M));
+        return (1 - (r + 1) / 2) * H;
+    } else {
+        const min = Math.min(0, allMin.value);
+        const max = Math.max(0, allMax.value);
+        return H - ((val - min) / Math.max(1e-9, max - min)) * H;
+    }
+};
+
+const minimapZero = computed(() => mapY(0));
+
+const barTypeQty = computed(() => {
+    if (!props.allMinimaps.length) return 0;
+    return props.allMinimaps.filter(ds => ds.type === 'bar').length
+});
+
+const barWidth = computed(() => {
+    return unitWidthX.value / (barTypeQty.value || 1) * 0.8
+})
+
+function getBarX(x, i, j) {
+    const w = barWidth.value;
+    const n = Math.max(1, barTypeQty.value);
+    const lastJ = maxSeries.value - 1;
+    if (j === 0) return x + (w / 2) * i;
+    if (j === lastJ) return x - (w / 2) * (n - i);
+    return x - (n * w) / 2 + i * w;
+}
+
+function getBarWidth(i, j) {
+    return [0, maxSeries.value - 1].includes(j) ? barWidth.value / 2 : barWidth.value
+}
+
+function makeSmartMapY(min, max, H) {
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const EPS = 1e-9;
+
+    if (max <= 0) {
+        const span = Math.max(EPS, 0 - min);
+        return (val) => H - ((val - min) / span) * H;
+    }
+    if (min >= 0) {
+        const span = Math.max(EPS, max - 0);
+        return (val) => H - ((val - 0) / span) * H;
+    }
+    const M = Math.max(EPS, Math.max(Math.abs(min), Math.abs(max)));
+    return (val) => {
+        const r = clamp(val / M, -1, 1);
+        return (1 - (r + 1) / 2) * H;
+    };
+}
+
+function makeMiniChart(ds) {
+    if (!ds || !ds.length) {
         return {
-        x: (svgMinimap.value.width / props.minimap.length) * i + unitWidthX.value / 2,
-        y: svgMinimap.value.height - (normalizedVal / diff) * (svgMinimap.value.height * 0.9)
+        fullSet: '',
+        selectionSet: '',
+        sliced: [],
+        firstPlot: null,
+        lastPlot: null,
+        hasFull: false,
+        hasSelection: false,
         };
-    });
-    const fullSet = props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points);
-    const sliced = [...points].slice(props.valueStart, props.valueEnd);
-    const selectionSet = props.smoothMinimap ? createSmoothPath(sliced) : createStraightPath(sliced);
+    }
+
+    const H = Math.max(1, svgMinimap.value.height);
+    const finite = ds.filter(Number.isFinite);
+    const seriesMin = Math.min(...finite);
+    const seriesMax = Math.max(...finite);
+
+    const mapYSeries = makeSmartMapY(seriesMin, seriesMax, H);
+
+    const len = ds.length;
+    const s = Math.min(Math.max(0, startMini.value), Math.max(0, len - 1));
+    const e = Math.min(len, Math.max(s + 1, endMini.value));
+
+    const points = ds.map((dp, i) => ({
+        x: unitWidthX.value * i + (props.minimapCompact ? 0 : unitWidthX.value / 2),
+        y: mapYSeries(dp),
+        v: dp,
+        y0:
+        seriesMin < 0 && seriesMax > 0
+            ? mapYSeries(0)
+            : mapYSeries(0)
+    }));
+
+    const sliced = points.slice(s, e);
+
+    const fullSet =
+        points.length >= 2
+        ? (props.smoothMinimap ? createSmoothPath(points) : createStraightPath(points))
+        : '';
+
+    const selectionSet =
+        sliced.length >= 2
+        ? (props.smoothMinimap ? createSmoothPath(sliced) : createStraightPath(sliced))
+        : '';
+
     return {
         fullSet,
         selectionSet,
         sliced,
-        firstPlot: points[props.valueStart],
-        lastPlot: points[props.valueEnd - 1]
+        points,
+        firstPlot: points[s] || null,
+        lastPlot: points[Math.max(0, e - 1)] || null,
+        hasFull: points.length >= 2,
+        hasSelection: sliced.length >= 2,
     };
+}
+
+const minimapLine = computed(() => {
+    if (!props.minimap.length) return {
+        fullSet: '',
+        selectionSet: '',
+        sliced: [],
+        firstPlot: null,
+        lastPlot: null,
+        hasFull: false,
+        hasSelection: false,
+    };
+    return makeMiniChart(props.minimap);
 });
 
+const allMinimapLines = computed(() => {
+    if (!props.allMinimaps.length) return [];
+    return props.allMinimaps.map((ds, idx) => {
+        const line = makeMiniChart(ds?.series || []);
+        const k = ds?.id ?? ds?.name ?? idx;
+        return {
+            key: typeof k === 'object' ? JSON.stringify(k) : String(k),
+            color: ds?.color,
+            ...line,
+            isVisible: ds.isVisible,
+            type: ds.type || 'line'
+        };
+    });
+});
+
+
 const selectionRectCoordinates = computed(() => {
+    const s = startMini.value;
+    const e = Math.max(s + 1, endMini.value);
     return {
-        x: unitWidthX.value * startValue.value + unitWidthX.value / 2,
-        width: svgMinimap.value.width * ((endValue.value - startValue.value) / props.max) - unitWidthX.value
+        x: unitWidthX.value * s + (props.minimapCompact ? 0 : unitWidthX.value / 2),
+        width: unitWidthX.value * (e - s) - unitWidthX.value,
     };
 });
 
@@ -322,19 +563,20 @@ const selectedTrap = ref(props.minimapSelectedIndex);
 watch(
     () => props.minimapSelectedIndex,
     (v) => {
-        selectedTrap.value = v + props.valueStart;
+        selectedTrap.value = v == null ? null : absToMiniStart(props.valueStart) + v;
     },
     { immediate: true }
 );
 
 function trapMouse(trap) {
     selectedTrap.value = trap;
-    if (trap >= props.valueStart && trap < props.valueEnd) {
-        emit('trapMouse', trap - props.valueStart);
+    const s = startMini.value;
+    const e = endMini.value;
+    if (trap >= s && trap < e) {
+        emit('trapMouse', trap - s);
     }
 }
 
-const inputStep = ref(0);
 const rangeStart = ref(null);
 const rangeEnd = ref(null);
 
@@ -472,7 +714,6 @@ function endDragging() {
     activeMoveHandler = activeEndHandler = null;
 }
 
-// ===== tooltips =====
 const isMouseDown = ref(false);
 const tooltipLeft = ref(null);
 const tooltipRight = ref(null);
@@ -567,6 +808,21 @@ onBeforeUnmount(() => {
     activeMoveEvent = activeEndEvent = null;
     activeMoveHandler = activeEndHandler = null;
 });
+
+const absLen = computed(() => Math.max(1, props.max - props.min));
+
+function absToMiniStart(i) {
+    const v = Math.floor(i - props.min);
+    return Math.min(Math.max(0, v), absLen.value);
+}
+function absToMiniEnd(i) {
+    const v = Math.ceil((i - props.min));
+    return Math.min(Math.max(0, v), absLen.value);
+}
+
+const startMini = computed(() => absToMiniStart(startValue.value));
+const endMini   = computed(() => absToMiniEnd(endValue.value));
+
 </script>
 
 <template>
@@ -618,27 +874,66 @@ onBeforeUnmount(() => {
                     class="minimap"  
                     style="width: 100%" data-cy="minimap"
                 >
-                    <svg 
-                        data-cy="slicer-minimap-svg" 
-                        :xmlns="XMLNS" 
-                        :viewBox="`0 0 ${svgMinimap.width < 0 ? 0 : svgMinimap.width} ${svgMinimap.height < 0 ? 0 : svgMinimap.height}`"
-                    >
+                <svg
+                    :key="`mm-${minimapMerged ? 'merged' : 'split'}-${minimapCompact ? 'compact' : 'normal'}`"
+                    data-cy="slicer-minimap-svg"
+                    :xmlns="XMLNS"
+                    :viewBox="`0 0 ${Math.max(0, svgMinimap.width)} ${Math.max(0, svgMinimap.height)}`"
+                >
                         <defs>
                             <linearGradient :id="uid" x1="0%" y1="0%" x2="0%" y2="100%">
                                 <stop offset="0%" :stop-color="`${minimapLineColor}50`"/>
                                 <stop offset="100%" stop-color="transparent"/>
                             </linearGradient>
                         </defs>
+
+                        <rect 
+                            class="vue-ui-zoom-minimap-frame"
+                            v-if="minimapCompact"
+                            :x="0"
+                            :y="0"
+                            :width="svgMinimap.width"
+                            :height="svgMinimap.height"
+                            fill="none"
+                            :stroke="minimapFrameColor"
+                            :rx="3"
+                        />
                         
-                        <path 
+                        <path
+                            v-if="minimapMerged"
                             :d="`M${minimapLine.fullSet}`" 
                             :stroke="`${minimapLineColor}`" 
                             fill="none"
                             stroke-width="1" 
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            style="opacity: 1"
+                            style="opacity: 0.6"
                         />
+
+                        <template v-else>
+                            <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
+                                <template v-for="(r, j) in dp.points">
+                                    <rect 
+                                        v-if="dp.isVisible"
+                                        :x="getBarX(r.x, i, j)"
+                                        :width="getBarWidth(i, j)"
+                                        :y="r.v >= 0 ? r.y : r.y0"
+                                        :height="r.v >= 0 ? (r.y0 - r.y) : (r.y - r.y0)"
+                                        :fill="dp.color"
+                                        style="opacity: 0.6"
+                                    />
+                                </template>
+                            </g>
+                            <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
+                                <path 
+                                    v-if="dp.isVisible"
+                                    :d="`M ${dp.fullSet}`" 
+                                    fill="none"
+                                    :stroke="dp.color"
+                                    style="opacity: 0.6"
+                                />
+                            </g>
+                        </template>
                         
                         <!-- SELECTION RECT -->
                         <rect
@@ -650,13 +945,6 @@ onBeforeUnmount(() => {
                             :fill="borderColor"
                             :rx="minimapSelectionRadius"
                             stroke="none"
-                        />
-
-                        <path 
-                            :d="`M${unitWidthX / 2},${Math.max(svgMinimap.height, 0)} ${minimapLine.fullSet} L${svgMinimap.width - (unitWidthX / 2)},${Math.max(svgMinimap.height, 0)}Z`" 
-                            :fill="`url(#${uid})`"
-                            stroke="none"
-                            style="opacity: 1"
                         />
 
                         <rect
@@ -680,68 +968,196 @@ onBeforeUnmount(() => {
                             }"
                         />
 
-                        <path 
-                            :d="`M${minimapLine.sliced[0].x},${Math.max(svgMinimap.height, 0)} ${minimapLine.selectionSet} L${minimapLine.sliced.at(-1).x},${Math.max(svgMinimap.height, 0)}Z`" 
-                            :fill="`url(#${uid})`"
-                            stroke="none"
-                            style="opacity: 1"
-                        />
-
-                        <path 
-                            :d="`M ${minimapLine.selectionSet}`" 
-                            :stroke="`${minimapLineColor}`" 
-                            fill="transparent"
-                            stroke-width="2" 
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-
-                        <circle
-                            :cx="minimapLine.firstPlot.x"
-                            :cy="minimapLine.firstPlot.y"
-                            stroke-width="0.5"
-                            :stroke="borderColor"
-                            r="3"
-                            :fill="minimapLineColor"
-                        />
-
-                        <circle
-                            :cx="minimapLine.lastPlot.x"
-                            :cy="minimapLine.lastPlot.y"
-                            stroke-width="0.5"
-                            :stroke="borderColor"
-                            r="3"
-                            :fill="minimapLineColor"
-                        />
-
                         <!-- SELECTION INDICATOR -->
                         <template v-if="selectedTrap !== null">
                             <g v-for="(trap, i) in availableTraps">
                                 <line
-                                    :x1="unitWidthX * i + (unitWidthX / 2)"
-                                    :x2="unitWidthX * i + (unitWidthX / 2)"
+                                    :x1="unitWidthX * i + (minimapCompact ? 0 : unitWidthX / 2)"
+                                    :x2="unitWidthX * i + (minimapCompact ? 0 : unitWidthX / 2)"
                                     :y1="0"
                                     :y2="Math.max(svgMinimap.height, 0)"
                                     :stroke="minimapIndicatorColor"
                                     stroke-linecap="round"
                                     stroke-dasharray="2"
                                     stroke-width="1"
-                                    v-if="selectedTrap === trap && trap >= valueStart && trap < valueEnd"
+                                    v-if="selectedTrap === trap && trap >= startMini && trap < endMini"
                                 />
                             </g>
                         </template>
 
+                        <line
+                            class="slicer-minimap-zero-line"
+                            v-if="!minimapMerged && scaleMin < 0"
+                            :x1="0"
+                            :x2="svgMinimap.width"
+                            :y1="minimapZero"
+                            :y2="minimapZero"
+                            :stroke="minimapFrameColor"
+                            stroke-width="0.5"
+                        />
+
+                        <!-- MERGED MINIMAP -->
+                        <template v-if="minimapMerged">
+                            <template v-if="minimapLine && minimapLine.sliced && minimapLine.sliced.length">
+                                <path
+                                    v-if="minimapLine.selectionSet"
+                                    :d="`M${minimapLine.sliced[0].x},${Math.max(svgMinimap.height, 0)} ${minimapLine.selectionSet} L${minimapLine.sliced[minimapLine.sliced.length - 1].x},${Math.max(svgMinimap.height, 0)}Z`"
+                                    :fill="`url(#${uid})`"
+                                    stroke="none"
+                                    style="opacity: 1"
+                                />
+                                <path
+                                    v-if="minimapLine.selectionSet"
+                                    :d="`M ${minimapLine.selectionSet}`"
+                                    :stroke="`${minimapLineColor}`"
+                                    fill="transparent"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </template>
+                        </template>
+
+                        <!-- SPLIT TREE (circles) -->
+                        <g v-else>
+                            <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
+                                <template v-for="(r, j) in dp.points">
+                                    <rect 
+                                        v-if="dp.isVisible"
+                                        :x="getBarX(r.x, i, j)"
+                                        :width="getBarWidth(i, j)"
+                                        :y="r.v >= 0 ? r.y : r.y0"
+                                        :height="r.v >= 0 ? (r.y0 - r.y) : (r.y - r.y0)"
+                                        :fill="dp.color"
+                                        :style="{
+                                            opacity: j >= valueStart && j <= valueEnd- 1 ? 1 : 0
+                                        }"
+                                    />
+                                </template>
+                            </g>
+                            <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
+                                <path
+                                    v-if="dp && dp.hasSelection && dp.selectionSet && dp.isVisible"
+                                    :d="`M ${dp.selectionSet}`"
+                                    :stroke="dp.color"
+                                    fill="transparent"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </g>
+                        </g>
+
+                        <!-- COMPACT HANDLES (minimap mode only) -->
+                        <rect
+                            class="vue-ui-zoom-compact-minimap-handle"
+                            v-if="hasMinimap && minimapCompact"
+                            :x="selectionRectCoordinates.x - 8"
+                            :y="0"
+                            :width="8"
+                            :height="svgMinimap.height"
+                            :fill="borderColor"
+                            :stroke="textColor"
+                            :rx="3"
+                        />
+
+                        <rect
+                            class="vue-ui-zoom-compact-minimap-handle"
+                            v-if="hasMinimap && minimapCompact"
+                            :x="selectionRectCoordinates.x + selectionRectCoordinates.width"
+                            :y="0"
+                            :width="8"
+                            :height="svgMinimap.height"
+                            :fill="borderColor"
+                            :stroke="textColor"
+                            :rx="3"
+                        />
+
+
+                        <!-- MERGED (circles) -->
+                        <template v-if="minimapMerged">
+                            <circle
+                                v-if="minimapLine && minimapLine.firstPlot"
+                                :cx="minimapLine.firstPlot.x"
+                                :cy="minimapLine.firstPlot.y"
+                                stroke-width="0.5"
+                                :stroke="borderColor"
+                                r="4"
+                                :fill="minimapLineColor"
+                            />
+                            <circle
+                                v-if="minimapLine && minimapLine.firstPlot"
+                                :cx="minimapLine.firstPlot.x"
+                                :cy="minimapLine.firstPlot.y"
+                                r="2"
+                                :fill="borderColor"
+                            />
+                            <circle
+                                v-if="minimapLine && minimapLine.lastPlot"
+                                :cx="minimapLine.lastPlot.x"
+                                :cy="minimapLine.lastPlot.y"
+                                stroke-width="0.5"
+                                :stroke="borderColor"
+                                r="4"
+                                :fill="minimapLineColor"
+                            />
+                            <circle
+                                v-if="minimapLine && minimapLine.lastPlot"
+                                :cx="minimapLine.lastPlot.x"
+                                :cy="minimapLine.lastPlot.y"
+                                r="2"
+                                :fill="borderColor"
+                            />
+                        </template>
+                        <!-- SPLIT TREE (circles) -->
+                        <g v-else>
+                            <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
+                                <circle
+                                    v-if="dp && dp.firstPlot && dp.isVisible"
+                                    :cx="dp.firstPlot.x"
+                                    :cy="dp.firstPlot.y"
+                                    stroke-width="0.5"
+                                    :stroke="borderColor"
+                                    r="4"
+                                    :fill="dp.color"
+                                />
+                                <circle
+                                    v-if="dp && dp.firstPlot && dp.isVisible"
+                                    :cx="dp.firstPlot.x"
+                                    :cy="dp.firstPlot.y"
+                                    r="2"
+                                    :fill="borderColor"
+                                />
+                                <circle
+                                    v-if="dp && dp.lastPlot && dp.isVisible"
+                                    :cx="dp.lastPlot.x"
+                                    :cy="dp.lastPlot.y"
+                                    stroke-width="0.5"
+                                    :stroke="borderColor"
+                                    r="4"
+                                    :fill="dp.color"
+                                />
+                                <circle
+                                    v-if="dp && dp.lastPlot && dp.isVisible"
+                                    :cx="dp.lastPlot.x"
+                                    :cy="dp.lastPlot.y"
+                                    r="2"
+                                    :fill="borderColor"
+                                />
+                            </g>
+                        </g>
+
                         <!-- TOOLTIP TRAPS -->
                         <rect 
                             v-for="(trap, i) in availableTraps"
-                            :x="unitWidthX * i"
                             :y="0"
                             :height="Math.max(svgMinimap.height, 0)"
-                            :width="unitWidthX < 0 ? 0 : unitWidthX"
                             fill="transparent"
                             style="pointer-events: all !important;"
+                            :x="unitWidthX * i - (minimapCompact ? unitWidthX / 2 : 0)"
+                            :width="unitWidthX < 0 ? 0 : unitWidthX"
                             :style="{
-                                cursor: trap >= valueStart && trap < valueEnd && enableSelectionDrag ? isMouseDown ? 'grabbing' : 'grab' : 'default',
+                                cursor: trap >= startMini && trap < endMini && enableSelectionDrag ? isMouseDown ? 'grabbing' : 'grab' : 'default'
                             }"
                             @mousedown="isMouseDown = true"
                             @mouseup="isMouseDown = false"
@@ -751,7 +1167,12 @@ onBeforeUnmount(() => {
                     </svg>
                 </div>
             </template>
-            <div class="slider-track"></div>
+
+            <div 
+                class="slider-track"
+                :style="{ visibility: hasMinimap && minimapCompact ? 'hidden' : 'visible' }"
+            />
+
             <div 
                 data-cy="slicer-range-highlight"
                 :class="{
@@ -762,36 +1183,46 @@ onBeforeUnmount(() => {
                 @mouseup="isMouseDown = false"
                 :style="{
                     ...highlightStyle,
-                    cursor: isMouseDown ? 'grabbing' : 'grab'
+                    cursor: isMouseDown ? 'grabbing' : 'grab',
+                    visibility: hasMinimap && minimapCompact ? 'hidden' : 'visible'
                 }"
             />
             
-            <input 
+            <input
                 v-if="enableRangeHandles"
                 data-cy="slicer-handle-left"
-                ref="rangeStart" 
-                :key="`range-min${inputStep}`" 
-                type="range" 
-                :class="{'range-left': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles }" 
-                :min="min" 
-                :max="max" 
-                v-model="startValue" 
-                @input="onStartInput"
+                ref="rangeStart"
+                type="range"
+                :class="{
+                    'range-left': true,
+                    'range-handle': true,
+                    'range-minimap': hasMinimap && verticalHandles,
+                    'range-invisible': hasMinimap && minimapCompact
+                }"
+                :min="min"
+                :max="useMini && minimapCompact ? gridLenMinus1 : max"
+                :step="1"
+                v-model.number="startForInput"
                 @mouseenter="setLeftLabelZIndex('start')"
             />
 
-            <input 
+            <input
                 v-if="enableRangeHandles"
                 data-cy="slicer-handle-right"
-                ref="rangeEnd" 
-                type="range" 
-                :class="{'range-right': true, 'range-handle': true, 'range-minimap': hasMinimap && verticalHandles }" 
-                :min="min" 
-                :max="max" 
-                v-model="endValue" 
-                @input="onEndInput" 
+                ref="rangeEnd"
+                type="range"
+                :class="{
+                    'range-right': true,
+                    'range-handle': true,
+                    'range-minimap': hasMinimap && verticalHandles,
+                    'range-invisible': hasMinimap && minimapCompact
+                }"
+                :min="min"
+                :max="useMini && minimapCompact ? gridLenMinus1 : max"
+                :step="1"
+                v-model.number="endForInput"
                 @mouseenter="setLeftLabelZIndex('end')"
-            />
+                />
 
             <div
                 v-if="labelLeft"
@@ -809,7 +1240,8 @@ onBeforeUnmount(() => {
                     backgroundColor: selectColor,
                     border: `1px solid ${borderColor}`,
                     zIndex: `${leftLabelZIndex + 4}`,
-                    visibility: tooltipsCollide || labelLeft === labelRight ? 'hidden' : 'visible'
+                    visibility: tooltipsCollide || labelLeft === labelRight ? 'hidden' : 'visible',
+                    top: hasMinimap && minimapCompact ? 'calc(-100% - 18px)' : '-100%'
                 }"
             >
                 {{ labelLeft }}
@@ -832,7 +1264,8 @@ onBeforeUnmount(() => {
                     color: adaptColorToBackground(selectColor),
                     backgroundColor: selectColor,
                     border: `1px solid ${borderColor}`,
-                    zIndex: '4'
+                    zIndex: '4',
+                    top: hasMinimap && minimapCompact ? 'calc(-100% - 18px)' : '-100%'
                 }"
             >
                 {{ labelLeft === labelRight ? labelLeft : `${labelLeft} - ${labelRight}` }}
@@ -854,7 +1287,8 @@ onBeforeUnmount(() => {
                     backgroundColor: selectColor,
                     border: `1px solid ${borderColor}`,
                     zIndex: '4',
-                    visibility: tooltipsCollide || labelLeft === labelRight ? 'hidden' : 'visible'
+                    visibility: tooltipsCollide || labelLeft === labelRight ? 'hidden' : 'visible',
+                    top: hasMinimap && minimapCompact ? 'calc(-100% - 18px)' : '-100%'
                 }"
             >
                 {{ labelRight }}
@@ -1056,7 +1490,6 @@ input[type="range"]::-ms-thumb {
     text-align:center;
     pointer-events: none;
     position: absolute;
-    top: -100%;
     width: fit-content;
     white-space:nowrap;
 }
@@ -1100,5 +1533,97 @@ input[type="range"]::-ms-thumb {
 .range-tooltip-visible {
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
+}
+
+/** Compact (minimap only) */
+
+input[type="range"].range-invisible {
+    position: absolute;
+    z-index: 3;
+    top: 0px;
+    height: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+input[type="range"].range-invisible.range-left {
+    left: -12px;
+}
+
+input[type="range"].range-invisible.range-right {
+    left: -6px;
+}
+
+input[type="range"].range-invisible::-webkit-slider-thumb {
+    background-color: transparent;
+    border-radius: 50%;
+    cursor: ew-resize;
+    position: relative;
+    z-index: 2;
+    outline: 2px transparent;
+    transition: all 0.2s ease-in-out;
+
+    &:active,
+    &:hover {
+        box-shadow: none;
+        background-color: transparent;
+    }
+}
+
+input[type="range"].range-invisible::-webkit-slider-thumb {
+    width: 12px;
+    height: 50px;
+    border-radius: 0px;
+    margin-top: -36px;
+    border-right: 1px solid transparent;
+    border-left: 1px solid transparent;
+    cursor: ew-resize;
+}
+
+input[type="range"].range-invisible::-moz-range-thumb {
+    background-color: transparent;
+    z-index: 2;
+    outline: none;
+
+    &:active,
+    &:hover {
+        box-shadow: 0 0 0 10px transparent;
+        background-color: transparent;
+    }
+}
+
+input[type="range"].range-invisible::-moz-range-thumb {
+    width: 12px;
+    height: 50px;
+    border-radius: 0px;
+    border: none;
+    cursor: ew-resize;
+    transform: translateY(-20px);
+    pointer-events: auto;
+}
+
+input[type="range"].range-invisible::-ms-thumb {
+    pointer-events: auto;
+    width: 20px;
+    height: 20px;
+    background-color: transparent;
+    border-radius: 50%;
+    cursor: ew-resize;
+    position: relative;
+    z-index: 2;
+    outline: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
+
+    &:active,
+    &:hover {
+        box-shadow: 0 0 0 10px transparent;
+        background-color: transparent;
+    }
+}
+
+.vue-ui-zoom-compact-minimap-handle {
+    opacity: 1;
+    pointer-events: none;
+    transition: opacity 0.15s ease-in-out;
 }
 </style>

@@ -247,6 +247,7 @@ export function useConfig() {
         verticalHandles: false,
         compact: true,
         merged: false,
+        frameColor: COLOR_GREY
     }
 
     const vue_ui_stackbar = {

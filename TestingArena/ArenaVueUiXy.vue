@@ -284,7 +284,11 @@ const dates = [
 function createDs(n, m = 100) {
     const arr = [];
     for (let i = 0; i < n; i += 1) {
-        arr.push(Math.random() * m * 1)
+        if (i > 20 && i < 30) {
+            arr.push(null);
+        } else {
+            arr.push(Math.random() * m * (Math.random() > 0.3 ? 1 : -1))
+        }
     }
     return arr
 }
@@ -390,7 +394,23 @@ onMounted(() => {
         dataset.value = [
     {
         name: "Serie A",
-        series: createDs(100),
+        series: createDs(12),
+        type: "bar",
+        dataLabels: false,
+        smooth: true,
+        useArea: true,
+    },
+    {
+        name: "Serie A",
+        series: createDs(12),
+        type: "bar",
+        dataLabels: false,
+        smooth: true,
+        useArea: true,
+    },
+    {
+        name: "Serie B",
+        series: createDs(12),
         type: "line",
         dataLabels: false,
         smooth: true,
@@ -413,7 +433,7 @@ onMounted(() => {
     //     dataLabels: false,
     // },
 ]
-    }, 2000)
+    }, 0)
 })
 
 // const dataset = ref([
@@ -639,7 +659,7 @@ const model = ref([
     { key: 'chart.zoom.enableRangeHandles', def: true, type: 'chexkbox' },
     { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox' },
 
-    { key: 'chart.zoom.minimap.show', def: false, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.smooth', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color' },
     { key: 'chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
@@ -647,10 +667,12 @@ const model = ref([
     { key: 'chart.zoom.minimap.selectionRadius', def: 2, type: 'number', min: 0, max: 24 },
     { key: 'chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color' },
     { key: 'chart.zoom.minimap.verticalHandles', def: false, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.compact', def: true, type: 'checkbox' },
+    { key: 'chart.zoom.minimap.merged', def: false, type: 'checkbox' },
 
-    { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
-    { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
-    { key: 'chart.zoom.preview.enable', def: true, type: 'checkbox'},
+    { key: 'chart.zoom.startIndex', def: 5, type: 'number', min: 0, max: 100 },
+    { key: 'chart.zoom.endIndex', def: 8, type: 'number', min: 0, max: 100 },
+    { key: 'chart.zoom.preview.enable', def: false, type: 'checkbox'},
     { key: 'chart.zoom.preview.stroke', def: '#1f77b4', type: 'color'},
     { key: 'chart.zoom.preview.fill', def: '#1f77b420', type: 'color'},
     { key: 'chart.zoom.preview.strokeDasharray', def: 0, type: 'number', min: 0, max: 12},
@@ -1156,9 +1178,9 @@ const config = computed(() => {
                     ...c.chart.zoom,
                     useDefaultFormat: true,
                     timeFormat: 'yyyy-MM-dd HH:mm:ss',
-                    customFormat: ({ absoluteIndex }) => {
-                        return String(absoluteIndex) + 'TEST'
-                    }
+                    // customFormat: ({ absoluteIndex }) => {
+                    //     return String(absoluteIndex) + 'TEST'
+                    // }
                 },
                 timeTag: {
                     ...c.chart.timeTag,

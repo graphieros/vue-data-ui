@@ -95,6 +95,20 @@ const datasets = ref({
             values: [-3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14]
         }
     ],
+    longObjectMixed: [
+        {
+            name: 'Serie 1',
+            values: [12, 7, 4, 11, 13, 16, 19, 22, 15, 28, 16, 12]
+        },
+        {
+            name: 'Serie 2',
+            values: [-2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13]
+        },
+        {
+            name: 'Serie 3',
+            values: [-3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14]
+        }
+    ],
     donut: [
         { name: 'Serie 1', value: 12},
         { name: 'Serie 2', value: 12},
@@ -120,12 +134,12 @@ function alterDataset() {
 }
 
 
-const selectedSerie = ref('longArray');
+const selectedSerie = ref('shortObjectMixed');
 
 const model = ref([
     { key: 'debug', def: true, type: 'checkbox'},
     { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'backgroundColor', def: '#FFFFFF20', type: 'color'},
+    { key: 'backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptionsButtons.pdf', def: true, type: 'checkbox'},
     { key: 'userOptionsButtons.img', def: true, type: 'checkbox'},
@@ -229,7 +243,7 @@ const model = ref([
     { key: 'zoomMinimap.lineColor', def: '#1A1A1A', type: 'color'},
     { key: 'zoomMinimap.selectionRadius', def: 2, type: 'range', min: 0, max: 24},
     { key: 'zoomMinimap.indicatorColor', def: '#1A1A1A', type: 'color'},
-    { key: 'zoomMinimap.verticalHandles', def: true, type: 'checkbox'},
+    { key: 'zoomMinimap.verticalHandles', def: false, type: 'checkbox'},
 
     { key: 'zoomStartIndex', def: null, type: 'number', min: 0, max: 100},
     { key: 'zoomEndIndex', def: null, type: 'number', min: 0, max: 100},

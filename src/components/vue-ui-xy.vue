@@ -1275,7 +1275,8 @@ const datasetWithIds = computed(() => {
         return {
             ...datapoint,
             series: lttb(datapoint.series),
-            id: `uniqueId_${i}`
+            id: `uniqueId_${i}`,
+            color: convertColorToHex(datapoint.color ? datapoint.color : customPalette.value[i] ? customPalette.value[i] : palette[i]),
         }
     });
 });
@@ -1369,6 +1370,18 @@ const minimap = computed(() => {
     const _min = Math.min(...sumAllSeries);
     return sumAllSeries.map(dp => dp + (_min < 0 ? Math.abs(_min) : 0)) // positivized
 });
+
+const allMinimaps = computed(() => {
+    if (!FINAL_CONFIG.value.chart.zoom.minimap.show) return [];
+    const _source = datasetWithIds.value.map(ds => {
+        return {
+            ...ds,
+            isVisible: !segregatedSeries.value.includes(ds.id),
+        }
+    })
+
+    return _source
+})
 
 const selectedSeries = computed(() => {
     return relativeDataset.value.map(datapoint => {
@@ -2698,8 +2711,8 @@ function timeTagX() {
     const centerX = drawingArea.value.left + activeIndex.value * sectionX + sectionX / 2;
     const desiredX = centerX - w / 2 - (W_FO - w) / 2;
     const minX = drawingArea.value.left - (W_FO - w) / 2;
-    const maxX = drawingArea.value.right - (W_FO + w) / 2;
-    const clamped = Math.max(minX, Math.min(desiredX, maxX));
+    const _maxX = drawingArea.value.right - (W_FO + w) / 2;
+    const clamped = Math.max(minX, Math.min(desiredX, _maxX));
     return checkNaN(clamped);
 }
 
@@ -4170,7 +4183,11 @@ defineExpose({
                 :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
                 :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => lttb(datapoint.series).length))"
                 :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
-                :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag" 
+                :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag"
+                :minimapCompact="FINAL_CONFIG.chart.zoom.minimap.compact"
+                :allMinimaps="allMinimaps"
+                :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
+                :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
                 @reset="refreshSlicer"
                 @trapMouse="selectMinimapIndex"
                 @futureStart="v => setPrecog('start', v)"
@@ -4214,7 +4231,12 @@ defineExpose({
                 :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
                 :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => lttb(datapoint.series).length))"
                 :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
-                :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag" @reset="refreshSlicer"
+                :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag"
+                :minimapCompact="FINAL_CONFIG.chart.zoom.minimap.compact"
+                :allMinimaps="allMinimaps"
+                :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
+                :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
+                @reset="refreshSlicer"
                 @trapMouse="selectMinimapIndex">
                 <template #reset-action="{ reset }">
                     <slot name="reset-action" v-bind="{ reset }" />
