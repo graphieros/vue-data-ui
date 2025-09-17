@@ -483,7 +483,8 @@ function makeMiniChart(ds, smooth = false) {
     const e = Math.min(len, Math.max(s + 1, endMini.value));
 
     const points = ds.map((dp, i) => {
-        const valid = Number.isFinite(dp);
+        const val = props.cutNullValues ? dp : dp === null ? 0 : dp;
+        const valid = Number.isFinite(val);
         const x = unitWidthX.value * i + (props.minimapCompact ? 0 : unitWidthX.value / 2);
         const y0 =
             seriesMin < 0 && seriesMax > 0
@@ -492,9 +493,9 @@ function makeMiniChart(ds, smooth = false) {
 
         return {
             x,
-            y: valid ? mapYSeries(dp) : NaN,
-            v: dp,
-            value: valid ? dp : null,
+            y: valid ? mapYSeries(val) : NaN,
+            v: val,
+            value: valid ? val : null,
             y0,
             i,
         };
