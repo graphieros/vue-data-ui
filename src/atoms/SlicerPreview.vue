@@ -416,7 +416,7 @@ function getBarWidth(i, j) {
 
 const globalRange = computed(() => {
     const vals = [];
-    if (Array.isArray(props.minimap) && props.minimap.length) {
+    if (Array.isArray(props.minimap) && props.minimap.length && props.minimapMerged) {
         vals.push(...props.minimap.filter(Number.isFinite));
     }
     if (Array.isArray(props.allMinimaps) && props.allMinimaps.length) {
@@ -493,11 +493,7 @@ function makeMiniChart(ds, smooth = false) {
     }
     const H = Math.max(1, svgMinimap.value.height);
 
-    const finite = ds.filter(Number.isFinite);
-    const seriesMin = finite.length ? Math.min(...finite) : 0;
-    const seriesMax = finite.length ? Math.max(...finite) : 0;
-
-    const mapYSeries = makeSmartMapY(seriesMin, seriesMax, H);
+    const mapYSeries = makeSmartMapY(allMin.value, allMax.value, H);
 
     const len = ds.length;
     const s = Math.min(Math.max(0, startMini.value), Math.max(0, len - 1));
@@ -507,10 +503,7 @@ function makeMiniChart(ds, smooth = false) {
         const val = props.cutNullValues ? dp : dp === null ? 0 : dp;
         const valid = Number.isFinite(val);
         const x = unitWidthX.value * i + (props.minimapCompact ? 0 : unitWidthX.value / 2);
-        const y0 =
-            seriesMin < 0 && seriesMax > 0
-                ? mapYSeries(0)
-                : mapYSeries(0);
+        const y0 = mapYSeries(0);
 
 
         return {
