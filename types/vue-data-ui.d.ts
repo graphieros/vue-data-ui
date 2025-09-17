@@ -1419,7 +1419,8 @@ declare module "vue-data-ui" {
         | "chartRidgeline"
         | "chartChord"
         | "tableDialogOpen"
-        | "tableDialogClose";
+        | "tableDialogClose"
+        | "minimap";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
