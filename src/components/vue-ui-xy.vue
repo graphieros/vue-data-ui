@@ -477,7 +477,12 @@ function normalizeSlicerWindow() {
 
     slicer.value = { start: s, end: e }
     slicerPrecog.value.start = s
-    slicerPrecog.value.end   = e
+    slicerPrecog.value.end = e
+
+    if(chartSlicer.value) {
+        chartSlicer.value.setStartValue(s);
+        chartSlicer.value.setEndValue(e)
+    }
 }
 
 const precogRect = computed(() => {
@@ -1001,39 +1006,49 @@ function validSlicerEnd(v) {
     return v;
 }
 
-async function setupSlicer() {
-    await nextTick();
-    await nextTick();
+const isSettingUp = ref(false);
+const slicerReady = ref(false);
 
-    const { startIndex, endIndex } = FINAL_CONFIG.value.chart.zoom;
-    const comp = chartSlicer.value;
+function setupSlicer() {
+    if (isSettingUp.value) return;
+    isSettingUp.value = true;
+    try {
+        const { startIndex, endIndex } = FINAL_CONFIG.value.chart.zoom;
+        const max = Math.max(...FINAL_DATASET.value.map(dp => lttb(dp.series).length));
 
-    const max = Math.max(...FINAL_DATASET.value.map(dp => lttb(dp.series).length));
+        const start = startIndex != null ? startIndex : 0;
+        const end   = endIndex   != null ? Math.min(validSlicerEnd(endIndex + 1), max) : max;
 
-    slicer.value = { start: 0, end: max };
-
-    if ((startIndex != null || endIndex != null) && comp) {
-        if (startIndex != null) {
-            slicer.value.start = startIndex;
-            comp.setStartValue(startIndex);
-        } else {
-            slicer.value.start = 0;
-            comp.setStartValue(0);
-        }
-        if (endIndex != null) {
-            slicer.value.end = endIndex + 1
-            comp.setEndValue(validSlicerEnd(endIndex + 1));
-        } else {
-            slicer.value.end = max;
-            comp.setEndValue(max);
-        }
-    } else {
-        slicer.value = { start: 0, end: max };
-        slicerStep.value += 1;
+        suppressChild.value = true;
+        slicer.value.start = start;
+        slicer.value.end   = end;
+        slicerPrecog.value.start = start;
+        slicerPrecog.value.end   = end;
+        normalizeSlicerWindow();
+        slicerReady.value = true;
+    } finally {
+        queueMicrotask(() => { suppressChild.value = false; });
+        isSettingUp.value = false;
     }
-    slicerPrecog.value.start = slicer.value.start;
-    slicerPrecog.value.end = slicer.value.end;
-    normalizeSlicerWindow()
+}
+
+const suppressChild = ref(false);
+
+function onSlicerStart(v) {
+    if (isSettingUp.value || suppressChild.value) return;
+    if (v === slicer.value.start) return;
+    slicer.value.start = v;
+    slicerPrecog.value.start = v;
+    normalizeSlicerWindow();
+}
+
+function onSlicerEnd(v) {
+    if (isSettingUp.value || suppressChild.value) return;
+    const end = validSlicerEnd(v);
+    if (end === slicer.value.end) return;
+    slicer.value.end = end;
+    slicerPrecog.value.end = end;
+    normalizeSlicerWindow();
 }
 
 async function refreshSlicer() {
@@ -4153,14 +4168,15 @@ defineExpose({
         <template v-if="FINAL_CONFIG.chart.zoom.preview.enable">
             <SlicerPreview 
                 ref="chartSlicer" 
-                v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
-                :key="`slicer_${slicerStep}`"
+                v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset  && slicerReady"
                 :max="maxX" 
                 :min="0"
                 :valueStart="slicer.start" 
                 :valueEnd="slicer.end" 
-                v-model:start="slicer.start" 
-                v-model:end="slicer.end"
+                :start="slicer.start"
+                :end="slicer.end"
+                @update:start="onSlicerStart"
+                @update:end="onSlicerEnd"
                 :selectedSeries="selectedSeries"
                 :customFormat="FINAL_CONFIG.chart.zoom.customFormat"
                 :background="FINAL_CONFIG.chart.zoom.color"
@@ -4204,7 +4220,6 @@ defineExpose({
         <template v-else>
             <Slicer ref="chartSlicer" 
                 v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
-                :key="`slicer_${slicerStep}`" 
                 :max="maxX" 
                 :min="0"
                 :valueStart="slicer.start" 
