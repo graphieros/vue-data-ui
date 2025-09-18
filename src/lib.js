@@ -3232,6 +3232,49 @@ export function buildInterLineAreas(opts) {
         : buildPerIntervalPolys(refinedA, refinedB);
 }
 
+export function triggerEvent(el, type, opts = {}) {
+    const defaults = { bubbles: true, cancelable: true, composed: true };
+    const options = { ...defaults, ...opts };
+
+    const mouseEvents = new Set([
+        'click',
+        'mousedown',
+        'mouseup',
+        'mousemove',
+        'mouseover',
+        'mouseout',
+        'mouseenter',
+        'mouseleave',
+        'dblclick',
+        'contextmenu'
+    ]);
+
+    const keyboardEvents = new Set([
+        'keydown',
+        'keyup',
+        'keypress'
+    ]);
+
+    let ev;
+    if (mouseEvents.has(type)) {
+        ev = new MouseEvent(type, options);
+    } else if (keyboardEvents.has(type)) {
+        ev = new KeyboardEvent(type, options);
+    } else if (type === 'input') {
+        try {
+            ev = new InputEvent(type, options);
+        } catch {
+            ev = new Event(type, options);
+        }
+    } else if (type.startsWith('custom:')) {
+        ev = new CustomEvent(type, { ...options, detail: options.detail });
+    } else {
+        ev = new Event(type, options);
+    }
+
+    el.dispatchEvent(ev);
+    return ev;
+}
 
 const lib = {
     XMLNS,
@@ -3331,6 +3374,7 @@ const lib = {
     themePalettes,
     translateSize,
     treeShake,
+    triggerEvent,
     wrapText
 };
 export default lib;

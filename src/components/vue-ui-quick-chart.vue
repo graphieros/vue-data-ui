@@ -2079,6 +2079,8 @@ defineExpose({
                 :minimapMerged="FINAL_CONFIG.zoomMinimap.merged"
                 :allMinimaps="allMinimaps"
                 :minimapFrameColor="FINAL_CONFIG.zoomMinimap.frameColor"
+                :focusOnDrag="FINAL_CONFIG.zoomFocusOnDrag"
+                :focusRangeRatio="FINAL_CONFIG.zoomFocusRangeRatio"
                 @reset="refreshSlicer"
                 @trapMouse="setCommonSelectedIndex"
             >

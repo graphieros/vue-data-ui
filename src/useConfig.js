@@ -234,6 +234,8 @@ export function useConfig() {
         endIndex: null,
         enableRangeHandles: true,
         enableSelectionDrag: true,
+        focusOnDrag: false,
+        focusRangeRatio: 0.2,
     }
 
     const MINIMAP = {
@@ -2917,6 +2919,8 @@ export function useConfig() {
         zoomEndIndex: null,
         zoomEnableRangeHandles: true,
         zoomEnableSelectionDrag: true,
+        zoomFocusOnDrag: false,
+        zoomFocusRangeRatio: 0.2,
     }
 
     const vue_ui_age_pyramid = {

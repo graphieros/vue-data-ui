@@ -4205,6 +4205,8 @@ defineExpose({
                 :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
                 :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
                 :cutNullValues="FINAL_CONFIG.line.cutNullValues"
+                :focusOnDrag="FINAL_CONFIG.chart.zoom.focusOnDrag"
+                :focusRangeRatio="FINAL_CONFIG.chart.zoom.focusRangeRatio"
                 @reset="refreshSlicer"
                 @trapMouse="selectMinimapIndex"
                 @futureStart="v => setPrecog('start', v)"
@@ -4253,6 +4255,8 @@ defineExpose({
                 :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
                 :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
                 :cutNullValues="FINAL_CONFIG.line.cutNullValues"
+                :focusOnDrag="FINAL_CONFIG.chart.zoom.focusOnDrag"
+                :focusRangeRatio="FINAL_CONFIG.chart.zoom.focusRangeRatio"
                 @reset="refreshSlicer"
                 @trapMouse="selectMinimapIndex">
                 <template #reset-action="{ reset }">

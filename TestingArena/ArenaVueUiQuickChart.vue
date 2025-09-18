@@ -134,7 +134,7 @@ function alterDataset() {
 }
 
 
-const selectedSerie = ref('shortObjectMixed');
+const selectedSerie = ref('longArray');
 
 const model = ref([
     { key: 'debug', def: true, type: 'checkbox'},
@@ -249,6 +249,8 @@ const model = ref([
     { key: 'zoomEndIndex', def: null, type: 'number', min: 0, max: 100},
     { key: 'zoomEnableRangeHandles', def: true, type: 'chexkbox'},
     { key: 'zoomEnableSelectionDrag', def: true, type: 'chexkbox'},
+    { key: 'zoomFocusOnDrag', def: true, type: 'checkbox'},
+    { key: 'zoomFocusRangeRatio', def: 0.2, type: 'number', min: 0.1, max: 0.9, step: 0.1},
 ]);
 
 const themeOptions = ref([

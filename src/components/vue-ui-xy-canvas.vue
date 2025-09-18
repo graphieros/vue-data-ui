@@ -1823,6 +1823,8 @@ defineExpose({
                 :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxSeries"
                 :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
                 :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
+                :focusOnDrag="FINAL_CONFIG.style.chart.zoom.focusOnDrag"
+                :focusRangeRatio="FINAL_CONFIG.style.chart.zoom.focusRangeRatio"
                 @reset="refreshSlicer"
             >
                 <template #reset-action="{ reset }">

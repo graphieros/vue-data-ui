@@ -322,6 +322,8 @@ declare module "vue-data-ui" {
         endIndex?: number | null;
         enableRangeHandles?: boolean;
         enableSelectionDrag?: boolean;
+        focusOnDrag?: boolean;
+        focusRangeRatio?: number;
     };
 
     export type Theme =
@@ -6196,6 +6198,8 @@ declare module "vue-data-ui" {
         zoomEnableRangeHandles?: boolean;
         zoomEnableSelectionDrag?: boolean;
         zoomCompact?: boolean;
+        zoomFocusOnDrag?: boolean;
+        zoomFocusRangeRatio?: number;
         userOptionsPosition?: "right" | "left";
         userOptionsButtons?: {
             tooltip?: boolean;

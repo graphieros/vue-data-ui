@@ -140,7 +140,9 @@ const model = ref([
     { key: 'style.zoom.endIndex', def: null, type: 'number', min: 0, max: 1000},
     { key: 'style.zoom.enableRangeHandles', def: true, type: 'chexkbox'},
     { key: 'style.zoom.enableSelectionDrag', def: true, type: 'chexkbox'},
-
+    { key: 'style.zoom.focusOnDrag', def: true, type: 'checkbox'},
+    { key: 'style.zoom.focusRangeRatio', def: 0.2, type: 'number', min: 0.1, max: 0.9, step: 0.1},
+    
     { key: 'style.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
     { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.title.fontSize', def: 20, type: 'number', min: 8, max: 48},

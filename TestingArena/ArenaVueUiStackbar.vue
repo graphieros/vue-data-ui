@@ -126,6 +126,8 @@ const model = ref([
     { key: 'style.chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100},
     { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'chexkbox'},
     { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'chexkbox'},
+    { key: 'style.chart.zoom.focusOnDrag', def: true, type: 'checkbox'},
+    { key: 'style.chart.zoom.focusRangeRatio', def: 0.2, type: 'number', min: 0.1, max: 0.9, step: 0.1},
 
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},

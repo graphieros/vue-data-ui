@@ -153,6 +153,8 @@ const model = ref([
     { key: 'style.chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100},
     { key: 'style.chart.zoom.enableRangeHandles', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
+    { key: 'style.chart.zoom.focusOnDrag', def: true, type: 'checkbox'},
+    { key: 'style.chart.zoom.focusRangeRatio', def: 0.2, type: 'number', min: 0.1, max: 0.9, step: 0.1},
 
     { key: 'table.show', def: false, type: 'checkbox'},
     { key: 'table.useDialog', def: true, type: 'checkbox'},

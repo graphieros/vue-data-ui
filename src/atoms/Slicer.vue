@@ -15,6 +15,7 @@ import {
     createStraightPath, 
     createStraightPathWithCuts, 
     createUid,
+    triggerEvent,
     XMLNS,
 } from '../lib';
 import { debounce, throttle } from '../canvas-lib';
@@ -147,6 +148,14 @@ const props = defineProps({
     cutNullValues: {
         type: Boolean,
         default: false,
+    },
+    focusOnDrag: {
+        type: Boolean,
+        default: false,
+    },
+    focusRangeRatio: {
+        type: Number,
+        default: 0.1
     }
 });
 
@@ -616,6 +625,10 @@ const currentRange = computed(() => {
     return props.valueEnd - props.valueStart;
 });
 
+const isZoom = computed(() => {
+    return currentRange.value < (props.max - props.min);
+});
+
 const isDragging = ref(false);
 let initialMouseX = ref(null);
 
@@ -645,7 +658,24 @@ let activeEndEvent = null;
 let activeMoveHandler = null;
 let activeEndHandler = null;
 
-const startDragging = (event) => {
+const dragStartIndex = ref(props.min);
+
+function clientXToIndex(clientX) {
+    if (!zoomWrapper.value) return props.min;
+
+    const rect = zoomWrapper.value.getBoundingClientRect();
+    const left = rect.left + TRACK_PADDING / 2;
+    const right = rect.right - TRACK_PADDING / 2;
+    const trackWidth = Math.max(1, right - left);
+
+    const x = Math.max(left, Math.min(clientX, right));
+    const pct = (x - left) / trackWidth;
+
+    const span = Math.max(1, props.max - props.min);
+    return Math.round(props.min + pct * span);
+}
+
+const startDragging = async (event) => {
     showTooltip.value = true;
     if (!props.enableSelectionDrag) return;
 
@@ -663,6 +693,27 @@ const startDragging = (event) => {
     const x = isTouch ? (touch0 ? touch0.clientX : 0) : event.clientX;
     initialMouseX.value = x;
     dragStartX.value = x;
+
+    if (props.focusOnDrag && !isZoom.value && zoomWrapper.value) {
+        dragStartIndex.value = clientXToIndex(x);
+        const ratio = Math.min(0.95, Math.max(0.05, props.focusRangeRatio));
+
+        const total = props.max - props.min;
+        const span = Math.max(1, Math.round(total * ratio));
+        const half = Math.floor(span / 2);
+
+        let focusStart = dragStartIndex.value - half;
+        focusStart = Math.max(props.min, Math.min(focusStart, props.max - span));
+        const focusEnd = Math.min(props.max, focusStart + span);
+
+        setStartValue(focusStart);
+        setEndValue(focusEnd);
+        
+        triggerEvent(zoomWrapper.value, 'mouseup');
+        await nextTick();
+        triggerEvent(zoomWrapper.value, 'mousedown', { clientX: x });
+    }
+
     dragStartStart.value = Number(startValue.value);
     dragStartEnd.value = Number(endValue.value);
     ippAtStart.value = indicesPerPixel.value;
@@ -700,14 +751,20 @@ function handleTouchDragging(event) {
 
 function updateDragging(currentX) {
     if (!isDragging.value) return;
-    const dx = currentX - dragStartX.value;
-    const shift = dx * ippAtStart.value;
-    let newStart = Math.round(dragStartStart.value + shift);
-    newStart = Math.max(props.min, Math.min(newStart, props.max - currentRange.value));
-    const newEnd = newStart + currentRange.value;
+    const i0 = clientXToIndex(dragStartX.value);
+    const i1 = clientXToIndex(currentX);
+    const deltaIdx = i1 - i0;
+    const span = Math.max(1, dragStartEnd.value - dragStartStart.value);
+    let newStart = Math.round(dragStartStart.value + deltaIdx);
+    const minStart = props.min;
+    const maxStart = props.max - span;
+    if (newStart < minStart) newStart = minStart;
+    if (newStart > maxStart) newStart = maxStart;
+    const newEnd = newStart + span;
     setStartValue(newStart);
     setEndValue(newEnd);
 }
+
 function stopDragging() {
     endDragging();
 }

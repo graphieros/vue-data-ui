@@ -658,6 +658,8 @@ const model = ref([
     { key: 'chart.zoom.useResetSlot', def: false, type: 'checkbox' },
     { key: 'chart.zoom.enableRangeHandles', def: true, type: 'chexkbox' },
     { key: 'chart.zoom.enableSelectionDrag', def: true, type: 'checkbox' },
+    { key: 'chart.zoom.focusOnDrag', def: true, type: 'checkbox'},
+    { key: 'chart.zoom.focusRangeRatio', def: 0.2, type: 'number', min: 0.1, max: 0.9 },
 
     { key: 'chart.zoom.minimap.show', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.smooth', def: false, type: 'checkbox' },
@@ -669,10 +671,10 @@ const model = ref([
     { key: 'chart.zoom.minimap.verticalHandles', def: false, type: 'checkbox' },
     { key: 'chart.zoom.minimap.compact', def: true, type: 'checkbox' },
     { key: 'chart.zoom.minimap.merged', def: false, type: 'checkbox' },
-
+    
     { key: 'chart.zoom.startIndex', def: null, type: 'number', min: 0, max: 100 },
     { key: 'chart.zoom.endIndex', def: null, type: 'number', min: 0, max: 100 },
-    { key: 'chart.zoom.preview.enable', def: true, type: 'checkbox'},
+    { key: 'chart.zoom.preview.enable', def: false, type: 'checkbox'},
     { key: 'chart.zoom.preview.stroke', def: '#1f77b4', type: 'color'},
     { key: 'chart.zoom.preview.fill', def: '#1f77b420', type: 'color'},
     { key: 'chart.zoom.preview.strokeDasharray', def: 0, type: 'number', min: 0, max: 12},
