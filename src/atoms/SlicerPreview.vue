@@ -708,6 +708,7 @@ let activeEndHandler = null;
 
 const startDragging = (event) => {
     isRanging.value = true;
+    
     showTooltip.value = true;
     if (!props.enableSelectionDrag) return;
 
@@ -771,6 +772,8 @@ function updateDragging(currentX) {
     const newEnd = newStart + currentRange.value;
     start.value = newStart;
     end.value = newEnd;
+    emitFutureStart(newStart);
+    emitFutureEnd(newEnd);
 }
 
 function stopDragging() {
