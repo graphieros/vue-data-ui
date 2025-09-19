@@ -176,7 +176,7 @@ describe("<VueUiXy />", () => {
 				});
 
 			cy.log("@selectX");
-			cy.get('.vue-ui-xy').trigger('mouseenter').trigger('click', { x: 40, y: 200})
+			cy.get('.vue-ui-xy').trigger('mouseenter').trigger('click', { x: 40, y: 200, force: true })
 				.then(() => {
 					expect(wrapper.emitted("selectX")).to.deep.equal([
 						[

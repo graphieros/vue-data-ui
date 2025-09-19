@@ -1127,11 +1127,36 @@ function calcIndividualRectY(plot) {
 
 const hoveredIndex = ref(null);
 
-let RAF_MOUSE_MOVE = 0;
+function clientToSvgCoords(evt) {
+    const svgEl = svgRef.value;
+    if (!svgEl) return null;
 
-function pointInRect(x, y, r) {
-    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+    // Precise mapping (handles fullscreen & letterboxing)
+    if (svgEl.createSVGPoint && svgEl.getScreenCTM) {
+        const pt = svgEl.createSVGPoint();
+        pt.x = evt.clientX;
+        pt.y = evt.clientY;
+        const ctm = svgEl.getScreenCTM();
+        if (ctm) {
+            const p = pt.matrixTransform(ctm.inverse());
+            return { x: p.x, y: p.y, ok: true };
+        }
+    }
+
+    // Fallback (preserveAspectRatio meet)
+    const rect = svgEl.getBoundingClientRect();
+    const vb = svgEl.viewBox?.baseVal || { x: 0, y: 0, width: rect.width, height: rect.height };
+    const scale = Math.min(rect.width / vb.width, rect.height / vb.height);
+    const drawnW = vb.width * scale;
+    const drawnH = vb.height * scale;
+    const offsetX = (rect.width - drawnW) / 2;
+    const offsetY = (rect.height - drawnH) / 2;
+    const x = (evt.clientX - rect.left - offsetX) / scale + vb.x;
+    const y = (evt.clientY - rect.top  - offsetY) / scale + vb.y;
+    return { x, y, ok: true };
 }
+
+let RAF_MOUSE_MOVE = 0;
 
 function onSvgMouseMove(e) {
     if (isAnnotator.value) return;
@@ -1139,29 +1164,32 @@ function onSvgMouseMove(e) {
     // cancel any pending raf so a stale one cannot re-open the tooltip
     if (RAF_MOUSE_MOVE) cancelAnimationFrame(RAF_MOUSE_MOVE);
 
-    const rect = svgRef.value?.getBoundingClientRect();
-
     RAF_MOUSE_MOVE = requestAnimationFrame(() => {
         RAF_MOUSE_MOVE = 0;
 
+        const svgPt = clientToSvgCoords(e);
         // Mouse may have already left by the time this runs :E
-        if (!rect || !pointInRect(e.clientX, e.clientY, rect)) {
+        if (!svgPt || !svgRef.value) {
             onSvgMouseLeave();
             return;
         }
 
-        const viewBox = svgRef.value.viewBox.baseVal;
-        const scaleX = viewBox.width / rect.width;
-        const svgX = (e.clientX - rect.left) * scaleX;
-        const localX = svgX - drawingArea.value.left;
-        const slotW = drawingArea.value.width / maxSeries.value;
+        // Ignore moves outside drawing area
+        const { left, right, top, bottom, width: areaW } = drawingArea.value;
+        if ( svgPt.x < left || svgPt.x > right || svgPt.y < top  || svgPt.y > bottom) {
+            onSvgMouseLeave();
+            return;
+        }
+
+        const localX = svgPt.x - left;
+        const slotW = areaW / maxSeries.value;
         const idx = Math.floor(localX / slotW);
 
         if (idx >= 0 && idx < maxSeries.value) {
-        if (hoveredIndex.value !== idx) {
-            hoveredIndex.value = idx;
-            toggleTooltipVisibility(true, idx);
-        }
+            if (hoveredIndex.value !== idx) {
+                hoveredIndex.value = idx;
+                toggleTooltipVisibility(true, idx);
+            }
         } else {
             onSvgMouseLeave();
         }
@@ -1177,7 +1205,23 @@ function onSvgMouseLeave() {
     toggleTooltipVisibility(false, null);
 }
 
-function onSvgClick() {
+function onSvgClick(e) {
+    const svgPt = clientToSvgCoords(e);
+    if (svgPt && svgRef.value) {
+        const { left, right, top, bottom, width: areaW } = drawingArea.value;
+
+        // Only react if click lands inside the drawing area
+        if (svgPt.x >= left && svgPt.x <= right && svgPt.y >= top && svgPt.y <= bottom) {
+            const slotW = areaW / Math.max(1, maxSeries.value);
+            const idx = Math.floor((svgPt.x - left) / slotW);
+
+            if (idx >= 0 && idx < maxSeries.value) {
+                selectX(idx);
+                return;
+            }
+        }
+    }
+
     if (hoveredIndex.value != null) {
         selectX(hoveredIndex.value);
     }
@@ -2955,7 +2999,7 @@ defineExpose({
         :class="`vue-ui-xy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
         ref="chart"
         :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
-        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)" @click="onSvgClick">
         <PenAndPaper v-if="FINAL_CONFIG.chart.userOptions.buttons.annotator && svgRef" :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.chart.backgroundColor" :color="FINAL_CONFIG.chart.color"
             :active="isAnnotator" @close="toggleAnnotator" />
