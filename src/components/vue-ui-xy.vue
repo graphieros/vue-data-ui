@@ -66,7 +66,6 @@ import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import img from '../img.js';
 import Title from '../atoms/Title.vue';
 import themes from "../themes.json";
-import Slicer from '../atoms/Slicer.vue';
 import Shape from '../atoms/Shape.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
@@ -4165,105 +4164,59 @@ defineExpose({
             </template>
         </template>
 
-        <template v-if="FINAL_CONFIG.chart.zoom.preview.enable">
-            <SlicerPreview 
-                ref="chartSlicer" 
-                v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset  && slicerReady"
-                :max="maxX" 
-                :min="0"
-                :valueStart="slicer.start" 
-                :valueEnd="slicer.end" 
-                :start="slicer.start"
-                :end="slicer.end"
-                @update:start="onSlicerStart"
-                @update:end="onSlicerEnd"
-                :selectedSeries="selectedSeries"
-                :customFormat="FINAL_CONFIG.chart.zoom.customFormat"
-                :background="FINAL_CONFIG.chart.zoom.color"
-                :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
-                :labelLeft="timeLabels[0]? timeLabels[0].text : ''" 
-                :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" 
-                :textColor="FINAL_CONFIG.chart.color"
-                :usePreciseLabels="FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.chart.zoom.useDefaultFormat"
-                :preciseLabels="preciseAllTimeLabels"
-                :inputColor="FINAL_CONFIG.chart.zoom.color" :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
-                :borderColor="FINAL_CONFIG.chart.backgroundColor" :minimap="minimap"
-                :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
-                :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
-                :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
-                :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
-                :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
-                :minimapSelectedIndex="selectedSerieIndex"
-                :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
-                :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
-                :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
-                :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => lttb(datapoint.series).length))"
-                :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
-                :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag"
-                :minimapCompact="FINAL_CONFIG.chart.zoom.minimap.compact"
-                :allMinimaps="allMinimaps"
-                :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
-                :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
-                :cutNullValues="FINAL_CONFIG.line.cutNullValues"
-                :focusOnDrag="FINAL_CONFIG.chart.zoom.focusOnDrag"
-                :focusRangeRatio="FINAL_CONFIG.chart.zoom.focusRangeRatio"
-                @reset="refreshSlicer"
-                @trapMouse="selectMinimapIndex"
-                @futureStart="v => setPrecog('start', v)"
-                @futureEnd="v => setPrecog('end', v)"
-                :timeLabels="allTimeLabels"
-                :isPreview="isPrecog"
-            >
-                <template #reset-action="{ reset }">
-                    <slot name="reset-action" v-bind="{ reset }" />
-                </template>
-            </SlicerPreview>
-        </template>
-        <template v-else>
-            <Slicer ref="chartSlicer" 
-                v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset"
-                :max="maxX" 
-                :min="0"
-                :valueStart="slicer.start" 
-                :valueEnd="slicer.end" 
-                v-model:start="slicer.start" 
-                v-model:end="slicer.end"
-                :background="FINAL_CONFIG.chart.zoom.color"
-                :fontSize="FINAL_CONFIG.chart.zoom.fontSize" 
-                :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
-                :labelLeft="slicerLabels.left" 
-                :labelRight="slicerLabels.right" 
-                :textColor="FINAL_CONFIG.chart.color"
-                :inputColor="FINAL_CONFIG.chart.zoom.color" 
-                :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
-                :borderColor="FINAL_CONFIG.chart.backgroundColor" 
-                :minimap="minimap"
-                :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
-                :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
-                :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
-                :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
-                :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
-                :minimapSelectedIndex="selectedSerieIndex"
-                :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
-                :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
-                :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
-                :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => lttb(datapoint.series).length))"
-                :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
-                :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag"
-                :minimapCompact="FINAL_CONFIG.chart.zoom.minimap.compact"
-                :allMinimaps="allMinimaps"
-                :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
-                :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
-                :cutNullValues="FINAL_CONFIG.line.cutNullValues"
-                :focusOnDrag="FINAL_CONFIG.chart.zoom.focusOnDrag"
-                :focusRangeRatio="FINAL_CONFIG.chart.zoom.focusRangeRatio"
-                @reset="refreshSlicer"
-                @trapMouse="selectMinimapIndex">
-                <template #reset-action="{ reset }">
-                    <slot name="reset-action" v-bind="{ reset }" />
-                </template>
-            </Slicer>
-        </template>
+        <SlicerPreview 
+            ref="chartSlicer" 
+            v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset  && slicerReady"
+            :immediate="!FINAL_CONFIG.chart.zoom.preview.enable"
+            :max="maxX" 
+            :min="0"
+            :valueStart="slicer.start" 
+            :valueEnd="slicer.end" 
+            :start="slicer.start"
+            :end="slicer.end"
+            @update:start="onSlicerStart"
+            @update:end="onSlicerEnd"
+            :selectedSeries="selectedSeries"
+            :customFormat="FINAL_CONFIG.chart.zoom.customFormat"
+            :background="FINAL_CONFIG.chart.zoom.color"
+            :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
+            :labelLeft="timeLabels[0]? timeLabels[0].text : ''" 
+            :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" 
+            :textColor="FINAL_CONFIG.chart.color"
+            :usePreciseLabels="FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.chart.zoom.useDefaultFormat"
+            :preciseLabels="preciseAllTimeLabels"
+            :inputColor="FINAL_CONFIG.chart.zoom.color" :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
+            :borderColor="FINAL_CONFIG.chart.backgroundColor" :minimap="minimap"
+            :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
+            :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
+            :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
+            :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
+            :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
+            :minimapSelectedIndex="selectedSerieIndex"
+            :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
+            :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
+            :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
+            :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => lttb(datapoint.series).length))"
+            :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
+            :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag"
+            :minimapCompact="FINAL_CONFIG.chart.zoom.minimap.compact"
+            :allMinimaps="allMinimaps"
+            :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
+            :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
+            :cutNullValues="FINAL_CONFIG.line.cutNullValues"
+            :focusOnDrag="FINAL_CONFIG.chart.zoom.focusOnDrag"
+            :focusRangeRatio="FINAL_CONFIG.chart.zoom.focusRangeRatio"
+            @reset="refreshSlicer"
+            @trapMouse="selectMinimapIndex"
+            @futureStart="v => setPrecog('start', v)"
+            @futureEnd="v => setPrecog('end', v)"
+            :timeLabels="allTimeLabels"
+            :isPreview="isPrecog"
+        >
+            <template #reset-action="{ reset }">
+                <slot name="reset-action" v-bind="{ reset }" />
+            </template>
+        </SlicerPreview>
 
         <div :id="`legend-bottom-${uniqueId}`" />
 

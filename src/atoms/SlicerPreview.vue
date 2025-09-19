@@ -24,6 +24,10 @@ import { useResponsive } from '../useResponsive';
 import BaseIcon from './BaseIcon.vue';
 
 const props = defineProps({
+    immediate: {
+        type: Boolean,
+        default: true
+    },
     background: {
         type: String,
         default: '#FFFFFF'
@@ -203,7 +207,12 @@ const start = computed({
         if (v === startValue.value) return;
         startValue.value = v;
         if (rangeStart.value) rangeStart.value.value = String(v);
-        if (isRanging.value) emitFutureStart(v);
+
+        if (props.immediate) {
+            emit('update:start', Number(v));
+        } else if (isRanging.value) {
+            emitFutureStart(v);
+        }
     }
 });
 
@@ -214,7 +223,10 @@ const end = computed({
         if (v === endValue.value) return;
         endValue.value = v;
         if (rangeEnd.value) rangeEnd.value.value = String(v);
-        if (isRanging.value) emitFutureEnd(v);
+
+        if (props.immediate) {
+            emit('update:end', Number(v));
+        } else if (isRanging.value) emitFutureEnd(v);
     }
 });
 
@@ -237,8 +249,10 @@ let _commitTimeout = null;
 
 function commitImmediately() {
     clearTimeout(_commitTimeout);
-    emit('update:start', Number(startValue.value));
-    emit('update:end', Number(endValue.value));
+    if (!props.immediate) {
+        emit('update:start', Number(startValue.value));
+        emit('update:end', Number(endValue.value));
+    }
     isRanging.value = false;
 }
 
@@ -1230,7 +1244,7 @@ defineExpose({
                             <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
                                 <template v-for="(r, j) in dp.points">
                                     <rect
-                                        v-if="dp && dp.hasSelection && dp.selectionSet && dp.isVisible && !isNaN(r.y)"
+                                        v-if="dp && dp.isVisible && !isNaN(r.y)"
                                         :x="getBarX(r.x, i, j)"
                                         :y="r.v >= 0 ? r.y : r.y0"
                                         :width="getBarWidth(i, j)"
