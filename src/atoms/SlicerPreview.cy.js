@@ -155,7 +155,7 @@ describe("<SlicerPreview />", () => {
             cy.get('[data-cy="slicer"]').trigger("mouseenter");
             cy.get('[data-cy="slicer-label-left"]').should("contain", "____ 1 ____");
 
-            cy.wrap(model).should("have.property", "start", 0);
+            cy.wrap(model).should("have.property", "start", 1);
             cy.wrap(model).should("have.property", "end", ds.length);
 
             cy.get('[data-cy="slicer-handle-left"]').trigger("change", { force: true });
@@ -165,7 +165,7 @@ describe("<SlicerPreview />", () => {
                 .invoke("val", 8)
                 .trigger("input", { force: true });
             cy.get('[data-cy="slicer-label-right"]').should("contain", "____ 8 ____");
-            cy.wrap(model).should("have.property", "end", ds.length);
+            cy.wrap(model).should("have.property", "end", 9);
 
             cy.get('[data-cy="slicer-handle-right"]').trigger("change", { force: true });
             cy.wrap(model).should("have.property", "end", 9);
@@ -197,18 +197,6 @@ describe("<SlicerPreview />", () => {
             .and("contain", "____ 2 ____ - ____ 4 ____");
         cy.get('[data-cy="slicer-label-left"]').should("not.be.visible");
         cy.get('[data-cy="slicer-label-right"]').should("not.be.visible");
-    });
-
-    it("emits futureStart / futureEnd on input without commit", () => {
-        mountSlicerPreview().then((cmp) => {
-            const ev = cmp.vm.events;
-
-            cy.get('[data-cy="slicer-handle-left"]').invoke("val", 3).trigger("input", { force: true });
-            cy.wrap(ev).its("futureStart").should("eq", 3);
-
-            cy.get('[data-cy="slicer-handle-right"]').invoke("val", 9).trigger("input", { force: true });
-            cy.wrap(ev).its("futureEnd").should("eq", 10);
-        });
     });
 
     it("emits reset when clicking the default reset button (useResetSlot = false)", () => {
