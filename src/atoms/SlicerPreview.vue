@@ -609,29 +609,44 @@ const miniToAbs = (i) => Math.round(props.min + i);
 
 const startForInput = computed({
     get() {
-        return useMini.value ? startMini.value : start.value;
+        return useMini.value ? startMini.value : Number(start.value);
     },
     set(v) {
         if (useMini.value) {
-            setStartValue(miniToAbs(v));
+        const n = Math.round(+v || 0);
+        setStartValue(miniToAbs(n));
         } else {
-            setStartValue(v);
+            let proposed = Math.round(+v || 0);
+            const maxAllowed = Number(endValue.value) - 1;
+            const clamped = Math.min(Math.max(props.min, proposed), maxAllowed);
+            if (rangeStart.value) {
+                rangeStart.value.valueAsNumber = clamped
+            };
+            setStartValue(clamped);
         }
     }
 });
 
 const endForInput = computed({
     get() {
-        return useMini.value ? Math.max(startMini.value, endMini.value - 1) : end.value;
+        return useMini.value ? Math.max(startMini.value, endMini.value - 1) : Number(end.value);
     },
     set(v) {
         if (useMini.value) {
-            setEndValue(miniToAbs(v + 1));
+            const n = Math.round(+v || 0);
+            setEndValue(miniToAbs(n + 1));
         } else {
-            setEndValue(v);
+            let proposed = Math.round(+v || 0);
+            const minAllowed = Number(startValue.value) + 1;
+            const clamped = Math.max(minAllowed, Math.min(proposed, props.max));
+            if (rangeEnd.value) {
+                rangeEnd.value.valueAsNumber = clamped;
+            }
+            setEndValue(clamped);
         }
     }
 });
+
 
 function setSelectedTrap(v) {
     selectedTrap.value = absToMiniStart(props.valueStart) + v;
