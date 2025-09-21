@@ -114,17 +114,16 @@ const isError = computed(() => {
 const currentComponent = computed(() => {
     if (loader.value) {
         const normalized = async () => {
-        const mod = await loader.value()
-        // If they passed a component instance already
-        if (mod && (mod.render || mod.setup)) return mod
-        // If it's an ES module, prefer default, else the first named export
-        const maybeDefault = mod?.default
-        if (maybeDefault) return maybeDefault
-        if (mod && typeof mod === 'object') {
-            const first = Object.values(mod)[0]
-            if (first) return first
-        }
-        throw new Error('[VueDataUi] Loader did not return a component.')
+            const mod = await loader.value()
+            if (mod && (mod.render || mod.setup)) return mod
+            const maybeDefault = mod?.default
+            if (maybeDefault) return maybeDefault
+            if (mod && typeof mod === 'object') {
+                const first = Object.values(mod)[0]
+                if (first) return first
+            }
+            console.error('[VueDataUi] Loader did not return a component.');
+            return;
         }
         return defineAsyncComponent({ loader: normalized })
     }
@@ -132,7 +131,10 @@ const currentComponent = computed(() => {
     const use = async () => {
         const reg = await loadRegistry()
         const l = reg[component.value]
-        if (!l) throw new Error(`Unknown component ${component.value}`)
+        if (!l) {
+            console.error((`Unknown component ${component.value}`));
+            return;
+        }
         const mod = await l()
         return mod?.default ?? mod
     }
