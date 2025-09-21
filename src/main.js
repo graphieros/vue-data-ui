@@ -66,11 +66,11 @@ import {
     VueUiWorld,
     VueUiRidgeline,
     VueUiChord,
+    VueDataUi
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
 
 import VueUiXy  from "vue-data-ui/vue-ui-xy";
-import VueDataUi from "vue-data-ui/universal";
 
 const app = createApp(App);
 app.component("Arrow", Arrow);

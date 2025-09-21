@@ -73,11 +73,6 @@
       "import": "./dist/components/*.js",
       "default": "./dist/components/*.js"
     },
-    "./universal": {
-      "types": "./dist/types/universal.d.ts",
-      "import": "./dist/universal.js",
-      "default": "./dist/universal.js"
-    },
     "./style.css": "./dist/style.css"
   },
   "sideEffects": [

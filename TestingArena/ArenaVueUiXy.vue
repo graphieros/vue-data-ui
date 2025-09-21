@@ -6,8 +6,6 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
-const xyLoader = () => import('vue-data-ui/vue-ui-xy')
-
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
 const dates = [
@@ -1400,7 +1398,7 @@ onMounted(async () => {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi :loader="xyLoader" :dataset="isPropsToggled ? alternateDataset : dataset"
+            <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
                 :selectedXIndex="selectedIndex"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
@@ -1496,7 +1494,7 @@ onMounted(async () => {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi :loader="xyLoader" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`"
+            <VueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiBuild">
                 <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                     <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
