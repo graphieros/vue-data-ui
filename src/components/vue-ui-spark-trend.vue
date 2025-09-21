@@ -2,6 +2,7 @@
 import { 
     computed, 
     defineAsyncComponent, 
+    nextTick, 
     onMounted, 
     ref, 
     toRefs,
@@ -54,6 +55,8 @@ const svgRef = ref(null);
 const source = ref(null);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
+const isAnimating = ref(false);
+const raf = ref(null);
 
 const uid = ref(createUid());
 
@@ -109,18 +112,6 @@ watch(() => props.config, (_newCfg) => {
     prepareChart();
 }, { deep: true });
 
-watch(() => FINAL_DATASET.value, (_) => {
-    safeDatasetCopy.value = largestTriangleThreeBucketsArray({
-        data: FINAL_DATASET.value,
-        threshold: FINAL_CONFIG.value.downsample.threshold
-    }).map(v => {
-        return ![undefined, Infinity, -Infinity, null, NaN].includes(v) ? v : null
-    });
-
-    animateChart();
-    fitText('.vue-ui-sparktrend-progress-label', 6);
-}, { deep: true })
-
 function sanitize(arr) {
     return arr.map(v => checkNaN(v))
 }
@@ -136,9 +127,43 @@ const safeDatasetCopy = ref(largestTriangleThreeBucketsArray({
     }
 }));
 
-const isAnimating = ref(false);
+watch(downsampled, (ds) => {
+    if (raf.value) {
+        cancelAnimationFrame(raf.value);
+        raf.value = null;
+    }
 
-const raf = ref(null);
+    if (FINAL_CONFIG.value.style.animation.show) {
+        safeDatasetCopy.value = Array(ds.length).fill(null);
+    } else {
+        safeDatasetCopy.value = ds.map(v =>
+        ![undefined, Infinity, -Infinity, null].includes(v) && !Number.isNaN(v) ? v : null
+        );
+    }
+
+    animateChart();
+    nextTick(() => fitText('.vue-ui-sparktrend-progress-label', 6));
+}, { deep: true, immediate: true });
+
+watch(
+    () => JSON.stringify(props.dataset),
+    () => {
+        if (raf.value) {
+        cancelAnimationFrame(raf.value);
+        raf.value = null;
+        }
+        manualLoading.value = objectIsEmpty(props.dataset);
+
+        const ds = downsampled.value;
+        safeDatasetCopy.value = FINAL_CONFIG.value.style.animation.show
+        ? Array(ds.length).fill(null)
+        : ds.map(v => (Number.isFinite(v) ? v : null));
+
+        animateChart();
+        nextTick(() => fitText('.vue-ui-sparktrend-progress-label', 6));
+    },
+    { deep: false, immediate: true }
+);
 
 function animateChart() {
     let fps = FINAL_CONFIG.value.style.animation.animationFrames;
@@ -242,11 +267,27 @@ const drawingArea = computed(() => {
 });
 
 const extremes = computed(() => {
-    const ds = sanitize(downsampled.value);
-    return {
-        max: Math.max(...ds.map(v => checkNaN(v))),
-        min: Math.min(...ds.map(v => checkNaN(v)))
+    const ds = sanitize(downsampled.value).filter(Number.isFinite);
+    if (!ds.length) return { max: 0, min: 0 };
+    let max = ds[0], min = ds[0];
+    for (let i = 1; i < ds.length; i++) {
+        const v = ds[i];
+        if (v > max) max = v;
+        if (v < min) min = v;
     }
+    return { max, min };
+});
+
+const datasetKey = computed(() => {
+    const ds = downsampled.value;
+    const last = ds.length ? ds[ds.length - 1] : 'x';
+    return [
+        uid.value,
+        ds.length,
+        Number.isFinite(last) ? last : 'x',
+        FINAL_CONFIG.value.downsample.threshold,
+        FINAL_CONFIG.value.style.line.smooth ? 's' : 'l'
+    ].join('-');
 });
 
 const absoluteMin = computed(() => {
@@ -347,7 +388,7 @@ const { fitText } = useFitSvgText({
 
 <template>
     <div ref="sparkTrendChart" class="vue-ui-spark-trend" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor}`">
-        <svg ref="svgRef" :xmlns="XMLNS" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`">
+        <svg :key="datasetKey" ref="svgRef" :xmlns="XMLNS" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`">
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->

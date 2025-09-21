@@ -662,7 +662,7 @@ function selectDatapoint(datapoint, index) {
             <g v-if="FINAL_CONFIG.style.plot.show" v-for="(plot, i) in mutableDataset">
                 <circle
                     data-cy="selection-plot"
-                    v-if="(selectedPlot && plot.id === selectedPlot.id) || selectedIndex === i || dataset.length === 1" 
+                    v-if="(selectedPlot && plot.id === selectedPlot.id) || selectedIndex === i || FINAL_DATASET.length === 1" 
                     :cx="plot.x" 
                     :cy="plot.y" 
                     :r="FINAL_CONFIG.style.plot.radius"

@@ -654,8 +654,8 @@ defineExpose({
             ...FINAL_CONFIG.style.chart.title.subtitle
         }
     }">
-                <span v-if="FINAL_CONFIG.translations.base && dataset.base">
-                    {{ FINAL_CONFIG.translations.base }}: {{ dataset.base }}
+                <span v-if="FINAL_CONFIG.translations.base && FINAL_DATASET.base">
+                    {{ FINAL_CONFIG.translations.base }}: {{ FINAL_DATASET.base }}
                 </span>
             </Title>
         </div>
