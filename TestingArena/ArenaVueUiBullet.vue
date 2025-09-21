@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiBullet } from "vue-data-ui";
+import { VueUiBullet as VueUiBulletTreeshaken } from "vue-data-ui/vue-ui-bullet";
+
 const { local, build, vduiLocal, vduiBuild } = useArena()
 
 const dataset = ref(undefined);
@@ -183,6 +186,10 @@ onMounted(async () => {
 
         <template #build>
             <VueUiBullet :dataset="dataset" :config="config" ref="build"/>
+        </template>
+
+        <template #build-treesh>
+            <VueUiBulletTreeshaken :dataset="dataset" :config="config" ref="build"/>
         </template>
 
         <template #VDUI-build>

@@ -6,6 +6,10 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUi3dBar } from "vue-data-ui";
+import { VueUi3dBar as VueUi3dBarTreeshaken } from "vue-data-ui/vue-ui-3d-bar";
+
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const datasets = ref({
@@ -273,6 +277,11 @@ onMounted(async () => {
         <template #build>
             <VueUi3dBar :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
             </VueUi3dBar>
+        </template>
+
+        <template #build-treesh>
+            <VueUi3dBarTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
+            </VueUi3dBarTreeshaken>
         </template>
 
         <template #VDUI-build>

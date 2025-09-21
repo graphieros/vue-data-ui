@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiHeatmap } from "vue-data-ui";
+import { VueUiHeatmap as VueUiHeatmapTreeshaken } from "vue-data-ui/vue-ui-heatmap";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 function makeDs() {
@@ -422,6 +425,27 @@ onMounted(async() => {
                     #AFTER {{ series.name }}
                 </template>
             </VueUiHeatmap>
+        </template>
+
+        <template #build-treesh>
+            <VueUiHeatmapTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" ref="build" @selectDatapoint="logCell">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueUiHeatmapTreeshaken>
         </template>
 
         <template #VDUI-build>

@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiStripPlot } from "vue-data-ui";
+import { VueUiStripPlot as VueUiStripPlotTreeshaken } from "vue-data-ui/vue-ui-strip-plot";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
 const dataset = ref(undefined);
@@ -372,6 +375,21 @@ onMounted(async () => {
                     #AFTER {{ series.name }}
                 </template>
             </VueUiStripPlot>
+        </template>
+
+        <template #build-treesh>
+            <VueUiStripPlotTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueUiStripPlotTreeshaken>
         </template>
 
         <template #VDUI-build>

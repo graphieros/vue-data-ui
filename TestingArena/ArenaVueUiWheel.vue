@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiWheel } from "vue-data-ui";
+import { VueUiWheel as VueUiWheelTreeshaken } from "vue-data-ui/vue-ui-wheel";
+
 const dataset = ref(undefined);
 
 onMounted(() => {
@@ -44,7 +47,7 @@ function alterDataset() {
 
 const model = ref([
     { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -206,6 +209,15 @@ onMounted(async () => {
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
                 </template> -->
             </VueUiWheel>
+        </template>
+        
+        <template #build-treesh>
+            <VueUiWheelTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
+                <!-- <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d39230" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template> -->
+            </VueUiWheelTreeshaken>
         </template>
         
         <template #VDUI-build>

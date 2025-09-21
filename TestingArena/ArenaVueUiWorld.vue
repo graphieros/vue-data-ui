@@ -6,6 +6,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiWorld } from "vue-data-ui";
+import { VueUiWorld as VueUiWorldTreeshaken } from "vue-data-ui/vue-ui-world";
+
 const dataset = ref(undefined);
 
 onMounted(() => {
@@ -335,6 +338,10 @@ onMounted(async() => {
 
         <template #build>
             <VueUiWorld :dataset="dataset" :config="config"/>
+        </template>
+
+        <template #build-treesh>
+            <VueUiWorldTreeshaken :dataset="dataset" :config="config"/>
         </template>
 
         <template #VDUI-build>

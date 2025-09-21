@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiScatter } from "vue-data-ui";
+import { VueUiScatter as VueUiScatterTreeshaken } from "vue-data-ui/vue-ui-scatter";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const scat1 = computed(() => {
@@ -453,6 +456,27 @@ onMounted(async () => {
                     #AFTER {{ series.name }}
                 </template>
             </VueUiScatter>
+        </template>
+
+        <template #build-treesh>
+            <VueUiScatterTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueUiScatterTreeshaken>
         </template>
 
         <template #VDUI-build>

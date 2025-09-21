@@ -1,7 +1,7 @@
 {
   "name": "vue-data-ui",
   "private": false,
-  "version": "3.1.18",
+  "version": "3.1.19-next.1",
   "type": "module",
   "description": "A user-empowering data visualization Vue 3 components library for eloquent data storytelling",
   "keywords": [
@@ -64,17 +64,20 @@
   ],
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/types/vue-data-ui.d.ts",
-        "default": "./dist/vue-data-ui.js"
-      },
-      "default": {
-        "types": "./dist/types/vue-data-ui.d.cts",
-        "default": "./dist/vue-data-ui.cjs"
-      }
+      "types": "./dist/types/vue-data-ui.d.ts",
+      "import": "./dist/vue-data-ui.js",
+      "default": "./dist/vue-data-ui.js"
+    },
+    "./*": {
+      "types": "./dist/types/*.d.ts",
+      "import": "./dist/components/*.js",
+      "default": "./dist/components/*.js"
     },
     "./style.css": "./dist/style.css"
   },
+  "sideEffects": [
+    "**/*.css"
+  ],
   "module": "dist/vue-data-ui.js",
   "types": "dist/types/vue-data-ui.d.ts",
   "scripts": {
@@ -93,8 +96,8 @@
     "cy": "node run-cy.cjs"
   },
   "peerDependencies": {
-    "vue": ">=3.3.0",
-    "jspdf": "^3.0.1"
+    "jspdf": "^3.0.1",
+    "vue": ">=3.3.0"
   },
   "peerDependenciesMeta": {
     "jspdf": {

@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiCarouselTable } from "vue-data-ui";
+import { VueUiCarouselTable as VueUiCarouselTableTreeshaken } from "vue-data-ui/vue-ui-carousel-table";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
 const model = ref([
@@ -236,6 +239,18 @@ function resumeVduiBuild() {
                 :config="config"
             >
             </VueUiCarouselTable>
+        </template>
+
+        <template #build-treesh>
+            <button @click="toggleAnimBuild">TOGGLE ANIMATION (public)</button>
+            <button @click="pauseBuild">PAUSE ANIMATION (public)</button>
+            <button @click="resumeBuild">RESUME ANIMATION (public)</button>
+            <VueUiCarouselTableTreeshaken
+                ref="buildComponent"
+                :dataset="dataset"
+                :config="config"
+            >
+            </VueUiCarouselTableTreeshaken>
         </template>
 
         <template #VDUI-build>

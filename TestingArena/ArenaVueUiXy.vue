@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiXy } from "vue-data-ui";
+import { VueUiXy as VueUiXyTreeshaken } from "vue-data-ui/vue-ui-xy";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
 const dates = [
@@ -1398,7 +1401,7 @@ onMounted(async () => {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi  component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
+            <LocalVueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset"
                 :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`"
                 :selectedXIndex="selectedIndex"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiLocal">
@@ -1491,6 +1494,16 @@ onMounted(async () => {
                     </div>
                 </template> 
             </VueUiXy>
+        </template>
+
+        <template #build-treesh>
+            <VueUiXyTreeshaken 
+                :dataset="isPropsToggled ? alternateDataset : dataset" 
+                :config="isPropsToggled ? alternateConfig : config"
+                :selectedXIndex="selectedIndex"
+                @selectX="selectX"
+            >
+            </VueUiXyTreeshaken>
         </template>
 
         <template #VDUI-build>

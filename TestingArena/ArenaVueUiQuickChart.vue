@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiQuickChart } from "vue-data-ui";
+import { VueUiQuickChart as VueUiQuickChartTreeshaken } from "vue-data-ui/vue-ui-quick-chart";
+
 function makeDs(m, n = 100) {
     const arr = [];
     for (let i = 0; i < m; i += 1) {
@@ -427,6 +430,26 @@ function selectDatapoint(datapoint) {
                 <button @click="reset()">REFRESH</button>
             </template>
         </VueUiQuickChart>
+    </template>
+
+    <template #build-treesh>
+        <VueUiQuickChartTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
+            <template #legend="{ legend }">
+                #LEGEND
+                <div style="font-size: 8px">
+                    {{ legend }}
+                </div>
+            </template>
+            <template #tooltip-before="{ seriesIndex }">
+                #BEFORE {{ seriesIndex }}
+            </template>
+            <template #tooltip-after="{ seriesIndex }">
+                #AFTER {{ seriesIndex }}
+            </template>
+            <template #reset-action="{ reset }">
+                <button @click="reset()">REFRESH</button>
+            </template>
+        </VueUiQuickChartTreeshaken>
     </template>
 
     <template #VDUI-build>

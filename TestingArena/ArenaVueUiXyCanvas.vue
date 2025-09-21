@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiXyCanvas } from "vue-data-ui";
+import { VueUiXyCanvas as VueUiXyCanvasTreeshaken } from "vue-data-ui/vue-ui-xy-canvas";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
 const crazyDs = [];
@@ -345,6 +348,10 @@ const config = computed(() => {
 
         <template #build>
             <VueUiXyCanvas :dataset="dataset" :config="config" :key="`build_${step}`" ref="build"></VueUiXyCanvas>
+        </template>
+
+        <template #build-treesh>
+            <VueUiXyCanvasTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`" ref="build"></VueUiXyCanvasTreeshaken>
         </template>
 
         <template #VDUI-build>

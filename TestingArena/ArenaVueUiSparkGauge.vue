@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiSparkgauge } from "vue-data-ui";
+import { VueUiSparkgauge as VueUiSparkgaugeTreeshaken } from "vue-data-ui/vue-ui-sparkgauge";
+
 const dataset = ref(undefined);
 
 onMounted(() => {
@@ -121,6 +124,11 @@ const step = ref(0);
         <template #build>
             <VueUiSparkgauge :dataset="dataset" :config="config" :key="`build_${step}`">
             </VueUiSparkgauge>
+        </template>
+
+        <template #build-treesh>
+            <VueUiSparkgaugeTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`">
+            </VueUiSparkgaugeTreeshaken>
         </template>
 
         <template #VDUI-build>

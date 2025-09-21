@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiTimer } from "vue-data-ui";
+import { VueUiTimer as VueUiTimerTreeshaken } from "vue-data-ui";
+
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
@@ -134,6 +137,14 @@ const localActions = computed(() => {
                     <div v-for="l in laps">{{ l }}</div>
                 </template>
             </VueUiTimer>
+        </template>
+
+        <template #build-treesh>
+            <VueUiTimerTreeshaken :config="config" :key="`build_${step}`">
+                <template #laps="{ laps }">
+                    <div v-for="l in laps">{{ l }}</div>
+                </template>
+            </VueUiTimerTreeshaken>
         </template>
 
         <template #VDUI-build>

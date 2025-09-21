@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiGizmo } from "vue-data-ui";
+import { VueUiGizmo as VueUiGizmoTreeshaken } from "vue-data-ui/vue-ui-gizmo";
+
 const dataset = ref(undefined);
 
 onMounted(() => {
@@ -68,6 +71,14 @@ const step = ref(0)
         <template #build>
             <VueUiGizmo :dataset="dataset" :config="config"/>
             <VueUiGizmo :dataset="dataset" :config="{
+                ...config,
+                type: 'gauge'
+            }"/>
+        </template>
+
+        <template #build-treesh>
+            <VueUiGizmoTreeshaken :dataset="dataset" :config="config"/>
+            <VueUiGizmoTreeshaken :dataset="dataset" :config="{
                 ...config,
                 type: 'gauge'
             }"/>

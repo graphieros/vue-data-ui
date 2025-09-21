@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiTableHeatmap } from "vue-data-ui";
+import { VueUiTableHeatmap as VueUiTableHeatmapTreeshaken } from "vue-data-ui/vue-ui-table-heatmap";
+
 const dataset = ref([
     {
         name: "Serie 1",
@@ -262,6 +265,51 @@ const step = ref(0)
                     </div>
                 </template>
             </VueUiTableHeatmap>
+        </template>
+
+        <template #build-treesh>
+            <VueUiTableHeatmapTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`">
+                <template #caption>
+                    <div style="width: 100%; height: 40px" class="pb-8 font-black text-2xl text-left pl-2">
+                        TITLE
+                    </div>
+                </template>
+
+                <template #head="{ value, rowIndex, type }">
+                    {{ value }}
+                </template>
+
+                <template #rowTitle="{ value, rowIndex, colIndex, type, isResponsive }">
+                    <div :style="`height: 40px; display: flex; align-items:center; justify-content: flex-start; padding: 0 6px;font-weight:${isResponsive ? 'bold' : 'normal'}`"
+                        class="bg-gray-200 dark:bg-[#2A2A2A] w-full">
+                        {{ value }}
+                    </div>
+                </template>
+                <template #cell="{ value, rowIndex, colIndex, type, color, textColor }">
+                    <div :style="`height: 40px; display: flex; align-items:center; justify-content: flex-end; padding: 0 6px;background:${color};color:${textColor}`"
+                        class="relative">
+                        {{ value }}
+                    </div>
+                </template>
+                <template #sum="{ value }">
+                    <div style="height:40px; display: flex; text-align:center; align-items:center; justify-content: flex-end; padding: 0 6px;"
+                        class="bg-gray-200 dark:bg-[#2A2A2A]">
+                        {{ value }}
+                    </div>
+                </template>
+                <template #average="{ value }">
+                    <div style="height:40px; display: flex; text-align:center; align-items:center; justify-content: flex-end; padding: 0 6px;"
+                        class="bg-gray-200 dark:bg-[#2A2A2A]">
+                        {{ value.toFixed(1) }}
+                    </div>
+                </template>
+                <template #median="{ value }">
+                    <div style="height:40px; display: flex; text-align:center; align-items:center; justify-content: flex-end; padding: 0 6px;"
+                        class="bg-gray-200 dark:bg-[#2A2A2A]">
+                        {{ value.toFixed(1) }}
+                    </div>
+                </template>
+            </VueUiTableHeatmapTreeshaken>
         </template>
 
         <template #VDUI-build>

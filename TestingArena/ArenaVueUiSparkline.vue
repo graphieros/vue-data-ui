@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiSparkline } from "vue-data-ui";
+import { VueUiSparkline as VueUiSparklineTreeshaken } from "vue-data-ui/vue-ui-sparkline";
+
 const dataset = ref([])
 onMounted(() => {
     dataset.value = undefined;
@@ -300,6 +303,24 @@ const step = ref(0)
                     </div>
                 </template>
             </VueUiSparkline>
+        </template>
+
+        <template #build-treesh>
+            <VueUiSparklineTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
+                <template #before="{ selected, latest, sum, average, median, trend }">
+                    <div style="color: white;height: 180px;font-size:11px">
+                        #BEFORE
+                        <ul>
+                            <li>Latest: {{ latest }}</li>
+                            <li>Sum: {{ sum }}</li>
+                            <li>Average: {{ average }}</li>
+                            <li>Median: {{ median }}</li>
+                            <li>Trend: {{ trend }}</li>
+                            <li>Selected: {{ selected }}</li>
+                        </ul>
+                    </div>
+                </template>
+            </VueUiSparklineTreeshaken>
         </template>
 
         <template #VDUI-build>

@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiHorizontalBar } from "vue-data-ui";
+import { VueUiHorizontalBar as VueUiHorizontalBarTreeshaken } from "vue-data-ui/vue-ui-horizontal-bar";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleSort } = useArena()
 
 const dataset = ref([])
@@ -437,6 +440,32 @@ onMounted(async () => {
                     #AFTER {{ series.name }}
                 </template>
             </VueUiHorizontalBar>
+        </template>
+
+        <template #build-treesh>
+            <VueUiHorizontalBarTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
+                </template>
+                <template #dataLabel="{ datapoint, isBlur, isVisible, isSafari, textAlign, flexAlign, percentage }">
+                    <div :style="`background:${datapoint.color}`">
+                        {{ datapoint.name }} : {{ percentage }}
+                    </div>
+                </template>
+                <!-- <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template> -->
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueUiHorizontalBarTreeshaken>
         </template>
 
         <template #VDUI-build>

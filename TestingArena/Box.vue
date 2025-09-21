@@ -42,8 +42,12 @@ function refresh() {
             <slot name="VDUI-local"/>
         </div>
         <div style="width: 100%; max-width: 600px">
-            <p>Build</p>
+            <p>Build (legacy import)</p>
             <slot name="build"/>
+        </div>
+        <div style="width: 100%; max-width: 600px">
+            <p>Build (treeshaking import)</p>
+            <slot name="build-treesh"/>
         </div>
         <div style="width: 100%; max-width: 600px">
             <p>VueDataUi build</p>

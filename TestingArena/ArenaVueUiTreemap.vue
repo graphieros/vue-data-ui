@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiTreemap } from "vue-data-ui";
+import { VueUiTreemap as VueUiTreemapTreeshaken } from "vue-data-ui/vue-ui-treemap";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref(undefined);
@@ -453,6 +456,33 @@ onMounted(async() => {
                     #AFTER {{ series.name }}
                 </template>
             </VueUiTreemap>
+        </template>
+
+        <template #build-treesh>
+            <VueUiTreemapTreeshaken :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #rect="{ rect, shouldShow, fontSize, isZoom, textColor }">
+                    #RECT
+                    <div style="font-size: 12px">
+                        {{ rect, shouldShow, fontSize, isZoom, textColor }}
+                    </div>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueUiTreemapTreeshaken>
         </template>
         
         <template #VDUI-build>

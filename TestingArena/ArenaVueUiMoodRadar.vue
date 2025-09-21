@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiMoodRadar } from "vue-data-ui";
+import { VueUiMoodRadar as VueUiMoodRadarTreeshaken } from "vue-data-ui/vue-ui-mood-radar";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref(undefined);
@@ -231,6 +234,21 @@ onMounted(async () => {
                     </div>
                 </template>
             </VueUiMoodRadar>
+        </template>
+
+        <template #build-treesh>
+            <VueUiMoodRadarTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+            </VueUiMoodRadarTreeshaken>
         </template>
 
         <template #VDUI-build>
