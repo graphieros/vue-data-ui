@@ -230,21 +230,6 @@ const end = computed({
     }
 });
 
-onMounted(() => {
-    const updateWidth = () => {
-        if (!zoomWrapper.value) return;
-        wrapperWidth.value = zoomWrapper.value.getBoundingClientRect().width;
-    };
-    updateWidth();
-
-    const onWinResize = throttle(updateWidth, 50);
-    window.addEventListener('resize', onWinResize);
-
-    onBeforeUnmount(() => {
-        window.removeEventListener('resize', onWinResize);
-    });
-});
-
 let _commitTimeout = null;
 
 function commitImmediately() {
@@ -370,16 +355,17 @@ const resizeObserver = ref(null);
 onMounted(() => {
     if (hasMinimap.value) {
         const handleResize = throttle(() => {
-        if (!minimapWrapper.value) return;
-        const { width, height } = useResponsive({ chart: minimapWrapper.value });
-        const W = Math.max(0, Math.round(width));
-        const H = Math.max(0, Math.round(height - 47));
+            if (!minimapWrapper.value) return;
+            const { width, height } = useResponsive({ chart: minimapWrapper.value });
+            
+            const W = Math.max(0, Math.round(width));
+            const H = Math.max(0, Math.round(height - 47));
 
-        if (W !== svgMinimap.value.width || H !== svgMinimap.value.height) {
-            svgMinimap.value.width  = W;
-            svgMinimap.value.height = H;
-        }
-        }, 50);
+            if (W !== svgMinimap.value.width || H !== svgMinimap.value.height) {
+                svgMinimap.value.width  = W;
+                svgMinimap.value.height = H;
+            }
+        }, 0);
 
         resizeObserver.value = new ResizeObserver(handleResize);
         resizeObserver.value.observe(minimapWrapper.value);
