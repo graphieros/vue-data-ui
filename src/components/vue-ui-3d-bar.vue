@@ -916,7 +916,7 @@ defineExpose({
 
             <text
                 data-cy="vue-ui-3d-bar-simple-datalabel"
-                v-if="FINAL_CONFIG.style.chart.dataLabel.show && ![null, undefined].includes(props.dataset.percentage) && [null, undefined].includes(props.dataset.series)"
+                v-if="FINAL_CONFIG.style.chart.dataLabel.show && ![null, undefined].includes(FINAL_DATASET.percentage) && [null, undefined].includes(FINAL_DATASET.series)"
                 :x="svg.width / 2"
                 :y="svg.top - FINAL_CONFIG.style.chart.dataLabel.fontSize / 2"
                 :font-size="FINAL_CONFIG.style.chart.dataLabel.fontSize"

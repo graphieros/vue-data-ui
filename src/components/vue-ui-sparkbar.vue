@@ -324,7 +324,7 @@ function onTrapLeave(datapoint, index) {
         <template v-for="(bar, i) in drawableDataset">
             <div 
                 data-cy="datapoint-wrapper" 
-                :style="`display:flex !important;${['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? `flex-direction: ${FINAL_CONFIG.style.labels.name.position === 'right' ? 'row-reverse' : 'row'} !important` : 'flex-direction:column !important'};gap:${FINAL_CONFIG.style.gap}px !important;align-items:center;${dataset.length > 0 && i !== dataset.length - 1 ? 'margin-bottom:6px' : ''}`" 
+                :style="`display:flex !important;${['left', 'right'].includes(FINAL_CONFIG.style.labels.name.position) ? `flex-direction: ${FINAL_CONFIG.style.labels.name.position === 'right' ? 'row-reverse' : 'row'} !important` : 'flex-direction:column !important'};gap:${FINAL_CONFIG.style.gap}px !important;align-items:center;${FINAL_DATASET.length > 0 && i !== FINAL_DATASET.length - 1 ? 'margin-bottom:6px' : ''}`" 
                 @click="selectDatapoint(bar, i)"
                 @mouseenter="onTrapEnter(bar, i)"
                 @mouseleave="onTrapLeave(bar, i)"

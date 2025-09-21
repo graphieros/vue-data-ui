@@ -1415,6 +1415,7 @@ export function objectIsEmpty(obj) {
     if (Array.isArray(obj)) {
         return obj.length === 0
     }
+    if (!obj) return true;
     return Object.keys(obj).length === 0
 }
 

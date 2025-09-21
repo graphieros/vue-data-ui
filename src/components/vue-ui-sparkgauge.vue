@@ -80,7 +80,7 @@ const { loading, FINAL_DATASET } = useLoading({
     })
 })
 
-const { svgRef } = useChartAccessibility({ config: { text: props.dataset.title } });
+const { svgRef } = useChartAccessibility({ config: { text: props.dataset?.title || '' } });
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
