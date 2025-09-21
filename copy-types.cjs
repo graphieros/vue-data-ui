@@ -27,7 +27,7 @@ fs.readdirSync(typesDir).forEach((file) => {
   const distFile = path.join(distTypesDir, file);
 
   fs.copyFileSync(srcFile, distFile);
-  fs.copyFileSync(srcFile, distFile.replace(/\.d\.ts$/, ".d.cts"));
+  // fs.copyFileSync(srcFile, distFile.replace(/\.d\.ts$/, ".d.cts"));
 });
 
 console.log("Types copied successfully.");

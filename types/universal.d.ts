@@ -1,0 +1,1 @@
+export { VueDataUi as default, VueDataUi } from './vue-data-ui';

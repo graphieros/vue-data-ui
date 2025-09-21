@@ -1,12 +1,16 @@
 declare module "vue-data-ui" {
-    import { Ref, WritableComputedRef, DefineComponent } from "vue";
+    import { Ref, DefineComponent } from "vue";
 
     export type VueUiUnknownObj = {
         [key: string]: unknown;
     };
 
-    export const VueDataUi: DefineComponent<{
-        dataset?:
+    export type AnyVueComponent = DefineComponent<any, any, any, any>;
+
+    export type VueDataUiLoader =
+        () => Promise<{ default: AnyVueComponent } | AnyVueComponent>;
+
+    export type VueDataUiAnyDataset =
         | VueUi3dBarDataset
         | VueUiAgePyramidDataset
         | VueUiAnnotatorDataset
@@ -62,7 +66,8 @@ declare module "vue-data-ui" {
         | VueUiWorldDataset
         | VueUiRidgelineDatasetItem[]
         | VueUiChordDataset;
-        config?:
+
+    export type VueDataUiAnyConfig =
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
         | VueUiAnnotatorConfig
@@ -123,9 +128,54 @@ declare module "vue-data-ui" {
         | VueUiWorldConfig
         | VueUiRidgelineConfig
         | VueUiChordConfig;
-    }>;
 
-    export type ChartEvent<T> = null | (({ datapoint, seriesIndex} : { datapoint: T, seriesIndex: number}) => void);
+    export type VueDataUiProps = {
+        loader?: VueDataUiLoader | null;
+        component?: string;
+        dataset: VueDataUiAnyDataset;
+        config?: VueDataUiAnyConfig;
+    };
+
+    export type VueDataUiExpose = {
+        getData?: (...args: any[]) => Promise<any> | any;
+        getImage?: (options?: { scale?: number }) => Promise<any>;
+        generateCsv?: () => void;
+        generateImage?: () => void;
+        generatePdf?: () => void;
+        toggleAnnotator?: () => void;
+        toggleFullscreen?: () => void;
+        toggleLabels?: () => void;
+        toggleStack?: () => void;
+        toggleTable?: () => void;
+        toggleTooltip?: () => void;
+        autoSize?: () => void;
+        getItemsPositions?: () => any;
+        toggleReadonly?: () => void;
+        shoot?: () => void;
+        close?: () => void;
+        restoreOrder?: () => void;
+        recalculateHeight?: () => void;
+        toggleLock?: () => void;
+        toggleSort?: () => void;
+        start?: () => void;
+        pause?: () => void;
+        reset?: () => void;
+        restart?: () => void;
+        lap?: () => void;
+        pauseAnimation?: () => void;
+        resumeAnimation?: () => void;
+        toggleAnimation?: () => void;
+        selectNode?: (...args: any[]) => void;
+        selectGroup?: (...args: any[]) => void;
+        selectRibbon?: (...args: any[]) => void;
+        resetZoom?: () => void;
+        [key: string]: any;
+    };
+
+    /** Keep the named export exactly as before (now with loader/component props). */
+    export const VueDataUi: DefineComponent<VueDataUiProps, VueDataUiExpose>;
+
+    export type ChartEvent<T> = null | (({ datapoint, seriesIndex }: { datapoint: T, seriesIndex: number }) => void);
 
     export type VueUiFlowEvent = ChartEvent<VueUiFlowNode>;
     export type VueUi3dBarEvent = ChartEvent<VueUi3dBarDatapoint>;
@@ -259,9 +309,9 @@ declare module "vue-data-ui" {
             annotator?: null | (() => void);
             csv?: null | ((csvStr?: string) => void);
             fullscreen?: null | (() => void);
-            img?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string} = {}) => void);
+            img?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string } = {}) => void);
             labels?: null | (() => void);
-            pdf?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string} = {}) => void);
+            pdf?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string } = {}) => void);
             sort?: null | (() => void);
             stack?: null | (() => void);
             table?: null | (() => void);
@@ -2373,8 +2423,8 @@ declare module "vue-data-ui" {
                 annotator?: boolean;
             };
             callbacks?: {
-                pdf?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string} = {}) => void);
-                img?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string} = {}) => void);
+                pdf?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string } = {}) => void);
+                img?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string } = {}) => void);
                 annotator?: null | (() => void);
             };
             buttonTitles?: {
@@ -2496,12 +2546,12 @@ declare module "vue-data-ui" {
         dataset: VueUiSparkbarDatasetItem[];
     }>;
 
-    export type VueUiAgePyramidDatasetRow = [
+    export type VueUiAgePyramidDatasetRow = {
         year: string,
         rank: number,
         v1: number | null,
         v2: number | null
-    ]
+    }
 
     export type VueUiAgePyramidDataset = VueUiAgePyramidDatasetRow[];
 
@@ -3886,7 +3936,7 @@ declare module "vue-data-ui" {
         toggleLabels(): void
         toggleTable(): void
         toggleTooltip(): void
-        autoSize():void
+        autoSize(): void
     }
 
     export const VueUiDonut: DefineComponent<
@@ -4095,7 +4145,7 @@ declare module "vue-data-ui" {
         toggleLabels(): void
         toggleTable(): void
         toggleTooltip(): void
-        autoSize():void
+        autoSize(): void
     }
 
     export const VueUiNestedDonuts: DefineComponent<
@@ -6094,9 +6144,9 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         events?: {
-            datapointEnter?: ChartEvent<object| object[]>;
-            datapointLeave?: ChartEvent<object| object[]>;
-            datapointClick?: ChartEvent<object| object[]>;
+            datapointEnter?: ChartEvent<object | object[]>;
+            datapointLeave?: ChartEvent<object | object[]>;
+            datapointClick?: ChartEvent<object | object[]>;
         };
         responsive?: boolean;
         theme?: Theme;
@@ -6505,7 +6555,7 @@ declare module "vue-data-ui" {
         name: string;
         plots: VueUiStripPlotDatasetItem[];
     };
-    
+
     export type VueUiStripPlotExpose = {
         getData(): Promise<Array<{
             color: string
@@ -8025,7 +8075,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiFunnelExpose = {
-        getData(): Promise<Array<{ 
+        getData(): Promise<Array<{
             color: string
             name: string
             value: string
@@ -8552,7 +8602,7 @@ declare module "vue-data-ui" {
     export type VueUiRidgelineDatapointEventEntry = {
         dp: VueUiRidgelineDatapointEventUnit;
         selected: number;
-    };      
+    };
 
     export type VueUiRidgelineDatapointEvent = VueUiRidgelineDatapointEventEntry[][];
 
@@ -9291,7 +9341,7 @@ declare module "vue-data-ui" {
      * @returns The shifted color in hexadecimal format.
      */
     export const shiftColorHue: (color: string, strength: number) => string;
-    
+
     export type FormatSmallValueArgs = {
         value: number;
         maxDecimals?: number;

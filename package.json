@@ -64,17 +64,25 @@
   ],
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/types/vue-data-ui.d.ts",
-        "default": "./dist/vue-data-ui.js"
-      },
-      "default": {
-        "types": "./dist/types/vue-data-ui.d.cts",
-        "default": "./dist/vue-data-ui.cjs"
-      }
+      "types": "./dist/types/vue-data-ui.d.ts",
+      "import": "./dist/vue-data-ui.js",
+      "default": "./dist/vue-data-ui.js"
+    },
+    "./*": {
+      "types": "./dist/types/*.d.ts",
+      "import": "./dist/components/*.js",
+      "default": "./dist/components/*.js"
+    },
+    "./universal": {
+      "types": "./dist/types/universal.d.ts",
+      "import": "./dist/universal.js",
+      "default": "./dist/universal.js"
     },
     "./style.css": "./dist/style.css"
   },
+  "sideEffects": [
+    "**/*.css"
+  ],
   "module": "dist/vue-data-ui.js",
   "types": "dist/types/vue-data-ui.d.ts",
   "scripts": {

@@ -230,11 +230,11 @@ const showTitleSlot = ref(false);
                     </div>
                 </template>
 
-                <template #data-label="{ bar }">
+                <!-- <template #data-label="{ bar }">
                     <div style="width:100%">
                         {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
                     </div>
-                </template>
+                </template> -->
             </VueUiSparkbar>
         </template>
         
@@ -247,11 +247,11 @@ const showTitleSlot = ref(false);
                     </div>
                 </template>
 
-                <template #data-label="{ bar }">
+                <!-- <template #data-label="{ bar }">
                     <div style="width:100%">
                         {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
                     </div>
-                </template>
+                </template> -->
             </VueDataUi>
         </template>
 

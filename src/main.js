@@ -3,7 +3,6 @@ import './style.css'
 import App from './App.vue'
 import { 
     Arrow,
-    VueDataUi,
     VueUi3dBar,
     VueUiAgePyramid,
     VueUiAnnotator,
@@ -44,7 +43,6 @@ import {
     VueUiHorizontalBar, // v3 renaming
     VueUiWaffle, 
     VueUiWheel,
-    VueUiXy,
     VueUiTableHeatmap,
     VueUiAccordion,
     VueUiQuickChart,
@@ -67,9 +65,12 @@ import {
     VueUiCirclePack,
     VueUiWorld,
     VueUiRidgeline,
-    VueUiChord
+    VueUiChord,
 } from 'vue-data-ui';
 import 'vue-data-ui/style.css';
+
+import VueUiXy  from "vue-data-ui/vue-ui-xy";
+import VueDataUi from "vue-data-ui/universal";
 
 const app = createApp(App);
 app.component("Arrow", Arrow);

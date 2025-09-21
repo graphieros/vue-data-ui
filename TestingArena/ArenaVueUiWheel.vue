@@ -44,7 +44,7 @@ function alterDataset() {
 
 const model = ref([
     { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: true, type: 'checkbox'},
+    { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
