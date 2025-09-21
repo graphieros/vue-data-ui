@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiDonutEvolution } from "vue-data-ui";
+import { VueUiDonutEvolution as VueUiDonutEvolutionTreeshaken } from "vue-data-ui/vue-ui-donut-evolution";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([])
@@ -323,6 +326,24 @@ onMounted(async() => {
                     <button @click="reset()">REFRESH</button>
                 </template>
             </VueUiDonutEvolution>
+        </template>
+
+        <template #build-treesh>
+            <VueUiDonutEvolutionTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #reset-action="{ reset }">
+                    <button @click="reset()">REFRESH</button>
+                </template>
+            </VueUiDonutEvolutionTreeshaken>
         </template>
 
         <template #VDUI-build>

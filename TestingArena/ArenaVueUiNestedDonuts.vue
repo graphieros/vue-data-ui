@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiNestedDonuts } from "vue-data-ui";
+import { VueUiNestedDonuts as VueUiNestedDonutsTreeshaken } from "vue-data-ui/vue-ui-nested-donuts";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
 const dataset = ref([])
@@ -366,6 +369,27 @@ onMounted(async() => {
                     #AFTER {{ series.name }}
                 </template>
             </VueUiNestedDonuts>
+        </template>
+
+        <template #build-treesh>
+            <VueUiNestedDonutsTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueUiNestedDonutsTreeshaken>
         </template>
 
         <template #VDUI-build>

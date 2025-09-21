@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiSparkHistogram } from "vue-data-ui"
+import { VueUiSparkHistogram as VueUiSparkHistogramTreeshaken } from "vue-data-ui/vue-ui-sparkhistogram";
+
 const dataset = ref(undefined);
 
 onMounted(() => {
@@ -294,6 +297,11 @@ function selectDatapoint(datapoint) {
         <template #build>
             <VueUiSparkHistogram :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectDatapoint="selectDatapoint">
             </VueUiSparkHistogram>
+        </template>
+
+        <template #build-treesh>
+            <VueUiSparkHistogramTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectDatapoint="selectDatapoint">
+            </VueUiSparkHistogramTreeshaken>
         </template>
 
         <template #VDUI-build>

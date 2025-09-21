@@ -5,6 +5,10 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiTiremarks } from "vue-data-ui";
+import { VueUiTiremarks as VueUiTiremarksTreeshaken } from "vue-data-ui/vue-ui-tiremarks";
+
+
 const dataset = ref(undefined)
 
 onMounted(() => {
@@ -194,6 +198,11 @@ onMounted(async () => {
         <template #build>
             <VueUiTiremarks :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
             </VueUiTiremarks>
+        </template>
+
+        <template #build-treesh>
+            <VueUiTiremarksTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
+            </VueUiTiremarksTreeshaken>
         </template>
 
         <template #VDUI-build>

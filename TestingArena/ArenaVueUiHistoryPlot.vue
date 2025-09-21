@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiHistoryPlot } from "vue-data-ui";
+import { VueUiHistoryPlot as VueUiHistoryPlotTreeshaken } from "vue-data-ui/vue-ui-history-plot";
+
 const { local, build, vduiLocal, vduiBuild } = useArena()
 
 const dataset = ref(undefined);
@@ -236,6 +239,10 @@ onMounted(async() => {
 
         <template #build>
             <VueUiHistoryPlot :dataset="dataset" :config="config"/>
+        </template>
+
+        <template #build-treesh>
+            <VueUiHistoryPlotTreeshaken :dataset="dataset" :config="config"/>
         </template>
 
         <template #VDUI-build>

@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiRidgeline } from "vue-data-ui";
+import { VueUiRidgeline as VueUiRidgelineTreeshaken } from "vue-data-ui/vue-ui-ridgeline";
+
 const themeOptions = ref([
     "",
     "hack",
@@ -254,6 +257,10 @@ onMounted(async () => {
 
         <template #build>
             <VueUiRidgeline :dataset="dataset" :config="config"/>
+        </template>
+
+        <template #build-treesh>
+            <VueUiRidgelineTreeshaken :dataset="dataset" :config="config"/>
         </template>
 
         <template #VDUI-build>

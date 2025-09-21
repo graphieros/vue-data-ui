@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiSparkTrend } from "vue-data-ui"; 
+import { VueUiSparkTrend as VueUiSparkTrendTreeshaken } from "vue-data-ui/vue-ui-spark-trend"; 
+
 function makeDs(n,m) {
     const arr = [];
     for(let i = 0; i < n; i += 1) {
@@ -172,6 +175,14 @@ const step = ref(0)
                 <VueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.negative : datasets.negative" :config="isPropsToggled ? alternateConfig : config" :key="`build0_${step}`"/>
                 <VueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.neutral : datasets.neutral" :config="isPropsToggled ? alternateConfig : config" :key="`build1_${step}`"/>
                 <VueUiSparkTrend :dataset="isPropsToggled ? alternateDataset.positive : datasets.positive" :config="isPropsToggled ? alternateConfig : config" :key="`build2_${step}`"/>
+            </div>
+        </template>
+
+        <template #build-treesh>
+            <div style="width: 100%">
+                <VueUiSparkTrendTreeshaken :dataset="isPropsToggled ? alternateDataset.negative : datasets.negative" :config="isPropsToggled ? alternateConfig : config" :key="`build0_${step}`"/>
+                <VueUiSparkTrendTreeshaken :dataset="isPropsToggled ? alternateDataset.neutral : datasets.neutral" :config="isPropsToggled ? alternateConfig : config" :key="`build1_${step}`"/>
+                <VueUiSparkTrendTreeshaken :dataset="isPropsToggled ? alternateDataset.positive : datasets.positive" :config="isPropsToggled ? alternateConfig : config" :key="`build2_${step}`"/>
             </div>
         </template>
 

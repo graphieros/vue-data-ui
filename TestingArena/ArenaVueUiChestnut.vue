@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiChestnut } from "vue-data-ui";
+import { VueUiChestnut as VueUiChestnutTreeshaken } from "vue-data-ui/vue-ui-chestnut";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref(undefined);
@@ -597,6 +600,21 @@ onMounted(async () => {
                 </div>
             </template> -->
         </VueUiChestnut>
+    </template>
+    
+    <template #build-treesh>
+        <VueUiChestnutTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="build">
+            <template #svg="{ svg }">
+                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+            </template>
+            <!-- <template #legend="{ legend }">
+                #LEGEND
+                <div style="font-size: 8px">
+                    {{ legend }}
+                </div>
+            </template> -->
+        </VueUiChestnutTreeshaken>
     </template>
     
     <template #VDUI-build>

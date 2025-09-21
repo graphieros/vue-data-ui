@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiTableSparkline } from "vue-data-ui";
+import { VueUiTableSparkline as VueUiTableSparklineTreeshaken } from "vue-data-ui/vue-ui-table-sparkline";
+
 const dataset = ref([
     {
         name: "Serie 1",
@@ -175,6 +178,11 @@ const step = ref(0)
         <template #build>
             <VueUiTableSparkline :dataset="dataset" :config="config" :key="`build_${step}`">
             </VueUiTableSparkline>
+        </template>
+
+        <template #build-treesh>
+            <VueUiTableSparklineTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`">
+            </VueUiTableSparklineTreeshaken>
         </template>
 
         <template #VDUI-build>

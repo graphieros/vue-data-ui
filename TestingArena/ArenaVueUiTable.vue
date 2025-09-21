@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiTable } from "vue-data-ui";
+import { VueUiTable as VueUiTableTreeshaken } from "vue-data-ui/vue-ui-table";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const head = ref([
@@ -254,6 +257,7 @@ onMounted(() => {
         <LocalVueUiTable ref="table" :dataset="dataset" :config="config" @page-change="pageChange"/>
         <LocalVueDataUi component="VueUiTable" :dataset="dataset" :config="config"/>
         <VueUiTable :dataset="dataset" :config="config"/>
+        <VueUiTableTreeshaken :dataset="dataset" :config="config"/>
         <VueDataUi component="VueUiTable" :dataset="dataset" :config="config"/>
     </div>
 </template>

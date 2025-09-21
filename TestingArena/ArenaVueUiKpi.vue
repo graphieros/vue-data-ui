@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiKpi } from "vue-data-ui";
+import { VueUiKpi as VueUiKpiTreeshaken } from "vue-data-ui/vue-ui-kpi";
+
 const dataset = ref(1201);
 
 function updateVal() {
@@ -45,6 +48,9 @@ const config = ref({
         </template>
         <template #build>
             <VueUiKpi :dataset="dataset" :config="config"/>
+        </template>
+        <template #build-treesh>
+            <VueUiKpiTreeshaken :dataset="dataset" :config="config"/>
         </template>
         <template #VDUI-build>
             <VueDataUi component="VueUiKpi" :dataset="dataset" :config="config"/>

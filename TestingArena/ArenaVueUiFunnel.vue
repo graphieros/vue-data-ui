@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena"
 
+import { VueUiFunnel } from "vue-data-ui";
+import { VueUiFunnel as VueUiFunnelTreeshaken } from "vue-data-ui/vue-ui-funnel";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref([
@@ -257,6 +260,28 @@ onMounted(async () => {
                     </g>
                 </template>
             </VueUiFunnel>
+        </template>
+
+        <template #build-treesh>
+            <VueUiFunnelTreeshaken :dataset="dataset" :config="config">
+                <template #source>
+                    #source
+                </template>
+                <template #watermark="{ isPrinting }">
+                    <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                        WATERMARK
+                    </div>
+                </template>
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #svg="{ svg }">
+                    <g style="pointer-events: none;">
+                        <circle :cx="svg.width - 30" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                        <text :x="svg.width - 30" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                    </g>
+                </template>
+            </VueUiFunnelTreeshaken>
         </template>
 
         <template #VDUI-build>

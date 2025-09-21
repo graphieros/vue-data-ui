@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiSmiley } from "vue-data-ui";
+import { VueUiSmiley as VueUiSmileyTreeshaken } from "vue-data-ui/vue-ui-smiley";
+
 const { local, build, vduiLocal, vduiBuild } = useArena()
 
 const dataset = ref({ rating: {
@@ -97,6 +100,10 @@ const config = computed(() => {
 
         <template #build>
             <VueUiSmiley :dataset="dataset" :config="config" ref="build"/>
+        </template>
+
+        <template #build-treesh>
+            <VueUiSmileyTreeshaken :dataset="dataset" :config="config" ref="build"/>
         </template>
 
         <template #VDUI-build>

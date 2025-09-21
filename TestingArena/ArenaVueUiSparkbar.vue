@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiSparkbar } from "vue-data-ui";
+import { VueUiSparkbar as VueUiSparkbarTreeshaken } from "vue-data-ui/vue-ui-sparkbar";
+
 const dataset = ref(undefined);
 
 onMounted(() => {
@@ -236,6 +239,23 @@ const showTitleSlot = ref(false);
                     </div>
                 </template> -->
             </VueUiSparkbar>
+        </template>
+        
+        <template #build-treesh>
+            <VueUiSparkbarTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
+                <template #title="{ title }" v-if="showTitleSlot">
+                    <div style="width:100%;">
+                        {{ title.title }}
+                        {{ title.subtitle }}
+                    </div>
+                </template>
+
+                <!-- <template #data-label="{ bar }">
+                    <div style="width:100%">
+                        {{ bar.name }}: {{ bar.valueLabel }} to {{ bar.targetLabel }}
+                    </div>
+                </template> -->
+            </VueUiSparkbarTreeshaken>
         </template>
         
         <template #VDUI-build>

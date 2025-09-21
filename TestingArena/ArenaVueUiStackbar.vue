@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiStackbar } from "vue-data-ui";
+import { VueUiStackbar as VueUiStackbarTreeshaken } from "vue-data-ui/vue-ui-stackbar";
+
 // const dataset = ref([
 //     {
 //         name: "Serie 1",
@@ -469,6 +472,33 @@ onMounted(async () => {
                 </g>
             </template>
         </VueUiStackbar>
+    </template>
+    
+    <template #build-treesh>
+        <VueUiStackbarTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`">
+            <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
+                <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
+                    <text
+                        :x="x"
+                        :y="y"
+                        :font-size="fontSize"
+                        :text-anchor="textAnchor"
+                        :fill="fill"
+                    >
+                        {{ content }}
+                    </text>
+                    <text
+                        :x="x"
+                        :y="y + fontSize"
+                        :font-size="fontSize * 0.8"
+                        :text-anchor="textAnchor"
+                        fill="grey"
+                    >
+                        {{ content }}
+                    </text>
+                </g>
+            </template>
+        </VueUiStackbarTreeshaken>
     </template>
 
     <template #VDUI-build>

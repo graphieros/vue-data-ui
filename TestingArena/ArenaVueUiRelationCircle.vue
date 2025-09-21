@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiRelationCircle } from "vue-data-ui";
+import { VueUiRelationCircle as VueUiRelationCircleTreeshaken } from "vue-data-ui/vue-ui-relation-circle";
+
 const dataset = ref(undefined);
 
 onMounted(() => {
@@ -256,6 +259,15 @@ onMounted(async() => {
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
                 </template>
             </VueUiRelationCircle>
+        </template>
+
+        <template #build-treesh>
+            <VueUiRelationCircleTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
+                </template>
+            </VueUiRelationCircleTreeshaken>
         </template>
 
         <template #VDUI-build>

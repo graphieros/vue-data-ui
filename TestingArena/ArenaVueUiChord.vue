@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiChord } from "vue-data-ui";
+import { VueUiChord as VueUiChordTreeshaken } from "vue-data-ui/vue-ui-chord"
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref(undefined);
@@ -197,6 +200,10 @@ onMounted(async () => {
 
         <template #build>
             <VueUiChord :dataset="dataset" :config="config" ref="build"/>
+        </template>
+
+        <template #build-treesh>
+            <VueUiChordTreeshaken :dataset="dataset" :config="config" ref="build"/>
         </template>
 
         <template #VDUI-build>

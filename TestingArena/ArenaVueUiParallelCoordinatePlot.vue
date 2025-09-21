@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiParallelCoordinatePlot } from "vue-data-ui";
+import { VueUiParallelCoordinatePlot as VueUiParallelCoordinatePlotTreeshaken } from "vue-data-ui/vue-ui-parallel-coordinate-plot";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
 
 const dataset = ref([]);
@@ -289,6 +292,10 @@ onMounted(async() => {
 
         <template #build>
             <VueUiParallelCoordinatePlot @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" :dataset="dataset" :config="config" ref="build"/>
+        </template>
+
+        <template #build-treesh>
+            <VueUiParallelCoordinatePlotTreeshaken @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" :dataset="dataset" :config="config" ref="build"/>
         </template>
 
         <template #VDUI-build>

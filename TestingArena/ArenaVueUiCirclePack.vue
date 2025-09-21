@@ -7,6 +7,9 @@ import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 import VueUiPattern from "../src/atoms/vue-ui-pattern.vue";
 
+import { VueUiCirclePack } from "vue-data-ui";
+import { VueUiCirclePack as VueUiCirclePackTreeshaken } from "vue-data-ui/vue-ui-circle-pack";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
 
 function makeDs({ name, qty, maxVal }) {
@@ -343,6 +346,10 @@ onMounted(async() => {
 
     <template #build>
       <VueUiCirclePack :dataset="dataset" :config="config" ref="build" />
+    </template>
+
+    <template #build-treesh>
+      <VueUiCirclePackTreeshaken :dataset="dataset" :config="config" ref="build" />
     </template>
 
     <template #VDUI-build>

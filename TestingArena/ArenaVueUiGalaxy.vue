@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiGalaxy } from "vue-data-ui";
+import { VueUiGalaxy as VueUiGalaxyTreeshaken } from "vue-data-ui/vue-ui-galaxy";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref(undefined);
@@ -294,6 +297,27 @@ onMounted(async () => {
                     #AFTER {{ series.name }}
                 </template>
             </VueUiGalaxy>
+        </template>
+
+        <template #build-treesh>
+            <VueUiGalaxyTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
+                </template>
+                <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template>
+                <template #tooltip-before="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #BEFORE {{ series.name }}
+                </template>
+                <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
+                    #AFTER {{ series.name }}
+                </template>
+            </VueUiGalaxyTreeshaken>
         </template>
 
         <template #VDUI-build>

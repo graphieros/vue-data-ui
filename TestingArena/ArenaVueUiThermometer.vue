@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiThermometer } from "vue-data-ui"; 
+import { VueUiThermometer as VueUiThermometerTreeshaken } from "vue-data-ui/vue-ui-thermometer"; 
+
 const dataset = ref(undefined)
 
 onMounted(() => {
@@ -203,6 +206,15 @@ onMounted(async () => {
                     <text :x="30" :y="30" text-anchor="middle">#SVG</text>
                 </template>
             </VueUiThermometer>
+        </template>
+
+        <template #build-treesh>
+            <VueUiThermometerTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
+                <template #svg="{ svg }">
+                    <circle :cx="30" :cy="30" :r="30" fill="#42d392" />
+                    <text :x="30" :y="30" text-anchor="middle">#SVG</text>
+                </template>
+            </VueUiThermometerTreeshaken>
         </template>
 
         <template #VDUI-build>

@@ -6,6 +6,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
 
+import { VueUiFlow } from "vue-data-ui";
+import { VueUiFlow as VueUiFlowTreeshaken } from "vue-data-ui/vue-ui-flow";
+
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
 const dataset = ref(undefined);
@@ -461,6 +464,10 @@ onMounted(async () => {
 
         <template #build>
             <VueUiFlow :dataset="dataset" :config="config" :key="`build_${step}`" ref="build"></VueUiFlow>
+        </template>
+
+        <template #build-treesh>
+            <VueUiFlowTreeshaken :dataset="dataset" :config="config" :key="`build_${step}`" ref="build"></VueUiFlowTreeshaken>
         </template>
 
         <template #VDUI-build>

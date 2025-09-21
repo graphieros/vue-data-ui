@@ -5,6 +5,9 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 
+import { VueUiSparkStackbar } from "vue-data-ui";
+import { VueUiSparkStackbar as VueUiSparkStackbarTreeshaken } from "vue-data-ui/vue-ui-sparkstackbar";
+
 const dataset = ref(undefined);
 
 onMounted(() => {
@@ -195,6 +198,11 @@ const step = ref(0)
         <template #build>
             <VueUiSparkStackbar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
             </VueUiSparkStackbar>
+        </template>
+
+        <template #build-treesh>
+            <VueUiSparkStackbarTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`">
+            </VueUiSparkStackbarTreeshaken>
         </template>
 
         <template #VDUI-build>

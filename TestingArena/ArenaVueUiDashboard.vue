@@ -5,6 +5,9 @@ import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import SomeTest from "../src/SomeTest.vue";
 
+import { VueUiDashboard } from "vue-data-ui";
+import { VueUiDashboard as VueUiDashboardTreeshaken } from "vue-data-ui/vue-ui-dashboard";
+
 const model= ref([
     { key: 'locked', def: false, type: 'checkbox' },
 
@@ -170,6 +173,10 @@ const dataset = ref([
 
         <template #VDUI-build>
             <VueDataUi component="VueUiDashboard" :dataset="dataset" :config="config"/>
+        </template>
+
+        <template #build-treesh>
+            <VueUiDashboardTreeshaken :dataset="dataset" :config="config"/>
         </template>
 
         <template #knobs>
