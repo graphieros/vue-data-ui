@@ -89,6 +89,8 @@ const segregated = ref([]);
 const step = ref(0);
 const slicerStep = ref(0);
 const readyTeleport = ref(false);
+const pathWrapper = ref(null);
+const pathTop = ref(null);
 
 const timeLabelsEls = ref(null);
 const scaleLabels = ref(null);
@@ -104,6 +106,18 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+            if (chartType.value === detector.chartType.LINE && FINAL_CONFIG.value.lineAnimated && !loading.value) {
+                animateLineNow({
+                    pathDuration: 1000,
+                    pointDuration: 1200,
+                    labelDuration: 1200,
+                });
+            }
+        })
+    },
     skeletonDataset: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
@@ -287,7 +301,7 @@ watch(FINAL_CONFIG, () => {
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
 
-onMounted(() => {
+onMounted(async () => {
     readyTeleport.value = true;
     prepareChart();
 })
@@ -817,7 +831,7 @@ const line = computed(() => {
         maxSeries: Math.max(...ds.map(d => d.values.length))
     };
 
-    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max < 0 ? 0 : extremes.max, FINAL_CONFIG.value.xyScaleSegments)
+    const scale = extremes.max === extremes.min ? calculateNiceScale(extremes.min, extremes.min + 1, FINAL_CONFIG.value.xyScaleSegments) :  calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max < 0 ? 0 : extremes.max, FINAL_CONFIG.value.xyScaleSegments)
     const absoluteMin = extremes.min < 0 ? Math.abs(extremes.min) : 0;
     const absoluteZero = extremes.max < 0 ? drawingArea.top : drawingArea.bottom - (absoluteMin / (scale.max + absoluteMin) * drawingArea.height)
     const slotSize = drawingArea.width / extremes.maxSeries;
@@ -1018,7 +1032,7 @@ const bar = computed(() => {
         maxSeries: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).map(d => d.values.length))
     }
 
-    const scale = calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, FINAL_CONFIG.value.xyScaleSegments)
+    const scale = extremes.min === extremes.max ? calculateNiceScale(extremes.min, extremes.min + 1, FINAL_CONFIG.value.xyScaleSegments) : calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, FINAL_CONFIG.value.xyScaleSegments)
     const absoluteMin = scale.min < 0 ? Math.abs(scale.min) : 0;
     const absoluteZero = drawingArea.bottom - (absoluteMin / (scale.max + absoluteMin) * drawingArea.height)
     const slotSize = drawingArea.width / extremes.maxSeries;
@@ -1172,6 +1186,116 @@ const bar = computed(() => {
         selectDatapoint
     }
 });
+
+function primePath(p) {
+    if (!p) return;
+    const len = p.getTotalLength();
+    p.style.transition = 'none';
+    p.style.strokeDasharray = `${len}`;
+    p.style.strokeDashoffset = `${len}`;
+}
+
+function primeRevealables(els, { fromOpacity='0', fromScale='0.85' } = {}) {
+    els.forEach(el => {
+        el.style.animation = 'none';
+        el.style.transition = 'none';
+        el.style.opacity = fromOpacity;
+        el.style.transform = `scale(${fromScale})`;
+        el.style.transformBox = 'fill-box';
+        el.style.transformOrigin = '50% 50%';
+    });
+}
+
+function getXFromCircle(el) {
+    return el.cx?.baseVal?.value ?? parseFloat(el.getAttribute('cx'));
+}
+function getXFromText(el) {
+    const xAttr = el.getAttribute('x');
+    if (xAttr != null) return parseFloat(xAttr);
+    const ctm = el.getCTM?.();
+    return ctm ? ctm.e : 0;
+}
+
+function bucketByXTolerance(elems, getX) {
+    if (!elems.length) return [];
+    const withX = elems.map(el => ({ el, x: getX(el) })).filter(o => Number.isFinite(o.x));
+    withX.sort((a, b) => a.x - b.x);
+
+    let minGap = Infinity;
+    for (let i = 1; i < withX.length; i++) {
+        const d = withX[i].x - withX[i - 1].x;
+        if (d > 0 && d < minGap) minGap = d;
+    }
+    const tol = (minGap === Infinity ? 1 : minGap) / 2;
+
+    const buckets = [];
+    let current = { x: withX[0].x, items: [withX[0].el] };
+    for (let i = 1; i < withX.length; i++) {
+        const { x, el } = withX[i];
+        if (Math.abs(x - current.x) <= tol) {
+            current.items.push(el);
+        } else {
+            buckets.push(current);
+            current = { x, items: [el] };
+        }
+    }
+    buckets.push(current);
+    return buckets;
+}
+
+function animateLineNow({
+        pathDuration,
+        pathEasing = 'ease-in-out',
+        pointDuration,
+        labelDuration,
+        pointDelay = 0,
+        labelDelay = 0,
+        pointStep = 0,
+        labelStep = 0,
+        intraSeriesStep = 0
+    } = {}) {
+    const wrappers = Array.isArray(pathWrapper.value) ? pathWrapper.value : [pathWrapper.value].filter(Boolean);
+    const tops     = Array.isArray(pathTop.value) ? pathTop.value : [pathTop.value].filter(Boolean);
+    const paths = [...wrappers, ...tops].filter(Boolean);
+    const root   = quickChart.value;
+    const points = Array.from(root.querySelectorAll('.vue-ui-quick-chart-plot'));
+    const labels = Array.from(root.querySelectorAll('.vue-ui-quick-chart-label'));
+    paths.forEach(primePath);
+    primeRevealables(points, { fromOpacity:'0', fromScale:'0.75' });
+    primeRevealables(labels, { fromOpacity:'0', fromScale:'0.98' });
+    points.forEach(el => el.classList.remove('quick-animation'));
+    labels.forEach(el => el.classList.remove('quick-animation'));
+    void root.offsetWidth;
+    const pointCols = bucketByXTolerance(points, getXFromCircle);
+    const labelCols = bucketByXTolerance(labels, getXFromText);
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            paths.forEach(p => {
+                p.style.transition = `stroke-dashoffset ${pathDuration}ms ${pathEasing}`;
+                p.style.strokeDashoffset = '0';
+            });
+
+            pointCols.forEach((col, colIndex) => {
+                col.items.forEach((el, k) => {
+                    const delay = pointDelay + colIndex * pointStep + k * intraSeriesStep;
+                    el.style.transition = `opacity ${pointDuration}ms ease-out ${delay}ms, transform ${pointDuration}ms ease-out ${delay}ms`;
+                    el.style.opacity = '1';
+                    el.style.transform = 'scale(1)';
+                });
+            });
+
+            labelCols.forEach((col, colIndex) => {
+                col.items.forEach((el, k) => {
+                    const delay = labelDelay + colIndex * labelStep + k * intraSeriesStep;
+                    el.style.transition = `opacity ${labelDuration}ms ease-out ${delay}ms, transform ${labelDuration}ms ease-out ${delay}ms`;
+                    el.style.opacity = '1';
+                    el.style.transform = 'scale(1)';
+                });
+            });
+        });
+    });
+}
 
 const allMinimaps = computed(() => {
     if (chartType.value === detector.chartType.LINE) {
@@ -1678,6 +1802,7 @@ defineExpose({
                         <g class="line-plot-series">
                             <template v-if="FINAL_CONFIG.lineSmooth">
                                 <path
+                                    ref="pathWrapper"
                                     data-cy="datapoint-line-wrapper"
                                     :d="`M ${createSmoothPath(ds.coordinates)}`"
                                     :stroke="FINAL_CONFIG.backgroundColor"
@@ -1685,9 +1810,10 @@ defineExpose({
                                     stroke-linecap="round"
                                     fill="none"
                                     :class="{'quick-animation': !loading, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated && !loading }"
-                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
+                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out'}"
                                 />
                                 <path
+                                    ref="pathTop"
                                     data-cy="datapoint-line"
                                     :d="`M ${createSmoothPath(ds.coordinates)}`"
                                     :stroke="ds.color"
@@ -1695,12 +1821,13 @@ defineExpose({
                                     stroke-linecap="round"
                                     fill="none"
                                     :class="{'quick-animation': !loading, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated && !loading }"
-                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
+                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out'}"
                                 >
                             </path>
                             </template>
                             <template v-else>
                                 <path
+                                    ref="pathWrapper"
                                     data-cy="datapoint-line-wrapper"
                                     :d="`M ${ds.linePath}`"
                                     :stroke="FINAL_CONFIG.backgroundColor"
@@ -1711,6 +1838,7 @@ defineExpose({
                                     :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
                                 />
                                 <path
+                                    ref="pathTop"
                                     data-cy="datapoint-line"
                                     :d="`M ${ds.linePath}`"
                                     :stroke="ds.color"
@@ -1718,7 +1846,7 @@ defineExpose({
                                     stroke-linecap="round"
                                     fill="none"
                                     :class="{'quick-animation': !loading, 'vue-data-ui-line-animated': FINAL_CONFIG.lineAnimated && !loading }"
-                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
+                                    :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out'}"
                                 />
                             </template>
                             <template v-for="(plot, j) in ds.coordinates">
@@ -1730,7 +1858,7 @@ defineExpose({
                                     :fill="ds.color"
                                     :stroke="FINAL_CONFIG.backgroundColor"
                                     stroke-width="0.5"
-                                    :class="{ 'quick-animation': !loading }"
+                                    :class="{ 'vue-ui-quick-chart-plot': true, 'quick-animation': !loading }"
                                     :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
                                 />
                             </template>
@@ -1747,7 +1875,7 @@ defineExpose({
                             :fill="ds.color"
                             :x="plot.x"
                             :y="checkNaN(plot.y) - FINAL_CONFIG.dataLabelFontSize / 2"
-                            class="quick-animation"
+                            :class="{ 'vue-ui-quick-chart-label': true, 'quick-animation': !loading }"
                             :style="{ transition: loading ? undefined : 'all 0.3s ease-in-out' }"
                         >
                             {{ applyDataLabel(
@@ -2276,6 +2404,7 @@ defineExpose({
     animation: quick 0.5s ease-in-out;
     transform-origin: center;
 }
+
 @keyframes quick {
     0% {
         transform: scale(0.9,0.9);
@@ -2289,18 +2418,6 @@ defineExpose({
         transform: scale(1,1);
         opacity: 1;
     }
-}
-
-.vue-data-ui-line-animated {
-    stroke-dasharray: 2000;  
-    stroke-dashoffset: 2000; 
-    animation: vueDataUiLineAnimation 0.5s cubic-bezier(0.790, 0.210, 0.790, 0.210) forwards; 
-}
-
-@keyframes vueDataUiLineAnimation {
-    to {
-        stroke-dashoffset: 0;
-      }
 }
 
 .vue-data-ui-bar-animated {

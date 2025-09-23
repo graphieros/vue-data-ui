@@ -11,7 +11,11 @@ import { VueUiQuickChart as VueUiQuickChartTreeshaken } from "vue-data-ui/vue-ui
 function makeDs(m, n = 100) {
     const arr = [];
     for (let i = 0; i < m; i += 1) {
-        arr.push(Math.random() * n)
+        if (i > 20 && i < 40) {
+            arr.push(null);
+        } else {
+            arr.push(Math.random() * n)
+        }
     }
     return arr
 }
