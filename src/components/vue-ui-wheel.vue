@@ -138,7 +138,7 @@ const baseLabelFontSize = ref(FINAL_CONFIG.value.style.chart.layout.percentage.f
 
 const wheel = computed(() => {
     return {
-        radius: (Math.min(svg.value.width, svg.value.height) * 0.9) / 2,
+        radius: ((Math.min(svg.value.width, svg.value.height) * 0.9) / 2) * FINAL_CONFIG.value.style.chart.layout.wheel.radiusRatio,
         centerX: svg.value.width / 2,
         centerY: svg.value.height / 2,
     }
@@ -220,6 +220,275 @@ onBeforeUnmount(() => {
     }
 });
 
+function rotateX([x, y, z], ax) {
+    const ca = Math.cos(ax), sa = Math.sin(ax);
+    return [x, y * ca - z * sa, y * sa + z * ca];
+}
+function perspectiveProject([x, y, z], f) {
+    const s = f / (f - z);
+    return [x * s, y * s, z, s];
+}
+
+function shadeColor(hex, t) {
+    const c = hex.replace('#', '');
+    const r = parseInt(c.substring(0,2), 16);
+    const g = parseInt(c.substring(2,4), 16);
+    const b = parseInt(c.substring(4,6), 16);
+    const shadeRatio = Math.min(1, Math.max(0, FINAL_CONFIG.value.style.chart.layout.wheel.ticks.shadeColorRatio3d));
+    const k = 1 - (shadeRatio * t);
+    const rr = Math.max(0, Math.min(255, Math.round(r * k)));
+    const gg = Math.max(0, Math.min(255, Math.round(g * k)));
+    const bb = Math.max(0, Math.min(255, Math.round(b * k)));
+    return `#${rr.toString(16).padStart(2,'0')}${gg.toString(16).padStart(2,'0')}${bb.toString(16).padStart(2,'0')}`;
+}
+
+function buildTicks3D({
+    cx, cy, radius, innerRatio = 0.8,
+    count = 120,
+    startDeg = 0,
+    axDeg = 50, // tilt angle (bigger = more perspective)
+    f = 520, // focal length (smaller = stronger perspective)
+    baseStroke = 5,
+    activeColor,
+    inactiveColor,
+    getActive
+}) {
+    const ax = axDeg * Math.PI / 180;
+    const outerR = radius;
+    const innerR = radius * innerRatio;
+    const ticks = [];
+    for (let i = 0; i < count; i += 1) {
+        const a = ((i / count) * 360 + startDeg) * Math.PI / 180;
+
+        // Points on the circle plane Z=0
+        const xo = cx + outerR * Math.cos(a);
+        const yo = cy + outerR * Math.sin(a);
+        const xi = cx + innerR * Math.cos(a);
+        const yi = cy + innerR * Math.sin(a);
+
+        // Move to local ring coords around (0,0) for rotation
+        const po = [xo - cx, yo - cy, 0];
+        const pi = [xi - cx, yi - cy, 0];
+
+        // Rotate the ring in 3D
+        const [rxo, ryo, rzo] = rotateX(po, ax);
+        const [rxi, ryi, rzi] = rotateX(pi, ax);
+
+        // Project to 2D
+        const [pxo, pyo, , so] = perspectiveProject([rxo, ryo, rzo], f);
+        const [pxi, pyi, , si] = perspectiveProject([rxi, ryi, rzi], f);
+
+        const x1 = cx + pxo; 
+        const y1 = cy + pyo;
+        const x2 = cx + pxi; 
+        const y2 = cy + pyi;
+
+        const depth = (Math.max(rzo, rzi) - (-outerR * Math.sin(ax))) / (2 * outerR * Math.sin(ax) || 1);
+        const isActive = getActive ? getActive(i) : true;
+
+        const c = FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(activeColor, (i * percentageToTickAmount.value) / tickAmount.value * (FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : activeColor;
+
+        const baseColor = isActive ? c : inactiveColor;
+        const color = shadeColor(baseColor, depth);
+        const stroke = Math.max(1.25, baseStroke * so * (Math.min(svg.value.width, svg.value.height) / 360));
+
+        ticks.push({ i, x1, y1, x2, y2, stroke, color, z: Math.max(rzo, rzi)});
+    }
+    ticks.sort((a, b) => a.z - b.z);
+    return ticks;
+}
+
+const ticks3D = computed(() => {
+    if (!FINAL_CONFIG.value.layout === '3d') return null;
+
+    const count = tickAmount.value;
+    const activeColor = FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient.show
+        ? shiftHue(FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor, 0)
+        : FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor;
+
+    const inactiveColor = FINAL_CONFIG.value.style.chart.layout.wheel.ticks.inactiveColor;
+    const baseStroke = FINAL_CONFIG.value.style.chart.layout.wheel.ticks.strokeWidth;
+
+    return buildTicks3D({
+        cx: wheel.value.centerX,
+        cy: wheel.value.centerY,
+        radius: wheel.value.radius,
+        innerRatio: FINAL_CONFIG.value.style.chart.layout.wheel.ticks.sizeRatio,
+        count,
+        startDeg: -90,
+        axDeg: FINAL_CONFIG.value.style.chart.layout.wheel.tiltAngle3d,
+        f: Math.min(svg.value.width, svg.value.height) * 1.45,
+        baseStroke,
+        activeColor,
+        inactiveColor,
+        getActive: (i) => activeValue.value > (i * percentageToTickAmount.value)
+    });
+});
+
+function buildCirclePath3D({ cx, cy, r, count = 180, startDeg = -90, axDeg = 50, f }) {
+    const ax = (axDeg * Math.PI) / 180;
+    const pts = [];
+    let scaleSum = 0;
+
+    for (let i = 0; i < count; i += 1) {
+        const a = ((i / count) * 360 + startDeg) * Math.PI / 180;
+        const p = [r * Math.cos(a), r * Math.sin(a), 0];
+        const [rx, ry, rz] = rotateX(p, ax);
+        const [px, py, , s] = perspectiveProject([rx, ry, rz], f);
+        scaleSum += s;
+        pts.push([cx + px, cy + py]);
+    }
+
+    let d = `M ${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i += 1) {
+        d += ` L ${pts[i][0]} ${pts[i][1]}`;
+    }
+    d += ' Z';
+
+    const avgScale = scaleSum / count;
+    return { d, avgScale, pts };
+}
+
+
+const vb3D = computed(() => {
+    if (FINAL_CONFIG.value.layout !== '3d') return null;
+
+    const f  = Math.min(svg.value.width, svg.value.height) * 1.45;
+    const ax = FINAL_CONFIG.value.style.chart.layout.wheel.tiltAngle3d;
+    const r  = wheel.value.radius;
+
+    const { pts } = buildCirclePath3D({
+        cx: wheel.value.centerX,
+        cy: wheel.value.centerY,
+        r,
+        startDeg: -90,
+        axDeg: ax,
+        f
+    });
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const [x, y] of pts) {
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+    }
+    return {
+        x: minX,
+        y: minY,
+        w: (maxX - minX),
+        h: (maxY - minY),
+    };
+});
+
+function ellipse(r) {
+    const f = Math.min(svg.value.width, svg.value.height) * 1.45;
+    const { d, avgScale } = buildCirclePath3D({
+        cx: wheel.value.centerX,
+        cy: wheel.value.centerY,
+        r,
+        startDeg: -90,
+        axDeg: FINAL_CONFIG.value.style.chart.layout.wheel.tiltAngle3d,
+        f
+    });
+
+    const swBase = FINAL_CONFIG.value.style.chart.layout.innerCircle.strokeWidth || 1;
+    const strokeWidth = swBase * avgScale; // compensate perspective
+
+
+    return {
+        d,
+        stroke: FINAL_CONFIG.value.style.chart.layout.innerCircle.stroke,
+        strokeWidth
+    };
+}
+
+const inner3D = computed(() => {
+  return ellipse(Math.max(0, wheel.value.radius * 0.8 * FINAL_CONFIG.value.style.chart.layout.innerCircle.radiusRatio));
+});
+
+function projectRingPoint({ cx, cy, r, aRad, ax, f }) {
+    const p = [r * Math.cos(aRad), r * Math.sin(aRad), 0];
+    const [rx, ry, rz] = rotateX(p, ax);
+    const [px, py, , s] = perspectiveProject([rx, ry, rz], f);
+    return { x: cx + px, y: cy + py, z: rz, s };
+}
+
+function buildArcTicks3D({
+    cx, cy, radius, innerRatio = 0.8,
+    count = 120,
+    startDeg = -87,
+    axDeg = 45,
+    f = 600,
+    activeColor,
+    inactiveColor,
+    getActive
+}) {
+    const ax = (axDeg * Math.PI) / 180;
+    const outerR = radius;
+    const innerR = radius * innerRatio;
+    const step = (2 * Math.PI) / count;
+
+    const wedges = [];
+
+    for (let i = 0; i < count; i += 1) {
+        const a0 = ((startDeg * Math.PI) / 180) + step * i;
+        const a1 = a0 + step * Math.min(1, FINAL_CONFIG.value.style.chart.layout.wheel.ticks.spacingRatio3d); // 1 = no spacing
+
+        const o0 = projectRingPoint({ cx, cy, r: outerR, aRad: a0, ax, f });
+        const o1 = projectRingPoint({ cx, cy, r: outerR, aRad: a1, ax, f });
+        const i1 = projectRingPoint({ cx, cy, r: innerR, aRad: a1, ax, f });
+        const i0 = projectRingPoint({ cx, cy, r: innerR, aRad: a0, ax, f });
+
+        const zAvg = (o0.z + o1.z + i0.z + i1.z) / 4;
+
+        const isActive = getActive ? getActive(i) : true;
+
+        const base = isActive
+        ? (FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient.show
+            ? shiftHue(
+                FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor,
+                (i * (100 / count)) / 100 *
+                (FINAL_CONFIG.value.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)
+                )
+            : activeColor)
+        : inactiveColor;
+
+        const depth = (() => {
+        const amp = outerR * Math.sin(ax) || 1;
+        return (zAvg - (-amp)) / (2 * amp);
+        })();
+        const fill = shadeColor(base, depth);
+
+        const d = `M ${o0.x} ${o0.y} L ${o1.x} ${o1.y} L ${i1.x} ${i1.y} L ${i0.x} ${i0.y} Z`;
+
+        wedges.push({ i, d, fill, z: zAvg });
+    }
+
+    wedges.sort((a, b) => a.z - b.z);
+    return wedges;
+}
+
+const arcTicks3D = computed(() => {
+    if (FINAL_CONFIG.value.layout !== '3d') return null;
+
+    const count = tickAmount.value;
+    return buildArcTicks3D({
+        cx: wheel.value.centerX,
+        cy: wheel.value.centerY,
+        radius: wheel.value.radius,
+        innerRatio: FINAL_CONFIG.value.style.chart.layout.wheel.ticks.sizeRatio,
+        count,
+        startDeg: -90,
+        axDeg: FINAL_CONFIG.value.style.chart.layout.wheel.tiltAngle3d,
+        f: Math.min(svg.value.width, svg.value.height) * 1.45,
+        activeColor: FINAL_CONFIG.value.style.chart.layout.wheel.ticks.activeColor,
+        inactiveColor: FINAL_CONFIG.value.style.chart.layout.wheel.ticks.inactiveColor,
+        getActive: (i) => activeValue.value > (i * (100 / count))
+    });
+});
+
+
 function useAnimation(targetValue) {
     let speed = FINAL_CONFIG.value.style.chart.animation.speed;
     const chunk = Math.abs(targetValue - activeValue.value) / (speed * 120);
@@ -239,7 +508,10 @@ function useAnimation(targetValue) {
 }
 
 const tickAmount = computed(() => {
-    return Math.max(100, FINAL_CONFIG.value.style.chart.layout.wheel.ticks.quantity);
+    if (FINAL_CONFIG.value.debug && FINAL_CONFIG.value.style.chart.layout.wheel.ticks.quantity < 12) {
+        console.warn(`VueUiWheel - The minimal number of ticks is 12`)
+    }
+    return Math.max(12, FINAL_CONFIG.value.style.chart.layout.wheel.ticks.quantity);
 });
 
 const percentageToTickAmount = computed(() => 100 / tickAmount.value);
@@ -297,6 +569,18 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const tickWidthStart = computed(() => {
+    return FINAL_CONFIG.value.style.chart.layout.wheel.ticks.strokeWidth * 2
+});
+
+const tickWidthMid = computed(() => {
+    return FINAL_CONFIG.value.style.chart.layout.wheel.ticks.strokeWidth * 2 * 0.75
+})
+
+const tickWidthEnd = computed(() => {
+    return FINAL_CONFIG.value.style.chart.layout.wheel.ticks.strokeWidth
+})
+
 defineExpose({
     getImage,
     generatePdf,
@@ -304,12 +588,12 @@ defineExpose({
     toggleAnnotator,
     toggleFullscreen
 });
-
 </script>
 
 <template>
     <div 
-        class="vue-ui-wheel" 
+        class="vue-ui-wheel"
+        :class="{ 'vue-ui-wheel-3d-wrap': FINAL_CONFIG.layout === '3d' }"
         ref="wheelChart"
         :id="uid"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
@@ -396,9 +680,11 @@ defineExpose({
         <svg
             ref="svgRef"
             :xmlns="XMLNS"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-ui-wheel-3d-svg': FINAL_CONFIG.layout === '3d' }"
             data-cy="wheel-svg"
-            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+            :viewBox="FINAL_CONFIG.layout === '3d' && !FINAL_CONFIG.responsive
+                ? `${vb3D?.x - 10 ?? 0} ${vb3D?.y ?? 0} ${vb3D?.w + 20 ?? Math.max(10, svg.width)} ${vb3D?.h ?? Math.max(10, svg.height)}`
+                : `0 0 ${Math.max(10, svg.width)} ${Math.max(10, svg.height)}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
         >
             <PackageVersion/>
@@ -406,10 +692,10 @@ defineExpose({
             <!-- BACKGROUND SLOT -->
             <foreignObject 
                 v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.width <= 0 ? 10 : svg.width"
-                :height="svg.height <= 0 ? 10 : svg.height"
+                :x="FINAL_CONFIG.layout === '3d' && !FINAL_CONFIG.responsive ? vb3D?.x - 10 ?? 0 : 0"
+                :y="FINAL_CONFIG.layout === '3d' && !FINAL_CONFIG.responsive ? vb3D?.y ?? 0 : 0"
+                :width="FINAL_CONFIG.layout === '3d' && !FINAL_CONFIG.responsive ? (vb3D?.w + 20 ?? Math.max(10, svg.width)) : Math.max(10, svg.width)"
+                :height="FINAL_CONFIG.layout === '3d' && !FINAL_CONFIG.responsive ? (vb3D?.h ?? Math.max(10, svg.height)) : Math.max(10, svg.height)"
                 :style="{
                     pointerEvents: 'none'
                 }"
@@ -417,40 +703,96 @@ defineExpose({
                 <slot name="chart-background"/>
             </foreignObject>
 
-            <template v-if="FINAL_CONFIG.style.chart.layout.wheel.ticks.type === 'classic'">
-                <line
-                    data-cy="wheel-tick"
-                    v-for="(tick, i) in ticks"
-                    :x1="tick.x1"
-                    :x2="tick.x2"
-                    :y1="tick.y1"
-                    :y2="tick.y2"
-                    :stroke="tick.color"
-                    :stroke-width="(FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth / 360) * Math.min(svg.width, svg.height)"
-                    :stroke-linecap="FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
-                    :class="{ 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && (i * percentageToTickAmount) <= activeValue }"
-                />
-            </template>
-            
-            <template v-else>
-                <path 
-                    v-for="(arc, i) in arcTicks"
-                    :d="arc.arcSlice"
-                    :fill="arc.color"
-                    :class="{ 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && (i * percentageToTickAmount) <= activeValue }"
-                /> 
+            <template v-if="FINAL_CONFIG.layout === '3d'">
+                <g v-if="FINAL_CONFIG.style.chart.layout.wheel.ticks.type === 'classic'">
+                    <line
+                        v-for="t in ticks3D || []"
+                        :key="t.i"
+                        :x1="t.x1" :y1="t.y1" :x2="t.x2" :y2="t.y2"
+                        :stroke="t.color"
+                        :stroke-width="(FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth / 360) * Math.min(svg.width, svg.height)"
+                        :stroke-linecap="FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
+                        stroke-linecap="round"
+                        :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && (t.i * percentageToTickAmount) <= activeValue }"
+                    />
+                </g>
+                <g v-else>
+                    <path
+                        v-for="w in arcTicks3D || []"
+                        :key="w.i"
+                        :d="w.d"
+                        :fill="FINAL_CONFIG.style.chart.layout.wheel.ticks.inactiveColor"
+                        :stroke="FINAL_CONFIG.style.chart.layout.wheel.ticks.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="vue-ui-wheel-tick"
+                    />
+                    <path
+                        v-for="w in arcTicks3D || []"
+                        :key="w.i"
+                        :d="w.d"
+                        :fill="w.fill"
+                        :stroke="FINAL_CONFIG.style.chart.layout.wheel.ticks.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated-3d': FINAL_CONFIG.style.chart.animation.use && (w.i * percentageToTickAmount) <= activeValue }"
+                    />
+                </g>
             </template>
 
-            <circle
-                data-cy="inner-circle"
-                v-if="FINAL_CONFIG.style.chart.layout.innerCircle.show"
-                :cx="wheel.centerX"
-                :cy="wheel.centerY"
-                :r="wheel.radius * 0.8 <= 0 ? 0.0001 : wheel.radius * 0.8"
+            <template v-else>
+                <template v-if="FINAL_CONFIG.style.chart.layout.wheel.ticks.type === 'classic'">
+                    <line
+                        data-cy="wheel-tick"
+                        v-for="(tick, i) in ticks"
+                        :x1="tick.x1"
+                        :x2="tick.x2"
+                        :y1="tick.y1"
+                        :y2="tick.y2"
+                        :stroke="tick.color"
+                        :stroke-width="(FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth / 360) * Math.min(svg.width, svg.height)"
+                        :stroke-linecap="FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
+                        :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && (i * percentageToTickAmount) <= activeValue }"
+                    />
+                </template>
+                
+                <template v-else>
+                    <path 
+                        v-for="(arc, i) in arcTicks"
+                        :d="arc.arcSlice"
+                        :fill="arc.color"
+                        :class="{'vue-ui-wheel-tick' : true,  'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && (i * percentageToTickAmount) <= activeValue }"
+                        :stroke="FINAL_CONFIG.style.chart.layout.wheel.ticks.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth"
+                    /> 
+                </template>
+            </template>
+
+            <!-- HOLLOW 3D -->
+            <path
+                class="vue-ui-wheel-inner-circle"
+                v-if="FINAL_CONFIG.layout === '3d' && inner3D"
+                :d="inner3D.d"
                 :stroke="FINAL_CONFIG.style.chart.layout.innerCircle.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.layout.innerCircle.strokeWidth"
                 fill="none"
             />
+
+            <!-- HOLLOW 2D -->
+            <circle
+                data-cy="inner-circle"
+                class="vue-ui-wheel-inner-circle"
+                v-else-if="FINAL_CONFIG.style.chart.layout.innerCircle.show"
+                :cx="wheel.centerX"
+                :cy="wheel.centerY"
+                :r="Math.max(0, wheel.radius * FINAL_CONFIG.style.chart.layout.innerCircle.radiusRatio * 0.8)"
+                :stroke="FINAL_CONFIG.style.chart.layout.innerCircle.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.layout.innerCircle.strokeWidth"
+                fill="none"
+            />
+            
             <g v-if="FINAL_CONFIG.style.chart.layout.percentage.show">
                 <rect 
                     v-if="loading"
@@ -464,13 +806,17 @@ defineExpose({
                 <text
                     v-else
                     data-cy="data-label"
-                    :x="wheel.centerX"
-                    :y="wheel.centerY + baseLabelFontSize / 3"
+                    :x="wheel.centerX + FINAL_CONFIG.style.chart.layout.percentage.offsetX"
+                    :y="wheel.centerY + baseLabelFontSize / 3 + FINAL_CONFIG.style.chart.layout.percentage.offsetY"
                     :font-size="baseLabelFontSize"
                     :fill="FINAL_CONFIG.style.chart.layout.wheel.ticks.gradient.show ? shiftHue(FINAL_CONFIG.style.chart.layout.wheel.ticks.activeColor, activeValue / 100 * (FINAL_CONFIG.style.chart.layout.wheel.ticks.gradient.shiftHueIntensity / 100)) : FINAL_CONFIG.style.chart.layout.wheel.ticks.activeColor"
                     text-anchor="middle"
                     :font-weight="FINAL_CONFIG.style.chart.layout.percentage.bold ? 'bold' : 'normal'"
                     style="font-variant-numeric:tabluar-nums"
+                    :stroke="FINAL_CONFIG.style.chart.layout.percentage.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.percentage.strokeWidth"
+                    paint-order="stroke fill"
+                    :class="{ 'vue-ui-wheel-label': FINAL_CONFIG.layout === '3d' }"
                 >
                     {{ applyDataLabel(
                         FINAL_CONFIG.style.chart.layout.percentage.formatter,
@@ -515,13 +861,28 @@ defineExpose({
 
 @keyframes animate-tick {
     0% {
-        stroke-width: 8;
+        stroke-width: v-bind(tickWidthStart);
     }
     80% {
-        stroke-width: 6;
+        stroke-width: v-bind(tickWidthMid);
     }
     100% {
-        stroke-width: 5;
+        stroke-width: v-bind(tickWidthEnd);
     }
+}
+
+.v-ui-wheel-3d-wrap {
+    perspective: 900px;
+}
+.vue-ui-wheel-3d-svg {
+    transform: rotateX(52deg) translateZ(0);
+    transform-origin: center;
+    will-change: transform;
+}
+
+.vue-ui-wheel-label {
+    transform: scale(0.65, 1);
+    transform-origin: center;
+    font-variant: tabular-nums;
 }
 </style>

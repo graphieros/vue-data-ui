@@ -1733,6 +1733,7 @@ declare module "vue-data-ui" {
         loading?: boolean; // v3
         responsive?: boolean;
         theme?: Theme;
+        layout?: 'classic' | '3d',
         style?: {
             fontFamily?: string;
             chart?: {
@@ -1745,6 +1746,8 @@ declare module "vue-data-ui" {
                 };
                 layout?: {
                     wheel?: {
+                        radiusRatio?: number;
+                        tiltAngle3d?: number;
                         ticks?: {
                             type?: 'classic' | 'arc';
                             rounded?: boolean;
@@ -1753,6 +1756,9 @@ declare module "vue-data-ui" {
                             sizeRatio?: number;
                             quantity?: number;
                             strokeWidth?: number;
+                            stroke?: string;
+                            spacingRatio3d?: number;
+                            shadeColorRatio3d?: number;
                             gradient?: {
                                 show?: boolean;
                                 shiftHueIntensity?: number;
@@ -1763,6 +1769,7 @@ declare module "vue-data-ui" {
                         show?: boolean;
                         stroke?: string;
                         strokeWidth?: number;
+                        radiusRatio?: number;
                     };
                     percentage?: {
                         show?: boolean;
@@ -1770,6 +1777,10 @@ declare module "vue-data-ui" {
                         rounding?: number;
                         bold?: boolean;
                         formatter?: Formatter;
+                        offsetX?: number;
+                        offsetY?: number;
+                        stroke?: string;
+                        strokeWidth?: number;
                     };
                 };
                 title?: ChartTitle;

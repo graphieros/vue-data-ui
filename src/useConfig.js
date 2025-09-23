@@ -1445,6 +1445,7 @@ export function useConfig() {
         loading: false, // v3
         responsive: false,
         theme: '',
+        layout: 'classic', // or '3d'
         style: {
             fontFamily: 'inherit',
             chart: {
@@ -1457,6 +1458,8 @@ export function useConfig() {
                 },
                 layout: {
                     wheel: {
+                        radiusRatio: 1,
+                        tiltAngle3d: 50,
                         ticks: {
                             type: 'classic', // or 'arc'
                             rounded: true,
@@ -1465,6 +1468,9 @@ export function useConfig() {
                             sizeRatio: 0.9,
                             quantity: 100, // min 100
                             strokeWidth: 5,
+                            stroke: 'transparent',
+                            spacingRatio3d: 1,
+                            shadeColorRatio3d: 0.15,
                             gradient: {
                                 show: true,
                                 shiftHueIntensity: 100
@@ -1474,14 +1480,19 @@ export function useConfig() {
                     innerCircle: {
                         show: true,
                         stroke: COLOR_GREY_LIGHT,
-                        strokeWidth: 1
+                        strokeWidth: 1,
+                        radiusRatio: 1,
                     },
                     percentage: {
                         show: true,
                         fontSize: FONT._48,
                         rounding: 1,
                         bold: true,
-                        formatter: null
+                        formatter: null,
+                        offsetX: 0,
+                        offsetY: 0,
+                        stroke: 'transparent',
+                        strokeWidth: 0
                     }
                 },
                 title: TITLE

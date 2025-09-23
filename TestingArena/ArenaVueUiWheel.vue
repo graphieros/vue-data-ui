@@ -12,7 +12,7 @@ const dataset = ref(undefined);
 
 onMounted(() => {
     setTimeout(() => {
-        dataset.value = { percentage: 75 };
+        dataset.value = { percentage: 99 };
     }, 2000)
 })
 
@@ -22,6 +22,7 @@ onMounted(() => {
 //         dataset.value.percentage = 10
 //     }, 3000)
 // })
+
 
 const isPropsToggled = ref(false);
 function toggleProps() {
@@ -46,6 +47,7 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'layout', def: '3d', type: 'select', options: ['3d', 'classic']},
     { key: 'debug', def: true, type: 'checkbox'},
     { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
@@ -63,23 +65,37 @@ const model = ref([
     { key: 'style.chart.animation.use', def: true, type: 'checkbox'},
     { key: 'style.chart.animation.speed', def: 0.5, type: 'number', min: 0, max: 2, step: 0.01},
     { key: 'style.chart.animation.acceleration', def: 1, type: 'number', min: 0, max: 10, step: 0.1},
+
+    { key: 'style.chart.layout.wheel.radiusRatio', def: 0.9, type: 'number', min: 0.1, max: 1, step: 0.01 },
+    { key: 'style.chart.layout.wheel.tiltAngle3d', def: 50, type: 'number', min: 10, max: 80 },
+
     { key: 'style.chart.layout.wheel.ticks.rounded', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.wheel.ticks.inactiveColor', def: '#e1e5e8', type: 'color'},
     { key: 'style.chart.layout.wheel.ticks.activeColor', def: '#5f8bee', type: 'color'},
-    { key: 'style.chart.layout.wheel.ticks.sizeRatio', def: 0.9, type: 'range', min: 0, max: 1, step: 0.01 },
-    { key: 'style.chart.layout.wheel.ticks.gradient.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.wheel.ticks.gradient.shiftHueIntensity', def: 100, type:'range', min: 0, max: 100},
+    { key: 'style.chart.layout.wheel.ticks.sizeRatio', def: 0.85, type: 'range', min: 0, max: 1, step: 0.01 },
+    { key: 'style.chart.layout.wheel.ticks.gradient.show', def: false, type: 'checkbox'},
+    { key: 'style.chart.layout.wheel.ticks.gradient.shiftHueIntensity', def: 12, type:'range', min: 0, max: 100},
     { key: 'style.chart.layout.wheel.ticks.quantity', def: 100, type: 'range', min: 1, max: 1000},
-    { key: 'style.chart.layout.wheel.ticks.strokeWidth', def: 5, type: 'range', min: 0.1, max: 12, step: 0.1},
+    { key: 'style.chart.layout.wheel.ticks.strokeWidth', def: 0, type: 'range', min: 0.1, max: 12, step: 0.1},
+    { key: 'style.chart.layout.wheel.ticks.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.layout.wheel.ticks.type', def: 'arc', type: 'select', options: ['classic', 'arc']},
+    { key: 'style.chart.layout.wheel.ticks.spacingRatio3d', def: 0.8, type: 'number', min: 0.1, max: 1, step: 0.1},
+    { key: 'style.chart.layout.wheel.ticks.shadeColorRatio3d', def: 0.15, type: 'number', min: 0.1, max: 1, step: 0.1},
 
     { key: 'style.chart.layout.innerCircle.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.innerCircle.stroke', def: '#e1e5e8', type: 'color'},
     { key: 'style.chart.layout.innerCircle.strokeWidth', def: 1, type: 'range', min: 0, max: 48},
+    { key: 'style.chart.layout.innerCircle.radiusRatio', def: 0.9, type: 'number', min: 0, max: 2, step: 0.1},
+
     { key: 'style.chart.layout.percentage.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.percentage.fontSize', def: 48, type: 'range', min: 8, max: 100},
+    { key: 'style.chart.layout.percentage.fontSize', def: 80, type: 'range', min: 8, max: 100},
     { key: 'style.chart.layout.percentage.rounding', def: 1, type: 'range', min: 0, max: 12},
     { key: 'style.chart.layout.percentage.bold', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.percentage.offsetX', def: 12, type: 'number', min: -100, max: 100 },
+    { key: 'style.chart.layout.percentage.offsetY', def: -16, type: 'number', min: -100, max: 100 },
+    { key: 'style.chart.layout.percentage.stroke', def: '#FFFFFF', type: 'color'},
+    { key: 'style.chart.layout.percentage.strokeWidth', def: 6, type: 'number', min: 0, max: 12 },
+
     { key: 'style.chart.title.text', def: 'Lorem ipsum dolor sic amet', type: 'text'},
     { key: 'style.chart.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
