@@ -488,7 +488,7 @@ function makeMiniChart(ds, smooth = false) {
     const e = Math.min(len, Math.max(s + 1, endMini.value));
 
     const points = ds.map((dp, i) => {
-        const val = props.cutNullValues ? dp : dp === null ? 0 : dp;
+        const val = dp;
         const valid = Number.isFinite(val);
         const x = unitWidthX.value * i + (props.minimapCompact ? 0 : unitWidthX.value / 2);
         const y0 = mapYSeries(0);
@@ -497,7 +497,7 @@ function makeMiniChart(ds, smooth = false) {
             x,
             y: valid ? mapYSeries(val) : NaN,
             v: val,
-            value: valid ? val : null,
+            value: val == null ? null : valid ? val : null,
             y0,
             i,
         };
@@ -513,15 +513,15 @@ function makeMiniChart(ds, smooth = false) {
     const fullSet =
         points.length >= 2
             ? (props.smoothMinimap || smooth
-                ? (props.cutNullValues ? createSmoothPathWithCuts(points) : createSmoothPath(points))
-                : (props.cutNullValues ? createStraightPathWithCuts(points) : createStraightPath(points)))
+                ? (props.cutNullValues ? createSmoothPathWithCuts(points) : createSmoothPath(points.filter(p => p.value != null)))
+                : (props.cutNullValues ? createStraightPathWithCuts(points) : createStraightPath(points.filter(p => p.value != null))))
             : '';
 
     const selectionSet =
         sliced.length >= 2
             ? (props.smoothMinimap || smooth
-                ? (props.cutNullValues ? createSmoothPathWithCuts(sliced) : createSmoothPath(sliced))
-                : (props.cutNullValues ? createStraightPathWithCuts(sliced) : createStraightPath(sliced)))
+                ? (props.cutNullValues ? createSmoothPathWithCuts(sliced) : createSmoothPath(sliced.filter(p => p.value != null)))
+                : (props.cutNullValues ? createStraightPathWithCuts(sliced) : createStraightPath(sliced.filter(p => p.value != null))))
             : '';
 
     return {
