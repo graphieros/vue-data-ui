@@ -843,56 +843,39 @@ export function convertConfigColors(config, seen = new WeakSet()) {
 }
 
 export function calcLinearProgression(plots) {
-    let x1, y1, x2, y2;
-    const len = plots.length;
+    const len = plots?.length ?? 0;
+    if (len < 2) return { x1: 0, y1: 0, x2: 0, y2: 0, slope: 0, trend: 0 };
 
-    if (!plots || plots.length === 0) {
-        return {
-            x1: 0,
-            y1: 0,
-            x2: 0,
-            y2: 0,
-            slope: 0,
-            trend: 0
-        }
+    let sx = 0, sy = 0, sxy = 0, sxx = 0;
+    for (const { x, y } of plots) { sx += x; sy += y; sxy += x * y; sxx += x * x; }
+    const denomPx = len * sxx - sx * sx || 1;
+    const slopePx = (len * sxy - sx * sy) / denomPx;
+    const interceptPx = (sy - slopePx * sx) / len;
+
+    const x1 = plots[0].x;
+    const x2 = plots[len - 1].x;
+    const y1 = slopePx * x1 + interceptPx;
+    const y2 = slopePx * x2 + interceptPx;
+
+    let vx = 0, vy = 0, vxy = 0, vxx = 0;
+    for (let i = 0; i < len; i += 1) { 
+        vx += i; 
+        vy += plots[i].value; 
+        vxy += i * plots[i].value; 
+        vxx += i * i; 
     }
+    const denomV = len * vxx - vx * vx || 1;
+    const slopeV = (len * vxy - vx * vy) / denomV;
+    const interceptV = (vy - slopeV * vx) / len;
 
-    let sumX = 0;
-    let sumY = 0;
-    let sumXY = 0;
-    let sumXX = 0;
-    for (const { x, y } of plots) {
-        sumX += x;
-        sumY += y;
-        sumXY += x * y;
-        sumXX += x * x;
-    }
-    const slope = (len * sumXY - sumX * sumY) / (len * sumXX - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / len;
-    x1 = plots[0].x;
-    x2 = plots[len - 1].x;
-    y1 = slope * x1 + intercept;
-    y2 = slope * x2 + intercept;
+    const vStart = interceptV;
+    const vEnd   = slopeV * (len - 1) + interceptV;
 
-    const trend = calcPercentageTrend(plots.map(p => p.value));
+    const EPS = 1e-9;
+    const scale = Math.max(Math.abs(vStart), Math.abs(vy / len), Math.abs(vEnd), EPS);
+    const trend = (vEnd - vStart) / scale;
 
-    return { x1, y1, x2, y2, slope, trend };
-}
-
-export function calcPercentageTrend(arr) {
-    const initialNumber = arr[0];
-    const lastNumber = arr[arr.length - 1];
-    const overallChange = lastNumber - initialNumber;
-
-    let totalMagnitude = 0;
-
-    for (let i = 1; i < arr.length; i++) {
-        const difference = Math.abs(arr[i] - arr[i - 1]);
-        totalMagnitude += difference;
-    }
-
-    const percentageTrend = (overallChange / totalMagnitude);
-    return isNaN(percentageTrend) ? 0 : percentageTrend;
+    return { x1, y1, x2, y2, slope: slopePx, trend };
 }
 
 export function calcMedian(arr) {

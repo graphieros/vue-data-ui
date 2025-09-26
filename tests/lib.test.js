@@ -17,7 +17,6 @@ import {
     buildInterLineAreas,
     calcLinearProgression,
     calcMedian,
-    calcPercentageTrend,
     calcPolygonPoints,
     calcStarPoints,
     calcTrend,
@@ -783,42 +782,48 @@ describe("createSmoothPath", () => {
     });
 });
 
-describe("calcPercentageTrend", () => {
-    test("returns a growth trend from an array of numbers", () => {
-        const arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        expect(calcPercentageTrend(arr)).toBe(1);
-
-        const arr2 = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-        expect(calcPercentageTrend(arr2)).toBe(-1);
-
-        const arr3 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-        expect(calcPercentageTrend(arr3)).toBe(0);
-
-        const arr4 = [1, 2, 1.5, 1.25, 1.125, 1.065];
-        expect(calcPercentageTrend(arr4)).toBe(0.033591731266149845);
-    });
-});
-
 describe("calcLinearProgression", () => {
     test("creates a linear progression object from an array of coordinates", () => {
-        const plots = [
+        const d1 = [
             { x: 1, y: 1, value: 1 },
-            { x: 2, y: 1.1, value: 1.1 },
-            { x: 3, y: 1.3, value: 1.3 },
-            { x: 4, y: 1.6, value: 1.6 },
-            { x: 5, y: 2, value: 2 },
-            { x: 6, y: 2.5, value: 2.5 },
-            { x: 7, y: 3.1, value: 3.1 },
-            { x: 8, y: 3.8, value: 3.8 },
-            { x: 9, y: 2.6, value: 2.6 },
+            { x: 2, y: 2, value: 2 },
         ];
-        expect(calcLinearProgression(plots)).toStrictEqual({
+        expect(calcLinearProgression(d1)).toStrictEqual({
             x1: 1,
-            y1: 0.8444444444444444,
-            x2: 9,
-            y2: 3.3777777777777773,
-            slope: 0.31666666666666665,
-            trend: 0.4000000000000001,
+            y1: 1,
+            x2: 2,
+            y2: 2,
+            slope: 1,
+            trend: 0.5,
+        });
+
+        const d2 = [
+            { x: 1, y: 1, value: 1 },
+            { x: 2, y: 0, value: 0 },
+        ];
+
+        expect(calcLinearProgression(d2)).toStrictEqual({
+            x1: 1,
+            y1: 1,
+            x2: 2,
+            y2: 0,
+            slope: -1,
+            trend: -1,
+        });
+
+        const d3 = [
+            { x: 1, y: 1, value: 1 },
+            { x: 2, y: 0, value: 0 },
+            { x: 3, y: 1, value: 1 },
+        ];
+
+        expect(calcLinearProgression(d3)).toStrictEqual({
+            x1: 1,
+            y1: 0.6666666666666666,
+            x2: 3,
+            y2: 0.6666666666666666,
+            slope: 0,
+            trend: 0,
         });
     });
 });
