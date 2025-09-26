@@ -58,6 +58,21 @@ const head = ref([
     rangeFilter: false,
   },
   {
+    name: "date2",
+    type: "date",
+    average: false,
+    decimals: undefined,
+    sum: false,
+    isSort: true,
+    isSearch: false,
+    isMultiselect: false,
+    isPercentage: false,
+    percentageTo: undefined,
+    suffix: "",
+    prefix: "",
+    rangeFilter: false,
+  },
+  {
     name: "base",
     type: "numeric",
     average: true,
@@ -171,10 +186,12 @@ function makeBody(n) {
       const category = getRandomCategory();
       let accueil = Math.random() * 100;
       const date = getRandomDate();
+      const date2 = getRandomDate();
       const data = [
         itemName,
         category,
         date,
+        date2,
         accueil,
         Number((Math.random() * 5).toFixed(1)),
         Math.random() * 200,
@@ -218,7 +235,7 @@ const dataset = ref( {
 
 onMounted(() => {
     setTimeout(() => {
-        dataset.value.body = makeBody(200)
+        dataset.value.body = makeBody(500)
     }, 3000)
 })
 

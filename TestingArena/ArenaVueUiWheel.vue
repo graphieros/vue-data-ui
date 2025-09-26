@@ -12,7 +12,7 @@ const dataset = ref(undefined);
 
 onMounted(() => {
     setTimeout(() => {
-        dataset.value = { percentage: 99 };
+        dataset.value = { percentage: 12 };
     }, 2000)
 })
 
@@ -67,7 +67,7 @@ const model = ref([
     { key: 'style.chart.animation.acceleration', def: 1, type: 'number', min: 0, max: 10, step: 0.1},
 
     { key: 'style.chart.layout.wheel.radiusRatio', def: 0.9, type: 'number', min: 0.1, max: 1, step: 0.01 },
-    { key: 'style.chart.layout.wheel.tiltAngle3d', def: 50, type: 'number', min: 10, max: 80 },
+    { key: 'style.chart.layout.wheel.tiltAngle3d', def: 50, type: 'range', min: 10, max: 80 },
 
     { key: 'style.chart.layout.wheel.ticks.rounded', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.wheel.ticks.inactiveColor', def: '#e1e5e8', type: 'color'},
@@ -81,6 +81,7 @@ const model = ref([
     { key: 'style.chart.layout.wheel.ticks.type', def: 'arc', type: 'select', options: ['classic', 'arc']},
     { key: 'style.chart.layout.wheel.ticks.spacingRatio3d', def: 0.8, type: 'number', min: 0.1, max: 1, step: 0.1},
     { key: 'style.chart.layout.wheel.ticks.shadeColorRatio3d', def: 0.15, type: 'number', min: 0.1, max: 1, step: 0.1},
+    { key: 'style.chart.layout.wheel.ticks.depth3d', def: 100, type: 'range', min: 0, max: 20},
 
     { key: 'style.chart.layout.innerCircle.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.innerCircle.stroke', def: '#e1e5e8', type: 'color'},

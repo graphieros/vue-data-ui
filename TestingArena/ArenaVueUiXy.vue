@@ -402,23 +402,26 @@ onMounted(() => {
         dataLabels: false,
         smooth: true,
         useArea: true,
+        useProgression: true
     },
-    {
-        name: "Serie A",
-        series: createDs(35),
-        type: "line",
-        dataLabels: false,
-        smooth: true,
-        useArea: true,
-    },
-    {
-        name: "Serie B",
-        series: createDs(35),
-        type: "bar",
-        dataLabels: false,
-        smooth: true,
-        useArea: true,
-    },
+    // {
+    //     name: "Serie A",
+    //     series: createDs(35),
+    //     type: "line",
+    //     dataLabels: false,
+    //     smooth: true,
+    //     useArea: true,
+    //     useProgression: true
+    // },
+    // {
+    //     name: "Serie B",
+    //     series: createDs(35),
+    //     type: "bar",
+    //     dataLabels: false,
+    //     smooth: true,
+    //     useArea: true,
+    //     useProgression: true
+    // },
     // {
     //     name: "Serie B",
     //     series: [60, 75, 11, 20, 10, 8, null, 20, 22, 204, 146, 117, 55],
