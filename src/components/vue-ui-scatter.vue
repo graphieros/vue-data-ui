@@ -542,9 +542,11 @@ const drawableDataset = computed(() => {
 
         let m, b;
         if (verticalX !== null) {
-        m = Infinity; b = null;
+            m = Infinity; 
+            b = null;
         } else {
-        m = slope; b = intercept;
+            m = slope; 
+            b = intercept;
         }
 
         // CORRELATION COEFFICIENT (data space, y-flipped)
