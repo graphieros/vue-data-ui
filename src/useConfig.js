@@ -1466,11 +1466,12 @@ export function useConfig() {
                             inactiveColor: COLOR_GREY_LIGHT,
                             activeColor: COLOR_BLUE,
                             sizeRatio: 0.9,
-                            quantity: 100, // min 100
+                            quantity: 100, // min: 12, max: 200
                             strokeWidth: 5,
                             stroke: 'transparent',
                             spacingRatio3d: 1,
                             shadeColorRatio3d: 0.15,
+                            depth3d: 0,
                             gradient: {
                                 show: true,
                                 shiftHueIntensity: 100
@@ -1492,7 +1493,7 @@ export function useConfig() {
                         offsetX: 0,
                         offsetY: 0,
                         stroke: 'transparent',
-                        strokeWidth: 0
+                        strokeWidth: 0,
                     }
                 },
                 title: TITLE
@@ -5416,6 +5417,17 @@ export function useConfig() {
                         strokeWidth: 2,
                         strokeDasharray: 4,
                         arrowSize: 7
+                    },
+                    timeLabels: {
+                        showOnlyAtModulo: true,
+                        modulo: 12,
+                    },
+                    datetimeFormatter: {
+                        ...AXIS_DATE_FORMATTER,
+                        enable: true
+                    },
+                    zoom: {
+                        show: true,
                     }
                 }
             }
@@ -5439,7 +5451,8 @@ export function useConfig() {
             to: 'To',
             total: 'Total',
             totalRows: 'Total rows',
-            filename: 'File name'
+            filename: 'File name',
+            xAxisLabels: 'X axis labels'
         },
         useChart: true
     }

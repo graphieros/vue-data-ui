@@ -1759,6 +1759,7 @@ declare module "vue-data-ui" {
                             stroke?: string;
                             spacingRatio3d?: number;
                             shadeColorRatio3d?: number;
+                            depth3d?: number;
                             gradient?: {
                                 show?: boolean;
                                 shiftHueIntensity?: number;
@@ -5691,6 +5692,14 @@ declare module "vue-data-ui" {
                         strokeDasharray?: number;
                         arrowSize?: number;
                     };
+                    timeLabels?: {
+                        showOnlyAtModulo?: boolean;
+                        modulo?: number;
+                    };
+                    zoom?: {
+                        show?: boolean;
+                    };
+                    datetimeFormatter?: AxisDateFormatter;
                 };
             };
         };
@@ -5714,6 +5723,7 @@ declare module "vue-data-ui" {
             total?: string;
             totalRows?: string;
             filename?: string;
+            xAxisLabels?: string;
         };
         useChart?: boolean;
     };

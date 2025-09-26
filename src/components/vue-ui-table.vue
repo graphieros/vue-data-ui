@@ -523,14 +523,20 @@
 
                 <!-- BAR | LINE CHARTS -->
                 <template v-if="[constants.BAR, constants.LINE].includes(chart.type) && !showDonutOptions">
+                    <label v-if="chartTimeLabelOptions.length > 1">
+                        {{ FINAL_CONFIG.translations.xAxisLabels }}
+                        <select v-model="chartTimeLabelSourceModel">
+                            <option v-for="opt in chartTimeLabelOptions">{{ opt }}</option>
+                        </select>
+                    </label>
                     <div style="width: 100%; margin-bottom: 12px">
-                        <VueUiXy :dataset="chartData.xyDatasetLine" :config="chartData.xyConfig" v-if="chart.type === constants.LINE"/>
-                        <VueUiXy :dataset="chartData.xyDatasetBar" :config="chartData.xyConfig" v-if="chart.type === constants.BAR"/>
+                        <VueUiXy :key="`chart_line_${chartStep}`" :dataset="chartData.xyDatasetLine" :config="chartData.xyConfig" v-if="chart.type === constants.LINE"/>
+                        <VueUiXy :key="`chart_bar_${chartStep}`" :dataset="chartData.xyDatasetBar" :config="chartData.xyConfig" v-if="chart.type === constants.BAR"/>
                     </div>
                     <div v-if="currentSelectionSpan.rows.length >= 2" class="chart-trend"
                         :style="`color:${FINAL_CONFIG.style.chart.modal.color}`">
                         <span>---</span> Trend: {{ dataLabel({
-                            v: chartData.progression.trend,
+                            v: chartData.progression.trend * 100,
                             s: '%',
                             r: 1
                         }) }}
@@ -656,13 +662,15 @@ export default {
             showChart: false,
             showDonutOptions: false,
             sorts: {},
+            chartStep: 0,
+            chartTimeLabelSourceModel: '',
             tableBody: JSON.parse(JSON.stringify(this.dataset.body)).map((el, i) => {
                 return {
                     ...el,
                     absoluteIndex: i
                 }
             }),
-            tableHead: JSON.parse(JSON.stringify(this.dataset.header)).map(head => {
+            tableHead: JSON.parse(JSON.stringify(this.dataset.header)).map((head, i) => {
                 return {
                     average: Object.hasOwn(head, 'average') ? head.average : false,
                     decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
@@ -677,6 +685,7 @@ export default {
                     suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
                     sum: Object.hasOwn(head, 'sum') ? head.sum : false,
                     type: head.type, // this attribute is mandatory
+                    index: i
                 }
             }),
             filename: '',
@@ -704,6 +713,7 @@ export default {
             }
         })
         this.filename = this.FINAL_CONFIG.style.exportMenu.filename;
+        this.chartTimeLabelSourceModel = this.dateHeaders[0]?.name ?? ''
     },
     watch: {
         isExportRequest: function (bool) {
@@ -732,7 +742,7 @@ export default {
                     ...el,
                     absoluteIndex: i
                 }));
-                this.tableHead = JSON.parse(JSON.stringify(newVal.header)).map(head => ({
+                this.tableHead = JSON.parse(JSON.stringify(newVal.header)).map((head, i) => ({
                     average: Object.hasOwn(head, 'average') ? head.average : false,
                     decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
                     isMultiselect: Object.hasOwn(head, 'isMultiselect') ? head.isMultiselect : false,
@@ -746,6 +756,7 @@ export default {
                     suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
                     sum: Object.hasOwn(head, 'sum') ? head.sum : false,
                     type: head.type,
+                    index: i
                 }));
 
                 this.currentSelectionSpan = { col: undefined, rows: [] };
@@ -782,6 +793,20 @@ export default {
         }
     },
     computed: {
+        dateHeaders() {
+            return [...this.tableHead].filter(th => th.type === this.constants.DATE);
+        },
+        chartTimeLabelOptions() {
+            return ['', ...this.dateHeaders.map(th => th.name)];
+        },
+        chartTimeLabelSourceIndex() {
+            const src = this.dateHeaders.find(th => th.name === this.chartTimeLabelSourceModel);
+            return src ? src.index : null;
+        },
+        chartTimeLabels() {
+            if (this.chartTimeLabelSourceIndex == null) return []
+            return this.visibleRows.map(r => r.td[this.chartTimeLabelSourceIndex]);
+        },
         availableDonutCategories() {
             return Object.keys(this.multiselects).map(index => {
                 return {
@@ -789,7 +814,7 @@ export default {
                     name: this.dataset.header[index].name,
                     options: this.multiselects[index],
                 }
-            })
+            });
         },
         canChart() {
             return this.FINAL_CONFIG.useChart && this.currentSelectionSpan.rows.length > 1;
@@ -849,7 +874,14 @@ export default {
                         stroke: lightenHexColor(textColor, 0.5),
                         labels: {
                             color: textColor,
-                            xAxisLabels: { show: false },
+                            xAxisLabels: {
+                                color: textColor,
+                                show: this.chartTimeLabels.length,
+                                values: this.chartTimeLabels,
+                                datetimeFormatter: this.FINAL_CONFIG.style.chart.layout.datetimeFormatter,
+                                showOnlyAtModulo: this.FINAL_CONFIG.style.chart.layout.timeLabels.showOnlyAtModulo,
+                                modulo: this.FINAL_CONFIG.style.chart.layout.timeLabels.modulo
+                            },
                         }
                     },
                     highlighter: {
@@ -864,7 +896,7 @@ export default {
                         fontSize: 18,
                     },
                     tooltip: {
-                        showTimeLabel: false,
+                        showTimeLabel: this.chartTimeLabels.length,
                         backgroundOpacity: 30,
                         color: textColor,
                         backgroundColor: bg,
@@ -880,7 +912,13 @@ export default {
                             annotator: false
                         }
                     },
-                    zoom: { show: false },
+                    zoom: {
+                        show: this.FINAL_CONFIG.style.chart.layout.zoom.show,
+                        focusOnDrag: true,
+                        minimap: {
+                            show: true
+                        }
+                    },
                 },
                 line: {
                     labels: {
@@ -1870,7 +1908,7 @@ export default {
 
 .vue-ui-table-main input {
     padding: 0 6px;
-    font-family: "Satoshi"
+    font-family: inherit;
 }
 
 .vue-ui-table-main button,
@@ -2493,5 +2531,13 @@ input.vue-ui-table-dialog-input {
 }
 input {
     font-family: inherit !important;
+}
+
+label {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    align-items:center;
+    font-size: 12px;
 }
 </style>
