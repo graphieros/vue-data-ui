@@ -3306,21 +3306,64 @@ defineExpose({
                             <g :data-cy="`xy-bar-progression-${i}`"
                                 v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                                 <defs>
-                                    <marker :id="`bar_arrow_${i}`" :markerWidth="7" :markerHeight="7" refX="0"
-                                        :refY="7 / 2" orient="auto">
-                                        <polygon :points="`0 0, ${7} ${7 / 2}, 0 ${7}`" :fill="serie.color" />
+                                    <marker
+                                        :id="`bar_arrow_${i}`"
+                                        markerWidth="9"
+                                        markerHeight="9"
+                                        viewBox="-1 -1 9 9"
+                                        markerUnits="userSpaceOnUse"
+                                        refX="7"
+                                        :refY="7 / 2"
+                                        orient="auto"
+                                        overflow="visible"
+                                    >
+                                        <polygon
+                                            points="0,0 7,3.5 0,7"
+                                            :fill="serie.color"
+                                            :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                            stroke-width="1"
+                                            stroke-linejoin="round"
+                                        />
                                     </marker>
                                 </defs>
                                 <line v-if="serie.plots.length > 1"
                                     :x1="calcLinearProgression(serie.plots).x1 + calcRectWidth()"
                                     :x2="calcLinearProgression(serie.plots).x2 + calcRectWidth()"
                                     :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
-                                    :y2="forceValidValue(calcLinearProgression(serie.plots).y2)" :stroke-width="1"
-                                    :stroke="serie.color" :stroke-dasharray="2" :marker-end="`url(#bar_arrow_${i})`" />
-                                <text v-if="serie.plots.length > 1" :data-cy="`xy-bar-progression-label-${i}`"
-                                    text-anchor="middle" :x="calcLinearProgression(serie.plots).x2 + calcRectWidth()"
-                                    :y="calcLinearProgression(serie.plots).y2 - 6" :font-size="fontSizes.plotLabels"
-                                    :fill="serie.color">
+                                    :y2="forceValidValue(calcLinearProgression(serie.plots).y2)" 
+                                    :stroke-width="2"
+                                    :stroke="FINAL_CONFIG.chart.backgroundColor" 
+                                    :stroke-dasharray="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    :marker-end="`url(#bar_arrow_${i})`" 
+                                />
+                                <line v-if="serie.plots.length > 1"
+                                    :x1="calcLinearProgression(serie.plots).x1 + calcRectWidth()"
+                                    :x2="calcLinearProgression(serie.plots).x2 + calcRectWidth()"
+                                    :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
+                                    :y2="forceValidValue(calcLinearProgression(serie.plots).y2)" 
+                                    :stroke-width="1"
+                                    :stroke="serie.color" 
+                                    :stroke-dasharray="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    :marker-end="`url(#bar_arrow_${i})`" 
+                                />
+                                <text 
+                                    v-if="serie.plots.length > 1" 
+                                    :data-cy="`xy-bar-progression-label-${i}`"
+                                    text-anchor="middle" 
+                                    :x="calcLinearProgression(serie.plots).x2 + calcRectWidth()"
+                                    :y="Math.max(calcLinearProgression(serie.plots).y2 - 12, drawingArea.top)" 
+                                    :font-size="fontSizes.plotLabels"
+                                    :fill="serie.color"
+                                    :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                    :stroke-width="4"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    paint-order="stroke fill"
+                                >
                                     {{ dataLabel({
                                         v: calcLinearProgression(serie.plots).trend * 100,
                                         s: '%',
@@ -3472,20 +3515,66 @@ defineExpose({
                         <g :data-cy="`xy-plot-progression-${i}`"
                             v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                             <defs>
-                                <marker :id="`plot_arrow_${i}`" :markerWidth="7" :markerHeight="7" refX="0" :refY="7 / 2"
-                                    orient="auto">
-                                    <polygon :points="`0 0, ${7} ${7 / 2}, 0 ${7}`" :fill="serie.color" />
+                                <marker 
+                                    :id="`plot_arrow_${i}`" 
+                                    markerWidth="9"
+                                    markerHeight="9"
+                                    viewBox="-1 -1 9 9"
+                                    markerUnits="userSpaceOnUse"
+                                    refX="7"
+                                    :refY="7 / 2"
+                                    orient="auto"
+                                    overflow="visible"
+                                >
+                                    <polygon
+                                        points="0,0 7,3.5 0,7"
+                                        :fill="serie.color"
+                                        :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                        stroke-width="1"
+                                        stroke-linejoin="round"
+                                    />
                                 </marker>
                             </defs>
-                            <line v-if="serie.plots.length > 1" :x1="calcLinearProgression(serie.plots).x1"
+                            <line 
+                                v-if="serie.plots.length > 1" 
+                                :x1="calcLinearProgression(serie.plots).x1"
                                 :x2="calcLinearProgression(serie.plots).x2"
                                 :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
-                                :y2="forceValidValue(calcLinearProgression(serie.plots).y2)" :stroke-width="1"
-                                :stroke="serie.color" :stroke-dasharray="2" :marker-end="`url(#plot_arrow_${i})`" />
-                            <text v-if="serie.plots.length > 1" :data-cy="`xy-plot-progression-label-${i}`"
-                                text-anchor="middle" :x="calcLinearProgression(serie.plots).x2"
-                                :y="calcLinearProgression(serie.plots).y2 - 6" :font-size="fontSizes.plotLabels"
-                                :fill="serie.color">
+                                :y2="forceValidValue(calcLinearProgression(serie.plots).y2)" 
+                                :stroke-width="2"
+                                :stroke="FINAL_CONFIG.chart.backgroundColor" 
+                                :stroke-dasharray="2" 
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                :marker-end="`url(#plot_arrow_${i})`" 
+                            />
+                            <line 
+                                v-if="serie.plots.length > 1" 
+                                :x1="calcLinearProgression(serie.plots).x1"
+                                :x2="calcLinearProgression(serie.plots).x2"
+                                :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
+                                :y2="forceValidValue(calcLinearProgression(serie.plots).y2)" 
+                                :stroke-width="1"
+                                :stroke="serie.color" 
+                                :stroke-dasharray="2" 
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                :marker-end="`url(#plot_arrow_${i})`" 
+                            />
+                            <text 
+                                v-if="serie.plots.length > 1" 
+                                :data-cy="`xy-plot-progression-label-${i}`"
+                                text-anchor="middle" 
+                                :x="calcLinearProgression(serie.plots).x2"
+                                :y="calcLinearProgression(serie.plots).y2 - 6" 
+                                :font-size="fontSizes.plotLabels"
+                                :fill="serie.color"
+                                :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                :stroke-width="4"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                paint-order="stroke fill"
+                            >
                                 {{ dataLabel({
                                     v: calcLinearProgression(serie.plots).trend * 100,
                                     s: '%',
@@ -3595,20 +3684,66 @@ defineExpose({
                         <g :data-cy="`xy-line-progression-${i}`"
                             v-if="Object.hasOwn(serie, 'useProgression') && serie.useProgression === true && !isNaN(calcLinearProgression(serie.plots).trend)">
                             <defs>
-                                <marker :id="`line_arrow_${i}`" :markerWidth="7" :markerHeight="7" refX="0" :refY="7 / 2"
-                                    orient="auto">
-                                    <polygon :points="`0 0, ${7} ${7 / 2}, 0 ${7}`" :fill="serie.color" />
+                                <marker
+                                    :id="`line_arrow_${i}`"
+                                    markerWidth="9"
+                                    markerHeight="9"
+                                    viewBox="-1 -1 9 9"
+                                    markerUnits="userSpaceOnUse"
+                                    refX="7"
+                                    :refY="7 / 2"
+                                    orient="auto"
+                                    overflow="visible"
+                                >
+                                    <polygon
+                                        points="0,0 7,3.5 0,7"
+                                        :fill="serie.color"
+                                        :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                        stroke-width="1"
+                                        stroke-linejoin="round"
+                                    />
                                 </marker>
                             </defs>
-                            <line v-if="serie.plots.length > 1" :x1="calcLinearProgression(serie.plots).x1"
+                            <line 
+                                v-if="serie.plots.length > 1" 
+                                :x1="calcLinearProgression(serie.plots).x1"
                                 :x2="calcLinearProgression(serie.plots).x2"
                                 :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
-                                :y2="forceValidValue(calcLinearProgression(serie.plots).y2)" :stroke-width="1"
-                                :stroke="serie.color" :stroke-dasharray="2" :marker-end="`url(#line_arrow_${i})`" />
-                            <text v-if="serie.plots.length > 1" :data-cy="`xy-line-progression-label-${i}`"
-                                text-anchor="middle" :x="calcLinearProgression(serie.plots).x2"
-                                :y="calcLinearProgression(serie.plots).y2 - 6" :font-size="fontSizes.plotLabels"
-                                :fill="serie.color">
+                                :y2="forceValidValue(calcLinearProgression(serie.plots).y2)" 
+                                :stroke-width="1"
+                                :stroke="FINAL_CONFIG.chart.backgroundColor" 
+                                :stroke-dasharray="2" 
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                :marker-end="`url(#line_arrow_${i})`" 
+                            />
+                            <line 
+                                v-if="serie.plots.length > 1" 
+                                :x1="calcLinearProgression(serie.plots).x1"
+                                :x2="calcLinearProgression(serie.plots).x2"
+                                :y1="forceValidValue(calcLinearProgression(serie.plots).y1)"
+                                :y2="forceValidValue(calcLinearProgression(serie.plots).y2)" 
+                                :stroke-width="1"
+                                :stroke="serie.color" 
+                                :stroke-dasharray="2" 
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                :marker-end="`url(#line_arrow_${i})`" 
+                            />
+                            <text 
+                                v-if="serie.plots.length > 1" 
+                                :data-cy="`xy-line-progression-label-${i}`"
+                                text-anchor="middle" 
+                                :x="calcLinearProgression(serie.plots).x2"
+                                :y="calcLinearProgression(serie.plots).y2 - 6" 
+                                :font-size="fontSizes.plotLabels"
+                                :fill="serie.color"
+                                :stroke="FINAL_CONFIG.chart.backgroundColor"
+                                :stroke-width="4"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                paint-order="stroke fill"
+                            >
                                 {{ dataLabel({
                                     v: calcLinearProgression(serie.plots).trend * 100,
                                     s: '%',
