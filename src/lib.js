@@ -847,7 +847,12 @@ export function calcLinearProgression(plots) {
     if (len < 2) return { x1: 0, y1: 0, x2: 0, y2: 0, slope: 0, trend: 0 };
 
     let sx = 0, sy = 0, sxy = 0, sxx = 0;
-    for (const { x, y } of plots) { sx += x; sy += y; sxy += x * y; sxx += x * x; }
+    for (const { x, y } of plots) { 
+        sx += x; 
+        sy += y; 
+        sxy += x * y; 
+        sxx += x * x; 
+    }
     const denomPx = len * sxx - sx * sx || 1;
     const slopePx = (len * sxy - sx * sy) / denomPx;
     const interceptPx = (sy - slopePx * sx) / len;
