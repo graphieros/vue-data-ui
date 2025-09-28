@@ -1472,7 +1472,14 @@ declare module "vue-data-ui" {
         | "chartChord"
         | "tableDialogOpen"
         | "tableDialogClose"
-        | "minimap";
+        | "minimap"
+        | "move"
+        | "resize"
+        | "selectAndGroup"
+        | "bringToFront"
+        | "bringToBack"
+        | "printer"
+        | "save";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -2327,15 +2334,15 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiAnnotatorConfig = {
+        alwaysVisible?: boolean;
         style?: {
             backgroundColor?: string;
             color?: string;
-            fixedTools?: boolean;
             fontFamily?: string;
-            hideWhenFolded?: boolean;
             showPrint?: boolean;
             showSave?: boolean;
             showTooltips?: boolean;
+            showImage?: boolean;
             buttons?: {
                 borderRadius?: number;
                 controls?: {
@@ -2382,6 +2389,7 @@ declare module "vue-data-ui" {
             tooltipBringToBack?: string;
             tooltipDuplicate?: string;
             tooltipUndo?: string;
+            tooltipRedo?: string;
             tooltipPdf?: string;
             tooltipSave?: string;
             tooltipShapeCircle?: string;
@@ -2397,6 +2405,7 @@ declare module "vue-data-ui" {
             tooltipShapeTextItalic?: string;
             tooltipShapeTextUnderline?: string;
             tooltipShapeColor?: string;
+            tooltipImage?: string;
         };
     };
 
@@ -6149,6 +6158,8 @@ declare module "vue-data-ui" {
             backgroundColor?: string;
             color?: string;
             iconColor?: string;
+            iconSize?: number;
+            icon?: VueUiIconName;
             padding?: string;
         };
         body?: {

@@ -1,5 +1,3 @@
-import { defineAsyncComponent } from "vue";
-
 export { default as VueUiXy } from "./components/vue-ui-xy.vue";
 export { default as Arrow } from "./atoms/Arrow.vue";
 export { default as VueUi3dBar } from "./components/vue-ui-3d-bar.vue";

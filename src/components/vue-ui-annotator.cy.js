@@ -13,7 +13,7 @@ describe('<VueUiAnnotator />', () => {
       }
     });
 
-    cy.get(`[data-cy="annotator-summary"]`).click();
+    cy.get(`[data-cy="accordion-summary"]`).click();
 
     cy.get(`[data-cy="annotator-button-circle"]`).click();
 
@@ -42,7 +42,7 @@ describe('<VueUiAnnotator />', () => {
         .wait(200)
         .trigger('pointerup', { force: true })
         .find('rect')
-        .should('have.length', 4);
+        .should('have.length', 5);
 
       cy.get(`[data-cy="annotator-button-arrow"]`).click();
 

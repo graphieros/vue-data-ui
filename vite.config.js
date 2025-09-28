@@ -15,6 +15,7 @@ const prod = process.env.NODE_ENV === "production";
 const entries = {
   index: resolve(__dirname, "src/index.js"),
   "components/arrow": resolve(__dirname, "src/entries/arrow.js"),
+  "components/vue-ui-annotator": resolve(__dirname, "src/entries/vue-ui-annotator.js"),
   "components/vue-ui-xy": resolve(__dirname, "src/entries/vue-ui-xy.js"),
   "components/vue-ui-3d-bar": resolve(__dirname, "src/entries/vue-ui-3d-bar.js"),
   "components/vue-ui-accordion": resolve(__dirname, "src/entries/vue-ui-accordion.js"),

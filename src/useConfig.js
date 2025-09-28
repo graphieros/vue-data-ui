@@ -4768,6 +4768,8 @@ export function useConfig() {
             backgroundColor: COLOR_WHITE,
             color: COLOR_BLACK,
             iconColor: COLOR_BLUE,
+            iconSize: 20,
+            icon: 'arrowRight',
             padding: '12px 6px'
         },
         body: {
@@ -4969,14 +4971,14 @@ export function useConfig() {
     }
 
     const vue_ui_annotator = {
+        alwaysVisible: false,
         style: {
             backgroundColor: COLOR_WHITE,
             color: COLOR_BLACK,
-            fixedTools: false,
             fontFamily: 'inherit',
-            hideWhenFolded: false,
-            showPrint: true,
+            showPrint: false,
             showSave: true,
+            showImage: true,
             showTooltips: true,
             buttons: {
                 borderRadius: 6,
@@ -5024,6 +5026,7 @@ export function useConfig() {
             tooltipBringToBack: 'Bring to back',
             tooltipDuplicate: 'Duplicate',
             tooltipUndo: 'Undo last shape',
+            tooltipRedo: 'Redo last shape',
             tooltipPdf: 'Save pdf',
             tooltipSave: 'Save annotations',
             tooltipShapeCircle: 'Draw circle',
@@ -5038,7 +5041,8 @@ export function useConfig() {
             tooltipShapeTextBold: 'Bold',
             tooltipShapeTextItalic: 'Italic',
             tooltipShapeTextUnderline: 'Underlined',
-            tooltipShapeColor: 'Color'
+            tooltipShapeColor: 'Color',
+            tooltipImage: 'Download PNG'
         }
     }
 

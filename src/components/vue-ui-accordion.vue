@@ -20,6 +20,8 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['toggle'])
+
 const FINAL_CONFIG = computed(() => {
     return useNestedProp({
         userConfig: props.config,
@@ -46,6 +48,7 @@ function toggleDetails() {
         isOpen.value = !isOpen.value;
     }
     init.value += 1;
+    emit('toggle');
 }
 
 const maxHeight = computed(() => {
@@ -56,12 +59,12 @@ const maxHeight = computed(() => {
 
 <template>
     <div>
-        <details :id="`details_${uid}`" ref="details" @toggle="toggleDetails">
+        <details :id="`details_${uid}`" ref="details" @toggle="toggleDetails" data-cy="accordion-summary">
             <summary :class="{ 'vue-ui-accordion-headless': hideDetails }">
                 <div class="vue-ui-accordion-head" :style="`background:${FINAL_CONFIG.head.backgroundColor};padding:${FINAL_CONFIG.head.padding}; ${hideDetails ? 'height: 0px !important; padding: 0 !important;' : ''}`">
                     <div class="vue-ui-accordion-arrow" v-if="!hideDetails">
                         <slot name="arrow" v-if="FINAL_CONFIG.head.useArrowSlot" v-bind="{ backgroundColor: FINAL_CONFIG.head.backgroundColor, color: FINAL_CONFIG.head.color, iconColor: FINAL_CONFIG.head.iconColor, isOpen }" />
-                        <BaseIcon name="arrowRight" v-else :stroke="FINAL_CONFIG.head.iconColor" />
+                        <BaseIcon :name="FINAL_CONFIG.head.icon" v-else :stroke="FINAL_CONFIG.head.iconColor" :size="FINAL_CONFIG.head.iconSize" />
                     </div>
                     <slot name="title" v-bind="{ color: FINAL_CONFIG.head.color, isOpen }"/>
                 </div>
