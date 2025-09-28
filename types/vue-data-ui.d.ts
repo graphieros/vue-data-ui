@@ -2413,7 +2413,7 @@ declare module "vue-data-ui" {
 
     export const VueUiAnnotator: DefineComponent<{
         config?: VueUiAnnotatorConfig;
-        dataset: VueUiAnnotatorDataset;
+        dataset?: VueUiAnnotatorDataset;
     }>;
 
     export type VueUiDashboardConfig = {
