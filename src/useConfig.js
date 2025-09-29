@@ -5284,6 +5284,10 @@ export function useConfig() {
         maxHeight: 500,
         rowsPerPage: 25,
         style: {
+            title: {
+                ...TITLE,
+                backgroundColor: COLOR_WHITE,
+            },
             th: {
                 backgroundColor: COLOR_GREY_LIGHT,
                 color: COLOR_BLACK,

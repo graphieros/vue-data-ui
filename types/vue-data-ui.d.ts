@@ -5566,6 +5566,7 @@ declare module "vue-data-ui" {
         maxHeight?: number;
         rowsPerPage?: number;
         style?: {
+            title?: ChartTitle & { backgroundColor?: string };
             th?: ChartTableCell & {
                 selected?: {
                     backgroundColor?: string;

@@ -241,6 +241,22 @@ onMounted(() => {
 
 const config = ref({
   style: {
+    title: {
+      text: 'Some title that can be long',
+      color: '#FF0000',
+      fontSize: 18,
+      bold: false,
+      textAlign: 'left',
+      paddingLeft: 12,
+      paddingRight: 0,
+      backgroundColor: '#00FF00',
+      subtitle: {
+        text: 'Some subtitle',
+        fontSize: 12,
+        color: '#0000FF',
+        bold: true,
+      }
+    },
     exportMenu: {
       show: true,
     }
