@@ -36,11 +36,13 @@
                         </button>
                     </div>
                     <div class="vue-ui-table-dialog-field">
-                        <label class="label vue-ui-table-dialog-input-label">
-                            {{ FINAL_CONFIG.translations.filename }}
-                            <input ref="filenameInputRef" @keydown.space.stop pattern=".*" class="vue-ui-table-dialog-input" type="text" v-model="filename"/>
+                        <label class="label vue-ui-table-dialog-input-label" style="width:100%;">
+                            <span style="width:fit-content">
+                                {{ FINAL_CONFIG.translations.filename }}
+                            </span>
+                            <input name="filename" ref="filenameInputRef" @keydown.space.stop pattern=".*" class="vue-ui-table-dialog-input" type="text" v-model="filename"/>
                         </label>
-                        <button class="vue-ui-table-dialog-field-button" @click="filename = ''">
+                        <button v-if="!!filename" class="vue-ui-table-dialog-field-button" @click="filename = ''">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.style.exportMenu.color" :size="18"/>
                         </button>
                     </div>
@@ -2503,10 +2505,10 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main .vue-ui-table-dialog-field {
-    width: calc(100% - 12px);
-    padding-right: 12px;
-    align-items:center;
+    width: 100%;
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .vue-ui-table-dialog-field {
@@ -2514,7 +2516,7 @@ button.th-reset:not(:disabled) {
 }
 
 input.vue-ui-table-dialog-input {
-    width: calc(100% - 44px);
+    width: 100% !important;
     padding-right: 44px;
 }
 
@@ -2524,8 +2526,8 @@ input.vue-ui-table-dialog-input {
     box-shadow: none;
     outline: none;
     position: absolute;
-    right: 4px;
-    top: 26px;
+    right: 0px;
+    top: 0px;
     min-width: 36px !important;
     width: 36px;
 }
