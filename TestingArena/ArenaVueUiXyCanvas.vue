@@ -159,13 +159,25 @@ const model = ref([
     { key: 'style.chart.grid.y.verticalLines.hideUnderXLength', def: 0, type: 'number', min: 5, max: 40 },
     { key: 'style.chart.grid.y.verticalLines.position', def: 'middle', type: 'select', options: ['start', 'middle']},
 
-    { key: 'style.chart.grid.y.timeLabels.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.grid.y.timeLabels.fontSizeRatio', def: 0.8, type: 'number', min: 0.1, max: 2, step: 0.1 },
-    { key: 'style.chart.grid.y.timeLabels.rotation', def: 0, type: 'number', min: -360, max: 360 },
-    { key: 'style.chart.grid.y.timeLabels.offsetY', def: 30, type: 'number', min: -100, max: 100 },
-    { key: 'style.chart.grid.y.timeLabels.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.chart.grid.y.timeLabels.modulo', def: 8, type: 'number', min: 1, max: 100},
-    { key: 'style.chart.grid.y.timeLabels.bold', def: true, type: 'checkbox'},
+    // { key: 'style.chart.grid.y.timeLabels.show', def: true, type: 'checkbox' },
+    // { key: 'style.chart.grid.y.timeLabels.fontSizeRatio', def: 0.8, type: 'number', min: 0.1, max: 2, step: 0.1 },
+    // { key: 'style.chart.grid.y.timeLabels.rotation', def: 0, type: 'number', min: -360, max: 360 },
+    // { key: 'style.chart.grid.y.timeLabels.offsetY', def: 30, type: 'number', min: -100, max: 100 },
+    // { key: 'style.chart.grid.y.timeLabels.color', def: '#1A1A1A', type: 'color' },
+    // { key: 'style.chart.grid.y.timeLabels.modulo', def: 8, type: 'number', min: 1, max: 100},
+    // { key: 'style.chart.grid.y.timeLabels.bold', def: true, type: 'checkbox'},
+
+    { key: 'style.chart.grid.x.timeLabels.show', def: true, type: 'checkbox' },
+    { key: 'style.chart.grid.x.timeLabels.fontSizeRatio', def: 0.8, type: 'number', min: 0.1, max: 2, step: 0.1 },
+    { key: 'style.chart.grid.x.timeLabels.rotation', def: 0, type: 'number', min: -360, max: 360 },
+    { key: 'style.chart.grid.x.timeLabels.offsetY', def: 30, type: 'number', min: -100, max: 100 },
+    { key: 'style.chart.grid.x.timeLabels.color', def: '#1A1A1A', type: 'color' },
+    { key: 'style.chart.grid.x.timeLabels.modulo', def: 8, type: 'number', min: 1, max: 100},
+    { key: 'style.chart.grid.x.timeLabels.bold', def: true, type: 'checkbox'},
+
+
+
+
     { key: 'style.chart.grid.x.showAxis', def: true, type: 'checkbox' },
     { key: 'style.chart.grid.x.axisName', def: 'X AXIS', type: 'text' },
     { key: 'style.chart.grid.x.axisColor', def: '#1A1A1A', type: 'color' },
@@ -259,14 +271,23 @@ const config = computed(() => {
                 // },
                 grid: {
                     ...c.style.chart.grid,
-                    y: {
-                        ...c.style.chart.grid.y,
+                    x: {
+                        ...c.style.chart.grid.x,
                         timeLabels: {
-                            ...c.style.chart.grid.y.timeLabels,
+                            ...c.style.chart.grid.x.timeLabels,
                             values: monthValues.value,
                             datetimeFormatter: {
                                 enable: true,
                             }
+                        }
+                    },
+                    y: {
+                        ...c.style.chart.grid.y,
+                        // Testing deprecated timeLabels on Y which was a mishap and was moved to x.
+                        // Using them on Y still works, as it gets applied on X anyway; so to be backwards compatible.
+                        // Any timeLabel config content placed in Y overrides the default config in X 
+                        timeLabels: {
+                            color: '#FF0000' 
                         }
                     }
                 }

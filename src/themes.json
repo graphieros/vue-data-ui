@@ -8929,15 +8929,15 @@
                             },
                             "verticalLines": {
                                 "show": false
-                            },
-                            "timeLabels": {
-                                "color": "#424242"
                             }
                         },
                         "x": {
                             "axisColor": "#5D4037",
                             "horizontalLines": {
                                 "color": "#9A9A9A"
+                            },
+                            "timeLabels": {
+                                "color": "#424242"
                             }
                         },
                         "zeroLine": {
@@ -8996,15 +8996,15 @@
                             },
                             "verticalLines": {
                                 "show": false
-                            },
-                            "timeLabels": {
-                                "color": "#BDBDBD"
                             }
                         },
                         "x": {
                             "axisColor": "#5D4037",
                             "horizontalLines": {
                                 "color": "#3A3A3A"
+                            },
+                            "timeLabels": {
+                                "color": "#BDBDBD"
                             }
                         },
                         "zeroLine": {
@@ -9063,15 +9063,15 @@
                             },
                             "verticalLines": {
                                 "show": false
-                            },
-                            "timeLabels": {
-                                "color": "#99AA99"
                             }
                         },
                         "x": {
                             "axisColor": "#5F6A5F",
                             "horizontalLines": {
                                 "color": "#3A3A3A"
+                            },
+                            "timeLabels": {
+                                "color": "#99AA99"
                             }
                         },
                         "zeroLine": {
@@ -9128,9 +9128,6 @@
                             },
                             "verticalLines": {
                                 "show": false
-                            },
-                            "timeLabels": {
-                                "color": "#8F837A"
                             }
                         },
                         "x": {
@@ -9138,6 +9135,9 @@
                             "horizontalLines": {
                                 "show": false,
                                 "alternate": false
+                            },
+                            "timeLabels": {
+                                "color": "#8F837A"
                             }
                         },
                         "zeroLine": {
@@ -9194,13 +9194,13 @@
                             },
                             "verticalLines": {
                                 "show": false
-                            },
-                            "timeLabels": {
-                                "color": "#50606C"
                             }
                         },
                         "x": {
-                            "axisColor": "#829C98"
+                            "axisColor": "#829C98",
+                            "timeLabels": {
+                                "color": "#50606C"
+                            }
                         },
                         "zeroLine": {
                             "color": "#444444"

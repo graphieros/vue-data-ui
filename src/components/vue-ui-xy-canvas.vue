@@ -182,7 +182,18 @@ function prepareConfig() {
         finalConfig.style.chart.zoom.endIndex = null;
     }
 
-    // ----------------------------------------------------------------------------
+    // -------------------------- TIME LABELS CONFIG FIX --------------------------
+    // Time labels were wrongly placed under the Y axis. This fix ensures back compatibility by
+    // merging existing time labels placed under Y into X.
+    
+    if (props.config && hasDeepProperty(props.config, 'style.chart.grid.y.timeLabels')) {
+        console.warn('VueUiXyCanvas: you are using the deprecated config.style.chart.grid.y.timeLabels. It is recommended to move this configuration to config.style.chart.grid.x.timeLabels.');
+
+        finalConfig.style.chart.grid.x.timeLabels = useNestedProp({
+            defaultConfig: finalConfig.style.chart.grid.x.timeLabels,
+            userConfig: props.config.style.chart.grid.y.timeLabels
+        });
+    }
 
     return finalConfig;
 }
@@ -552,7 +563,7 @@ function setupChart() {
         } else if(FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) >= FINAL_CONFIG.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
             for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
 
-                if(i % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo) === 0) {
+                if(i % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo) === 0) {
                     line(
                         ctx.value,
                         [
@@ -677,7 +688,7 @@ function setupChart() {
                 
                 for (let k = slicer.value.start; k < slicer.value.end; k += 1) {
 
-                    if(k % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo) === 0) {
+                    if(k % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo) === 0) {
                         line(
                             ctx.value,
                             [
@@ -964,31 +975,31 @@ function drawDataLabels(ds) {
 
 const timeLabels = computed(() => {
     return useTimeLabels({
-        values: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values,
+        values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
         maxDatapoints: maxSeries.value,
-        formatter: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.datetimeFormatter,
+        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
         start: 0,
-        end: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.length
+        end: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.length
     });
 });
 
 function drawTimeLabels() {
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
         if (
-            (slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo || 
-            ((slicer.value.end - slicer.value.start) >= FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo && (i % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.modulo) === 0 ||
-            (i === (tooltipIndex.value + slicer.value.start)) && FINAL_CONFIG.value.style.chart.grid.y.timeLabels.showMarker ))) 
+            (slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo || 
+            ((slicer.value.end - slicer.value.start) >= FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo && (i % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo) === 0 ||
+            (i === (tooltipIndex.value + slicer.value.start)) && FINAL_CONFIG.value.style.chart.grid.x.timeLabels.showMarker ))) 
         {
             text(
                 ctx.value,
                 timeLabels.value[i] ? timeLabels.value[i].text : i + 1,
                 drawingArea.value.left + (drawingArea.value.slot * (i - slicer.value.start)) + (drawingArea.value.slot / 2),
-                drawingArea.value.bottom + (w.value / FINAL_CONFIG.value.style.chart.grid.y.timeLabels.offsetY),
+                drawingArea.value.bottom + (w.value / FINAL_CONFIG.value.style.chart.grid.x.timeLabels.offsetY),
                 {
-                    align: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation === 0 ? 'center' : FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation > 0 ? 'left' : 'right',
-                    font: `${FINAL_CONFIG.value.style.chart.grid.y.timeLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.timeLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                    color: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.showMarker ? setOpacity(FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color, tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100) : FINAL_CONFIG.value.style.chart.grid.y.timeLabels.color,
-                    rotation: FINAL_CONFIG.value.style.chart.grid.y.timeLabels.rotation,
+                    align: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation === 0 ? 'center' : FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation > 0 ? 'left' : 'right',
+                    font: `${FINAL_CONFIG.value.style.chart.grid.x.timeLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.x.timeLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
+                    color: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.showMarker ? setOpacity(FINAL_CONFIG.value.style.chart.grid.x.timeLabels.color, tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100) : FINAL_CONFIG.value.style.chart.grid.x.timeLabels.color,
+                    rotation: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation,
                 }
             );
         }
@@ -1229,7 +1240,7 @@ function draw() {
     }
 
     // TIME LABELS
-    FINAL_CONFIG.value.style.chart.grid.y.timeLabels.show && drawTimeLabels();
+    FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show && drawTimeLabels();
     FINAL_CONFIG.value.style.chart.selector.show && FINAL_CONFIG.value.style.chart.selector.showHorizontalSelector && drawHorizontalSelector();
 
     drawYAxisScaleLabels();
@@ -1306,7 +1317,7 @@ function handleMousemove(e) {
             config: FINAL_CONFIG.value
         })
     } else {
-        if (FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]) {
+        if (FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]) {
             html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${timeLabels.value.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value].text}</div>`;
         }
         html += tootlipDataset.value.join('')
@@ -1480,7 +1491,7 @@ const dataTable = computed(() => {
             return ds.series[i] ?? 0
         }).reduce((a,b ) => a + b, 0);
 
-        body.push([FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[i].text : i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.rounding))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)));
+        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[i].text : i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.rounding))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)));
     }
 
     const config = {
@@ -1516,7 +1527,7 @@ const tableCsv = computed(() => {
     const body = [];
 
     for (let i = slicer.value.start; i < slicer.value.end; i += 1) {
-        const row = [FINAL_CONFIG.value.style.chart.grid.y.timeLabels.values[i] ? timeLabels.value[i].text : i + 1];
+        const row = [FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values[i] ? timeLabels.value[i].text : i + 1];
         formattedDataset.value.forEach(s => {
             row.push(Number((s.series[i] || 0).toFixed(FINAL_CONFIG.value.table.rounding)));
         });
@@ -1808,8 +1819,8 @@ defineExpose({
                 :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
                 :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
                 :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-                :labelLeft="FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.start] ? timeLabels[slicer.start].text : ''"
-                :labelRight="FINAL_CONFIG.style.chart.grid.y.timeLabels.values[slicer.end-1] ? timeLabels[slicer.end-1].text : ''"
+                :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[slicer.start].text : ''"
+                :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels[slicer.end-1].text : ''"
                 :textColor="FINAL_CONFIG.style.chart.color"
                 :inputColor="FINAL_CONFIG.style.chart.zoom.color"
                 :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
