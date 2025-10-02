@@ -257,6 +257,33 @@ const config = ref({
         bold: true,
       }
     },
+    th: {
+      buttons: {
+        filter: {
+          active: {
+            backgroundColor: '#FF0000',
+            color: '#FFAA00'
+          },
+          inactive: {
+            backgroundColor: '#00FF00',
+            color: '#FF0000'
+          }
+        },
+        cancel: {
+          active: {
+            backgroundColor: '#0000FF',
+            color: 'red'
+          },
+          inactive: {
+            backgroundColor: '#FFBBDD',
+            color: '#6376DD'
+          }
+        }
+      }
+    },
+    rows: {
+      outline: '1px solid red'
+    },
     exportMenu: {
       show: true,
     }

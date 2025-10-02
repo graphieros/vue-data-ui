@@ -182,16 +182,18 @@
                                             <div class="date-wrapper--button">
                                                 <button v-if="th.isSort" @click="sortTh(i, $event)"
                                                     :class="{ 'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i]) }"
-                                                    :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.pagination.buttons.color}`">
+                                                    :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`">
                                                     <span v-if="sorts[i] === constants.ASC"
                                                         v-html="[constants.DATE].includes(th.type) ? icons.sort09 : icons.sortAZ" />
                                                     <span v-else-if="sorts[i] === constants.DESC"
                                                         v-html="[constants.DATE].includes(th.type) ? icons.sort90 : icons.sortZA" />
                                                     <span v-else v-html="icons.arrowSort" />
                                                 </button>
-                                                <button @click="resetDates(i); resetFilter(i, th, $event)"
+                                                <button 
+                                                    @click="resetDates(i); resetFilter(i, th, $event)"
                                                     :disabled="!filteredDatesIndexes[i] && isResetDisabled(i, th)"
-                                                    class="th-reset">
+                                                    class="th-reset"
+                                                >
                                                     ✖
                                                 </button>
                                             </div>
@@ -206,7 +208,7 @@
                                     <button v-if="!hasNaN[i] && th.isSort && th.type !== constants.DATE"
                                         @click="sortTh(i, $event)"
                                         :class="{ 'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i]) }"
-                                        :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.pagination.buttons.color}`">
+                                        :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`">
                                         <span v-if="sorts[i] === constants.ASC"
                                             v-html="[constants.NUMERIC].includes(th.type) ? icons.sort09 : icons.sortZA" />
                                         <span v-else-if="sorts[i] === constants.DESC"
@@ -218,13 +220,15 @@
                                     <button v-if="th.isMultiselect" @click="toggleMultiselect(i, th, $event)"
                                         v-html="icons.filter"
                                         :class="{ 'th-button-active': multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length }"
-                                        :style="`background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.pagination.buttons.color}`" />
+                                        :style="`background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`" />
 
                                     <!-- SHOW CHART -->
-                                    <button v-if="currentSelectionSpan.col === i && canChart"
-                                        @click="showChart = !showChart" v-html="icons.chart"
+                                    <button 
+                                        v-if="currentSelectionSpan.col === i && canChart"
+                                        @click="showChart = !showChart" 
+                                        v-html="icons.chart"
                                         :class="{ 'th-button-active': showChart }"
-                                        :style="`background:${showChart ? '' : FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${showChart ? '' : FINAL_CONFIG.style.pagination.buttons.color}`" />
+                                        :style="`background:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`" />
 
                                     <div v-if="th.rangeFilter && rangeFilters[i] && !hasNaN[i]" class="th-range-filter">
                                         <label :for="`rangeMin${i}`"><span style="color:grey">ᒥ</span> min <span
@@ -242,8 +246,12 @@
                                     </div>
 
                                     <!-- RESET -->
-                                    <button v-if="canResetColumn(i, th)" @click="resetFilter(i, th, $event)"
-                                        :disabled="isResetDisabled(i, th)" class="th-reset">
+                                    <button 
+                                        v-if="canResetColumn(i, th)" 
+                                        @click="resetFilter(i, th, $event)"
+                                        :disabled="isResetDisabled(i, th)" 
+                                        class="th-reset"
+                                    >
                                         ✖
                                     </button>
 
@@ -300,10 +308,20 @@
                     <tr v-for="(tr, i) in visibleRows" :key="`tbody_${i}`" :data-row="i % 2 === 0 ? 'odd' : 'even'"
                         :class="`tr_${uid}`"
                         :style="`${i % 2 === 0 ? `background:${FINAL_CONFIG.style.rows.odd.backgroundColor};color:${FINAL_CONFIG.style.rows.odd.color}` : `background:${FINAL_CONFIG.style.rows.even.backgroundColor};color:${FINAL_CONFIG.style.rows.even.color}`}`">
-                        <td class="vue-ui-table-td-iteration" :data-row="i % 2 === 0 ? 'odd' : 'even'">{{
-                            tr.absoluteIndex + 1 }}</td>
-                        <td :data-row="i % 2 === 0 ? 'odd' : 'even'" v-for="(td, j) in tr.td" :key="`td_${i}_${j}`"
-                            :style="isNumeric(td) || dataset.header[j].type === constants.DATE ? `text-align:right;font-variant-numeric: tabular-nums;` : ''"
+                        <td 
+                            class="vue-ui-table-td-iteration" 
+                            :data-row="i % 2 === 0 ? 'odd' : 'even'"
+                            :style="{
+                                outline: FINAL_CONFIG.style.rows.outline
+                            }"
+                        >
+                            {{ tr.absoluteIndex + 1 }}
+                        </td>
+                        <td 
+                            :data-row="i % 2 === 0 ? 'odd' : 'even'" 
+                            v-for="(td, j) in tr.td" 
+                            :key="`td_${i}_${j}`"
+                            :style="isNumeric(td) || dataset.header[j].type === constants.DATE ? `text-align:right;font-variant-numeric: tabular-nums;outline:${FINAL_CONFIG.style.rows.outline}` : `outline:${FINAL_CONFIG.style.rows.outline}`"
                             @click="selectTd({
                                 td,
                                 rowIndex: i,
@@ -606,6 +624,7 @@ import {
     lightenHexColor, 
     palette, 
     treeShake,
+    setOpacity,
 } from "../lib";
 import { useConfig } from "../useConfig";
 import VueUiXy from "./vue-ui-xy.vue";
@@ -845,6 +864,36 @@ export default {
         }
     },
     computed: {
+        colorCancelInactive() {
+            return this.FINAL_CONFIG.style.th.buttons.cancel.inactive.backgroundColor;
+        },
+        textColorCancelInactive() {
+            return this.FINAL_CONFIG.style.th.buttons.cancel.inactive.color;
+        },
+        colorCancelActive() {
+            return this.FINAL_CONFIG.style.th.buttons.cancel.active.backgroundColor;
+        },
+        colorCancelActiveLight() {
+            return lightenHexColor(this.colorCancelActive, 0.33);
+        },
+        colorCancelActiveOutline() {
+            return setOpacity(this.colorCancelActive, 33);
+        },
+        colorButtonSortActive() {
+            return this.FINAL_CONFIG.style.th.buttons.filter.active.backgroundColor;
+        },
+        colorButtonSortActiveLight() {
+            return lightenHexColor(this.colorButtonSortActive, 0.33);
+        },
+        colorButtonSortActiveOutline() {
+            return setOpacity(this.colorButtonSortActive, 33);
+        },
+        colorButtonSortInactive() {
+            return this.FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor;
+        },
+        colorButtonSortActiveColorText() {
+            return this.FINAL_CONFIG.style.th.buttons.filter.active.color;
+        },
         dateHeaders() {
             return [...this.tableHead].filter(th => th.type === this.constants.DATE);
         },
@@ -1939,10 +1988,6 @@ export default {
     padding: 3px 8px;
 }
 
-.vue-ui-table-main tr td {
-    outline: 1px solid white;
-}
-
 .vue-ui-table-main .th-numeric {
     text-align: right;
     font-variant-numeric: tabular-nums;
@@ -2000,15 +2045,20 @@ export default {
     outline: none;
 }
 
+button.th-reset:disabled {
+    background: v-bind(colorCancelInactive);
+    color: v-bind(textColorCancelInactive);
+}
+
 button.th-reset:not(:disabled) {
-    background: radial-gradient(at top, #f19a71, #F17171);
-    border: 1px solid #F17171;
+    background: radial-gradient(at top, v-bind(colorCancelActiveLight), v-bind(colorCancelActive));
+    border: 1px solid v-bind(colorCancelActive);
     color: white;
 }
 
 .vue-ui-table-main button.th-reset:not(:disabled):hover,
 .vue-ui-table-main button.th-reset:not(:disabled):focus {
-    outline: 3px solid #f171717e;
+    outline: 3px solid v-bind(colorCancelActiveOutline);
 }
 
 .vue-ui-table-main [data-is-open="false"] {
@@ -2077,13 +2127,13 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main .th-button-active {
-    background: radial-gradient(at top, #62b5f0, #1f77b4);
-    color: white;
+    background: radial-gradient(at top, v-bind(colorButtonSortActiveLight), v-bind(colorButtonSortActive));
+    color: v-bind(colorButtonSortActiveColorText);
 }
 
 .vue-ui-table-main .th-button-active:hover,
 .vue-ui-table-main .th-button-active:focus {
-    outline: 3px solid #1f77b47a;
+    outline: 3px solid v-bind(colorButtonSortActiveOutline);
 }
 
 .vue-ui-table-main .th-date {
@@ -2274,16 +2324,6 @@ button.th-reset:not(:disabled) {
     height: 100%;
     justify-content: center;
     width: 100%;
-}
-
-.vue-ui-table-main th.col-selector--selected {
-    background: radial-gradient(at top left, #62b5f0, #1f77b4);
-    color: white;
-}
-
-.vue-ui-table-main th.col-selector--selected div {
-    background: transparent;
-    color: white;
 }
 
 .vue-ui-table-main .vue-ui-table-chart-modal {

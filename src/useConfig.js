@@ -4396,18 +4396,19 @@ export function useConfig() {
                             hideUnderXLength: 20,
                             position: 'middle' // 'start'
                         },
-                        timeLabels: {
-                            show: true,
-                            showMarker: true,
-                            fontSizeRatio: 0.8,
-                            values: [],
-                            datetimeFormatter: AXIS_DATE_FORMATTER,
-                            rotation: 0,
-                            offsetY: 30,
-                            color: COLOR_BLACK,
-                            modulo: 12,
-                            bold: false,
-                        }
+                        // Moved to x (at last...)
+                        // timeLabels: {
+                        //     show: true,
+                        //     showMarker: true,
+                        //     fontSizeRatio: 0.8,
+                        //     values: [],
+                        //     datetimeFormatter: AXIS_DATE_FORMATTER,
+                        //     rotation: 0,
+                        //     offsetY: 30,
+                        //     color: COLOR_BLACK,
+                        //     modulo: 12,
+                        //     bold: false,
+                        // }
                     },
                     x: {
                         showAxis: true,
@@ -4420,6 +4421,18 @@ export function useConfig() {
                             alternate: true,
                             opacity: 20
                         },
+                        timeLabels: {
+                            show: true,
+                            showMarker: true,
+                            fontSizeRatio: 0.8,
+                            values: [],
+                            datetimeFormatter: AXIS_DATE_FORMATTER,
+                            rotation: 0,
+                            offsetY: 30,
+                            color: COLOR_BLACK,
+                            modulo: 12,
+                            bold: false,
+                        }
                     },
                     zeroLine: {
                         show: true,
@@ -5295,9 +5308,32 @@ export function useConfig() {
                 selected: {
                     backgroundColor: COLOR_BLUE,
                     color: COLOR_WHITE
+                },
+                buttons: {
+                    filter: {
+                        inactive: {
+                            backgroundColor: COLOR_GREY_LIGHT,
+                            color: COLOR_BLACK
+                        },
+                        active: {
+                            backgroundColor: COLOR_BLUE,
+                            color: COLOR_WHITE
+                        }
+                    },
+                    cancel: {
+                        inactive: {
+                            backgroundColor: COLOR_GREY_LIGHT,
+                            color: COLOR_BLACK
+                        },
+                        active: {
+                            backgroundColor: '#F17171',
+                            color: COLOR_WHITE
+                        }
+                    }
                 }
             },
             rows: {
+                outline: `1px solid ${COLOR_WHITE}`,
                 even: {
                     backgroundColor: '#f3f5f7',
                     color: COLOR_BLACK,

@@ -5572,8 +5572,31 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     color?: string;
                 };
+                buttons?: {
+                    filter?: {
+                        inactive?: {
+                            backgroundColor?: string;
+                            color?: string;
+                        };
+                        active?: {
+                            backgroundColor?: string;
+                            color?: string;    
+                        };
+                    };
+                    cancel?: {
+                        inactive?: {
+                            backgroundColor?: string;
+                            color?: string;
+                        };
+                        active?: {
+                            backgroundColor?: string;
+                            color?: string;    
+                        };
+                    };
+                };
             };
             rows?: {
+                outline?: string;
                 even?: {
                     backgroundColor?: string;
                     color?: string;
@@ -7024,7 +7047,9 @@ declare module "vue-data-ui" {
                             hideUnderXLength?: number;
                             position?: "start" | "middle";
                         };
-                        timeLabels?: { // Oversight! TODO: in v3 move to x (breaking change)
+                        // LEGACY: time labels were placed wrongly under Y
+                        // Type def is kept here for backwards compatibility
+                        timeLabels?: {
                             show?: boolean;
                             fontSizeRatio?: number;
                             values?: Array<string | number>;
@@ -7048,6 +7073,19 @@ declare module "vue-data-ui" {
                             color?: string;
                             alternate?: boolean;
                             opacity?: number;
+                        };
+                        timeLabels?: {
+                            show?: boolean;
+                            fontSizeRatio?: number;
+                            values?: Array<string | number>;
+                            datetimeFormatter?: AxisDateFormatter;
+                            rotation?: number;
+                            offsetY?: number;
+                            color?: string;
+                            showOnlyAtModulo?: boolean;
+                            modulo?: number;
+                            showMarker?: boolean;
+                            bold?: boolean;
                         };
                     };
                     zeroLine?: {
