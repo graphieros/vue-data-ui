@@ -287,8 +287,23 @@ function prepareConfig() {
         mergedConfig.events.datapointClick = null;
     }
 
+    // Merging highlight area(s) incomplete user configs
+    if (props.config && hasDeepProperty(props.config, 'chart.highlightArea')) {
+        if (Array.isArray(props.config.chart.highlightArea)) {
+            mergedConfig.chart.highlightArea = props.config.chart.highlightArea
+                .map(hl => mergeHighlightArea({
+                    defaultConfig: DEFAULT_CONFIG.chart.highlightArea,
+                    userConfig: hl
+                }));
+        } else {
+            mergedConfig.chart.highlightArea = mergeHighlightArea({
+                defaultConfig: DEFAULT_CONFIG.chart.highlightArea,
+                userConfig: props.config.chart.highlightArea
+            });
+        }
+    }
     // ----------------------------------------------------------------------------
-
+    
     if (mergedConfig.theme) {
         return {
             ...useNestedProp({
@@ -300,6 +315,13 @@ function prepareConfig() {
     } else {
         return mergedConfig
     }
+}
+
+function mergeHighlightArea({ defaultConfig, userConfig }) {
+    return useNestedProp({
+        defaultConfig,
+        userConfig
+    });
 }
 
 const isDataset = computed({
