@@ -120,12 +120,14 @@ div.vue-ui-accordion-content {
     max-height: 0;
     overflow: hidden;
     transition: max-height 400ms ease-out, opacity 400ms ease-out;
+    pointer-events: none;
 }
 
 details[open]+div.vue-ui-accordion-content {
     max-height: v-bind(maxHeight);
     transition: max-height 1s ease-out, opacity 1s ease-out;
     opacity: 1;
+    pointer-events: auto;
 }
 
 details[open] span::before {
