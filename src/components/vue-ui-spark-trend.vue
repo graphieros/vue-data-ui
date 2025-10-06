@@ -387,7 +387,7 @@ const { fitText } = useFitSvgText({
 </script>
 
 <template>
-    <div ref="sparkTrendChart" class="vue-ui-spark-trend" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor}`">
+    <div ref="sparkTrendChart" class="vue-data-ui-component vue-ui-spark-trend" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor}`">
         <svg :key="datasetKey" ref="svgRef" :xmlns="XMLNS" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`">
             <PackageVersion />
 

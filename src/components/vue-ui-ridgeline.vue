@@ -969,7 +969,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="ridgelineChart" :class="`vue-ui-ridgeline ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
+    <div ref="ridgelineChart" :class="`vue-data-ui-component vue-ui-ridgeline ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         :id="`vue-ui-ridgeline_${uid}`" :style="{
             fontFamily: FINAL_CONFIG.style.fontFamily,
             width: '100%',

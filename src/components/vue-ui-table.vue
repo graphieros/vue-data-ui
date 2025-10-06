@@ -1,5 +1,5 @@
 <template>
-    <div class="vue-ui-table-main" :style="`font-family: ${FINAL_CONFIG.fontFamily}`">
+    <div class="vue-data-ui-component vue-ui-table-main" :style="`font-family: ${FINAL_CONFIG.fontFamily}`">
         <div class="vue-ui-table-export-hub" 
             :style="{ top: exportButtonTop + 'px' }" v-if="FINAL_CONFIG.style.exportMenu.show">
             <button @click="isExportRequest = !isExportRequest" v-html="icons.export"

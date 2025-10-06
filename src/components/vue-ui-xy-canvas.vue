@@ -1658,7 +1658,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :style="`width:100%; position:relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-ui-donut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div :style="`width:100%; position:relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-data-ui-component vue-ui-xy-canvas ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text"
             :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <Title 
@@ -1920,10 +1920,6 @@ defineExpose({
 
 <style scoped>
 @import "../vue-data-ui.css";
-
-.vue-ui-xy-canvas {
-    width: 100%;
-}
 
 canvas {
     position: absolute;

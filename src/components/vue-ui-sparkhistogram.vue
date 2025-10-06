@@ -304,7 +304,7 @@ watch([WIDTH, HEIGHT, () => FINAL_DATASET.value], async() => {
 
 <template>
     <div 
-        class="vue-ui-spark-histogram"
+        class="vue-data-ui-component vue-ui-spark-histogram"
         ref="histogramChart"
         :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};font-family:${FINAL_CONFIG.style.fontFamily}`" @mouseleave="selectedIndex = null"
     >

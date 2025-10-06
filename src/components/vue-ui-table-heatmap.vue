@@ -211,7 +211,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tableContainer" :style="`width:100%; overflow-x:auto; container-type: inline-size;padding-top:${FINAL_CONFIG.userOptions.show ? '36px' : ''}; ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}; position:relative;`" :class="{ 'vue-ui-responsive' : isResponsive }" :id="`table_heatmap_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div ref="tableContainer" :style="`width:100%; overflow-x:auto; container-type: inline-size;padding-top:${FINAL_CONFIG.userOptions.show ? '36px' : ''}; ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}; position:relative;`" :class="{ 'vue-data-ui-component': true, 'vue-ui-responsive' : isResponsive }" :id="`table_heatmap_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
 
         <UserOptions
             ref="details"

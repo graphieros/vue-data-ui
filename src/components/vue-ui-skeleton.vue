@@ -307,7 +307,7 @@ const chordPaths = ref([
 </script>
 
 <template>
-    <div :id="uid" :class="{ 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${FINAL_CONFIG.style.backgroundColor};color:${FINAL_CONFIG.style.color};display:flex;align-items:center;justify-content:center;`">
+    <div :id="uid" :class="{ 'vue-data-ui-component': true, 'vue-ui-skeleton': true, 'vue-ui-skeleton-animated': isAnimated }" :style="`background:${FINAL_CONFIG.style.backgroundColor};color:${FINAL_CONFIG.style.color};display:flex;align-items:center;justify-content:center;`">
         <template v-if="type === 'chord'">
             <svg :xmlns="XMLNS" width="100%" viewBox="0 0 600 600" :style="{ background: FINAL_CONFIG.style.backgroundColor }">
                 <PackageVersion />

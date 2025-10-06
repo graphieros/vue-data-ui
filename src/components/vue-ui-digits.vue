@@ -58,7 +58,7 @@ const maxY = computed(() => {
 </script>
 
 <template>
-    <svg class="vue-ui-digits" :xmlns="XMLNS" :viewBox="`0 0 ${maxY} 80`" :style="`background:${FINAL_CONFIG.backgroundColor};${FINAL_CONFIG.height ? `height:${FINAL_CONFIG.height};` : ''}${FINAL_CONFIG.width ? `width:${FINAL_CONFIG.width}` : ''}`">
+    <svg class="vue-data-ui-component vue-ui-digits" :xmlns="XMLNS" :viewBox="`0 0 ${maxY} 80`" :style="`background:${FINAL_CONFIG.backgroundColor};${FINAL_CONFIG.height ? `height:${FINAL_CONFIG.height};` : ''}${FINAL_CONFIG.width ? `width:${FINAL_CONFIG.width}` : ''}`">
         <Digit
             v-for="digit in digits"
             :x="digit.x"

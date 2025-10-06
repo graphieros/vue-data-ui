@@ -688,7 +688,7 @@ defineExpose({
 <template>
   <div
     ref="ringsChart"
-    :class="`vue-ui-rings ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
+    :class="`vue-data-ui-component vue-ui-rings ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
     :style="`font-family:${FINAL_CONFIG.style.fontFamily};text-align:center;width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
     :id="`rings_${uid}`"
     @mouseleave="

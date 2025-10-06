@@ -254,7 +254,7 @@ defineExpose({
 <template>
     <div 
         ref="timerChart" 
-        class="vue-ui-timer"
+        class="vue-data-ui-component vue-ui-timer"
         :style="{
             fontFamily: FINAL_CONFIG.style.fontFamily,
             width: '100%',

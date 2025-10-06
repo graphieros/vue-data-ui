@@ -1,5 +1,5 @@
 <template>
-  <div class="vue-ui-annotator">
+  <div class="vue-data-ui-component vue-ui-annotator">
     <div data-dom-to-png-ignore>
       <Accordion
         :config="{

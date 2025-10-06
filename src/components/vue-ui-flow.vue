@@ -991,7 +991,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="flowChart" :class="`vue-ui-flow ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''
+    <div ref="flowChart" :class="`vue-data-ui-component vue-ui-flow ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''
         }`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`flow_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)">

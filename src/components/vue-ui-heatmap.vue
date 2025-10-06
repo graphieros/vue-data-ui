@@ -846,7 +846,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="heatmapChart" :class="`vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`" @mouseenter="() => setVisibility(true)" @mouseleave="() => setVisibility(false)">
+    <div ref="heatmapChart" :class="`vue-data-ui-component vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`" @mouseenter="() => setVisibility(true)" @mouseleave="() => setVisibility(false)">
         
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"

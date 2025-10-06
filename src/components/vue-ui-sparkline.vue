@@ -534,7 +534,7 @@ function selectDatapoint(datapoint, index) {
 </script>
 
 <template>
-    <div ref="sparklineChart"  class="vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};`">
+    <div ref="sparklineChart"  class="vue-data-ui-component vue-ui-sparkline" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};`">
         <!-- SLOT BEFORE -->
         <slot 
             name="before" 

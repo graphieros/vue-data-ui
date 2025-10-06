@@ -109,7 +109,7 @@ const gaugeBody = computed(() => {
 </script>
 
 <template>
-    <div class="vue-ui-gizmo-wrapper">
+    <div class="vue-data-ui-component vue-ui-gizmo-wrapper">
         <svg
             class="vue-ui-gizmo"
             :viewBox="`0 0 ${svg.width} ${svg.height}`"

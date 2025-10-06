@@ -735,7 +735,7 @@ defineExpose({
 
 <template>
     <div 
-        :class="`vue-ui-chestnut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
+        :class="`vue-data-ui-component vue-ui-chestnut ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         ref="chestnutChart"
         :id="`vue-ui-chestnut_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"

@@ -490,7 +490,7 @@ defineExpose({
 <template>
     <div
         ref="bulletChart"
-        :class="`vue-ui-bullet ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
+        :class="`vue-data-ui-component vue-ui-bullet ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`bullet_${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)" 

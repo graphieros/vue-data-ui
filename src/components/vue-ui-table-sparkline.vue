@@ -484,7 +484,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tableContainer" :class="{ 'vue-ui-table-sparkline': true, 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div ref="tableContainer" :class="{'vue-data-ui-component': true, 'vue-ui-table-sparkline': true, 'vue-ui-responsive': isResponsive }" style="overflow: hidden" :id="`table_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         
         <div 
             v-if="FINAL_CONFIG.title.text" 

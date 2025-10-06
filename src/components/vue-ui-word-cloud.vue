@@ -635,7 +635,7 @@ function useTooltip(word, index) {
 </script>
 
 <template>
-    <div class="vue-ui-word-cloud" ref="wordCloudChart" :id="`wordCloud_${uid}`"
+    <div class="vue-data-ui-component vue-ui-word-cloud" ref="wordCloudChart" :id="`wordCloud_${uid}`"
         :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
 
         <PenAndPaper

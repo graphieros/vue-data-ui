@@ -965,7 +965,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'} ${FINAL_CONFIG.responsive && FINAL_CONFIG.autoSize ? 'vue-ui-vertical-bar-autosize' : ''}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`padding-top:${FINAL_CONFIG.responsive && FINAL_CONFIG.autoSize ? `${remainingHeight / 2}px` : '0'}; font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? FINAL_CONFIG.autoSize ? `height:calc(100% - ${remainingHeight}px` : 'height: 100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div :class="`vue-data-ui-component vue-ui-vertical-bar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'} ${FINAL_CONFIG.responsive && FINAL_CONFIG.autoSize ? 'vue-ui-vertical-bar-autosize' : ''}`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`" :style="`padding-top:${FINAL_CONFIG.responsive && FINAL_CONFIG.autoSize ? `${remainingHeight / 2}px` : '0'}; font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? FINAL_CONFIG.autoSize ? `height:calc(100% - ${remainingHeight}px` : 'height: 100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"

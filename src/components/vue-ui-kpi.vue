@@ -98,7 +98,7 @@ watch(() => props.dataset, (newValue) => {
 </script>
 
 <template>
-    <div :class="`vue-ui-kpi ${FINAL_CONFIG.layoutClass}`" :style="`background:${FINAL_CONFIG.backgroundColor}; ${FINAL_CONFIG.layoutCss}`">
+    <div :class="`vue-data-ui-component vue-ui-kpi ${FINAL_CONFIG.layoutClass}`" :style="`background:${FINAL_CONFIG.backgroundColor}; ${FINAL_CONFIG.layoutCss}`">
         <div :class="`vue-ui-kpi-title ${FINAL_CONFIG.titleClass}`" :style="`font-family: ${FINAL_CONFIG.fontFamily}; font-size:${FINAL_CONFIG.titleFontSize}px; color:${FINAL_CONFIG.titleColor}; font-weight:${FINAL_CONFIG.titleBold ? 'bold' : 'normal'}; ${FINAL_CONFIG.titleCss}`">
             <slot name="title" :comment="dataset"></slot>
             {{ FINAL_CONFIG.title }}

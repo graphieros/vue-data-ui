@@ -1035,6 +1035,7 @@ defineExpose({
     <div 
         ref="chordChart"
         :class="{
+            'vue-data-ui-component': true,
             'vue-ui-chord': true,
             'vue-data-ui-wrapper-fullscreen': isFullscreen,
             'vue-data-ui-responsive': FINAL_CONFIG.responsive

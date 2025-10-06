@@ -58,7 +58,7 @@ const maxHeight = computed(() => {
 </script>
 
 <template>
-    <div>
+    <div class="vue-data-ui-component">
         <details :id="`details_${uid}`" ref="details" @toggle="toggleDetails" data-cy="accordion-summary">
             <summary :class="{ 'vue-ui-accordion-headless': hideDetails }">
                 <div class="vue-ui-accordion-head" :style="`background:${FINAL_CONFIG.head.backgroundColor};padding:${FINAL_CONFIG.head.padding}; ${hideDetails ? 'height: 0px !important; padding: 0 !important;' : ''}`">

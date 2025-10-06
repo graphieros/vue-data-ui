@@ -274,7 +274,7 @@ function onTrapLeave(datapoint, index) {
 
 <template>
     <div
-        class="vue-ui-sparkbar"
+        class="vue-data-ui-component vue-ui-sparkbar"
         :style="{
             width: '100%',
             position: 'relative',

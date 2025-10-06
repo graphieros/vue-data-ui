@@ -416,6 +416,7 @@ defineExpose({
         :style="{
             position: 'relative'
         }"
+        class="vue-data-ui-component"
     >
         <div 
             class="vue-ui-dashboard-container" 

@@ -1237,7 +1237,7 @@ defineExpose({
     <div 
         :id="`stackbar_${uid}`"
         ref="stackbarChart"
-        :class="{'vue-ui-stackbar': true, 'vue-data-ui-wrapper-fullscreen' : isFullscreen }" 
+        :class="{'vue-data-ui-component': true, 'vue-ui-stackbar': true, 'vue-data-ui-wrapper-fullscreen' : isFullscreen }" 
         :style="`background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color};font-family:${FINAL_CONFIG.style.fontFamily}; position: relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
         @mouseenter="() => setUserOptionsVisibility(true)" 
         @mouseleave="() => setUserOptionsVisibility(false)"

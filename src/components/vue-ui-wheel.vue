@@ -610,7 +610,7 @@ defineExpose({
 <template>
     <div 
         class="vue-ui-wheel"
-        :class="{ 'vue-ui-wheel-3d-wrap': FINAL_CONFIG.layout === '3d' }"
+        :class="{ 'vue-data-ui-component': true, 'vue-ui-wheel-3d-wrap': FINAL_CONFIG.layout === '3d' }"
         ref="wheelChart"
         :id="uid"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
