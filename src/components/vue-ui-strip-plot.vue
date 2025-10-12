@@ -40,6 +40,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
@@ -463,19 +464,25 @@ const offsetY = computed(() => {
 
 const drawingArea = computed(() => {
     const offsetX = getOffsetX();
-
-    const width = WIDTH.value - offsetX - FINAL_CONFIG.value.style.chart.padding.left - FINAL_CONFIG.value.style.chart.padding.right - FINAL_CONFIG.value.style.chart.labels.axis.yLabelOffsetX - 5;
+    const left = padding.value.left + offsetX + FINAL_CONFIG.value.style.chart.labels.axis.yLabelOffsetX + 5;
+    const right = WIDTH.value - padding.value.right;
+    const width = Math.max(0, right - left);
+    const top = padding.value.top + FINAL_CONFIG.value.style.chart.plots.radius + FINAL_CONFIG.value.style.chart.labels.bestPlotLabel.fontSize;
+    const bottom = HEIGHT.value - padding.value.bottom - offsetY.value;
+    const height = Math.max(0, bottom - top);
+    const seriesCount = Array.isArray(FINAL_DATASET.value) ? FINAL_DATASET.value.length : 0;
+    const stripWidth = seriesCount > 0 ? width / seriesCount : 0;
 
     return {
-        left: padding.value.left + offsetX + FINAL_CONFIG.value.style.chart.labels.axis.yLabelOffsetX + 5,
-        right: WIDTH.value - padding.value.right,
-        top: padding.value.top,
-        bottom: HEIGHT.value - padding.value.bottom - offsetY.value,
+        left,
+        right,
+        top,
+        bottom,
         width,
-        height: HEIGHT.value - padding.value.top - padding.value.bottom - offsetY.value,
-        stripWidth: width / FINAL_DATASET.value.length,
+        height,
+        stripWidth,
         absoluteHeight: HEIGHT.value,
-    }
+    };
 });
 
 const immutableDataset = computed(() => {
@@ -806,12 +813,32 @@ function closeTable() {
     }
 }
 
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleLabels,
     toggleTooltip,
@@ -868,6 +895,7 @@ defineExpose({
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
@@ -885,6 +913,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip"

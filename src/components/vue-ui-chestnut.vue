@@ -34,6 +34,7 @@ import {
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useTableResponsive } from "../useTableResponsive";
 import { useUserOptionState } from "../useUserOptionState";
@@ -720,12 +721,74 @@ function closeTable() {
     }
 }
 
+const legendSet = computed(() => {
+    return mutableDataset.value.map((root,i) => {
+        return {
+        ...root,
+        display: `${root.name}: ${applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.roots.labels.formatter,
+            root.total,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
+                v: root.total,
+                s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
+                r: FINAL_CONFIG.value.style.chart.layout.legend.roundingValue
+            }),
+            { datapoint: root }
+        )} (${dataLabel({
+            v: root.total / treeTotal.value * 100,
+            s: '%',
+            r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage
+        })})`
+    }
+    })
+});
+
+const svgLegendItems = computed(() => {
+    return legendSet.value.map(l => ({
+        color: l.color,
+        name: l.display,
+        shape: 'circle'
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+
+const svgLegend = computed(() => ({
+    ...FINAL_CONFIG.value.style.chart.layout.legend,
+    textAlign: 'center',
+    show: true,
+    position: 'bottom'
+}));
+
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.layout.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg,
+    titleEmbedded: true
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleAnnotator,
     toggleFullscreen
@@ -769,6 +832,7 @@ defineExpose({
             :uid="uid"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
@@ -785,6 +849,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleAnnotator="toggleAnnotator"
             :style="{
@@ -1158,6 +1223,7 @@ defineExpose({
                 :height="svg.height - drawableArea.bottom"
                 :width="svg.width"
                 style="overflow: visible"
+                data-no-svg-export
                 @click="resetTree"
             >
                 <div style="width: 100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column">

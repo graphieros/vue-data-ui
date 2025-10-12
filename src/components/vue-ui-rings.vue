@@ -37,6 +37,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from "../useLoading";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
@@ -354,13 +355,20 @@ const datasetCopy = computed(() => {
 })
 
 const legendSet = computed(() => {
-    return datasetCopy.value.map((el) => {
+    return datasetCopy.value.map((el, i) => {
       return {
         ...el,
         shape: 'circle',
         opacity: segregated.value.includes(el.uid) ? 0.5 : 1,
         segregate: () => segregate(el.uid),
-        isSegregated: segregated.value.includes(el.uid)
+        isSegregated: segregated.value.includes(el.uid),
+        display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${!FINAL_CONFIG.value.style.chart.legend.showValue ? '' : applyDataLabel(FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter, el.value, dataLabel({
+            p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+            v: el.value,
+            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+            r: FINAL_CONFIG.value.style.chart.legend.roundingValue
+        }), { datapoint: el, index: i })}${!FINAL_CONFIG.value.style.chart.legend.showPercentage ? '' :
+        !segregated.value.includes(el.uid) ? `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}${isNaN(el.value / grandTotal.value) ? '-' : dataLabel({v: el.value / grandTotal.value * 100, s: '%', r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage })}${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` : `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}- %${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` }`
       }
     })
     .toSorted((a,b) => b.value - a.value)
@@ -373,7 +381,7 @@ const legendConfig = computed(() => {
         color: FINAL_CONFIG.value.style.chart.legend.color,
         fontSize: FINAL_CONFIG.value.style.chart.legend.fontSize,
         paddingBottom: 12,
-        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
+        fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : '',
     }
 })
 
@@ -671,12 +679,42 @@ function closeTable() {
     }
 }
 
+const svgLegendItems = computed(() => {
+    return legendSet.value.map(l => ({
+        ...l,
+        name: l.display
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
@@ -750,6 +788,7 @@ defineExpose({
         :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
         :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
         :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+        :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
         :hasTable="FINAL_CONFIG.userOptions.buttons.table"
         :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
         :isTooltip="mutableConfig.showTooltip"
@@ -766,6 +805,7 @@ defineExpose({
         @generatePdf="generatePdf"
         @generateCsv="generateCsv"
         @generateImage="generateImage"
+        @generateSvg="generateSvg"
         @toggleTable="toggleTable"
         @toggleTooltip="toggleTooltip"
         @toggleAnnotator="toggleAnnotator"
@@ -948,28 +988,7 @@ defineExpose({
   
           <template #item="{legend, index }">
               <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`" v-if="!loading">
-                  {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
-                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                    legend.value,
-                    dataLabel({
-                      p:FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix, 
-                      v: legend.value, 
-                      s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix, 
-                      r:FINAL_CONFIG.style.chart.legend.roundingValue
-                    }),
-                    { datapoint: legend, seriesIndex: index }
-                    )
-                  }}
-                  {{ 
-                    !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
-                    !segregated.includes(legend.uid)
-                      ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / grandTotal) ? '-' : dataLabel({
-                      v: legend.value / grandTotal * 100,
-                      s: '%',
-                      r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                    })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                      : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                  }}
+                  {{ legend.display }}
               </div>
           </template>
         </Legend>

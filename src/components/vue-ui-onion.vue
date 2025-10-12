@@ -31,6 +31,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading.js";
 import { usePrinter } from "../usePrinter";
+import { useSvgExport } from "../useSvgExport.js";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
@@ -351,6 +352,17 @@ const immutableDataset = computed(() => {
             isSegregated: segregated.value.includes(id)
         }
     })
+});
+
+const legendSet = computed(() => {
+    return immutableDataset.value.map((ds, i) => ({
+        ...ds,
+        display: `${ds.name ? ds.name + ': ' : ''}${dataLabel({
+            v: ds.percentage ?? 0,
+            s: '%',
+            r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage,
+        })}`
+    }));
 });
 
 const animDataset = ref(immutableDataset.value)
@@ -683,7 +695,36 @@ watch(() => mutableConfig.value.showTable, v => {
             tableUnit.value.close()
         }
     }
-})
+});
+
+const svgLegendItems = computed(() => {
+    return legendSet.value.map(l => ({
+        ...l,
+        name: l.display
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
 
 defineExpose({
     getData,
@@ -691,6 +732,7 @@ defineExpose({
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
@@ -754,6 +796,7 @@ defineExpose({
             :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
@@ -771,6 +814,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
@@ -997,17 +1041,17 @@ defineExpose({
                 <Legend
                     v-if="FINAL_CONFIG.style.chart.legend.show"
                     :key="`legend_${legendStep}`"
-                    :legendSet="immutableDataset"
+                    :legendSet="legendSet"
                     :config="legendConfig"
                     @clickMarker="({legend}) => segregate(legend.id)"
                 >
                     <template #item="{ legend }">
                         <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
-                            {{ legend.name ? legend.name + ': ' : '' }} {{ (legend.percentage || 0).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage) }}%
+                            {{ legend.display }}
                         </div>
                     </template>
                 </Legend>
-                <slot v-else name="legend" v-bind:legend="immutableDataset"></slot>
+                <slot v-else name="legend" v-bind:legend="legendSet"></slot>
             </div>
         </Teleport>
 

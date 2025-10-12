@@ -39,7 +39,9 @@ import {
 } from "../lib";
 import { throttle } from "../canvas-lib"
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useTimeLabels } from "../useTimeLabels";
@@ -48,7 +50,6 @@ import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import img from "../img";
 import Slicer from "../atoms/Slicer.vue";
 import themes from "../themes.json";
-import { useLoading } from "../useLoading";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -602,6 +603,7 @@ const donut = computed(() => {
             proportion: (d.value || 0) / total,
             value: d.value || 0,
             absoluteValue: fd.value.dataset.find((_, idx) => `donut_${idx}` === d.id).VALUE,
+            shape: 'circle'
         }
     });
 
@@ -847,6 +849,7 @@ const line = computed(() => {
     const drawableDataset = ds.map((d, i) => {
         return {
             ...d,
+            shape: 'circle',
             coordinates: d.values.map((v,j) => {
                 return {
                     x: drawingArea.left + (slotSize * (j + 1)) - (slotSize / 2),
@@ -1048,6 +1051,7 @@ const bar = computed(() => {
     const legend = ds.map((d, i) => {
         return {
             ...d,
+            shape: 'square',
             coordinates: d.values.map((v,j) => {
                 const barHeight = (((v + absoluteMin) / (extremes.max + absoluteMin)) * drawingArea.height)
                 const barHeightNegative = (Math.abs(v) / Math.abs(extremes.min) * (drawingArea.height - absoluteZero))
@@ -1244,58 +1248,67 @@ function bucketByXTolerance(elems, getX) {
 }
 
 function animateLineNow({
-        pathDuration,
-        pathEasing = 'ease-in-out',
-        pointDuration,
-        labelDuration,
-        pointDelay = 0,
-        labelDelay = 0,
-        pointStep = 0,
-        labelStep = 0,
-        intraSeriesStep = 0
+    pathDuration,
+    pathEasing = 'ease-in-out',
+    pointDuration,
+    labelDuration,
+    pointDelay = 0,
+    labelDelay = 0,
+    pointStep = 0,
+    labelStep = 0,
+    intraSeriesStep = 0
     } = {}) {
-    const wrappers = Array.isArray(pathWrapper.value) ? pathWrapper.value : [pathWrapper.value].filter(Boolean);
-    const tops     = Array.isArray(pathTop.value) ? pathTop.value : [pathTop.value].filter(Boolean);
+    const wrappers = Array.isArray(pathWrapper?.value) ? pathWrapper.value : [pathWrapper?.value].filter(Boolean);
+    const tops     = Array.isArray(pathTop?.value) ? pathTop.value : [pathTop?.value].filter(Boolean);
     const paths = [...wrappers, ...tops].filter(Boolean);
-    const root   = quickChart.value;
-    const points = Array.from(root.querySelectorAll('.vue-ui-quick-chart-plot'));
-    const labels = Array.from(root.querySelectorAll('.vue-ui-quick-chart-label'));
+
+    const root = quickChart?.value || null;
+
+    const points = root ? Array.from(root.querySelectorAll('.vue-ui-quick-chart-plot')) : [];
+    const labels = root ? Array.from(root.querySelectorAll('.vue-ui-quick-chart-label')) : [];
+
     paths.forEach(primePath);
-    primeRevealables(points, { fromOpacity:'0', fromScale:'0.75' });
-    primeRevealables(labels, { fromOpacity:'0', fromScale:'0.98' });
+    primeRevealables(points, { fromOpacity: '0', fromScale: '0.75' });
+    primeRevealables(labels, { fromOpacity: '0', fromScale: '0.98' });
+
     points.forEach(el => el.classList.remove('quick-animation'));
     labels.forEach(el => el.classList.remove('quick-animation'));
-    void root.offsetWidth;
-    const pointCols = bucketByXTolerance(points, getXFromCircle);
-    const labelCols = bucketByXTolerance(labels, getXFromText);
+
+    if (root) {
+        void root.offsetWidth;
+    }
+
+    const pointCols = points.length ? bucketByXTolerance(points, getXFromCircle) : [];
+    const labelCols = labels.length ? bucketByXTolerance(labels, getXFromText)   : [];
 
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            paths.forEach(p => {
-                p.style.transition = `stroke-dashoffset ${pathDuration}ms ${pathEasing}`;
-                p.style.strokeDashoffset = '0';
-            });
+        paths.forEach(p => {
+            p.style.transition = `stroke-dashoffset ${pathDuration}ms ${pathEasing}`;
+            p.style.strokeDashoffset = '0';
+        });
 
-            pointCols.forEach((col, colIndex) => {
-                col.items.forEach((el, k) => {
-                    const delay = pointDelay + colIndex * pointStep + k * intraSeriesStep;
-                    el.style.transition = `opacity ${pointDuration}ms ease-out ${delay}ms, transform ${pointDuration}ms ease-out ${delay}ms`;
-                    el.style.opacity = '1';
-                    el.style.transform = 'scale(1)';
-                });
+        pointCols.forEach((col, colIndex) => {
+            col.items.forEach((el, k) => {
+                const delay = pointDelay + colIndex * pointStep + k * intraSeriesStep;
+                el.style.transition = `opacity ${pointDuration}ms ease-out ${delay}ms, transform ${pointDuration}ms ease-out ${delay}ms`;
+                el.style.opacity = '1';
+                el.style.transform = 'scale(1)';
             });
+        });
 
-            labelCols.forEach((col, colIndex) => {
-                col.items.forEach((el, k) => {
-                    const delay = labelDelay + colIndex * labelStep + k * intraSeriesStep;
-                    el.style.transition = `opacity ${labelDuration}ms ease-out ${delay}ms, transform ${labelDuration}ms ease-out ${delay}ms`;
-                    el.style.opacity = '1';
-                    el.style.transform = 'scale(1)';
+        labelCols.forEach((col, colIndex) => {
+            col.items.forEach((el, k) => {
+                const delay = labelDelay + colIndex * labelStep + k * intraSeriesStep;
+                el.style.transition = `opacity ${labelDuration}ms ease-out ${delay}ms, transform ${labelDuration}ms ease-out ${delay}ms`;
+                el.style.opacity = '1';
+                el.style.transform = 'scale(1)';
                 });
             });
         });
     });
 }
+
 
 const allMinimaps = computed(() => {
     if (chartType.value === detector.chartType.LINE) {
@@ -1383,10 +1396,63 @@ useTimeLabelCollision({
     width: WIDTH.value
 });
 
+const svgBg = computed(() => FINAL_CONFIG.value.backgroundColor);
+
+const svgLegendItems = computed(() => {
+    if (chartType.value === detector.chartType.DONUT) {
+        return donut.value.legend;
+    } else if (chartType.value === detector.chartType.LINE) {
+        return line.value.legend;
+    } else {
+        return bar.value.legend;
+    }
+});
+
+const svgLegend = computed(() => {
+    return {
+        show: FINAL_CONFIG.value.showLegend,
+        bold: false,
+        backgroundColor: FINAL_CONFIG.value.backgroundColor,
+        color: FINAL_CONFIG.value.color,
+        fontSize: FINAL_CONFIG.value.legendFontSize,
+        position: FINAL_CONFIG.value.legendPosition
+    }
+})
+
+const svgTitle = computed(() => ({
+    text: FINAL_CONFIG.value.title,
+    color: FINAL_CONFIG.value.color,
+    fontSize: FINAL_CONFIG.value.titleFontSize,
+    bold: FINAL_CONFIG.value.titleBold,
+    textAlign: FINAL_CONFIG.value.titleTextAlign,
+    subtitle: {
+        text: '',
+    }
+}));
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptionsCallbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getImage,
     generatePdf,
     generateImage,
+    generateSvg,
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
@@ -1431,6 +1497,7 @@ defineExpose({
             :hasTooltip="FINAL_CONFIG.userOptionsButtons.tooltip && FINAL_CONFIG.showTooltip"
             :hasPdf="FINAL_CONFIG.userOptionsButtons.pdf"
             :hasImg="FINAL_CONFIG.userOptionsButtons.img"
+            :hasSvg="FINAL_CONFIG.userOptionsButtons.svg"
             :hasFullscreen="FINAL_CONFIG.userOptionsButtons.fullscreen"
             :hasXls="false"
             :isTooltip="mutableConfig.showTooltip"
@@ -1445,6 +1512,7 @@ defineExpose({
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
             :style="{

@@ -32,6 +32,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from "../useLoading";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
@@ -880,12 +881,42 @@ function closeTable() {
     }
 }
 
+const svgLegendItems = computed(() => {
+    return legendSet.value.map(l => ({
+        ...l,
+        shape: 'circle'
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleAnnotator,
     toggleFullscreen
@@ -942,6 +973,7 @@ defineExpose({
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
@@ -957,6 +989,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleAnnotator="toggleAnnotator"
             :style="{

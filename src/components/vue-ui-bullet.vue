@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, toRefs } from "vue";
 import { useConfig } from "../useConfig";
 import { XMLNS, createUid, error, getMissingDatasetAttributes, objectIsEmpty, treeShake } from "../lib";
+import { throttle } from "../canvas-lib";
 import { useNestedProp } from "../useNestedProp";
 import { convertColorToHex } from "../lib";
 import { lightenHexColor } from "../lib";
@@ -15,10 +16,10 @@ import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
-import { throttle } from "../canvas-lib";
 import { useResponsive } from "../useResponsive";
 import { useLoading } from "../useLoading";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import { useSvgExport } from "../useSvgExport";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
@@ -415,14 +416,17 @@ const legendSet = computed(() => {
                 s: FINAL_CONFIG.value.style.chart.segments.dataLabels.suffix,
                 r: FINAL_CONFIG.value.style.chart.segments.dataLabels.rounding
             })
-        )
+        );
+
+        const value = `${formattedFrom} — ${formattedTo}`;
 
         return {
             ...segment,
             shape: 'square',
-            value: `${formattedFrom} - ${formattedTo}`
+            value,
+            display: `${segment.name}: ${value}`
         }
-    })
+    });
 })
 
 const legendConfig = computed(() => {
@@ -476,11 +480,39 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const svgLegendItems = computed(() => {
+    return legendSet.value.map(l => ({
+        ...l,
+        name: l.display
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+function generateSvg({ isCb }) {
+    if (isCb) {
+        FINAL_CONFIG.value.userOptions.callbacks.svg(getSvg());
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generatePdf,
     generateImage,
+    generateSvg,
     toggleAnnotator,
     toggleFullscreen
 })
@@ -542,6 +574,7 @@ defineExpose({
             :hasTooltip="false"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasXls="false"
             :hasTable="false"
             :hasLabel="false"
@@ -557,6 +590,7 @@ defineExpose({
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleAnnotator="toggleAnnotator"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'

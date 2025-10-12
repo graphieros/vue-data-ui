@@ -1,5 +1,15 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, shallowRef, toRefs, nextTick } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick,
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs, 
+    watch, 
+} from "vue";
 import {
     applyDataLabel,
     convertColorToHex,
@@ -23,18 +33,19 @@ import {
     checkNaN,
 } from "../lib.js";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
+import { useLoading } from "../useLoading.js";
 import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { useSvgExport } from "../useSvgExport.js";
+import { useResponsive } from "../useResponsive";
+import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
+import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
+import img from "../img.js";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import img from "../img.js";
-import { useLoading } from "../useLoading.js";
 import BaseScanner from "../atoms/BaseScanner.vue";
-import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
@@ -616,10 +627,30 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getImage,
     generatePdf,
     generateImage,
+    generateSvg,
     toggleAnnotator,
     toggleFullscreen
 });
@@ -661,19 +692,37 @@ defineExpose({
         </div>
 
         <!-- OPTIONS -->
-        <UserOptions ref="details" :key="`user_options_${step}`"
+        <UserOptions 
+            ref="details" 
+            :key="`user_options_${step}`"
             v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
-            :isImaging="isImaging" :isPrinting="isPrinting" :uid="uid" :hasXls="false"
-            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
-            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" :chartElement="gaugeChart" :callbacks="FINAL_CONFIG.userOptions.callbacks"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :color="FINAL_CONFIG.style.chart.color"
+            :isImaging="isImaging" 
+            :isPrinting="isPrinting" 
+            :uid="uid" 
+            :hasXls="false"
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" 
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :isFullscreen="isFullscreen"
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" 
+            :chartElement="gaugeChart" 
+            :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
-            :position="FINAL_CONFIG.userOptions.position" :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
-            :isAnnotation="isAnnotator" @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf"
-            @generateImage="generateImage" @toggleAnnotator="toggleAnnotator" :style="{
-        visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
-    }">
+            :position="FINAL_CONFIG.userOptions.position" 
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
+            :isAnnotation="isAnnotator" 
+            @toggleFullscreen="toggleFullscreen" 
+            @generatePdf="generatePdf"
+            @generateImage="generateImage" 
+            @generateSvg="generateSvg"
+            @toggleAnnotator="toggleAnnotator" 
+            :style="{
+                visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
+            }"
+        >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }"/>
             </template>

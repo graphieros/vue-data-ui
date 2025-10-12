@@ -190,6 +190,7 @@ const relevantProps = computed(() => {
 const generatePdf = ref(() => null);
 const generateCsv = ref(() => null);
 const generateImage = ref(() => null);
+const generateSvg = ref(() => null);
 const getItemsPositions = ref(() => null);
 const toggleReadonly = ref(() => null);
 const shoot = ref(() => null);
@@ -230,6 +231,9 @@ watch(currentComponentRef, async (newRef) => {
         }
         if (newRef.generateImage) {
             generateImage.value = newRef.generateImage;
+        }
+        if (newRef.generateSvg) {
+            generateSvg.value = newRef.generateSvg;
         }
         if (newRef.generateCsv) {
             generateCsv.value = newRef.generateCsv;
@@ -399,6 +403,7 @@ defineExpose({
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     getItemsPositions,
     toggleReadonly,
     shoot,

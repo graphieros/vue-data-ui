@@ -28,12 +28,14 @@ import {
     isFunction,
     objectIsEmpty,
     treeShake,
+    triggerResize,
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from "../useLoading";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useTimeLabels } from "../useTimeLabels";
@@ -135,6 +137,14 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+            if(heatmapChart.value && heatmapChart.value.parentNode) {
+                triggerResize(heatmapChart.value.parentNode);
+            }
+        })
+    },
     skeletonDataset: makeSkeletonDataset(),
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
@@ -831,12 +841,32 @@ function closeTable() {
     }
 }
 
+const svgBg = computed(() => FINAL_CONFIG.value.style.backgroundColor);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
@@ -893,6 +923,7 @@ defineExpose({
             :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.tooltip.show"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
@@ -910,6 +941,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"

@@ -31,6 +31,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
+import { useSvgExport } from "../useSvgExport";
 import { useResponsive } from "../useResponsive";
 import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
@@ -673,11 +674,31 @@ function closeTable() {
     }
 }
 
+const svgBg = computed(() => FINAL_CONFIG.value.style.backgroundColor);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    backgroundColor: svgBg
+})
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getImage,
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
@@ -734,6 +755,7 @@ defineExpose({
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
@@ -750,6 +772,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"

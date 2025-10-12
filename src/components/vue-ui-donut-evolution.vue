@@ -33,6 +33,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from "../useLoading.js";
+import { useSvgExport } from "../useSvgExport.js";
 import { useTimeLabels } from "../useTimeLabels";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive.js";
@@ -719,12 +720,30 @@ const legendSet = computed(() => {
             }
         })
         .sort((a,b) => b.value - a.value)
-        .map((el) => {
+        .map((el, i) => {
             return {
                 ...el,
                 opacity: segregated.value.includes(el.uid) ? 0.5 : 1,
                 segregate: () => segregate(el.uid),
-                isSegregated: segregated.value.includes(el.uid)
+                isSegregated: segregated.value.includes(el.uid),
+                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${!FINAL_CONFIG.value.style.chart.legend.showValue ? '' : applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.dataLabels.formatter,
+                el.value,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.layout.dataLabels.prefix,
+                    v: el.value,
+                    s: FINAL_CONFIG.value.style.chart.layout.dataLabels.suffix,
+                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue
+                }),
+                { datapoint: el, seriesIndex: i }
+                )}${!FINAL_CONFIG.value.style.chart.legend.showPercentage ? '' :
+                !segregated.value.includes(el.uid)
+                    ? `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}${isNaN(el.value / grandTotal.value) ? '-' : dataLabel({
+                    v: el.value / grandTotal.value * 100,
+                    s: '%',
+                    r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage
+                })}${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}`
+                    : `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}- %${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}`}`
             }
         })
 });
@@ -946,12 +965,42 @@ function closeTable() {
     }
 }
 
+const svgLegendItems = computed(() => {
+    return legendSet.value.map(l => ({
+        ...l,
+        name: l.display
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleAnnotator,
     toggleFullscreen
@@ -1007,6 +1056,7 @@ defineExpose({
             :uid="uid"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
@@ -1023,6 +1073,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleAnnotator="toggleAnnotator"
             :style="{
@@ -1420,28 +1471,7 @@ defineExpose({
                 >
                     <template #item="{legend, index}">
                         <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
-                            {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.dataLabels.formatter,
-                                legend.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.dataLabels.prefix,
-                                    v: legend.value,
-                                    s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
-                                    r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                }),
-                                { datapoint: legend, seriesIndex: index }
-                                ) 
-                            }}
-                            {{ 
-                                !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
-                                !segregated.includes(legend.uid)
-                                    ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / grandTotal) ? '-' : dataLabel({
-                                    v: legend.value / grandTotal * 100,
-                                    s: '%',
-                                    r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                                })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                                    : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                            }}
+                            {{ legend.display }}
                         </div>
                     </template>
                 </Legend>

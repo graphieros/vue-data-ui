@@ -27,6 +27,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
@@ -300,6 +301,26 @@ const convertedDataset = computed(() => {
         .sort((a, b) => b.key - a.key);
 });
 
+const legendSet = computed(() => {
+    return convertedDataset.value.map((ds,i) => ({
+        ...ds,
+        display: `${applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.dataLabel.formatter,
+            ds.value,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.chart.layout.dataLabel.prefix,
+                v: ds.value,
+                s: FINAL_CONFIG.value.style.chart.layout.dataLabel.suffix,
+                r: FINAL_CONFIG.value.style.chart.layout.dataLabel.roundingValue
+            })
+        )}${loading.value ? '' : ` (${dataLabel({
+            v: ds.proportion * 100,
+            s: '%',
+            r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage
+        })})`}`
+    }))
+})
+
 const radar = computed(() => {
     ['1', '2', '3', '4', '5'].forEach(rating => {
         if([null, undefined].includes(FINAL_DATASET.value[rating])){
@@ -530,12 +551,43 @@ function closeTable() {
     }
 }
 
+const svgLegendItems = computed(() => {
+    return legendSet.value.map(l => ({
+        ...l,
+        name: l.display,
+        shape: 'circle'
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleAnnotator,
     toggleFullscreen
@@ -591,6 +643,7 @@ defineExpose({
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
@@ -606,6 +659,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleAnnotator="toggleAnnotator"
             :style="{
@@ -844,7 +898,7 @@ defineExpose({
             <div ref="chartLegend">
                 <Legend 
                     v-if="FINAL_CONFIG.style.chart.legend.show" 
-                    :legendSet="convertedDataset" 
+                    :legendSet="legendSet" 
                     :config="legendConfig"
                     :key="`legend_${legendStep}`"
                     style="display: flex; row-gap: 6px">
@@ -866,21 +920,7 @@ defineExpose({
                                 :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
                             <BaseIcon :strokeWidth="1" v-if="legend.key == 5" name="moodHappy"
                                 :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
-                            <span v-if="!loading" style="font-weight: bold">{{ applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.dataLabel.formatter,
-                                legend.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.dataLabel.prefix,
-                                    v: legend.value,
-                                    s: FINAL_CONFIG.style.chart.layout.dataLabel.suffix,
-                                    r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue
-                                }),
-                                { datapoint: legend, seriesIndex: index }
-                            ) }}</span><span v-if="!loading">({{ dataLabel({
-                                v: legend.proportion * 100,
-                                s: '%',
-                                r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                            })}})</span>
+                            <span v-if="!loading" :style="{ fontWeight: FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'}">{{ legend.display }}</span>
                         </div>
                     </template>
                 </Legend>

@@ -47,6 +47,7 @@ import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue";
 import BaseIcon from '../atoms/BaseIcon.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import { useSvgExport } from '../useSvgExport';
 
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
@@ -574,10 +575,22 @@ const legendSet = computed(() => {
     })
         .sort((a,b) => b.value - a.value)
         .map((el, _i) => {
+            const proportion = el.value / immutableDataset.value.map(m => m.value).reduce((a, b) => a + b, 0)
             return {
                 ...el,
-                proportion: el.value / immutableDataset.value.map(m => m.value).reduce((a, b) => a + b, 0),
-                opacity: segregated.value.includes(el.id) ? 0.5 : 1
+                proportion,
+                opacity: segregated.value.includes(el.id) ? 0.5 : 1,
+                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${!FINAL_CONFIG.value.style.chart.legend.showValue ? '' : applyDataLabel(
+                    FINAL_CONFIG.value.style.chart.layout.labels.formatter,
+                    el.value,
+                    dataLabel({
+                        p: FINAL_CONFIG.value.style.chart.layout.labels.prefix, 
+                        v: el.value, 
+                        s: FINAL_CONFIG.value.style.chart.layout.labels.suffix, 
+                        r: FINAL_CONFIG.value.style.chart.legend.roundingValue
+                    }),
+                    { datapoint: el }
+                )}${!FINAL_CONFIG.value.style.chart.legend.showPercentage ? '' : !segregated.value.includes(el.id) ? `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}${isNaN(el.value / total.value) ? '-' : (el.value / total.value * 100).toFixed(FINAL_CONFIG.value.style.chart.legend.roundingPercentage)}%${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` : `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}- %${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}`}`
             }
         })
 });
@@ -844,11 +857,41 @@ function closeTable() {
     }
 }
 
+const svgLegendItems = computed(() => {
+    return legendSet.value.map(l => ({
+        ...l,
+        name: l.display
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generateCsv,
     generateImage,
+    generateSvg,
     generatePdf,
     toggleTable,
     toggleTooltip,
@@ -913,6 +956,7 @@ defineExpose({
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :isFullscreen="isFullscreen"
@@ -929,6 +973,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
@@ -1059,10 +1104,18 @@ defineExpose({
                     :width="getWidth(rect)"
                     class="vue-ui-treemap-cell-foreignObject"
                 >
-                    <div style="width: 100%; height: 100%" class="vue-ui-treemap-cell">
+                    <div 
+                        :style="{
+                            width: `calc(100% - ${calcFontSize(rect) / 1.5}px)`,
+                            height: `calc(100% - ${calcFontSize(rect) / 1.5}px)`,
+                            padding: `${calcFontSize(rect) / 3}px`,
+                            lineHeight: `${calcFontSize(rect)}px`
+                        }"
+                        class="vue-ui-treemap-cell"
+                    >
                         <div
                             class="vue-ui-treemap-cell-default"
-                            v-if="FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && (rect.proportion > FINAL_CONFIG.style.chart.layout.labels.hideUnderProportion || isZoom)" :style="`width:calc(100% - ${calcFontSize(rect) / 1.5}px);text-align:left;line-height:${calcFontSize(rect) < 14 ? 14 : calcFontSize(rect)}px;padding:${calcFontSize(rect) / 3}px; color:${adaptColorToBackground(rect.color)}`"
+                            v-if="FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && (rect.proportion > FINAL_CONFIG.style.chart.layout.labels.hideUnderProportion || isZoom)" :style="`width:calc(100% - ${calcFontSize(rect) / 1.5}px);text-align:left; color:${adaptColorToBackground(rect.color)}`"
                         >
                             <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
                                 {{ rect.name }}
@@ -1117,24 +1170,7 @@ defineExpose({
                 >
                     <template #item="{ legend, index }">
                         <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
-                            {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}} {{ !FINAL_CONFIG.style.chart.legend.showValue ? '' : applyDataLabel(
-                                FINAL_CONFIG.style.chart.layout.labels.formatter,
-                                legend.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.layout.labels.prefix, 
-                                    v: legend.value, 
-                                    s: FINAL_CONFIG.style.chart.layout.labels.suffix, 
-                                    r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                }),
-                                { datapoint: legend }
-                                ) 
-                            }}
-                            {{ 
-                                !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
-                                !segregated.includes(legend.id)
-                                    ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / total) ? '-' : (legend.value / total * 100).toFixed(FINAL_CONFIG.style.chart.legend.roundingPercentage)}%${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                                    : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                            }}
+                            {{ legend.display }}
                         </div>
                     </template>
                 </Legend>
@@ -1236,6 +1272,7 @@ defineExpose({
 .vue-ui-treemap-cell,
 .vue-ui-treemap-cell-foreignObject {
     pointer-events: none;
+    padding: 3px;
 }
 
 .vue-ui-treemap-rect {

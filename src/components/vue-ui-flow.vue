@@ -31,6 +31,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from "../useLoading";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
@@ -867,7 +868,8 @@ const legendSet = computed(() => {
             return {
                 ...cat,
                 segregate: () => drillCategory({ legend: cat, i }),
-                opacity: segregated.value.length ? segregated.value.includes(i) ? 1: 0.5 : 1
+                opacity: segregated.value.length ? segregated.value.includes(i) ? 1: 0.5 : 1,
+                display: `${cat.name} (${cat.count})`
             }
         })
 });
@@ -975,11 +977,41 @@ function closeTable() {
     }
 }
 
+const svgLegendItems = computed(() => {
+    return legendSetFiltered.value.map(l => ({
+        ...l,
+        name: l.display
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generateCsv,
     generateImage,
+    generateSvg,
     generatePdf,
     toggleTable,
     toggleAnnotator,
@@ -1030,6 +1062,7 @@ defineExpose({
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" 
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
@@ -1048,6 +1081,7 @@ defineExpose({
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv" 
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable" 
             @toggleAnnotator="toggleAnnotator" 
             :style="{
@@ -1208,7 +1242,7 @@ defineExpose({
                     @clickMarker="(payload) => drillCategory(payload)">
                     <template #item="{ legend, index }">
                         <div @click="legend.segregate()" :style="`opacity:${segregated.length ? segregated.includes(index) ? 1 : 0.5 : 1}`" v-if="!loading">
-                            {{ legend.name }} ({{ legend.count }})
+                            {{ legend.display }}
                         </div>
                     </template>
                 </Legend>

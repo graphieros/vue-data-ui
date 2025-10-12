@@ -1,5 +1,14 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, shallowRef, toRefs } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs,
+    watch, 
+} from "vue";
 import { 
     applyDataLabel,
     checkNaN,
@@ -14,16 +23,17 @@ import {
     XMLNS
 } from "../lib";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useSvgExport } from "../useSvgExport";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
-import { useLoading } from "../useLoading";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
+import themes from "../themes.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
@@ -49,7 +59,7 @@ const props = defineProps({
 
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length
-})
+});
 
 const uid = ref(createUid());
 const details = ref(null);
@@ -598,10 +608,31 @@ const depth3d = computed(() => {
     return Math.max(1, Math.min(20, FINAL_CONFIG.value.style.chart.layout.wheel.ticks.depth3d));
 });
 
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    backgroundColor: svgBg,
+    stretchTitle: true
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getImage,
     generatePdf,
     generateImage,
+    generateSvg,
     toggleAnnotator,
     toggleFullscreen
 });
@@ -659,6 +690,7 @@ defineExpose({
             :uid="uid"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
             :hasXls="false"
             :isFullscreen="isFullscreen"
@@ -672,6 +704,7 @@ defineExpose({
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleAnnotator="toggleAnnotator"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'

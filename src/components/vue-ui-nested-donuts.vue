@@ -40,6 +40,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
@@ -1062,10 +1063,28 @@ const legendSets = computed(() => {
             );
             const displayValue = isFirstLoad.value ? rawValue : s.value;
 
+            const display = `${s.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${!FINAL_CONFIG.value.style.chart.legend.showValue ? '' : applyDataLabel(
+                FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                displayValue,
+                dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+                    v: displayValue,
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue,
+                }),
+                { datapoint: s, seriesIndex: j }
+            )}${!FINAL_CONFIG.value.style.chart.legend.showPercentage ? '' : !segregated.value.includes(s.id) ? `${FINAL_CONFIG.value.style.chart.legend.showValue ? '(' : ''}${isNaN(displayValue / total) ? '-' : dataLabel({
+                v: (displayValue / total) * 100,
+                s: "%",
+                r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage,
+            })}${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` : `${FINAL_CONFIG.value.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}`}`
+
             return {
                 name: s.name,
                 color: s.color,
                 value: displayValue,
+                display,
+                svgDisplay: `${s.arcOf ? `${s.arcOf} - ` : ''}${display}`,
                 shape: "circle",
                 arcOf: s.arcOf,
                 id: s.id,
@@ -1294,6 +1313,32 @@ function closeTable() {
     }
 }
 
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+const legendSet = computed(() => legendSets.value.flat().map(el => ({
+    ...el,
+    name: el.svgDisplay
+})))
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: legendSet,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     autoSize,
     getData,
@@ -1301,6 +1346,7 @@ defineExpose({
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleLabels,
     toggleTooltip,
@@ -1350,7 +1396,8 @@ defineExpose({
             :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show" 
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" 
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasImg="FINAL_CONFIG.userOptions.buttons.img" 
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
@@ -1368,6 +1415,7 @@ defineExpose({
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv"
             @generateImage="generateImage" 
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable" 
             @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip" 
@@ -1743,33 +1791,7 @@ defineExpose({
                     <template #item="{ legend, index }">
                         <div data-cy="legend-item" @click="segregateDonut(legend)"
                             :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
-                            {{ legend.name }}{{ FINAL_CONFIG.style.chart.legend.showPercentage || FINAL_CONFIG.style.chart.legend.showValue ? ':' : ''}}
-                            {{
-                                !FINAL_CONFIG.style.chart.legend.showValue ? '' : 
-                                applyDataLabel(
-                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                                    legend.value,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
-                                        v: legend.value,
-                                        s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                        r: FINAL_CONFIG.style.chart.legend.roundingValue,
-                                    }),
-                                    { datapoint: legend, seriesIndex: index }
-                                )
-                            }}
-                            {{ 
-                                !FINAL_CONFIG.style.chart.legend.showPercentage ? '' :
-                                !segregated.includes(legend.id) 
-                                    ? `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}${isNaN(legend.value / legend.total)
-                                        ? "-"
-                                        : dataLabel({
-                                            v: (legend.value / legend.total) * 100,
-                                            s: "%",
-                                            r: FINAL_CONFIG.style.chart.legend.roundingPercentage,
-                                        })}${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                                    : `${FINAL_CONFIG.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.style.chart.legend.showValue ? ')' : ''}`
-                            }}
+                            {{ legend.display }}
                         </div>
                     </template>
                 </Legend>

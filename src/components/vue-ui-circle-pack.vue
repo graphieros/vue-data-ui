@@ -43,6 +43,7 @@ import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from "../themes.json";
 import BaseScanner from '../atoms/BaseScanner.vue';
+import { useSvgExport } from '../useSvgExport';
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -587,12 +588,32 @@ function closeTable() {
     }
 }
 
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generateCsv,
     generatePdf,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleAnnotator,
     toggleFullscreen
@@ -641,6 +662,7 @@ defineExpose({
             :hasLabel="false"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" 
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" 
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
@@ -656,7 +678,8 @@ defineExpose({
             @toggleFullscreen="toggleFullscreen" 
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
-            @generateImage="generateImage" 
+            @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable" 
             @toggleAnnotator="toggleAnnotator" 
             :style="{ visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible' }"

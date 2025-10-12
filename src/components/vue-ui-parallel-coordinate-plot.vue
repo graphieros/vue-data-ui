@@ -28,6 +28,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from "../useLoading";
+import { useSvgExport } from "../useSvgExport";
 import { useResponsive } from "../useResponsive";
 import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
@@ -446,7 +447,8 @@ const legendSet = computed(() => {
             ...ds,
             opacity: segregated.value.includes(ds.id) ? 0.5 : 1,
             segregate: () => segregate(ds.id),
-            isSegregated: segregated.value.includes(ds.id)
+            isSegregated: segregated.value.includes(ds.id),
+            shape: 'circle'
         }
     });
 });
@@ -807,12 +809,35 @@ function closeTable() {
     }
 }
 
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: legendSet,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generateCsv,
     generatePdf,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleLabels,
     toggleTooltip,
@@ -878,6 +903,7 @@ defineExpose({
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
@@ -895,6 +921,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip"

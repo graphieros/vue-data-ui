@@ -47,6 +47,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import themes from "../themes.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import { useSvgExport } from "../useSvgExport.js";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -515,13 +516,19 @@ const legendSet = computed(() => {
         return s.values.map(v => v / (s.target || max.value))
     });
     return datasetCopy.value.map((d,i) => {
+        const totalProportion = checkNaN(ratios.map(r => r[i]).reduce((a, b) => a + b, 0) / seriesCopy.value.length);
         return {
             ...d,
-            totalProportion: checkNaN(ratios.map(r => r[i]).reduce((a, b) => a + b, 0) / seriesCopy.value.length),
+            totalProportion,
             shape: 'circle',
             opacity: segregated.value.includes(i) ? 0.5 : 1,
             segregate: () => segregate(i),
-            isSegregated: segregated.value.includes(i)
+            isSegregated: segregated.value.includes(i),
+            display: `${d.name}: ${dataLabel({
+                v: (totalProportion ?? 0) * 100,
+                s: '%',
+                r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage
+            })}`
         }
     })
 });
@@ -766,12 +773,42 @@ function closeTable() {
     }
 }
 
+const svgLegendItems = computed(() => {
+    return legendSet.value.map(l => ({
+        ...l,
+        name: l.display
+    }));
+});
+
+const svgBg = computed(() => FINAL_CONFIG.value.style.chart.backgroundColor);
+const svgLegend = computed(() => FINAL_CONFIG.value.style.chart.legend);
+const svgTitle = computed(() => FINAL_CONFIG.value.style.chart.title);
+
+const { exportSvg, getSvg } = useSvgExport({
+    svg: svgRef,
+    title: svgTitle,
+    legend: svgLegend,
+    legendItems: svgLegendItems,
+    backgroundColor: svgBg
+});
+
+async function generateSvg({ isCb }) {
+    if (isCb) {
+        const { blob, url, text, dataUrl } = await getSvg();
+        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+
+    } else {
+        exportSvg();
+    }
+}
+
 defineExpose({
     getData,
     getImage,
     generatePdf,
     generateCsv,
     generateImage,
+    generateSvg,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
@@ -836,6 +873,7 @@ defineExpose({
             :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
@@ -853,6 +891,7 @@ defineExpose({
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"
+            @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
@@ -1041,13 +1080,7 @@ defineExpose({
                 >
                     <template #item="{ legend, index }">
                         <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`" v-if="!loading">
-                            {{ legend.name }}: {{ 
-                                dataLabel({
-                                    v: legend.totalProportion * 100,
-                                    s: '%',
-                                    r: FINAL_CONFIG.style.chart.legend.roundingPercentage
-                                })
-                            }}
+                            {{ legend.display }}
                         </div>
                     </template>
                 </Legend>
