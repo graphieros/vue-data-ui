@@ -698,7 +698,8 @@ export function useSvgExport({
         const full = `<?xml version="1.0" standalone="no"?>\n${xml}`;
         const blob = new Blob([full], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(blob);
-        return { blob, url };
+        const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(full)}`;
+        return { blob, url, text: full, dataUrl };
     }
 
     async function exportSvg(customFileName) {
