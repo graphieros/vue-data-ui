@@ -288,6 +288,7 @@ declare module "vue-data-ui" {
             stack?: boolean;
             table?: boolean;
             tooltip?: boolean;
+            svg?: boolean;
         };
         buttonTitles?: {
             animation?: string;
@@ -303,6 +304,7 @@ declare module "vue-data-ui" {
             stack?: string;
             table?: string;
             tooltip?: string;
+            svg?: string;
         };
         callbacks?: {
             animation?: null | (() => void);
@@ -316,6 +318,7 @@ declare module "vue-data-ui" {
             stack?: null | (() => void);
             table?: null | (() => void);
             tooltip?: null | (() => void);
+            svg?: null | (({blob, url, text, dataUrl}: { blob: Blob; url: URL, text: string, dataUrl: string }) => void);
         };
         print?: {
             scale?: number;
@@ -1479,7 +1482,8 @@ declare module "vue-data-ui" {
         | "bringToFront"
         | "bringToBack"
         | "printer"
-        | "save";
+        | "save"
+        | "svg";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -6313,6 +6317,7 @@ declare module "vue-data-ui" {
             img?: boolean;
             fullscreen?: boolean;
             annotator?: boolean;
+            svg?: boolean;
         };
         userOptionsButtonTitles?: {
             open?: string;
@@ -6322,6 +6327,7 @@ declare module "vue-data-ui" {
             img?: string;
             fullscreen?: string;
             annotator?: string;
+            svg?: strng
         };
         userOptionsPrint?: {
             scale?: number;
@@ -6334,6 +6340,7 @@ declare module "vue-data-ui" {
             img?: null | ((base64?: string) => void);
             fullscreen?: null | (() => void);
             annotator?: null | (() => void);
+            svg?: null | (({blob, url, text, dataUrl}: { blob: Blob; url: URL, text: string, dataUrl: string }) => void);
         };
         showUserOptionsOnChartHover?: boolean;
         keepUserOptionsStateOnChartLeave?: boolean;

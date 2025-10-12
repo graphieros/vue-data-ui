@@ -124,7 +124,8 @@ export function useConfig() {
         sort = false,
         stack = false,
         animation = false,
-        annotator = false
+        annotator = false,
+        svg = false,
     }) => {
 
         const buttonTitles = {
@@ -140,7 +141,8 @@ export function useConfig() {
             sort: "Toggle sort",
             stack: "Toggle stack mode",
             animation: "Toggle animation",
-            annotator: "Toggle annotator"
+            annotator: "Toggle annotator",
+            svg: "Download SVG"
         }
 
         if (!tooltip) delete buttonTitles.tooltip
@@ -154,6 +156,7 @@ export function useConfig() {
         if (!stack) delete buttonTitles.stack
         if (!animation) delete buttonTitles.animation
         if (!annotator) delete buttonTitles.annotator
+        if (!svg) delete buttonTitles.svg
 
         return {
             show: true,
@@ -171,7 +174,8 @@ export function useConfig() {
                 sort,
                 stack,
                 animation,
-                annotator
+                annotator,
+                svg
             },
             callbacks: {
                 animation: null,
@@ -185,6 +189,7 @@ export function useConfig() {
                 stack: null,
                 table: null,
                 tooltip: null,
+                svg: null,
             },
             buttonTitles,
             print: {
@@ -286,7 +291,8 @@ export function useConfig() {
             table: true,
             labels: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         style: {
             fontFamily: 'inherit',
@@ -637,7 +643,8 @@ export function useConfig() {
                 labels: true,
                 fullscreen: true,
                 stack: true,
-                annotator: true
+                annotator: true,
+                svg: true
             })
         },
         bar: {
@@ -779,6 +786,7 @@ export function useConfig() {
             labels: true,
             fullscreen: true,
             annotator: true,
+            svg: true
         }),
         translations: {
             total: 'Total',
@@ -935,7 +943,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         style: {
             fontFamily: 'inherit',
@@ -1084,7 +1093,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -1185,7 +1195,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         translations: {
             target: 'Target',
@@ -1334,7 +1345,8 @@ export function useConfig() {
             table: true,
             labels: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         translations: {
             category: 'Category',
@@ -1433,7 +1445,8 @@ export function useConfig() {
             pdf: true,
             img: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         translations: {
             base: 'Base'
@@ -1503,7 +1516,8 @@ export function useConfig() {
             pdf: true,
             img: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         })
     }
 
@@ -1557,7 +1571,8 @@ export function useConfig() {
             pdf: true,
             img: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         })
     }
 
@@ -1727,7 +1742,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         translations: {
             total: 'Total',
@@ -1808,7 +1824,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -1930,7 +1947,8 @@ export function useConfig() {
             table: true,
             sort: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -2069,7 +2087,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -2240,7 +2259,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -2369,7 +2389,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -2851,7 +2872,8 @@ export function useConfig() {
             pdf: true,
             img: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         },
         userOptionsButtonTitles: {
             open: 'Open options',
@@ -2860,7 +2882,8 @@ export function useConfig() {
             pdf: 'Download PDF',
             img: 'Download PNG',
             fullscreen: 'Toggle fullscreen',
-            annotator: 'Toggle annotator'
+            annotator: 'Toggle annotator',
+            svg: 'Download SVG'
         },
         userOptionsPrint: {
             overflowTolerance: 0.2,
@@ -2872,7 +2895,8 @@ export function useConfig() {
             pdf: null,
             img: null,
             fullscreen: null,
-            annotator: null
+            annotator: null,
+            svg: null
         },
         title: '',
         titleBold: true,
@@ -3035,7 +3059,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -3101,7 +3126,8 @@ export function useConfig() {
             pdf: true,
             img: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         })
     }
 
@@ -3160,7 +3186,8 @@ export function useConfig() {
             pdf: true,
             img: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         })
     }
 
@@ -3226,7 +3253,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -3401,7 +3429,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -3489,7 +3518,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -3545,7 +3575,8 @@ export function useConfig() {
             table: true,
             labels: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -3590,7 +3621,8 @@ export function useConfig() {
             table: true,
             labels: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         style: {
             fontFamily: 'inherit',
@@ -3744,7 +3776,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -3784,7 +3817,8 @@ export function useConfig() {
             table: true,
             labels: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         style: {
             fontFamily: 'inherit',
@@ -3903,7 +3937,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         style: {
             fontFamily: 'inherit',
@@ -4122,7 +4157,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -4283,7 +4319,8 @@ export function useConfig() {
             img: true,
             table: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         nodeCategories: {},
         nodeCategoryColors: {},
@@ -4503,6 +4540,7 @@ export function useConfig() {
             fullscreen: true,
             annotator: true,
             tooltip: true,
+            svg: true
         }),
         nodeCategories: {},
         nodeCategoryColors: {},
@@ -4590,7 +4628,8 @@ export function useConfig() {
             table: true,
             labels: true,
             fullscreen: true,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         style: {
             fontFamily: 'inherit',
@@ -5643,7 +5682,8 @@ export function useConfig() {
             labels: false,
             fullscreen: true,
             stack: false,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         style: {
             fontFamily: 'inherit',
@@ -5742,7 +5782,8 @@ export function useConfig() {
             labels: false,
             fullscreen: true,
             stack: false,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         style: {
             fontFamily: 'inherit',
@@ -5829,7 +5870,8 @@ export function useConfig() {
             labels: false,
             fullscreen: true,
             stack: false,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -5994,7 +6036,8 @@ export function useConfig() {
             labels: false,
             fullscreen: true,
             stack: false,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -6086,7 +6129,8 @@ export function useConfig() {
             labels: false,
             fullscreen: true,
             stack: false,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         customPalette: [],
         projection: 'globe',
@@ -6178,7 +6222,8 @@ export function useConfig() {
             labels: false,
             fullscreen: true,
             stack: false,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
@@ -6344,7 +6389,8 @@ export function useConfig() {
             labels: false,
             fullscreen: true,
             stack: false,
-            annotator: true
+            annotator: true,
+            svg: true
         }),
         table: {
             ...TABLE,
