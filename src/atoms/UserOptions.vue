@@ -17,6 +17,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    hasSvg: {
+        type: Boolean,
+        default: false,
+    },
     hasLabel: {
         type: Boolean,
         default: false,
@@ -139,7 +143,20 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['generatePdf', 'generateCsv', 'generateImage', 'toggleTable', 'toggleLabels', 'toggleSort', 'toggleFullscreen', 'toggleStack', 'toggleTooltip', 'toggleAnimation', 'toggleAnnotator']);
+const emit = defineEmits([
+    'generatePdf', 
+    'generateCsv', 
+    'generateImage', 
+    'toggleTable', 
+    'toggleLabels', 
+    'toggleSort', 
+    'toggleFullscreen', 
+    'toggleStack', 
+    'toggleTooltip', 
+    'toggleAnimation', 
+    'toggleAnnotator', 
+    'generateSvg'
+]);
 
 async function generatePdf() {
     if (props.callbacks.pdf) {
@@ -161,6 +178,10 @@ async function generateImage() {
     } else {
         emit('generateImage');
     }
+}
+
+function generateSvg() {
+    emit('generateSvg', { isCb: !!props.callbacks.svg });
 }
 
 const isTableOpen = ref(false);
@@ -317,6 +338,7 @@ const isInfo = ref({
     fullscreen: false,
     animation: false,
     annotator: false,
+    svg: false
 })
 
 </script>
@@ -384,6 +406,16 @@ const isInfo = ref({
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.img && !$slots.optionImg" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.img, 'button-info-left-visible': position === 'left' && isInfo.img }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.img }}
+                </div>
+            </button>
+
+            <button tabindex="0" v-if="hasSvg" data-cy="user-options-svg" class="vue-ui-user-options-button" @click="generateSvg" @mouseenter="isInfo.svg = true" @mouseout="isInfo.svg = false">
+                <template v-if="$slots.optionSvg">
+                    <slot name="optionSvg"/>
+                </template>
+                <BaseIcon v-else name="svg" :stroke="color" style="pointer-events: none;" />
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.svg && !$slots.optionSvg" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.svg, 'button-info-left-visible': position === 'left' && isInfo.svg }" :style="{ background: backgroundColor, color: color }">
+                    {{ titles.svg }}
                 </div>
             </button>
 
