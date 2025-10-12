@@ -27,7 +27,7 @@ export function testCommonFeatures({
         cy.get('.atom-data-table').should('exist').and('be.visible')
 
         cy.log('close table')
-        cy.get('[data-cy="data-table-close"]').should('exist').and('be.visible').click();
+        cy.get('[data-cy="data-table-close"]').should('exist').and('be.visible').click({ force: true });
         cy.get('.atom-data-table').should('not.be.visible')
     }
 

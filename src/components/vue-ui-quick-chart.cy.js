@@ -83,7 +83,7 @@ describe('VueUiQuickChart', () => {
                     'id',
                     'name',
                     'value',
-                    'values'
+                    'values',
                 )
             });
 
@@ -97,7 +97,8 @@ describe('VueUiQuickChart', () => {
                     'coordinates',
                     'id',
                     'name',
-                    'values'
+                    'values',
+                    'shape'
                 );
             });
         });
@@ -183,7 +184,7 @@ describe('VueUiQuickChart', () => {
                     'id',
                     'name',
                     'value',
-                    'values'
+                    'values',
                 )
             });
 
@@ -198,7 +199,8 @@ describe('VueUiQuickChart', () => {
                     'id',
                     'linePath',
                     'name',
-                    'values'
+                    'values',
+                    'shape'
                 );
             });
         });
@@ -298,7 +300,7 @@ describe('VueUiQuickChart', () => {
                     'id',
                     'name',
                     'value',
-                    'values'
+                    'values',
                 )
             });
 
@@ -314,7 +316,8 @@ describe('VueUiQuickChart', () => {
                     'coordinates',
                     'id',
                     'name',
-                    'values'
+                    'values',
+                    'shape'
                 );
             });
         });
@@ -416,7 +419,7 @@ describe('VueUiQuickChart', () => {
                     'id',
                     'name',
                     'value',
-                    'values'
+                    'values',
                 )
             });
 
@@ -433,7 +436,8 @@ describe('VueUiQuickChart', () => {
                     'id',
                     'linePath',
                     'name',
-                    'values'
+                    'values',
+                    'shape'
                 );
             });
         });
@@ -538,7 +542,7 @@ describe('VueUiQuickChart', () => {
                     'separator',
                     'startX',
                     'startY',
-                    'value'
+                    'value',
                 )
             });
 
@@ -554,7 +558,8 @@ describe('VueUiQuickChart', () => {
                     'immutableValue',
                     'name',
                     'proportion',
-                    'value'
+                    'value',
+                    'shape'
                 );
             });
         });

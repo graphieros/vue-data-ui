@@ -1,4 +1,3 @@
-import vueUiCirclePack from "./vue-ui-circle-pack.vue";
 import { components } from "../../cypress/fixtures/vdui-components";
 import { testCommonFeatures } from "../../cypress/fixtures";
 import VueUiCirclePack from "./vue-ui-circle-pack.vue";
