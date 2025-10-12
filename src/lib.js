@@ -847,11 +847,11 @@ export function calcLinearProgression(plots) {
     if (len < 2) return { x1: 0, y1: 0, x2: 0, y2: 0, slope: 0, trend: 0 };
 
     let sx = 0, sy = 0, sxy = 0, sxx = 0;
-    for (const { x, y } of plots) { 
-        sx += x; 
-        sy += y; 
-        sxy += x * y; 
-        sxx += x * x; 
+    for (const { x, y } of plots) {
+        sx += x;
+        sy += y;
+        sxy += x * y;
+        sxx += x * x;
     }
     const denomPx = len * sxx - sx * sx || 1;
     const slopePx = (len * sxy - sx * sy) / denomPx;
@@ -863,18 +863,18 @@ export function calcLinearProgression(plots) {
     const y2 = slopePx * x2 + interceptPx;
 
     let vx = 0, vy = 0, vxy = 0, vxx = 0;
-    for (let i = 0; i < len; i += 1) { 
-        vx += i; 
-        vy += plots[i].value; 
-        vxy += i * plots[i].value; 
-        vxx += i * i; 
+    for (let i = 0; i < len; i += 1) {
+        vx += i;
+        vy += plots[i].value;
+        vxy += i * plots[i].value;
+        vxx += i * i;
     }
     const denomV = len * vxx - vx * vx || 1;
     const slopeV = (len * vxy - vx * vy) / denomV;
     const interceptV = (vy - slopeV * vx) / len;
 
     const vStart = interceptV;
-    const vEnd   = slopeV * (len - 1) + interceptV;
+    const vEnd = slopeV * (len - 1) + interceptV;
 
     const EPS = 1e-9;
     const scale = Math.max(Math.abs(vStart), Math.abs(vy / len), Math.abs(vEnd), EPS);
@@ -3265,6 +3265,41 @@ export function triggerEvent(el, type, opts = {}) {
     return ev;
 }
 
+export function triggerResize(el, { delta = 1, delay = 20, disableTransitions = true } = {}) {
+    if (!el || !(el instanceof HTMLElement)) return;
+
+    const style = el.style;
+
+    const prev = {
+        width: style.width,
+        height: style.height,
+        transition: style.transition,
+    };
+
+    const rect = el.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+
+    if (disableTransitions) {
+        style.transition = 'none';
+    }
+
+    style.width = `${Math.max(0, w + delta)}px`;
+    style.height = `${Math.max(0, h + delta)}px`;
+    el.offsetWidth;
+
+    setTimeout(() => {
+        style.width = prev.width;
+        style.height = prev.height;
+        el.offsetWidth;
+        requestAnimationFrame(() => {
+            if (disableTransitions) {
+                style.transition = prev.transition;
+            }
+        });
+    }, delay);
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -3364,6 +3399,7 @@ const lib = {
     translateSize,
     treeShake,
     triggerEvent,
+    triggerResize,
     wrapText
 };
 export default lib;
