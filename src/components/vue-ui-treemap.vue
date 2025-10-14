@@ -1275,6 +1275,11 @@ defineExpose({
     padding: 3px;
 }
 
+.vue-ui-treemap-cell {
+    height: 100%;
+    width: 100%;
+}
+
 .vue-ui-treemap-rect {
     transition: all 0.2s ease-in-out;
 }
