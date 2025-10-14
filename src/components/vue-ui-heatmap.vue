@@ -140,8 +140,8 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     callback: () => {
         Promise.resolve().then(async () => {
             await nextTick();
-            if(heatmapChart.value && heatmapChart.value.parentNode) {
-                triggerResize(heatmapChart.value.parentNode);
+            if(heatmapChart.value) {
+                triggerResize(heatmapChart.value);
             }
         })
     },

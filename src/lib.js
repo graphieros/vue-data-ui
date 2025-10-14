@@ -3269,7 +3269,6 @@ export function triggerResize(el, { delta = 1, delay = 20, disableTransitions = 
     if (!el || !(el instanceof HTMLElement)) return;
 
     const style = el.style;
-
     const prev = {
         width: style.width,
         height: style.height,
@@ -3280,22 +3279,27 @@ export function triggerResize(el, { delta = 1, delay = 20, disableTransitions = 
     const w = rect.width;
     const h = rect.height;
 
-    if (disableTransitions) {
-        style.transition = 'none';
-    }
+    if (disableTransitions) style.transition = 'none';
 
-    style.width = `${Math.max(0, w + delta)}px`;
-    style.height = `${Math.max(0, h + delta)}px`;
-    el.offsetWidth;
+    const isRelative = (v) => /%|em|rem/.test(v);
+
+    style.width = prev.width && isRelative(prev.width)
+        ? `calc(${prev.width} + ${delta}px)`
+        : `${Math.max(0, w + delta)}px`;
+
+    style.height = prev.height && isRelative(prev.height)
+        ? `calc(${prev.height} + ${delta}px)`
+        : `${Math.max(0, h + delta)}px`;
+
+    void el.offsetWidth;
 
     setTimeout(() => {
         style.width = prev.width;
         style.height = prev.height;
-        el.offsetWidth;
+        void el.offsetWidth;
+
         requestAnimationFrame(() => {
-            if (disableTransitions) {
-                style.transition = prev.transition;
-            }
+            if (disableTransitions) style.transition = prev.transition;
         });
     }, delay);
 }
