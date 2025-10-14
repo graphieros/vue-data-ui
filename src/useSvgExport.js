@@ -894,7 +894,6 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
 
                 const ta = (cs.getPropertyValue('text-align') || parent?.ta || 'start').trim().toLowerCase();
 
-                // paddings
                 let padT = parseFloat(cs.getPropertyValue('padding-top')) || 0;
                 let padR = parseFloat(cs.getPropertyValue('padding-right')) || 0;
                 let padB = parseFloat(cs.getPropertyValue('padding-bottom')) || 0;
@@ -905,7 +904,6 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                     padT = t; padR = r; padB = b; padL = l;
                 }
 
-                // borders / box-sizing
                 const bL = parseFloat(cs.getPropertyValue('border-left-width')) || 0;
                 const bR = parseFloat(cs.getPropertyValue('border-right-width')) || 0;
                 const box = cs.getPropertyValue('box-sizing') || 'content-box';
@@ -958,7 +956,6 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
             const lcaEl = lcaPath[lcaPath.length - 1] || htmlRoot;
             const lcaStyle = readTextStyle(lcaEl);
 
-            // accumulated padding
             let padLsum = 0, padRsum = 0, padTsum = 0;
             for (const el of lcaPath) {
                 const st = readTextStyle(el);
@@ -968,21 +965,15 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
             }
 
             const widths = [Math.max(1, wFO - padLsum - padRsum)];
-
-            // For every ancestor in the LCA path, try to get the content width
             for (const el of lcaPath) {
                 try {
                     const cs = CACHE_CSS(el);
-
-                    // Preferred: clientWidth (padding included, border excluded)
                     if (el.clientWidth && el.clientWidth > 0) {
                         const pL = parseFloat(cs.paddingLeft) || 0;
                         const pR = parseFloat(cs.paddingRight) || 0;
                         const cw = Math.max(1, el.clientWidth - pL - pR);
                         widths.push(cw);
                     }
-
-                    // Fallback: computed width
                     const wStr = cs.width;
                     const wNum = parseFloat(wStr);
                     if (Number.isFinite(wNum) && wNum > 0) {
@@ -1018,7 +1009,7 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
 
             const textEl = document.createElementNS(SVG_NS, 'text');
             textEl.setAttribute('x', String(baseX));
-            textEl.setAttribute('y', String(yFO + padTsum)); // keep first line at the top of the content box
+            textEl.setAttribute('y', String(yFO + padTsum));
             textEl.setAttribute('text-anchor', anchor);
             textEl.setAttribute('dominant-baseline', 'text-before-edge');
             textEl.setAttribute('xml:space', 'preserve');
@@ -1156,6 +1147,39 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
         }
     }
 
+    const measureHtmlNaturalSize = (htmlEl) => {
+        try {
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'absolute';
+            wrapper.style.left = '-99999px';
+            wrapper.style.top = '-99999px';
+            wrapper.style.visibility = 'hidden';
+            wrapper.style.pointerEvents = 'none';
+            wrapper.style.width = 'auto';
+            wrapper.style.height = 'auto';
+
+            const clone = htmlEl.cloneNode(true);
+
+            clone.style.width = 'auto';
+            clone.style.height = 'auto';
+            clone.style.display = 'inline-block';
+            clone.style.maxWidth = 'none';
+            clone.style.maxHeight = 'none';
+            clone.style.boxSizing = 'content-box';
+
+            document.body.appendChild(wrapper);
+            wrapper.appendChild(clone);
+
+            const rect = clone.getBoundingClientRect();
+            const w = Math.ceil(rect.width || clone.scrollWidth || 0);
+            const h = Math.ceil(rect.height || clone.scrollHeight || 0);
+
+            wrapper.remove();
+            return { w: Math.max(1, w), h: Math.max(1, h) };
+        } catch {
+            return { w: 0, h: 0 };
+        }
+    };
 
     // Text to svg
     for (const fo of list) {
@@ -1193,10 +1217,21 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
 
                 await new Promise(r => requestAnimationFrame(r));
                 const bb = fo.getBBox();
-                const w = Math.max(1, Math.ceil(bb.width));
-                const h = Math.max(1, Math.ceil(bb.height));
+                let w = Math.max(1, Math.ceil(bb.width));
+                let h = Math.max(1, Math.ceil(bb.height));
 
-                if (!w || !h) {
+                // If the html subtree is bigger than FO use the bigger natural size
+                const contentRoot = fo.firstElementChild;
+                if (contentRoot) {
+                    const natural = measureHtmlNaturalSize(contentRoot);
+                    const attrW = parseFloat(fo.getAttribute('width') || '0') || 0;
+                    const attrH = parseFloat(fo.getAttribute('height') || '0') || 0;
+
+                    w = Math.max(w, attrW, natural.w);
+                    h = Math.max(h, attrH, natural.h);
+                }
+
+                if (!(w > 0 && h > 0)) {
                     skipped += 1;
                     continue;
                 }
@@ -1209,8 +1244,10 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 tempSvg.setAttribute('viewBox', `0 0 ${w} ${h}`);
 
                 const foClone = fo.cloneNode(true);
-                foClone.setAttribute('x', '0'); foClone.setAttribute('y', '0');
-                foClone.setAttribute('width', String(w)); foClone.setAttribute('height', String(h));
+                foClone.setAttribute('x', '0');
+                foClone.setAttribute('y', '0');
+                foClone.setAttribute('width', String(w));
+                foClone.setAttribute('height', String(h));
                 tempSvg.appendChild(foClone);
 
                 const xml = new XMLSerializer().serializeToString(tempSvg);
@@ -1239,8 +1276,8 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
                 image.setAttribute('href', dataUrl);
                 image.setAttribute('x', fo.getAttribute('x') || String(bb.x));
                 image.setAttribute('y', fo.getAttribute('y') || String(bb.y));
-                image.setAttribute('width', fo.getAttribute('width') || String(bb.width));
-                image.setAttribute('height', fo.getAttribute('height') || String(bb.height));
+                image.setAttribute('width', String(w));
+                image.setAttribute('height', String(h));
 
                 fo.parentNode.replaceChild(image, fo);
                 rasterized += 1;
@@ -1252,3 +1289,4 @@ async function processForeignObjects(svgRoot, { mode = 'raster' } = {}) {
 
     return { converted, rasterized, skipped, errors };
 }
+
