@@ -8,7 +8,8 @@ import {
     ref, 
     shallowRef, 
     toRefs,
-    watch,
+    watch, 
+    watchEffect, 
 } from "vue";
 import { 
     XMLNS,
@@ -44,7 +45,6 @@ import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
-import { useResizeObserverEffect } from "../useResizeObserverEffect";
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes.json";
@@ -460,8 +460,20 @@ function getOffsetX() {
 
 
 const xAxisScalesH = ref(0);
-const updateHeight = throttle((h) => { xAxisScalesH.value = h; });
-useResizeObserverEffect({ elementRef: xAxisScales, callback: updateHeight, attr: 'height' });
+
+const updateHeight = throttle((h) => {
+    xAxisScalesH.value = h;
+});
+
+watchEffect((onInvalidate) => {
+    const el = xAxisScales.value;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height);
+    });
+    observer.observe(el);
+    onInvalidate(() => observer.disconnect());
+});
 
 const offsetY = computed(() => {
     let h = 0;

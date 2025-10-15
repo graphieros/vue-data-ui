@@ -64,7 +64,6 @@ import { useSvgExport } from '../useSvgExport.js';
 import { useNestedProp } from '../useNestedProp';
 import { useTimeLabels } from '../useTimeLabels.js';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
-import { useResizeObserverEffect } from '../useResizeObserverEffect.js';
 import img from '../img.js';
 import Title from '../atoms/Title.vue';
 import themes from "../themes.json";
@@ -661,8 +660,22 @@ function getScaleLabelX() {
 
 
 const timeLabelsHeight = ref(0);
-const updateHeight = throttle((h) => { timeLabelsHeight.value = h }, 100);
-useResizeObserverEffect({ elementRef: timeLabelsEls, callback: updateHeight, attr: 'height' });
+
+const updateHeight = throttle((h) => {
+    timeLabelsHeight.value = h
+}, 100)
+
+// Track time label height to update drawing area when they rotate
+watchEffect((onInvalidate) => {
+    const el = timeLabelsEls.value
+    if (!el) return
+
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height)
+    })
+    observer.observe(el)
+    onInvalidate(() => observer.disconnect())
+})
 
 onBeforeUnmount(() => {
     timeLabelsHeight.value = 0

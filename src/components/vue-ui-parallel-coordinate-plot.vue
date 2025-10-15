@@ -1,15 +1,5 @@
 <script setup>
-import { 
-    ref, 
-    computed, 
-    onMounted, 
-    onBeforeUnmount, 
-    watch, 
-    defineAsyncComponent, 
-    shallowRef,
-    toRefs, 
-    nextTick 
-} from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef, watchEffect, toRefs, nextTick } from "vue";
 import {
     applyDataLabel,
     calculateNiceScale, 
@@ -44,7 +34,6 @@ import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
-import { useResizeObserverEffect } from "../useResizeObserverEffect";
 import themes from "../themes.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
@@ -366,8 +355,22 @@ const WIDTH = computed(() => chartDimensions.value.width);
 const HEIGHT = computed(() => chartDimensions.value.height);
 
 const topLabelsHeight = ref(0);
-const updateTopLabelsHeight = throttle((h) => { topLabelsHeight.value = h }, 100);
-useResizeObserverEffect({ elementRef: xAxisLabels, callback: updateTopLabelsHeight, attr: 'height' });
+
+const updateTopLabelsHeight = throttle((h) => {
+    topLabelsHeight.value = h
+}, 100);
+
+// Track time label height to update drawing area when they rotate
+watchEffect((onInvalidate) => {
+    const el = xAxisLabels.value
+    if (!el) return
+
+    const observer = new ResizeObserver(entries => {
+        updateTopLabelsHeight(entries[0].contentRect.height)
+    })
+    observer.observe(el)
+    onInvalidate(() => observer.disconnect())
+});
 
 const drawingArea = computed(() => {
     const { top: p_top, right: p_right, bottom: p_bottom, left: p_left } = FINAL_CONFIG.value.style.chart.padding;

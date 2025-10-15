@@ -7,7 +7,8 @@ import {
     ref, 
     shallowRef, 
     toRefs,
-    watch,
+    watch, 
+    watchEffect, 
 } from "vue";
 import {
     adaptColorToBackground,
@@ -44,7 +45,6 @@ import { useTimeLabels } from "../useTimeLabels";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
-import { useResizeObserverEffect } from "../useResizeObserverEffect";
 import themes from "../themes.json";
 import Legend from "../atoms/Legend.vue";
 import Title from "../atoms/Title.vue";
@@ -481,8 +481,20 @@ const WIDTH = computed(() => svg.value.width);
 const HEIGHT = computed(() => svg.value.height);
 
 const timeLabelsOffsetY = ref(0);
-const updateHeight = throttle((h) => { timeLabelsOffsetY.value = h; }, 100);
-useResizeObserverEffect({ elementRef: timeLabelsEls, callback: updateHeight, attr: 'height' });
+
+const updateHeight = throttle((h) => {
+    timeLabelsOffsetY.value = h;
+}, 100);
+
+watchEffect((onInvalidate) => {
+    const el = timeLabelsEls.value;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+        updateHeight(entries[0].contentRect.height);
+    })
+    observer.observe(el);
+    onInvalidate(() => observer.disconnect());
+});
 
 onBeforeUnmount(() => {
     timeLabelsOffsetY.value = 0;
