@@ -9,7 +9,6 @@ import {
     shallowRef, 
     toRefs,
     watch, 
-    watchEffect, 
 } from "vue";
 import {
     applyDataLabel,
@@ -37,6 +36,7 @@ import { useNestedProp } from "../useNestedProp";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
+import { useResizeObserverEffect } from "../useResizeObserverEffect";
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes.json";
@@ -273,25 +273,12 @@ const WIDTH = computed(() => svg.value.width);
 const HEIGHT = computed(() => svg.value.height);
 
 const xAxisLabelsHeight = ref(0);
-
-const updateHeight = throttle((h) => {
-    xAxisLabelsHeight.value = h;
-}, 100);
-
-watchEffect((onInvalidate) => {
-    const el = xAxisLabels.value;
-    if (!el) return;
-
-    const observer = new ResizeObserver(entries => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
-});
+const updateHeight = throttle((h) => { xAxisLabelsHeight.value = h; }, 100);
+useResizeObserverEffect({ elementRef: xAxisLabels, callback: updateHeight, attr: 'height' });
 
 onBeforeUnmount(() => {
     xAxisLabelsHeight.value = 0;
-})
+});
 
 const drawingArea = computed(() => {
     const width = svg.value.width - FINAL_CONFIG.value.style.layout.padding.right - FINAL_CONFIG.value.style.layout.padding.left;

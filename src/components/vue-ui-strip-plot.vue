@@ -9,7 +9,6 @@ import {
     shallowRef, 
     toRefs,
     watch, 
-    watchEffect, 
 } from "vue";
 import {
     applyDataLabel,
@@ -46,6 +45,7 @@ import { useResponsive } from "../useResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
+import { useResizeObserverEffect } from "../useResizeObserverEffect";
 import img from "../img";
 import Shape from "../atoms/Shape.vue";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
@@ -431,20 +431,8 @@ function getOffsetX() {
 }
 
 const labelsXHeight = ref(0);
-
-const updateHeight = throttle((h) => {
-    labelsXHeight.value = h;
-}, 100);
-
-watchEffect((onInvalidate) => {
-    const el = timeLabelsEls.value;
-    if (!el) return;
-    const observer = new ResizeObserver(entries => {
-        updateHeight(entries[0].contentRect.height);
-    });
-    observer.observe(el);
-    onInvalidate(() => observer.disconnect());
-});
+const updateHeight = throttle((h) => { labelsXHeight.value = h; }, 100);
+useResizeObserverEffect({ elementRef: timeLabelsEls, callback: updateHeight, attr: 'height' });
 
 onBeforeUnmount(() => {
     labelsXHeight.value = 0;

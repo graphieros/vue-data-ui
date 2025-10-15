@@ -10,7 +10,6 @@ import {
     toRefs ,
     useSlots, 
     watch, 
-    watchEffect,
 } from "vue";
 import { useConfig } from "../useConfig";
 import { 
@@ -50,6 +49,7 @@ import { useTimeLabels } from "../useTimeLabels";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
+import { useResizeObserverEffect } from "../useResizeObserverEffect.js";
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
@@ -460,37 +460,11 @@ function getOffsetX() {
 const labelsXHeight = ref(0);
 const offsetRight = ref(0);
 
-const updateHeight = throttle((h) => {
-    labelsXHeight.value = h;
-}, 100);
+const updateHeight = throttle((h) => { labelsXHeight.value = h;}, 100);
+useResizeObserverEffect({ elementRef: FINAL_CONFIG.value.orientation === 'vertical' ? timeLabelsEls : scaleLabels, callback: updateHeight, attr: 'height'});
 
-watchEffect((onInvalidate) => {
-    const el = FINAL_CONFIG.value.orientation === 'vertical' ? timeLabelsEls.value : scaleLabels.value;
-    if (!el) return
-
-    const observer = new ResizeObserver(entries => {
-        updateHeight(entries[0].contentRect.height)
-    })
-    observer.observe(el)
-    onInvalidate(() => observer.disconnect())
-});
-
-const updateOffsetRight = throttle((w) => {
-    offsetRight.value = w + FINAL_CONFIG.value.style.chart.bars.totalValues.fontSize
-}, 100);
-
-watchEffect((onInvalidate) => {
-    if (FINAL_CONFIG.value.orientation === 'vertical') return;
-
-    const el = sumRight.value;
-    if (!el) return
-
-    const observer = new ResizeObserver(entries => {
-        updateOffsetRight(entries[0].contentRect.width)
-    })
-    observer.observe(el)
-    onInvalidate(() => observer.disconnect())
-});
+const updateOffsetRight = throttle((w) => { offsetRight.value = w + FINAL_CONFIG.value.style.chart.bars.totalValues.fontSize}, 100);
+useResizeObserverEffect({ elementRef: sumRight, callback: updateOffsetRight, attr: 'width', earlyReturn: FINAL_CONFIG.value.orientation === 'vertical' });
 
 onBeforeUnmount(() => {
     labelsXHeight.value = 0;

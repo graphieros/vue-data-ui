@@ -9,8 +9,7 @@ import {
     ref, 
     shallowRef, 
     toRefs,
-    watch, 
-    watchEffect, 
+    watch,
 } from "vue";
 import { 
     adaptColorToBackground, 
@@ -43,6 +42,7 @@ import { useTableResponsive } from "../useTableResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { useResizeObserverEffect } from '../useResizeObserverEffect';
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes.json";
@@ -141,7 +141,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
         Promise.resolve().then(async () => {
             await nextTick();
             if(heatmapChart.value) {
-                triggerResize(heatmapChart.value);
+                triggerResize(heatmapChart.value, { delta: 0.1, delay: 250 });
             }
         })
     },
@@ -339,56 +339,16 @@ const svg = computed(() => ({
 }));
 
 const topLabelsHeight = ref(0);
-
-const updateTopLabelsHeight = throttle((h) => {
-    topLabelsHeight.value = h
-}, 100);
-
-// Track time label height to update drawing area when they rotate
-watchEffect((onInvalidate) => {
-    const el = xAxisLabels.value
-    if (!el) return
-
-    const observer = new ResizeObserver(entries => {
-        updateTopLabelsHeight(entries[0].contentRect.height)
-    })
-    observer.observe(el)
-    onInvalidate(() => observer.disconnect())
-});
+const updateTopLabelsHeight = throttle((h) => { topLabelsHeight.value = h }, 100);
+useResizeObserverEffect({ elementRef: xAxisLabels, callback: updateTopLabelsHeight, attr: 'height' });
 
 const leftLabelsWidth = ref(0);
-
-const updateLeftLabelsWidth = throttle((h) => {
-    leftLabelsWidth.value = h
-}, 100);
-
-watchEffect((onInvalidate) => {
-    const el = yAxisLabels.value
-    if (!el) return
-
-    const observer = new ResizeObserver(entries => {
-        updateLeftLabelsWidth(entries[0].contentRect.width)
-    })
-    observer.observe(el)
-    onInvalidate(() => observer.disconnect())
-});
+const updateLeftLabelsWidth = throttle((h) => { leftLabelsWidth.value = h }, 100);
+useResizeObserverEffect({ elementRef: yAxisLabels, callback: updateLeftLabelsWidth, attr: 'width' });
 
 const xAxisSumLabelsHeight = ref(0);
-
-const updateXAxisSumLabelsHeight = throttle((h) => {
-    xAxisSumLabelsHeight.value = h
-}, 100);
-
-watchEffect((onInvalidate) => {
-    const el = xAxisSums.value
-    if (!el) return
-
-    const observer = new ResizeObserver(entries => {
-        updateXAxisSumLabelsHeight(entries[0].contentRect.height)
-    })
-    observer.observe(el)
-    onInvalidate(() => observer.disconnect())
-});
+const updateXAxisSumLabelsHeight = throttle((h) => { xAxisSumLabelsHeight.value = h }, 100);
+useResizeObserverEffect({ elementRef: xAxisSums, callback: updateXAxisSumLabelsHeight, attr: 'height' });
 
 onBeforeUnmount(() => {
     topLabelsHeight.value = 0;
