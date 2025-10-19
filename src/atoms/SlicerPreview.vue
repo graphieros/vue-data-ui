@@ -953,13 +953,15 @@ const labels = computed(() => {
         const customLeft = props.customFormat({
             absoluteIndex: startValue.value,
             seriesIndex: startValue.value,
-            datapoint: props.selectedSeries
+            datapoint: props.selectedSeries,
+            timeLabel: props.preciseLabels[startValue.value]
         });
         
         const customRight = props.customFormat({
             absoluteIndex: endValue.value - 1,
             seriesIndex: -1,
-            datapoint: props.selectedSeries
+            datapoint: props.selectedSeries,
+            timeLabel: props.preciseLabels[endValue.value - 1]
         });
 
         if (typeof customLeft === 'string' && typeof customRight === 'string') {
@@ -1034,7 +1036,7 @@ defineExpose({
     <div 
         data-cy="slicer" 
         data-dom-to-png-ignore 
-        style="padding: 0 24px" 
+        style="padding: 0 24px;" 
         class="vue-data-ui-zoom" 
         ref="zoomWrapper"
         @mousedown="startDragging" 
@@ -1099,61 +1101,78 @@ defineExpose({
                             :rx="3"
                         />
 
-                        <path
-                            v-if="minimapMerged"
-                            :d="`M${minimapLine.fullSet}`" 
-                            :stroke="`${minimapLineColor}`" 
-                            fill="none"
-                            stroke-width="1" 
-                            stroke-linecap="round" 
-                            stroke-linejoin="round" 
-                            style="opacity: 0.6" 
-                        />
-
-                        <path
-                            v-if="minimapMerged && !minimapCompact"
-                            :d="`M${unitWidthX / 2},${Math.max(svgMinimap.height, 0)} ${minimapLine.fullSet} L${svgMinimap.width - (unitWidthX / 2)},${Math.max(svgMinimap.height, 0)}Z`"
-                            :fill="`url(#${uid})`"
-                            stroke="none" 
-                            style="opacity: 0.6" 
-                        />
-
-                        <template v-else-if="!minimapMerged">
-                            <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
-                                <template v-for="(r, j) in dp.points">
-                                    <rect
-                                        v-if="dp.isVisible && !isNaN(r.y)"
-                                        :x="getBarX(r.x, i, j)"
-                                        :y="r.v >= 0 ? r.y : r.y0"
-                                        :width="getBarWidth(i, j)"
-                                        :height="r.v >= 0 ? (r.y0 - r.y) : (r.y - r.y0)"
-                                        :fill="dp.color"
-                                        :style="{ opacity: 0.6 }"
+                        <template v-if="!$slots.slotMap">
+                            <path
+                                v-if="minimapMerged"
+                                :d="`M${minimapLine.fullSet}`" 
+                                :stroke="`${minimapLineColor}`" 
+                                fill="none"
+                                stroke-width="1" 
+                                stroke-linecap="round" 
+                                stroke-linejoin="round" 
+                                style="opacity: 0.6" 
+                            />
+    
+                            <path
+                                v-if="minimapMerged && !minimapCompact"
+                                :d="`M${unitWidthX / 2},${Math.max(svgMinimap.height, 0)} ${minimapLine.fullSet} L${svgMinimap.width - (unitWidthX / 2)},${Math.max(svgMinimap.height, 0)}Z`"
+                                :fill="`url(#${uid})`"
+                                stroke="none" 
+                                style="opacity: 0.6" 
+                            />
+    
+                            <template v-else-if="!minimapMerged">
+                                <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
+                                    <template v-for="(r, j) in dp.points">
+                                        <rect
+                                            v-if="dp.isVisible && !isNaN(r.y)"
+                                            :x="getBarX(r.x, i, j)"
+                                            :y="r.v >= 0 ? r.y : r.y0"
+                                            :width="getBarWidth(i, j)"
+                                            :height="r.v >= 0 ? (r.y0 - r.y) : (r.y - r.y0)"
+                                            :fill="dp.color"
+                                            :style="{ opacity: 0.6 }"
+                                        />
+                                    </template>
+                                </g>
+                                <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')">
+                                    <path 
+                                        v-if="dp.isVisible"
+                                        :d="`M ${dp.fullSet}`" 
+                                        fill="none"
+                                        :stroke="dp.color"
+                                        style="opacity: 0.6"
                                     />
-                                </template>
-                            </g>
-                            <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')">
-                                <path 
-                                    v-if="dp.isVisible"
-                                    :d="`M ${dp.fullSet}`" 
-                                    fill="none"
-                                    :stroke="dp.color"
-                                    style="opacity: 0.6"
-                                />
-                                
-                                <circle
-                                    v-for="m in dp.fullMarkers"
-                                    v-if="dp.isVisible && cutNullValues"
-                                    :key="`sel-dot-under-${dp.key}-${m.i}`"
-                                    :cx="m.x"
-                                    :cy="m.y"
-                                    r="2"
-                                    :fill="dp.color"
-                                    :stroke="borderColor"
-                                    stroke-width="0.5"
-                                    style="opacity: 0.6"
-                                />
-                            </g>
+                                    
+                                    <circle
+                                        v-for="m in dp.fullMarkers"
+                                        v-if="dp.isVisible && cutNullValues"
+                                        :key="`sel-dot-under-${dp.key}-${m.i}`"
+                                        :cx="m.x"
+                                        :cy="m.y"
+                                        r="2"
+                                        :fill="dp.color"
+                                        :stroke="borderColor"
+                                        stroke-width="0.5"
+                                        style="opacity: 0.6"
+                                    />
+                                </g>
+                                <g v-for="dp in allMinimapLines.filter(d => d.type === 'plot')"> 
+                                    <g v-for="m in dp.points">
+                                        <circle
+                                            v-if="dp.isVisible && m.value !== null"
+                                            :key="`sel-plot-under-${dp.key}-${m.i}`"
+                                            :cx="m.x"
+                                            :cy="m.y"
+                                            r="2"
+                                            :fill="dp.color"
+                                            :stroke="borderColor"
+                                            stroke-width="0.5"
+                                            style="opacity: 0.6"
+                                        />
+                                    </g>                                 
+                                </g>
+                            </template>
                         </template>
 
                         <!-- SELECTION RECT -->
@@ -1198,75 +1217,101 @@ defineExpose({
                             stroke-width="0.5"
                         />
 
-                        <!-- MERGED MINIMAP -->
-                        <g v-if="minimapMerged" :key="'merged-tree'">
-                            <template v-if="minimapLine && minimapLine.sliced && minimapLine.sliced.length">
-                                <path
-                                    v-if="minimapLine.selectionSet"
-                                    :d="`M${minimapLine.sliced[0].x},${Math.max(svgMinimap.height, 0)} ${minimapLine.selectionSet} L${minimapLine.sliced[minimapLine.sliced.length - 1].x},${Math.max(svgMinimap.height, 0)}Z`"
-                                    :fill="`url(#${uid})`"
-                                    stroke="none"
-                                    style="opacity: 1"
-                                />
-                                <path
-                                    v-if="minimapLine.selectionSet"
-                                    :d="`M ${minimapLine.selectionSet}`"
-                                    :stroke="`${minimapLineColor}`"
-                                    fill="transparent"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </template>
-
-                            <circle
-                                v-if="minimapLine && minimapLine.firstPlot"
-                                :cx="minimapLine.firstPlot.x"
-                                :cy="minimapLine.firstPlot.y"
-                                stroke-width="0.5"
-                                :stroke="borderColor"
-                                r="3"
-                                :fill="minimapLineColor"
-                            />
-                            <circle
-                                v-if="minimapLine && minimapLine.lastPlot"
-                                :cx="minimapLine.lastPlot.x"
-                                :cy="minimapLine.lastPlot.y"
-                                stroke-width="0.5"
-                                :stroke="borderColor"
-                                r="3"
-                                :fill="minimapLineColor"
-                            />
-                        </g>
-
-
-                        <!-- SPLIT TREE (lines) -->
-                        <g v-else :key="'split-tree'">
-                            <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
-                                <template v-for="(r, j) in dp.points">
-                                    <rect
-                                        v-if="dp && dp.isVisible && !isNaN(r.y)"
-                                        :x="getBarX(r.x, i, j)"
-                                        :y="r.v >= 0 ? r.y : r.y0"
-                                        :width="getBarWidth(i, j)"
-                                        :height="r.v >= 0 ? (r.y0 - r.y) : (r.y - r.y0)"
-                                        :fill="dp.color"
-                                        :style="{ opacity: j >= start && j < end ? 1 : 0 }"
+                        <template v-if="!$slots.slotMap">
+                            <!-- MERGED MINIMAP -->
+                            <g v-if="minimapMerged" :key="'merged-tree'">
+                                <template v-if="minimapLine && minimapLine.sliced && minimapLine.sliced.length">
+                                    <path
+                                        v-if="minimapLine.selectionSet"
+                                        :d="`M${minimapLine.sliced[0].x},${Math.max(svgMinimap.height, 0)} ${minimapLine.selectionSet} L${minimapLine.sliced[minimapLine.sliced.length - 1].x},${Math.max(svgMinimap.height, 0)}Z`"
+                                        :fill="`url(#${uid})`"
+                                        stroke="none"
+                                        style="opacity: 1"
+                                    />
+                                    <path
+                                        v-if="minimapLine.selectionSet"
+                                        :d="`M ${minimapLine.selectionSet}`"
+                                        :stroke="`${minimapLineColor}`"
+                                        fill="transparent"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
                                     />
                                 </template>
-                            </g>
-                            <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
-                                <path
-                                    v-if="dp && dp.hasSelection && dp.selectionSet && dp.isVisible"
-                                    :d="`M ${dp.selectionSet}`"
-                                    :stroke="dp.color"
-                                    fill="transparent"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
+    
+                                <circle
+                                    v-if="minimapLine && minimapLine.firstPlot"
+                                    :cx="minimapLine.firstPlot.x"
+                                    :cy="minimapLine.firstPlot.y"
+                                    stroke-width="0.5"
+                                    :stroke="borderColor"
+                                    r="3"
+                                    :fill="minimapLineColor"
+                                />
+                                <circle
+                                    v-if="minimapLine && minimapLine.lastPlot"
+                                    :cx="minimapLine.lastPlot.x"
+                                    :cy="minimapLine.lastPlot.y"
+                                    stroke-width="0.5"
+                                    :stroke="borderColor"
+                                    r="3"
+                                    :fill="minimapLineColor"
                                 />
                             </g>
-                        </g>
+    
+                            <!-- SPLIT TREE (lines) -->
+                            <g v-else :key="'split-tree'">
+                                <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
+                                    <template v-for="(r, j) in dp.points">
+                                        <rect
+                                            v-if="dp && dp.isVisible && !isNaN(r.y)"
+                                            :x="getBarX(r.x, i, j)"
+                                            :y="r.v >= 0 ? r.y : r.y0"
+                                            :width="getBarWidth(i, j)"
+                                            :height="r.v >= 0 ? (r.y0 - r.y) : (r.y - r.y0)"
+                                            :fill="dp.color"
+                                            :style="{ opacity: j >= start && j < end ? 1 : 0 }"
+                                        />
+                                    </template>
+                                </g>
+                                <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
+                                    <path
+                                        v-if="dp && dp.hasSelection && dp.selectionSet && dp.isVisible"
+                                        :d="`M ${dp.selectionSet}`"
+                                        :stroke="dp.color"
+                                        fill="transparent"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </g>
+                                <g v-for="dp in allMinimapLines.filter(d => d.type === 'plot')" :key="String(dp.key)">
+                                    <g v-for="m in dp.points">
+                                        <circle
+                                            v-if="dp.isVisible && m.value !== null"
+                                            :cx="m.x"
+                                            :cy="m.y"
+                                            r="2"
+                                            :fill="dp.color"
+                                            :stroke="borderColor"
+                                            stroke-width="0.5"
+                                            style="opacity: 0.6"
+                                        />
+                                    </g>
+                                </g>
+                            </g>
+                        </template>
+
+                        <slot 
+                            v-if="$slots.slotMap"
+                            name="slotMap"
+                            v-bind="{
+                                width: Math.max(0, svgMinimap.width),
+                                height: Math.max(0, svgMinimap.height),
+                                zeroY: minimapZero,
+                                unitW: Math.max(0, unitWidthX)
+                            }" 
+                        />
 
                         <!-- COMPACT HANDLES (minimap mode only) -->
                         <rect
@@ -1298,101 +1343,117 @@ defineExpose({
                             <line v-bind="selectionIndicator"/>
                         </template>
 
-                        <!-- MERGED MINIMAP -->
-                        <g v-if="minimapMerged" :key="'merged-tree'">
-                            <circle
-                                v-if="minimapLine && minimapLine.firstPlot && minimapLine.firstPlot.value !== null"
-                                :cx="minimapLine.firstPlot.x"
-                                :cy="minimapLine.firstPlot.y"
-                                stroke-width="0.5"
-                                :stroke="borderColor"
-                                r="4"
-                                :fill="minimapLineColor"
-                            />
-                            <circle
-                                v-if="minimapLine && minimapLine.firstPlot && minimapLine.firstPlot.value !== null"
-                                :cx="minimapLine.firstPlot.x"
-                                :cy="minimapLine.firstPlot.y"
-                                :r="2"
-                                :fill="borderColor"
-                            />
-                            <circle
-                                v-if="minimapLine && minimapLine.lastPlot && minimapLine.lastPlot.value !== null"
-                                :cx="minimapLine.lastPlot.x"
-                                :cy="minimapLine.lastPlot.y"
-                                stroke-width="0.5"
-                                :stroke="borderColor"
-                                r="4"
-                                :fill="minimapLineColor"
-                            />
-                            <circle
-                                v-if="minimapLine && minimapLine.lastPlot && minimapLine.lastPlot.value !== null"
-                                :cx="minimapLine.lastPlot.x"
-                                :cy="minimapLine.lastPlot.y"
-                                r="2"
-                                :fill="borderColor"
-                            />
-                        </g>
-
-                        <!-- SPLIT TREE (circles) -->
-                        <g v-else>
-                            <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
-                                <path
-                                    v-if="dp && dp.hasSelection && dp.selectionSet && dp.isVisible"
-                                    :d="`M ${dp.selectionSet}`"
-                                    :stroke="dp.color"
-                                    fill="transparent"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-
+                        <template v-if="!$slots.slotMap">
+                            <!-- MERGED MINIMAP -->
+                            <g v-if="minimapMerged" :key="'merged-tree'">
                                 <circle
-                                    v-for="m in dp.selectionMarkers"
-                                    v-if="dp.isVisible && cutNullValues"
-                                    :key="`sel-dot-${dp.key}-${m.i}`"
-                                    :cx="m.x"
-                                    :cy="m.y"
-                                    r="2.5"
-                                    :fill="dp.color"
-                                    :stroke="borderColor"
-                                    stroke-width="0.5"
-                                />
-
-                                <circle
-                                    v-if="dp && dp.firstPlot && dp.isVisible && dp.firstPlot.value !== null"
-                                    :cx="dp.firstPlot.x"
-                                    :cy="dp.firstPlot.y"
+                                    v-if="minimapLine && minimapLine.firstPlot && minimapLine.firstPlot.value !== null"
+                                    :cx="minimapLine.firstPlot.x"
+                                    :cy="minimapLine.firstPlot.y"
                                     stroke-width="0.5"
                                     :stroke="borderColor"
                                     r="4"
-                                    :fill="dp.color"
+                                    :fill="minimapLineColor"
                                 />
                                 <circle
-                                    v-if="dp && dp.firstPlot && dp.isVisible && dp.firstPlot.value !== null"
-                                    :cx="dp.firstPlot.x"
-                                    :cy="dp.firstPlot.y"
-                                    r="2"
+                                    v-if="minimapLine && minimapLine.firstPlot && minimapLine.firstPlot.value !== null"
+                                    :cx="minimapLine.firstPlot.x"
+                                    :cy="minimapLine.firstPlot.y"
+                                    :r="2"
                                     :fill="borderColor"
                                 />
                                 <circle
-                                    v-if="dp && dp.lastPlot && dp.isVisible && dp.lastPlot.value !== null"
-                                    :cx="dp.lastPlot.x"
-                                    :cy="dp.lastPlot.y"
+                                    v-if="minimapLine && minimapLine.lastPlot && minimapLine.lastPlot.value !== null"
+                                    :cx="minimapLine.lastPlot.x"
+                                    :cy="minimapLine.lastPlot.y"
                                     stroke-width="0.5"
                                     :stroke="borderColor"
                                     r="4"
-                                    :fill="dp.color"
+                                    :fill="minimapLineColor"
                                 />
                                 <circle
-                                    v-if="dp && dp.lastPlot && dp.isVisible && dp.lastPlot.value !== null"
-                                    :cx="dp.lastPlot.x"
-                                    :cy="dp.lastPlot.y"
+                                    v-if="minimapLine && minimapLine.lastPlot && minimapLine.lastPlot.value !== null"
+                                    :cx="minimapLine.lastPlot.x"
+                                    :cy="minimapLine.lastPlot.y"
                                     r="2"
                                     :fill="borderColor"
                                 />
                             </g>
-                        </g>
+    
+                            <!-- SPLIT TREE (circles) -->
+                            <g v-else>
+                                <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
+                                    <path
+                                        v-if="dp && dp.hasSelection && dp.selectionSet && dp.isVisible"
+                                        :d="`M ${dp.selectionSet}`"
+                                        :stroke="dp.color"
+                                        fill="transparent"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+    
+                                    <circle
+                                        v-for="m in dp.selectionMarkers"
+                                        v-if="dp.isVisible && cutNullValues"
+                                        :key="`sel-dot-${dp.key}-${m.i}`"
+                                        :cx="m.x"
+                                        :cy="m.y"
+                                        r="2.5"
+                                        :fill="dp.color"
+                                        :stroke="borderColor"
+                                        stroke-width="0.5"
+                                    />
+    
+                                    <circle
+                                        v-if="dp && dp.firstPlot && dp.isVisible && dp.firstPlot.value !== null"
+                                        :cx="dp.firstPlot.x"
+                                        :cy="dp.firstPlot.y"
+                                        stroke-width="0.5"
+                                        :stroke="borderColor"
+                                        r="4"
+                                        :fill="dp.color"
+                                    />
+                                    <circle
+                                        v-if="dp && dp.firstPlot && dp.isVisible && dp.firstPlot.value !== null"
+                                        :cx="dp.firstPlot.x"
+                                        :cy="dp.firstPlot.y"
+                                        r="2"
+                                        :fill="borderColor"
+                                    />
+                                    <circle
+                                        v-if="dp && dp.lastPlot && dp.isVisible && dp.lastPlot.value !== null"
+                                        :cx="dp.lastPlot.x"
+                                        :cy="dp.lastPlot.y"
+                                        stroke-width="0.5"
+                                        :stroke="borderColor"
+                                        r="4"
+                                        :fill="dp.color"
+                                    />
+                                    <circle
+                                        v-if="dp && dp.lastPlot && dp.isVisible && dp.lastPlot.value !== null"
+                                        :cx="dp.lastPlot.x"
+                                        :cy="dp.lastPlot.y"
+                                        r="2"
+                                        :fill="borderColor"
+                                    />
+                                </g>
+                                <g v-for="dp in allMinimapLines.filter(d => d.type === 'plot')" :key="String(dp.key)">
+                                    <g v-for="m in dp.points">
+                                        <circle
+                                            v-if="dp.isVisible && cutNullValues && m.value !== null"
+                                            :key="`sel-plot-${dp.key}-${m.i}`"
+                                            :cx="m.x"
+                                            :cy="m.y"
+                                            r="2.5"
+                                            :fill="dp.color"
+                                            :stroke="borderColor"
+                                            stroke-width="0.5"
+                                        />
+                                    </g>
+                                </g>
+                            </g>
+                        </template>
 
                         <!-- TOOLTIP TRAPS -->
                         <rect 
