@@ -20,33 +20,54 @@ import { VueUiStackbar as VueUiStackbarTreeshaken } from "vue-data-ui/vue-ui-sta
 //     },
 // ]);
 
-const dataset = ref([]);
+function makeDs(n) {
+    const arr = [];
+    for(let i = 0; i < n; i += 1) {
+        arr.push(Math.random() * 5 * (Math.random() > 0.3 ? 1 : 1))
+    }
+    return arr;
+}
 
-onMounted(() => {
-    dataset.value = undefined;
-    setTimeout(() => {
-        dataset.value = [
+const dataset = ref([
             {
                 name: "Series 1",
-                series: [1, 2, 1, 3, 1, 5, 0.1],
+                series: makeDs(100),
             },
             {
                 name: "Series 2",
-                series: [0, 2, 3, 2, 1, 2, 0.1],
+                series: makeDs(100),
             },
             {
                 name: "Series 3",
-                series: [1, 2, 4, 3, 2, 1, 0.1],
+                series: makeDs(100),
             },
-        ]
-    }, 2000)
-})
+        ]);
+
+// onMounted(() => {
+//     dataset.value = undefined;
+//     setTimeout(() => {
+//         dataset.value = [
+//             {
+//                 name: "Series 1",
+//                 series: makeDs(100),
+//             },
+//             {
+//                 name: "Series 2",
+//                 series: makeDs(100),
+//             },
+//             {
+//                 name: "Series 3",
+//                 series: makeDs(100),
+//             },
+//         ]
+//     }, 2000)
+// })
 
 const monthValues = computed(() => {
   const yearStart = 2026
   const arr = []
 
-  for (let i = 0; i < 13; i++) {
+  for (let i = 0; i < 100; i += 1) {
     const d = new Date(yearStart, i, 1)
     arr.push(d.getTime())
   }
@@ -91,7 +112,7 @@ const model = ref([
     { key: 'loading', def: false, type: 'checkbox'},
     { key: 'debug', def: false, type: 'checkbox'},
     { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
-    { key: 'orientation', def: 'horizontal', type:'select', options: ['vertical', 'horizontal']},
+    { key: 'orientation', def: 'vertical', type:'select', options: ['vertical', 'horizontal']},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'theme', def: '', type: 'select', options: ['', 'zen', 'hack', 'concrete']},
     { key: 'useCssAnimation', def: false, type: 'checkbox'},
@@ -99,10 +120,10 @@ const model = ref([
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.height', def: 500, type: 'number', min: 200, max: 1000},
     { key: 'style.chart.width', def: 800, type: 'number', min: 200, max: 1000},
-    { key: 'style.chart.padding.top', def: 0, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.right', def: 0, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
-    { key: 'style.chart.padding.left', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.bottom', def: 12, type: 'number', min: 0, max: 100},
+    { key: 'style.chart.padding.left', def: 12, type: 'number', min: 0, max: 100},
 
     { key: 'style.chart.title.text', def: 'Lorem ipsum', type: 'text' },
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color' },
@@ -132,6 +153,24 @@ const model = ref([
     { key: 'style.chart.zoom.focusOnDrag', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.focusRangeRatio', def: 0.2, type: 'number', min: 0.1, max: 0.9, step: 0.1},
 
+    { key: 'style.chart.zoom.preview.enable', def: true, type: 'checkbox'},
+    { key: 'style.chart.zoom.preview.stroke', def: '#1f77b4', type: 'color'},
+    { key: 'style.chart.zoom.preview.fill', def: '#1f77b420', type: 'color'},
+    { key: 'style.chart.zoom.preview.strokeDasharray', def: 0, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.zoom.preview.strokeWidth', def: 2, type: 'number', min: 0, max: 12},
+
+    { key: 'style.chart.zoom.minimap.show', def: true, type: 'checkbox' },
+    { key: 'style.chart.zoom.minimap.smooth', def: false, type: 'checkbox' },
+    { key: 'style.chart.zoom.minimap.selectedColor', def: '#1f77b4', type: 'color' },
+    { key: 'style.chart.zoom.minimap.selectedColorOpacity', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
+    { key: 'style.chart.zoom.minimap.lineColor', def: '#1A1A1A', type: 'color' },
+    { key: 'style.chart.zoom.minimap.selectionRadius', def: 2, type: 'number', min: 0, max: 24 },
+    { key: 'style.chart.zoom.minimap.indicatorColor', def: '#1A1A1A', type: 'color' },
+    { key: 'style.chart.zoom.minimap.verticalHandles', def: false, type: 'checkbox' },
+    { key: 'style.chart.zoom.minimap.compact', def: true, type: 'checkbox' },
+    { key: 'style.chart.zoom.minimap.merged', def: false, type: 'checkbox' },
+
+
     { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color'},
@@ -154,7 +193,7 @@ const model = ref([
     { key: 'style.chart.bars.gapRatio', def: 0.5, type: 'range', min: 0, max: 1, step: 0.01 },
     { key: 'style.chart.bars.distributed', def: false, type: 'checkbox'},
     { key: 'style.chart.bars.showDistributedPercentage', def: false, type: 'checkbox'},
-    { key: 'style.chart.bars.borderRadius', def: 6, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.bars.borderRadius', def: 1, type: 'number', min: 0, max: 12},
     { key: 'style.chart.bars.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
 
     { key: 'style.chart.bars.gradient.show', def: true, type: 'checkbox'},
@@ -166,7 +205,7 @@ const model = ref([
     { key: 'style.chart.bars.totalValues.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.bars.totalValues.color', def: '#1A1A1A', type: 'color'},
 
-    { key: 'style.chart.bars.dataLabels.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.bars.dataLabels.show', def: false, type: 'checkbox'},
     { key: 'style.chart.bars.dataLabels.hideEmptyValues', def: false, type: 'checkbox'},
     { key: 'style.chart.bars.dataLabels.hideEmptyPercentages', def: true, type: 'checkbox'},
 
@@ -205,6 +244,9 @@ const model = ref([
     { key: 'style.chart.grid.x.timeLabels.rotation', def: 0, type: 'range', min: -90, max: 90},
     { key: 'style.chart.grid.x.timeLabels.autoRotate.enable', def: true, type: 'checkbox'},
     { key: 'style.chart.grid.x.timeLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+    { key: 'style.chart.grid.x.timeLabels.showOnlyAtModulo', def: true, type: 'checkbox'},
+    { key: 'style.chart.grid.x.timeLabels.showOnlyFirstAndLast', def: false, type: 'checkbox'},
+    { key: 'style.chart.grid.x.timeLabels.modulo', def: 12, type: 'number', min: 2, max: 12 },
 
     { key: 'style.chart.grid.x.timeLabels.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'style.chart.grid.x.timeLabels.color', def: '#1A1A1A', type: 'color'},
@@ -286,18 +328,31 @@ const config = computed(() => {
                         }
                     }
                 },
+                zoom: {
+                    ...c.style.chart.zoom,
+                    useDefaultFormat: false,
+                    customFormat: ({ absoluteIndex, seriesIndex, datapoint, timeLabel }) => {
+                        // console.log({ absoluteIndex, seriesIndex, datapoint, timeLabel });
+                        return `T - ${timeLabel.text}`
+                    }
+                },
+                tooltip: {
+                    ...c.style.chart.tooltip,
+                    useDefaultTimeFormat: true,
+                    timeFormat: 'yyyy-MM-dd'
+                },
                 grid: {
                     ...c.style.chart.grid,
                     x: {
                         ...c.style.chart.grid.x,
                         timeLabels: {
                             ...c.style.chart.grid.x.timeLabels,
-                            values: monthValues.value,
+                            values: ['T1', 'T2', 'T3', 'T4'],
                             // values: new Array(6).fill(0).map((d, i) => {
                             //     return `Some long name\nfor dataset of index ${i}` 
                             // }),
                             datetimeFormatter: {
-                                enable: true
+                                enable: false
                             }
                             // values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG']
                         }
@@ -329,6 +384,12 @@ onMounted(async () => {
         console.log(img)
     }
 })
+
+const selectedX = ref(undefined);
+
+function selectX({ datapoint, index, indexLabel}) {
+    selectedX.value = index;
+}
     
 </script>
 
@@ -340,9 +401,9 @@ onMounted(async () => {
         </select>
     </div>
 <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-    <LocalVueUiStackbar :dataset="dataset" :config="{...config,
+    <LocalVueUiStackbar @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="{...config,
         responsive: true,
-    }" :key="`local_resp_${step}`" @selectTimeLabel="selectTimeLabel"> 
+    }"  @selectTimeLabel="selectTimeLabel"> 
             <template #chart-background>
                 <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
             </template>
@@ -390,11 +451,11 @@ onMounted(async () => {
     </LocalVueUiStackbar>
 </div> -->
 
-<Box>
+<Box comp="VueUiStackbar" :dataset="dataset">
     <template #title>VueUiStackbar</template>
 
     <template #local>
-        <LocalVueUiStackbar :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+        <LocalVueUiStackbar @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
             <!-- <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                 <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
                     <text
@@ -421,7 +482,7 @@ onMounted(async () => {
     </template>
 
     <template #VDUI-local>
-        <LocalVueDataUi component="VueUiStackbar" :dataset="dataset" :config="config" :key="`local_vdui_${step}`">
+        <LocalVueDataUi @selectX="selectX" :selectedXIndex="selectedX" component="VueUiStackbar" :dataset="dataset" :config="config" :key="`local_vdui_${step}`">
             <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                 <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
                     <text

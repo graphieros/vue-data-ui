@@ -14,8 +14,10 @@ import {
 } from "vue";
 import { useConfig } from "../useConfig";
 import { 
+    XMLNS, 
     adaptColorToBackground,
     applyDataLabel,
+    buildDisplayedTimeLabels,
     calculateNiceScale,
     calculateNiceScaleWithExactExtremes, 
     convertColorToHex, 
@@ -38,11 +40,11 @@ import {
     sumSeries, 
     themePalettes, 
     treeShake, 
-    XMLNS, 
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from "../useLoading.js";
+import { useDateTime } from "../useDateTime.js";
 import { useSvgExport } from "../useSvgExport.js";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
@@ -54,9 +56,10 @@ import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import themes from "../themes.json";
+import locales from '../locales/locales.json';
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
-import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import SlicerPreview from "../atoms/SlicerPreview.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -83,9 +86,13 @@ const props = defineProps({
             return []
         }
     },
+    selectedXIndex: {
+        type: Number,
+        default: undefined
+    }
 });
 
-const emit = defineEmits(['selectDatapoint', 'selectLegend', 'selectTimeLabel']);
+const emit = defineEmits(['selectDatapoint', 'selectLegend', 'selectTimeLabel', 'selectX']);
 
 const isDataset = computed({
     get() {
@@ -107,14 +114,12 @@ const chartTitle = ref(null);
 const chartLegend = ref(null);
 const chartSlicer = ref(null);
 const source = ref(null);
-const slicerStep = ref(0);
 const isFullscreen = ref(false);
 const trapIndex = ref(null);
 const isLoaded = ref(false);
 const titleStep = ref(0);
 const tableStep = ref(0);
 const legendStep = ref(0);
-const slicerComponent = ref(null);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
@@ -125,6 +130,8 @@ const scaleLabels = ref(null);
 const timeLabelsEls = ref(null);
 const sumTop = ref(null);
 const sumRight = ref(null);
+
+const selectedMinimapIndex = ref(null);
 
 onMounted(() => {
     readyTeleport.value = true;
@@ -207,6 +214,16 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
+
+function onChartEnter() {
+    setUserOptionsVisibility(true);
+}
+
+function onChartLeave() {
+    setUserOptionsVisibility(false);
+    emit('selectX', { seriesIndex: null, datapoint: null });
+    trapIndex.value = null;
+}
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -291,6 +308,8 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.dataLabels.show = FINAL_CONFIG.value.style.chart.bars.dataLabels.show;
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+
+    normalizeSlicerWindow();
 }, { deep: true });
 
 watch(() => props.dataset, (_) => {
@@ -392,7 +411,7 @@ function prepareChart() {
                 chart: stackbarChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
-                slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxSeries.value > 1 ? chartSlicer.value : null,
+                slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxSeries.value > 6 ? chartSlicer.value.$el : null,
                 source: source.value
             });
 
@@ -547,6 +566,51 @@ const drawingArea = computed(() => {
     }
 });
 
+const precogRect = computed(() => {
+    const { left, top, width: totalWidth, height: totalHeight } = drawingArea.value;
+    const windowStart = slicer.value.start;
+    const windowEnd = slicer.value.end;
+    const windowLen = Math.max(1, windowEnd - windowStart);
+
+    const relStart = Math.max(0, Math.min(windowLen, (slicerPrecog.value.start ?? windowStart) - windowStart));
+    const relEnd = Math.max(0, Math.min(windowLen, (slicerPrecog.value.end   ?? windowEnd)   - windowStart));
+    const span = Math.max(0, relEnd - relStart);
+
+    const commonCfg = {
+        fill: FINAL_CONFIG.value.style.chart.zoom.preview.fill,
+        stroke: FINAL_CONFIG.value.style.chart.zoom.preview.stroke,
+        ['stroke-width']: FINAL_CONFIG.value.style.chart.zoom.preview.strokeWidth,
+        ['stroke-dasharray']: FINAL_CONFIG.value.style.chart.zoom.preview.strokeDasharray,
+        ['stroke-linecap']: 'round',
+        ['stroke-linejoin']: 'round',
+        style: {
+            pointerEvents: 'none',
+            transition: 'none !important',
+            animation: 'none !important'
+        }
+    };
+
+    if (FINAL_CONFIG.value.orientation === 'horizontal') {
+        const unit = totalHeight / windowLen;
+        return {
+            x: left,
+            y: top + relStart * unit,
+            width: totalWidth,
+            height: span * unit,
+            ...commonCfg
+        };
+    } else {
+        const unit = totalWidth / windowLen;
+        return {
+            x: left + relStart * unit,
+            y: top,
+            width: span * unit,
+            height: totalHeight,
+            ...commonCfg
+        };
+    }
+});
+
 const unmutableDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
         const color = convertColorToHex(ds.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
@@ -569,57 +633,65 @@ const maxSeries = computed(() => {
     return Math.max(...unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)).map(ds => ds.series.length))
 });
 
+
+function selectMinimapIndex(i) {
+    selectedMinimapIndex.value = i;
+}
+
 const slicer = ref({
     start: 0,
     end: Math.max(...FINAL_DATASET.value.map(ds => ds.series.length))
 });
 
-function refreshSlicer() {
-    setupSlicer()
+const slicerPrecog = ref({ start: 0, end: Math.max(...FINAL_DATASET.value.map(ds => ds.series.length)) });
+
+const isPrecog = computed(() => {
+    return FINAL_CONFIG.value.style.chart.zoom.preview.enable && (slicerPrecog.value.start !== slicer.value.start || slicerPrecog.value.end !== slicer.value.end);
+});
+
+function setPrecog(side, val) {
+    slicerPrecog.value[side] = val;
 }
 
-async function setupSlicer() {
-    await nextTick();
-    await nextTick();
+function normalizeSlicerWindow() {
+    const maxLen = maxSeries.value;
+    let s = Math.max(0, Math.min(slicer.value.start ?? 0, maxLen - 1))
+    let e = Math.max(s + 1, Math.min(slicer.value.end ?? maxLen, maxLen))
 
-    const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
-    const comp = slicerComponent.value;
-    const maxLength = Math.max(...FINAL_DATASET.value.map(ds => ds.series.length));
+    if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) { s = 0; e = maxLen }
 
-    slicer.value = { start: 0, end: maxLength };
+    slicer.value.start = s;
+    slicer.value.end = e;
+    slicerPrecog.value.start = s
+    slicerPrecog.value.end = e
 
-    if ((startIndex != null || endIndex != null) && comp) {
-        if (startIndex != null) {
-            comp.setStartValue(startIndex);
-        } else {
-            slicer.value.start = 0;
-            comp.setStartValue(0);
-        }
-        if (endIndex != null) {
-            comp.setEndValue(validSlicerEnd(endIndex + 1));
-        } else {
-            slicer.value.end = maxLength;
-            comp.setEndValue(maxLength);
-        }
-    } else {
-        slicer.value = { start: 0, end: maxLength };
-        slicerStep.value += 1;
+    if(chartSlicer.value) {
+        chartSlicer.value.setStartValue(s);
+        chartSlicer.value.setEndValue(e)
     }
 }
 
-function validSlicerEnd(v) {
-    const max = Math.max(...FINAL_DATASET.value.map(ds => ds.series.length));
-    if (v > max) {
-        return max;
-    }
-    if (v < 0 || (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null && v < FINAL_CONFIG.value.style.chart.zoom.startIndex)) {
-        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
-            return FINAL_CONFIG.value.style.chart.zoom.startIndex + 1
-        } else {
-            return 1
-        }
-    }
-    return v
+const refreshRAF = ref(null);
+function nextPaint() {
+    return new Promise(r => requestAnimationFrame(() =>
+        requestAnimationFrame(() => r())
+    ));
+}
+
+onBeforeUnmount(() => {
+    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+});
+
+async function refreshSlicer() {
+    setupSlicer();
+
+    // Now this is basically sweeping shit under the rug so it works:
+    await nextTick();
+    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+    refreshRAF.value = requestAnimationFrame(async () => {
+        await nextPaint();
+        setupSlicer();
+    });
 }
 
 const barSlot = computed(() => {
@@ -635,6 +707,21 @@ const barSlot = computed(() => {
 const datasetTotals = computed(() => {
     return sumSeries(unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id))).slice(slicer.value.start, slicer.value.end);
 });
+
+const datasetTotalsMinimap = computed(() => {
+    if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
+    return sumSeries(unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)))
+});
+
+const allMinimaps = computed(() => {
+    if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
+    return [{
+        name: '',
+        series: datasetTotalsMinimap.value,
+        color: '#000000',
+        isVisible: true
+    }]
+})
 
 const displayTotals = computed(() => {
     return sumSeries(unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)).map(s => {
@@ -694,6 +781,78 @@ const timeLabels = computed(() => {
     })
 });
 
+const allTimeLabels = computed(() => {
+    return useTimeLabels({
+        values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
+        maxDatapoints: maxSeries.value,
+        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
+        start: 0,
+        end: maxSeries.value
+    })
+});
+
+const modulo = computed(() => {
+    const m = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo;
+    if (!timeLabels.value.length) return m;
+    return Math.min(m, [...new Set(timeLabels.value.map(t => t.text))].length);
+});
+
+const displayedTimeLabels = computed(() => {
+    const cfg = FINAL_CONFIG.value.style.chart.grid.x.timeLabels;
+    const vis = timeLabels.value || [];
+    const all = allTimeLabels.value || [];
+    const start = slicer.value.start ?? 0;
+    const sel = trapIndex.value;
+    const maxS = maxSeries.value;
+    const visTexts = vis.map(l => l?.text ?? '');
+    const allTexts = all.map(l => l?.text ?? '');
+
+    return buildDisplayedTimeLabels(
+        !!cfg.showOnlyFirstAndLast,
+        !!cfg.showOnlyAtModulo,
+        Math.max(1, modulo.value || 1),
+        visTexts,
+        allTexts,
+        start,
+        sel,
+        maxS
+    );
+});
+
+const preciseTimeFormatter = computed(() => {
+    const xl = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter
+
+    const dt = useDateTime({
+        useUTC: xl.useUTC,
+        locale: locales[xl.locale] || { months:[], shortMonths:[], days:[], shortDays:[] },
+        januaryAsYear: xl.januaryAsYear
+    });
+
+    return (absIndex, fmt) => {
+        const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values
+        const ts = values?.[absIndex]
+        if (ts == null) return ''
+        const res = dt.formatDate(new Date(ts), fmt)
+        return dt.formatDate(new Date(ts), fmt)
+    }
+});
+
+const preciseAllTimeLabels = computed(() => {
+    const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values || []
+    return values.map((_, i) => ({
+        text: preciseTimeFormatter.value(i, FINAL_CONFIG.value.style.chart.zoom.timeFormat),
+        absoluteIndex: i
+    }));
+});
+
+const preciseAllTimeLabelsTooltip = computed(() => {
+    const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values || []
+    return values.map((_, i) => ({
+        text: preciseTimeFormatter.value(i, FINAL_CONFIG.value.style.chart.tooltip.timeFormat),
+        absoluteIndex: i
+    }));
+});
+
 const formattedDataset = computed(() => {
     if (!isDataset.value && !loading.value) return [];
 
@@ -716,15 +875,68 @@ const formattedDataset = computed(() => {
     const ZERO_POSITION = yLabels.value[0] ? yLabels.value[0].zero : drawingArea.value.bottom;
     const HORIZONTAL_ZERO_POSITION = yLabels.value[0] ? yLabels.value[0].horizontal_zero : drawingArea.value.left;
 
+    let posPrefixMini = Array(datasetTotalsMinimap.value.length).fill(0);
+let negPrefixMini = Array(datasetTotalsMinimap.value.length).fill(0);
+
     return unmutableDataset.value
         .filter(ds => !segregated.value.includes(ds.id))
         .map(ds => {
+            const fullSeries = ds.series.slice();
+
+            const posOffsetMini = fullSeries.map((v, i) => posPrefixMini[i]);
+            const negOffsetMini = fullSeries.map((v, i) => negPrefixMini[i]);
+
+            fullSeries.forEach((v, i) => {
+                if ((Number(v) || 0) >= 0) {
+                    posPrefixMini[i] += (Number(v) || 0);
+                } else {
+                    negPrefixMini[i] += Math.abs(Number(v) || 0);
+                }
+            });
+
             const slicedSeries = ds.series.slice(slicer.value.start, slicer.value.end);
             const signedSliced = ds.signedSeries.slice(slicer.value.start, slicer.value.end);
 
             const x = slicedSeries.map((_dp, i) => {
                 return drawingArea.value.left + (barSlot.value * i) + (barSlot.value * FINAL_CONFIG.value.style.chart.bars.gapRatio / 4);
             });
+
+            const valsMini = (datasetTotalsMinimap.value || []).filter(Number.isFinite);
+            const premaxMini = valsMini.length ? Math.max(...valsMini) : 0;
+            const preminMini = valsMini.length ? Math.min(...valsMini) : 0;
+
+            function makeMiniScale({ minimapH }) {
+            const EPS = 1e-9;
+            const hasPos = premaxMini > 0;
+            const hasNeg = preminMini < 0;
+
+            if (hasPos && hasNeg) {
+                const M = Math.max(premaxMini, Math.abs(preminMini)) || EPS;
+                return {
+                    pxPerUnit: (minimapH / 2) / M,
+                    zero: minimapH / 2
+                };
+            }
+
+            if (hasPos) {
+                const span = Math.max(EPS, premaxMini);
+                return {
+                    pxPerUnit: minimapH / span,
+                    zero: minimapH
+                };
+            }
+
+            const span = Math.max(EPS, Math.abs(preminMini));
+                return {
+                    pxPerUnit: minimapH / span,
+                    zero: 0
+                };
+            }
+
+            const xMinimap = ({ left, unitW }) => {
+                const gap = unitW * (FINAL_CONFIG.value.style.chart.bars.gapRatio / 4);
+                return fullSeries.map((_, i) => left + unitW * i + gap);
+            };
 
             const horizontal_y = slicedSeries.map((_dp, i) => {
                 return drawingArea.value.top + (barSlot.value * i) + (barSlot.value * FINAL_CONFIG.value.style.chart.bars.gapRatio / 4);
@@ -747,6 +959,27 @@ const formattedDataset = computed(() => {
                 }
                 return currentY;
             });
+
+            const yMinimap = ({ minimapH }) => {
+                if (FINAL_CONFIG.value.style.chart.bars.distributed) {
+                    const EPS = 1e-9;
+                    return fullSeries.map((raw, i) => {
+                        const vAbs = Math.abs(Number(raw) || 0);
+                        const total = Math.abs(datasetTotalsMinimap.value?.[i] || 0) || EPS;
+                        const prevAbs = posOffsetMini[i];
+                        const topProportion = (prevAbs + vAbs) / total;
+                        return minimapH - topProportion * minimapH;
+                    });
+                }
+
+                const { pxPerUnit, zero } = makeMiniScale({ minimapH });
+                return fullSeries.map((raw, i) => {
+                    const v = Number(raw) || 0;
+                    return v >= 0
+                    ? zero - (posOffsetMini[i] + v) * pxPerUnit
+                    : zero +  negOffsetMini[i]       * pxPerUnit;
+                });
+            };
 
             const horizontal_x = slicedSeries.map((dp, i) => {
                 const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
@@ -778,6 +1011,21 @@ const formattedDataset = computed(() => {
                     }
             });
 
+            const heightMinimap = ({ minimapH }) => {
+            if (FINAL_CONFIG.value.style.chart.bars.distributed) {
+                const EPS = 1e-9;
+                return fullSeries.map((raw, i) => {
+                    const vAbs = Math.abs(Number(raw) || 0);
+                    const total = Math.abs(datasetTotalsMinimap.value?.[i] || 0) || EPS;
+                    const proportion = vAbs / total;
+                    return proportion * minimapH;
+                });
+            }
+
+            const { pxPerUnit } = makeMiniScale({ minimapH });
+                return fullSeries.map(raw => Math.abs(Number(raw) || 0) * pxPerUnit);
+            };
+
             const horizontal_width = slicedSeries.map((dp, i) => {
                 const proportion = FINAL_CONFIG.value.style.chart.bars.distributed
                     ? (dp || 0) / datasetTotals.value[i]
@@ -808,7 +1056,10 @@ const formattedDataset = computed(() => {
                 height,
                 horizontal_width,
                 horizontal_y,
-                horizontal_x
+                horizontal_x,
+                xMinimap,
+                yMinimap,
+                heightMinimap
             };
         });
 });
@@ -877,7 +1128,8 @@ function getDatapoint(seriesIndex) {
             value: fd.series[seriesIndex] === 0 ? 0 : (fd.signedSeries[seriesIndex] === -1 ? (fd.series[seriesIndex] >= 0 ? -fd.series[seriesIndex] : fd.series[seriesIndex]) : fd.series[seriesIndex]) || null,
             proportion: fd.proportions[seriesIndex] || null,
             color: fd.color,
-            id: fd.id
+            id: fd.id,
+            timeLabel: allTimeLabels.value[seriesIndex]
         }
     });
 }
@@ -891,12 +1143,32 @@ function onTrapLeave(i) {
     trapIndex.value = null;
 }
 
+const datapointsForSlicerCustomFormat = computed(() => {
+    return Array(maxSeries.value).fill(0).map((_,i) => getDatapoint(i))
+});
+
+watch(() => props.selectedXIndex, (v) => {
+    if ([null, undefined].includes(props.selectedXIndex)) {
+        trapIndex.value = null;
+        return;
+    }
+
+    const targetIndex = v - slicer.value.start;
+    if (targetIndex < 0 || v >= slicer.value.end) {
+        trapIndex.value = null;
+    } else {
+        trapIndex.value = targetIndex ?? null;
+    }
+}, { immediate: true })
+
 function useTooltip(seriesIndex) {
     trapIndex.value = seriesIndex;
     isTooltip.value = true;
 
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
     const datapoint = getDatapoint(seriesIndex);
+
+    selectX({ seriesIndex, datapoint });
 
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: seriesIndex + slicer.value.start });
@@ -934,8 +1206,8 @@ function useTooltip(seriesIndex) {
 
         let html = "";
 
-        if (timeLabels.value[seriesIndex] && timeLabels.value[seriesIndex].text && FINAL_CONFIG.value.style.chart.tooltip.showTimeLabel) {
-            html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${borderColor};padding-bottom:6px;margin-bottom:3px;">${timeLabels.value[seriesIndex].text}</div>`;
+        if ((timeLabels.value[seriesIndex] && timeLabels.value[seriesIndex].text) || (preciseAllTimeLabelsTooltip.value[seriesIndex] && preciseAllTimeLabelsTooltip.value[seriesIndex].text) && FINAL_CONFIG.value.style.chart.tooltip.showTimeLabel) {
+            html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${borderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat ? timeLabels.value[seriesIndex]?.text : preciseAllTimeLabelsTooltip.value[seriesIndex]?.text || allTimeLabels.value[seriesIndex]?.text || ''}</div>`;
         }
 
         const parenthesis = [
@@ -1241,6 +1513,76 @@ async function generateSvg({ isCb }) {
     }
 }
 
+function validSlicerEnd(v) {
+    const _max = maxSeries.value;
+
+    if (v > _max) {
+        return _max;
+    }
+    if (v < 0 || (v < slicer.value.start)) {
+        if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
+            return slicer.value.start + 1
+        } else {
+            return 1
+        }
+    }
+    return v;
+}
+
+const isSettingUp = ref(false);
+const slicerReady = ref(false);
+
+function setupSlicer() {
+    if (isSettingUp.value) return;
+    isSettingUp.value = true;
+    try {
+        const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
+        const max = maxSeries.value;
+
+        const start = startIndex != null ? startIndex : 0;
+        const end = endIndex   != null ? Math.min(validSlicerEnd(endIndex + 1), max) : max;
+
+        suppressChild.value = true;
+        slicer.value.start = start;
+        slicer.value.end   = end;
+        slicerPrecog.value.start = start;
+        slicerPrecog.value.end   = end;
+        normalizeSlicerWindow();
+        slicerReady.value = true;
+    } finally {
+        queueMicrotask(() => { suppressChild.value = false; });
+        isSettingUp.value = false;
+    }
+}
+
+const suppressChild = ref(false);
+
+function onSlicerStart(v) {
+    if (isSettingUp.value || suppressChild.value) return;
+    if (v === slicer.value.start) return;
+    slicer.value.start = v;
+    slicerPrecog.value.start = v;
+    normalizeSlicerWindow();
+}
+
+function onSlicerEnd(v) {
+    if (isSettingUp.value || suppressChild.value) return;
+    const end = validSlicerEnd(v);
+    if (end === slicer.value.end) return;
+    slicer.value.end = end;
+    slicerPrecog.value.end = end;
+    normalizeSlicerWindow();
+}
+
+function selectX({ seriesIndex, datapoint }) {
+    const index = slicer.value.start + seriesIndex
+    emit('selectX', {
+        dataset: datapoint,
+        index,
+        indexLabel: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values[index]
+    })
+}
+
 defineExpose({
     getData,
     getImage,
@@ -1263,8 +1605,8 @@ defineExpose({
         ref="stackbarChart"
         :class="{'vue-data-ui-component': true, 'vue-ui-stackbar': true, 'vue-data-ui-wrapper-fullscreen' : isFullscreen }" 
         :style="`background:${FINAL_CONFIG.style.chart.backgroundColor};color:${FINAL_CONFIG.style.chart.color};font-family:${FINAL_CONFIG.style.fontFamily}; position: relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
-        @mouseenter="() => setUserOptionsVisibility(true)" 
-        @mouseleave="() => setUserOptionsVisibility(false)"
+        @mouseenter="onChartEnter" 
+        @mouseleave="onChartLeave"
     >
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
@@ -1753,7 +2095,7 @@ defineExpose({
             <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'vertical'">
                 <g ref="timeLabelsEls">
                     <g v-if="$slots['time-label']">
-                        <g v-for="(timeLabel, i) in timeLabels">
+                        <g v-for="(timeLabel, i) in displayedTimeLabels">
                             <slot name="time-label" v-bind="{
                                 x: drawingArea.left + (barSlot * i) + barSlot / 2,
                                 y: drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY,
@@ -1768,7 +2110,7 @@ defineExpose({
                         </g>
                     </g>
                     <g v-else>
-                        <g v-for="(timeLabel, i) in timeLabels">
+                        <g v-for="(timeLabel, i) in displayedTimeLabels">
                             <text
                                 v-if="!String(timeLabel.text).includes('\n')"
                                 class="vue-data-ui-time-label"
@@ -1894,7 +2236,7 @@ defineExpose({
                     @click="() => selectDatapoint(i)"
                     @mouseenter="() => useTooltip(i)"
                     @mouseleave="() => onTrapLeave(i)"
-                    :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
+                    :fill="i === trapIndex || i === selectedMinimapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
                     :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
                 />
             </template>
@@ -1911,10 +2253,18 @@ defineExpose({
                     @click="() => selectDatapoint(i)"
                     @mouseenter="() => useTooltip(i)"
                     @mouseleave="() => onTrapLeave(i)"
-                    :fill="i === trapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
+                    :fill="i === trapIndex || i === selectedMinimapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
                     :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
                 />
             </template>
+
+            <!-- ZOOM PREVIEW -->
+            <rect 
+                v-if="isPrecog" 
+                v-bind="precogRect" 
+                :data-start="slicer.start" 
+                :data-end="slicer.end"
+            />
 
             <slot name="svg" v-bind="{ ...drawingArea }"/>
         </svg>
@@ -1923,39 +2273,88 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-dom-to-png-ignore>    
-            <Slicer 
-                ref="slicerComponent"
-                v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 1"
-                :key="`slicer_${slicerStep}`"
-                :background="FINAL_CONFIG.style.chart.zoom.color"
-                :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
-                :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
-                :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-                :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[0].text : ''"
-                :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels.at(-1).text : ''"
-                :textColor="FINAL_CONFIG.style.chart.color"
-                :inputColor="FINAL_CONFIG.style.chart.zoom.color"
-                :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
-                :max="Math.max(...dataset.map(ds => ds.series.length))"
-                :min="0"
-                :valueStart="slicer.start"
-                :valueEnd="slicer.end"
-                v-model:start="slicer.start"
-                v-model:end="slicer.end"
-                :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
-                :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : Math.max(...dataset.map(ds => ds.series.length))"
-                :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
-                :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
-                :focusOnDrag="FINAL_CONFIG.style.chart.zoom.focusOnDrag"
-                :focusRangeRatio="FINAL_CONFIG.style.chart.zoom.focusRangeRatio"
-                @reset="refreshSlicer"
-            >
-                <template #reset-action="{ reset }">
-                    <slot name="reset-action" v-bind="{ reset }"/>
-                </template>
-            </Slicer>
-        </div>
+
+        <SlicerPreview 
+            ref="chartSlicer"
+            v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 6 && isDataset && slicerReady"
+            :allMinimaps="allMinimaps"
+            :background="FINAL_CONFIG.style.chart.zoom.color"
+            :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
+            :customFormat="FINAL_CONFIG.style.chart.zoom.customFormat"
+            :cutNullValues="false"
+            :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
+            :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
+            :end="slicer.end"
+            :focusOnDrag="FINAL_CONFIG.style.chart.zoom.focusOnDrag"
+            :focusRangeRatio="FINAL_CONFIG.style.chart.zoom.focusRangeRatio"
+            :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
+            :immediate="!FINAL_CONFIG.style.chart.zoom.preview.enable"
+            :inputColor="FINAL_CONFIG.style.chart.zoom.color"
+            :isPreview="isPrecog"
+            :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[0].text : ''"
+            :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels.at(-1).text : ''"
+            :max="Math.max(...dataset.map(ds => ds.series.length))"
+            :min="0"
+            :minimap="datasetTotalsMinimap"
+            :minimapCompact="FINAL_CONFIG.style.chart.zoom.minimap.compact"
+            :minimapFrameColor="FINAL_CONFIG.style.chart.zoom.minimap.frameColor"
+            :minimapIndicatorColor="FINAL_CONFIG.style.chart.zoom.minimap.indicatorColor"
+            :minimapMerged="false"
+            :minimapSelectedColor="FINAL_CONFIG.style.chart.zoom.minimap.selectedColor"
+            :minimapSelectedColorOpacity="FINAL_CONFIG.style.chart.zoom.minimap.selectedColorOpacity"
+            :minimapSelectedIndex="trapIndex"
+            :minimapSelectionRadius="1"
+            :preciseLabels="preciseAllTimeLabels.length ? preciseAllTimeLabels : allTimeLabels"
+            :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : Math.max(...dataset.map(ds => ds.series.length))"
+            :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
+            :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
+            :selectedSeries="datapointsForSlicerCustomFormat"
+            :smoothMinimap="false"
+            :start="slicer.start"
+            :textColor="FINAL_CONFIG.style.chart.color"
+            :timeLabels="allTimeLabels"
+            :usePreciseLabels="FINAL_CONFIG.style.chart.grid.x.timeLabels.datetimeFormatter.enable && !FINAL_CONFIG.style.chart.zoom.useDefaultFormat"
+            :valueEnd="slicer.end"
+            :valueStart="slicer.start"
+            :verticalHandles="FINAL_CONFIG.style.chart.zoom.minimap.verticalHandles"
+            @update:end="onSlicerEnd"
+            @update:start="onSlicerStart"
+            @trapMouse="selectMinimapIndex"
+            @reset="refreshSlicer"
+            @futureEnd="v => setPrecog('end', v)"
+            @futureStart="v => setPrecog('start', v)"
+        >
+            <template #reset-action="{ reset }">
+                <slot name="reset-action" v-bind="{ reset }"/>
+            </template>
+
+            <template #slotMap="{ width: minimapW, height: minimapH, unitW }">
+                <g v-for="dp in formattedDataset" :key="dp.id">
+                    <template v-for="(x, j) in dp.xMinimap({ left: 0, unitW })" :key="j">
+                    <rect
+                        :x="j === 0
+                            ? (x - (unitW * (FINAL_CONFIG.style.chart.bars.gapRatio / 4)))
+                            : x - unitW / 2"
+                        :y="Math.max(0, Math.min(minimapH, dp.yMinimap({ minimapH })[j]))"
+                        :height="dp.heightMinimap({ minimapH })[j]"
+                        :width="[0, maxSeries - 1].includes(j)
+                            ? (unitW * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)) / 2
+                            : unitW * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
+                        :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="0.5"
+                        rx="0"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :style="{
+                            opacity: j >= slicerPrecog.start && j <= slicerPrecog.end ? 1 : 0.62
+                        }"
+                    />
+                    </template>
+                </g>
+            </template>
+
+        </SlicerPreview>
 
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
