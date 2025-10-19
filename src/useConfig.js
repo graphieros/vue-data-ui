@@ -243,18 +243,22 @@ export function useConfig() {
         focusRangeRatio: 0.2,
     }
 
-    const MINIMAP = {
+    const MINIMAP_BASE = {
         show: false,
-        smooth: false,
         selectedColor: COLOR_BLUE,
         selectedColorOpacity: 0.2,
-        lineColor: COLOR_BLACK,
-        selectionRadius: 2,
         indicatorColor: COLOR_BLACK,
         verticalHandles: false,
         compact: true,
-        merged: false,
         frameColor: COLOR_GREY
+    }
+
+    const MINIMAP = {
+        ...MINIMAP_BASE,
+        smooth: false,
+        lineColor: COLOR_BLACK,
+        selectionRadius: 2,
+        merged: false,
     }
 
     const vue_ui_stackbar = {
@@ -307,14 +311,29 @@ export function useConfig() {
                     ...LEGEND,
                     position: 'bottom'
                 },
-                zoom: ZOOM,
+                zoom: {
+                    ...ZOOM,
+                    minimap: MINIMAP_BASE,
+                    preview: {
+                        enable: true,
+                        fill: '#CCCCCC50',
+                        stroke: '#6A6A6A',
+                        strokeWidth: 2,
+                        strokeDasharray: 0,
+                    },
+                    useDefaultFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is enabled and useDefaultFormat is false
+                    customFormat: null // overrides all if callback => string
+                },
                 tooltip: {
                     ...TOOLTIP,
                     showValue: true,
                     showPercentage: true,
                     roundingValue: 0,
                     roundingPercentage: 0,
-                    showTimeLabel: true
+                    showTimeLabel: true,
+                    useDefaultTimeFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss' // When datetimeFormatter is enabled and useDefaultFormat is false
                 },
                 highlighter: {
                     color: COLOR_BLACK,
@@ -387,7 +406,10 @@ export function useConfig() {
                             },
                             fontSize: FONT._14,
                             color: COLOR_BLACK,
-                            bold: false
+                            bold: false,
+                            showOnlyFirstAndLast: false,
+                            showOnlyAtModulo: false,
+                            modulo: 12
                         }
                     },
                     y: {
@@ -2281,6 +2303,7 @@ export function useConfig() {
     }
 
     const vue_ui_candlestick = {
+        type: 'candlestick', // or 'ohlc'
         debug: false, // v3
         loading: false, // v3
         responsive: false,
@@ -2308,7 +2331,22 @@ export function useConfig() {
                     show: true,
                     stroke: COLOR_GREY_LIGHT,
                     strokeWidth: 0.5,
+                    verticalLines: {
+                        show: false,
+                        strokeDasharray: 0,
+                        strokeWidth: 0.5,
+                        stroke: COLOR_GREY_LIGHT
+                    },
+                    horizontalLines: {
+                        show: false,
+                        strokeDasharray: 0,
+                        strokeWidth: 0.5,
+                        stroke: COLOR_GREY_LIGHT
+                    },
                     xAxis: {
+                        ticks: {
+                            show: true,
+                        },
                         dataLabels: {
                             show: true,
                             fontSize: FONT._10,
@@ -2320,7 +2358,10 @@ export function useConfig() {
                                 enable: true, // v3
                                 angle: -30 // v3
                             },
-                            datetimeFormatter: AXIS_DATE_FORMATTER
+                            datetimeFormatter: AXIS_DATE_FORMATTER,
+                            showOnlyFirstAndLast: false,
+                            showOnlyAtModulo: false,
+                            modulo: 12
                         },
                     },
                     yAxis: {
@@ -2365,13 +2406,29 @@ export function useConfig() {
                     widthRatio: 0.5
                 }
             },
-            zoom: ZOOM,
+            zoom: {
+                ...ZOOM,
+                minimap: MINIMAP_BASE,
+                preview: {
+                    enable: true,
+                    fill: '#CCCCCC50',
+                    stroke: '#6A6A6A',
+                    strokeWidth: 2,
+                    strokeDasharray: 0,
+                },
+                useDefaultFormat: true,
+                timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is enabled and useDefaultFormat is false
+                customFormat: null // overrides all if callback => string
+            },
             title: TITLE,
             tooltip: {
                 ...TOOLTIP,
                 roundingValue: 0,
                 prefix: '',
                 suffix: '',
+                showChart: true,
+                useDefaultTimeFormat: true,
+                timeFormat: 'yyyy-MM-dd HH:mm:ss' // When datetimeFormatter is enabled and useDefaultFormat is false
             }
         },
         translations: {
@@ -4368,6 +4425,8 @@ export function useConfig() {
     }
 
     const vue_ui_xy_canvas = {
+        debug: false,
+        loading: false,
         responsive: false,
         theme: '',
         customPalette: [],
@@ -4398,14 +4457,32 @@ export function useConfig() {
                     min: null,
                     max: null,
                 },
-                zoom: ZOOM,
+                zoom: {
+                    ...ZOOM,
+                    minimap: MINIMAP,
+                    preview: { // v3
+                        enable: false,
+                        fill: '#CCCCCC50',
+                        stroke: '#6A6A6A',
+                        strokeWidth: 2,
+                        strokeDasharray: 0,
+                    },
+                    useDefaultFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is enabled
+                    customFormat: null // overrides all if callback => string
+                },
                 selector: {
                     show: true,
                     color: COLOR_BLACK,
                     dashed: true,
                     showHorizontalSelector: false,
                 },
-                tooltip: TOOLTIP,
+                tooltip: {
+                    ...TOOLTIP,
+                    showTimeLabel: true,
+                    useDefaultTimeFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss' // When datetimeFormatter is enabled and useDefaultFormat is false
+                },
                 legend: {
                     ...LEGEND,
                     position: 'bottom',
@@ -4478,6 +4555,7 @@ export function useConfig() {
                     }
                 },
                 line: {
+                    cutNullValues: true,
                     plots: {
                         show: true,
                         radiusRatio: 1

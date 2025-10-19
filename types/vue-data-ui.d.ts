@@ -2734,7 +2734,10 @@ declare module "vue-data-ui" {
         VueUiAgePyramidExpose
     >;
 
+    export type OHLC = [string | number, number, number, number, number];
+
     export type VueUiCandlestickConfig = {
+        type?: 'ohlc' | 'candlesctick';
         debug?: boolean;
         loading?: boolean;
         responsive?: boolean;
@@ -2762,7 +2765,22 @@ declare module "vue-data-ui" {
                     show?: boolean;
                     stroke?: string;
                     strokeWidth?: number;
+                    verticalLines?: {
+                        show?: boolean;
+                        strokeDasharray?: number;
+                        strokeWidth?: number;
+                        stroke?: string;
+                    };
+                    horizontalLines?: {
+                        show?: boolean;
+                        strokeDasharray?: number;
+                        strokeWidth?: number;
+                        stroke?: string;
+                    };
                     xAxis?: {
+                        ticks?: {
+                            show?: boolean;
+                        };
                         dataLabels?: {
                             show?: boolean;
                             fontSize?: number;
@@ -2773,10 +2791,11 @@ declare module "vue-data-ui" {
                             autoRotate?: { // v3
                                 enable?: boolean; // v3
                                 angle?: number; // v3
-                            }
-                        };
-                        timeLabels?: {
-                            datetimeFormatter?: AxisDateFormatter
+                            };
+                            datetimeFormatter?: AxisDateFormatter;
+                            showOnlyFirstAndLast?: boolean;
+                            showOnlyAtModulo?: boolean;
+                            modulo?: number;
                         };
                     };
                     yAxis?: {
@@ -2821,7 +2840,20 @@ declare module "vue-data-ui" {
                     widthRatio?: number;
                 };
             };
-            zoom?: ChartZoom;
+            zoom?: ChartZoom & {
+                preview?: {
+                    enable?: boolean;
+                    fill?: string;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    strokeDasharray?: number;
+                };
+                useDefaultFormat?: boolean;
+                timeFormat?: string;
+                customFormat?:
+                    | null
+                    | ((params: MinimalCustomFormatParams<OHLC[]>) => string);
+            };
             title?: ChartTitle;
             tooltip?: ChartTooltip & {
                 roundingValue?: number;
@@ -2836,6 +2868,9 @@ declare module "vue-data-ui" {
                         VueUiCandlestickConfig
                     >
                 ) => string);
+                useDefaultTimeFormat?: boolean;
+                timeFormat?: string;
+                showChart?: boolean;
             };
         };
         translations?: {
@@ -2884,7 +2919,8 @@ declare module "vue-data-ui" {
     export const VueUiCandlestick: DefineComponent<
         {
             config?: VueUiCandlestickConfig;
-            dataset: Array<Array<string | number>>;
+            dataset: OHLC[];
+            selectedXIndex?: number | null;
         },
         VueUiCandlestickExpose
     >;
@@ -6985,6 +7021,8 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiXyCanvasConfig = {
+        debug?: boolean;
+        loading?: boolean;
         downsample?: {
             threshold?: number;
         };
@@ -7005,7 +7043,20 @@ declare module "vue-data-ui" {
                     min?: number | null;
                     max?: number | null;
                 };
-                zoom?: ChartZoom;
+                zoom?: ChartZoom & {
+                    preview?: {
+                        enable?: boolean;
+                        fill?: string;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        strokeDasharray?: number;
+                    };
+                    useDefaultFormat?: boolean;
+                    timeFormat?: string;
+                    customFormat?:
+                    | null
+                    | ((params: MinimalCustomFormatParams<VueUiXyCanvasDatasetItem[]>) => string);
+                };
                 selector?: {
                     show?: boolean;
                     color?: string;
@@ -7022,6 +7073,9 @@ declare module "vue-data-ui" {
                             VueUiXyConfig
                         >
                     ) => string);
+                    showTimeLabel?: boolean;
+                    useDefaultTimeFormat?: boolean;
+                    timeFormat?: string;
                 };
                 legend?: {
                     backgroundColor?: string;
@@ -7102,6 +7156,7 @@ declare module "vue-data-ui" {
                     };
                 };
                 line?: {
+                    cutNullValues?: boolean;
                     plots?: {
                         show?: boolean;
                         radiusRatio?: number;
@@ -7794,7 +7849,20 @@ declare module "vue-data-ui" {
                     backgroundColor?: string;
                     position?: 'bottom' | 'top';
                 };
-                zoom?: ChartZoom;
+                zoom?: ChartZoom & {
+                    preview?: {
+                        enable?: boolean;
+                        fill?: string;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        strokeDasharray?: number;
+                    };
+                    useDefaultFormat?: boolean;
+                    timeFormat?: string;
+                    customFormat?:
+                        | null
+                        | ((params: MinimalCustomFormatParams<Array<VueUiStackbarDatapointItem & { absoluteIndex: number }>>) => string);
+                };
                 tooltip?: ChartTooltip & {
                     showValue?: boolean;
                     showPercentage?: boolean;
@@ -7810,6 +7878,8 @@ declare module "vue-data-ui" {
                         >
                     ) => string);
                     showTimeLabel?: boolean;
+                    useDefaultTimeFormat?: boolean;
+                    timeFormat?: string;
                 };
                 highlighter?: {
                     color?: string;
@@ -7883,6 +7953,9 @@ declare module "vue-data-ui" {
                             fontSize?: number;
                             color?: string;
                             bold?: boolean;
+                            showOnlyFirstAndLast?: boolean;
+                            showOnlyAtModulo?: boolean;
+                            modulo?: number;
                         };
                     };
                     y?: {
@@ -7946,6 +8019,7 @@ declare module "vue-data-ui" {
         {
             config?: VueUiStackbarConfig;
             dataset: VueUiStackbarDatasetItem[];
+            selectedXIndex?: number | null;
         },
         VueUiStackbarExpose
     >;
