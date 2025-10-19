@@ -129,7 +129,7 @@ const mapping = ref({
 })
 
 const options = computed(() => Object.keys(mapping.value));
-const selectedComponent = ref('VueUiAnnotator');
+const selectedComponent = ref('VueUiXyCanvas');
 
 /**
  * Legacy testing arena where some non chart components can be tested

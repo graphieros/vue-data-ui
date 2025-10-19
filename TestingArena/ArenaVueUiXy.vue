@@ -398,7 +398,7 @@ onMounted(() => {
     {
         name: "Serie A",
         series: createDs(35),
-        type: "bar",
+        type: "plot",
         dataLabels: false,
         smooth: true,
         useArea: true,
@@ -837,7 +837,7 @@ const model = ref([
     { key: 'line.labels.rounding', def: 0, type: 'number', min: 0, max: 6, label: 'rounding', category: 'line' },
     { key: 'line.labels.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'line' },
     { key: 'line.area.useGradient', def: true, type: 'checkbox', label: 'useGradient', category: 'line' },
-    { key: 'line.area.opacity', def: 20, type: 'range', min: 0, max: 100, label: 'opacity', category: 'line' },
+    { key: 'line.area.opacity', def: 30, type: 'range', min: 0, max: 100, label: 'opacity', category: 'line' },
 
     { key: 'line.dot.useSerieColor', def: false, type: 'checkbox' },
     { key: 'line.dot.fill', def: '#FFFFFF', type: 'color' },
@@ -1184,7 +1184,7 @@ const config = computed(() => {
                 },
                 zoom: {
                     ...c.chart.zoom,
-                    useDefaultFormat: true,
+                    useDefaultFormat: false,
                     timeFormat: 'yyyy-MM-dd HH:mm:ss',
                     // customFormat: ({ absoluteIndex }) => {
                     //     return String(absoluteIndex) + 'TEST'

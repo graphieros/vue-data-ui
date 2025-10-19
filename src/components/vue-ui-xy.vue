@@ -15,8 +15,10 @@ import {
 import {
     abbreviate,
     adaptColorToBackground,
-    assignStackRatios,
     applyDataLabel,
+    assignStackRatios,
+    buildDisplayedTimeLabels,
+    buildInterLineAreas,
     calcLinearProgression,
     calculateNiceScale,
     calculateNiceScaleWithExactExtremes,
@@ -24,36 +26,35 @@ import {
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
+    createIndividualArea,
+    createIndividualAreaWithCuts,
     createPolygonPath,
+    createSmoothAreaSegments,
     createSmoothPath,
-    createStraightPath,
+    createSmoothPathWithCuts,
     createStar,
+    createStraightPath,
+    createStraightPathWithCuts,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createUid,
     dataLabel,
     downloadCsv,
+    error,
     forceValidValue,
     functionReturnsString,
     hasDeepProperty,
     isFunction,
     isSafeValue,
     largestTriangleThreeBucketsArray,
+    objectIsEmpty,
     palette,
     placeXYTag,
     setOpacity,
     shiftHue,
-    error,
-    objectIsEmpty,
     themePalettes,
     translateSize,
-    createSmoothPathWithCuts,
-    createStraightPathWithCuts,
-    createIndividualAreaWithCuts,
-    createSmoothAreaSegments,
-    createIndividualArea,
     treeShake,
-    buildInterLineAreas,
 } from '../lib';
 import { throttle } from '../canvas-lib.js';
 import { useConfig } from '../useConfig';
@@ -849,91 +850,6 @@ const modulo = computed(() => {
     return Math.min(m, [...new Set(timeLabels.value.map(t => t.text))].length);
 });
 
-function memoizeDisplayedTimeLabels(fn) {
-    let prevKey = null;
-    let prevVal = null;
-    return (...args) => {
-        const key = JSON.stringify(args);
-        if (key === prevKey) return prevVal;
-        prevKey = key;
-        prevVal = fn(...args);
-        return prevVal;
-    };
-}
-
-const _buildDisplayedTimeLabels = memoizeDisplayedTimeLabels((
-    showOnlyFirstAndLast,
-    showOnlyAtModulo,
-    moduloBase,
-    visTexts,
-    allTexts,
-    startAbs,
-    selIdx,
-    maxSeriesCount
-    ) => {
-    if (showOnlyFirstAndLast) {
-        if (visTexts.length <= 2) {
-            return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
-        }
-        const out = visTexts.map((t, i) => {
-            const keep = (i === 0) || (i === visTexts.length - 1) || (selIdx != null && i === selIdx);
-            return { text: keep ? t : '', absoluteIndex: i };
-        });
-        return out;
-    }
-
-    if (!showOnlyAtModulo) {
-        return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
-    }
-
-    const mod = Math.max(1, moduloBase || 1);
-    if (maxSeriesCount <= mod) {
-        return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
-    }
-
-    const candidates = [];
-    for (let i = 0; i < visTexts.length; i += 1) {
-        const cur = visTexts[i] ?? '';
-        if (!cur) continue;
-        const prevAbs = startAbs + i - 1 >= 0 ? (allTexts[startAbs + i - 1] ?? '') : null;
-        if (cur !== prevAbs) candidates.push(i);
-    }
-
-    if (!candidates.length) {
-        return visTexts.map((_t, i) => ({ text: '', absoluteIndex: i }));
-    }
-
-    const C = candidates.length;
-    const base = mod;
-    const minK = Math.max(2, Math.min(base - 3, C));
-    const maxK = Math.min(C, base + 3);
-
-    let bestK = Math.min(base, C);
-    let bestScore = Infinity;
-
-    for (let k = minK; k <= maxK; k += 1) {
-        const remainder = (C - 1) % (k - 1);
-        const drift = Math.abs(k - base);
-        const score = remainder * 10 + drift;
-        if (score < bestScore) { bestScore = score; bestK = k; }
-    }
-
-    const picked = new Set();
-    if (bestK <= 1) {
-        picked.add(candidates[Math.round((C - 1) / 2)]);
-    } else {
-        const step = (C - 1) / (bestK - 1);
-        for (let j = 0; j < bestK; j += 1) {
-        picked.add(candidates[Math.round(j * step)]);
-        }
-    }
-
-    return visTexts.map((t, i) => ({
-        text: picked.has(i) ? t : '',
-        absoluteIndex: i
-    }));
-});
-
 const displayedTimeLabels = computed(() => {
     const cfg = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels;
     const vis = timeLabels.value || [];
@@ -944,7 +860,7 @@ const displayedTimeLabels = computed(() => {
     const visTexts = vis.map(l => l?.text ?? '');
     const allTexts = all.map(l => l?.text ?? '');
 
-    return _buildDisplayedTimeLabels(
+    return buildDisplayedTimeLabels(
         !!cfg.showOnlyFirstAndLast,
         !!cfg.showOnlyAtModulo,
         Math.max(1, modulo.value || 1),
@@ -2208,54 +2124,6 @@ const preciseAllTimeLabels = computed(() => {
         text: preciseTimeFormatter.value(i, FINAL_CONFIG.value.chart.zoom.timeFormat),
         absoluteIndex: i
     }))
-})
-
-// Simple Slicer labels
-const useSlicerCustomFormat = ref(false);
-
-const slicerLabels = computed(() => {
-    let left = '', right = '';
-    if (FINAL_CONFIG.value.chart.zoom.preview.enable) {
-        return { left, right };
-    }
-    useSlicerCustomFormat.value = false;
-    const customFormat = FINAL_CONFIG.value.chart.zoom.customFormat;
-    if (isFunction(customFormat)) {
-        try {
-            const customLeft = customFormat({
-                absoluteIndex: slicer.value.start,
-                seriesIndex: slicer.value.start,
-                datapoint: selectedSeries.value
-            });
-            const customRight = customFormat({
-                absoluteIndex: slicer.value.end - 1,
-                seriesIndex: slicer.value.end - 1,
-                datapoint: selectedSeries.value
-            });
-            if (typeof customLeft === 'string' && typeof customRight === 'string') {
-                left = customLeft;
-                right = customRight;
-                useSlicerCustomFormat.value = true;
-            }
-        } catch (err) {
-            console.warn('Custom format cannot be applied on zoom labels.');
-            useSlicerCustomFormat.value = false;
-        }
-    }
-
-    if (!useSlicerCustomFormat.value) {
-        left = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.zoom.useDefaultFormat
-        ? (preciseAllTimeLabels.value[slicer.value.start]?.text || '')
-        : (timeLabels.value[0]?.text || '');
-
-        const endAbs = Math.max(slicer.value.start, slicer.value.end - 1)
-
-        right = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.value.chart.zoom.useDefaultFormat
-        ? (preciseAllTimeLabels.value[endAbs]?.text || '')
-        : (timeLabels.value.at(-1)?.text || '')        
-    }
-
-    return { left, right };
 });
 
 const tooltipContent = computed(() => {
@@ -4267,52 +4135,54 @@ defineExpose({
 
         <SlicerPreview 
             ref="chartSlicer" 
-            v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset  && slicerReady"
-            :immediate="!FINAL_CONFIG.chart.zoom.preview.enable"
-            :max="maxX" 
-            :min="0"
-            :valueStart="slicer.start" 
-            :valueEnd="slicer.end" 
-            :start="slicer.start"
-            :end="slicer.end"
-            @update:start="onSlicerStart"
-            @update:end="onSlicerEnd"
-            :selectedSeries="selectedSeries"
-            :customFormat="FINAL_CONFIG.chart.zoom.customFormat"
+            v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset && slicerReady"
+            :allMinimaps="allMinimaps"
             :background="FINAL_CONFIG.chart.zoom.color"
-            :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
-            :labelLeft="timeLabels[0]? timeLabels[0].text : ''" 
-            :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" 
-            :textColor="FINAL_CONFIG.chart.color"
-            :usePreciseLabels="FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.chart.zoom.useDefaultFormat"
-            :preciseLabels="preciseAllTimeLabels"
-            :inputColor="FINAL_CONFIG.chart.zoom.color" :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
-            :borderColor="FINAL_CONFIG.chart.backgroundColor" :minimap="minimap"
-            :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
-            :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
-            :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
-            :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
-            :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
-            :minimapSelectedIndex="selectedSerieIndex"
-            :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
-            :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
-            :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
-            :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => lttb(datapoint.series).length))"
+            :borderColor="FINAL_CONFIG.chart.backgroundColor" 
+            :customFormat="FINAL_CONFIG.chart.zoom.customFormat"
+            :cutNullValues="FINAL_CONFIG.line.cutNullValues"
             :enableRangeHandles="FINAL_CONFIG.chart.zoom.enableRangeHandles"
             :enableSelectionDrag="FINAL_CONFIG.chart.zoom.enableSelectionDrag"
-            :minimapCompact="FINAL_CONFIG.chart.zoom.minimap.compact"
-            :allMinimaps="allMinimaps"
-            :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
-            :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
-            :cutNullValues="FINAL_CONFIG.line.cutNullValues"
+            :end="slicer.end"
             :focusOnDrag="FINAL_CONFIG.chart.zoom.focusOnDrag"
             :focusRangeRatio="FINAL_CONFIG.chart.zoom.focusRangeRatio"
+            :fontSize="FINAL_CONFIG.chart.zoom.fontSize" :useResetSlot="FINAL_CONFIG.chart.zoom.useResetSlot"
+            :immediate="!FINAL_CONFIG.chart.zoom.preview.enable"
+            :inputColor="FINAL_CONFIG.chart.zoom.color" 
+            :isPreview="isPrecog"
+            :labelLeft="timeLabels[0]? timeLabels[0].text : ''" 
+            :labelRight="timeLabels.at(-1) ? timeLabels.at(-1).text : ''" 
+            :max="maxX" 
+            :min="0"
+            :minimap="minimap"
+            :minimapCompact="FINAL_CONFIG.chart.zoom.minimap.compact"
+            :minimapFrameColor="FINAL_CONFIG.chart.zoom.minimap.frameColor"
+            :minimapIndicatorColor="FINAL_CONFIG.chart.zoom.minimap.indicatorColor"
+            :minimapLineColor="FINAL_CONFIG.chart.zoom.minimap.lineColor"
+            :minimapMerged="FINAL_CONFIG.chart.zoom.minimap.merged"
+            :minimapSelectedColor="FINAL_CONFIG.chart.zoom.minimap.selectedColor"
+            :minimapSelectedColorOpacity="FINAL_CONFIG.chart.zoom.minimap.selectedColorOpacity"
+            :minimapSelectedIndex="selectedSerieIndex"
+            :minimapSelectionRadius="FINAL_CONFIG.chart.zoom.minimap.selectionRadius"
+            :preciseLabels="preciseAllTimeLabels.length ? preciseAllTimeLabels : allTimeLabels"
+            :refreshEndPoint="FINAL_CONFIG.chart.zoom.endIndex !== null ? FINAL_CONFIG.chart.zoom.endIndex + 1 : Math.max(...dataset.map(datapoint => lttb(datapoint.series).length))"
+            :refreshStartPoint="FINAL_CONFIG.chart.zoom.startIndex !== null ? FINAL_CONFIG.chart.zoom.startIndex : 0"
+            :selectColor="FINAL_CONFIG.chart.zoom.highlightColor"
+            :selectedSeries="selectedSeries"
+            :smoothMinimap="FINAL_CONFIG.chart.zoom.minimap.smooth"
+            :start="slicer.start"
+            :textColor="FINAL_CONFIG.chart.color"
+            :timeLabels="allTimeLabels"
+            :usePreciseLabels="FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.chart.zoom.useDefaultFormat"
+            :valueEnd="slicer.end" 
+            :valueStart="slicer.start" 
+            :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
+            @futureEnd="v => setPrecog('end', v)"
+            @futureStart="v => setPrecog('start', v)"
             @reset="refreshSlicer"
             @trapMouse="selectMinimapIndex"
-            @futureStart="v => setPrecog('start', v)"
-            @futureEnd="v => setPrecog('end', v)"
-            :timeLabels="allTimeLabels"
-            :isPreview="isPrecog"
+            @update:end="onSlicerEnd"
+            @update:start="onSlicerStart"
         >
             <template #reset-action="{ reset }">
                 <slot name="reset-action" v-bind="{ reset }" />
