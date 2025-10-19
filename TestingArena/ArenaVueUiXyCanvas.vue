@@ -14,10 +14,14 @@ const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleSta
 const crazyDs = [];
 const crazyDs2 = [];
 const crazyDs3 = []
-for (let i = 0; i < 200; i += 1) {
-    crazyDs.push(Math.random() + (Math.random() > 0.5 ? Math.random() * 100 : 0))
+for (let i = 0; i < 50; i += 1) {
+    if ((i > 10 && i <= 20) || (i > 21 && i < 30)) {
+        crazyDs3.push(null)
+    } else {
+        crazyDs3.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -5 : Math.random() * 5))
+    }
+    crazyDs.push(Math.random() + (Math.random() > 0.5 ? Math.random() * 10 : -10))
     crazyDs2.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -10 : -10))
-    crazyDs3.push(Math.random() + (Math.random() > 0.5 ? Math.random() * -5 : Math.random() * 5))
 }
 
 function makeDs(n,m) {
@@ -28,11 +32,26 @@ function makeDs(n,m) {
     return arr
 }
 
-const dataset = ref([
+const dataset = ref(undefined);
+
+onMounted(() => {
+    setTimeout(() => {
+        dataset.value = [
         {
             name: "S0",
             series: crazyDs3,
             type: "line",
+            useArea: true,
+            dataLabels: true,
+            scaleSteps: 2,
+            prefix: '$',
+            suffix: '£',
+            rounding: 1,
+        },
+        {
+            name: "S1",
+            series: crazyDs2,
+            type: "bar",
             useArea: false,
             dataLabels: true,
             scaleSteps: 2,
@@ -40,7 +59,20 @@ const dataset = ref([
             suffix: '£',
             rounding: 1,
         },
-    ])
+        {
+            name: "S2",
+            series: crazyDs,
+            type: "plot",
+            useArea: false,
+            dataLabels: true,
+            scaleSteps: 2,
+            prefix: '$',
+            suffix: '£',
+            rounding: 1,
+        },
+    ]
+    }, 2000)
+})
 
     async function getData() {
         return makeDs(800, 100)
@@ -75,6 +107,8 @@ async function longpolling ()
 
 
 const model = ref([
+    { key: 'loading', def: false, type: 'checkbox'},
+    { key: 'debug', def: true, type: 'checkbox'},
     { key: 'downsample.threshold', def: 120000, type: 'number', min: 0,max: 10000000},
     { key: 'responsive', def: false, type: "checkbox" },
     { key: 'userOptions.show', def: true, type: 'checkbox' },
@@ -95,7 +129,7 @@ const model = ref([
     { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
     
     { key: 'style.fontFamily', def: 'Arial', type: 'text' },
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color' },
+    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
     { key: 'style.chart.aspectRatio', def: '12 / 9', type: 'text' },
     { key: 'style.chart.stacked', def: false, type: 'checkbox' },
@@ -115,6 +149,9 @@ const model = ref([
     { key: 'style.chart.zoom.enableSelectionDrag', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.focusOnDrag', def: true, type: 'checkbox'},
     { key: 'style.chart.zoom.focusRangeRatio', def: 0.2, type: 'number', min: 0.1, max: 0.9, step: 0.1},
+
+    { key: 'style.chart.zoom.minimap.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.zoom.preview.enable', def: true, type: 'checkbox'},
 
     { key: 'style.chart.selector.show', def: true, type: 'checkbox' },
     { key: 'style.chart.selector.color', def: '#1A1A1A', type: 'color' },
@@ -194,7 +231,7 @@ const model = ref([
 
     { key: 'style.chart.bar.gradient.show', def: false, type: 'checkbox'},
 
-    { key: 'style.chart.area.opacity', def: 60, type: 'number', min: 10, max: 100 },
+    { key: 'style.chart.area.opacity', def: 30, type: 'number', min: 10, max: 100 },
     { key: 'style.chart.dataLabels.show', def: false, type: 'checkbox' },
     { key: 'style.chart.dataLabels.bold', def: true, type: 'checkbox' },
     { key: 'style.chart.dataLabels.fontSizeRatio', def: 1, type: 'number', min: 0.1, max: 2, step: 0.1 },
@@ -231,20 +268,18 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6]);
+const currentTheme = ref(themeOptions.value[0]);
 
 const monthValues = computed(() => {
-  const yearStart = 2026
-  const arr = []
+    const yearStart = 2026
+    const arr = []
 
-  for (let i = 0; i < 200; i++) {
-    const d = new Date(yearStart, i, 1)
-    arr.push(d.getTime())
-  }
+    for (let i = 0; i < 200; i += 1) {
+        const d = new Date(yearStart, i, 1)
+        arr.push(d.getTime())
+    }
 
-  console.log(arr)
-
-  return arr
+    return arr
 })
 
 const config = computed(() => {
@@ -263,19 +298,30 @@ const config = computed(() => {
                         return `f | ${value}`
                     }
                 },
-                // tooltip: {
-                //     ...c.style.chart.tooltip,
-                //     customFormat: ({ datapoint }) => {
-                //         return datapoint[0].name
-                //     }
-                // },
+                tooltip: {
+                    ...c.style.chart.tooltip,
+                    useDefaultTimeFormat: false,
+                    timeFormat: 'yyyy-MM-dd'
+                    // customFormat: ({ datapoint }) => {
+                    //     return datapoint[0].name
+                    // }
+                },
+                zoom: {
+                    ...c.style.chart.zoom,
+                    useDefaultFormat: false,
+                    timeFormat: 'yyyy-MM',
+                    // customFormat: (d) => {
+                    //     console.log(d);
+                    //     return 'T'
+                    // }
+                },
                 grid: {
                     ...c.style.chart.grid,
                     x: {
                         ...c.style.chart.grid.x,
                         timeLabels: {
                             ...c.style.chart.grid.x.timeLabels,
-                            values: monthValues.value,
+                            values: [],
                             datetimeFormatter: {
                                 enable: true,
                             }
@@ -313,7 +359,11 @@ const config = computed(() => {
 //     }
 // })
 
+const selectedX = ref(undefined);
 
+function selectX({ datapoint, index, indexLabel}) {
+    selectedX.value = index;
+}
 
 </script>
 
@@ -354,7 +404,7 @@ const config = computed(() => {
         <template #title>VueUiXyCanvas</template>
 
         <template #local>
-            <LocalVueUiXyCanvas :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+            <LocalVueUiXyCanvas @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
                 <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -362,7 +412,7 @@ const config = computed(() => {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiXyCanvas" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
+            <LocalVueDataUi @selectX="selectX" :selectedXIndex="selectedX" component="VueUiXyCanvas" :dataset="dataset" :config="config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
 
             </LocalVueDataUi>
         </template>

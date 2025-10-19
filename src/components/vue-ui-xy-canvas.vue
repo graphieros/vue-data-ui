@@ -8,7 +8,8 @@ import {
     nextTick,
     useSlots,
     defineAsyncComponent,
-    shallowRef
+    shallowRef,
+    toRefs
 } from "vue";
 import {
     applyDataLabel,
@@ -31,6 +32,7 @@ import {
     sanitizeArray,
     setOpacity,
     themePalettes,
+    treeShake,
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import {
@@ -42,26 +44,29 @@ import {
     rect,
     text,
 } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { usePrinter } from "../usePrinter";
-import { useResponsive } from "../useResponsive";
 import { useConfig } from "../useConfig";
+import { useLoading } from "../useLoading";
+import { usePrinter } from "../usePrinter";
+import { useDateTime } from "../useDateTime";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
+import { useTimeLabels } from "../useTimeLabels";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import img from "../img";
 import themes from "../themes.json";
+import locales from '../locales/locales.json';
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
-import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
-import { useTimeLabels } from "../useTimeLabels";
-import img from "../img";
 import BaseIcon from "../atoms/BaseIcon.vue";
+import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
+import SlicerPreview from "../atoms/SlicerPreview.vue"; // Must be ready in responsive mode
+import BaseScanner from "../atoms/BaseScanner.vue";
 
-const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
-const NonSvgPenAndPaper = defineAsyncComponent(() => import('../atoms/NonSvgPenAndPaper.vue'));
-const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
+const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
+const NonSvgPenAndPaper = defineAsyncComponent(() => import('../atoms/NonSvgPenAndPaper.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_xy_canvas: DEFAULT_CONFIG } = useConfig();
@@ -78,6 +83,10 @@ const props = defineProps({
         default() {
             return {}
         }
+    },
+    selectedXIndex: {
+        type: Number,
+        default: undefined
     }
 });
 
@@ -96,7 +105,6 @@ const dpr = ref(1);
 const datasetHasChanged = ref(true);
 const tooltipHasChanged = ref(true);
 const clonedCanvas = ref(null);
-const slicerStep = ref(0);
 const step = ref(0);
 const isFullscreen = ref(false);
 const chartTitle = ref(null);
@@ -110,12 +118,14 @@ const mouseY = ref(null);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
+const isSettingUp = ref(false);
+const slicerReady = ref(false);
+const suppressChild = ref(false);
+const selectedMinimapIndex = ref(null);
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length;
-});
+const isDataset = computed(() => Array.isArray(FINAL_DATASET.value) && FINAL_DATASET.value.length > 0);
 
-const emit = defineEmits(['selectLegend']);
+const emit = defineEmits(['selectLegend', 'selectX']);
 const slots = useSlots();
 
 onMounted(() => {
@@ -124,17 +134,82 @@ onMounted(() => {
     }
 });
 
-const FINAL_CONFIG = computed({
-    get: () => {
-        return prepareConfig();
-    },
-    set: (newCfg) => {
-        return newCfg
-    }
-});
+const FINAL_CONFIG = ref(prepareConfig());
+
+const debug = computed(() => !!FINAL_CONFIG.value.debug);
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: [
+        {
+            name: '',
+            series: [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 134],
+            type: 'line',
+            smooth: true,
+            color: '#BABABA'
+        },
+        {
+            name: '',
+            series: [0, 0.5, 1, 1.5, 2.5, 4, 6.5, 10.5, 17, 27.5, 44.5, 67],
+            type: 'bar',
+            color: '#AAAAAA'
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    grid: {
+                        x: {
+                            axisColor: '#6A6A6A',
+                            timeLabels: { show: false },
+                            axisName: '',
+                            horizontalLines: {
+                                color: '#6A6A6A'
+                            }
+                        },
+                        y: {
+                            axisColor: '#6A6A6A',
+                            axisLabels: { show: false },
+                            axisName: '',
+                            verticalLines: {
+                                color: '#6A6A6A'
+                            }
+                        },
+                        zeroLine: {
+                            color: '#6A6A6A'
+                        }
+                    },
+                    legend: {
+                        backgroundColor: '#99999930',
+                    },
+                    paddingProportions: {
+                        left: 0.05
+                    }
+                }
+            }
+        }
+    })
+})
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef:canvas } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
+
+function onChartEnter() {
+    setUserOptionsVisibility(true);
+}
+
+function onChartLeave() {
+    setUserOptionsVisibility(false);
+    emit('selectX', { seriesIndex: null, datapoint: null });
+    tooltipIndex.value = null;
+}
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -199,7 +274,9 @@ function prepareConfig() {
 }
 
 watch(() => props.config, (_newCfg) => {
-    FINAL_CONFIG.value = prepareConfig();
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     prepareChart();
     titleStep.value += 1;
@@ -213,12 +290,22 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
 }, { deep: true });
 
-watch(() => props.dataset, () => {
-    prepareChart();
+watch(() => props.dataset, async (d) => {
+    if (!Array.isArray(d) || d.length === 0) return;
+    await nextTick();
+
+    if (canvas.value && !ctx.value) {
+        ctx.value = canvas.value.getContext('2d', { willReadFrequently: true });
+    }
+
+    datasetHasChanged.value = true;
+    tooltipHasChanged.value = true;
+    await refreshSlicer();
+    resizeCanvas();
     titleStep.value += 1;
     tableStep.value += 1;
     legendStep.value += 1;
-}, { deep: true })
+}, { deep: true });
 
 const aspectRatio = ref(FINAL_CONFIG.value.style.chart.aspectRatio);
 
@@ -249,6 +336,10 @@ const maxSeries = computed(() => {
     return Math.max(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).map(ds => ds.series.length))
 });
 
+function selectMinimapIndex(i) {
+    selectedMinimapIndex.value = i;
+    draw()
+}
 
 const drawingArea = computed(() => {
     const width = w.value - (w.value * (FINAL_CONFIG.value.style.chart.paddingProportions.left + FINAL_CONFIG.value.style.chart.paddingProportions.right))
@@ -334,10 +425,10 @@ const tootlipDataset = computed(() => {
                 <span>${ds.name ? ds.name + ': ' : ''}</span>
                 <span>${ applyDataLabel(
                     FINAL_CONFIG.value.style.chart.dataLabels.formatter,
-                    ds.series[tooltipIndex.value],
+                    ds.series[tooltipIndex.value] ?? '-',
                     dataLabel({
                         p: ds.prefix || '',
-                        v: ds.series[tooltipIndex.value],
+                        v: ds.series[tooltipIndex.value] ?? '-',
                         s: ds.suffix || '',
                         r: ds.rounding || 0
                     }),
@@ -348,12 +439,16 @@ const tootlipDataset = computed(() => {
     });
 });
 
+const cutNullValues = computed(() => {
+    return FINAL_CONFIG.value.style.chart.line.cutNullValues
+})
+
 const dsCopy = computed(() => {
-    return props.dataset.map((ds, i) => {
+    return FINAL_DATASET.value.map((ds, i) => {
         return {
             ...ds,
             series: largestTriangleThreeBucketsArray({
-                data: sanitizeArray(ds.series),
+                data: sanitizeArray(ds.series, [], cutNullValues.value),
                 threshold: FINAL_CONFIG.value.downsample.threshold
             }),
             absoluteIndex: i,
@@ -361,6 +456,31 @@ const dsCopy = computed(() => {
         }
     });
 });
+
+const minimap = computed(() => {
+    if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
+    const _source = dsCopy.value.filter(ds => !segregated.value.includes(ds.absoluteIndex));
+    const maxIndex = Math.max(..._source.map(datapoint => datapoint.series.length));
+
+    const sumAllSeries = [];
+    for (let i = 0; i < maxIndex; i += 1) {
+        sumAllSeries.push(_source.map(ds => ds.series[i] || 0).reduce((a, b) => (a || 0) + (b || 0), 0))
+    }
+    const _min = Math.min(...sumAllSeries);
+    return sumAllSeries.map(dp => dp + (_min < 0 ? Math.abs(_min) : 0)) // positivized
+});
+
+const allMinimaps = computed(() => {
+    if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
+    const _source = dsCopy.value.map(ds => {
+        return {
+            ...ds,
+            isVisible: !segregated.value.includes(ds.absoluteIndex),
+        }
+    })
+
+    return _source
+})
 
 watch(maxSeries, (v) => {
     if(v) {
@@ -463,39 +583,85 @@ const slicer = ref({
     end: maxSeries.value
 });
 
-function refreshSlicer() {
-    setupSlicer();
+const slicerPrecog = ref({ start: 0, end: maxSeries.value });
+
+const refreshRAF = ref(null);
+function nextPaint() {
+    return new Promise(r => requestAnimationFrame(() =>
+        requestAnimationFrame(() => r())
+    ));
 }
 
-const slicerComponent = ref(null);
+onBeforeUnmount(() => {
+    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+});
+
+
+async function refreshSlicer() {
+    setupSlicer();
+
+    // Now this is basically sweeping shit under the rug so it works:
+    await nextTick();
+    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+    refreshRAF.value = requestAnimationFrame(async () => {
+        await nextPaint();
+        setupSlicer();
+    });
+}
+
+const isPrecog = computed(() => {
+    return FINAL_CONFIG.value.style.chart.zoom.preview.enable && (slicerPrecog.value.start !== slicer.value.start || slicerPrecog.value.end !== slicer.value.end);
+});
+
+function setPrecog(side, val) {
+    slicerPrecog.value[side] = val;
+}
 
 async function setupSlicer() {
-    await nextTick();
-    await nextTick();
+    if (isSettingUp.value) return;
+    isSettingUp.value = true;
+    try {
+        const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
+        const max = Math.max(...dsCopy.value.map(dp => dp.series.length));
 
-    const { startIndex, endIndex } = FINAL_CONFIG.value.style.chart.zoom;
-    const comp = slicerComponent.value;
-    const max = maxSeries.value;
+        const start = startIndex != null ? startIndex : 0;
+        const end   = endIndex   != null ? Math.min(validSlicerEnd(endIndex + 1), max) : max;
 
-    slicer.value = { start: 0, end: max };
+        suppressChild.value = true;
+        slicer.value.start = start;
+        slicer.value.end   = end;
+        slicerPrecog.value.start = start;
+        slicerPrecog.value.end   = end;
 
-    if ((startIndex != null || endIndex != null) && comp) {
-        if (startIndex != null) {
-            comp.setStartValue(startIndex);
-        } else {
-            slicer.value.start = 0;
-            comp.setStartValue(0);
+        normalizeSlicerWindow();
+
+        slicerReady.value = true;
+        await nextTick();
+        if (chartSlicer.value) {
+            chartSlicer.value.setStartValue(slicer.value.start);
+            chartSlicer.value.setEndValue(slicer.value.end);
         }
-        if (endIndex != null) {
-            comp.setEndValue(validSlicerEnd(endIndex + 1));
-        } else {
-            slicer.value.end = max;
-            comp.setEndValue(max);
-        }
-    } else {
-        slicer.value = { start: 0, end: max };
-        slicerStep.value += 1;
+    } finally {
+        queueMicrotask(() => { suppressChild.value = false; });
+        isSettingUp.value = false;
     }
+}
+
+function onSlicerStart(v) {
+    if (isSettingUp.value || suppressChild.value) return;
+    if (v === slicer.value.start) return;
+    slicer.value.start = v;
+    slicerPrecog.value.start = v;
+    normalizeSlicerWindow();
+}
+
+function onSlicerEnd(v) {
+    if (isSettingUp.value || suppressChild.value) return;
+    const end = validSlicerEnd(v);
+    if (end === slicer.value.end) return;
+    slicer.value.end = end;
+    slicerPrecog.value.end = end;
+    normalizeSlicerWindow();
 }
 
 function validSlicerEnd(v) {
@@ -503,14 +669,35 @@ function validSlicerEnd(v) {
     if (v > max) {
         return max;
     }
-    if (v < 0 || (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null && v < FINAL_CONFIG.value.style.chart.zoom.startIndex)) {
+    if (v < 0 || (v < slicer.value.start)) {
         if (FINAL_CONFIG.value.style.chart.zoom.startIndex !== null) {
             return FINAL_CONFIG.value.style.chart.zoom.startIndex + 1
         } else {
             return 1
         }
     }
-    return v
+    return v;
+}
+
+function normalizeSlicerWindow() {
+    const maxLen = Math.max(
+        1,
+        Math.max(...dsCopy.value.map(dp => dp.series.length))
+    )
+
+    let s = Math.max(0, Math.min(slicer.value.start ?? 0, maxLen - 1))
+    let e = Math.max(s + 1, Math.min(slicer.value.end ?? maxLen, maxLen))
+
+    if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) { s = 0; e = maxLen }
+
+    slicer.value = { start: s, end: e }
+    slicerPrecog.value.start = s
+    slicerPrecog.value.end = e
+
+    if(chartSlicer.value) {
+        chartSlicer.value.setStartValue(s);
+        chartSlicer.value.setEndValue(e)
+    }
 }
 
 const lineAndPlotTypes = computed(() => {
@@ -526,26 +713,46 @@ const barTypes = computed(() => {
 });
 
 function resizeCanvas() {
-    if(!canvas.value) {
-        return
-    }
+    if (!canvas.value || !container.value) return;
     const containerWidth = container.value.offsetWidth;
     const containerHeight = container.value.offsetHeight;
     canvas.value.width = containerWidth * dpr.value * 2;
-    canvas.value.height = containerHeight * dpr.value * 2; 2;
+    canvas.value.height = containerHeight * dpr.value * 2;
     w.value = containerWidth * dpr.value * 2;
     h.value = containerHeight * dpr.value * 2;
-    ctx.value.scale(dpr.value, dpr.value);
-
+    ctx.value?.scale(dpr.value, dpr.value);
     draw();
 }
 
+watch(isDataset, async (hasData) => {
+    if (!hasData) {
+        clonedCanvas.value = null;
+        isTooltip.value = false;
+        tooltipIndex.value = null;
+        mouseY.value = null;
+        return;
+    }
+    await nextTick();
+    if (canvas.value && !ctx.value) {
+        ctx.value = canvas.value.getContext('2d', { willReadFrequently: true });
+    }
+    datasetHasChanged.value = true;
+    tooltipHasChanged.value = true;
+    await refreshSlicer();
+    resizeCanvas();
+    draw();
+});
+
 function setupChart() {
-    ctx.value.clearRect(0, 0, 10000, 10000)
+    if (!ctx.value) return;
+
+    ctx.value.clearRect(0, 0, 10000, 10000);
     ctx.value.fillStyle = FINAL_CONFIG.value.style.chart.backgroundColor;
     ctx.value.fillRect(0, 0, drawingArea.value.canvasWidth, drawingArea.value.canvasHeight);
 
-    if (!mutableConfig.value.stacked) {
+    if (!isDataset.value) return;
+
+if (!mutableConfig.value.stacked) {
         // VERTICAL LINES
         if (FINAL_CONFIG.value.style.chart.grid.y.verticalLines.show && (slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.y.verticalLines.hideUnderXLength) {
             for (let i = 0; i < (slicer.value.end - slicer.value.start) + 1; i += 1) {
@@ -844,7 +1051,7 @@ function setupChart() {
 
 function drawPlots(ds) {
     for (let i = 0; i < ds.coordinatesLine.length; i += 1) {
-        const radius = (tooltipIndex.value === i ? w.value / 150 : FINAL_CONFIG.value.style.chart.line.plots.show ? w.value / 200 : 0) * FINAL_CONFIG.value.style.chart.line.plots.radiusRatio;
+        const radius = (tooltipIndex.value === i || selectedMinimapIndex.value === i ? w.value / 150 : (FINAL_CONFIG.value.style.chart.line.plots.show || ds.type === 'plot') ? w.value / 200 : 0) * FINAL_CONFIG.value.style.chart.line.plots.radiusRatio;
         circle(
             ctx.value,
             { x: ds.coordinatesLine[i].x, y: ds.coordinatesLine[i].y },
@@ -912,7 +1119,7 @@ function drawYAxisScaleLabels() {
                         align: 'right',
                         font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                         color: FINAL_CONFIG.value.style.chart.grid.y.axisLabels.color,
-                        globalAlpha: formattedDataset.value.some(ds => ds.showYMarker) && ![null, undefined].includes(tooltipIndex.value) ? 0.2 : 1
+                        globalAlpha: formattedDataset.value.some(ds => ds.showYMarker) && ![null, undefined].includes(tooltipIndex.value ?? selectedMinimapIndex.value) ? 0.2 : 1
                     }
                 );
             });
@@ -938,7 +1145,7 @@ function drawYAxisScaleLabels() {
                             align: 'right',
                             font: `${FINAL_CONFIG.value.style.chart.grid.y.axisLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.y.axisLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                             color: ds.color,
-                            globalAlpha: ds.showYMarker && ![null, undefined].includes(tooltipIndex.value) ? 0.2 : 1
+                            globalAlpha: ds.showYMarker && ![null, undefined].includes(tooltipIndex.value ?? selectedMinimapIndex.value) ? 0.2 : 1
                         }
                     );
                 });
@@ -968,6 +1175,8 @@ function drawDataLabels(ds) {
                 align: 'center',
                 font: `${FINAL_CONFIG.value.style.chart.dataLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.dataLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
                 color: FINAL_CONFIG.value.style.chart.dataLabels.useSerieColor ? ds.color : FINAL_CONFIG.value.style.chart.dataLabels.color,
+                strokeColor: FINAL_CONFIG.value.style.chart.backgroundColor,
+                lineWidth: 0.5
             }
         );
     }
@@ -979,8 +1188,41 @@ const timeLabels = computed(() => {
         maxDatapoints: maxSeries.value,
         formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
         start: 0,
-        end: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.length
+        end: maxSeries.value
     });
+});
+
+const preciseTimeFormatter = computed(() => {
+    const xl = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter;
+
+    const dt = useDateTime({
+        useUTC: xl.useUTC,
+        locale: locales[xl.locale] || { months:[], shortMonths:[], days:[], shortDays:[] },
+        januaryAsYear: xl.januaryAsYear
+    });
+
+    return (absIndex, fmt) => {
+        const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values
+        const ts = values?.[absIndex]
+        if (ts == null) return ''
+        return dt.formatDate(new Date(ts), fmt)
+    }
+});
+
+const preciseAllTimeLabels = computed(() => {
+    const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values || []
+    return values.map((_, i) => ({
+        text: preciseTimeFormatter.value(i, FINAL_CONFIG.value.style.chart.zoom.timeFormat),
+        absoluteIndex: i
+    }));
+});
+
+const preciseAllTimeLabelsTooltip = computed(() => {
+    const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values || []
+    return values.map((_, i) => ({
+        text: preciseTimeFormatter.value(i, FINAL_CONFIG.value.style.chart.tooltip.timeFormat),
+        absoluteIndex: i
+    }));
 });
 
 function drawTimeLabels() {
@@ -988,7 +1230,7 @@ function drawTimeLabels() {
         if (
             (slicer.value.end - slicer.value.start) < FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo || 
             ((slicer.value.end - slicer.value.start) >= FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo && (i % Math.floor((slicer.value.end - slicer.value.start) / FINAL_CONFIG.value.style.chart.grid.x.timeLabels.modulo) === 0 ||
-            (i === (tooltipIndex.value + slicer.value.start)) && FINAL_CONFIG.value.style.chart.grid.x.timeLabels.showMarker ))) 
+            (i === (tooltipIndex.value + slicer.value.start) || i === selectedMinimapIndex.value) && FINAL_CONFIG.value.style.chart.grid.x.timeLabels.showMarker ))) 
         {
             text(
                 ctx.value,
@@ -998,7 +1240,7 @@ function drawTimeLabels() {
                 {
                     align: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation === 0 ? 'center' : FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation > 0 ? 'left' : 'right',
                     font: `${FINAL_CONFIG.value.style.chart.grid.x.timeLabels.bold ? 'bold ' : ''}${Math.round(w.value / 40 * FINAL_CONFIG.value.style.chart.grid.x.timeLabels.fontSizeRatio)}px ${FINAL_CONFIG.value.style.fontFamily}`,
-                    color: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.showMarker ? setOpacity(FINAL_CONFIG.value.style.chart.grid.x.timeLabels.color, tooltipIndex.value !== null ? (tooltipIndex.value + slicer.value.start) === i ? 100 : 20 : 100) : FINAL_CONFIG.value.style.chart.grid.x.timeLabels.color,
+                    color: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.showMarker ? setOpacity(FINAL_CONFIG.value.style.chart.grid.x.timeLabels.color, (tooltipIndex.value !== null || selectedMinimapIndex.value !== null) ? (tooltipIndex.value + slicer.value.start) === i || selectedMinimapIndex.value === i ? 100 : 20 : 100) : FINAL_CONFIG.value.style.chart.grid.x.timeLabels.color,
                     rotation: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation,
                 }
             );
@@ -1010,8 +1252,8 @@ function drawVerticalSelector() {
     line(
         ctx.value,
         [
-            { x: drawingArea.value.left + (drawingArea.value.slot * tooltipIndex.value) + (drawingArea.value.slot / 2), y: drawingArea.value.top },
-            { x: drawingArea.value.left + (drawingArea.value.slot * tooltipIndex.value) + (drawingArea.value.slot / 2), y: drawingArea.value.bottom },
+            { x: drawingArea.value.left + (drawingArea.value.slot * (tooltipIndex.value ?? selectedMinimapIndex.value)) + (drawingArea.value.slot / 2), y: drawingArea.value.top },
+            { x: drawingArea.value.left + (drawingArea.value.slot * (tooltipIndex.value ?? selectedMinimapIndex.value)) + (drawingArea.value.slot / 2), y: drawingArea.value.bottom },
         ],
         {
             color: FINAL_CONFIG.value.style.chart.selector.color,
@@ -1136,27 +1378,84 @@ function drawBars() {
     });
 }
 
-function drawLineOrArea(ds) {
-    if (ds.useArea) {
-        // AREA
-        if (mutableConfig.value.stacked) {
-            polygon(
-                ctx.value,
-                [{ x: ds.coordinatesLine[0].x, y: ds.localZero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: ds.localZero }],
-                {
-                    fillColor: setOpacity(ds.color, FINAL_CONFIG.value.style.chart.area.opacity),
-                    strokeColor: 'transparent',
-                }
-            );
+function getNonNullAreaParts(ds, baselineY) {
+    const pts = ds.coordinatesLine.map((pt, idx) => {
+        const v = ds.series[idx];
+        const valid = v !== null && v !== undefined && Number.isFinite(pt?.y);
+        return valid ? pt : null;
+    });
+
+    const polygons = [];
+    const singles  = [];
+
+    let current = [];
+    for (let i = 0; i < pts.length; i += 1) {
+        const p = pts[i];
+        if (p) {
+            current.push(p);
         } else {
-            polygon(
-                ctx.value,
-                [{ x: ds.coordinatesLine[0].x, y: absoluteExtremes.value.zero }, ...ds.coordinatesLine, { x: ds.coordinatesLine.at(-1).x, y: absoluteExtremes.value.zero }],
-                {
-                    fillColor: setOpacity(ds.color, FINAL_CONFIG.value.style.chart.area.opacity),
-                    strokeColor: 'transparent',
-                }
-            );
+            if (current.length >= 2) {
+                const first = current[0];
+                const last  = current[current.length - 1];
+                polygons.push([
+                    { x: first.x, y: baselineY },
+                    ...current,
+                    { x: last.x,  y: baselineY }
+                ]);
+            } else if (current.length === 1) {
+                singles.push(current[0]);
+            }
+            current = [];
+        }
+    }
+
+    if (current.length >= 2) {
+        const first = current[0];
+        const last  = current[current.length - 1];
+        polygons.push([
+            { x: first.x, y: baselineY },
+            ...current,
+            { x: last.x,  y: baselineY }
+        ]);
+    } else if (current.length === 1) {
+        singles.push(current[0]);
+    }
+
+    return { polygons, singles };
+}
+
+
+
+function getNonNullLineChunks(ds) {
+    const pts = ds.coordinatesLine.map((pt, idx) => {
+        const v = ds.series[idx];
+        const valid = v !== null && v !== undefined && Number.isFinite(pt?.y);
+        return valid ? pt : null;
+    });
+
+    const chunks = [];
+    let current = [];
+    for (let i = 0; i < pts.length; i += 1) {
+        const p = pts[i];
+        if (p) {
+            current.push(p);
+        } else {
+            if (current.length >= 2) chunks.push(current);
+            current = [];
+        }
+    }
+    if (current.length >= 2) chunks.push(current);
+    return chunks;
+}
+
+function drawJustLine(ds) {
+    if (cutNullValues.value) {
+        const chunks = getNonNullLineChunks(ds);
+        for (const segment of chunks) {
+            line(ctx.value, segment, {
+                color: ds.color,
+                lineWidth: 3
+            });
         }
     } else {
         line(ctx.value, ds.coordinatesLine, {
@@ -1165,6 +1464,58 @@ function drawLineOrArea(ds) {
         });
     }
 }
+
+function drawLineOrArea(ds) {
+    const cutGaps = !!cutNullValues.value;
+
+    if (ds.useArea) {
+        const baselineY = mutableConfig.value.stacked
+            ? ds.localZero
+            : absoluteExtremes.value.zero;
+
+        if (cutGaps) {
+            const { polygons, singles } = getNonNullAreaParts(ds, baselineY);
+
+            for (const poly of polygons) {
+                polygon(ctx.value, poly, {
+                    fillColor: setOpacity(ds.color, FINAL_CONFIG.value.style.chart.area.opacity),
+                    strokeColor: 'transparent',
+                });
+            }
+
+            // Dots for plots surrounded by null values
+            const baseRadius = (w.value / 200) * FINAL_CONFIG.value.style.chart.line.plots.radiusRatio;
+            for (const pt of singles) {
+                circle(
+                    ctx.value,
+                    { x: pt.x, y: pt.y },
+                    baseRadius,
+                    {
+                        color: FINAL_CONFIG.value.style.chart.backgroundColor,
+                        fillStyle: ds.color,
+                        strokeColor: 'transparent'
+                    }
+                );
+            }
+        } else {
+            const start = { x: ds.coordinatesLine[0].x, y: baselineY };
+            const end   = { x: ds.coordinatesLine.at(-1).x, y: baselineY };
+            polygon(
+                ctx.value,
+                [start, ...ds.coordinatesLine, end],
+                {
+                    fillColor: setOpacity(ds.color, FINAL_CONFIG.value.style.chart.area.opacity),
+                    strokeColor: 'transparent',
+                }
+            );
+        }
+        drawJustLine(ds);
+        return;
+    }
+    drawJustLine(ds);
+}
+
+
 
 function drawXBaseLineStacked() {
     formattedDataset.value.forEach((ds, i) => {
@@ -1182,11 +1533,41 @@ function drawXBaseLineStacked() {
     });
 }
 
-function draw() {
-    setupChart();
-    if (datasetHasChanged.value) {
+function drawPrecogRect() {
+    const { left, top, width: totalWidth, height } = drawingArea.value
+    const windowStart = slicer.value.start
+    const windowEnd = slicer.value.end
+    const windowLen = windowEnd - windowStart
+    const unit = totalWidth / windowLen
+    const rawStart = slicerPrecog.value.start - windowStart;
+    const rawEnd   = slicerPrecog.value.end   - windowStart;
+    const relStart = Math.max(0, Math.min(windowLen, rawStart));
+    const relEnd   = Math.max(0, Math.min(windowLen, rawEnd));
 
-        (tooltipIndex.value !== null && FINAL_CONFIG.value.style.chart.selector.show) && drawVerticalSelector();
+    rect(
+        ctx.value,
+        [
+            { x: left + relStart * unit, y: top },
+            { x: left + relStart * unit + ((relEnd - relStart) * unit), y: top },
+            { x: left + relStart * unit + ((relEnd - relStart) * unit), y: top + height },
+            { x: left + relStart * unit, y: top + height },
+        ],
+        {
+            fillColor: FINAL_CONFIG.value.style.chart.zoom.preview.fill,
+            strokeColor: FINAL_CONFIG.value.style.chart.zoom.preview.stroke,
+            lineDash: Array(4).fill(FINAL_CONFIG.value.style.chart.zoom.preview.strokeDasharray),
+            lineWidth: FINAL_CONFIG.value.style.chart.zoom.preview.strokeWidth
+        }
+    );
+}
+
+function draw() {
+    if (!isDataset.value || !canvas.value || !ctx.value) return;
+
+    setupChart();
+
+    if (datasetHasChanged.value) {
+        ((tooltipIndex.value !== null || selectedMinimapIndex.value !== null) && FINAL_CONFIG.value.style.chart.selector.show) && drawVerticalSelector();
 
         drawBars();
 
@@ -1205,46 +1586,48 @@ function draw() {
             }
         });
 
-        clonedCanvas.value = cloneCanvas(canvas.value);
+        if (canvas.value) {
+            clonedCanvas.value = cloneCanvas(canvas.value);
+        }
     } else {
         if (clonedCanvas.value) {
-            ctx.value.clearRect(0, 0, 10000, 10000)
-            ctx.value.drawImage(clonedCanvas.value, 0, 0)
+            ctx.value.clearRect(0, 0, 10000, 10000);
+            ctx.value.drawImage(clonedCanvas.value, 0, 0);
         }
 
-        (tooltipIndex.value !== null && FINAL_CONFIG.value.style.chart.selector.show) && drawVerticalSelector();
+        ((tooltipIndex.value !== null || selectedMinimapIndex.value !== null) && FINAL_CONFIG.value.style.chart.selector.show) && drawVerticalSelector();
 
         // PLOT HIGHLIGHTS
-        if (tooltipIndex.value !== null) {
+        if ((tooltipIndex.value !== null || selectedMinimapIndex.value !== null)) {
             formattedDataset.value.forEach(ds => {
-                if (((ds.type === 'line' || !ds.type)) || ds.type === 'plot') {
-                    if(!ds.coordinatesLine[tooltipIndex.value]) return
-                    if (ds.coordinatesLine[tooltipIndex.value].x !== undefined && ds.coordinatesLine[tooltipIndex.value].y !== undefined) {
-                        circle(
-                            ctx.value,
-                            {
-                                x: ds.coordinatesLine[tooltipIndex.value].x,
-                                y: ds.coordinatesLine[tooltipIndex.value].y
-                            },
-                            w.value / 150 * FINAL_CONFIG.value.style.chart.line.plots.radiusRatio,
-                            {
-                                color: FINAL_CONFIG.value.style.chart.backgroundColor,
-                                fillStyle: ds.color,
-                                strokeColor: 'transparent'
-                            }
-                        );
-                    }
+                const idx = tooltipIndex.value ?? selectedMinimapIndex.value;
+                const point = ds.coordinatesLine[idx];
+                if (((ds.type === 'line' || !ds.type) || ds.type === 'plot') && point && Number.isFinite(point.x) && Number.isFinite(point.y)) {
+                    circle(
+                        ctx.value,
+                        { x: point.x, y: point.y },
+                        (w.value / 150) * FINAL_CONFIG.value.style.chart.line.plots.radiusRatio,
+                        {
+                            color: FINAL_CONFIG.value.style.chart.backgroundColor,
+                            fillStyle: ds.color,
+                            strokeColor: 'transparent'
+                        }
+                    );
                 }
             });
         }
     }
 
-    // TIME LABELS
+    // TIME LABELS & SELECTORS
     FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show && drawTimeLabels();
     FINAL_CONFIG.value.style.chart.selector.show && FINAL_CONFIG.value.style.chart.selector.showHorizontalSelector && drawHorizontalSelector();
 
     drawYAxisScaleLabels();
     drawYAxisSelectedDatapoints();
+
+    if (FINAL_CONFIG.value.style.chart.zoom.preview.enable && (slicer.value.start !== slicerPrecog.value.start || slicer.value.end !== slicerPrecog.value.end)) {
+        drawPrecogRect();
+    }
 
     datasetHasChanged.value = false;
 }
@@ -1255,20 +1638,19 @@ const debounceCanvasResize = debounce(() => {
 }, maxSeries.value > 200 ? 10 : 1, !tooltipHasChanged.value);
 
 function getYandValueAtIndex(datapoint) {
-    if ([null, undefined].includes(tooltipIndex.value) || !datapoint.coordinatesLine[tooltipIndex.value]) return false;
-    const { y, value } = datapoint.coordinatesLine[tooltipIndex.value];
+    if ([null, undefined].includes(tooltipIndex.value ?? selectedMinimapIndex.value) || !datapoint.coordinatesLine[tooltipIndex.value ?? selectedMinimapIndex.value]) return false;
+    const { y, value } = datapoint.coordinatesLine[tooltipIndex.value ?? selectedMinimapIndex.value];
     return { y, value };
 }
 
 function handleMousemove(e) {
+    if (!isDataset.value || !canvas.value) return;
+
     const { left, top } = canvas.value.getBoundingClientRect();
     const mouseX = e.clientX - left;
     mouseY.value = (e.clientY - top) * 2;
 
-    if (
-        mouseY.value < drawingArea.value.top || 
-        mouseY.value > drawingArea.value.bottom
-    ) {
+    if (mouseY.value < drawingArea.value.top || mouseY.value > drawingArea.value.bottom) {
         mouseY.value = null;
     }
 
@@ -1285,46 +1667,64 @@ function handleMousemove(e) {
     if (!tooltipHasChanged.value) return;
 
     let html = "";
-
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+
+    const datapoint = formattedDataset.value.map(ds => ({
+        shape: ds.shape || null,
+        name: ds.name,
+        color: ds.color,
+        type: ds.type || 'line',
+        value: ds.series.find((s, i) => i === tooltipIndex.value)
+    }));
+
+    selectX({ seriesIndex: tooltipIndex.value, datapoint });
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
         seriesIndex: tooltipIndex.value,
-        datapoint: formattedDataset.value.map(ds => {
-            return {
-                shape: ds.shape || null,
-                name: ds.name,
-                color: ds.color,
-                type: ds.type || 'line',
-                value: ds.series.find((s, i) => i === tooltipIndex.value)
-            }
-        }),
+        datapoint,
         series: formattedDataset.value,
         config: FINAL_CONFIG.value
     }))) {
         tooltipContent.value = customFormat({
             seriesIndex: tooltipIndex.value,
-            datapoint: formattedDataset.value.map(ds => {
-                return {
-                    shape: ds.shape || null,
-                    name: ds.name,
-                    color: ds.color,
-                    type: ds.type || 'line',
-                    value: ds.series.find((s, i) => i === tooltipIndex.value)
-                }
-            }),
+            datapoint,
             series: formattedDataset.value,
             config: FINAL_CONFIG.value
-        })
+        });
     } else {
         if (FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]) {
-            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${timeLabels.value.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value].text}</div>`;
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]?.text : preciseAllTimeLabelsTooltip.value[tooltipIndex.value]?.text}</div>`;
+        } else {
+            html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${timeLabels.value[tooltipIndex.value + slicer.value.start]?.text ?? ''}</div>`;
         }
-        html += tootlipDataset.value.join('')
+        html += tootlipDataset.value.join('');
         tooltipContent.value = html;
     }
     tooltipHasChanged.value = false;
 }
+
+function selectX({ seriesIndex, datapoint }) {
+    const index = slicer.value.start + seriesIndex
+    emit('selectX', {
+        dataset: datapoint,
+        index,
+        indexLabel: ''
+    })
+}
+
+watch(() => props.selectedXIndex, (v) => {
+    if ([null, undefined].includes(props.selectedXIndex)) {
+        tooltipIndex.value = null;
+        return;
+    }
+
+    const targetIndex = v - slicer.value.start;
+    if (targetIndex < 0 || v >= slicer.value.end) {
+        tooltipIndex.value = null;
+    } else {
+        tooltipIndex.value = targetIndex ?? null;
+    }
+}, { immediate: true })
 
 watch(() => tooltipIndex.value, (_) => {
     debounceCanvasResize();
@@ -1336,6 +1736,10 @@ watch(() => slicer.value, (_) => {
 }, {
     deep: true
 });
+
+watch(() => slicerPrecog.value, (_) => {
+    draw();
+}, { deep: true })
 
 watch(() => mutableConfig.value.showDataLabels, (_) => {
     datasetHasChanged.value = true;
@@ -1372,17 +1776,20 @@ onMounted(() => {
 });
 
 function prepareChart() {
-    if (objectIsEmpty(props.dataset)) {
-        error({
-            componentName: 'VueUiXyCanvas',
-            type: 'dataset'
-        });
-    } else {
-        // TODO: check for missing ds attrs
-        if (canvas.value) {
+    if (objectIsEmpty(props.dataset) && debug.value) {
+        error({ componentName: 'VueUiXyCanvas', type: 'dataset' });
+    }
+
+    nextTick(() => {
+        if (canvas.value && !ctx.value) {
             ctx.value = canvas.value.getContext('2d', { willReadFrequently: true });
         }
-    }
+        if (ctx.value && isDataset.value) {
+            datasetHasChanged.value = true;
+            tooltipHasChanged.value = true;
+            resizeCanvas();
+        }
+    });
 
     if (FINAL_CONFIG.value.responsive) {
         const handleResize = throttle(() => {
@@ -1390,30 +1797,24 @@ function prepareChart() {
                 chart: xy.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
-                slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxSeries.value > 1 ? chartSlicer.value : null,
+                slicer: FINAL_CONFIG.value.style.chart.zoom.show && maxSeries.value > 6 ? chartSlicer.value?.$el : null,
                 source: source.value
             });
-
             requestAnimationFrame(() => {
                 aspectRatio.value = `${width} / ${height}`;
             });
         });
 
         if (responsiveObserver.value) {
-            if (observedEl.value) {
-                responsiveObserver.value.unobserve(observedEl.value)
-            }
+            if (observedEl.value) responsiveObserver.value.unobserve(observedEl.value);
             responsiveObserver.value.disconnect();
         }
-
         responsiveObserver.value = new ResizeObserver(handleResize);
         observedEl.value = xy.value.parentNode;
         responsiveObserver.value.observe(observedEl.value);
     }
 
-    if (resizeObserver.value) {
-        resizeObserver.value.disconnect();
-    }
+    if (resizeObserver.value) resizeObserver.value.disconnect();
 
     resizeObserver.value = new ResizeObserver((entries) => {
         for (const entry of entries) {
@@ -1423,10 +1824,10 @@ function prepareChart() {
             }
         }
     });
-
     resizeObserver.value.observe(container.value);
-    setupSlicer();
+    refreshSlicer();
 }
+
 
 onBeforeUnmount(() => {
     if (resizeObserver.value) resizeObserver.value.disconnect();
@@ -1658,7 +2059,7 @@ defineExpose({
 </script>
 
 <template>
-    <div :style="`width:100%; position:relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-data-ui-component vue-ui-xy-canvas ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div :style="`width:100%; position:relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}; background:${FINAL_CONFIG.style.chart.backgroundColor};`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-data-ui-component vue-ui-xy-canvas ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" @mouseenter="onChartEnter" @mouseleave="onChartLeave">
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text"
             :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <Title 
@@ -1754,32 +2155,15 @@ defineExpose({
         ref="container">
             <canvas
                 data-cy="canvas"
-                v-if="isDataset" 
                 ref="canvas" 
                 style="width:100%; height:100%;" 
                 @mousemove="handleMousemove($event)"
                 @mouseleave="handleMouseLeave"
             />
+
+            <!-- v3 Skeleton loader -->
+            <BaseScanner v-if="loading" />
             
-            <Skeleton 
-                v-else
-                :config="{
-                    type: 'line',
-                    style: {
-                        backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                        line: {
-                            axis: {
-                                color: '#CCCCCC',
-                            },
-                            path: {
-                                color: '#CCCCCC',
-                                strokeWidth: 0.5
-                            }
-                        }
-                    }
-            }"
-        />
-    
             <!-- TOOLTIP -->
             <Tooltip 
                 :show="mutableConfig.showTooltip && isTooltip"
@@ -1810,39 +2194,64 @@ defineExpose({
             </Tooltip>
         </div>
     
-        <div ref="chartSlicer" :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`" data-dom-to-png-ignore>    
-            <Slicer 
-                ref="slicerComponent"
-                v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 1"
-                :key="`slicer_${slicerStep}`"
+
+            <SlicerPreview
+                ref="chartSlicer"
+                v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 6 && isDataset && slicerReady && !loading"
+                :allMinimaps="allMinimaps"
                 :background="FINAL_CONFIG.style.chart.zoom.color"
                 :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
-                :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
-                :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
-                :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[slicer.start].text : ''"
-                :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels[slicer.end-1].text : ''"
-                :textColor="FINAL_CONFIG.style.chart.color"
-                :inputColor="FINAL_CONFIG.style.chart.zoom.color"
-                :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
-                :max="maxSeries"
-                :min="0"
-                :valueStart="slicer.start"
-                :valueEnd="slicer.end"
-                v-model:start="slicer.start"
-                v-model:end="slicer.end"
-                :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
-                :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxSeries"
+                :customFormat="FINAL_CONFIG.style.chart.zoom.customFormat"
+                :cutNullValues="cutNullValues"
                 :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
                 :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
+                :end="slicer.end"
                 :focusOnDrag="FINAL_CONFIG.style.chart.zoom.focusOnDrag"
                 :focusRangeRatio="FINAL_CONFIG.style.chart.zoom.focusRangeRatio"
+                :fontSize="FINAL_CONFIG.style.chart.zoom.fontSize"
+                :immediate="!FINAL_CONFIG.style.chart.zoom.preview.enable"
+                :inputColor="FINAL_CONFIG.style.chart.zoom.color"
+                :isPreview="isPrecog"
+                :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[slicer.start].text : ''"
+                :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels[slicer.end-1].text : ''"
+                :max="maxSeries"
+                :min="0"
+                :minimap="minimap"
+                :minimapCompact="FINAL_CONFIG.style.chart.zoom.minimap.compact"
+                :minimapFrameColor="FINAL_CONFIG.style.chart.zoom.minimap.frameColor"
+                :minimapIndicatorColor="FINAL_CONFIG.style.chart.zoom.minimap.indicatorColor"
+                :minimapLineColor="FINAL_CONFIG.style.chart.zoom.minimap.lineColor"
+                :minimapMerged="FINAL_CONFIG.style.chart.zoom.minimap.merged"
+                :minimapSelectedColor="FINAL_CONFIG.style.chart.zoom.minimap.selectedColor"
+                :minimapSelectedColorOpacity="FINAL_CONFIG.style.chart.zoom.minimap.selectedColorOpacity"
+                :minimapSelectedIndex="tooltipIndex"
+                :minimapSelectionRadius="FINAL_CONFIG.style.chart.zoom.minimap.selectionRadius"
+                :preciseLabels="preciseAllTimeLabels.length ? preciseAllTimeLabels : timeLabels"
+                :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxSeries"
+                :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
+                :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
+                :selectedSeries="dsCopy"
+                :smoothMinimap="FINAL_CONFIG.style.chart.zoom.minimap.smooth"
+                :start="slicer.start"
+                :timeLabels="timeLabels"
+                :usePreciseLabels="FINAL_CONFIG.style.chart.grid.x.timeLabels.datetimeFormatter.enable && !FINAL_CONFIG.style.chart.zoom.useDefaultFormat"
+                :textColor="FINAL_CONFIG.style.chart.color"
+                :useResetSlot="FINAL_CONFIG.style.chart.zoom.useResetSlot"
+                :valueEnd="slicer.end"
+                :valueStart="slicer.start"
+                :verticalHandles="FINAL_CONFIG.style.chart.zoom.minimap.verticalHandles" 
+                @futureEnd="v => setPrecog('end', v)"
+                @futureStart="v => setPrecog('start', v)"
                 @reset="refreshSlicer"
+                @trapMouse="selectMinimapIndex"
+                @update:end="onSlicerEnd"
+                @update:start="onSlicerStart"
             >
                 <template #reset-action="{ reset }">
                     <slot name="reset-action" v-bind="{ reset }"/>
                 </template>
-            </Slicer>
-        </div>
+            </SlicerPreview>
+
 
         <div :id="`legend-bottom-${uid}`" />
 

@@ -284,7 +284,7 @@ export function rect(ctx, coordinates, options = {}) {
         shadowColor = null,
         shadowBlur = 0,
         shadowOffsetX = 0,
-        shadowOffsetY = 0
+        shadowOffsetY = 0,
     } = options;
 
     ctx.beginPath();
