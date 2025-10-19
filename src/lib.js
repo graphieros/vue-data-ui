@@ -2075,9 +2075,10 @@ export function hasDeepProperty(obj, path) {
     });
 }
 
-export function sanitizeArray(arr, keys = []) {
+export function sanitizeArray(arr, keys = [], keepNull = false) {
 
     function sanitizeValue(value) {
+        if (keepNull && (value === null)) return null;
         if (typeof value === 'string' && isNaN(Number(value))) return value;
         return (typeof value === 'number' && isFinite(value)) ? value : 0;
     }
@@ -2132,6 +2133,7 @@ export function sanitizeArray(arr, keys = []) {
 
     return sanitize(arr);
 }
+
 
 export function setOpacity(hex, opac = 100) {
     if (hex.length === 9) {
@@ -3304,6 +3306,92 @@ export function triggerResize(el, { delta = 1, delay = 20, disableTransitions = 
     }, delay);
 }
 
+export function cacheLastResult(fn) {
+    let prevKey = null;
+    let prevVal = null;
+    return (...args) => {
+        const key = JSON.stringify(args);
+        if (key === prevKey) return prevVal;
+        prevKey = key;
+        prevVal = fn(...args);
+        return prevVal;
+    };
+}
+
+// VueUiXy, VueUiStackbar
+export const buildDisplayedTimeLabels = cacheLastResult((
+    showOnlyFirstAndLast,
+    showOnlyAtModulo,
+    moduloBase,
+    visTexts,
+    allTexts,
+    startAbs,
+    selIdx,
+    maxSeriesCount
+) => {
+    if (showOnlyFirstAndLast) {
+        if (visTexts.length <= 2) {
+            return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
+        }
+        const out = visTexts.map((t, i) => {
+            const keep = (i === 0) || (i === visTexts.length - 1) || (selIdx != null && i === selIdx);
+            return { text: keep ? t : '', absoluteIndex: i };
+        });
+        return out;
+    }
+
+    if (!showOnlyAtModulo) {
+        return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
+    }
+
+    const mod = Math.max(1, moduloBase || 1);
+    if (maxSeriesCount <= mod) {
+        return visTexts.map((t, i) => ({ text: t, absoluteIndex: i }));
+    }
+
+    const candidates = [];
+    for (let i = 0; i < visTexts.length; i += 1) {
+        const cur = visTexts[i] ?? '';
+        if (!cur) continue;
+        const prevAbs = startAbs + i - 1 >= 0 ? (allTexts[startAbs + i - 1] ?? '') : null;
+        if (cur !== prevAbs) candidates.push(i);
+    }
+
+    if (!candidates.length) {
+        return visTexts.map((_t, i) => ({ text: '', absoluteIndex: i }));
+    }
+
+    const C = candidates.length;
+    const base = mod;
+    const minK = Math.max(2, Math.min(base - 3, C));
+    const maxK = Math.min(C, base + 3);
+
+    let bestK = Math.min(base, C);
+    let bestScore = Infinity;
+
+    for (let k = minK; k <= maxK; k += 1) {
+        const remainder = (C - 1) % (k - 1);
+        const drift = Math.abs(k - base);
+        const score = remainder * 10 + drift;
+        if (score < bestScore) { bestScore = score; bestK = k; }
+    }
+
+    const picked = new Set();
+    if (bestK <= 1) {
+        picked.add(candidates[Math.round((C - 1) / 2)]);
+    } else {
+        const step = (C - 1) / (bestK - 1);
+        for (let j = 0; j < bestK; j += 1) {
+            picked.add(candidates[Math.round(j * step)]);
+        }
+    }
+
+    return visTexts.map((t, i) => ({
+        text: picked.has(i) ? t : '',
+        absoluteIndex: i
+    }));
+});
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -3312,7 +3400,9 @@ const lib = {
     applyDataLabel,
     assignStackRatios,
     autoFontSize,
+    buildDisplayedTimeLabels,
     buildInterLineAreas,
+    cacheLastResult,
     calcLinearProgression,
     calcMarkerOffsetX,
     calcMarkerOffsetY,

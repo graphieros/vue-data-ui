@@ -2030,25 +2030,29 @@ describe("hasDeepProperty", () => {
 });
 
 describe("sanitizeArray", () => {
-    const source0 = [1, 2, 3, NaN, undefined, Infinity, -Infinity];
+    const source0 = [1, 2, 3, NaN, undefined, Infinity, -Infinity, null];
     test("sanitizes an array of numbers", () => {
-        expect(sanitizeArray(source0)).toStrictEqual([1, 2, 3, 0, 0, 0, 0]);
+        expect(sanitizeArray(source0)).toStrictEqual([1, 2, 3, 0, 0, 0, 0, 0]);
     });
 
     const source1 = [
         {
-            values: [1, NaN, undefined, Infinity, -Infinity],
-            value: [2, NaN, undefined, Infinity, -Infinity],
+            values: [1, NaN, undefined, Infinity, -Infinity, null],
+            value: [2, NaN, undefined, Infinity, -Infinity, null],
         },
     ];
     test("sanitizes an array of objects where some attributes are arrays of numbers", () => {
         expect(sanitizeArray(source1, ["values, value"])).toStrictEqual([
             {
-                value: [2, 0, 0, 0, 0],
-                values: [1, 0, 0, 0, 0],
+                value: [2, 0, 0, 0, 0, 0],
+                values: [1, 0, 0, 0, 0, 0],
             },
         ]);
     });
+    const withNull = [null, 1, null, 2, NaN, undefined, Infinity, -Infinity];
+    test('keeps null values', () => {
+        expect(sanitizeArray(withNull, [], true)).toStrictEqual([null, 1, null, 2, 0, 0, 0, 0])
+    })
 });
 
 describe("lightenHexColor", () => {
