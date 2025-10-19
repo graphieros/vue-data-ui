@@ -11,23 +11,45 @@ import { VueUiCandlestick as VueUiCandlestickTreshaken } from "vue-data-ui/vue-u
 
 const dataset = ref([]);
 
+function generateRandomCandlestickData({
+    count = 12,
+    startDate = Date.UTC(2024, 0, 1), // starting date (Jan 1, 2024)
+    interval = 30 * 24 * 60 * 60 * 1000, // 1 month in ms
+    startPrice = 100,
+    volatility = 0.2 // 20% volatility
+    } = {}) {
+    const data = [];
+    let lastClose = startPrice;
+
+    for (let i = 0; i < count; i++) {
+        const timestamp = startDate + i * interval;
+
+        // simulate price movement
+        const changePercent = (Math.random() - 0.5) * volatility;
+        const open = lastClose;
+        const close = open * (1 + changePercent);
+        const high = Math.max(open, close) * (1 + Math.random() * volatility);
+        const low = Math.min(open, close) * (1 - Math.random() * volatility);
+        const volume = Math.round(1000 + Math.random() * 9000);
+
+        data.push([
+            timestamp,
+            Math.round(open),
+            Math.round(high),
+            Math.round(low),
+            Math.round(close),
+            volume
+        ]);
+
+        lastClose = close;
+    }
+    return data;
+}
+
 onMounted(() => {
     dataset.value = undefined;
     setTimeout(() => {
-        dataset.value = [
-            [1704067200000, 10, 20, 2, 10, 30],
-            [1706745600000, 10, 30, 5, 20, 50],
-            [1709251200000, 20, 50, 10, 30, 80],
-            [1711929600000, 30, 80, 20, 50, 130],
-            [1714521600000, 50, 130, 30, 100, 210],
-            [1717200000000, 80, 210, 50, 150, 340],
-            [1719792000000, 130, 340, 80, 280, 550],
-            [1722470400000, 210, 550, 130, 50, 890],
-            [1725148800000, 340, 890, 210, 750, 1440],
-            [1727740800000, 550, 1440, 340, 1230, 2330],
-            [1730419200000, 890, 2330, 550, 1950, 3770],
-            [1733011200000, 1440, 3770, 890, 3200, 5100]
-        ]
+        dataset.value = generateRandomCandlestickData({ count: 100 })
     }, 2000)
 })
 
@@ -65,6 +87,7 @@ function alterDataset() {
 }
 
 const model = ref([
+    { key: 'type', def: 'ohlc', type: 'select', options: ['ohlc', 'candlestick']},
     { key: 'loading', def: false, type: 'checkbox'},
     { key: 'debug', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
@@ -91,14 +114,25 @@ const model = ref([
     { key: 'style.height', def: 316, type: 'number', min: 100, max: 1000},
     { key: 'style.width', def: 512, type: 'number', min: 100, max: 1000},
     { key: 'style.layout.padding.top', def: 0, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.right', def: 0, type: 'number', min: 0, max: 100},
+    { key: 'style.layout.padding.right', def: 12, type: 'number', min: 0, max: 100},
     { key: 'style.layout.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.layout.padding.left', def: 0, type: 'number', min: 0, max: 100},
     { key: 'style.layout.selector.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.layout.selector.opacity', def: 10, type: 'range', min: 0, max: 100},
     { key: 'style.layout.grid.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.grid.stroke', def: '#e1e5e8', type: 'color'},
-    { key: 'style.layout.grid.strokeWidth', def: 0.5, type: 'range', min: 0, max: 12, step: 0.5},
+    { key: 'style.layout.grid.stroke', def: '#CCCCCC', type: 'color'},
+    { key: 'style.layout.grid.strokeWidth', def: 1, type: 'range', min: 0, max: 12, step: 0.5},
+
+    { key: 'style.layout.grid.horizontalLines.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.grid.horizontalLines.strokeDasharray', def: 3, type: 'number', min: 0, max: 12},
+    { key: 'style.layout.grid.horizontalLines.stroke', def: '#FF0000', type: 'color'},
+    { key: 'style.layout.grid.horizontalLines.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.1},
+
+    { key: 'style.layout.grid.verticalLines.show', def: true, type: 'checkbox'},
+    { key: 'style.layout.grid.verticalLines.strokeDasharray', def: 3, type: 'number', min: 0, max: 12},
+    { key: 'style.layout.grid.verticalLines.stroke', def: '#0000FF', type: 'color'},
+    { key: 'style.layout.grid.verticalLines.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.1},
+
     { key: 'style.layout.grid.xAxis.dataLabels.show', def: true, type: 'checkbox'},
     { key: 'style.layout.grid.xAxis.dataLabels.fontSize', def: 10, type: 'number', min: 4, max: 12},
     { key: 'style.layout.grid.xAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
@@ -120,7 +154,7 @@ const model = ref([
     { key: 'style.layout.grid.yAxis.scale.max', def: null, type: 'number', min: 0, max: 10000},
 
     { key: 'style.layout.wick.stroke', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.wick.strokeWidth', def: 3, type: 'number', min: 0, max: 12, step: 0.5},
+    { key: 'style.layout.wick.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.5},
     { key: 'style.layout.wick.extremity.shape', def: 'line', type: 'select', options: ['line', 'circle']},
     { key: 'style.layout.wick.extremity.size', def: 'auto', type: 'select', options: ['auto', 5, 10, 20, 40]},
     { key: 'style.layout.wick.extremity.color', def: '#1A1A1A', type: 'color'},
@@ -145,6 +179,8 @@ const model = ref([
     { key: 'style.zoom.enableSelectionDrag', def: true, type: 'chexkbox'},
     { key: 'style.zoom.focusOnDrag', def: true, type: 'checkbox'},
     { key: 'style.zoom.focusRangeRatio', def: 0.2, type: 'number', min: 0.1, max: 0.9, step: 0.1},
+    { key: 'style.zoom.minimap.show', def: true, type: 'checkbox' },
+    { key: 'style.zoom.preview.enable', def: true, type: 'checkbox' },
     
     { key: 'style.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
     { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
@@ -238,6 +274,19 @@ const config = computed(() => {
             theme: currentTheme.value,
             style: {
                 ...c.style,
+                zoom: {
+                    ...c.style.zoom,
+                    useDefaultFormat: true,
+                    timeFormat: 'yyyy-MM-dd',
+                    customFormat: ({ datapoint, timeLabel }) => {
+                        return timeLabel
+                    }
+                },
+                tooltip: {
+                    ...c.style.tooltip,
+                    useDefaultTimeFormat: false,
+                    timeFormat: 'yyyy-MM-dd'
+                },
                 layout: {
                     ...c.style.layout,
                     grid: {
@@ -245,6 +294,9 @@ const config = computed(() => {
                         xAxis: {
                             ...c.style.layout.grid.xAxis,
                             dataLabels: {
+                                showOnlyFirstAndLast: false,
+                                showOnlyAtModulo: true,
+                                modulo: 12,
                                 datetimeFormatter: {
                                     enable: true
                                 }
@@ -266,7 +318,13 @@ onMounted(async () => {
         const img = await local.value.getImage();
         console.log(img)
     }
-})
+});
+
+const selectedX = ref(undefined);
+
+function selectX({ datapoint, index, indexLabel}) {
+    selectedX.value = index;
+}
 
 </script>
 
@@ -312,7 +370,7 @@ onMounted(async () => {
         <template #title>VueUiCandlestick</template>
 
         <template #local>
-            <LocalVueUiCandlestick :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
+            <LocalVueUiCandlestick :selectedXIndex="selectedX" @selectX="selectX" :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
                 <!-- <template #optionPdf>
                     PRINT PDF
                 </template>
@@ -339,7 +397,7 @@ onMounted(async () => {
         </template>
 
         <template #VDUI-local>
-            <LocalVueDataUi component="VueUiCandlestick" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
+            <LocalVueDataUi :selectedXIndex="selectedX" @selectX="selectX" component="VueUiCandlestick" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" ref="vduiLocal">
                 <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

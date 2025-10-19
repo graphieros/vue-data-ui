@@ -33,7 +33,7 @@ describe('<VueUiCandlestick />', () => {
       cy.get('@scaleLabels').last().contains('160');
 
       cy.log('X axis labels');
-      cy.get('[data-cy="x-label"]').as('xLabels').should('exist').and('be.visible').and('have.length', 5);
+      cy.get('[data-cy="x-label"]').as('xLabels').should('exist').and('be.visible').and('have.length', 10);
       cy.get('@xLabels').first().contains(dataset[0][0]);
       cy.get('@xLabels').last().contains(dataset.at(-1)[0]);
     });

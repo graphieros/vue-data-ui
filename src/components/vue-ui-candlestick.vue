@@ -12,6 +12,7 @@ import {
     watchEffect, 
 } from "vue";
 import { 
+    buildDisplayedTimeLabels,
     calculateNiceScale,
     checkNaN, 
     createCsvContent, 
@@ -33,6 +34,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from '../useLoading.js';
+import { useDateTime } from "../useDateTime.js";
 import { useSvgExport } from "../useSvgExport.js";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
@@ -43,8 +45,9 @@ import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes.json";
-import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
+import locales from '../locales/locales.json';
 import BaseScanner from "../atoms/BaseScanner.vue";
+import SlicerPreview from "../atoms/SlicerPreview.vue"; // Must be ready in responsive mode
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -69,8 +72,14 @@ const props = defineProps({
         default() {
             return []
         }
+    },
+    selectedXIndex: {
+        type: Number,
+        default: undefined
     }
 });
+
+const emit = defineEmits(['selectX']);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -96,6 +105,7 @@ const scaleLabels = ref(null);
 const timeLabelsEls = ref(null);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
+const selectedMinimapIndex = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -140,6 +150,12 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     },
                     grid: { 
                         stroke: '#6A6A6A',
+                        verticalLines: {
+                            stroke: '#6A6A6A'
+                        },
+                        horizontalLines: {
+                            stroke: '#6A6A6A'
+                        },
                         yAxis: {
                             dataLabels: { show: false },
                             scale: {
@@ -168,6 +184,16 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
+
+function onChartEnter() {
+    setUserOptionsVisibility(true);
+}
+
+function onChartLeave() {
+    setUserOptionsVisibility(false);
+    emit('selectX', { seriesIndex: null, datapoint: null });
+    hoveredIndex.value = null;
+}
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -232,15 +258,15 @@ watch(() => props.config, (_newCfg) => {
     // Reset mutable config
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.tooltip.show;
+
+    normalizeSlicerWindow();
 }, { deep: true });
 
 watch(() => props.dataset, (newDs) => {
     if (Array.isArray(newDs) && newDs.length > 0) {
         manualLoading.value = false;
     }
-    slicer.value.start = 0;
-    slicer.value.end = newDs.length
-    slicerStep.value += 1;
+    refreshSlicer();
 }, { deep: true });
 
 const svg = ref({
@@ -285,7 +311,7 @@ function prepareChart() {
             const { width, height } = useResponsive({
                 chart: candlestickChart.value,
                 title: FINAL_CONFIG.value.style.title.text ? chartTitle.value : null,
-                slicer: chartSlicer.value,
+                slicer: FINAL_CONFIG.value.style.zoom.show && len.value > 6 ? chartSlicer.value.$el : null,
                 legend: chartLegend.value,
                 source: source.value,
                 noTitle: noTitle.value
@@ -417,6 +443,37 @@ const drawingArea = computed(() => {
     }
 });
 
+const precogRect = computed(() => {
+    const { left, top, width: totalWidth, height } = drawingArea.value
+    const windowStart = slicer.value.start
+    const windowEnd = slicer.value.end
+    const windowLen = windowEnd - windowStart
+    const unit = totalWidth / windowLen
+
+    const rawStart = slicerPrecog.value.start - windowStart;
+    const rawEnd   = slicerPrecog.value.end   - windowStart;
+    const relStart = Math.max(0, Math.min(windowLen, rawStart));
+    const relEnd   = Math.max(0, Math.min(windowLen, rawEnd));
+
+    return {
+        x: left + relStart * unit,
+        y: top,
+        width: (relEnd - relStart) * unit,
+        height,
+        fill: FINAL_CONFIG.value.style.zoom.preview.fill,
+        stroke: FINAL_CONFIG.value.style.zoom.preview.stroke,
+        ['stroke-width']: FINAL_CONFIG.value.style.zoom.preview.strokeWidth,
+        ['stroke-dasharray']: FINAL_CONFIG.value.style.zoom.preview.strokeDasharray,
+        ['stroke-linecap']: 'round',
+        ['stroke-linejoin']: 'round',
+        style: {
+            pointerEvents: 'none',
+            transition: 'none !important',
+            animation: 'none !important'
+        }
+    }
+});
+
 const len = computed(() => FINAL_DATASET.value.length);
 
 const slicer = ref({
@@ -424,13 +481,44 @@ const slicer = ref({
     end: len.value
 });
 
-const mutableDataset = computed(() => {
+const slicerPrecog = ref({ start: 0, end: len.value });
+
+const isPrecog = computed(() => {
+    return FINAL_CONFIG.value.style.zoom.preview.enable && (slicerPrecog.value.start !== slicer.value.start || slicerPrecog.value.end !== slicer.value.end);
+});
+
+function setPrecog(side, val) {
+    slicerPrecog.value[side] = val;
+}
+
+function normalizeSlicerWindow() {
+    let s = Math.max(0, Math.min(slicer.value.start ?? 0, len.value - 1))
+    let e = Math.max(s + 1, Math.min(slicer.value.end ?? len.value, len.value))
+
+    if (!Number.isFinite(s) || !Number.isFinite(e) || e <= s) { s = 0; e = len.value }
+
+    slicer.value.start = s;
+    slicer.value.end = e;
+    slicerPrecog.value.start = s
+    slicerPrecog.value.end = e
+
+    if(chartSlicer.value) {
+        chartSlicer.value.setStartValue(s);
+        chartSlicer.value.setEndValue(e)
+    }
+}
+
+const absoluteDataset = computed(() => {
     return FINAL_DATASET.value.map((ds, i) => {
         return {
             ...ds,
             absoluteIndex: i
         }
-    }).slice(slicer.value.start, slicer.value.end);
+    })
+})
+
+const mutableDataset = computed(() => {
+    return absoluteDataset.value.slice(slicer.value.start, slicer.value.end);
 });
 
 const datasetBreakdown = computed(() => {
@@ -505,9 +593,23 @@ const datasetBreakdown = computed(() => {
     });
 });
 
+const minimapSource = computed(() => {
+    return absoluteDataset.value.map(ds => {
+        return {
+            absoluteIndex: ds.absoluteIndex,
+            period: ds[0],
+            open: ds[1],
+            high: ds[2],
+            low: ds[3],
+            last: ds[4],
+            volume: ds[5],
+        }
+    });
+});
+
 const slot = computed(() => {
     return drawingArea.value.width / mutableDataset.value.length
-})
+});
 
 const extremes = computed(() => {
     const max = FINAL_CONFIG.value.style.layout.grid.yAxis.scale.max === null ? Math.max(...datasetBreakdown.value.map(ds => ds.high)) : FINAL_CONFIG.value.style.layout.grid.yAxis.scale.max;
@@ -552,6 +654,48 @@ const drawableDataset = computed(() => {
     });
 });
 
+function convertToMinimapPlot({ item, index,minimapH, unitW }) {
+    const _min = FINAL_CONFIG.value.style.layout.grid.yAxis.scale.min ?? 0;
+    const _max = FINAL_CONFIG.value.style.layout.grid.yAxis.scale.max ?? Math.max(...FINAL_DATASET.value.map(d => d[2]));
+    return {
+        ...item,
+        x: checkNaN((index * unitW)),
+        y: checkNaN((1 - ((item - _min) / (_max - _min))) * minimapH),
+        value: checkNaN(item)
+    }
+}
+
+const minimapDataset  = computed(() => {
+    // expose SVG dimensions from Slicer minimap to apply a convertToPlot
+    return ({ minimapH, unitW }) => minimapSource.value.map((ds, i) => {
+            const open = convertToMinimapPlot({ item: ds.open, index: i, minimapH, unitW });
+            const high = convertToMinimapPlot({ item: ds.high, index: i, minimapH, unitW });
+            const low = convertToMinimapPlot({ item: ds.low, index: i, minimapH, unitW });
+            const last = convertToMinimapPlot({ item: ds.last, index: i, minimapH, unitW });
+            const isBullish = ds.last > ds.open;
+            return {
+                period: ds.period,
+                open,
+                high,
+                low,
+                last,
+                volume: ds.volume,
+                isBullish,
+                absoluteIndex: ds.absoluteIndex
+            }
+        })
+})
+
+const allMinimaps = computed(() => {
+    if (!FINAL_CONFIG.value.style.zoom.minimap.show) return [];
+    return [{
+        name: '',
+        series: FINAL_DATASET.value.map(d => d[2]),
+        color: '#000000',
+        isVisible: true
+    }]
+})
+
 function ratioToMax(value) {
     return checkNaN((value - niceScale.value.min) / (niceScale.value.max - niceScale.value.min));
 }
@@ -577,6 +721,77 @@ const timeLabels = computed(() => {
         start: slicer.value.start,
         end: slicer.value.end
     })
+});
+
+const allTimeLabels = computed(() => {
+    return useTimeLabels({
+        values: FINAL_DATASET.value.map(ds => ds[0]),
+        maxDatapoints: FINAL_DATASET.value.length,
+        formatter: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter,
+        start: 0,
+        end: len.value
+    })
+});
+
+const modulo = computed(() => {
+    const m = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.modulo;
+    if (!timeLabels.value.length) return m;
+    return Math.min(m, [...new Set(timeLabels.value.map(t => t.text))].length);
+});
+
+const preciseTimeFormatter = computed(() => {
+    const xl = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter
+
+    const dt = useDateTime({
+        useUTC: xl.useUTC,
+        locale: locales[xl.locale] || { months:[], shortMonths:[], days:[], shortDays:[] },
+        januaryAsYear: xl.januaryAsYear
+    });
+
+    return (absIndex, fmt) => {
+        const values = FINAL_DATASET.value.map(ds => ds[0])
+        const ts = values?.[absIndex]
+        if (ts == null) return ''
+        return dt.formatDate(new Date(ts), fmt)
+    }
+});
+
+const preciseAllTimeLabelsTooltip = computed(() => {
+    const values = FINAL_DATASET.value.map(ds => ds[0]) || []
+    return values.map((_, i) => ({
+        text: preciseTimeFormatter.value(i, FINAL_CONFIG.value.style.tooltip.timeFormat),
+        absoluteIndex: i
+    }))
+});
+
+const preciseAllTimeLabels = computed(() => {
+    const values = FINAL_DATASET.value.map(ds => ds[0]) || []
+    return values.map((_, i) => ({
+        text: preciseTimeFormatter.value(i, FINAL_CONFIG.value.style.zoom.timeFormat),
+        absoluteIndex: i
+    }))
+})
+
+const displayedTimeLabels = computed(() => {
+    const cfg = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels;
+    const vis = timeLabels.value || [];
+    const all = allTimeLabels.value || [];
+    const start = slicer.value.start ?? 0;
+    const sel = hoveredIndex.value;
+    const maxS = len.value;
+    const visTexts = vis.map(l => l?.text ?? '');
+    const allTexts = all.map(l => l?.text ?? '');
+
+    return buildDisplayedTimeLabels(
+        !!cfg.showOnlyFirstAndLast,
+        !!cfg.showOnlyAtModulo,
+        Math.max(1, modulo.value || 1),
+        visTexts,
+        allTexts,
+        start,
+        sel,
+        maxS
+    );
 });
 
 const slicerLabels = computed(() => {
@@ -609,6 +824,20 @@ function onTrapLeave(index, datapoint) {
     isTooltip.value = false;
 }
 
+watch(() => props.selectedXIndex, (v) => {
+    if ([null, undefined].includes(props.selectedXIndex)) {
+        hoveredIndex.value = null;
+        return;
+    }
+
+    const targetIndex = v - slicer.value.start;
+    if (targetIndex < 0 || v >= slicer.value.end) {
+        hoveredIndex.value = null;
+    } else {
+        hoveredIndex.value = targetIndex ?? null;
+    }
+}, { immediate: true })
+
 function useTooltip(index, datapoint) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: index + slicer.value.start })
@@ -621,6 +850,8 @@ function useTooltip(index, datapoint) {
         series: drawableDataset.value,
         config: FINAL_CONFIG.value
     }
+
+    selectX({ seriesIndex: index, datapoint });
 
     const customFormat = FINAL_CONFIG.value.style.tooltip.customFormat;
 
@@ -642,7 +873,11 @@ function useTooltip(index, datapoint) {
             const { period, open, high, low, last, volume, isBullish } = drawableDataset.value[index];
             const { period:tr_period, open:tr_open, high:tr_high, low:tr_low, last:tr_last, volume:tr_volume } = FINAL_CONFIG.value.translations;
 
-            const timeLabel = !FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable ? period : timeLabels.value[index].text
+            const timeLabel = !FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable 
+                ? period
+                : FINAL_CONFIG.value.style.tooltip.useDefaultTimeFormat 
+                    ? timeLabels.value[index].text
+                    : preciseAllTimeLabelsTooltip.value[index].text
     
             html += `<div data-cy="candlestick-tooltip-period"><svg style="margin-right:6px" viewBox="0 0 12 12" height="12" width="12"><rect x="0" y="0" height="12" width="12" rx="${FINAL_CONFIG.value.style.layout.candle.borderRadius*3}" stroke="${FINAL_CONFIG.value.style.layout.candle.stroke}" stroke-width="${FINAL_CONFIG.value.style.layout.candle.strokeWidth}" 
                 fill="${FINAL_CONFIG.value.style.layout.candle.gradient.show 
@@ -662,8 +897,6 @@ function useTooltip(index, datapoint) {
                 r: FINAL_CONFIG.value.style.tooltip.roundingValue
             });
 
-            html += `<div>${tr_open}: <b>${label_open}</b></div>`;
-
             const label_high = dataLabel({
                 p: FINAL_CONFIG.value.style.tooltip.prefix,
                 v: high.value,
@@ -671,25 +904,50 @@ function useTooltip(index, datapoint) {
                 r: FINAL_CONFIG.value.style.tooltip.roundingValue
             });
 
-            html += `<div>${tr_high}: <b>${label_high}</b></div>`;
-
             const label_low = dataLabel({
                 p: FINAL_CONFIG.value.style.tooltip.prefix,
                 v: low.value,
                 s: FINAL_CONFIG.value.style.tooltip.suffix,
                 r: FINAL_CONFIG.value.style.tooltip.roundingValue
             });
-
-            html += `<div>${tr_low}: <b>${label_low}</b></div>`;
-
+            
             const label_last = dataLabel({
                 p: FINAL_CONFIG.value.style.tooltip.prefix,
                 v: last.value,
                 s: FINAL_CONFIG.value.style.tooltip.suffix,
                 r: FINAL_CONFIG.value.style.tooltip.roundingValue
             });
+            
+            if (FINAL_CONFIG.value.style.tooltip.showChart) {
+                html += `<div style="width:100%;display:flex;align-items:center;justify-content:center;">
+                    <svg viewBox="0 0 100 100" width="100px" style="background: transparent; overflow: visible">
+                        <g>
+                            <line x1="50" x2="50" y1="20" y2="80" stroke="${datapoint.isBullish ? FINAL_CONFIG.value.style.layout.candle.colors.bullish : FINAL_CONFIG.value.style.layout.candle.colors.bearish}" stroke-width="2" stroke-linecap="round" />
+                            ${datapoint.isBullish ? `
+                                <line x1="45" x2="50" y1="65" y2="65" stroke="${FINAL_CONFIG.value.style.layout.candle.colors.bullish}" stroke-width="1.5" stroke-linecap="round" />
+                                <line x1="50" x2="55" y1="35" y2="35" stroke="${FINAL_CONFIG.value.style.layout.candle.colors.bullish}" stroke-width="1.5" stroke-linecap="round" />
+                                <text x="38" y="70" text-anchor="end" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_open}</text>
+                                <text x="62" y="40" text-anchor="start" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_last}</text>
+                            `: `
+                                <line x1="45" x2="50" y1="35" y2="35" stroke="${FINAL_CONFIG.value.style.layout.candle.colors.bearish}" stroke-width="1.5" stroke-linecap="round" />
+                                <line x1="50" x2="55" y1="65" y2="65" stroke="${FINAL_CONFIG.value.style.layout.candle.colors.bearish}" stroke-width="1.5" stroke-linecap="round" />
+                                <text x="40" y="40" text-anchor="end" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_open}</text>
+                                <text x="60" y="70" text-anchor="start" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_last}</text>
+                            `}
+                            <text x="50" y="13" text-anchor="middle" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_high}</text>
+                            <text x="50" y="97" text-anchor="middle" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_low}</text>
+                        <g>
+                    </svg>
+                    <div>
+                `;
+            } else {
+                html += `<div>${tr_open}: <b>${label_open}</b></div>`;
+                html += `<div>${tr_high}: <b>${label_high}</b></div>`;
+                html += `<div>${tr_low}: <b>${label_low}</b></div>`;
+                html += `<div>${tr_last}: <b>${label_last}</b></div>`;
+            }
 
-            html += `<div>${tr_last}: <b>${label_last}</b></div>`;
+
             html += `</div>`;
     
             tooltipContent.value = `<div style="text-align:right">${html}</div>`
@@ -698,38 +956,54 @@ function useTooltip(index, datapoint) {
     isTooltip.value = true;
 }
 
-function refreshSlicer() {
-    setupSlicer();
+const refreshRAF = ref(null);
+function nextPaint() {
+    return new Promise(r => requestAnimationFrame(() =>
+        requestAnimationFrame(() => r())
+    ));
 }
 
-const slicerComponent = ref(null);
+onBeforeUnmount(() => {
+    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+});
 
-async function setupSlicer() {
+
+async function refreshSlicer() {
+    setupSlicer();
+
+    // Now this is basically sweeping shit under the rug so it works:
     await nextTick();
-    await nextTick();
+    if (refreshRAF.value) cancelAnimationFrame(refreshRAF.value);
+    refreshRAF.value = requestAnimationFrame(async () => {
+        await nextPaint();
+        setupSlicer();
+    });
+}
 
-    const { startIndex, endIndex } = FINAL_CONFIG.value.style.zoom;
-    const comp = slicerComponent.value;
-    const max = len.value;
+const isSettingUp = ref(false);
+const slicerReady = ref(false);
+const suppressChild = ref(false);
 
-    slicer.value = { start: 0, end: max };
+function setupSlicer() {
+    if (isSettingUp.value) return;
+    isSettingUp.value = true;
+    try {
+        const { startIndex, endIndex } = FINAL_CONFIG.value.style.zoom;
+        const max = len.value;
 
-    if ((startIndex != null || endIndex != null) && comp) {
-        if (startIndex != null) {
-            comp.setStartValue(startIndex);
-        } else {
-            slicer.value.start = 0;
-            comp.setStartValue(0);
-        }
-        if (endIndex != null) {
-            comp.setEndValue(validSlicerEnd(endIndex + 1));
-        } else {
-            slicer.value.end = max;
-            comp.setEndValue(max);
-        }
-    } else {
-        slicer.value = { start: 0, end: max };
-        slicerStep.value += 1;
+        const start = startIndex != null ? startIndex : 0;
+        const end = endIndex   != null ? Math.min(validSlicerEnd(endIndex + 1), max) : max;
+
+        suppressChild.value = true;
+        slicer.value.start = start;
+        slicer.value.end   = end;
+        slicerPrecog.value.start = start;
+        slicerPrecog.value.end   = end;
+        normalizeSlicerWindow();
+        slicerReady.value = true;
+    } finally {
+        queueMicrotask(() => { suppressChild.value = false; });
+        isSettingUp.value = false;
     }
 }
 
@@ -738,7 +1012,7 @@ function validSlicerEnd(v) {
     if (v > max) {
         return max;
     }
-    if (v < 0 || (FINAL_CONFIG.value.style.zoom.startIndex !== null && v < FINAL_CONFIG.value.style.zoom.startIndex)) {
+    if (v < 0 || (v < slicer.value.start)) {
         if (FINAL_CONFIG.value.style.zoom.startIndex !== null) {
             return FINAL_CONFIG.value.style.zoom.startIndex + 1;
         } else {
@@ -965,6 +1239,36 @@ async function generateSvg({ isCb }) {
     }
 }
 
+function selectMinimapIndex(i) {
+    selectedMinimapIndex.value = i;
+}
+
+function onSlicerStart(v) {
+    if (isSettingUp.value || suppressChild.value) return;
+    if (v === slicer.value.start) return;
+    slicer.value.start = v;
+    slicerPrecog.value.start = v;
+    normalizeSlicerWindow();
+}
+
+function onSlicerEnd(v) {
+    if (isSettingUp.value || suppressChild.value) return;
+    const end = validSlicerEnd(v);
+    if (end === slicer.value.end) return;
+    slicer.value.end = end;
+    slicerPrecog.value.end = end;
+    normalizeSlicerWindow();
+}
+
+function selectX({ seriesIndex, datapoint }) {
+    const index = slicer.value.start + seriesIndex
+    emit('selectX', {
+        dataset: datapoint,
+        index,
+        indexLabel: ''
+    })
+}
+
 defineExpose({
     getImage,
     generatePdf,
@@ -980,7 +1284,7 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="candlestickChart" :class="`vue-data-ui-component vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`position:relative;font-family:${FINAL_CONFIG.style.fontFamily}; text-align:center;background:${FINAL_CONFIG.style.backgroundColor}; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" :id="`vue-ui-candlestick_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div ref="candlestickChart" :class="`vue-data-ui-component vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`position:relative;font-family:${FINAL_CONFIG.style.fontFamily}; text-align:center;background:${FINAL_CONFIG.style.backgroundColor}; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" :id="`vue-ui-candlestick_${uid}`" @mouseenter="onChartEnter" @mouseleave="onChartLeave">
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1142,6 +1446,53 @@ defineExpose({
                     :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                     stroke-linecap="round"
                 />
+                <!-- HORIZONTAL GRID -->
+                <template v-if="FINAL_CONFIG.style.layout.grid.horizontalLines.show">
+                    <line 
+                        v-for="h in yLabels"
+                        :x1="drawingArea.left"
+                        :x2="drawingArea.right"
+                        :y1="h.y"
+                        :y2="h.y"
+                        :stroke="FINAL_CONFIG.style.layout.grid.horizontalLines.stroke"
+                        :stroke-width="FINAL_CONFIG.style.layout.grid.horizontalLines.strokeWidth"
+                        :stroke-dasharray="FINAL_CONFIG.style.layout.grid.horizontalLines.strokeDasharray"
+                        stroke-linecap="round"
+                    />
+                </template>
+
+                <!-- VERTICAL GRID -->
+                <template v-if="FINAL_CONFIG.style.layout.grid.verticalLines.show">
+                    <g v-for="(v, i) in displayedTimeLabels">
+                        <line
+                            v-if="v.text"
+                            :x1="drawingArea.left + (slot * i) + (slot / 2)"
+                            :x2="drawingArea.left + (slot * i) + (slot / 2)"
+                            :y1="drawingArea.top"
+                            :y2="drawingArea.bottom"
+                            :stroke="FINAL_CONFIG.style.layout.grid.verticalLines.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.grid.verticalLines.strokeWidth"
+                            :stroke-dasharray="FINAL_CONFIG.style.layout.grid.verticalLines.strokeDasharray"
+                            stroke-linecap="round"
+                        />
+                    </g>
+                </template>
+
+                <!-- X AXIS TICKS -->
+                <template v-if="FINAL_CONFIG.style.layout.grid.xAxis.ticks.show">
+                    <g v-for="(v, i) in displayedTimeLabels">
+                        <line
+                            v-if="v.text"
+                            :x1="drawingArea.left + (slot * i) + (slot / 2)"
+                            :x2="drawingArea.left + (slot * i) + (slot / 2)"
+                            :y1="drawingArea.bottom"
+                            :y2="drawingArea.bottom + 3"
+                            :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
+                            stroke-linecap="round"
+                        />
+                    </g>
+                </template>
             </g>
 
             <!-- LABELS -->
@@ -1197,7 +1548,7 @@ defineExpose({
                 </g>
             </g>
             <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show && FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable" ref="timeLabelsEls">
-                <g v-for="(timeLabel, i) in timeLabels">
+                <g v-for="(timeLabel, i) in displayedTimeLabels">
                     <text
                         class="vue-data-ui-time-label"
                         data-cy="x-label"
@@ -1212,92 +1563,105 @@ defineExpose({
                 </g>
             </g>
             
-            <!-- CANDLE WICK -->
-            <g>
-                <g v-for="(wick, i) in drawableDataset">
-                    <rect
-                        :data-cy="`candlestick-wick-vertical-${i}`" 
-                        :x="wick.open.x - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
-                        :y="wick.high.y"
-                        :width="FINAL_CONFIG.style.layout.wick.strokeWidth"
-                        :height="Math.abs(wick.high.y - wick.low.y)"
-                        :fill="FINAL_CONFIG.style.layout.wick.stroke"
-                        stroke="none"
-                        :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
-                        :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                    />
-                    <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'circle'">
-                        <circle 
-                            :cx="wick.high.x" 
-                            :cy="wick.high.y" 
-                            :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
-                            :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
-                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                        />
-                        <circle 
-                            :cx="wick.low.x" 
-                            :cy="wick.low.y" 
-                            :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
-                            :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
-                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                        />
-                    </g>
-                    <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'line'">
+
+            <template v-if="FINAL_CONFIG.type === 'candlestick'">
+                <!-- CANDLE WICK -->
+                <g>
+                    <g v-for="(wick, i) in drawableDataset">
                         <rect
-                            :data-cy="`candlestick-wick-high-${i}`"
-                            :x="wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
-                            :y="wick.high.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
-                            :width="Math.abs((wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.high.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
-                            :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
-                            :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
-                            :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
-                            stroke="none"
-                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                        />
-                        <rect
-                            :data-cy="`candlestick-wick-low-${i}`"
-                            :x="wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
-                            :y="wick.low.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
-                            :width="Math.abs((wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.low.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
-                            :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
-                            :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                            :data-cy="`candlestick-wick-vertical-${i}`" 
+                            :x="wick.open.x - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
+                            :y="wick.high.y"
+                            :width="FINAL_CONFIG.style.layout.wick.strokeWidth"
+                            :height="Math.abs(wick.high.y - wick.low.y)"
+                            :fill="FINAL_CONFIG.style.layout.wick.stroke"
                             stroke="none"
                             :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
                             :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
                         />
+                        <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'circle'">
+                            <circle 
+                                :cx="wick.high.x" 
+                                :cy="wick.high.y" 
+                                :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
+                                :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                                :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                            />
+                            <circle 
+                                :cx="wick.low.x" 
+                                :cy="wick.low.y" 
+                                :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
+                                :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                                :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                            />
+                        </g>
+                        <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'line'">
+                            <rect
+                                :data-cy="`candlestick-wick-high-${i}`"
+                                :x="wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
+                                :y="wick.high.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
+                                :width="Math.abs((wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.high.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
+                                :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
+                                :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
+                                :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                                stroke="none"
+                                :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                            />
+                            <rect
+                                :data-cy="`candlestick-wick-low-${i}`"
+                                :x="wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
+                                :y="wick.low.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
+                                :width="Math.abs((wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.low.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
+                                :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
+                                :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                                stroke="none"
+                                :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
+                                :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                            />
+                        </g>
                     </g>
                 </g>
-            </g>
-            <!-- CANDLE BODY -->
-            <g>
-                <rect
-                    v-for="(candle, i) in drawableDataset"
-                    :data-cy="`candlestick-rect-underlayer-${i}`"
-                    :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
-                    :y="candle.isBullish ? candle.last.y : candle.open.y"
-                    :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
-                    :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
-                    :fill="FINAL_CONFIG.style.layout.candle.gradient.underlayer"
-                    :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
-                    stroke="none"
-                    :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                />
-                <rect
-                    v-for="(candle, i) in drawableDataset"
-                    :data-cy="`candlestick-rect-${i}`"
-                    :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
-                    :y="candle.isBullish ? candle.last.y : candle.open.y"
-                    :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
-                    :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
-                    :fill="candle.isBullish ? FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bullish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bearish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bearish"
-                    :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
-                    :stroke="FINAL_CONFIG.style.layout.candle.stroke"
-                    :stroke-width="FINAL_CONFIG.style.layout.candle.strokeWidth"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                />
-            </g>
+                <!-- CANDLE BODY -->
+                <g>
+                    <rect
+                        v-for="(candle, i) in drawableDataset"
+                        :data-cy="`candlestick-rect-underlayer-${i}`"
+                        :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
+                        :y="candle.isBullish ? candle.last.y : candle.open.y"
+                        :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
+                        :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
+                        :fill="FINAL_CONFIG.style.layout.candle.gradient.underlayer"
+                        :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
+                        stroke="none"
+                        :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                    />
+                    <rect
+                        v-for="(candle, i) in drawableDataset"
+                        :data-cy="`candlestick-rect-${i}`"
+                        :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
+                        :y="candle.isBullish ? candle.last.y : candle.open.y"
+                        :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
+                        :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
+                        :fill="candle.isBullish ? FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bullish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bearish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bearish"
+                        :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
+                        :stroke="FINAL_CONFIG.style.layout.candle.stroke"
+                        :stroke-width="FINAL_CONFIG.style.layout.candle.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                    />
+                </g>
+            </template>
+
+            <template v-if="FINAL_CONFIG.type === 'ohlc'">
+                <g v-for="(dp, i) in drawableDataset">
+                    <path
+                        :d="`M ${dp.high.x},${dp.high.y} ${dp.low.x},${dp.low.y} M${dp.open.x - Math.min(6, slot / 3)},${dp.open.y} ${dp.open.x},${dp.open.y} M${dp.last.x},${dp.last.y} ${dp.last.x + Math.min(6, slot / 3)},${dp.last.y}`"
+                        :stroke="dp.isBullish ? FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.colors.bearish"
+                        :stroke-width="1"
+                    />
+                </g>
+            </template>
 
             <!-- TOOLTIP TRAPS -->
             <g>
@@ -1308,13 +1672,22 @@ defineExpose({
                     :y="drawingArea.top"
                     :height="drawingArea.height <= 0 ? 0.0001 : drawingArea.height"
                     :width="slot <= 0 ? 0.0001 : slot"
-                    :fill="hoveredIndex === i ? setOpacity(FINAL_CONFIG.style.layout.selector.color, FINAL_CONFIG.style.layout.selector.opacity) : 'transparent'"
+                    :fill="hoveredIndex === i || selectedMinimapIndex === i ? setOpacity(FINAL_CONFIG.style.layout.selector.color, FINAL_CONFIG.style.layout.selector.opacity) : 'transparent'"
                     @mouseover="() => useTooltip(i, rect)"
                     @mouseleave="() => onTrapLeave(i, rect)"
                     @click="() => selectDatapoint(i, rect)"
                 />
             </g>
             </g>
+
+            <!-- ZOOM PREVIEW -->
+            <rect 
+                v-if="isPrecog" 
+                v-bind="precogRect" 
+                :data-start="slicer.start" 
+                :data-end="slicer.end"
+            />
+
             <slot name="svg" :svg="svg"/>
         </svg>
 
@@ -1322,38 +1695,82 @@ defineExpose({
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
         </div>
 
-        <div ref="chartSlicer" v-if="FINAL_CONFIG.style.zoom.show && isDataset">
-            <Slicer
-                ref="slicerComponent"
-                :key="`slicer_${slicerStep}`"
-                :background="FINAL_CONFIG.style.zoom.color"
-                :borderColor="FINAL_CONFIG.style.backgroundColor"
-                :fontSize="FINAL_CONFIG.style.zoom.fontSize"
-                :useResetSlot="FINAL_CONFIG.style.zoom.useResetSlot"
-                :labelLeft="slicerLabels.start"
-                :labelRight="slicerLabels.end"
-                :textColor="FINAL_CONFIG.style.color"
-                :inputColor="FINAL_CONFIG.style.zoom.color"
-                :selectColor="FINAL_CONFIG.style.zoom.highlightColor"
-                :max="len"
-                :min="0"
-                :valueStart="slicer.start"
-                :valueEnd="slicer.end"
-                v-model:start="slicer.start"
-                v-model:end="slicer.end"
-                :refreshStartPoint="FINAL_CONFIG.style.zoom.startIndex !== null ? FINAL_CONFIG.style.zoom.startIndex : 0"
-                :refreshEndPoint="FINAL_CONFIG.style.zoom.endIndex !== null ? FINAL_CONFIG.style.zoom.endIndex + 1 : len"
-                :enableRangeHandles="FINAL_CONFIG.style.zoom.enableRangeHandles"
-                :enableSelectionDrag="FINAL_CONFIG.style.zoom.enableSelectionDrag"
-                :focusOnDrag="FINAL_CONFIG.style.zoom.focusOnDrag"
-                :focusRangeRatio="FINAL_CONFIG.style.zoom.focusRangeRatio"
-                @reset="refreshSlicer"
-            >
-                <template #reset-action="{ reset }">
-                    <slot name="reset-action" v-bind="{ reset }"/>
-                </template>
-            </Slicer>
-        </div>
+        <SlicerPreview
+            ref="chartSlicer"
+            v-if="FINAL_CONFIG.style.zoom.show && len > 6 && isDataset && slicerReady"
+            :allMinimaps="allMinimaps"
+            :background="FINAL_CONFIG.style.zoom.color"
+            :borderColor="FINAL_CONFIG.style.backgroundColor"
+            :customFormat="FINAL_CONFIG.style.zoom.customFormat"
+            :cutNullValues="false"
+            :enableRangeHandles="FINAL_CONFIG.style.zoom.enableRangeHandles"
+            :enableSelectionDrag="FINAL_CONFIG.style.zoom.enableSelectionDrag"
+            :end="slicer.end"
+            :focusOnDrag="FINAL_CONFIG.style.zoom.focusOnDrag"
+            :focusRangeRatio="FINAL_CONFIG.style.zoom.focusRangeRatio"
+            :fontSize="FINAL_CONFIG.style.zoom.fontSize"
+            :immediate="!FINAL_CONFIG.style.zoom.preview.enable"
+            :inputColor="FINAL_CONFIG.style.zoom.color"
+            :isPreview="isPrecog"
+            :labelLeft="slicerLabels.start || ''"
+            :labelRight="slicerLabels.end || ''"
+            :max="len"
+            :min="0"
+            :minimap="FINAL_CONFIG.style.zoom.minimap.show ? FINAL_DATASET.map(d => d[2]) : []"
+            :minimapCompact="FINAL_CONFIG.style.zoom.minimap.compact"
+            :minimapFrameColor="FINAL_CONFIG.style.zoom.minimap.frameColor"
+            :minimapIndicatorColor="FINAL_CONFIG.style.zoom.minimap.indicatorColor"
+            :minimapMerged="false"
+            :minimapSelectedColor="FINAL_CONFIG.style.zoom.minimap.selectedColor"
+            :minimapSelectedColorOpacity="FINAL_CONFIG.style.zoom.minimap.selectedColorOpacity"
+            :minimapSelectedIndex="hoveredIndex"
+            :minimapSelectionRadius="1"
+            :preciseLabels="preciseAllTimeLabels"
+            :refreshEndPoint="FINAL_CONFIG.style.zoom.endIndex !== null ? FINAL_CONFIG.style.zoom.endIndex + 1 : len"
+            :refreshStartPoint="FINAL_CONFIG.style.zoom.startIndex !== null ? FINAL_CONFIG.style.zoom.startIndex : 0"
+            :selectColor="FINAL_CONFIG.style.zoom.highlightColor"
+            :selectedSeries="FINAL_DATASET"
+            :smoothMinimap="false"
+            :start="slicer.start"
+            :textColor="FINAL_CONFIG.style.color"
+            :timeLabels="allTimeLabels"
+            :usePreciseLabels="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable && !FINAL_CONFIG.style.zoom.useDefaultFormat"
+            :useResetSlot="FINAL_CONFIG.style.zoom.useResetSlot"
+            :valueEnd="slicer.end"
+            :valueStart="slicer.start"
+            :verticalHandles="FINAL_CONFIG.style.zoom.minimap.verticalHandles"
+            @update:end="onSlicerEnd"
+            @update:start="onSlicerStart"
+            @trapMouse="selectMinimapIndex"
+            @reset="refreshSlicer"
+            @futureEnd="v => setPrecog('end', v)"
+            @futureStart="v => setPrecog('start', v)"
+        >
+            <template #reset-action="{ reset }">
+                <slot name="reset-action" v-bind="{ reset }"/>
+            </template>
+
+            <template #slotMap="{ height: minimapH, unitW }">
+                <g v-for="(dp, i) in minimapDataset({ minimapH, unitW })">
+                    <path
+                        :d="`M ${dp.high.x},${dp.high.y} ${dp.low.x},${dp.low.y}`"
+                        :stroke="dp.isBullish ? FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.colors.bearish"
+                        :stroke-width="1"
+                        :style="{
+                            opacity: i >= slicerPrecog.start && i <= slicerPrecog.end ? 1 : 0.6
+                        }"
+                    />
+                    <path
+                        :d="`M ${dp.open.x},${dp.open.y} ${dp.last.x},${dp.last.y}`"
+                        :stroke="dp.isBullish ? FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.colors.bearish"
+                        :stroke-width="Math.min(6, unitW / 1.5)"
+                        :style="{
+                            opacity: i >= slicerPrecog.start && i <= slicerPrecog.end ? 1 : 0.6
+                        }"
+                    />
+                </g>
+            </template>
+        </SlicerPreview>
 
         <div ref="chartLegend">
             <slot name="legend" v-bind:legend="drawableDataset"></slot>
