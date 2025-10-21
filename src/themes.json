@@ -8761,6 +8761,9 @@
                             "color": "#757575"
                         }
                     },
+                    "words": {
+                        "selectedStroke": "#FFF8E1"
+                    },
                     "tooltip": {
                         "backgroundColor": "#FFECB3",
                         "backgroundOpacity": 30,
@@ -8795,6 +8798,9 @@
                             "color": "#BDBDBD"
                         }
                     },
+                    "words": {
+                        "selectedStroke": "#1E1E1E"
+                    },
                     "tooltip": {
                         "backgroundColor": "#1E1E1E",
                         "backgroundOpacity": 30,
@@ -8828,6 +8834,9 @@
                         "subtitle": {
                             "color": "#99AA99"
                         }
+                    },
+                    "words": {
+                        "selectedStroke": "#1A1A1A"
                     }
                 }
             },
@@ -8852,6 +8861,9 @@
                         "subtitle": {
                             "color": "#99AA99"
                         }
+                    },
+                    "words": {
+                        "selectedStroke": "#fbfafa"
                     }
                 }
             },
@@ -8876,6 +8888,9 @@
                         "subtitle": {
                             "color": "#718890"
                         }
+                    },
+                    "words": {
+                        "selectedStroke": "#f6f6fb"
                     }
                 }
             },

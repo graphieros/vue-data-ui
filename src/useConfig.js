@@ -4398,7 +4398,9 @@ export function useConfig() {
                     proximity: 10,
                     packingWeight: 1,
                     color: COLOR_BLACK,
-                    usePalette: true
+                    usePalette: true,
+                    hoverOpacity: 0.5,
+                    selectedStroke: 'transparent'
                 },
                 title: TITLE,
                 tooltip: {

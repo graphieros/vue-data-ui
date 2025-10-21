@@ -6935,6 +6935,8 @@ declare module "vue-data-ui" {
                     packingWeight?: number;
                     color?: string;
                     usePalette?: boolean;
+                    hoverOpacity?: number;
+                    selectedStroke?: string;
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {

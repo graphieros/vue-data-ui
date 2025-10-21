@@ -160,6 +160,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     words: {
                         color: '#6A6A6A',
                         usePalette: false,
+                        selectedStroke: '#CCCCCC'
                     }
                 }
             }
@@ -781,14 +782,27 @@ function useTooltip(word, index) {
                         @click="onTrapClick(word, index)"
                     />
                     <text
-                        :fill="word.color" 
-                        :font-weight="FINAL_CONFIG.style.chart.words.bold ? 'bold' : 'normal'" :key="index"
-                        :x="word.x" :y="word.y" :font-size="word.fontSize"
+                        :fill="word.color"
+                        :font-weight="FINAL_CONFIG.style.chart.words.bold ? 'bold' : 'normal'"
+                        :key="index"
+                        :x="word.x"
+                        :y="word.y"
+                        :font-size="word.fontSize"
                         :transform="`translate(${word.width / 2}, ${word.height / 2})`"
-                        :class="{'animated': FINAL_CONFIG.useCssAnimation, 'word-selected': selectedWord && selectedWord === word.id && mutableConfig.showTooltip, 'word-not-selected': selectedWord && selectedWord !== word.id && mutableConfig.showTooltip }"
+                        :class="{ 'animated': FINAL_CONFIG.useCssAnimation && !loading }"
                         text-anchor="middle"
                         dominant-baseline="central"
-                        :style="`animation-delay:${index * FINAL_CONFIG.animationDelayMs}ms !important; pointer-events:none;`"
+                        paint-order="stroke fill"
+                        :stroke="(!selectedWord || selectedWord === word.id) ? FINAL_CONFIG.style.chart.words.selectedStroke : undefined"
+                        :stroke-width="word.height * 0.05"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :style="`
+                            animation-delay:${index * FINAL_CONFIG.animationDelayMs}ms !important;
+                            pointer-events:none;
+                            fill-opacity:${(!selectedWord || selectedWord === word.id) ? 1 : FINAL_CONFIG.style.chart.words.hoverOpacity} !important;
+                            transition:fill-opacity 0.3s ease-in-out !important;
+                        `"
                     >
                         {{ word.name }}
                     </text>
@@ -914,13 +928,6 @@ text.animated {
     to {
         opacity: 1;
     }
-}
-
-.animated.word-selected {
-    opacity: 1;
-}
-.word-not-selected {
-    opacity: 0.5 !important;
 }
 
 .reset-wrapper {
