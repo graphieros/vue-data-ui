@@ -701,7 +701,7 @@ function useTooltip(apex, i) {
 
             sparkBarData.value.push({
                 name: cat?.name ?? `#${k + 1}`,
-                value: rawVal,
+                value: apex.values[k] / apex.target * 100,
                 color: cat?.color,
                 suffix: display,
                 prefix: '',
