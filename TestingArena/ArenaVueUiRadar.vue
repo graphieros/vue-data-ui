@@ -20,8 +20,8 @@ const src = {
             series: [
                 {
                     name: 'Serie 1 with a long name',
-                    values: [60, 20, 30],
-                    target: 100,
+                    values: [60.01, 20, 100],
+                    target: 200,
                     formatter: ({value}) => {
                         return `f1 - ${value}`
                     }
@@ -30,9 +30,9 @@ const src = {
                     name: 'Serie 2 with a long name',
                     values: [20, 80, 40],
                     target: 100,
-                    formatter: ({value}) => {
-                        return `f2 - ${value}`
-                    }
+                    // formatter: ({value}) => {
+                    //     return `f2 - ${value}`
+                    // }
                 },
                 {
                     name: 'Serie 3 also quite long',
@@ -47,7 +47,7 @@ const dataset = ref(undefined);
 onMounted(() => {
     setTimeout(() => {
         dataset.value = src
-    }, 2000)
+    }, 0)
     
     // setTimeout(() => {
     //     dataset.value = undefined;
@@ -165,8 +165,8 @@ const model = ref([
     { key: 'style.chart.tooltip.backgroundColor', def: "#FFFFFF", type: 'color'},
     { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.tooltip.fontSize', def: 14, type: 'range', min: 6, max: 48},
-    { key: 'style.chart.tooltip.showValue', def: true, type: 'checkbox'}, // FIXME not applied
-    { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox'}, // FIXME not applied
+    { key: 'style.chart.tooltip.showValue', def: true, type: 'checkbox'},
+    { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.roundingValue', def: 2, type: 'range', min: 0, max: 12},
     { key: 'style.chart.tooltip.roundingPercentage', def: 2, type: 'range', min: 0, max: 12},
     { key: 'style.chart.tooltip.animation.show', def: true, type: 'checkbox'},
@@ -227,11 +227,11 @@ const config = computed(() => {
                     ...c.style.chart,
                     tooltip: {
                         ...c.style.chart.tooltip,
-                        customFormat: ({ datapoint }) => {
-                            let html = '';
-                            console.log(datapoint);
-                            return "test"
-                        }
+                        // customFormat: ({ datapoint }) => {
+                        //     let html = '';
+                        //     console.log(datapoint);
+                        //     return "test"
+                        // }
                     }
                 }
             }

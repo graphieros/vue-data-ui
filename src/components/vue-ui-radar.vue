@@ -331,74 +331,94 @@ function getData() {
     })
 }
 
-const datasetCopy = computed(() => {
-    if ([null, undefined].includes(FINAL_DATASET.value.categories)) {
+function validateRadarDataset() {
+    const ds = FINAL_DATASET.value;
+
+    if ([null, undefined].includes(ds?.categories)) {
+        error({
+            componentName: 'VueUiRadar',
+            type: 'dataset',
+            debug: debug.value
+        });
         error({
             componentName: 'VueUiRadar',
             type: 'datasetAttribute',
             property: 'categories ({ name: string; prefix?: string; suffix?: string}[])',
             debug: debug.value
         });
-        return []
+        return;
+    }
+
+    if (ds.categories.length === 0) {
+        error({
+            componentName: 'VueUiRadar',
+            type: 'datasetAttributeEmpty',
+            property: 'categories',
+            debug: debug.value
+        });
     } else {
-        if(FINAL_DATASET.value.categories.length === 0) {
+        ds.categories.forEach((cat, i) => {
+        getMissingDatasetAttributes({
+            datasetObject: cat,
+            requiredAttributes: ['name']
+        }).forEach(attr => {
             error({
                 componentName: 'VueUiRadar',
-                type: 'datasetAttributeEmpty',
-                property: 'categories',
+                type: 'datasetAttribute',
+                property: `category.${attr} at index ${i}`,
+                index: i,
                 debug: debug.value
-            })
-        } else {
-            FINAL_DATASET.value.categories.forEach((cat, i) => {
-                getMissingDatasetAttributes({
-                    datasetObject: cat,
-                    requiredAttributes: ['name']
-                }).forEach(attr => {
-                    error({
-                        componentName: 'VueUiRadar',
-                        type: 'datasetAttribute',
-                        property: `category.${attr} at index ${i}`,
-                        index: i,
-                        debug: debug.value
-                    })
-                })
-            })
-        }
+            });
+        });
+        });
     }
-    if([null, undefined].includes(FINAL_DATASET.value.series)) {
+
+    if ([null, undefined].includes(ds?.series)) {
         error({
             componentName: 'VueUiRadar',
             type: 'datasetAttribute',
             property: 'series ({ name: string; values: number[]; color?: string; target: number}[])',
             debug: debug.value
-        })
+        });
     } else {
-        FINAL_DATASET.value.series.forEach((serie, i) => {
-            getMissingDatasetAttributes({
-                datasetObject: serie,
-                requiredAttributes: ['name', 'values', 'target']
-            }).forEach(attr => {
-                error({
-                    componentName: 'VueUiRadar',
-                    type: 'datasetSerieAttribute',
-                    key: 'series',
-                    property: attr,
-                    index: i,
-                    debug: debug.value
-                })
-            })
-        })
+        ds.series.forEach((serie, i) => {
+        getMissingDatasetAttributes({
+            datasetObject: serie,
+            requiredAttributes: ['name', 'values', 'target']
+        }).forEach(attr => {
+            error({
+                componentName: 'VueUiRadar',
+                type: 'datasetSerieAttribute',
+                key: 'series',
+                property: attr,
+                index: i,
+                debug: debug.value
+            });
+        });
+        });
     }
+}
 
-    return FINAL_DATASET.value.categories.map((c, i) => {
-        return {
-            name: c.name,
-            categoryId: `radar_category_${uid.value}_${i}`,
-            color: convertColorToHex(c.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
-            prefix: c.prefix ?? '',
-            suffix: c.suffix ?? '',
-        }
-    });
+watch(
+    () => FINAL_DATASET.value,
+    () => validateRadarDataset(),
+    { deep: true, immediate: true }
+);
+
+const datasetCopy = computed(() => {
+    const cats = Array.isArray(FINAL_DATASET.value?.categories)
+        ? FINAL_DATASET.value.categories
+        : [];
+
+    const colors = customPalette.value ?? palette;
+
+    return cats.map((c, i) => ({
+        name: c?.name ?? '',
+        categoryId: `radar_category_${uid.value}_${i}`,
+        color: convertColorToHex(c?.color) || colors[i] || palette[i % palette.length],
+        prefix: c?.prefix ?? '',
+        suffix: c?.suffix ?? '',
+    }));
 });
 
 const seriesCopy = computed(() => {
@@ -550,6 +570,7 @@ const dataTable = computed(() => {
         { name: FINAL_CONFIG.value.translations.target, color: "" },
         ...legendSet.value
     ];
+
     const body = FINAL_DATASET.value.series.map(ds => {
         return [
             ds.name,
@@ -567,7 +588,7 @@ const dataTable = computed(() => {
                 return `${applyDataLabel(
                     ds.formatter,
                     v,
-                    dataLabel({p: datasetCopy.value[i].prefix, v, s: datasetCopy.value[i].suffix, r:FINAL_CONFIG.value.table.td.roundingValue})
+                    dataLabel({p: datasetCopy.value[i]?.prefix ?? '', v, s: datasetCopy.value[i]?.suffix ?? '', r:FINAL_CONFIG.value.table.td.roundingValue})
                 )} (${isNaN(v / ds.target) ? '' : dataLabel({
                     v: v / ds.target * 100,
                     s: '%',
@@ -616,53 +637,78 @@ function useTooltip(apex, i) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint: apex, seriesIndex: i });
     }
-    
+
+    const cats = datasetCopy.value.slice();
+
     sparkBarData.value = [];
     selectedIndex.value = i;
     isTooltip.value = true;
-    let html = "";
-
     dataTooltipSlot.value = {
         datapoint: apex,
         seriesIndex: i,
         series: {
-            categories: datasetCopy.value,
+            categories: cats,
             datapoints: seriesCopy.value,
             radar: radar.value
         },
         config: FINAL_CONFIG.value
-    }
+    };
 
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
-            seriesIndex: i,
-            datapoint: apex,
-            series: { categories: datasetCopy.value, datapoints: seriesCopy.value, radar: radar.value  },
-            config: FINAL_CONFIG.value
-        }))) {
+        seriesIndex: i,
+        datapoint: apex,
+        series: { categories: cats, datapoints: seriesCopy.value, radar: radar.value },
+        config: FINAL_CONFIG.value
+    }))) {
         tooltipContent.value = customFormat({
             seriesIndex: i,
             datapoint: apex,
-            series: { categories: datasetCopy.value, datapoints: seriesCopy.value, radar: radar.value  },
+            series: { categories: cats, datapoints: seriesCopy.value, radar: radar.value },
             config: FINAL_CONFIG.value
-        })
-    } else {
-        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
-        for(let k = 0; k < apex.values.length; k += 1) {
-            if(!segregated.value.includes(k)) {
-                sparkBarData.value.push({
-                    name: datasetCopy.value[k].name,
-                    value: apex.values[k] / apex.target * 100,
-                    color: datasetCopy.value[k].color,
-                    suffix: '%)',
-                    prefix: `${dataLabel({p: datasetCopy.value[k].prefix ?? '',v:apex.values[k],s:datasetCopy.value[k].suffix ?? '', r:FINAL_CONFIG.value.style.chart.tooltip.roundingValue})} (`,
-                    rounding: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
-                    formatter: apex.formatter
-                })
-            }
+        });
+        return;
+    }
+
+    tooltipContent.value = `<div style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${apex.name}</div>`;
+
+    for (let k = 0; k < apex.values.length; k += 1) {
+        if (!segregated.value.includes(k)) {
+            const cat = cats[k];
+            const rawVal = apex.values[k];
+            const pct = isNaN(rawVal / apex.target) ? 0 : (rawVal / apex.target) * 100;
+
+            const valueLabel = applyDataLabel(
+                apex.formatter,
+                rawVal,
+                dataLabel({
+                    p: datasetCopy.value[k].prefix,
+                    v: rawVal,
+                    s: datasetCopy.value[k].suffix,
+                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
+                }),
+                { datapoint: apex }
+            );
+
+            const percentageLabel = dataLabel({
+                v: pct,
+                s: '%',
+                r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
+            });
+
+            const display = FINAL_CONFIG.value.style.chart.tooltip.showValue && FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `${valueLabel} (${percentageLabel})` : FINAL_CONFIG.value.style.chart.tooltip.showValue && !FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? valueLabel : !FINAL_CONFIG.value.style.chart.tooltip.showValue && FINAL_CONFIG.value.style.chart.tooltip.showPercentage ? `${percentageLabel}` :  '';
+
+            sparkBarData.value.push({
+                name: cat?.name ?? `#${k + 1}`,
+                value: rawVal,
+                color: cat?.color,
+                suffix: display,
+                prefix: '',
+                rounding: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+                formatter: apex.formatter
+            });
         }
-        tooltipContent.value = html;
     }
 }
 
@@ -1119,7 +1165,18 @@ defineExpose({
             </template>
             <template #tooltip-after>
                 <div style="max-width: 200px;margin:0 auto" v-if="!['function'].includes(typeof FINAL_CONFIG.style.chart.tooltip.customFormat)">
-                    <SparkBar :dataset="sparkBarData" :config="sparkBarConfig" :backgroundOpacity="0"/>
+                    <SparkBar :dataset="sparkBarData" :config="sparkBarConfig" :backgroundOpacity="0">
+                        <template #data-label="{ bar }">
+                            <div class="vue-ui-radar-tooltip-datalabel" style="width: 100%">
+                                <span class="vue-ui-radar-tooltip-datalabel-name">
+                                    {{ bar.name + (FINAL_CONFIG.style.chart.tooltip.showValue || FINAL_CONFIG.style.chart.tooltip.showPercentage ? ':' : '') }}
+                                </span>
+                                <span v-if="FINAL_CONFIG.style.chart.tooltip.showValue || FINAL_CONFIG.style.chart.tooltip.showPercentage">
+                                    {{ bar.suffix }}
+                                </span>
+                            </div>
+                        </template>
+                    </SparkBar>
                 </div>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>
@@ -1206,6 +1263,13 @@ path, line, rect, circle {
 
 polygon {
     transform-origin: center;
+}
+
+.vue-ui-radar-tooltip-datalabel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items:center;
+    gap: 4px;
 }
 
 .animated-in {
