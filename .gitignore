@@ -22,7 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-TODO.txt
+TODO.md
 publish-build.cjs
 changeLog.cjs
 package-copy.json
