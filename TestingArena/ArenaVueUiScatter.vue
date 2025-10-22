@@ -17,7 +17,7 @@ const scat1 = computed(() => {
         arr.push({
             x: Math.random() * (Math.random() > 0.5 ? i / 3 : -i / 3),
             y: Math.random() * (Math.random() > 0.5 ? i / 3 : -i / 3),
-            name: `plot_${i}_cluster_1`
+            name: `plot_${i}_cluster_1`,
         });
     }
     return arr;
@@ -25,11 +25,12 @@ const scat1 = computed(() => {
 
 const scat2 = computed(() => {
     const arr = [];
-    for (let i = -500; i < 500; i += 1) {
+    for (let i = -20; i < 20; i += 1) {
         arr.push({
             x: Math.random() * (Math.random() > 0.5 ? i / 4 : -i / 4),
             y: Math.random() * (Math.random() > 0.5 ? i / 4 : -i / 4),
             name: `plot_${i}_cluster_2`,
+            marked: i > 10 && i < 15
         });
     }
     return arr;
@@ -44,6 +45,7 @@ onMounted(() => {
                 name: "Cluster 2",
                 values: scat2.value,
                 shape: "circle",
+                marked: true
             },
             // {
             //     name: "Cluster 1",
@@ -51,7 +53,7 @@ onMounted(() => {
             //     shape: "star",
             // },
         ]
-    }, 2000)
+    }, 0)
 })
 
 const alternateDataset = ref([
@@ -347,7 +349,30 @@ onMounted(async () => {
         const img = await local.value.getImage()
         console.log(img)
     }
-})
+});
+
+function freestyle({ drawingArea, data }) {
+    const marked = (data || []).filter(d => !!d?.marked)
+    const markedPlots = marked[0]?.plots.filter(p => !!p?.v?.marked);
+    const circles = (markedPlots || []).map(p => {
+        return `
+            <g style="pointer-events: none;">
+                <circle
+                    cx="${p?.x}"
+                    cy="${p?.y}"
+                    r="20"
+                    stroke="#FF0000"
+                    fill="none"
+                />
+                <path
+                    d="M${p?.x - 20},${p?.y} ${p?.x - 5},${p?.y} M${p?.x},${p?.y - 20} ${p?.x},${p?.y - 5} M${p?.x + 20},${p?.y} ${p?.x + 5},${p?.y} M${p?.x},${p?.y + 20} ${p?.x},${p?.y + 5}"
+                    stroke="#FF0000"
+                />
+            </g>
+        `
+    })
+    return circles;
+}
 
 </script>
 
@@ -366,6 +391,10 @@ onMounted(async () => {
             ...config,
             responsive: true
         }">
+
+        <template #svg="{ svg }">
+            <g v-html="freestyle(svg)" />
+        </template>
 
         <!-- <template #chart-background>
             <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>

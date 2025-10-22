@@ -402,7 +402,10 @@ onMounted(() => {
         dataLabels: false,
         smooth: true,
         useArea: true,
-        useProgression: true
+        useProgression: true,
+        // freestyle:
+        marks: [10, 20],
+        annotated: true
     },
     // {
     //     name: "Serie A",
@@ -1239,9 +1242,35 @@ onMounted(async () => {
         const data = await vduiLocal.value.getData()
         console.log(data)
         const img = await vduiLocal.value.getImage({ scale: 4 });
-        console.log(img)
     }
 })
+
+// Basically any content can be jazzed onto the chart :)
+function freestyle({ data, drawingArea }) {
+    const annotated = data.filter(d => !!d.annotated);
+    const points = (annotated[0]?.plots || []).filter((_, i) => annotated[0].marks.includes(i));
+
+    return `
+        <g>
+            <line
+                x1="${points[0]?.x}"
+                x2="${points[0]?.x}"
+                y1="${drawingArea.top}"
+                y2="${drawingArea.bottom}"
+                stroke="black"
+                stroke-width="3"
+            />
+            <text
+                x="${points[0]?.x + 12}"
+                y="${drawingArea.top + 12}"
+                fill="red"
+                font-size="16"
+            >
+                This is awesome
+            </text>
+        </g>
+    `
+}
 
 </script>
 
@@ -1267,6 +1296,14 @@ onMounted(async () => {
             ...config,
             responsive: true,
         }" @selectTimeLabel="selectTimeLabel">
+
+            <template #svg="{ svg }">
+                <g>
+                    <!-- <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text> -->
+                    <g v-html="freestyle(svg)"/>
+                </g>
+            </template>
 
             <template #area-gradient="{ series, id }">
                 <linearGradient :id="id" x1="0" x2="0" y1="0" y2="1">

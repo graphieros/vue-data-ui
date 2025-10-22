@@ -32,10 +32,12 @@ const dataset = ref([
             {
                 name: "Series 1",
                 series: makeDs(100),
+                marked: true
             },
             {
                 name: "Series 2",
                 series: makeDs(100),
+                marked: true
             },
             {
                 name: "Series 3",
@@ -390,6 +392,37 @@ const selectedX = ref(undefined);
 function selectX({ datapoint, index, indexLabel}) {
     selectedX.value = index;
 }
+
+function freestyle({ drawingArea, data }) {
+    const marked = data?.filter(d => !!d.marked);
+    const paths = marked.map((m, i) => {
+        const dp = m ?? {x: [], y: []};
+        const minY = Math.min(...dp?.y);
+        const minX = dp.x[dp.y.indexOf(minY)];
+        const maxY = Math.max(...dp?.y);
+        const maxX = dp.x[dp.y.indexOf(maxY)];
+        return `
+            <defs>
+                <marker
+                    id="arrow_${i}"
+                    viewBox="0 0 10 10"
+                    refX="5"
+                    refY="5"
+                    markerWidth="6"
+                    markerHeight="6"
+                    orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" />
+                </marker>
+            </defs>
+            <path
+                d="M${minX > maxX ? `${maxX},${maxY} ${minX},${minY}` : `${minX},${minY} ${maxX},${maxY}`}"
+                stroke="#000000"
+                marker-end="url(#arrow_${i})"
+            />
+        `
+    });
+    return paths;
+}
     
 </script>
 
@@ -404,6 +437,10 @@ function selectX({ datapoint, index, indexLabel}) {
     <LocalVueUiStackbar @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="{...config,
         responsive: true,
     }"  @selectTimeLabel="selectTimeLabel"> 
+            <template #svg="{ svg }">
+                <g v-html="freestyle(svg)"/>
+            </template>
+
             <template #chart-background>
                 <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
             </template>

@@ -50,7 +50,7 @@ onMounted(() => {
     dataset.value = undefined;
     setTimeout(() => {
         dataset.value = generateRandomCandlestickData({ count: 100 })
-    }, 2000)
+    }, 100)
 })
 
 const alternateDataset = ref([
@@ -207,7 +207,7 @@ const model = ref([
     { key: 'translations.open', def: 'Open', type: 'text'},
     { key: 'translations.high', def: 'High', type: 'text'},
     { key: 'translations.low', def: 'Low', type: 'text'},
-    { key: 'translations.last', def: 'Last', type: 'text'},
+    { key: 'translations.last', def: 'Close', type: 'text'},
     { key: 'translations.volume', def: 'Volume', type: 'text'},
 
     { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
@@ -326,6 +326,30 @@ function selectX({ datapoint, index, indexLabel}) {
     selectedX.value = index;
 }
 
+function freestyle({ drawingArea, data }) {
+    const maxVol = data.filter(d => !!d.isMaxVolume);
+    const minVol = data.filter(d => !!d.isMinVolume);
+    return `
+        <path
+            d="M${minVol[0]?.high?.x},${minVol[0]?.high?.y} ${maxVol[0]?.high?.x},${maxVol[0]?.high?.y}"
+            stroke="black"
+        />
+        <path
+            d="M${minVol[0]?.low?.x},${minVol[0]?.low?.y} ${maxVol[0]?.low?.x},${maxVol[0]?.low?.y}"
+            stroke="black"
+        />
+        <polygon 
+            points="
+                ${minVol[0]?.high.x},${minVol[0]?.high?.y} 
+                ${maxVol[0]?.high?.x},${maxVol[0]?.high?.y} 
+                ${maxVol[0]?.low?.x},${maxVol[0]?.low?.y}
+                ${minVol[0]?.low?.x},${minVol[0]?.low?.y} 
+            "
+            fill="#00000020"
+        />
+    `
+}
+
 </script>
 
 <template>
@@ -349,6 +373,10 @@ function selectX({ datapoint, index, indexLabel}) {
             ...config,
             responsive: true
         }">
+        <template #svg="{ svg }">
+            <g v-html="freestyle(svg)"/>
+        </template>
+
         <template #chart-background>
             <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
         </template>
