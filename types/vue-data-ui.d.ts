@@ -2926,6 +2926,7 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiScatterDatasetValueItem = {
+        [key: string]: any;
         name: string;
         x: number;
         y: number;
@@ -2934,6 +2935,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiScatterDatasetItem = {
+        [key: string]: any;
         name: string;
         values: VueUiScatterDatasetValueItem[];
         color?: string;
@@ -3118,12 +3120,14 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiScatterDatapoint = {
+        [key: string]: any;
         clusterName: string | undefined;
         color: string;
         deviation: number;
         id: string;
         shape: Shape | null;
         v: {
+            [key: string]: any;
             x: number;
             y: number;
             name: string;
@@ -3688,6 +3692,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiXyDatasetItem = {
+        [key: string]: any; // which can be recovered through the #svg slot
         name: string;
         series: Array<number | null>;
         type: "bar" | "line" | "plot";
@@ -7789,6 +7794,7 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiStackbarDatasetItem = {
+        [key: string]: any; // To be recovered through the #svg slot
         name: string;
         series: Array<number | null>;
         color?: string;
