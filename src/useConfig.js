@@ -2436,7 +2436,7 @@ export function useConfig() {
             open: "Open",
             high: "High",
             low: "Low",
-            last: "Last",
+            last: "Close",
             volume: "Volume"
         },
         userOptions: USER_OPTIONS({

@@ -564,7 +564,7 @@ const datasetBreakdown = computed(() => {
             error({
                 componentName: 'VueUiCandlestick',
                 type: 'datasetAttribute',
-                property: 'last (index 4)',
+                property: 'close (index 4)',
                 index: i,
                 debug: debug.value
             })
@@ -587,7 +587,7 @@ const datasetBreakdown = computed(() => {
             open: ds[1],
             high: ds[2],
             low: ds[3],
-            last: ds[4],
+            close: ds[4],
             volume: ds[5],
         }
     });
@@ -601,7 +601,7 @@ const minimapSource = computed(() => {
             open: ds[1],
             high: ds[2],
             low: ds[3],
-            last: ds[4],
+            close: ds[4],
             volume: ds[5],
         }
     });
@@ -625,33 +625,54 @@ const niceScale = computed(() => {
     return calculateNiceScale(extremes.value.min, extremes.value.max, FINAL_CONFIG.value.style.layout.grid.yAxis.dataLabels.steps)
 })
 
-function convertToPlot(item, index) {
+function convertToPlot(item, index, dpMax = null, dpMin = null) {
     return {
         ...item,
         x: checkNaN(drawingArea.value.left + (index * slot.value) + (slot.value / 2)),
         y: checkNaN(drawingArea.value.top + (1 - ((item - niceScale.value.min) / (niceScale.value.max - niceScale.value.min))) * drawingArea.value.height),
-        value: checkNaN(item)
+        value: checkNaN(item),
+        isMax: item === dpMax,
+        isMin: item === dpMin
     }
 }
 
 const drawableDataset = computed(() => {
+    const dpMax = {
+        o: Math.max(...datasetBreakdown.value.map(d => d.open)),
+        h: Math.max(...datasetBreakdown.value.map(d => d.high)),
+        l: Math.max(...datasetBreakdown.value.map(d => d.low)),
+        c: Math.max(...datasetBreakdown.value.map(d => d.low))
+    };
+    const dpMin = {
+        o: Math.min(...datasetBreakdown.value.map(d => d.open)),
+        h: Math.min(...datasetBreakdown.value.map(d => d.high)),
+        l: Math.min(...datasetBreakdown.value.map(d => d.low)),
+        c: Math.min(...datasetBreakdown.value.map(d => d.low))
+    }
+    const volumeMax = Math.max(...datasetBreakdown.value.map(d => d.volume));
+    const volumeMin = Math.min(...datasetBreakdown.value.map(d => d.volume));
+
     return datasetBreakdown.value.map((ds, i) => {
-        const open = convertToPlot(ds.open, i);
-        const high = convertToPlot(ds.high, i);
-        const low = convertToPlot(ds.low, i);
-        const last = convertToPlot(ds.last, i);
-        const isBullish = ds.last > ds.open;
+        const open = convertToPlot(ds.open, i, dpMax.o, dpMin.o);
+        const high = convertToPlot(ds.high, i, dpMax.h, dpMin.h);
+        const low = convertToPlot(ds.low, i, dpMax.l, dpMin.l);
+        const close = convertToPlot(ds.close, i, dpMax.c, dpMin.c);
+        const isBullish = ds.close > ds.open;
+        const isMaxVolume = ds.volume === volumeMax;
+        const isMinVolume = ds.volume === volumeMin;
         return {
             period: ds.period,
             open,
             high,
             low,
-            last,
+            close,
             volume: ds.volume,
             isBullish,
-            absoluteIndex: ds.absoluteIndex
+            absoluteIndex: ds.absoluteIndex,
+            isMaxVolume,
+            isMinVolume
         }
-    });
+    })
 });
 
 function convertToMinimapPlot({ item, index,minimapH, unitW }) {
@@ -671,14 +692,14 @@ const minimapDataset  = computed(() => {
             const open = convertToMinimapPlot({ item: ds.open, index: i, minimapH, unitW });
             const high = convertToMinimapPlot({ item: ds.high, index: i, minimapH, unitW });
             const low = convertToMinimapPlot({ item: ds.low, index: i, minimapH, unitW });
-            const last = convertToMinimapPlot({ item: ds.last, index: i, minimapH, unitW });
-            const isBullish = ds.last > ds.open;
+            const close = convertToMinimapPlot({ item: ds.close, index: i, minimapH, unitW });
+            const isBullish = ds.close > ds.open;
             return {
                 period: ds.period,
                 open,
                 high,
                 low,
-                last,
+                close,
                 volume: ds.volume,
                 isBullish,
                 absoluteIndex: ds.absoluteIndex
@@ -802,8 +823,8 @@ const slicerLabels = computed(() => {
         }
     } else {
         return {
-            start: timeLabels.value.find(el => el.absoluteIndex === slicer.value.start).text,
-            end: timeLabels.value.find(el => el.absoluteIndex === slicer.value.end - 1).text
+            start: timeLabels.value.find(el => el.absoluteIndex === slicer.value.start)?.text ?? '',
+            end: timeLabels.value.find(el => el.absoluteIndex === slicer.value.end - 1)?.text ?? ''
         }
     }
 });
@@ -870,8 +891,8 @@ function useTooltip(index, datapoint) {
     } else {
         if (FINAL_CONFIG.value.style.tooltip.show) {
             let html = "";
-            const { period, open, high, low, last, volume, isBullish } = drawableDataset.value[index];
-            const { period:tr_period, open:tr_open, high:tr_high, low:tr_low, last:tr_last, volume:tr_volume } = FINAL_CONFIG.value.translations;
+            const { period, open, high, low, close, volume, isBullish } = drawableDataset.value[index];
+            const { period:tr_period, open:tr_open, high:tr_high, low:tr_low, close:tr_close, volume:tr_volume } = FINAL_CONFIG.value.translations;
 
             const timeLabel = !FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable 
                 ? period
@@ -911,9 +932,9 @@ function useTooltip(index, datapoint) {
                 r: FINAL_CONFIG.value.style.tooltip.roundingValue
             });
             
-            const label_last = dataLabel({
+            const label_close = dataLabel({
                 p: FINAL_CONFIG.value.style.tooltip.prefix,
-                v: last.value,
+                v: close.value,
                 s: FINAL_CONFIG.value.style.tooltip.suffix,
                 r: FINAL_CONFIG.value.style.tooltip.roundingValue
             });
@@ -927,12 +948,12 @@ function useTooltip(index, datapoint) {
                                 <line x1="45" x2="50" y1="65" y2="65" stroke="${FINAL_CONFIG.value.style.layout.candle.colors.bullish}" stroke-width="1.5" stroke-linecap="round" />
                                 <line x1="50" x2="55" y1="35" y2="35" stroke="${FINAL_CONFIG.value.style.layout.candle.colors.bullish}" stroke-width="1.5" stroke-linecap="round" />
                                 <text x="38" y="70" text-anchor="end" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_open}</text>
-                                <text x="62" y="40" text-anchor="start" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_last}</text>
+                                <text x="62" y="40" text-anchor="start" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_close}</text>
                             `: `
                                 <line x1="45" x2="50" y1="35" y2="35" stroke="${FINAL_CONFIG.value.style.layout.candle.colors.bearish}" stroke-width="1.5" stroke-linecap="round" />
                                 <line x1="50" x2="55" y1="65" y2="65" stroke="${FINAL_CONFIG.value.style.layout.candle.colors.bearish}" stroke-width="1.5" stroke-linecap="round" />
                                 <text x="40" y="40" text-anchor="end" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_open}</text>
-                                <text x="60" y="70" text-anchor="start" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_last}</text>
+                                <text x="60" y="70" text-anchor="start" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_close}</text>
                             `}
                             <text x="50" y="13" text-anchor="middle" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_high}</text>
                             <text x="50" y="97" text-anchor="middle" fill="${FINAL_CONFIG.value.style.tooltip.color}">${label_low}</text>
@@ -944,7 +965,7 @@ function useTooltip(index, datapoint) {
                 html += `<div>${tr_open}: <b>${label_open}</b></div>`;
                 html += `<div>${tr_high}: <b>${label_high}</b></div>`;
                 html += `<div>${tr_low}: <b>${label_low}</b></div>`;
-                html += `<div>${tr_last}: <b>${label_last}</b></div>`;
+                html += `<div>${tr_close}: <b>${label_close}</b></div>`;
             }
 
 
@@ -1024,7 +1045,7 @@ function validSlicerEnd(v) {
 
 function generateCsv(callback=null) {
     nextTick(() => {
-        const labels = [FINAL_CONFIG.value.translations.period, FINAL_CONFIG.value.translations.open, FINAL_CONFIG.value.translations.high, FINAL_CONFIG.value.translations.low, FINAL_CONFIG.value.translations.last, FINAL_CONFIG.value.translations.volume];
+        const labels = [FINAL_CONFIG.value.translations.period, FINAL_CONFIG.value.translations.open, FINAL_CONFIG.value.translations.high, FINAL_CONFIG.value.translations.low, FINAL_CONFIG.value.translations.close, FINAL_CONFIG.value.translations.volume];
 
         const values = drawableDataset.value.map((ds, i) => {
             return [
@@ -1032,7 +1053,7 @@ function generateCsv(callback=null) {
                 ds.open.value,
                 ds.high.value,
                 ds.low.value,
-                ds.last.value,
+                ds.close.value,
                 ds.volume
             ]
         });
@@ -1069,9 +1090,9 @@ const dataTable = computed(() => {
             s: FINAL_CONFIG.value.table.td.suffix,
             r: FINAL_CONFIG.value.table.td.roundingValue
         });
-        const label_last = dataLabel({
+        const label_close = dataLabel({
             p: FINAL_CONFIG.value.table.td.prefix,
-            v: ds.last.value,
+            v: ds.close.value,
             s: FINAL_CONFIG.value.table.td.suffix,
             r: FINAL_CONFIG.value.table.td.roundingValue
         });
@@ -1081,7 +1102,7 @@ const dataTable = computed(() => {
             label_open,
             label_high,
             label_low,
-            label_last,
+            label_close,
             `${isNaN(ds.volume) ? '-' : ds.volume.toLocaleString()}`,
         ]
     });
@@ -1627,8 +1648,8 @@ defineExpose({
                         v-for="(candle, i) in drawableDataset"
                         :data-cy="`candlestick-rect-underlayer-${i}`"
                         :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
-                        :y="candle.isBullish ? candle.last.y : candle.open.y"
-                        :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
+                        :y="candle.isBullish ? candle.close.y : candle.open.y"
+                        :height="Math.abs(candle.close.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.close.y - candle.open.y)"
                         :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
                         :fill="FINAL_CONFIG.style.layout.candle.gradient.underlayer"
                         :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
@@ -1639,8 +1660,8 @@ defineExpose({
                         v-for="(candle, i) in drawableDataset"
                         :data-cy="`candlestick-rect-${i}`"
                         :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
-                        :y="candle.isBullish ? candle.last.y : candle.open.y"
-                        :height="Math.abs(candle.last.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.last.y - candle.open.y)"
+                        :y="candle.isBullish ? candle.close.y : candle.open.y"
+                        :height="Math.abs(candle.close.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.close.y - candle.open.y)"
                         :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
                         :fill="candle.isBullish ? FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bullish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bearish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bearish"
                         :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
@@ -1656,7 +1677,7 @@ defineExpose({
             <template v-if="FINAL_CONFIG.type === 'ohlc'">
                 <g v-for="(dp, i) in drawableDataset">
                     <path
-                        :d="`M ${dp.high.x},${dp.high.y} ${dp.low.x},${dp.low.y} M${dp.open.x - Math.min(6, slot / 3)},${dp.open.y} ${dp.open.x},${dp.open.y} M${dp.last.x},${dp.last.y} ${dp.last.x + Math.min(6, slot / 3)},${dp.last.y}`"
+                        :d="`M ${dp.high.x},${dp.high.y} ${dp.low.x},${dp.low.y} M${dp.open.x - Math.min(6, slot / 3)},${dp.open.y} ${dp.open.x},${dp.open.y} M${dp.close.x},${dp.close.y} ${dp.close.x + Math.min(6, slot / 3)},${dp.close.y}`"
                         :stroke="dp.isBullish ? FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.colors.bearish"
                         :stroke-width="1"
                     />
@@ -1688,7 +1709,11 @@ defineExpose({
                 :data-end="slicer.end"
             />
 
-            <slot name="svg" :svg="svg"/>
+            <slot name="svg" :svg="{
+                ...svg,
+                data: drawableDataset,
+                drawingArea
+            }"/>
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
@@ -1761,7 +1786,7 @@ defineExpose({
                         }"
                     />
                     <path
-                        :d="`M ${dp.open.x},${dp.open.y} ${dp.last.x},${dp.last.y}`"
+                        :d="`M ${dp.open.x},${dp.open.y} ${dp.close.x},${dp.close.y}`"
                         :stroke="dp.isBullish ? FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.colors.bearish"
                         :stroke-width="Math.min(6, unitW / 1.5)"
                         :style="{
