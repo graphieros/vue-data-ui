@@ -2266,7 +2266,10 @@ defineExpose({
                 :data-end="slicer.end"
             />
 
-            <slot name="svg" v-bind="{ ...drawingArea }"/>
+            <slot name="svg" :svg="{ 
+                drawingArea,
+                data: formattedDataset
+            }"/>
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
