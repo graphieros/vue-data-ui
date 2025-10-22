@@ -3953,7 +3953,11 @@ defineExpose({
                     :data-end="slicer.end"
                 />
 
-                <slot name="svg" :svg="svg" />
+                <slot name="svg" :svg="{
+                    ...svg,
+                    data: [...lineSet, ...barSet, ...plotSet],
+                    drawingArea
+                }" />
             </g>
         </svg>
 
