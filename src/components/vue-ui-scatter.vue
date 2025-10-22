@@ -454,7 +454,7 @@ const mutableDataset = computed(() => {
                     clusterName: ds.name,
                     color: ds.color ? ds.color : (customPalette.value[i] || palette[i] || palette[i % palette.length]),
                     id: `plot_${uid.value}_${Math.random()}`,
-                    weight: v.weight ?? FINAL_CONFIG.value.style.layout.plots.radius
+                    weight: v.weight ?? FINAL_CONFIG.value.style.layout.plots.radius,
                 }
             }),
         }
@@ -1924,7 +1924,14 @@ defineExpose({
                     </text>
                 </g>
             </g>
-            <slot name="svg" :svg="svg"/>
+            <slot name="svg" :svg="{
+                ...svg,
+                drawingArea: {
+                    ...drawingArea,
+                    zero
+                },
+                data: mutableDataset
+            }"/>
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
