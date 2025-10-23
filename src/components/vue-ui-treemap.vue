@@ -495,9 +495,6 @@ function getWidth({ x0, x1 }) {
 
 function calcFontSize(rect) {
     const cfg = FINAL_CONFIG.value.style.chart.layout.labels;
-
-    console.log(cfg)
-
     const base = cfg.fontSize;
     const minFs = cfg.minFontSize;
     const maxFs = cfg.fontSize * 2;
