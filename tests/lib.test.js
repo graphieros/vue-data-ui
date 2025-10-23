@@ -51,10 +51,11 @@ import {
     dataLabel,
     degreesToRadians,
     error,
+    escapeXml,
+    escapeXmlAttr,
     forceValidValue,
     formatSmallValue,
     functionReturnsString,
-    generateSpiralCoordinates,
     getAreaSegments,
     getCloserPoint,
     getCumulativeAverage,
@@ -4206,5 +4207,52 @@ describe('buildInterLineAreas', () => {
         });
         expect(areas.length).toBeGreaterThan(0);
         expect(allClosed(areas)).toBe(true);
+    });
+});
+
+describe('escapeXml', () => {
+    test('handles empty string', () => {
+        expect(escapeXml('')).toBe('');
+    });
+    test('escapes &, <, >', () => {
+        expect(escapeXml('&<>')).toBe('&amp;&lt;&gt;');
+    });
+    test('does not escape double quotes', () => {
+        expect(escapeXml('"')).toBe('"');
+        expect(escapeXml('some "attr" & <tag>')).toBe('some "attr" &amp; &lt;tag&gt;');
+    });
+    test('leaves safe characters unchanged', () => {
+        expect(escapeXml('abc 123_-.:,')).toBe('abc 123_-.:,');
+    });
+    test('coerces non-strings via String()', () => {
+        expect(escapeXml(42)).toBe('42');
+        expect(escapeXml(null)).toBe('null');
+        expect(escapeXml(undefined)).toBe('undefined');
+    });
+    test('already-escaped entities get "&" re-escaped', () => {
+        expect(escapeXml('&lt; &gt; &amp;')).toBe('&amp;lt; &amp;gt; &amp;amp;');
+    });
+});
+
+describe('escapeXmlAttr', () => {
+    test('handles empty string', () => {
+        expect(escapeXmlAttr('')).toBe('');
+    });
+    test('escapes &, ", <, >', () => {
+        expect(escapeXmlAttr('&"<>')).toBe('&amp;&quot;&lt;&gt;');
+        expect(escapeXmlAttr('a & b "quote" <x>')).toBe('a &amp; b &quot;quote&quot; &lt;x&gt;');
+    });
+    test('does not escape single quote/apostrophe', () => {
+        expect(escapeXmlAttr("abc'd efg")).toBe("abc'd efg");
+    });
+    test('leaves safe characters unchanged', () => {
+        expect(escapeXmlAttr('abc 123_-.:,')).toBe('abc 123_-.:,');
+    });
+    test('coerces to string', () => {
+        expect(escapeXmlAttr(0)).toBe('0');
+        expect(escapeXmlAttr(false)).toBe('false');
+    });
+    test('already-escaped entities get "&" re-escaped', () => {
+        expect(escapeXmlAttr('&lt; &gt; &quot; &amp;')).toBe('&amp;lt; &amp;gt; &amp;quot; &amp;amp;');
     });
 });

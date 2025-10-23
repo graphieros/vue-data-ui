@@ -3392,6 +3392,21 @@ export const buildDisplayedTimeLabels = cacheLastResult((
     }));
 });
 
+export function escapeXml(str) {
+    return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+}
+
+export function escapeXmlAttr(str) {
+    return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -3450,6 +3465,8 @@ const lib = {
     easeOutCubic,
     emptyObjectToNull,
     error,
+    escapeXml,
+    escapeXmlAttr,
     fib,
     forceValidValue,
     formatSmallValue,
@@ -3497,3 +3514,4 @@ const lib = {
     wrapText
 };
 export default lib;
+

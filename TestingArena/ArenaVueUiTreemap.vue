@@ -127,7 +127,7 @@ onMounted(() => {
         ]
     },
 ]
-    }, 2000)
+    }, 1000)
 })
 
 const isPropsToggled = ref(false);
@@ -178,7 +178,7 @@ const model = ref([
     { key: 'style.chart.layout.sorted', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.rects.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.layout.rects.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.layout.rects.borderRadius', def: 0, type: 'number', min: 0, max: 24},
+    { key: 'style.chart.layout.rects.borderRadius', def: 12, type: 'number', min: 0, max: 24},
     { key: 'style.chart.layout.rects.colorRatio', def: 0.3, type: 'number', min: 0, max: 1, step: 0.01},
     { key: 'style.chart.layout.rects.gradient.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.rects.gradient.intensity', def: 30, type: 'range', min:0, max: 100},
@@ -192,6 +192,12 @@ const model = ref([
     { key: 'style.chart.layout.labels.prefix', def: 'Value: ', type: 'text'},
     { key: 'style.chart.layout.labels.suffix', def: '€', type: 'text'},
     { key: 'style.chart.layout.labels.rounding', def: 1, type: 'number', min: 0, max: 12},
+
+    { key: 'style.chart.layout.labels.name.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.name.bold', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.value.show', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.labels.value.bold', def: true, type: 'checkbox'},
+
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.legend.show', def: true, type: 'checkbox'},

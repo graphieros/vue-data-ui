@@ -21,6 +21,8 @@ import {
     dataLabel,
     downloadCsv,
     error,
+    escapeXml,
+    escapeXmlAttr,
     functionReturnsString,
     isFunction,
     lightenHexColor,
@@ -224,36 +226,59 @@ const chartDimensions = ref({
     width: FINAL_CONFIG.value.style.chart.width
 })
 
-const svg = computed(() => {
-    return {
-        bottom: chartDimensions.value.height - FINAL_CONFIG.value.style.chart.padding.bottom,
-        height: chartDimensions.value.height - FINAL_CONFIG.value.style.chart.padding.top - FINAL_CONFIG.value.style.chart.padding.bottom,
-        left: FINAL_CONFIG.value.style.chart.padding.left,
-        right: chartDimensions.value.width - FINAL_CONFIG.value.style.chart.padding.right,
-        top: FINAL_CONFIG.value.style.chart.padding.top,
-        vbHeight: chartDimensions.value.height,
-        vbWidth: chartDimensions.value.width,
-        width: chartDimensions.value.width - FINAL_CONFIG.value.style.chart.padding.left - FINAL_CONFIG.value.style.chart.padding.right,
+function pxToSvgY(px) {
+    const chartEl = treemapChart.value;
+    const totalHeight = chartDimensions.value.height;
+    if (!chartEl || !totalHeight) return px;
+        const chartRect = chartEl.getBoundingClientRect();
+        return px * (totalHeight / chartRect.height);
     }
+
+function getBreadcrumbOffsetSvg() {
+    if (!breadcrumbsNav.value || breadcrumbs.value.length <= 1) return 0;
+
+    const nav = breadcrumbsNav.value;
+    const cs = getComputedStyle(nav);
+
+    const px =
+        nav.offsetHeight +
+        parseFloat(cs.marginTop || '0') +
+        parseFloat(cs.marginBottom || '0') +
+        parseFloat(cs.paddingTop || '0') +
+        parseFloat(cs.paddingBottom || '0');
+
+    return pxToSvgY(px);
+}
+
+const svg = computed(() => {
+    const padding = FINAL_CONFIG.value.style.chart.padding;
+    const totalWidth  = chartDimensions.value.width;
+    const totalHeight = chartDimensions.value.height;
+
+    const offsetY = getBreadcrumbOffsetSvg();
+
+    const left   = padding.left;
+    const right  = totalWidth - padding.right;
+    const top    = padding.top;
+    const bottom = totalHeight - padding.bottom - offsetY;
+
+    return {
+        left,
+        top,
+        right,
+        bottom,
+        width:  right - left,
+        height: Math.max(0, bottom - top),
+        vbWidth:  totalWidth,
+        vbHeight: totalHeight - offsetY,
+
+        offsetY,
+    };
 });
 
-function addIdsToTree(tree) {
-    tree.forEach((node, i) => {
-        node.id = createUid();
-        node.color = convertColorToHex(node.color) || customPalette.value[i] || palette[i] || palette[i % palette.length];
-        if (node.children) {
-            node.children.forEach(c => {
-                c.parentId = node.id,
-                c.color = node.color
-            })
-        addIdsToTree(node.children);
-        }
-    });
-}
 
 const immutableDataset = ref(FINAL_DATASET.value);
 const currentSet = ref(immutableDataset.value);
-
 const rootColorMap = shallowRef(new Map());
 
 function applyIdsAndTopLevelColors(tree) {
@@ -424,22 +449,41 @@ function mapChildren(children, parentColor, parentName, totalValue) {
 };
 
 const squarified = computed(() => {
+    const levelTotal = orderedDataset.value
+        .map(el => Number(el.value) || 0)
+        .reduce((a, b) => a + b, 0) || 1;
+
     return generateTreemap(
-        orderedDataset.value.map((el, i) => {
-            const totalValue = el.children ? el.children.reduce((acc, child) => acc + child.value, 0) : el.value;
-            return {
-                value: el.value,
-                id: el.id || createUid(),
-                children: el.children
-                    ? mapChildren(el.children.sort((a, b) => b.value - a.value), el.color, el.name, totalValue)
-                    : undefined,
-                color: el.color,
-                name: el.name,
-            };
+        orderedDataset.value.map(el => {
+        const parentChildrenTotal = el.children
+            ? el.children.reduce((acc, c) => acc + (Number(c.value) || 0), 0)
+            : el.value;
+
+        return {
+            value: el.value,
+            id: el.id || createUid(),
+            proportion: (Number(el.value) || 0) / levelTotal,
+            children: el.children
+            ? mapChildren(
+                el.children.sort((a, b) => (b.value || 0) - (a.value || 0)),
+                el.color,
+                el.name,
+                parentChildrenTotal || 1
+                )
+            : undefined,
+            color: el.color,
+            name: el.name,
+        };
         }),
-        { x0: svg.value.left * 2, y0: svg.value.top, x1: svg.value.width, y1: svg.value.height }
+        {
+            x0: svg.value.left,
+            y0: svg.value.top,
+            x1: svg.value.left + svg.value.width,
+            y1: svg.value.top + svg.value.height,
+        }
     );
 });
+
 
 function getHeight({ y0, y1 }) {
     return y1 - y0 <= 0 ? 0.0001 : y1 - y0;
@@ -450,10 +494,37 @@ function getWidth({ x0, x1 }) {
 }
 
 function calcFontSize(rect) {
-    const provisional = FINAL_CONFIG.value.style.chart.layout.labels.fontSize * (rect.proportion * 2 > 1 ? 1 : rect.proportion * 2);
-    const adapted = provisional < FINAL_CONFIG.value.style.chart.layout.labels.minFontSize ? FINAL_CONFIG.value.style.chart.layout.labels.minFontSize : provisional;
-    return adapted;
+    const cfg = FINAL_CONFIG.value.style.chart.layout.labels;
+
+    console.log(cfg)
+
+    const base = cfg.fontSize;
+    const minFs = cfg.minFontSize;
+    const maxFs = cfg.fontSize * 2;
+
+    const scalePower = 0.5;
+    const baseScaleLow  = 0.6 ;
+    const baseScaleHigh = 1;
+    const maxOfMinDim = 0.9;
+
+    let p = rect.proportion;
+    if (!(typeof p === 'number' && isFinite(p))) {
+        const area = Math.max(1e-6, getWidth(rect) * getHeight(rect));
+        const full = Math.max(1e-6, svg.value.width * svg.value.height);
+        p = area / full;
+    }
+
+    const areaScaled = Math.pow(Math.min(1, Math.max(0, p)), scalePower);
+    const mult = baseScaleLow + (baseScaleHigh - baseScaleLow) * areaScaled;
+    let fontSize = base * mult;
+    const minDim = Math.max(0.0001, Math.min(getWidth(rect), getHeight(rect)));
+    fontSize = Math.min(fontSize, minDim * maxOfMinDim);
+    fontSize = Math.max(minFs, Math.min(maxFs, fontSize));
+
+    return fontSize;
 }
+
+
 
 function toggleFullscreen(state) {
     isFullscreen.value = state;
@@ -461,15 +532,11 @@ function toggleFullscreen(state) {
 }
 
 const viewBox = computed(() => {
-    let offsetBreadcrumbsY = 0;
-    if (breadcrumbsNav.value) {
-        offsetBreadcrumbsY = breadcrumbsNav.value.getBoundingClientRect().height; 
-    }
     return {
         startX: 0,
         startY: 0,
         width: svg.value.vbWidth,
-        height: svg.value.vbHeight - offsetBreadcrumbsY,
+        height: svg.value.vbHeight,
     }
 });
 
@@ -886,6 +953,231 @@ async function generateSvg({ isCb }) {
     }
 }
 
+function buildTreemapText({ rect, seriesIndex }) {
+    const showName = FINAL_CONFIG.value.style.chart.layout.labels.name.show;
+    const showValue = FINAL_CONFIG.value.style.chart.layout.labels.value.show;
+
+    if (!showName && !showValue) return '';
+
+    const padding = Math.max(2, calcFontSize(rect) / 3);
+    const fontSize = Math.max(8, calcFontSize(rect));
+    const lineHeight = fontSize * 1.2;
+    const rectW = Math.max(0, getWidth(rect) - padding * 2);
+    const rectH = Math.max(0, getHeight(rect) - padding * 2);
+
+    if (rectW <= 2 || rectH <= fontSize * 0.8) return '';
+
+    const fontFamily = FINAL_CONFIG.value.style.fontFamily;
+    const fontWeightTitle = FINAL_CONFIG.value.style.chart.layout.labels.name.bold ? '600' : '400';
+    const fontWeightValue = FINAL_CONFIG.value.style.chart.layout.labels.value.bold ? '600' : '400';
+    const fill = adaptColorToBackground(rect.color);
+
+    const nameText = showName ? String(rect.name ?? '') : '';
+    const valueText = showValue
+        ? applyDataLabel(
+            FINAL_CONFIG.value.style.chart.layout.labels.formatter,
+            rect.value,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.chart.layout.labels.prefix,
+                v: rect.value,
+                s: FINAL_CONFIG.value.style.chart.layout.labels.suffix,
+                r: FINAL_CONFIG.value.style.chart.layout.labels.rounding
+            }),
+            { datapoint: rect, seriesIndex }
+        )
+        : '';
+
+    function measure(text, size = fontSize, weight = '400') {
+        const svg = document.createElementNS(XMLNS, 'svg');
+        svg.setAttribute('width', '0');
+        svg.setAttribute('height', '0');
+        svg.style.position = 'absolute';
+        svg.style.visibility = 'hidden';
+        svg.style.pointerEvents = 'none';
+
+        const t = document.createElementNS(XMLNS, 'text');
+        t.setAttribute('font-size', String(size));
+        t.setAttribute('font-family', fontFamily);
+        t.setAttribute('font-weight', String(weight));
+        t.textContent = text || '';
+
+        svg.appendChild(t);
+        document.body.appendChild(svg);
+        const w = t.getComputedTextLength();
+        document.body.removeChild(svg);
+        return w;
+    }
+
+    function wrapLines(text, maxWidth, size, weight, maxLines, addEllipsis) {
+        const words = String(text).split(/\s+/).filter(Boolean);
+        const lines = [];
+        let cur = '';
+
+        function fits(s) {
+            return measure(s, size, weight) <= maxWidth;
+        }
+
+        function breakLongWord(word) {
+            if (fits(word)) return [word];
+            const chunks = [];
+            let left = 0;
+            while (left < word.length) {
+                let lo = 1, hi = word.length - left, best = 1;
+                while (lo <= hi) {
+                    const mid = (lo + hi) >> 1;
+                    const slice = word.slice(left, left + mid);
+                    if (fits(slice)) {
+                        best = mid;
+                        lo = mid + 1;
+                    } else {
+                        hi = mid - 1;
+                    }
+                }
+                chunks.push(word.slice(left, left + best));
+                left += best;
+            }
+            return chunks;
+        }
+
+        const tokens = words.flatMap(w => breakLongWord(w));
+        for (const tok of tokens) {
+            const test = cur ? cur + ' ' + tok : tok;
+            if (fits(test)) {
+                cur = test;
+            } else {
+                if (cur) lines.push(cur);
+                cur = tok;
+                if (lines.length === maxLines - 1) break;
+            }
+        }
+        if (cur && lines.length < maxLines) lines.push(cur);
+
+        if (addEllipsis && lines.length === maxLines) {
+            const last = lines[lines.length - 1];
+            if (!fits(last)) {
+                let s = last;
+                while (s.length && !fits(s)) s = s.slice(0, -1);
+                lines[lines.length - 1] = s;
+            }
+            let ell = lines[lines.length - 1] + '…';
+            if (!fits(ell)) {
+                let base = lines[lines.length - 1];
+                while (base.length && !fits(base + '…')) base = base.slice(0, -1);
+                ell = base + '…';
+            }
+            lines[lines.length - 1] = ell;
+        }
+
+        return lines;
+    }
+
+    // Reserve a line for value ONLY if value is shown
+    const reserveForValue = showValue ? 1 : 0;
+    const maxTitleLines = Math.max(0, Math.floor(rectH / lineHeight) - reserveForValue);
+
+    if (maxTitleLines <= 0) {
+        // No room for title lines; optionally show only the value
+        if (!showValue) return '';
+        const x = rect.x0 + padding;
+        const y = rect.y0 + padding + fontSize; // baseline
+        const safeVal = escapeXml(valueText);
+        const valueFits = measure(safeVal, fontSize, fontWeightValue) <= rectW;
+        if (!valueFits) return '';
+        return `
+        <text 
+            x="${x}" 
+            y="${y}" 
+            font-size="${fontSize}" 
+            font-family="${escapeXmlAttr(fontFamily)}" 
+            font-weight="${fontWeightValue}" 
+            fill="${escapeXmlAttr(fill)}"
+        >
+            ${safeVal}
+        </text>`;
+    }
+
+    const titleLines = showName
+        ? wrapLines(nameText, rectW, fontSize, fontWeightTitle, maxTitleLines, true)
+        : [];
+
+    let valueSize = fontSize;
+    let valueStr = String(valueText);
+
+    if (showValue) {
+        while (measure(valueStr, valueSize, fontWeightValue) > rectW && valueSize > Math.max(8, fontSize * 0.75)) {
+            valueSize -= 1;
+        }
+        if (measure(valueStr, valueSize, fontWeightValue) > rectW) {
+            while (valueStr.length && measure(valueStr + '…', valueSize, fontWeightValue) > rectW) {
+                valueStr = valueStr.slice(0, -1);
+            }
+            valueStr += '…';
+            if (!valueStr.length) return '';
+        }
+    }
+
+    const usedH = titleLines.length * lineHeight + (showValue ? lineHeight : 0);
+    if (usedH > rectH) {
+        while (titleLines.length && (titleLines.length * lineHeight + (showValue ? lineHeight : 0)) > rectH) {
+            titleLines.pop();
+        }
+        if (!titleLines.length && (!showValue || lineHeight > rectH)) return '';
+    }
+
+    const x = rect.x0 + padding;
+    const y = rect.y0 + padding + fontSize;
+
+    const tspans = [];
+
+    if (showName) {
+        titleLines.forEach((line, i) => {
+            tspans.push(`
+            <tspan 
+                x="${x}" 
+                dy="${i === 0 ? 0 : lineHeight}" 
+                font-weight="${fontWeightTitle}"
+            >
+                ${escapeXml(line)}
+            </tspan>`
+            );
+        });
+    }
+
+    if (showValue) {
+        tspans.push(`
+        <tspan 
+            x="${x}" 
+            dy="${titleLines.length ? lineHeight : 0}"
+            font-weight="${fontWeightValue}" 
+            font-size="${valueSize}"
+        >
+            ${escapeXml(valueStr)}
+        </tspan>`
+        );
+    }
+
+    return `<text 
+        x="${x}" 
+        y="${y}" 
+        font-size="${fontSize}" 
+        font-family="${escapeXmlAttr(fontFamily)}" 
+        fill="${escapeXmlAttr(fill)}" 
+        paint-order="stroke" 
+        stroke="transparent" 
+        stroke-width="0"
+        style="transition: all 0.2s ease-in-out;"
+    >
+        ${tspans.join('')}
+    </text>`;
+}
+
+function getSafeRadius(rect) {
+    const r = FINAL_CONFIG.value.style.chart.layout.rects.borderRadius;
+    const w = getWidth(rect);
+    const h = getHeight(rect);
+    return Math.min(r, Math.min(w, h) / 6);
+}
+
 defineExpose({
     getData,
     getImage,
@@ -1079,7 +1371,7 @@ defineExpose({
                     :height="getHeight(rect)" 
                     :width="getWidth(rect)" 
                     :fill="isSafari ? rect.color : FINAL_CONFIG.style.chart.layout.rects.gradient.show ? `url(#tgrad_${rect.id})` : rect.color"
-                    :rx="FINAL_CONFIG.style.chart.layout.rects.borderRadius"
+                    :rx="getSafeRadius(rect)"
                     :stroke="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.stroke : FINAL_CONFIG.style.chart.layout.rects.stroke"
                     :stroke-width="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.strokeWidth : FINAL_CONFIG.style.chart.layout.rects.strokeWidth"
                     @click.stop="zoom(rect, i)"
@@ -1097,6 +1389,14 @@ defineExpose({
                     ]"
                 />
 
+                <!-- DEFAULT DATALABELS-->
+                <g 
+                    style="pointer-events: none" 
+                    v-if="!$slots.rect && !loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels" 
+                    v-html="buildTreemapText({ rect, seriesIndex: i })" 
+                />
+
+                <!-- SLOTTED CONTENT -->
                 <foreignObject
                     :x="rect.x0" 
                     :y="rect.y0" 
@@ -1109,32 +1409,9 @@ defineExpose({
                             width: `calc(100% - ${calcFontSize(rect) / 1.5}px)`,
                             height: `calc(100% - ${calcFontSize(rect) / 1.5}px)`,
                             padding: `${calcFontSize(rect) / 3}px`,
-                            lineHeight: `${calcFontSize(rect)}px`
                         }"
                         class="vue-ui-treemap-cell"
                     >
-                        <div
-                            class="vue-ui-treemap-cell-default"
-                            v-if="FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && (rect.proportion > FINAL_CONFIG.style.chart.layout.labels.hideUnderProportion || isZoom)" :style="`width:calc(100% - ${calcFontSize(rect) / 1.5}px);text-align:left; color:${adaptColorToBackground(rect.color)}`"
-                        >
-                            <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
-                                {{ rect.name }}
-                            </span><br>
-                            <span :style="`width:100%;font-size:${calcFontSize(rect)}px;`">
-                                {{ applyDataLabel(
-                                    FINAL_CONFIG.style.chart.layout.labels.formatter,
-                                    rect.value,
-                                    dataLabel({
-                                        p: FINAL_CONFIG.style.chart.layout.labels.prefix,
-                                        v: rect.value,
-                                        s: FINAL_CONFIG.style.chart.layout.labels.suffix,
-                                        r: FINAL_CONFIG.style.chart.layout.labels.rounding
-                                    }),
-                                    { datapoint: rect }
-                                    )
-                                }}
-                            </span>
-                        </div>
                         <slot
                             v-if="!loading"
                             name="rect" 

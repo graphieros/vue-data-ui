@@ -512,6 +512,14 @@ declare module "vue-data-ui" {
                         suffix?: string;
                         rounding?: number;
                         formatter?: Formatter;
+                        name?: {
+                            show?: boolean;
+                            bold?: boolean;
+                        };
+                        value?: {
+                            show?: boolean;
+                            bold?: boolean;
+                        }
                     };
                 };
                 legend?: ChartBaseLegend & {

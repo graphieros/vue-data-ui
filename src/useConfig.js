@@ -1001,7 +1001,15 @@ export function useConfig() {
                         prefix: 'Value: ',
                         suffix: '',
                         rounding: 0,
-                        formatter: null
+                        formatter: null,
+                        name: { 
+                            show: true,
+                            bold: true 
+                        },
+                        value: { 
+                            show: true,
+                            bold: false 
+                        }
                     }
                 },
                 legend: {
