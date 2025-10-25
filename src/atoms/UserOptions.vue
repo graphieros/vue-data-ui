@@ -366,7 +366,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-else name="tooltipDisabled" :stroke="color" style="pointer-events: none"/>
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.tooltip && !$slots.optionTooltip" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-left-visible': position === 'left' && isInfo.tooltip, 'button-info-right-visible': position === 'right' && isInfo.tooltip }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.tooltip" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-left-visible': position === 'left' && isInfo.tooltip, 'button-info-right-visible': position === 'right' && isInfo.tooltip }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.tooltip }}
                 </div>
             </button>
@@ -379,7 +379,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isPrinting" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="pdf" :stroke="color" style="pointer-events: none;" />
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.pdf && !$slots.optionPdf" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.pdf, 'button-info-left-visible': position === 'left' && isInfo.pdf }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.pdf" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.pdf, 'button-info-left-visible': position === 'left' && isInfo.pdf }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.pdf }}
                 </div>
             </button>
@@ -391,7 +391,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon name="excel" :stroke="color" style="pointer-events: none"/>
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.csv && !$slots.optionCsv" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.csv, 'button-info-left-visible': position === 'left' && isInfo.csv }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.csv" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.csv, 'button-info-left-visible': position === 'left' && isInfo.csv }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.csv }}
                 </div>
             </button>
@@ -404,7 +404,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isImaging" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="image" :stroke="color" style="pointer-events: none;" />
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.img && !$slots.optionImg" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.img, 'button-info-left-visible': position === 'left' && isInfo.img }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.img" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.img, 'button-info-left-visible': position === 'left' && isInfo.img }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.img }}
                 </div>
             </button>
@@ -414,7 +414,7 @@ const isInfo = ref({
                     <slot name="optionSvg"/>
                 </template>
                 <BaseIcon v-else name="svg" :stroke="color" style="pointer-events: none;" />
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.svg && !$slots.optionSvg" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.svg, 'button-info-left-visible': position === 'left' && isInfo.svg }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.svg" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.svg, 'button-info-left-visible': position === 'left' && isInfo.svg }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.svg }}
                 </div>
             </button>
@@ -427,7 +427,7 @@ const isInfo = ref({
                     <BaseIcon v-if="tableDialog" :name="isTableOpen ? 'tableDialogClose' : 'tableDialogOpen'" :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else :name="isTableOpen ? 'tableClose' : 'tableOpen'" :stroke="color" style="pointer-events: none;" />
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.table && !$slots.optionTable" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.table, 'button-info-left-visible': position === 'left' && isInfo.table }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.table" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.table, 'button-info-left-visible': position === 'left' && isInfo.table }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.table }}
                 </div>
             </button>
@@ -439,7 +439,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon :name="isLabel ? 'labelClose' : 'labelOpen'" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.labels && !$slots.optionLabels" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.labels, 'button-info-left-visible': position === 'left' && isInfo.labels }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.labels" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.labels, 'button-info-left-visible': position === 'left' && isInfo.labels }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.labels }}
                 </div>
             </button>
@@ -451,7 +451,7 @@ const isInfo = ref({
                 <template v-else>
                     <BaseIcon name="sort" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.sort && !$slots.optionSort" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.sort, 'button-info-left-visible': position === 'left' && isInfo.sort }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.sort" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.sort, 'button-info-left-visible': position === 'left' && isInfo.sort }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.sort }}
                 </div>
             </button>
@@ -464,7 +464,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isItStacked" name="unstack" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-else name="stack" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.stack && !$slots.optionStack" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.stack, 'button-info-left-visible': position === 'left' && isInfo.stack }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.stack" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.stack, 'button-info-left-visible': position === 'left' && isInfo.stack }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.stack }}
                 </div>
             </button>
@@ -477,7 +477,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isFullscreen" name="exitFullscreen" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-if="!isFullscreen" name="fullscreen" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.fullscreen && !$slots.optionFullscreen" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.fullscreen, 'button-info-left-visible': position === 'left' && isInfo.fullscreen }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.fullscreen" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.fullscreen, 'button-info-left-visible': position === 'left' && isInfo.fullscreen }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.fullscreen }}
                 </div>
             </button>
@@ -490,7 +490,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isAnimated" name="play" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-if="!isAnimated" name="pause" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.fullscreen && !$slots.optionAnimation" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.animation, 'button-info-left-visible': position === 'left' && isInfo.animation }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.fullscreen" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.animation, 'button-info-left-visible': position === 'left' && isInfo.animation }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.animation }}
                 </div>
             </button>
@@ -503,7 +503,7 @@ const isInfo = ref({
                     <BaseIcon v-if="isAnnotator" name="annotatorDisabled" :stroke="color" style="pointer-events: none;"/>
                     <BaseIcon v-if="!isAnnotator" name="annotator" :stroke="color" style="pointer-events: none;"/>
                 </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.annotator && !$slots.optionAnnotator" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.annotator, 'button-info-left-visible': position === 'left' && isInfo.annotator }" :style="{ background: backgroundColor, color: color }">
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.annotator" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.annotator, 'button-info-left-visible': position === 'left' && isInfo.annotator }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.annotator }}
                 </div>
             </button>
