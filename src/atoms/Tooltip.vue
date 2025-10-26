@@ -89,6 +89,11 @@ const { x, y } = useMouse(props.parent);
 const targetPosition = ref({ x: 0, y: 0 });
 const displayPosition = ref({ x: 0, y: 0 });
 
+function placeTooltip({ x: _x, y: _y }) {
+    x.value = _x;
+    y.value = _y;
+}
+
 let animationFrameId = null;
 
 function stepAnimation() {
@@ -210,6 +215,11 @@ const tooltipStyle = computed(() => {
 
     return base;
 });
+
+defineExpose({
+    placeTooltip
+});
+
 </script>
 
 <template>
