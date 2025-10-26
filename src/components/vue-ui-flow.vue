@@ -82,6 +82,7 @@ const observedEl = ref(null);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
+const tooltip = ref(null);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -430,22 +431,23 @@ function computeSankeyCoordinates(ds) {
         let yCursor = Math.max(0, (innerH - used) / 2);
 
         names.forEach((name, i) => {
-        const h = heights[i];
-        const x = p.left + levelIndex * colSpacing;
-        const y = yCursor;
+            const h = heights[i];
+            const x = p.left + levelIndex * colSpacing;
+            const y = yCursor;
 
-        nodeCoordinates[name] = {
-            x,
-            y,
-            absoluteY: y,
-            height: h,
-            i,
-            color: nodes[name].color,
-            value: nodes[name].value,
-        };
+            nodeCoordinates[name] = {
+                x,
+                y,
+                absoluteY: y,
+                height: h,
+                i,
+                color: nodes[name].color,
+                value: nodes[name].value,
+                id: createUid()
+            };
 
-        yCursor += h;
-        if (i < n - 1) yCursor += gapPx;
+            yCursor += h;
+            if (i < n - 1) yCursor += gapPx;
         });
     });
 
@@ -581,11 +583,14 @@ const selectedNodes = ref(null);
 const selectedSource = ref(null);
 const dataTooltipSlot = ref(null);
 const useCustomFormat = ref(false);
+const selectedNodeId = ref(null);
+
 
 function selectNode(node, index) {
     segregated.value = [];
     selectedNodes.value = findConnectedNodes(node.name);
     selectedSource.value = node.name;
+    selectedNodeId.value = node.id;
 
     const nodeName = node.name;
     const dataset = sanitizedDataset.value;
@@ -712,6 +717,7 @@ function selectNode(node, index) {
 }
 
 function unselectNode(index) {
+    selectedNodeId.value = null;
     const datapoint = dataTooltipSlot.value;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: index });
@@ -1006,6 +1012,17 @@ async function generateSvg({ isCb }) {
     }
 }
 
+async function focusNode(node, i) {
+    selectNode(node, i);
+    if (mutableConfig.value.showTooltip) {
+        await nextTick();
+        if (flowChart.value && tooltip.value) {
+            const { left, top } = flowChart.value.getBoundingClientRect();
+            tooltip.value.placeTooltip({x: (left ?? 0) + 12, y: (top ?? 0) + 12 });
+        }
+    }
+}
+
 defineExpose({
     getData,
     getImage,
@@ -1150,9 +1167,17 @@ defineExpose({
                 </linearGradient>
             </defs>
 
-            <path data-cy="link" v-for="path in mutableDataset.links" class="vue-ui-flow-link" :d="path.path" stroke-linejoin="round" stroke-miterlimit="1"
-                :fill="`url(#${path.id})`" :stroke="FINAL_CONFIG.style.chart.links.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.links.strokeWidth" :style="`
+            <path 
+                data-cy="link" 
+                v-for="path in mutableDataset.links" 
+                class="vue-ui-flow-link" 
+                :d="path.path" 
+                stroke-linejoin="round" 
+                stroke-miterlimit="1"
+                :fill="`url(#${path.id})`" 
+                :stroke="FINAL_CONFIG.style.chart.links.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.links.strokeWidth" 
+                :style="`
                     opacity:${selectedNodes
                         ? selectedNodes.includes(path.source) &&
                             selectedNodes.includes(path.target)
@@ -1164,7 +1189,8 @@ defineExpose({
                                 : 0.3
                             : FINAL_CONFIG.style.chart.links.opacity
                     }
-                `" />
+                `" 
+            />
 
             <rect 
                 data-cy="node" 
@@ -1177,9 +1203,32 @@ defineExpose({
                 :fill="node.color" 
                 :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.nodes.strokeWidth" 
+                :rx="FINAL_CONFIG.style.chart.nodes.borderRadius"
+                :style="{
+                    opacity: selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0.3) : 1,
+                    outline: selectedNodeId !== null && selectedNodeId === node.id ? '2px solid currentColor' : undefined,
+                }"
+
+                role="button"
+                tabindex="0"
+                :aria-label="`${node.name}: ${applyDataLabel(
+                    FINAL_CONFIG.style.chart.nodes.labels.formatter,
+                    node.value,
+                    dataLabel({
+                        p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
+                        v: node.value,
+                        s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
+                        r: FINAL_CONFIG.style.chart.nodes.labels.rounding
+                    })
+                )}`"
                 @mouseenter="selectNode(node, i)"
-                @mouseleave="unselectNode(i)" :style="`opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0.3) : 1 }`" 
+                @mouseleave="unselectNode(i)" 
                 @click="clickNode(i)"
+                @keydown.enter.prevent="clickNode(i)"
+                @keydown.space.prevent="clickNode(i)"
+                @keydown.esc.prevent="unselectNode(i)"
+                @focus="focusNode(node, i)"
+                @blur="unselectNode(i)"
             />
 
             <g v-if="FINAL_CONFIG.style.chart.nodes.labels.show">
@@ -1256,6 +1305,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip 
+            ref="tooltip"
             :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
             :color="FINAL_CONFIG.style.chart.tooltip.color" 

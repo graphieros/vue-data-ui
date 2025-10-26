@@ -7347,6 +7347,7 @@ declare module "vue-data-ui" {
                     };
                     stroke?: string;
                     strokeWidth?: number;
+                    borderRadius?: number;
                 };
                 links?: {
                     // width?: number; // v3 deprecated

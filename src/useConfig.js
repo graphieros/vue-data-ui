@@ -4672,7 +4672,8 @@ export function useConfig() {
                         formatter: null
                     },
                     stroke: COLOR_WHITE,
-                    strokeWidth: 1
+                    strokeWidth: 1,
+                    borderRadius: 0,
                 },
                 links: {
                     // width: 200, // v3 deprecated

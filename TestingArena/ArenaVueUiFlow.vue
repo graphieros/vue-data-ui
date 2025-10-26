@@ -191,6 +191,8 @@ const model = ref([
     { key: 'style.chart.nodes.labels.abbreviation.length', def: 3, type: 'number', min: 1, max: 12 },
     { key: 'style.chart.nodes.stroke', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.nodes.strokeWidth', def: 1, type: 'number', min: 0, max: 12 },
+    { key: 'style.chart.nodes.borderRadius', def: 3, type: 'number', min: 0, max: 12},
+
     { key: 'style.chart.links.opacity', def: 0.8, type: 'number', min: 0, max: 1, step: 0.1 },
     { key: 'style.chart.links.stroke', def: '#FFFFFF', type: 'color' },
     { key: 'style.chart.links.strokeWidth', def: 1, type: 'number', min: 0, max: 12 },
