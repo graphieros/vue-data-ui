@@ -413,7 +413,9 @@ const isInfo = ref({
                 <template v-if="$slots.optionSvg">
                     <slot name="optionSvg"/>
                 </template>
-                <BaseIcon v-else name="svg" :stroke="color" style="pointer-events: none;" />
+                <template v-else>
+                    <BaseIcon name="svg" :stroke="color" style="pointer-events: none;" />
+                </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.svg" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.svg, 'button-info-left-visible': position === 'left' && isInfo.svg }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.svg }}
                 </div>
@@ -458,7 +460,7 @@ const isInfo = ref({
 
             <button tabindex="0" v-if="hasStack" data-cy="user-options-stack" class="vue-ui-user-options-button" @click="toggleStack" @mouseenter="isInfo.stack = true" @mouseout="isInfo.stack = false">
                 <template v-if="$slots.optionStack">
-                    <slot name="optionStack"/>
+                    <slot name="optionStack" v-bind="{ isStack: isItStacked }"/>
                 </template>
                 <template v-else>
                     <BaseIcon v-if="isItStacked" name="unstack" :stroke="color" style="pointer-events: none;"/>

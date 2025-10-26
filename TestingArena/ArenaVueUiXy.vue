@@ -407,15 +407,15 @@ onMounted(() => {
         marks: [10, 20],
         annotated: true
     },
-    // {
-    //     name: "Serie A",
-    //     series: createDs(35),
-    //     type: "line",
-    //     dataLabels: false,
-    //     smooth: true,
-    //     useArea: true,
-    //     useProgression: true
-    // },
+    {
+        name: "Serie A",
+        series: createDs(35),
+        type: "line",
+        dataLabels: false,
+        smooth: true,
+        useArea: true,
+        useProgression: true
+    },
     // {
     //     name: "Serie B",
     //     series: createDs(35),

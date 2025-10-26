@@ -2986,14 +2986,17 @@ defineExpose({
             <template #optionImg v-if="$slots.optionImg">
                 <slot name="optionImg" />
             </template>
+            <template #optionSvg v-if="$slots.optionSvg">
+                <slot name="optionSvg" />
+            </template>
             <template #optionTable v-if="$slots.optionTable">
                 <slot name="optionTable" />
             </template>
             <template #optionLabels v-if="$slots.optionLabels">
                 <slot name="optionLabels" />
             </template>
-            <template #optionStack v-if="$slots.optionStack">
-                <slot name="optionStack" />
+            <template #optionStack="{ isStack }" v-if="$slots.optionStack">
+                <slot name="optionStack" v-bind="{ isStack }" />
             </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }" />

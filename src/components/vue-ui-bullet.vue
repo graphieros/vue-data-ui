@@ -605,6 +605,9 @@ defineExpose({
             <template #optionImg v-if="$slots.optionImg">
                 <slot name="optionImg" />
             </template>
+            <template #optionSvg v-if="$slots.optionSvg">
+                <slot name="optionSvg" />
+            </template>
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
             </template>

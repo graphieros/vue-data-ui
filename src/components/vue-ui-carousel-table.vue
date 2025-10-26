@@ -582,6 +582,9 @@ defineExpose({
             <template #optionImg v-if="$slots.optionImg">
                 <slot name="optionImg" />
             </template>
+            <template #optionSvg v-if="$slots.optionSvg">
+                <slot name="optionSvg" />
+            </template>
             <template #optionAnimation v-if="$slots.optionAnimation">
                 <slot name="optionAnimation" />
             </template>
