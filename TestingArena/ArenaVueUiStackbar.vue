@@ -423,6 +423,10 @@ function freestyle({ drawingArea, data }) {
     });
     return paths;
 }
+
+function selectLegend(l) {
+    console.log(l)
+}
     
 </script>
 
@@ -434,7 +438,7 @@ function freestyle({ drawingArea, data }) {
         </select>
     </div>
 <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-    <LocalVueUiStackbar @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="{...config,
+    <LocalVueUiStackbar @selectLegend="selectLegend" @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="{...config,
         responsive: true,
     }"  @selectTimeLabel="selectTimeLabel"> 
             <template #svg="{ svg }">

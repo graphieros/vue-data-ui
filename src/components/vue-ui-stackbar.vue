@@ -1342,14 +1342,14 @@ const dataTable = computed(() => {
     return { head, body: body.slice(0, slicer.value.end - slicer.value.start), config, colNames }
 });
 
-function segregate(index, item) {
-    emit('selectLegend', formattedDataset.value.find(el => el.absoluteIndex === index));
+function segregate(_, item) {
     if (segregated.value.includes(item.id)) {
         segregated.value = segregated.value.filter(el => el !== item.id);
     } else {
         if ( segregated.value.length === unmutableDataset.value.length - 1) return; 
         segregated.value.push(item.id);
     }
+    emit('selectLegend', formattedDataset.value)
 }
 
 const legendSet = computed(() => {
