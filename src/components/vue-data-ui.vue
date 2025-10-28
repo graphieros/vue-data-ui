@@ -171,7 +171,9 @@ const emit = defineEmits([
     'selectGroup',
     'selectRibbon',
     'toggleTable',
-    'resetZoom'
+    'resetZoom',
+    'showSeries',
+    'hideSeries',
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -217,6 +219,8 @@ const selectGroup = ref(() => null);
 const selectRibbon = ref(() => null);
 const autoSize = ref(() => null);
 const resetZoom = ref(() => null);
+const showSeries = ref(() => null);
+const hideSeries = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -316,6 +320,12 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.resetZoom) { 
             resetZoom.value = newRef.resetZoom;
         }
+        if (newRef.showSeries) {
+            showSeries.value = newRef.showSeries;
+        }
+        if (newRef.hideSeries) {
+            hideSeries.value = newRef.hideSeries;
+        }
     }
 })
 
@@ -352,6 +362,8 @@ const getEventHandlers = () => {
         'autoSize',
         'toggleTable',
         'resetZoom',
+        'showSeries',
+        'hideSeries'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -428,7 +440,9 @@ defineExpose({
     selectNode,
     selectGroup,
     selectRibbon,
-    resetZoom
+    resetZoom,
+    showSeries,
+    hideSeries
 });
 
 const notSupported = computed(() => {
