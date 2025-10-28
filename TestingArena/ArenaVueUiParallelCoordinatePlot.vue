@@ -228,9 +228,17 @@ function selectDatapoint(dp) {
 }
 
 onMounted(async() => {
-    if (local.value) {
-        const p = await local.value.getImage()
+    if (vduiLocal.value) {
+        const p = await vduiLocal.value.getImage()
         console.log(p)
+
+        // setTimeout(() => {
+        //     vduiLocal.value.hideSeries('Series 1')
+        // }, 4000)
+        // setTimeout(() => {
+        //     vduiLocal.value.showSeries('Series 1')
+        //     vduiLocal.value.hideSeries('Series 2')
+        // }, 5000)
     }
 })
     

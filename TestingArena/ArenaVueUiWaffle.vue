@@ -17,15 +17,15 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = [
             {
-                name: 'A with a long name',
+                name: 'Series A',
                 values: [3]
             },
             {
-                name: 'A',
+                name: 'Series B',
                 values: [2]
             },
             {
-                name: 'A',
+                name: 'Series C',
                 values: [1]
             },
         ]
@@ -238,6 +238,15 @@ onMounted(async() => {
     if (local.value) {
         const img = await local.value.getImage()
         console.log(img)
+
+        // setTimeout(() => {
+        //     local.value.hideSeries('Series A')
+        // }, 4000)
+
+        // setTimeout(() => {
+        //     local.value.showSeries('Series A')
+        //     local.value.hideSeries('Series B')
+        // }, 5000)
     }
 })
 

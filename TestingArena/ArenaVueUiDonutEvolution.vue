@@ -232,7 +232,15 @@ const step = ref(0)
 onMounted(async() => {
     if (vduiLocal.value) {
         const img = await vduiLocal.value.getImage();
-        console.log(img)
+        console.log(img);
+
+        // setTimeout(() => {
+        //     vduiLocal.value.hideSeries('Serie 1')
+        // }, 4000)
+        // setTimeout(() => {
+        //     vduiLocal.value.showSeries('Serie 1')
+        //     vduiLocal.value.hideSeries('Serie 2')
+        // }, 5000)
     }
 })
 

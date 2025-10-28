@@ -266,7 +266,15 @@ function selectLegend(legend) {
 onMounted(async () => {
     if (local.value) {
         const img = await local.value.getImage()
-        console.log(img)
+        console.log(img);
+
+        // setTimeout(() => {
+        //     local.value.hideSeries('Category 1')
+        // }, 4000);
+        // setTimeout(() => {
+        //     local.value.showSeries('Category 1')
+        //     local.value.hideSeries('Category 2')
+        // }, 5000);
     }
 })
 

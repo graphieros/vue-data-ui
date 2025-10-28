@@ -365,6 +365,21 @@ function selectX({ datapoint, index, indexLabel}) {
     selectedX.value = index;
 }
 
+// onMounted(() => {
+//     setTimeout(() => {
+//         if (local.value) {
+//             local.value.hideSeries('S0')
+//             local.value.hideSeries('S1')
+//         }
+//     }, 3000)
+//     setTimeout(() => {
+//         if (local.value) {
+//             local.value.showSeries('S0')
+//             local.value.hideSeries('S2')
+//         }
+//     }, 4000)
+// })
+
 </script>
 
 <template>

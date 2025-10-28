@@ -237,7 +237,15 @@ const step = ref(0)
 onMounted(async () => {
     if (local.value) {
         const img = await local.value.getImage()
-        console.log(img)
+        console.log(img);
+
+        setTimeout(() => {
+            local.value.hideSeries('Serie 1');
+        }, 4000);
+        setTimeout(() => {
+            local.value.showSeries('Serie 1');
+            local.value.hideSeries('Serie 2');
+        }, 5000);
     }
 })
 

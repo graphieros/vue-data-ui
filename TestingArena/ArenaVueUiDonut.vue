@@ -28,15 +28,15 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = [
             {
-                name: 'A with a long name',
+                name: 'Series A',
                 values: [3]
             },
             {
-                name: 'A',
+                name: 'Series B',
                 values: [2]
             },
             {
-                name: 'A',
+                name: 'Series C',
                 values: [1]
             },
         ]
@@ -369,6 +369,13 @@ onMounted(async () => {
         const img = await localDonut.value.getImage()
         console.log(img)
         // localDonut.value.autoSize()
+        // setTimeout(() => {
+        //     localDonut.value.hideSeries('Series C')
+        // }, 4000)
+        // setTimeout(() => {
+        //     localDonut.value.hideSeries('Series A')
+        //     localDonut.value.showSeries('Series C')
+        // }, 5000)
     }
 })
 

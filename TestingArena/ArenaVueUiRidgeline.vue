@@ -213,6 +213,9 @@ onMounted(async () => {
     if (local.value) {
         const img = await local.value.getImage();
         console.log(img)
+        setTimeout(() => {
+            local.value.hideSeries('Average Monthly Temperature (°C)')
+        }, 4000)
     }
 })
 

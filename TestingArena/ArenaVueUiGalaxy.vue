@@ -199,7 +199,15 @@ function selectDatapoint(datapoint) {
 onMounted(async () => {
     if (local.value) {
         const img = await local.value.getImage()
-        console.log(img)
+        console.log(img);
+
+        // setTimeout(() => {
+        //     local.value.hideSeries('Series 3');
+        // }, 4000)
+        // setTimeout(() => {
+        //     local.value.showSeries('Series 3');
+        //     local.value.hideSeries('Series 2');
+        // }, 5000)
     }
 })
 

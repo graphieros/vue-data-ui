@@ -160,6 +160,21 @@ const config = computed(() => {
 
 const step = ref(0)
 
+const local = ref(null);
+
+// onMounted(() => {
+//     if (local.value) {
+//         setTimeout(() => {
+//             local.value.hideSeries('Vue')
+//         }, 4000)
+//         setTimeout(() => {
+//             local.value.hideSeries('Javascript')
+//             local.value.showSeries('Vue')
+//         }, 5000)
+//     }
+// })
+
+
 </script>
 
 <template>
@@ -177,7 +192,7 @@ const step = ref(0)
         <template #title>VueUiSparkStackbar</template>
 
         <template #local>
-            <LocalVueUiSparkStackbar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
+            <LocalVueUiSparkStackbar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" ref="local">
                 <template #chart-background>
                     <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
                 </template>

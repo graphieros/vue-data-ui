@@ -260,6 +260,13 @@ onMounted(async() => {
     if (local.value) {
         const img = await local.value.getImage()
         console.log(img)
+
+        // setTimeout(() => {
+        //     local.value.hideSeries('Serie 3')
+        // }, 4000)
+        // setTimeout(() => {
+        //     local.value.showSeries('Serie 3')
+        // }, 5000)
     }
 })
 

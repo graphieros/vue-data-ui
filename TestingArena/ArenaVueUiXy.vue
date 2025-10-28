@@ -408,7 +408,7 @@ onMounted(() => {
         annotated: true
     },
     {
-        name: "Serie A",
+        name: "Serie B",
         series: createDs(35),
         type: "line",
         dataLabels: false,
@@ -1237,11 +1237,20 @@ function selectTimeLabel(data) {
     console.log(data)
 }
 
+const resp = ref(null);
+
 onMounted(async () => {
     if(vduiLocal.value) {
         const data = await vduiLocal.value.getData()
         console.log(data)
         const img = await vduiLocal.value.getImage({ scale: 4 });
+    }
+    if (resp.value) {
+        resp.value.hideSeries('Serie A')
+        setTimeout(() => {
+            resp.value.showSeries('Serie A');
+            resp.value.hideSeries('Serie B');
+        }, 1000)
     }
 })
 
@@ -1292,7 +1301,7 @@ function freestyle({ data, drawingArea }) {
     </div>
 
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiXy component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="{
+        <LocalVueUiXy ref="resp" :dataset="isPropsToggled ? alternateDataset : dataset" :config="{
             ...config,
             responsive: true,
         }" @selectTimeLabel="selectTimeLabel">

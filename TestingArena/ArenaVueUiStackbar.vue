@@ -427,6 +427,20 @@ function freestyle({ drawingArea, data }) {
 function selectLegend(l) {
     console.log(l)
 }
+
+const resp = ref(null);
+
+// onMounted(() => {
+//     if (local.value) {
+//         local.value.hideSeries('Series 1');
+//         local.value.hideSeries('Series 2');
+//         setTimeout(() => {
+//             local.value.showSeries('Series 1');
+//             local.value.showSeries('Series 2');
+//             local.value.hideSeries('Series 3');
+//         }, 1000)
+//     }
+// })
     
 </script>
 
@@ -438,7 +452,7 @@ function selectLegend(l) {
         </select>
     </div>
 <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-    <LocalVueUiStackbar @selectLegend="selectLegend" @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="{...config,
+    <LocalVueUiStackbar ref="resp" @selectLegend="selectLegend" @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="{...config,
         responsive: true,
     }"  @selectTimeLabel="selectTimeLabel"> 
             <template #svg="{ svg }">

@@ -47,11 +47,11 @@ onMounted(() => {
                 shape: "circle",
                 marked: true
             },
-            // {
-            //     name: "Cluster 1",
-            //     values: scat1.value,
-            //     shape: "star",
-            // },
+            {
+                name: "Cluster 1",
+                values: scat1.value,
+                shape: "star",
+            },
         ]
     }, 0)
 })
@@ -347,7 +347,15 @@ function selectLegend(legend) {
 onMounted(async () => {
     if (local.value) {
         const img = await local.value.getImage()
-        console.log(img)
+        console.log(img);
+
+        // setTimeout(() => {
+        //     local.value.hideSeries('Cluster 2')
+        // }, 4000)
+        // setTimeout(() => {
+        //     local.value.showSeries('Cluster 2')
+        //     local.value.hideSeries('Cluster 1')
+        // }, 5000)
     }
 });
 
