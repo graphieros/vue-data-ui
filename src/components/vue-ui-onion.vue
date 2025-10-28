@@ -482,9 +482,43 @@ function segregate(id) {
     if(segregated.value.includes(id)) {
         segregated.value = segregated.value.filter(el => el !== id);
     }else {
+        if (segregated.value.length === immutableDataset.value.length - 1) return;
         segregated.value.push(id)
     }
     emit('selectLegend', mutableDataset.value)
+}
+
+function validSeriesToToggle(name) {
+    if (!immutableDataset.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiOnion - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = immutableDataset.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiOnion - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.id)) {
+        segregate(dp.id);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.id))  {
+        segregate(dp.id);
+    }
 }
 
 function getData() {
@@ -733,6 +767,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,

@@ -254,6 +254,39 @@ function segregate(index) {
     }
 }
 
+function validSeriesToToggle(name) {
+    if (!absoluteDataset.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiSparkStackbar - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = absoluteDataset.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiSparkStackbar - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.id)) {
+        segregate(dp.seriesIndex);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.id))  {
+        segregate(dp.seriesIndex);
+    }
+}
+
 const drawableDataset = computed(() => {
     let start = 0;
     const datapoints = [];
@@ -345,6 +378,11 @@ function useTooltip({ datapoint, seriesIndex }) {
         tooltipContent.value = `<div>${html}</div>`;
     }
 }
+
+defineExpose({
+    hideSeries,
+    showSeries
+});
 
 </script>
 

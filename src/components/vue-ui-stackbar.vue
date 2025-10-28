@@ -1342,7 +1342,7 @@ const dataTable = computed(() => {
     return { head, body: body.slice(0, slicer.value.end - slicer.value.start), config, colNames }
 });
 
-function segregate(_, item) {
+function segregate(item) {
     if (segregated.value.includes(item.id)) {
         segregated.value = segregated.value.filter(el => el !== item.id);
     } else {
@@ -1350,6 +1350,39 @@ function segregate(_, item) {
         segregated.value.push(item.id);
     }
     emit('selectLegend', formattedDataset.value)
+}
+
+function validSeriesToToggle(name) {
+    if (!unmutableDataset.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiStackbar - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = unmutableDataset.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiStackbar - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.id)) {
+        segregate({ id : dp.id });
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.id))  {
+        segregate({ id: dp.id });
+    }
 }
 
 const legendSet = computed(() => {
@@ -1362,7 +1395,7 @@ const legendSet = computed(() => {
         return {
             ...ds,
             opacity: segregated.value.includes(ds.id) ? 0.5 : 1,
-            segregate: () => segregate(ds.absoluteIndex, ds),
+            segregate: () => segregate(ds),
             isSegregated: segregated.value.includes(ds.id)
         }
     });
@@ -1590,6 +1623,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleLabels,
     toggleTooltip,

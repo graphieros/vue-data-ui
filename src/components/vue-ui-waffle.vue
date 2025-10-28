@@ -619,6 +619,39 @@ function segregate(uid) {
     }));
 }
 
+function validSeriesToToggle(name) {
+    if (!immutableSet.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiWaffle - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = immutableSet.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiWaffle - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.uid)) {
+        segregate(dp.uid);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.uid))  {
+        segregate(dp.uid);
+    }
+}
+
 const legendSet = computed(() => {
     return datasetCopy.value
         .map((serie, i) => {
@@ -1026,6 +1059,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,

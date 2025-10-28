@@ -1233,6 +1233,39 @@ function segregate(legendItem) {
     segregateStep.value += 1;
 }
 
+function validSeriesToToggle(name) {
+    if (!absoluteDataset.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiXy - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = absoluteDataset.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiXy - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregatedSeries.value.includes(dp.id)) {
+        segregate({ id : dp.id });
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregatedSeries.value.includes(dp.id))  {
+        segregate({ id: dp.id });
+    }
+}
+
 const chartAriaLabel = computed(() => {
     const titleText = FINAL_CONFIG.value.chart.title.text || 'Chart visualization';
     const subtitleText = FINAL_CONFIG.value.chart.title.subtitle.text || '';
@@ -2909,6 +2942,8 @@ defineExpose({
     generateImage,
     generateSvg,
     generateCsv,
+    hideSeries,
+    showSeries,
     toggleStack,
     toggleTable,
     toggleLabels,

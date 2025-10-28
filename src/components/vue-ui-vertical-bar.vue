@@ -566,6 +566,39 @@ async function segregate(id) {
     emit('selectLegend', mutableDataset.value);
 }
 
+function validSeriesToToggle(name) {
+    if (!immutableDataset.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiHorizontalBar - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = immutableDataset.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiHorizontalBar - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.id)) {
+        segregate(dp.id);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.id))  {
+        segregate(dp.id);
+    }
+}
+
 const mutableDataset = computed(() => {
     return immutableDataset.value.filter(serie => !segregated.value.includes(serie.id));
 });
@@ -1003,6 +1036,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleSort,
     toggleTooltip,

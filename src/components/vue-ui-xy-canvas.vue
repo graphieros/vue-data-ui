@@ -1850,6 +1850,39 @@ function segregate(index) {
     debounceCanvasResize();
 }
 
+function validSeriesToToggle(name) {
+    if (!dsCopy.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiXyCanvas - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = dsCopy.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiXyCanvas - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.absoluteIndex)) {
+        segregate(dp.absoluteIndex);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.absoluteIndex))  {
+        segregate(dp.absoluteIndex);
+    }
+}
+
 const legendSet = computed(() => {
     return dsCopy.value.map((ds, i) => {
         return {
@@ -2048,6 +2081,8 @@ defineExpose({
     generateCsv,
     generatePdf,
     generateImage,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleLabels,
     toggleStack,

@@ -746,6 +746,58 @@ function segregateDonut(item) {
     }
 }
 
+function validSeriesToToggle(name) {
+    if (!immutableDataset.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiNestedDonuts - There are no series to show.');
+        }
+        return null;
+    }
+    
+    const dp = immutableDataset.value.flatMap(d => d.series).filter((el) => el.name === name)
+
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiNestedDonuts - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+
+    if (Array.isArray(dp)) {
+        dp.forEach(el => {
+            if (segregated.value.includes(el.id)) {
+                segregateDonut({ id : el.id });
+            }
+        })
+    } else {
+        if (segregated.value.includes(dp.id)) {
+            segregateDonut({ id: dp.id });
+        }
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (Array.isArray(dp)) {
+        dp.forEach(el => {
+            if (!segregated.value.includes(el.id)) {
+                segregateDonut({ id: el.id });
+            }
+        })
+    } else {
+        if (!segregated.value.includes(dp.id))  {
+            segregateDonut({ id: dp.id });
+        }
+    }
+}
+
 const donutThickness = computed(() => {
     return (
         (donutSize.value / immutableDataset.value.length) *
@@ -1347,6 +1399,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleLabels,
     toggleTooltip,

@@ -623,6 +623,39 @@ function segregate(index) {
     }
 }
 
+function validSeriesToToggle(name) {
+    if (!formattedDataset.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiHistoryPlot - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = formattedDataset.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiHistoryPlot - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.seriesIndex)) {
+        segregate(dp.seriesIndex);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.seriesIndex))  {
+        segregate(dp.seriesIndex);
+    }
+}
+
 const legendSet = computed(() => {
     return formattedDataset.value.map(ds => {
         return {
@@ -983,6 +1016,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,

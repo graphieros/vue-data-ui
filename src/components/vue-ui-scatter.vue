@@ -836,6 +836,39 @@ function segregate(id) {
     }
 }
 
+function validSeriesToToggle(name) {
+    if (!datasetWithId.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiScatter - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = datasetWithId.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiScatter - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.id)) {
+        segregate(dp.id);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.id))  {
+        segregate(dp.id);
+    }
+}
+
 function generateCsv(callback=null) {
     nextTick(() => {
         const labels = ["", FINAL_CONFIG.value.table.translations.correlationCoefficient, FINAL_CONFIG.value.table.translations.nbrPlots, `${FINAL_CONFIG.value.style.layout.dataLabels.xAxis.name} ${FINAL_CONFIG.value.table.translations.average}`, `${FINAL_CONFIG.value.style.layout.dataLabels.yAxis.name} ${FINAL_CONFIG.value.table.translations.average}`];
@@ -1233,6 +1266,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,

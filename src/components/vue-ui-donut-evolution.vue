@@ -766,14 +766,47 @@ const legendConfig = computed(() => {
 function segregate(id) {
     if(segregated.value.includes(id)) {
         segregated.value = segregated.value.filter(s => s !== id);
-        emit('selectLegend', null)
+        emit('selectLegend', mutableDataset.value)
     }else {
         if(segregated.value.length === convertedDataset.value.length - 1) return;
         segregated.value.push(id);
-        emit('selectLegend', convertedDataset.value.find(d => d.uid === id));
+        emit('selectLegend', mutableDataset.value);
     }
     if(fixedDatapoint.value) {
         fixDatapoint(drawableDataset.value.find((_, i) => i === fixedDatapointIndex.value))
+    }
+}
+
+function validSeriesToToggle(name) {
+    if (!convertedDataset.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiDonutEvolution - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = convertedDataset.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiDonutEvolution - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.uid)) {
+        segregate(dp.uid);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.uid))  {
+        segregate(dp.uid);
     }
 }
 
@@ -1001,6 +1034,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleAnnotator,
     toggleFullscreen

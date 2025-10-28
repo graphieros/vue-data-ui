@@ -719,6 +719,39 @@ function segregate(index) {
     })));
 }
 
+function validSeriesToToggle(name) {
+    if (!immutableSet.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiDonut - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = immutableSet.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiDonut - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.seriesIndex)) {
+        segregate(dp.seriesIndex);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.seriesIndex))  {
+        segregate(dp.seriesIndex);
+    }
+}
+
 
 const _total = computed(() => FINAL_DATASET.value.reduce((sum, ds) => sum + ds.values.reduce((a, b) => a + b, 0), 0));
 
@@ -1231,6 +1264,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleLabels,
     toggleTooltip,

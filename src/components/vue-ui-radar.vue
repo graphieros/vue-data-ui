@@ -428,10 +428,44 @@ const seriesCopy = computed(() => {
                 ...s,
                 color: convertColorToHex(s.color) || customPalette.value[i] || palette[i] || palette[i % palette.length],
                 serieId: `radar_serie_${uid.value}_${i}`,
-                formatter: s.formatter || null
+                formatter: s.formatter || null,
+                absoluteIndex: i
             }
         });
 });
+
+function validSeriesToToggle(name) {
+    if (!seriesCopy.value.length) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn('VueUiRadar - There are no series to show.');
+        }
+        return null;
+    }
+    const dp = legendSet.value.find(d => d.name === name);
+    if (!dp) {
+        if (FINAL_CONFIG.value.debug) {
+            console.warn(`VueUiRadar - Series name not found "${name}"`);
+        }
+        return null;
+    }
+    return dp;
+}
+
+function showSeries(name) {
+    const dp = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (segregated.value.includes(dp.absoluteIndex)) {
+        segregate(dp.absoluteIndex);
+    }
+}
+
+function hideSeries(name) {
+    const dp  = validSeriesToToggle(name);
+    if (dp === null) return;
+    if (!segregated.value.includes(dp.absoluteIndex))  {
+        segregate(dp.absoluteIndex);
+    }
+}
 
 const max = computed(() => Math.max(...seriesCopy.value
         .flatMap(s => s.values)));
@@ -539,6 +573,7 @@ const legendSet = computed(() => {
         const totalProportion = checkNaN(ratios.map(r => r[i]).reduce((a, b) => a + b, 0) / seriesCopy.value.length);
         return {
             ...d,
+            absoluteIndex: i,
             totalProportion,
             shape: 'circle',
             opacity: segregated.value.includes(i) ? 0.5 : 1,
@@ -855,6 +890,8 @@ defineExpose({
     generateCsv,
     generateImage,
     generateSvg,
+    hideSeries,
+    showSeries,
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
