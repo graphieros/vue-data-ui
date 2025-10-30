@@ -332,6 +332,8 @@ export function useConfig() {
                     roundingValue: 0,
                     roundingPercentage: 0,
                     showTimeLabel: true,
+                    showTotal: false,
+                    totalTranslation: 'Total',
                     useDefaultTimeFormat: true,
                     timeFormat: 'yyyy-MM-dd HH:mm:ss' // When datetimeFormatter is enabled and useDefaultFormat is false
                 },
@@ -352,6 +354,7 @@ export function useConfig() {
                     totalValues: {
                         show: true,
                         offsetY: 0,
+                        offsetX: 0,
                         fontSize: FONT._16,
                         bold: false,
                         color: COLOR_BLACK
@@ -377,6 +380,14 @@ export function useConfig() {
                         ticks: 10,
                         scaleMin: null, // Force min scale (defaults to dataset's min)
                         scaleMax: null, // Force max scale (defaults to dataset's max)
+                    },
+                    frame: {
+                        show: false,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 2,
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                        strokeDasharray: 0
                     },
                     x: {
                         showAxis: true,
@@ -2724,6 +2735,7 @@ export function useConfig() {
             },
             labels: {
                 value: {
+                    show: true,
                     fontSize: FONT._14,
                     minFontSize: MIN_FONT_SIZE, // v3
                     color: COLOR_BLACK,
@@ -2735,6 +2747,7 @@ export function useConfig() {
                     formatter: null,
                 },
                 valueLabel: {
+                    show: true,
                     fontSize: FONT._14,
                     minFontSize: MIN_FONT_SIZE, // v3
                     color: COLOR_BLACK,
@@ -2742,6 +2755,7 @@ export function useConfig() {
                     rounding: 0,
                 },
                 timeLabel: {
+                    show: true,
                     fontSize: FONT._12,
                     minFontSize: MIN_FONT_SIZE, // v3
                     color: COLOR_BLACK,

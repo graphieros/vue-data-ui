@@ -275,6 +275,12 @@ const model = ref([
     { key: 'style.chart.grid.y.axisLabels.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.grid.y.axisLabels.rounding', def: 2, type: 'number', min: 0, max: 6},
 
+    { key: 'style.chart.grid.frame.show', def: true, type: 'checkbox' },
+    { key: 'style.chart.grid.frame.stroke', def: '#CCCCCC', type: 'color'},
+    { key: 'style.chart.grid.frame.strokeWidth', def: 4, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.grid.frame.strokeLinecap', def: 'round', type: 'text'},
+    { key: 'style.chart.grid.frame.strokeLinejoin', def: 'round', type: 'text'},
+    { key: 'style.chart.grid.frame.strokeDasharray', def: 0, type: 'number', min: 0, max: 24 },
     
     { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
     { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},

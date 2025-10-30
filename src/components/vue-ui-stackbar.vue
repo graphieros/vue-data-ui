@@ -498,18 +498,54 @@ const updateOffsetRight = throttle((w) => {
     offsetRight.value = w + FINAL_CONFIG.value.style.chart.bars.totalValues.fontSize
 }, 100);
 
+
+function computeRightOverhang() {
+    if (FINAL_CONFIG.value.orientation !== 'horizontal') return 0;
+
+    const group = sumRight.value;
+    if (!group) return 0;
+
+    const texts = Array.from(group.querySelectorAll('text'));
+    if (!texts.length) return 0;
+
+    let maxRight = -Infinity;
+    for (const t of texts) {
+        try {
+        const box = t.getBBox();
+        const right = box.x + box.width;
+        if (right > maxRight) maxRight = right;
+        } catch (_) {
+            //
+        }
+    }
+
+    const overhang = Math.max(0, maxRight - (drawingArea.value?.right ?? 0));
+    return overhang;
+}
+
 watchEffect((onInvalidate) => {
-    if (FINAL_CONFIG.value.orientation === 'vertical') return;
+    if (FINAL_CONFIG.value.orientation !== 'horizontal') return;
 
     const el = sumRight.value;
-    if (!el) return
+    if (!el) return;
 
-    const observer = new ResizeObserver(entries => {
-        updateOffsetRight(entries[0].contentRect.width)
-    })
-    observer.observe(el)
-    onInvalidate(() => observer.disconnect())
+    const onChange = () => {
+        const overhang = computeRightOverhang();
+        updateOffsetRight(overhang);
+    };
+
+    onChange();
+    const resizeObserver = new ResizeObserver(onChange);
+    resizeObserver.observe(el);
+    const mutationObserver = new MutationObserver(onChange);
+    mutationObserver.observe(el, { childList: true, subtree: true, characterData: true });
+
+    onInvalidate(() => {
+        resizeObserver.disconnect();
+        mutationObserver.disconnect();
+    });
 });
+
 
 onBeforeUnmount(() => {
     labelsXHeight.value = 0;
@@ -1182,6 +1218,7 @@ function useTooltip(seriesIndex) {
     }
 
     const sum = datapoint.map(d => Math.abs(d.value)).reduce((a, b) => a + b, 0);
+    const sumLabel = datapoint.map(d => forceValidValue(d.value)).reduce((a, b) => a + b, 0);
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
         seriesIndex,
@@ -1198,6 +1235,8 @@ function useTooltip(seriesIndex) {
     } else {
         const { 
             showValue,
+            showTotal,
+            totalTranslation,
             showPercentage, 
             borderColor,
             roundingValue,
@@ -1210,6 +1249,25 @@ function useTooltip(seriesIndex) {
             html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${borderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat ? timeLabels.value[seriesIndex]?.text : preciseAllTimeLabelsTooltip.value[seriesIndex]?.text || allTimeLabels.value[seriesIndex]?.text || ''}</div>`;
         }
 
+        if (showTotal) {
+            html += `<div class="vue-data-ui-tooltip-total" style="display:flex;flex-direction:row;align-items:center;gap:4px">
+                <span>${totalTranslation}:</span>
+                <span>
+                    ${applyDataLabel(
+                        FINAL_CONFIG.value.style.chart.bars.dataLabels.formatter,
+                        sumLabel,
+                        dataLabel({
+                            p: FINAL_CONFIG.value.style.chart.bars.dataLabels.prefix,
+                            v: sumLabel,
+                            s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
+                            r: roundingValue
+                        }),
+                        { datapoint: { name: totalTranslation, value: sumLabel } }
+                    )}
+                </span>
+            </div>`
+        }
+
         const parenthesis = [
             showValue && showPercentage ? '(' : '',
             showValue && showPercentage ? ')' : '',
@@ -1219,12 +1277,16 @@ function useTooltip(seriesIndex) {
             html += `
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px">
                     <svg viewBox="0 0 60 60" height="14" width="14"><rect rx="5" x="0" y="0" height="60" width="60" stroke="none" fill="${FINAL_CONFIG.value.style.chart.bars.gradient.show ? `url(#gradient_${ds.id})` : ds.color}"/>${slots.pattern ? `<rect rx="5" x="0" y="0" height="60" width="60" stroke="none" fill="url(#pattern_${uid.value}_${ds.absoluteIndex})"/>` : ''}</svg>
-                    ${ds.name}${showValue || showPercentage ? ':' : ''} ${showValue ? dataLabel({
-                        p: FINAL_CONFIG.value.style.chart.bars.dataLabels.prefix,
-                        v: ds.value,
-                        s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
-                        r: roundingValue,
-                    }) : ''} ${parenthesis[0]}${showPercentage ? dataLabel({
+                    ${ds.name}${showValue || showPercentage ? ':' : ''} ${showValue ? applyDataLabel(
+                        FINAL_CONFIG.value.style.chart.bars.dataLabels.formatter,
+                        ds.value,
+                            dataLabel({
+                            p: FINAL_CONFIG.value.style.chart.bars.dataLabels.prefix,
+                            v: ds.value,
+                            s: FINAL_CONFIG.value.style.chart.bars.dataLabels.suffix,
+                            r: roundingValue,
+                        }, { datapoint: ds })
+                    ) : ''} ${parenthesis[0]}${showPercentage ? dataLabel({
                         v: isNaN(ds.value / sum) ? 0 : Math.abs(ds.value) / sum * 100, // Negs are absed to show relative proportion to absolute total. It's opinionated.
                         s: '%',
                         r: roundingPercentage,
@@ -1616,6 +1678,67 @@ function selectX({ seriesIndex, datapoint }) {
     })
 }
 
+function getZeroPositions() {
+    const y0 = yLabels.value?.[0]?.zero ?? drawingArea.value.bottom;
+    const x0 = yLabels.value?.[0]?.horizontal_zero ?? drawingArea.value.left;
+    return { y0, x0 };
+}
+
+function placeLabelTotalY(index) {
+    const { y0 } = getZeroPositions();
+    const cfg = FINAL_CONFIG.value.style.chart.bars.totalValues;
+    const pad = Math.max(2, (cfg.fontSize * 0.3) + cfg.offsetY);
+
+    let minY = Infinity;
+    let hasPos = false;
+
+    for (const dp of formattedDataset.value || []) {
+        const v = dp?.series?.[index] ?? 0;
+        const h = dp?.height?.[index] ?? 0;
+        const y = dp?.y?.[index];
+        if (v > 0 && h > 0 && Number.isFinite(y)) {
+        hasPos = true;
+        if (y < minY) minY = y;
+        }
+    }
+
+    const topY = hasPos && Number.isFinite(minY) ? minY : y0;
+    const rawY = topY - pad;
+
+    const clampedY = Math.min(
+        Math.max(rawY, 0),
+        drawingArea.value.bottom
+    );
+
+    return clampedY;
+}
+
+
+
+function placeLabelTotalX(index) {
+    const { x0 } = getZeroPositions();
+    const pad = Math.max(2, (FINAL_CONFIG.value.style.chart.bars.totalValues.fontSize * 0.3) + FINAL_CONFIG.value.style.chart.bars.totalValues.offsetX);
+
+    let rightMost = -Infinity;
+    let hasPos = false;
+
+    for (const dp of formattedDataset.value || []) {
+        const v = dp?.series?.[index] ?? 0;
+        const x = dp?.horizontal_x?.[index];
+        const wRaw = dp?.horizontal_width?.[index];
+        const w = Number.isFinite(wRaw) ? Math.max(0, wRaw) : 0;
+        if (!Number.isFinite(x)) continue;
+
+        if (v > 0 && w > 0) {
+        hasPos = true;
+        rightMost = Math.max(rightMost, x + w);
+        }
+    }
+
+    const baseX = hasPos && Number.isFinite(rightMost) ? rightMost : x0;
+    return baseX + pad;
+}
+
 defineExpose({
     getData,
     getImage,
@@ -1775,6 +1898,23 @@ defineExpose({
                 </linearGradient>
             </defs>
 
+            <!-- FRAME -->
+            <rect 
+                data-cy="frame" 
+                v-if="FINAL_CONFIG.style.chart.grid.frame.show"
+                :style="{ pointerEvents: 'none', transition: 'none', animation: 'none !important' }"
+                :x="Math.max(0, drawingArea.left)" 
+                :y="Math.max(0, drawingArea.top)"
+                :width="Math.max(0, drawingArea.width)"
+                :height="Math.max(0, drawingArea.height)" 
+                fill="transparent"
+                :stroke="FINAL_CONFIG.style.chart.grid.frame.stroke"
+                :stroke-width="FINAL_CONFIG.style.chart.grid.frame.strokeWidth"
+                :stroke-linecap="FINAL_CONFIG.style.chart.grid.frame.strokeLinecap"
+                :stroke-linejoin="FINAL_CONFIG.style.chart.grid.frame.strokeLinejoin"
+                :stroke-dasharray="FINAL_CONFIG.style.chart.grid.frame.strokeDasharray" 
+            />
+
             <!-- HORIZONTAL LINES (vertical mode) -->
             <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines && FINAL_CONFIG.orientation === 'vertical'">
                 <line
@@ -1846,7 +1986,7 @@ defineExpose({
                     <rect 
                         v-for="(rect, j) in dp.x"
                         :x="rect"
-                        :y="dp.y[j] < 0 ? 0 : dp.y[j]"
+                        :y="forceValidValue(dp.y[j])"
                         :height="dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0"
                         :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
                         :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
@@ -1861,7 +2001,7 @@ defineExpose({
                         <rect 
                         v-for="(rect, j) in dp.x"
                         :x="rect"
-                        :y="dp.y[j] < 0 ? 0 : dp.y[j]"
+                        :y="forceValidValue(dp.y[j])"
                         :height="dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0"
                         :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
                         :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
@@ -1996,7 +2136,7 @@ defineExpose({
                             data-cy="label-total"
                             v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
                             :x="drawingArea.left + (barSlot * i) + barSlot / 2"
-                            :y="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
+                            :y="placeLabelTotalY(i)"
                             text-anchor="middle"
                             :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
                             :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
@@ -2035,8 +2175,8 @@ defineExpose({
                         <text
                             data-cy="label-total"
                             v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
-                            :x="drawingArea.right + FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3"
-                            :y="drawingArea.top + (barSlot * i) + barSlot / 2"
+                            :x="placeLabelTotalX(i)"
+                            :y="drawingArea.top + (barSlot * i) + barSlot / 2 + (FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3)"
                             text-anchor="start"
                             :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
                             :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"

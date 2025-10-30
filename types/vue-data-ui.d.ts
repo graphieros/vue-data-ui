@@ -271,6 +271,15 @@ declare module "vue-data-ui" {
         bold?: boolean;
     };
 
+    export type ChartFrame = {
+        show?: boolean;
+        stroke?: string;
+        strokeWidth?: number;
+        strokeLinecap?: "round" | "butt" | "square";
+        strokeLinejoin?: "arcs" | "bevel" | "miter" | "miter-clip" | "round";
+        strokeDasharray?: number;
+    }
+
     export type ChartUserOptions = {
         show?: boolean;
         showOnChartHover?: boolean;
@@ -1997,6 +2006,7 @@ declare module "vue-data-ui" {
             };
             labels?: {
                 value?: {
+                    show?: boolean;
                     fontSize?: number;
                     minFontSize?: number; // v3
                     color?: string;
@@ -2008,6 +2018,7 @@ declare module "vue-data-ui" {
                     formatter?: Formatter;
                 };
                 valueLabel?: {
+                    show?: boolean;
                     fontSize?: number;
                     minFontSize?: number; // v3
                     color?: string;
@@ -2015,6 +2026,7 @@ declare module "vue-data-ui" {
                     rounding?: number;
                 };
                 timeLabel?: {
+                    show?: boolean;
                     fontSize?: number;
                     minFontSize?: number; // v3
                     color?: string;
@@ -3478,14 +3490,7 @@ declare module "vue-data-ui" {
                 showHorizontalLines?: boolean;
                 showVerticalLines?: boolean;
                 position?: "middle" | "start";
-                frame?: {
-                    show?: boolean;
-                    stroke?: string;
-                    strokeWidth?: number;
-                    strokeLinecap?: "round" | "butt" | "square";
-                    strokeLinejoin?: "arcs" | "bevel" | "miter" | "miter-clip" | "round";
-                    strokeDasharray?: number;
-                };
+                frame?: ChartFrame;
                 labels?: {
                     color?: string;
                     show?: boolean;
@@ -7897,6 +7902,8 @@ declare module "vue-data-ui" {
                     showTimeLabel?: boolean;
                     useDefaultTimeFormat?: boolean;
                     timeFormat?: string;
+                    showTotal?: boolean;
+                    totalTranslation?: string;
                 };
                 highlighter?: {
                     color?: string;
@@ -7915,6 +7922,7 @@ declare module "vue-data-ui" {
                     totalValues?: {
                         show?: boolean;
                         offsetY?: number;
+                        offsetX?: number;
                         fontSize?: number;
                         bold?: boolean;
                         color?: string;
@@ -7936,6 +7944,7 @@ declare module "vue-data-ui" {
                     };
                 };
                 grid?: {
+                    frame?: ChartFrame;
                     scale?: {
                         ticks?: number;
                         scaleMin?: number | null;
