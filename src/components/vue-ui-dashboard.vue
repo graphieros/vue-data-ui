@@ -519,7 +519,26 @@ defineExpose({
             :style="{
                 zIndex: resolvedItems.length + 1
             }"
-        />
+        >
+            <template #annotator-action-close>
+                <slot name="annotator-action-close"/>
+            </template>
+            <template #annotator-action-color="{ color }">
+                <slot name="annotator-action-color" v-bind="{ color }"/>
+            </template>
+            <template #annotator-action-draw="{ mode }">
+                <slot name="annotator-action-draw" v-bind="{ mode }"/>
+            </template>
+            <template #annotator-action-undo="{ disabled }">
+                <slot name="annotator-action-undo" v-bind="{ disabled }"/>
+            </template>
+            <template #annotator-action-redo="{ disabled }">
+                <slot name="annotator-action-redo" v-bind="{ disabled }"/>
+            </template>
+            <template #annotator-action-delete="{ disabled }">
+                <slot name="annotator-action-delete" v-bind="{ disabled }"/>
+            </template>
+        </PenAndPaper>
 
         <UserOptions
             v-if="((FINAL_CONFIG.allowPrint /* deprecated, but still ok */) || FINAL_CONFIG.userOptions.show) && (FINAL_CONFIG.userOptions.buttons.pdf || FINAL_CONFIG.userOptions.buttons.img)"

@@ -149,9 +149,12 @@ function prepareChart() {
                 source: source.value
             });
 
+            const _timeLabelHeight = FINAL_CONFIG.value.style.labels.timeLabel.show ? FINAL_CONFIG.value.style.labels.timeLabel.fontSize * 2 : 0;
+            const _valueLabelHeight = FINAL_CONFIG.value.style.labels.valueLabel.show ? FINAL_CONFIG.value.style.labels.valueLabel.fontSize * 2 : 0;
+
             requestAnimationFrame(() => {
                 WIDTH.value = Math.max(10, width);
-                HEIGHT.value = Math.max(10, height - 12);
+                HEIGHT.value = Math.max(10, height - 12 - _timeLabelHeight - _valueLabelHeight);
             });
         });
 
@@ -173,14 +176,17 @@ watch(() => props.config, (_newCfg) => {
 }, { deep: true });
 
 const drawingArea = computed(() => {
-    const height = HEIGHT.value;
+    const _timeLabelHeight = FINAL_CONFIG.value.style.labels.timeLabel.show ? FINAL_CONFIG.value.style.labels.timeLabel.fontSize * 2 : 0;
+    const _valueLabelHeight = FINAL_CONFIG.value.style.labels.valueLabel.show ? FINAL_CONFIG.value.style.labels.valueLabel.fontSize * 2 : 0;
+
+    const height = HEIGHT.value + _timeLabelHeight + _valueLabelHeight;
     const width = WIDTH.value;
     const top = FINAL_CONFIG.value.style.layout.padding.top;
     const bottom = height - FINAL_CONFIG.value.style.layout.padding.bottom;
     const left = FINAL_CONFIG.value.style.layout.padding.left;
     const right = width - FINAL_CONFIG.value.style.layout.padding.right;
     const centerY = top + ((height - top - FINAL_CONFIG.value.style.layout.padding.bottom) / 2);
-    const drawingHeight = height - FINAL_CONFIG.value.style.layout.padding.top - FINAL_CONFIG.value.style.layout.padding.bottom;
+    const drawingHeight = height - FINAL_CONFIG.value.style.layout.padding.top - FINAL_CONFIG.value.style.layout.padding.bottom - _timeLabelHeight - _valueLabelHeight;
     const drawingWidth = width - FINAL_CONFIG.value.style.layout.padding.left - FINAL_CONFIG.value.style.layout.padding.right;
     return {
         bottom,
@@ -327,7 +333,7 @@ watch([WIDTH, HEIGHT, () => FINAL_DATASET.value], async() => {
                         ) 
                     }}
                 </span>
-                <span data-cy="title-selection-value-label" v-if="![undefined, null].includes(selectedIndex) && ![null, undefined].includes(computedDataset[selectedIndex].valueLabel)">({{ computedDataset[selectedIndex].valueLabel || 0 }})</span>
+                <span data-cy="title-selection-value-label" v-if="![undefined, null].includes(selectedIndex) && ![null, undefined].includes(computedDataset[selectedIndex].valueLabel)">{{ ` (${computedDataset[selectedIndex].valueLabel || 0})`}}</span>
             </div>
             <div data-cy="subtitle" v-if="FINAL_CONFIG.style.title.subtitle.text" :style="`font-size:${FINAL_CONFIG.style.title.subtitle.fontSize}px;color:${FINAL_CONFIG.style.title.subtitle.color};font-weight:${FINAL_CONFIG.style.title.subtitle.bold ? 'bold' : 'normal'}`">
                 {{ FINAL_CONFIG.style.title.subtitle.text }}
@@ -416,24 +422,27 @@ watch([WIDTH, HEIGHT, () => FINAL_DATASET.value], async() => {
             </g>
 
             <template v-if="!loading">
-                <text v-for="(val, i) in computedDataset"
-                    class="vue-ui-sparkhistogram-top-label"
-                    data-cy="datapoint-label-value"
-                    text-anchor="middle"
-                    :x="val.textAnchor"
-                    :y="val.y - (FINAL_CONFIG.style.labels.value.fontSize / 3) + FINAL_CONFIG.style.labels.value.offsetY"
-                    :font-size="FINAL_CONFIG.style.labels.value.fontSize"
-                    :font-weight="FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'"
-                    :fill="FINAL_CONFIG.style.labels.value.color"
-                >
-                    {{ getTopLabel(val, i) }}
-                </text>
+                <g v-for="(val, i) in computedDataset">
+                    <text
+                        v-if="FINAL_CONFIG.style.labels.value.show"
+                        class="vue-ui-sparkhistogram-top-label"
+                        data-cy="datapoint-label-value"
+                        text-anchor="middle"
+                        :x="val.textAnchor"
+                        :y="val.y - (FINAL_CONFIG.style.labels.value.fontSize / 3) + FINAL_CONFIG.style.labels.value.offsetY"
+                        :font-size="FINAL_CONFIG.style.labels.value.fontSize"
+                        :font-weight="FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.labels.value.color"
+                    >
+                        {{ getTopLabel(val, i) }}
+                    </text>
+                </g>
     
                 <g v-for="(label, _i) in computedDataset">
                     <text 
                         class="vue-ui-sparkhistogram-bottom-label"
                         data-cy="datapoint-label-valueLabel"
-                        v-if="label.valueLabel"
+                        v-if="label.valueLabel && FINAL_CONFIG.style.labels.valueLabel.show"
                         :x="label.textAnchor"
                         :y="label.y + label.height + FINAL_CONFIG.style.labels.valueLabel.fontSize"
                         :font-size="FINAL_CONFIG.style.labels.valueLabel.fontSize"
@@ -448,9 +457,9 @@ watch([WIDTH, HEIGHT, () => FINAL_DATASET.value], async() => {
                     <text
                         class="vue-ui-sparkhistogram-time-label"
                         data-cy="datapoint-label-time"
-                        v-if="time.timeLabel"
+                        v-if="time.timeLabel && FINAL_CONFIG.style.labels.timeLabel.show"
                         :x="time.textAnchor"
-                        :y="drawingArea.height - FINAL_CONFIG.style.labels.timeLabel.fontSize / 2"
+                        :y="drawingArea.height"
                         :font-size="FINAL_CONFIG.style.labels.timeLabel.fontSize"
                         :fill="FINAL_CONFIG.style.labels.timeLabel.color"
                         text-anchor="middle"
