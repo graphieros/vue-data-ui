@@ -1306,6 +1306,25 @@ function freestyle({ data, drawingArea }) {
             responsive: true,
         }" @selectTimeLabel="selectTimeLabel">
 
+            <!-- <template #annotator-action-close>
+                T
+            </template>
+            <template #annotator-action-color="{ color }">
+                <div :style="{ color: color }">{{ color }}</div>
+            </template>
+            <template #annotator-action-draw="{ mode }">
+                {{ mode }}
+            </template>
+            <template #annotator-action-undo="{ disabled }">
+                {{ disabled }}
+            </template>
+            <template #annotator-action-redo="{ disabled }">
+                {{ disabled }}
+            </template>
+            <template #annotator-action-delete="{ disabled }">
+                {{ disabled }}
+            </template> -->
+
             <template #svg="{ svg }">
                 <g>
                     <!-- <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />

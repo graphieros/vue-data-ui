@@ -266,6 +266,9 @@ onMounted(async () => {
                 <template #optionPdf>
                     PRINT PDF
                 </template>
+                <!-- <template #annotator-action-close>
+                    CL
+                </template> -->
             </LocalVueUi3dBar>
         </template>
 

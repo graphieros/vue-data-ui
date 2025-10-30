@@ -165,10 +165,12 @@ const model = ref([
     { key: 'style.animation.speedMs', def: 500, type: 'range', min: 100, max: 1000},
     { key: 'style.layout.height', def: 96, type: 'number', min: 30, max: 300},
     { key: 'style.layout.width', def: 640, type: 'number', min: 200, max: 1000},
-    { key: 'style.layout.padding.top', def: 24, type: 'number', min: 0, max: 48},
+
+    { key: 'style.layout.padding.top', def: 0, type: 'number', min: 0, max: 48},
     { key: 'style.layout.padding.right', def: 0, type: 'number', min: 0, max: 48},
     { key: 'style.layout.padding.left', def: 0, type: 'number', min: 0, max: 48},
-    { key: 'style.layout.padding.bottom', def: 36, type: 'number', min: 0, max: 48},
+    { key: 'style.layout.padding.bottom', def: 0, type: 'number', min: 0, max: 48},
+
     { key: 'style.bars.shape', def: 'square', type: 'select', options: ['circle', 'triangle', 'square', 'diamond', 'pentagon', 'hexagon', 'star']},
     { key: 'style.bars.strokeWidth', def: 0, type: 'number', min: 0, max: 12},
     { key: 'style.bars.colors.positive', def: '#3366CC', type: 'color'},
@@ -176,6 +178,8 @@ const model = ref([
     { key: 'style.bars.colors.gradient.show', def: true, type: 'checkbox'},
     { key: 'style.bars.borderRadius', def: 24, type: 'range', min: 0, max: 48},
     { key: 'style.bars.gap', def: 12, type: 'range', min: 0, max: 48},
+
+    { key: 'style.labels.value.show', def: true, type: 'checkbox'},
     { key: 'style.labels.value.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'style.labels.value.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.labels.value.bold', def: true, type: 'checkbox'},
@@ -183,13 +187,18 @@ const model = ref([
     { key: 'style.labels.value.prefix', def: 'P', type: 'text'},
     { key: 'style.labels.value.suffix', def: 'S', type: 'text'},
     { key: 'style.labels.value.offsetY', def: 0, type: 'number', min: -100, max: 100},
+
+    { key: 'style.labels.valueLabel.show', def: true, type: 'checkbox'},
     { key: 'style.labels.valueLabel.fontSize', def: 14, type: 'number', min: 8, max: 48},
     { key: 'style.labels.valueLabel.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.labels.valueLabel.bold', def: false, type: 'checkbox'},
     { key: 'style.labels.valueLabel.rounding', def: 1, type: 'number', min: 0, max: 12},
+
+    { key: 'style.labels.timeLabel.show', def: true, type: 'checkbox'},
     { key: 'style.labels.timeLabel.fontSize', def: 12, type: 'number', min: 8, max: 24},
     { key: 'style.labels.timeLabel.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.labels.timeLabel.bold', def: false, type: 'checkbox'},
+
     { key: 'style.selector.stroke', def: '#3366CC', type: 'color'},
     { key: 'style.selector.strokeWidth', def: 2, type: 'number', min: 0, max: 12},
     { key: 'style.selector.strokeDasharray', def: 2, type: 'number', min: 0, max: 12 },
