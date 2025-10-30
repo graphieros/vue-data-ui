@@ -23,7 +23,10 @@ import { VueUiStackbar as VueUiStackbarTreeshaken } from "vue-data-ui/vue-ui-sta
 function makeDs(n) {
     const arr = [];
     for(let i = 0; i < n; i += 1) {
-        arr.push(Math.random() * 5 * (Math.random() > 0.3 ? 1 : 1))
+        if (i === 0) {
+            arr.push(0)
+        }
+        arr.push(Math.random() * 5 * (Math.random() > 0.3 ? 1 : -1))
     }
     return arr;
 }
@@ -31,17 +34,17 @@ function makeDs(n) {
 const dataset = ref([
             {
                 name: "Series 1",
-                series: makeDs(100),
+                series: makeDs(24),
                 marked: true
             },
             {
                 name: "Series 2",
-                series: makeDs(100),
+                series: makeDs(24),
                 marked: true
             },
             {
                 name: "Series 3",
-                series: makeDs(100),
+                series: makeDs(24),
             },
         ]);
 
@@ -185,9 +188,11 @@ const model = ref([
     { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 64},
     { key: 'style.chart.tooltip.showValue', def: true, type: 'checkbox'},
     { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox'},
-    { key: 'style.chart.tooltip.roundingValue', def: 0, type: 'number', min: 0, max: 6},
+    { key: 'style.chart.tooltip.roundingValue', def: 2, type: 'number', min: 0, max: 6},
     { key: 'style.chart.tooltip.roundingPercentage', def: 0, type: 'number', min: 0, max: 6},
     { key: 'style.chart.tooltip.showTimeLabel', def: true, type: 'checkbox'},
+    { key: 'style.chart.tooltip.showTotal', def: true, type: 'checkbox'},
+    { key: 'style.chart.tooltip.totalTranslation', def: 'Total', type: 'text'},
 
     { key: 'style.chart.highlighter.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.highlighter.opacity', def: 5, type: 'range', min: 0, max: 30},
@@ -202,12 +207,14 @@ const model = ref([
     { key: 'style.chart.bars.gradient.intensity', def: 20, type: 'range', min: 0, max: 100},
 
     { key: 'style.chart.bars.totalValues.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.bars.totalValues.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.bars.totalValues.offsetY', def: 6, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.bars.totalValues.offsetX', def: 6, type: 'number', min: -100, max: 100},
+
     { key: 'style.chart.bars.totalValues.fontSize', def: 16, type: 'number', min: 8, max: 42},
     { key: 'style.chart.bars.totalValues.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.bars.totalValues.color', def: '#1A1A1A', type: 'color'},
 
-    { key: 'style.chart.bars.dataLabels.show', def: false, type: 'checkbox'},
+    { key: 'style.chart.bars.dataLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.bars.dataLabels.hideEmptyValues', def: false, type: 'checkbox'},
     { key: 'style.chart.bars.dataLabels.hideEmptyPercentages', def: true, type: 'checkbox'},
 
@@ -216,8 +223,8 @@ const model = ref([
     { key: 'style.chart.bars.dataLabels.fontSize', def: 14, type: 'number', min: 8, max: 42},
     { key: 'style.chart.bars.dataLabels.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.bars.dataLabels.rounding', def: 2, type: 'number', min: 0, max: 6},
-    { key: 'style.chart.bars.dataLabels.prefix', def: 'P', type: 'text'},
-    { key: 'style.chart.bars.dataLabels.suffix', def: 'S', type: 'text'},
+    { key: 'style.chart.bars.dataLabels.prefix', def: '', type: 'text'},
+    { key: 'style.chart.bars.dataLabels.suffix', def: '', type: 'text'},
 
     { key: 'style.chart.bars.dataLabels.hideUnderValue', def: null, type: 'number', min: 0, max: 100},
     { key: 'style.chart.bars.dataLabels.hideUnderPercentage', def: 10, type: 'number', min: 0, max: 100},
@@ -331,9 +338,9 @@ const config = computed(() => {
                     ...c.style.chart.bars,
                     dataLabels: {
                         ...c.style.chart.bars.dataLabels,
-                        formatter: ({value, config}) => {
-                            return `f | ${value}`
-                        }
+                        // formatter: ({value, config}) => {
+                        //     return `f | ${value}`
+                        // }
                     }
                 },
                 zoom: {
@@ -368,9 +375,9 @@ const config = computed(() => {
                     y: {
                         ...c.style.chart.grid.y,
                         axisLabels: {
-                            formatter: ({ value }) => {
-                                return 'BOO' + value
-                            }
+                            // formatter: ({ value }) => {
+                            //     return 'BOO' + value
+                            // }
                         }
                     }
                 }
@@ -462,7 +469,7 @@ const resp = ref(null);
         responsive: true,
     }"  @selectTimeLabel="selectTimeLabel"> 
             <template #svg="{ svg }">
-                <g v-html="freestyle(svg)"/>
+                <!-- <g v-html="freestyle(svg)"/> -->
             </template>
 
             <template #chart-background>
