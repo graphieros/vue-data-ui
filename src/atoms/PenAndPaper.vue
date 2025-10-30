@@ -585,12 +585,23 @@ onBeforeUnmount(() => {
             backgroundColor: backgroundColor,
             border: `1px solid ${buttonBorderColor}`
         }">
-            <BaseIcon name="close" :stroke="color" />
+            <slot name="annotator-action-close">
+                <BaseIcon name="close" :stroke="color" />
+            </slot>
         </button>
+
         <button class="vue-ui-pen-and-paper-action" style="padding: 0 !important">
-            <ColorPicker v-model:value="currentColor" :backgroundColor="backgroundColor"
-                :buttonBorderColor="buttonBorderColor" />
+            <ColorPicker 
+                v-model:value="currentColor" 
+                :backgroundColor="backgroundColor"
+                :buttonBorderColor="buttonBorderColor"
+            >
+                <template #annotator-action-color="{ color }">
+                    <slot name="annotator-action-color" v-bind="{ color }"/>
+                </template>
+            </ColorPicker>
         </button>
+
         <button
             data-cy="pen-and-paper-toggle-text"
             class="vue-ui-pen-and-paper-action"
@@ -600,8 +611,10 @@ onBeforeUnmount(() => {
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
             }"
-            >
-            <BaseIcon :name="mode === 'draw' ? 'annotator' : 'text'" :stroke="color" />
+        >
+            <slot name="annotator-action-draw" v-bind="{ mode }">
+                <BaseIcon :name="mode === 'draw' ? 'annotator' : 'text'" :stroke="color" />
+            </slot>    
             <div :style="{
                 position: 'absolute',
                 bottom: '-20px',
@@ -626,21 +639,30 @@ onBeforeUnmount(() => {
                 border: `1px solid ${buttonBorderColor}`,
                 marginTop: '20px'
             }">
-            <BaseIcon name="restart" :stroke="color" />
+            <slot name="annotator-action-undo" v-bind="{ disabled: !stack.length }">
+                <BaseIcon name="restart" :stroke="color" />
+            </slot>
         </button>
+
         <button class="vue-ui-pen-and-paper-action"
             :class="{ 'vue-ui-pen-and-paper-action-disabled': !redoStack.length }" @click="redoLastDraw" :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`
             }">
-            <BaseIcon name="restart" :stroke="color" style="transform: scaleX(-1)" />
+            <slot name="annotator-action-redo" v-bind="{ disabled: !redoStack.length}">
+                <BaseIcon name="restart" :stroke="color" style="transform: scaleX(-1)" />
+            </slot>
         </button>
+
         <button class="vue-ui-pen-and-paper-action" :class="{ 'vue-ui-pen-and-paper-action-disabled': !stack.length }"
             @click="reset" :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`
-            }">
-            <BaseIcon name="trash" :stroke="color" />
+            }"
+        >
+            <slot name="annotator-action-delete" v-bind="{ disabled: !stack.length }">
+                <BaseIcon name="trash" :stroke="color" />
+            </slot>
         </button>
 
         <input

@@ -166,7 +166,9 @@ const palette = ref([
             :style="colorPickerStyle"
             type="button"
         >
-            <BaseIcon name="palette" :stroke="iconColor" :size="22" />
+            <slot name="annotator-action-color" v-bind="{ color: iconColor }">
+                <BaseIcon name="palette" :stroke="iconColor" :size="22" />
+            </slot>
         </button>
 
         <div 
