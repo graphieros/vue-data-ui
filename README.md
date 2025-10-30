@@ -676,6 +676,32 @@ User options menu icon can be customized using the #menuIcon slot:
 </template>
 ```
 
+Since version 3.5.1, slots are exposed to customize the chart annotator sub-menu:
+
+```html
+<VueUiXy :dataset="dataset" :config="config">
+  <template #annotator-action-close>
+    <MyCloseIcon />
+  </template>
+  <template #annotator-action-color="{ color }">
+    <MyColorIcon :color="color" />
+  </template>
+  <template #annotator-action-draw="{ mode }">
+    <MyDrawIcon v-if="mode === 'draw'" />
+    <MyTextIcon v-else />
+  </template>
+  <template #annotator-action-undo="{ disabled }">
+    <MyUndoIcon />
+  </template>
+  <template #annotator-action-redo="{ disabled }">
+    <MyRedoIcon />
+  </template>
+  <template #annotator-action-delete="{ disabled }">
+    <MyDeleteIcon />
+  </template>
+</VueUiXy>
+```
+
 # Custom palette
 
 It is possible to provide a custom palette in the config prop through config.customPalette (string[]) for the following components:
