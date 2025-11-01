@@ -204,7 +204,7 @@ export function positionWords({
             });
 
             if (strictPixelPadding) {
-                wordMask = dilateWordMask({ wordMask, w, h, dilation: 1 });
+                wordMask = dilateWordMask({ wordMask, w, h, dilation: 2 });
             }
 
             let r = 0;

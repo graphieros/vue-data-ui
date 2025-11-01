@@ -30,6 +30,7 @@ const model = ref([
     { key: 'loading', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox' },
+    { key: 'strictPixelPadding', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.tooltip', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
     { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
