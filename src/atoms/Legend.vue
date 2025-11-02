@@ -44,7 +44,8 @@ function handleClick(legend, i) {
         <slot name="legendTitle" :titleSet="legendSet" />
         <div v-for="(legend, i) in legendSet" :key="`legend_${i}`"
             :class="{ 'vue-data-ui-legend-item': true, 'active': clickable }">
-            <svg 
+            <svg
+                data-cy="legend-marker"
                 v-if="legend.shape" 
                 @click="handleClick(legend, i)" 
                 height="1em" 
