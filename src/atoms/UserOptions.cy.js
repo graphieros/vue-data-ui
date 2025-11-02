@@ -14,7 +14,8 @@ describe('<UserOptions />', () => {
         hasSort: true,
         hasFullscreen: true,
         hasAnimation: true,
-        hasAnnotator: true
+        hasAnnotator: true,
+        hasSvg: true
       }
     });
   }
@@ -55,7 +56,8 @@ describe('<UserOptions />', () => {
       'user-options-sort',
       'user-options-fullscreen',
       'user-options-anim',
-      'user-options-annotator'
+      'user-options-annotator',
+      'user-options-svg'
     ].forEach(btn => {
       cy.get(`[data-cy="${btn}"]`).should('exist').and('be.visible');
     })
@@ -74,6 +76,7 @@ describe('<UserOptions />', () => {
         hasAnimation: true,
         hasAnnotator: true,
         hasFullscreen: true,
+        hasSvg: true,
         chartElement: {
           requestFullscreen: () => {},
           exitFullscreen: () => {}
@@ -116,6 +119,9 @@ describe('<UserOptions />', () => {
       cy.get('[data-cy="user-options-annotator"]').click().then(() => {
         expect(wrapper.emitted('toggleAnnotator')).to.exist
       })
+      cy.get('[data-cy="user-options-svg"]').click().then(() => {
+        expect(wrapper.emitted('generateSvg')).to.exist
+      })
     })
   })
 
@@ -133,6 +139,7 @@ describe('<UserOptions />', () => {
         hasAnimation: true,
         hasAnnotator: true,
         hasFullscreen: true,
+        hasSvg: true,
         titles: {
           open: 'open',
           close: 'close',
@@ -146,7 +153,8 @@ describe('<UserOptions />', () => {
           stack: 'stack',
           fullscreen: 'fullscreen',
           animation: 'animation',
-          annotator: 'annotator'
+          annotator: 'annotator',
+          svg: 'svg'
         }
       }
     }).then(() => {
@@ -194,6 +202,10 @@ describe('<UserOptions />', () => {
       cy.get('[data-cy="user-options-annotator"]').trigger('mouseenter').then(() => {
         cy.get('[data-cy="uo-tooltip"]').should('be.visible').and('contain', 'annotator')
         cy.get('[data-cy="user-options-annotator"]').trigger('mouseout')
+      })
+      cy.get('[data-cy="user-options-svg"]').trigger('mouseenter').then(() => {
+        cy.get('[data-cy="uo-tooltip"]').should('be.visible').and('contain', 'svg')
+        cy.get('[data-cy="user-options-svg"]').trigger('mouseout')
       })
     })
   })
