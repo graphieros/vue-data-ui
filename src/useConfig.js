@@ -261,6 +261,208 @@ export function useConfig() {
         merged: false,
     }
 
+    const vue_ui_stackline = {
+        loading: false,
+        debug: false,
+        theme: '',
+        responsive: false,
+        events: {
+            datapointEnter: null,
+            datapointLeave: null,
+            datapointClick: null,
+        },
+        customPalette: [],
+        useCssAnimation: false,
+        table: {
+            ...TABLE,
+            useDialog: false,
+            columnNames: {
+                period: 'Period',
+                total: 'Total'
+            },
+            th: TABLE_TH,
+            td: {
+                ...TABLE_TD,
+                roundingValue: 0
+            },
+        },
+        userOptions: USER_OPTIONS({
+            tooltip: true,
+            pdf: true,
+            csv: true,
+            img: true,
+            table: true,
+            labels: true,
+            fullscreen: true,
+            annotator: true,
+            svg: true
+        }),
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                height: 500,
+                width: 800,
+                padding: PADDING([12, 12, 12, 12]),
+                title: TITLE,
+                legend: {
+                    ...LEGEND,
+                    position: 'bottom'
+                },
+                zoom: {
+                    ...ZOOM,
+                    minimap: MINIMAP_BASE,
+                    preview: {
+                        enable: true,
+                        fill: '#CCCCCC50',
+                        stroke: '#6A6A6A',
+                        strokeWidth: 2,
+                        strokeDasharray: 0,
+                    },
+                    useDefaultFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is enabled and useDefaultFormat is false
+                    customFormat: null // overrides all if callback => string
+                },
+                highlighter: {
+                    color: COLOR_BLACK,
+                    opacity: 5,
+                    useLine: false,
+                    lineDasharray: 2,
+                    lineWidth: 1
+                },
+                tooltip: {
+                    ...TOOLTIP,
+                    showValue: true,
+                    showPercentage: true,
+                    roundingValue: 0,
+                    roundingPercentage: 0,
+                    showTimeLabel: true,
+                    showTotal: false,
+                    totalTranslation: 'Total',
+                    useDefaultTimeFormat: true,
+                    timeFormat: 'yyyy-MM-dd HH:mm:ss' // When datetimeFormatter is enabled and useDefaultFormat is false
+                },
+                grid: {
+                    scale: {
+                        ticks: 10,
+                        scaleMin: null, // Force min scale (defaults to dataset's min)
+                        scaleMax: null, // Force max scale (defaults to dataset's max)
+                    },
+                    frame: {
+                        show: false,
+                        stroke: COLOR_GREY_LIGHT,
+                        strokeWidth: 2,
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                        strokeDasharray: 0
+                    },
+                    x: {
+                        showAxis: true,
+                        showHorizontalLines: false,
+                        axisColor: COLOR_GREY_LIGHT,
+                        linesColor: COLOR_GREY_LIGHT,
+                        linesThickness: 1,
+                        linesStrokeDasharray: 0,
+                        axisThickness: 2,
+                        axisName: {
+                            show: true,
+                            text: '',
+                            fontSize: FONT._14,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            offsetY: 0,
+                        },
+                        timeLabels: {
+                            show: true,
+                            values: [],
+                            datetimeFormatter: AXIS_DATE_FORMATTER,
+                            offsetY: 0,
+                            rotation: 0,
+                            autoRotate: {
+                                enable: true,
+                                angle: -30
+                            },
+                            fontSize: FONT._14,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            showOnlyFirstAndLast: false,
+                            showOnlyAtModulo: false,
+                            modulo: 12
+                        }
+                    },
+                    y: {
+                        showAxis: true,
+                        showVerticalLines: false,
+                        linesColor: COLOR_GREY_LIGHT,
+                        linesThickness: 1,
+                        linesStrokeDasharray: 0,
+                        axisColor: COLOR_GREY_LIGHT,
+                        axisThickness: 2,
+                        axisName: {
+                            show: true,
+                            text: '',
+                            fontSize: FONT._14,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            offsetX: 0,
+                        },
+                        axisLabels: {
+                            formatter: null,
+                            show: true,
+                            color: COLOR_BLACK,
+                            fontSize: FONT._14,
+                            bold: false,
+                            rounding: 0
+                        }
+                    },
+                },
+                lines: {
+                    useArea: true,
+                    smooth: false,
+                    areaOpacity: 0.5,
+                    distributed: false,
+                    showDistributedPercentage: true,
+                    strokeWidth: 1,
+                    gradient: {
+                        show: true,
+                        intensity: 40
+                    },
+                    dot: {
+                        hideAboveMaxSerieLength: 62,
+                        useSerieColor: true,
+                        fill: COLOR_WHITE,
+                        strokeWidth: 0.5,
+                        radius: 4,
+                    },
+                    totalValues: {
+                        show: true,
+                        offsetY: 0,
+                        fontSize: FONT._16,
+                        bold: true,
+                        color: COLOR_BLACK
+                    },
+                    dataLabels: {
+                        hideAboveMaxSerieLength: 62,
+                        offsetY: 0,
+                        show: true,
+                        hideEmptyValues: true,
+                        hideUnderValue: null,
+                        hideEmptyPercentages: true,
+                        hideUnderPercentage: null,
+                        color: COLOR_BLACK,
+                        fontSize: FONT._14,
+                        bold: false,
+                        rounding: 0,
+                        prefix: '',
+                        suffix: '',
+                        formatter: null
+                    }
+                },
+            }
+        }
+    }
+
     const vue_ui_stackbar = {
         loading: false, // v3
         debug: false, // v3
@@ -6613,6 +6815,7 @@ export function useConfig() {
         vue_ui_world,
         vue_ui_ridgeline,
         vue_ui_chord,
+        vue_ui_stackline,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,

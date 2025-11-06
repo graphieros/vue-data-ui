@@ -65,7 +65,8 @@ declare module "vue-data-ui" {
         | VueUiCirclePackDatasetItem[]
         | VueUiWorldDataset
         | VueUiRidgelineDatasetItem[]
-        | VueUiChordDataset;
+        | VueUiChordDataset
+        | VueUiStacklineDatasetItem[];
 
     export type VueDataUiAnyConfig =
         | VueUi3dBarConfig
@@ -127,7 +128,8 @@ declare module "vue-data-ui" {
         | VueUiCirclePackConfig
         | VueUiWorldConfig
         | VueUiRidgelineConfig
-        | VueUiChordConfig;
+        | VueUiChordConfig
+        | VueUiStacklineConfig;
 
     export type VueDataUiProps = {
         loader?: VueDataUiLoader | null;
@@ -605,6 +607,8 @@ declare module "vue-data-ui" {
         toggleTooltip(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiTreemap: DefineComponent<
@@ -772,6 +776,8 @@ declare module "vue-data-ui" {
         toggleTooltip(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiGalaxy: DefineComponent<
@@ -1500,7 +1506,8 @@ declare module "vue-data-ui" {
         | "bringToBack"
         | "printer"
         | "save"
-        | "svg";
+        | "svg"
+        | "stackline";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -1677,6 +1684,8 @@ declare module "vue-data-ui" {
         toggleAnnotator(): void
         toggleTable(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiDonutEvolution: DefineComponent<
@@ -1952,6 +1961,8 @@ declare module "vue-data-ui" {
         toggleTooltip(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiRings: DefineComponent<
@@ -2180,10 +2191,18 @@ declare module "vue-data-ui" {
         width?: number;
     };
 
-    export const VueUiSparkStackbar: DefineComponent<{
-        config?: VueUiSparkStackbarConfig;
-        dataset: VueUiSparkStackbarDatasetItem[];
-    }>;
+    export type VueUiSparkStackbarExpose = {
+        showSeries(name: string): void
+        hideSeries(name: string): void
+    }
+
+    export const VueUiSparkStackbar: DefineComponent<
+        {
+            config?: VueUiSparkStackbarConfig;
+            dataset: VueUiSparkStackbarDatasetItem[];
+        },
+        VueUiSparkStackbarExpose
+    >;
 
     export type VueUiThermometerConfig = {
         debug?: boolean; // v3
@@ -3185,6 +3204,8 @@ declare module "vue-data-ui" {
         toggleTooltip(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiScatter: DefineComponent<
@@ -3794,6 +3815,8 @@ declare module "vue-data-ui" {
         toggleStack(): void
         toggleTable(): void
         toggleTooltip(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiXy: DefineComponent<
@@ -4016,6 +4039,8 @@ declare module "vue-data-ui" {
         toggleTable(): void
         toggleTooltip(): void
         autoSize(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiDonut: DefineComponent<
@@ -4225,6 +4250,8 @@ declare module "vue-data-ui" {
         toggleTable(): void
         toggleTooltip(): void
         autoSize(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiNestedDonuts: DefineComponent<
@@ -4376,6 +4403,8 @@ declare module "vue-data-ui" {
         toggleFullscreen(): void
         toggleTable(): void
         toggleTooltip(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiWaffle: DefineComponent<
@@ -4545,6 +4574,8 @@ declare module "vue-data-ui" {
         toggleAnnotator(): void
         toggleTooltip(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiRadar: DefineComponent<
@@ -4748,6 +4779,8 @@ declare module "vue-data-ui" {
         toggleTooltip(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiQuadrant: DefineComponent<
@@ -5256,6 +5289,8 @@ declare module "vue-data-ui" {
         toggleTooltip(): void
         toggleTable(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiOnion: DefineComponent<
@@ -5457,6 +5492,8 @@ declare module "vue-data-ui" {
         toggleAnnotator(): void
         toggleTooltip(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export type VueUiHorizontalBarExpose = VueUiVerticalBarExpose; // v3 renaming
@@ -7241,6 +7278,8 @@ declare module "vue-data-ui" {
         toggleStack(): void
         toggleTooltip(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiXyCanvas: DefineComponent<
@@ -7607,6 +7646,8 @@ declare module "vue-data-ui" {
         toggleTooltip(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiParallelCoordinatePlot: DefineComponent<
@@ -8039,6 +8080,8 @@ declare module "vue-data-ui" {
         toggleLabels(): void
         toggleTooltip(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiStackbar: DefineComponent<
@@ -8048,6 +8091,243 @@ declare module "vue-data-ui" {
             selectedXIndex?: number | null;
         },
         VueUiStackbarExpose
+    >;
+
+    export type VueUiStacklineDatapointItem = VueUiStackbarDatapointItem;
+
+    export type VueUiStacklineSeriesItem = VueUiStackbarSeriesItem;
+
+    export type VueUiStacklineDatasetItem = VueUiStackbarDatasetItem & {
+        standalone?: boolean; // If true, series will not be part of stacked series
+    }
+
+    export type VueUiStacklineConfig = {
+        loading?: boolean;
+        debug?: boolean;
+        theme?: Theme;
+        responsive?: boolean;
+        events?: {
+            datapointEnter?: VueUiStacklineEvent;
+            datapointLeave?: VueUiStacklineEvent;
+            datapointClick?: VueUiStacklineEvent;
+        };
+        customPalette?: string[];
+        useCssAnimation?: boolean;
+        table?: {
+            show?: boolean;
+            useDialog?: boolean;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                period?: string;
+                total?: string;
+            };
+            th: ChartTableCell;
+            td: ChartTableCell & {
+                roundingValue?: number;
+            };
+        };
+        userOptions?: ChartUserOptions;
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                height?: number;
+                width?: number;
+                padding?: ChartPadding;
+                title?: ChartTitle;
+                legend?: ChartBaseLegend & {
+                    backgroundColor?: string;
+                    position?: 'top' | 'bottom';
+                };
+                zoom?: ChartZoom & {
+                    preview?: {
+                        enable?: boolean;
+                        fill?: string;
+                        stroke?: string;
+                        strokeWidth?: number;
+                        strokeDasharray?: number;
+                    };
+                    useDefaultFormat?: boolean;
+                    timeFormat?: string;
+                    customFormat?:
+                        | null
+                        | ((params: MinimalCustomFormatParams<Array<VueUiStacklineDatapointItem & { absoluteIndex: number }>>) => string);
+                };
+                highlighter?: {
+                    color?: string;
+                    opacity?: number;
+                    useLine?: boolean;
+                    lineDasharray?: number;
+                    lineWidth?: number;
+                };
+                tooltip?: ChartTooltip & {
+                    showValue?: boolean;
+                    showPercentage?: boolean;
+                    roundingValue?: number;
+                    roundingPercentage?: number;
+                    customFormat?:
+                    | null
+                    | ((
+                        params: VueUiTooltipParams<
+                            VueUiStacklineDatapointItem[],
+                            VueUiStacklineSeriesItem[],
+                            VueUiStacklineConfig
+                        >
+                    ) => string);
+                    showTimeLabel?: boolean;
+                    useDefaultTimeFormat?: boolean;
+                    timeFormat?: string;
+                    showTotal?: boolean;
+                    totalTranslation?: string;
+                };
+                lines?: {
+                    useArea?: boolean; // Only applied on stacked series (!standalone)
+                    smooth?: boolean;
+                    areaOpacity?: number;
+                    distributed?: boolean;
+                    showDistributedPercentage?: boolean;
+                    strokeWidth?: number;
+                    gradient?: {
+                        show?: boolean;
+                        intensity?: number;
+                    };
+                    dot?: {
+                        hideAboveMaxSerieLength?: number;
+                        useSerieColor?: boolean;
+                        fill?: string;
+                        strokeWidth?: number;
+                        radius?: number;
+                    };
+                    totalValues?: {
+                        show?: boolean;
+                        offsetY?: boolean;
+                        fontSize?: number;
+                        bold?: boolean;
+                        color?: string;
+                    };
+                    dataLabels?: {
+                        hideAboveMaxSerieLength?: number;
+                        offsetY?: number;
+                        show?: boolean;
+                        hideEmptyValues?: boolean;
+                        hideUnderValue?: number | null;
+                        hideEmptyPercentages?: boolean;
+                        hideUnderPercentage?: number | null;
+                        color?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                        rounding?: number;
+                        prefix?: string;
+                        formatter?: Formatter;
+                    }
+                };
+                grid?: {
+                    frame?: ChartFrame;
+                    scale?: {
+                        ticks?: number;
+                        scaleMin?: number | null;
+                        scaleMax?: number | null;
+                    };
+                    x?: {
+                        showAxis?: boolean;
+                        showHorizontalLines?: boolean;
+                        linesColor?: string;
+                        linesThickness?: number;
+                        linesStrokeDasharray?: number;
+                        axisColor?: string;
+                        axisThickness?: number;
+                        axisName?: {
+                            show?: boolean;
+                            text?: string;
+                            fontSize?: number;
+                            color?: string;
+                            bold?: boolean;
+                            offsetY?: number;
+                        };
+                        timeLabels?: {
+                            show?: boolean;
+                            values?: Array<number | string>;
+                            datetimeFormatter?: AxisDateFormatter;
+                            offsetY?: number;
+                            rotation?: number;
+                            autoRotate?: {
+                                enable?: boolean;
+                                angle?: number;
+                            };
+                            fontSize?: number;
+                            color?: string;
+                            bold?: boolean;
+                            showOnlyFirstAndLast?: boolean;
+                            showOnlyAtModulo?: boolean;
+                            modulo?: number;
+                        };
+                    };
+                    y?: {
+                        showAxis?: boolean;
+                        showVerticalLines?: boolean;
+                        linesColor?: string;
+                        linesThickness?: number;
+                        linesStrokeDasharray?: number;
+                        axisColor?: string;
+                        axisThickness?: number;
+                        axisName?: {
+                            show?: boolean;
+                            text?: string;
+                            fontSize?: number;
+                            color?: string;
+                            bold?: boolean;
+                            offsetX?: number;
+                        };
+                        axisLabels?: {
+                            formatter?: Formatter;
+                            show?: boolean;
+                            color?: string;
+                            fontSize?: number;
+                            bold?: boolean;
+                            rounding?: number;
+                        };
+                    };
+                };
+            }
+        }
+    }
+
+    export type VueUiStacklineExpose = {
+        getData(): Promise<Array<{
+            absoluteIndex: number
+            color: string
+            height: number[],
+            horizontal_width: number[],
+            horizontal_x: number[],
+            horizontal_y: number[],
+            id: string
+            name: string
+            proportions: number[],
+            series: number[],
+            signedSeries: number[],
+            x: number[],
+            y: number[],
+            standalone?: boolean
+        }>>
+        getImage(options?: { scale?: number }): GetImagePromise
+        generateCsv(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleTable(): void
+        toggleLabels(): void
+        toggleTooltip(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiStackline: DefineComponent<
+        {
+            config?: VueUiStacklineConfig;
+            dataset: VueUiStacklineDatasetItem[];
+            selectedXIndex?: number | null;
+        },
+        VueUiStacklineExpose
     >;
 
     export type VueUiBulletSegment = {
@@ -8498,6 +8778,8 @@ declare module "vue-data-ui" {
         toggleTooltip(): void
         toggleTable(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiHistoryPlot: DefineComponent<
@@ -8944,6 +9226,8 @@ declare module "vue-data-ui" {
         toggleAnnotator(): void
         toggleTable(): void
         toggleFullscreen(): void
+        showSeries(name: string): void
+        hideSeries(name: string): void
     }
 
     export const VueUiRidgeline: DefineComponent<
@@ -9168,7 +9452,8 @@ declare module "vue-data-ui" {
         | VueUiCirclePackConfig
         | VueUiWorldConfig
         | VueUiRidgelineConfig
-        | VueUiChordConfig;
+        | VueUiChordConfig
+        | VueUiStacklineConfig;
 
     export type VueDataUiConfigKey =
         | "vue_ui_3d_bar"
@@ -9232,7 +9517,8 @@ declare module "vue-data-ui" {
         | "vue_ui_circle_pack"
         | "vue_ui_world"
         | "vue_ui_ridgeline"
-        | "vue_ui_chord";
+        | "vue_ui_chord"
+        | "vue_ui_stackline";
 
     export type VueDataUiWordCloudTransformCallback =
         | ((word: string) => string)

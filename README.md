@@ -8,7 +8,7 @@
 # vue-data-ui
 
 [![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
-[![Static Badge](https://img.shields.io/badge/components-63-blue)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-64-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -49,6 +49,7 @@ Available components
 - [VueUiRings](https://vue-data-ui.graphieros.com/docs#vue-ui-rings)
 - [VueUiScatter](https://vue-data-ui.graphieros.com/docs#vue-ui-scatter)
 - [VueUiStackbar](https://vue-data-ui.graphieros.com/docs#vue-ui-stackbar)
+- [VueUiStackline](https://vue-data-ui.graphieros.com/docs#vue-ui-stackline)
 - [VueUiStripPlot](https://vue-data-ui.graphieros.com/docs#vue-ui-strip-plot)
 - [VueUiThermometer](https://vue-data-ui.graphieros.com/docs#vue-ui-thermometer)
 - [VueUiTiremarks](https://vue-data-ui.graphieros.com/docs#vue-ui-tiremarks)
@@ -301,6 +302,7 @@ The following charts bear these slots:
 - VueUiScatter
 - VueUiSparkStackbar
 - VueUiStackbar
+- VueUiStackline
 - VueUiTreemap
 - VueUiHorizontalBar
 - VueUiWordCloud
@@ -470,6 +472,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiRings`                  | `VueUiRingsDatasetItem[]`                  | `VueUiRingsConfig`                  | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`                                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`, `#pattern`                                                                                    | ✅             | ✅     |
 | `VueUiScatter`                | `VueUiScatterDatasetItem[]`                | `VueUiScatterConfig`                | `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleTooltip` , `getImage`                                                                                 | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`                                                                                                | ✅             | ✅     |
 | `VueUiStackbar`               | `VueUiStackbarDatasetItem[]`               | `VueUiStackbarConfig`               | `@selectLegend`, `@selectDatapoint`, `@selectTimeLabel`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage`                                    | `#svg`, `#legend`, `#time-label`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`, `#pattern`                                                    | ✅             | ✅     |
+| `VueUiStackline`              | `VueUiStacklineDatasetItem[]`              | `VueUiStacklineConfig`              | `@selectLegend`, `@selectDatapoint`, `@selectTimeLabel`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage`                                    | `#svg`, `#legend`, `#time-label`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`, `#pattern`                                                    | ✅             | ✅     |
 | `VueUiStripPlot`              | `VueUiStripPlotDataset[]`                  | `VueUiStripPlotConfig`              | `@selectDatapoint`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip` , `getImage`                                                                         | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`                                                                                                | ✅             | ✅     |
 | `VueUiThermometer`            | `VueUiThermometerDataset`                  | `VueUiThermometerConfig`            | `generatePdf`, `generateImage` , `getImage`                                                                                                                                                                       | `#svg`, `#watermark`, `#chart-background`                                                                                                                                                | ❌             | ✅     |
 | `VueUiTiremarks`              | `VueUiTiremarksDataset`                    | `VueUiTiremarksConfig`              | `generatePdf`, `generateImage` , `getImage`                                                                                                                                                                       | `#svg`, `#legend`, `#watermark`, `#chart-background`                                                                                                                                     | ❌             | ✅     |
@@ -654,6 +657,7 @@ User options actions available per chart:
 | VueUiSparkgauge             | (no user options menu)                                                                                                    |
 | VueUiSparkline              | (no user options menu)                                                                                                    |
 | VueUiStackbar               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
+| VueUiStackline              | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
 | VueUiStripPlot              | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
 | VueUiTableHeatmap           | optionPdf, optionImg, optionCsv, optionFullscreen                                                                         |
 | VueUiTableSparkline         | optionPdf, optionImg, optionCsv, optionFullscreen                                                                         |
@@ -730,6 +734,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiSparkStackbar
 - VueUiSparkbar
 - VueUiStackbar
+- VueUiStackline
 - VueUiStripPlot
 - VueUiTableSparkline
 - VueUiThermometer
@@ -787,6 +792,7 @@ However the folowing charts can be made fully responsive, making them better to 
 | VueUiSparkgauge             | -                              |
 | VueUiSparkline              | ✅                             |
 | VueUiStackbar               | ✅                             |
+| VueUiStackline              | ✅                             |
 | VueUiStripPlot              | ✅                             |
 | VueUiTableHeatmap           | -                              |
 | VueUiTableSparkline         | -                              |
@@ -901,6 +907,7 @@ The #pattern slot is available on the following components:
 - VueUiRidgeline
 - VueUiRings
 - VueUiStackbar
+- VueUiStackline
 - VueUiHorizontalBar
 - VueUiWaffle
 - VueUiWorld
@@ -1117,6 +1124,7 @@ Below is a table of the places where such line breaks can be used:
 | VueUiQuickChart             | Time labels (x axis) | config.xyPeriods                                       |
 | VueUiRidgeline              | Time labels (x axis) | config.style.chart.xAxis.labels.values                 |
 | VueUiStackbar               | Time labels (x axis) | config.style.chart.grid.x.timeLabels.values            |
+| VueUiStackline              | Time labels (x axis) | config.style.chart.grid.x.timeLabels.values            |
 | VueUiStripPlot              | x axis labels        | dataset names                                          |
 
 ## PDF generation
@@ -1237,6 +1245,7 @@ function hideSeriesByName(name) {
 - VueUiScatter
 - VueUiSparkStackbar
 - VueUiStackbar
+- VueUiStackline
 - VueUiTreemap
 - VueUiWaffle
 - VueUiXy

@@ -2438,6 +2438,42 @@ export const components = [
         },
         wrapperClass: ".vue-ui-stackbar",
     },
+        {
+        name: "VueUiStackline",
+        dataset: [
+            {
+                name: "Series 1",
+                series: [10, 20, 30, 10, 20, 4, 5],
+            },
+            {
+                name: "Series 2",
+                series: [20, 40, -60, 20, 10],
+            },
+            {
+                name: "Series 3",
+                series: [20, 40, 60, 20, 10],
+            },
+        ],
+        config: {
+            style: {
+                chart: {
+                    grid: {
+                        x: {
+                            axisName: { text: "x" },
+                        },
+                        y: {
+                            axisName: { text: "y" },
+                        },
+                    },
+                    title: {
+                        text: "Title",
+                        subtitle: { text: "Subtitle" },
+                    },
+                },
+            },
+        },
+        wrapperClass: ".vue-ui-stackline",
+    },
     {
         name: "VueUiBullet",
         dataset: {
