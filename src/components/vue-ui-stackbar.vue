@@ -176,6 +176,9 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                         dataLabels: { show: false },
                     },
                     grid: {
+                        frame: {
+                            stroke: '#6A6A6A'
+                        },
                         scale: {
                             scaleMin: 0,
                             scaleMax: 40
@@ -746,7 +749,12 @@ const datasetTotals = computed(() => {
 
 const datasetTotalsMinimap = computed(() => {
     if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
-    return sumSeries(unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)))
+    return sumSeries(unmutableDataset.value.map(ds => {
+        return {
+            ...ds,
+            series: ds.series.map(d => d ?? 0)
+        }
+    }).filter(ds => !segregated.value.includes(ds.id)))
 });
 
 const allMinimaps = computed(() => {
@@ -1680,8 +1688,7 @@ function selectX({ seriesIndex, datapoint }) {
 
 function getZeroPositions() {
     const y0 = yLabels.value?.[0]?.zero ?? drawingArea.value.bottom;
-    const x0 = yLabels.value?.[0]?.horizontal_zero ?? drawingArea.value.left;
-    return { y0, x0 };
+    return { y0 };
 }
 
 function placeLabelTotalY(index) {

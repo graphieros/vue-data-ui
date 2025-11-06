@@ -59,7 +59,7 @@ import ArenaVueUiRidgeline from "../TestingArena/ArenaVueUiRidgeline.vue";
 import ArenaVueUiChord from "../TestingArena/ArenaVueUiChord.vue"
 import ArenaVueUiDashboard from "../TestingArena/ArenaVueUiDashboard.vue";
 import ArenaVueUiAnnotator from "../TestingArena/ArenaVueUiAnnotator.vue";
-
+import ArenaVueUiStackline from "../TestingArena/ArenaVueUiStackline.vue";
 
   /**
    * TODO: migrate manual testing for the following:
@@ -68,6 +68,7 @@ import ArenaVueUiAnnotator from "../TestingArena/ArenaVueUiAnnotator.vue";
    */
 
 const mapping = ref({
+  VueUiStackline: markRaw(ArenaVueUiStackline),
   VueUiXy: markRaw(ArenaVueUiXy), 
   VueUiDonut: markRaw(ArenaVueUiDonut),
   VueUiTreemap: markRaw(ArenaVueUiTreemap),
@@ -129,7 +130,7 @@ const mapping = ref({
 })
 
 const options = computed(() => Object.keys(mapping.value));
-const selectedComponent = ref('VueUiWordCloud');
+const selectedComponent = ref('VueUiStackline');
 
 /**
  * Legacy testing arena where some non chart components can be tested

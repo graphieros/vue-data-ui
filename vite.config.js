@@ -72,6 +72,7 @@ const entries = {
   "components/vue-ui-carousel-table": resolve(__dirname, "src/entries/vue-ui-carousel-table.js"),
   "components/vue-ui-gizmo": resolve(__dirname, "src/entries/vue-ui-gizmo.js"),
   "components/vue-ui-stackbar": resolve(__dirname, "src/entries/vue-ui-stackbar.js"),
+  "components/vue-ui-stackline": resolve(__dirname, "src/entries/vue-ui-stackline.js"),
   "components/vue-ui-bullet": resolve(__dirname, "src/entries/vue-ui-bullet.js"),
   "components/vue-ui-funnel": resolve(__dirname, "src/entries/vue-ui-funnel.js"),
   "components/vue-ui-history-plot": resolve(__dirname, "src/entries/vue-ui-history-plot.js"),

@@ -270,13 +270,18 @@ describe("treeShake", () => {
                     bool0: false
                 },
             },
-            key4: {}
+            key4: {},
+            key5: [],
+            key6: ['A', null, 1],
+            key7: null
         };
 
         const userConfig0 = {};
 
         const userConfig1 = {
             key1: "",
+            key6: ['B', true],
+            key7: true
         };
 
         const userConfig2 = {
@@ -297,23 +302,7 @@ describe("treeShake", () => {
             }
         };
 
-        expect(treeShake({ defaultConfig, userConfig: userConfig0 })).toStrictEqual(
-            {
-                key1: "val1",
-                key2: {
-                    subkey: "subkey",
-                },
-                key3: {
-                    subkey: {
-                        subsubkey: "subsubkey",
-                        withNull: null,
-                        bool1: true,
-                        bool0: false
-                    },
-                },
-                key4: {}
-            }
-        );
+        expect(treeShake({ defaultConfig, userConfig: userConfig0 })).toStrictEqual(defaultConfig);
 
         expect(treeShake({ defaultConfig, userConfig: userConfig1 })).toStrictEqual(
             {
@@ -329,7 +318,10 @@ describe("treeShake", () => {
                         bool0: false
                     },
                 },
-                key4: {}
+                key4: {},
+                key5: [],
+                key6: ['B', true],
+                key7: true
             }
         );
 
@@ -347,7 +339,10 @@ describe("treeShake", () => {
                         bool0: false
                     },
                 },
-                key4: {}
+                key4: {},
+                key5: [],
+                key6: ['A', null, 1],
+                key7: null
             }
         );
 
@@ -367,7 +362,10 @@ describe("treeShake", () => {
                 },
                 key4: {
                     A: '1',
-                }
+                },
+                key5: [],
+                key6: ['A', null, 1],
+                key7: null
             }
         );
     });

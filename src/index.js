@@ -56,6 +56,7 @@ export { default as VueUiXyCanvas } from "./components/vue-ui-xy-canvas.vue";
 export { default as VueUiCarouselTable } from "./components/vue-ui-carousel-table.vue";
 export { default as VueUiGizmo } from "./components/vue-ui-gizmo.vue";
 export { default as VueUiStackbar } from "./components/vue-ui-stackbar.vue";
+export { default as VueUiStackline } from "./components/vue-ui-stackline.vue";
 export { default as VueUiBullet } from "./components/vue-ui-bullet.vue";
 export { default as VueUiFunnel } from "./components/vue-ui-funnel.vue";
 export { default as VueUiHistoryPlot } from "./components/vue-ui-history-plot.vue";
