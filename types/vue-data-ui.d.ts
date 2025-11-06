@@ -8093,11 +8093,18 @@ declare module "vue-data-ui" {
         VueUiStackbarExpose
     >;
 
-    export type VueUiStacklineDatapointItem = VueUiStackbarDatapointItem;
+    export type VueUiStacklineDatapointItem = VueUiStackbarDatapointItem & {
+        shape: Shape;
+        standalone: boolean;
+    };
 
-    export type VueUiStacklineSeriesItem = VueUiStackbarSeriesItem;
+    export type VueUiStacklineSeriesItem = VueUiStackbarSeriesItem & {
+        shape: Shape;
+        standalone: boolean;
+    };
 
     export type VueUiStacklineDatasetItem = VueUiStackbarDatasetItem & {
+        shape?: Shape;
         standalone?: boolean; // If true, series will not be part of stacked series
     }
 
@@ -8201,7 +8208,7 @@ declare module "vue-data-ui" {
                     };
                     totalValues?: {
                         show?: boolean;
-                        offsetY?: boolean;
+                        offsetY?: number;
                         fontSize?: number;
                         bold?: boolean;
                         color?: string;
