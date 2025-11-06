@@ -1507,7 +1507,7 @@ declare module "vue-data-ui" {
         | "printer"
         | "save"
         | "svg"
-        | "stackline";
+        | "chartStackline";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
