@@ -285,6 +285,14 @@ watch(() => props.config, (_newCfg) => {
     mutableConfig.value.dataLabels.show = FINAL_CONFIG.value.style.chart.lines.dataLabels.show;
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+    defaultSizes.value.width = FINAL_CONFIG.value.style.chart.width;
+    defaultSizes.value.height = FINAL_CONFIG.value.style.chart.height;
+    defaultSizes.value.paddingRatio = {
+        top: FINAL_CONFIG.value.style.chart.padding.top / FINAL_CONFIG.value.style.chart.height,
+        right: FINAL_CONFIG.value.style.chart.padding.right / FINAL_CONFIG.value.style.chart.width,
+        bottom: FINAL_CONFIG.value.style.chart.padding.bottom / FINAL_CONFIG.value.style.chart.height,
+        left: FINAL_CONFIG.value.style.chart.padding.left / FINAL_CONFIG.value.style.chart.width,
+    }
 
     normalizeSlicerWindow();
 }, { deep: true });
@@ -1548,7 +1556,7 @@ const tooltipContent = computed(() => {
 
         return `
         <div style="display:flex;flex-direction:row;align-items:center;gap:4px">
-            <div style="width:20px;height:20px">${shapeSvg(ds)}</div>
+            <div style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;">${shapeSvg(ds)}</div>
             ${ds.name}${showValue || withPct ? ':' : ''} 
             ${showValue ? applyDataLabel(
             FINAL_CONFIG.value.style.chart.lines.dataLabels.formatter,
