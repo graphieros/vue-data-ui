@@ -128,7 +128,7 @@ app.component("VueUiRadar", VueUiRadar);
 app.mount("#app");
 ```
 
-Or you can import just what you need in your files:
+Or you can import just what you need into your files:
 
 ```js
 <script setup>import {(VueUiRadar, VueUiXy)} from "vue-data-ui";</script>
@@ -208,7 +208,7 @@ customFormat: ({ seriesIndex, datapoint, series, config }) => {
 Data labels can be customized using the `formatter` config attribute (since v2.3.29 on all chart components):
 
 ```
-// the formatter attribute is generally placed under label or dataLabel config attribute objects
+// the formatter attribute is generally placed under the label or dataLabel config attribute objects
 
 const config = ref({
   formatter: ({ value, config }) => {
@@ -270,7 +270,7 @@ It is recommended to set the show legend config attribute to false, to hide the 
 ## Tooltip #tooltip-before & #tooltip-after slots
 
 Customize tooltip contents with #tooltip-before and #tooltip-after slots.
-It is that easy to include an image, another chart or any other content into your tooltips. It's an alternative to the config option tooltip.customFormat, in case richer tooltip content is needed.
+Is it that easy to include an image, another chart or any other content into your tooltips. It's an alternative to the config option tooltip.customFormat, in case richer tooltip content is needed.
 
 Both slots expose the following object:
 
@@ -333,13 +333,13 @@ The following charts bear these slots:
   </template>
   <template #tooltip-after={ datapoint, seriesIndex, dataset, config }">
     <div>
-      This content shows last
+      This content shows the last
     </div>
   </template>
 </VueUiDonut>
 ```
 
-The #tooltip-before & #tooltip-after slots also works when using the VueDataUi universal component, if the component it wraps supports them.
+The #tooltip-before & #tooltip-after slots also work when using the VueDataUi universal component, if the component it wraps supports them.
 
 ## Add a watermark using the #watermark slot
 
@@ -539,8 +539,8 @@ All names of available icons are available in the vue-data-ui.d.ts file under th
 
 # User options
 
-User options menu is accessible in the burger menu located on the top right of charts, and visible by default.
-To hide user options menu, set config.userOptions.show to false:
+User options menu is accessible in the burger menu located on the top right of the charts, and visible by default.
+To hide the user options menu, set config.userOptions.show to false:
 
 ```js
 const config = ref({
@@ -551,7 +551,7 @@ const config = ref({
 })
 ```
 
-User options menu can be set to appear only when hovering the component:
+The user options menu can be set to appear only when hovering over the component:
 
 ```js
 const config = ref({
@@ -563,7 +563,7 @@ const config = ref({
 });
 ```
 
-Predefined actions in user options menu depend on the type of chart. Some charts have more or less actions available. Action buttons contain an predefined icons by default.
+Predefined actions in the user options menu depend on the type of chart. Some charts have more or fewer actions available. Action buttons contain predefined icons by default.
 
 To hide a given action, set the userOption.buttons, for example:
 
@@ -596,7 +596,7 @@ What happens when the button is clicked is taken care of by the component, excep
 </VueUiDonut>
 ```
 
-You can pass a callback trhough the config, for each button, to override the default behavior:
+You can pass a callback through the config, for each button, to override the default behavior:
 
 ```ts
 const config = {
@@ -611,7 +611,7 @@ const config = {
       csv: (csvStr: string) => {
         console.log(csvStr);
       },
-      // the other atributes also have the same names as the buttons
+      // the other attributes also have the same names as the buttons
     },
   },
 };
@@ -752,7 +752,7 @@ Accepted color formats: HEX, RGB, HSL, named colors.
 # Responsive charts
 
 By default, all charts will scale to the width of their container.
-However the folowing charts can be made fully responsive, making them better to use in resizable containers:
+However the following charts can be made fully responsive, making them better to use in resizable containers:
 
 | Component                   | Responsive feature implemented |
 | --------------------------- | ------------------------------ |
@@ -827,7 +827,7 @@ The following charts use the LTTB algorithm (Largest-Triangle-Three-Bucket) beyo
 | Component       | Default Threshold | Remark                                                    |
 | --------------- | ----------------- | --------------------------------------------------------- |
 | VueUiXy         | 1095              |                                                           |
-| VueUiXyCanvas   | 10000             | Since this chart uses canvas, threhsold can be set higher |
+| VueUiXyCanvas   | 10000             | Since this chart uses canvas, the threshold can be set higher |
 | VueUiQuadrant   | 1095              |                                                           |
 | VueUiScatter    | 1095              |                                                           |
 | VueUiSparkline  | 1095              |                                                           |
@@ -884,7 +884,7 @@ A pattern element must be used inside this slot. It will be injected inside a de
 ```html
 <VueUiDonut :config="config" :dataset="dataset">
   <template #pattern="{ seriesIndex, patternId }">
-    <!-- Apply a patattern on the first datapoint only -->
+    <!-- Apply a pattern on the first datapoint only -->
     <pattern
       v-if="seriesIndex === 0"
       :id="patternId"
@@ -913,7 +913,7 @@ The #pattern slot is available on the following components:
 - VueUiWorld
 - VueUiXy
 
-A set of 12 readymade patterns are available through the VueUiPattern component:
+A set of 12 readymade patterns is available through the VueUiPattern component:
 
 ```js
 import { VueUiPattern } from "vue-data-ui";
@@ -956,7 +956,7 @@ List of available patterns:
 
 # Utility functions
 
-A set of uility functions is available:
+A set of utility functions is available:
 
 ```js
 import {
@@ -1111,7 +1111,7 @@ const merged = mergeConfigs({
 
 ## Multiline data labels
 
-Some components will display labels on mutliple lines when the provided text contains a line break. (example: "I contain\na line break").
+Some components will display labels on multiple lines when the provided text contains a line break. (example: "I contain\na line break").
 Below is a table of the places where such line breaks can be used:
 
 | Component                   | Label displayed      | Where to use line breaks                               |
@@ -1129,7 +1129,7 @@ Below is a table of the places where such line breaks can be used:
 
 ## PDF generation
 
-This package requires jspdf as a peer dependency. Please install it in your project if you intend on using the PDF printing feature.
+This package requires jspdf as a peer dependency. Please install it in your project if you intend to use the PDF printing feature.
 
 ## `useObjectBindings`
 
