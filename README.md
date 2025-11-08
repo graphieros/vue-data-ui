@@ -269,8 +269,8 @@ It is recommended to set the show legend config attribute to false, to hide the 
 
 ## Tooltip #tooltip-before & #tooltip-after slots
 
-Customize tooltip contents with #tooltip-before and #tooltip-after slots.
-Is it that easy to include an image, another chart or any other content into your tooltips. It's an alternative to the config option tooltip.customFormat, in case richer tooltip content is needed.
+Customize tooltip contents with #tooltip-before and #tooltip-after slots, to include an image, another chart or any other rich content into your tooltips.
+It's an alternative to the config option `tooltip.customFormat`, in case richer tooltip content is needed.
 
 Both slots expose the following object:
 
@@ -824,14 +824,14 @@ const config = ref({
 Very large datasets (> 5k or > 10k datapoints) will cause the browsers rendering engines to slow down, caused by too many SVG DOM elements to render.
 The following charts use the LTTB algorithm (Largest-Triangle-Three-Bucket) beyond a certain threshold to downsample the rendered dataset while preserving its shape. These components are the most susceptible to be used with very large datasets:
 
-| Component       | Default Threshold | Remark                                                    |
-| --------------- | ----------------- | --------------------------------------------------------- |
-| VueUiXy         | 1095              |                                                           |
+| Component       | Default Threshold | Remark                                                        |
+| --------------- | ----------------- | ------------------------------------------------------------- |
+| VueUiXy         | 1095              |                                                               |
 | VueUiXyCanvas   | 10000             | Since this chart uses canvas, the threshold can be set higher |
-| VueUiQuadrant   | 1095              |                                                           |
-| VueUiScatter    | 1095              |                                                           |
-| VueUiSparkline  | 1095              |                                                           |
-| VueUiSparkTrend | 1095              |                                                           |
+| VueUiQuadrant   | 1095              |                                                               |
+| VueUiScatter    | 1095              |                                                               |
+| VueUiSparkline  | 1095              |                                                               |
+| VueUiSparkTrend | 1095              |                                                               |
 
 The downsample threshold for each component can be set in the config prop passed to components:
 
