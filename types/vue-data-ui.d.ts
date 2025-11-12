@@ -393,6 +393,7 @@ declare module "vue-data-ui" {
     export type Theme =
         | ""
         | "zen"
+        | "dark"
         | "hack"
         | "concrete"
         | "celebration"
