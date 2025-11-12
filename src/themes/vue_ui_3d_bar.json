@@ -1,0 +1,216 @@
+{
+    "default": {},
+    "dark": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "box": {
+                    "stroke": "#5A5A5A"
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                },
+                "legend": {
+                    "color": "#CCCCCC"
+                },
+                "dataLabel": {
+                    "color": "#CCCCCC"
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
+    "celebration": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242",
+                "bar": {
+                    "color": "#D32F2F"
+                },
+                "box": {
+                    "stroke": "#5D4037"
+                },
+                "title": {
+                    "color": "#424242",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                },
+                "legend": {
+                    "color": "#424242"
+                },
+                "dataLabel": {
+                    "color": "#424242"
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            },
+            "td": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            }
+        }
+    },
+    "celebrationNight": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD",
+                "bar": {
+                    "color": "#D32F2F"
+                },
+                "box": {
+                    "stroke": "#5D4037"
+                },
+                "title": {
+                    "color": "#FFF8E1",
+                    "subtitle": {
+                        "color": "#BDBDBD"
+                    }
+                },
+                "legend": {
+                    "color": "#BDBDBD"
+                },
+                "dataLabel": {
+                    "color": "#BDBDBD"
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD"
+            },
+            "td": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD"
+            }
+        }
+    },
+    "hack": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "bar": {
+                    "color": "#66CC66"
+                },
+                "box": {
+                    "stroke": "#333333"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "legend": {
+                    "color": "#99AA99"
+                },
+                "dataLabel": {
+                    "color": "#AACCAA"
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#AACCAA"
+            }
+        }
+    },
+    "zen": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "bar": {
+                    "color": "#B9B99D"
+                },
+                "box": {
+                    "stroke": "#DCDFE7"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "legend": {
+                    "color": "#99AA99"
+                },
+                "dataLabel": {
+                    "color": "#A0AC94"
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8F837A"
+            },
+            "td": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8F837A"
+            }
+        }
+    },
+    "concrete": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "bar": {
+                    "color": "#4A6A75"
+                },
+                "box": {
+                    "stroke": "#DEE1DE"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                },
+                "legend": {
+                    "color": "#61747E"
+                },
+                "dataLabel": {
+                    "color": "#61747E"
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            },
+            "td": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            }
+        }
+    }
+}

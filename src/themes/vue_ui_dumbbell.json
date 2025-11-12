@@ -1,0 +1,316 @@
+{
+    "default": {},
+    "dark": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "comparisonLines": {
+                    "rectColor": "#CCCCCC",
+                    "labelColor": "#CCCCCC"
+                },
+                "plots": {
+                    "stroke": "#1A1A1A"
+                },
+                "grid": {
+                    "horizontalGrid": {
+                        "stroke": "#4A4A4A"
+                    },
+                    "verticalGrid": {
+                        "stroke": "#4A4A4A"
+                    }
+                },
+                "highlighter": {
+                    "color": "#CCCCCC"
+                },
+                "labels": {
+                    "yAxisLabels": {
+                        "color": "#CCCCCC"
+                    },
+                    "xAxisLabels": {
+                        "color": "#CCCCCC"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC"
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
+    "celebration": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242",
+                "plots": {
+                    "startColor": "#F57C00",
+                    "endColor": "#D32F2F",
+                    "stroke": "#FFF8E1"
+                },
+                "grid": {
+                    "horizontalGrid": {
+                        "stroke": "#5D403780"
+                    },
+                    "verticalGrid": {
+                        "stroke": "#5D403780"
+                    }
+                },
+                "labels": {
+                    "yAxisLabels": {
+                        "color": "#424242"
+                    },
+                    "xAxisLabels": {
+                        "color": "#424242"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#FFF8E1",
+                    "color": "#424242"
+                },
+                "title": {
+                    "color": "#424242",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            },
+            "td": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            }
+        }
+    },
+    "celebrationNight": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD",
+                "comparisonLines": {
+                    "rectColor": "#CCCCCC",
+                    "labelColor": "#CCCCCC"
+                },
+                "highlighter": {
+                    "color": "#CCCCCC"
+                },
+                "plots": {
+                    "startColor": "#F57C00",
+                    "endColor": "#D32F2F",
+                    "stroke": "#1E1E1E"
+                },
+                "grid": {
+                    "horizontalGrid": {
+                        "stroke": "#5D4037"
+                    },
+                    "verticalGrid": {
+                        "stroke": "#5D4037"
+                    }
+                },
+                "labels": {
+                    "yAxisLabels": {
+                        "color": "#BDBDBD"
+                    },
+                    "xAxisLabels": {
+                        "color": "#BDBDBD"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#1E1E1E",
+                    "color": "#BDBDBD"
+                },
+                "title": {
+                    "color": "#FFF8E1",
+                    "subtitle": {
+                        "color": "#BDBDBD"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD"
+            },
+            "td": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD"
+            }
+        }
+    },
+    "hack": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "plots": {
+                    "startColor": "#008000",
+                    "endColor": "#00FF00",
+                    "stroke": "#1A1A1A"
+                },
+                "comparisonLines": {
+                    "rectColor": "#CCCCCC",
+                    "labelColor": "#99CC99"
+                },
+                "highlighter": {
+                    "color": "#CCCCCC"
+                },
+                "grid": {
+                    "horizontalGrid": {
+                        "stroke": "#5F6A5F"
+                    },
+                    "verticalGrid": {
+                        "stroke": "#5F6A5F"
+                    }
+                },
+                "labels": {
+                    "yAxisLabels": {
+                        "color": "#99CC99"
+                    },
+                    "xAxisLabels": {
+                        "color": "#99CC99"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#AACCAA"
+            }
+        }
+    },
+    "zen": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "plots": {
+                    "startColor": "#DCB482",
+                    "endColor": "#B9B99D",
+                    "stroke": "#fbfafa"
+                },
+                "grid": {
+                    "horizontalGrid": {
+                        "show": false
+                    },
+                    "verticalGrid": {
+                        "show": false
+                    }
+                },
+                "labels": {
+                    "yAxisLabels": {
+                        "color": "#8A9892"
+                    },
+                    "xAxisLabels": {
+                        "show": false
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8F837A"
+            },
+            "td": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8F837A"
+            }
+        }
+    },
+    "concrete": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "plots": {
+                    "startColor": "#718885",
+                    "endColor": "#7DA9B5",
+                    "stroke": "#404C5A"
+                },
+                "grid": {
+                    "horizontalGrid": {
+                        "stroke": "#829C98"
+                    },
+                    "verticalGrid": {
+                        "stroke": "#829C98"
+                    }
+                },
+                "labels": {
+                    "yAxisLabels": {
+                        "color": "#61747E"
+                    },
+                    "xAxisLabels": {
+                        "color": "#61747E"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#61747E"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            },
+            "td": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            }
+        }
+    }
+}

@@ -1,0 +1,105 @@
+{
+    "default": {},
+    "dark": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "dataLabel": {
+                "color": "#CCCCCC"
+            },
+            "trendLabel": {
+                "color": "#CCCCCC"
+            }
+        }
+    },
+    "celebration": {
+        "style": {
+            "backgroundColor": "#FFF8E1",
+            "line": {
+                "smooth": false
+            },
+            "dataLabel": {
+                "color": "#424242"
+            },
+            "trendLabel": {
+                "color": "#424242"
+            }
+        }
+    },
+    "celebrationNight": {
+        "style": {
+            "backgroundColor": "#1E1E1E",
+            "line": {
+                "smooth": false
+            },
+            "dataLabel": {
+                "color": "#BDBDBD"
+            },
+            "trendLabel": {
+                "color": "#BDBDBD"
+            }
+        }
+    },
+    "hack": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "line": {
+                "stroke": "#00FF00",
+                "smooth": false
+            },
+            "dataLabel": {
+                "color": "#AACCAA"
+            },
+            "trendLabel": {
+                "color": "#99CC99"
+            },
+            "arrow": {
+                "colors": {
+                    "positive": "#66CC66",
+                    "negative": "#196619"
+                }
+            }
+        }
+    },
+    "zen": {
+        "style": {
+            "backgroundColor": "#fbfafa",
+            "line": {
+                "stroke": "#B9B99D"
+            },
+            "dataLabel": {
+                "color": "#8A9892"
+            },
+            "trendLabel": {
+                "color": "#99CC99"
+            },
+            "arrow": {
+                "colors": {
+                    "positive": "#B9B99D",
+                    "negative": "#C09E85",
+                    "neutral": "#A5AFC1"
+                }
+            }
+        }
+    },
+    "concrete": {
+        "style": {
+            "backgroundColor": "#f6f6fb",
+            "line": {
+                "stroke": "#4A6A75"
+            },
+            "dataLabel": {
+                "color": "#61747E"
+            },
+            "trendLabel": {
+                "color": "#8A9892"
+            },
+            "arrow": {
+                "colors": {
+                    "positive": "#4A6A75",
+                    "negative": "#C09E85",
+                    "neutral": "#ABB1BC"
+                }
+            }
+        }
+    }
+}

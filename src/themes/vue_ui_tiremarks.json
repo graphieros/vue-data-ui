@@ -1,0 +1,143 @@
+{
+    "default": {},
+    "dark": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "layout": {
+                    "inactiveColor": "#4A4A4A"
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        }
+    },
+    "celebration": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242",
+                "layout": {
+                    "crescendo": false,
+                    "inactiveColor": "#5D403760",
+                    "activeColor": "#D32F2F",
+                    "ticks": {
+                        "gradient": {
+                            "shiftHueIntensity": 0
+                        }
+                    }
+                },
+                "title": {
+                    "color": "#424242",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        }
+    },
+    "celebrationNight": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD",
+                "layout": {
+                    "crescendo": false,
+                    "inactiveColor": "#5D403760",
+                    "activeColor": "#D32F2F",
+                    "ticks": {
+                        "gradient": {
+                            "shiftHueIntensity": 0
+                        }
+                    }
+                },
+                "title": {
+                    "color": "#FFF8E1",
+                    "subtitle": {
+                        "color": "#BDBDBD"
+                    }
+                }
+            }
+        }
+    },
+    "hack": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "layout": {
+                    "crescendo": false,
+                    "inactiveColor": "#333333",
+                    "activeColor": "#66CC66",
+                    "ticks": {
+                        "gradient": {
+                            "shiftHueIntensity": 15
+                        }
+                    }
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        }
+    },
+    "zen": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "layout": {
+                    "crescendo": true,
+                    "curved": true,
+                    "curveAngleX": 5,
+                    "curveAngleY": 5,
+                    "inactiveColor": "#F7EDE2",
+                    "activeColor": "#B1A7AD",
+                    "ticks": {
+                        "gradient": {
+                            "shiftHueIntensity": 15
+                        }
+                    }
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        }
+    },
+    "concrete": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "layout": {
+                    "crescendo": false,
+                    "inactiveColor": "#BBCBC7",
+                    "activeColor": "#6C94A0",
+                    "ticks": {
+                        "gradient": {
+                            "shiftHueIntensity": 10
+                        }
+                    }
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                }
+            }
+        }
+    }
+}

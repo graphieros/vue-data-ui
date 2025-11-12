@@ -1,0 +1,183 @@
+{
+    "default": {},
+    "dark": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "bar": {
+                "gradient": {
+                    "underlayerColor": "#FFFFFF"
+                }
+            },
+            "legend": {
+                "name": {
+                    "color": "#CCCCCC"
+                },
+                "value": {
+                    "color": "#CCCCCC"
+                },
+                "percentage": {
+                    "color": "#CCCCCC"
+                }
+            },
+            "title": {
+                "color": "#CCCCCC",
+                "subtitle": {
+                    "color": "#757575"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#1A1A1A",
+                "backgroundOpacity": 70,
+                "color": "#CCCCCC",
+                "borderColor": "#5A5A5A"
+            }
+        }
+    },
+    "celebration": {
+        "style": {
+            "backgroundColor": "#FFF8E1",
+            "bar": {
+                "gradient": {
+                    "underlayerColor": "#FFF8E1"
+                }
+            },
+            "legend": {
+                "name": {
+                    "color": "#424242"
+                },
+                "value": {
+                    "color": "#424242"
+                },
+                "percentage": {
+                    "color": "#424242"
+                }
+            },
+            "title": {
+                "color": "#424242",
+                "subtitle": {
+                    "color": "#757575"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#FFECB3",
+                "backgroundOpacity": 30,
+                "color": "#424242",
+                "borderColor": "#FF8A65"
+            }
+        }
+    },
+    "celebrationNight": {
+        "style": {
+            "backgroundColor": "#1E1E1E",
+            "bar": {
+                "gradient": {
+                    "underlayerColor": "#FFF8E1"
+                }
+            },
+            "legend": {
+                "name": {
+                    "color": "#BDBDBD"
+                },
+                "value": {
+                    "color": "#BDBDBD"
+                },
+                "percentage": {
+                    "color": "#BDBDBD"
+                }
+            },
+            "title": {
+                "color": "#FFF8E1",
+                "subtitle": {
+                    "color": "#BDBDBD"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#1E1E1E",
+                "backgroundOpacity": 30,
+                "color": "#FFF8E1",
+                "borderColor": "#FF8A65"
+            }
+        }
+    },
+    "hack": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "bar": {
+                "gradient": {
+                    "underlayerColor": "#1A1A1A"
+                }
+            },
+            "legend": {
+                "name": {
+                    "color": "#99AA99"
+                },
+                "value": {
+                    "color": "#AACCAA"
+                },
+                "percentage": {
+                    "color": "#99CC99"
+                }
+            },
+            "title": {
+                "color": "#66CC66",
+                "subtitle": {
+                    "color": "#99AA99"
+                }
+            }
+        }
+    },
+    "zen": {
+        "style": {
+            "backgroundColor": "#fbfafa",
+            "bar": {
+                "gradient": {
+                    "underlayerColor": "#fbfafa"
+                }
+            },
+            "legend": {
+                "name": {
+                    "color": "#8A9892"
+                },
+                "value": {
+                    "color": "#A0AC94"
+                },
+                "percentage": {
+                    "color": "#8A9892"
+                }
+            },
+            "title": {
+                "color": "#8A9892",
+                "subtitle": {
+                    "color": "#99AA99"
+                }
+            }
+        }
+    },
+    "concrete": {
+        "style": {
+            "backgroundColor": "#f6f6fb",
+            "bar": {
+                "gradient": {
+                    "underlayerColor": "#f6f6fb"
+                }
+            },
+            "legend": {
+                "name": {
+                    "color": "#50606C"
+                },
+                "value": {
+                    "color": "#8A9892"
+                },
+                "percentage": {
+                    "color": "#61747E"
+                }
+            },
+            "title": {
+                "color": "#50606C",
+                "subtitle": {
+                    "color": "#718890"
+                }
+            }
+        }
+    }
+}

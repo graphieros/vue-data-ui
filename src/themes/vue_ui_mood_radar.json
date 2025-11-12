@@ -1,0 +1,302 @@
+{
+    "default": {},
+    "dark": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "layout": {
+                    "grid": {
+                        "stroke": "#4A4A4A"
+                    },
+                    "outerPolygon": {
+                        "stroke": "#5A5A5A"
+                    },
+                    "dataLabel": {
+                        "color": "#CCCCCC"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC"
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
+    "celebration": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242",
+                "layout": {
+                    "grid": {
+                        "stroke": "#5D403780"
+                    },
+                    "outerPolygon": {
+                        "stroke": "#5D4037"
+                    },
+                    "dataPolygon": {
+                        "color": "#D32F2F",
+                        "stroke": "#D32F2F"
+                    },
+                    "smileys": {
+                        "colors": {
+                            "5": "#D32F2F",
+                            "4": "#E64A19",
+                            "3": "#F57C00",
+                            "2": "#FF9800",
+                            "1": "#FFC107"
+                        }
+                    },
+                    "dataLabel": {
+                        "color": "#424242"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#FFF8E1",
+                    "color": "#424242"
+                },
+                "title": {
+                    "color": "#424242",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            },
+            "td": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            }
+        }
+    },
+    "celebrationNight": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD",
+                "layout": {
+                    "grid": {
+                        "stroke": "#5D403780"
+                    },
+                    "outerPolygon": {
+                        "stroke": "#5D4037"
+                    },
+                    "dataPolygon": {
+                        "color": "#D32F2F",
+                        "stroke": "#D32F2F"
+                    },
+                    "smileys": {
+                        "colors": {
+                            "5": "#D32F2F",
+                            "4": "#E64A19",
+                            "3": "#F57C00",
+                            "2": "#FF9800",
+                            "1": "#FFC107"
+                        }
+                    },
+                    "dataLabel": {
+                        "color": "#BDBDBD"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#1E1E1E",
+                    "color": "#BDBDBD"
+                },
+                "title": {
+                    "color": "#FFF8E1",
+                    "subtitle": {
+                        "color": "#BDBDBD"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            },
+            "td": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            }
+        }
+    },
+    "hack": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "layout": {
+                    "grid": {
+                        "stroke": "#333333"
+                    },
+                    "outerPolygon": {
+                        "stroke": "#334C33"
+                    },
+                    "dataPolygon": {
+                        "color": "#33B333",
+                        "stroke": "#00FF00"
+                    },
+                    "smileys": {
+                        "colors": {
+                            "1": "#336633",
+                            "2": "#338033",
+                            "3": "#339933",
+                            "4": "#33E633",
+                            "5": "#00FF00"
+                        }
+                    },
+                    "dataLabel": {
+                        "color": "#00FF00"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#AACCAA"
+            }
+        }
+    },
+    "zen": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "layout": {
+                    "grid": {
+                        "stroke": "#C5B8A7"
+                    },
+                    "outerPolygon": {
+                        "strokeWidth": 0
+                    },
+                    "dataPolygon": {
+                        "color": "#858480",
+                        "stroke": "#C09E85"
+                    },
+                    "smileys": {
+                        "colors": {
+                            "1": "#C09E85",
+                            "2": "#DCB482",
+                            "3": "#DFCA99",
+                            "4": "#E0CFC3",
+                            "5": "#B9B99D"
+                        }
+                    },
+                    "dataLabel": {
+                        "color": "#606C5A"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8F837A"
+            },
+            "td": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8F837A"
+            }
+        }
+    },
+    "concrete": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "layout": {
+                    "grid": {
+                        "stroke": "#61747E"
+                    },
+                    "outerPolygon": {
+                        "stroke": "#50606C"
+                    },
+                    "dataPolygon": {
+                        "color": "#A3C4BE",
+                        "stroke": "#92B0B5"
+                    },
+                    "smileys": {
+                        "colors": {
+                            "1": "#5C6B5B",
+                            "2": "#4A6A75",
+                            "3": "#6C94A0",
+                            "4": "#7DA9B5",
+                            "5": "#8EBFCA"
+                        }
+                    },
+                    "dataLabel": {
+                        "color": "#50606C"
+                    }
+                },
+                "legend": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#61747E"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            },
+            "td": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            }
+        }
+    }
+}

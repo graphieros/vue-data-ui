@@ -1,0 +1,79 @@
+{
+    "default": {},
+    "dark": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC"
+        },
+        "table": {
+            "head": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
+    "celebration": {
+        "style": {
+            "backgroundColor": "#FFF8E1",
+            "color": "#424242",
+            "heatmapColors": {
+                "min": "#FFECB3",
+                "max": "#D32F2F"
+            }
+        },
+        "table": {
+            "head": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            }
+        }
+    },
+    "hack": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#99AA99",
+            "heatmapColors": {
+                "min": "#333333",
+                "max": "#66CC66"
+            }
+        },
+        "table": {
+            "head": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99"
+            }
+        }
+    },
+    "zen": {
+        "style": {
+            "backgroundColor": "#fbfafa",
+            "color": "#8A9892",
+            "heatmapColors": {
+                "max": "#C09E85",
+                "min": "#DCDFE7"
+            }
+        },
+        "table": {
+            "head": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892"
+            }
+        }
+    },
+    "concrete": {
+        "style": {
+            "backgroundColor": "#f6f6fb",
+            "color": "#50606C",
+            "heatmapColors": {
+                "max": "#4A6A75",
+                "min": "#EFECEC"
+            }
+        },
+        "table": {
+            "head": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            }
+        }
+    }
+}

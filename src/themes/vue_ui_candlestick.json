@@ -1,0 +1,394 @@
+{
+    "default": {},
+    "dark": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC",
+            "layout": {
+                "selector": {
+                    "color": "#CCCCCC"
+                },
+                "grid": {
+                    "stroke": "#5A5A5A",
+                    "xAxis": {
+                        "dataLabels": {
+                            "color": "#CCCCCC"
+                        }
+                    },
+                    "yAxis": {
+                        "dataLabels": {
+                            "color": "#CCCCCC"
+                        }
+                    }
+                },
+                "wick": {
+                    "stroke": "#5A5A5A",
+                    "extremity": {
+                        "color": "#5A5A5A"
+                    }
+                },
+                "candle": {
+                    "stroke": "#1A1A1A"
+                }
+            },
+            "zoom": {
+                "color": "#4A4A4A",
+                "highlightColor": "#9A9A9A",
+                "minimap": {
+                    "selectedColor": "#8A8A8A",
+                    "lineColor": "#424242",
+                    "indicatorColor": "#CCCCCC"
+                }
+            },
+            "title": {
+                "color": "#CCCCCC",
+                "subtitle": {
+                    "color": "#757575"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#1A1A1A",
+                "backgroundOpacity": 70,
+                "color": "#CCCCCC",
+                "borderColor": "#5A5A5A"
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
+    "celebration": {
+        "style": {
+            "backgroundColor": "#FFF8E1",
+            "color": "#424242",
+            "layout": {
+                "selector": {
+                    "color": "#424242"
+                },
+                "grid": {
+                    "stroke": "#5D4037",
+                    "xAxis": {
+                        "dataLabels": {
+                            "color": "#424242"
+                        }
+                    },
+                    "yAxis": {
+                        "dataLabels": {
+                            "color": "#424242"
+                        }
+                    }
+                },
+                "wick": {
+                    "stroke": "#5D4037",
+                    "extremity": {
+                        "color": "#5D4037"
+                    }
+                },
+                "candle": {
+                    "stroke": "#FFF8E1",
+                    "colors": {
+                        "bullish": "#D32F2F",
+                        "bearish": "#F57C00"
+                    },
+                    "gradient": {
+                        "show": false
+                    }
+                }
+            },
+            "zoom": {
+                "color": "#5D4037",
+                "highlightColor": "#FF8A65"
+            },
+            "title": {
+                "color": "#424242",
+                "subtitle": {
+                    "color": "#757575"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#FFECB3",
+                "backgroundOpacity": 30,
+                "color": "#424242",
+                "borderColor": "#FF8A65"
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            },
+            "td": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242"
+            }
+        }
+    },
+    "celebrationNight": {
+        "style": {
+            "backgroundColor": "#1E1E1E",
+            "color": "#BDBDBD",
+            "layout": {
+                "selector": {
+                    "color": "#FFF8E1"
+                },
+                "grid": {
+                    "stroke": "#5D4037",
+                    "xAxis": {
+                        "dataLabels": {
+                            "color": "#BDBDBD"
+                        }
+                    },
+                    "yAxis": {
+                        "dataLabels": {
+                            "color": "#BDBDBD"
+                        }
+                    }
+                },
+                "wick": {
+                    "stroke": "#BDBDBD",
+                    "extremity": {
+                        "color": "#BDBDBD"
+                    }
+                },
+                "candle": {
+                    "stroke": "#1E1E1E",
+                    "colors": {
+                        "bullish": "#D32F2F",
+                        "bearish": "#F57C00"
+                    },
+                    "gradient": {
+                        "show": false
+                    }
+                }
+            },
+            "zoom": {
+                "color": "#5D4037",
+                "highlightColor": "#FF8A65"
+            },
+            "title": {
+                "color": "#FFF8E1",
+                "subtitle": {
+                    "color": "#BDBDBD"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#1E1E1E",
+                "backgroundOpacity": 30,
+                "color": "#FFF8E1",
+                "borderColor": "#FF8A65"
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD"
+            },
+            "td": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD"
+            }
+        }
+    },
+    "hack": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#99AA99",
+            "layout": {
+                "selector": {
+                    "color": "#7DA9B5"
+                },
+                "grid": {
+                    "stroke": "#334C33",
+                    "xAxis": {
+                        "dataLabels": {
+                            "color": "#99CC99"
+                        }
+                    },
+                    "yAxis": {
+                        "dataLabels": {
+                            "color": "#99CC99"
+                        }
+                    }
+                },
+                "wick": {
+                    "stroke": "#334C33",
+                    "extremity": {
+                        "color": "#334C33"
+                    }
+                },
+                "candle": {
+                    "stroke": "#1A1A1A",
+                    "colors": {
+                        "bullish": "#00FF00",
+                        "bearish": "#334C33"
+                    },
+                    "gradient": {
+                        "show": false
+                    }
+                }
+            },
+            "zoom": {
+                "color": "#5F6A5F",
+                "highlightColor": "#66CC66"
+            },
+            "title": {
+                "color": "#66CC66",
+                "subtitle": {
+                    "color": "#99AA99"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#2A2F2A",
+                "color": "#AACCAA",
+                "borderColor": "#66CC66"
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#AACCAA"
+            }
+        }
+    },
+    "zen": {
+        "style": {
+            "backgroundColor": "#fbfafa",
+            "color": "#8A9892",
+            "layout": {
+                "selector": {
+                    "color": "#8F837A"
+                },
+                "grid": {
+                    "stroke": "transparent",
+                    "xAxis": {
+                        "dataLabels": {
+                            "color": "#8A9892"
+                        }
+                    },
+                    "yAxis": {
+                        "dataLabels": {
+                            "color": "#8A9892"
+                        }
+                    }
+                },
+                "wick": {
+                    "stroke": "#D7E0D2",
+                    "extremity": {
+                        "shape": "circle",
+                        "size": 2,
+                        "color": "#C5B8A7"
+                    }
+                },
+                "candle": {
+                    "stroke": "#fbfafa",
+                    "colors": {
+                        "bullish": "#A0AC94",
+                        "bearish": "#C09E85"
+                    },
+                    "gradient": {
+                        "show": true
+                    }
+                }
+            },
+            "zoom": {
+                "color": "#E0CFC3",
+                "highlightColor": "#8F837A"
+            },
+            "title": {
+                "color": "#8A9892",
+                "subtitle": {
+                    "color": "#99AA99"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892"
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8F837A"
+            },
+            "td": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8F837A"
+            }
+        }
+    },
+    "concrete": {
+        "style": {
+            "backgroundColor": "#f6f6fb",
+            "color": "#50606C",
+            "layout": {
+                "selector": {
+                    "color": "#7DA9B5"
+                },
+                "grid": {
+                    "stroke": "#334C33",
+                    "xAxis": {
+                        "dataLabels": {
+                            "color": "#61747E"
+                        }
+                    },
+                    "yAxis": {
+                        "dataLabels": {
+                            "color": "#61747E"
+                        }
+                    }
+                },
+                "wick": {
+                    "stroke": "#61747E",
+                    "extremity": {
+                        "color": "#61747E"
+                    }
+                },
+                "candle": {
+                    "stroke": "#1A1A1A",
+                    "colors": {
+                        "bullish": "#92B0AB",
+                        "bearish": "#EFECEC"
+                    },
+                    "gradient": {
+                        "show": false
+                    }
+                }
+            },
+            "zoom": {
+                "color": "#92B0AB",
+                "highlightColor": "#50606C"
+            },
+            "title": {
+                "color": "#50606C",
+                "subtitle": {
+                    "color": "#718890"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            },
+            "td": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
+            }
+        }
+    }
+}

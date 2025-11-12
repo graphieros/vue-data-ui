@@ -1,0 +1,105 @@
+{
+    "default": {},
+    "dark": {
+        "title": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC",
+            "subtitle": {
+                "color": "#757575"
+            }
+        },
+        "thead": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC"
+        },
+        "tbody": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC"
+        }
+    },
+    "celebration": {
+        "title": {
+            "backgroundColor": "#FFF8E1",
+            "color": "#424242",
+            "subtitle": {
+                "color": "#757575"
+            }
+        },
+        "thead": {
+            "backgroundColor": "#FFF8E1",
+            "color": "#424242"
+        },
+        "tbody": {
+            "backgroundColor": "#FFF8E1",
+            "color": "#424242"
+        }
+    },
+    "celebrationNight": {
+        "title": {
+            "backgroundColor": "#1E1E1E",
+            "color": "#FFF8E1",
+            "subtitle": {
+                "color": "#BDBDBD"
+            }
+        },
+        "thead": {
+            "backgroundColor": "#1E1E1E",
+            "color": "#BDBDBD"
+        },
+        "tbody": {
+            "backgroundColor": "#1E1E1E",
+            "color": "#BDBDBD"
+        }
+    },
+    "hack": {
+        "title": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#66CC66",
+            "subtitle": {
+                "color": "#99AA99"
+            }
+        },
+        "thead": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#99AA99"
+        },
+        "tbody": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#99AA99"
+        }
+    },
+    "zen": {
+        "title": {
+            "backgroundColor": "#fbfafa",
+            "color": "#8A9892",
+            "subtitle": {
+                "color": "#99AA99"
+            }
+        },
+        "thead": {
+            "backgroundColor": "#fbfafa",
+            "color": "#8A9892"
+        },
+        "tbody": {
+            "backgroundColor": "#fbfafa",
+            "color": "#A0AC94"
+        }
+    },
+    "concrete": {
+        "title": {
+            "backgroundColor": "#f6f6fb",
+            "color": "#50606C",
+            "subtitle": {
+                "color": "#718890"
+            }
+        },
+        "thead": {
+            "backgroundColor": "#f6f6fb",
+            "color": "#50606C"
+        },
+        "tbody": {
+            "backgroundColor": "#f6f6fb",
+            "color": "#50606C"
+        }
+    }
+}

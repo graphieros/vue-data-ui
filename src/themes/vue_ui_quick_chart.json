@@ -1,0 +1,79 @@
+{
+    "default": {},
+    "dark": {
+        "backgroundColor": "#1A1A1A",
+        "color": "#CCCCCC",
+        "donutStroke": "#1A1A1A",
+        "xyAxisStroke": "#5A5A5A",
+        "xyGridStroke": "#4A4A4A",
+        "xyHighlighterColor": "#CCCCCC",
+        "zoomColor": "#4A4A4A",
+        "zoomHighlightColor": "#9A9A9A",
+        "zoomMinimap": {
+            "lineColor": "#424242",
+            "selectedColor": "#8A8A8A",
+            "indicatorColor": "#CCCCCC"
+        },
+        "tooltipBorderColor": "#5A5A5A",
+        "tooltipBackgroundOpacity": 70
+    },
+    "celebration": {
+        "backgroundColor": "#FFF8E1",
+        "color": "#424242",
+        "xyAxisStroke": "#5D4037",
+        "xyGridStroke": "#5D403760",
+        "xyHighlighterColor": "#424242",
+        "zoomColor": "#5D4037",
+        "zoomHighlightColor": "#FF8A65",
+        "zoomMinimap": {
+            "lineColor": "#424242",
+            "selectedColor": "#FF8A65"
+        },
+        "tooltipBorderColor": "#FF8A65",
+        "tooltipBackgroundOpacity": 30
+    },
+    "celebrationNight": {
+        "backgroundColor": "#1E1E1E",
+        "color": "#BDBDBD",
+        "xyAxisStroke": "#5D4037",
+        "xyGridStroke": "#5D403780",
+        "xyHighlighterColor": "#FFF8E1",
+        "zoomColor": "#5D4037",
+        "zoomHighlightColor": "#FF8A65",
+        "zoomMinimap": {
+            "lineColor": "#FF6B6B",
+            "selectedColor": "#FF8A65",
+            "indicatorColor": "#FF8A65"
+        },
+        "tooltipBorderColor": "#FF8A65",
+        "tooltipBackgroundOpacity": 30
+    },
+    "hack": {
+        "backgroundColor": "#1A1A1A",
+        "color": "#99AA99",
+        "xyAxisStroke": "#5F6A5F",
+        "xyGridStroke": "#333333",
+        "xyHighlighterColor": "#66CC66",
+        "zoomColor": "#5F6A5F",
+        "zoomHighlightColor": "#66CC66",
+        "tooltipBorderColor": "#66CC66"
+    },
+    "zen": {
+        "backgroundColor": "#fbfafa",
+        "color": "#8A9892",
+        "xyAxisStroke": "transparent",
+        "xyGridStroke": "transparent",
+        "xyHighlighterColor": "#8F837A",
+        "zoomColor": "#E0CFC3",
+        "zoomHighlightColor": "#8F837A"
+    },
+    "concrete": {
+        "backgroundColor": "#f6f6fb",
+        "color": "#50606C",
+        "xyAxisStroke": "#829C98",
+        "xyGridStroke": "#CCD6D3",
+        "xyHighlighterColor": "#7DA9B5",
+        "zoomColor": "#92B0AB",
+        "zoomHighlightColor": "#50606C"
+    }
+}

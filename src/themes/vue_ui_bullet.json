@@ -1,0 +1,225 @@
+{
+    "default": {},
+    "dark": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "legend": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC"
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                },
+                "segments": {
+                    "baseColor": "#5A5A5A",
+                    "dataLabels": {
+                        "color": "#CCCCCC"
+                    },
+                    "ticks": {
+                        "stroke": "#5A5A5A"
+                    }
+                },
+                "target": {
+                    "color": "#1A1A1A"
+                },
+                "valueBar": {
+                    "color": "#CCCCCC",
+                    "stroke": "#5A5A5A",
+                    "label": {
+                        "color": "#CCCCCC"
+                    }
+                }
+            }
+        }
+    },
+    "celebration": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#FFF8E1",
+                "color": "#424242",
+                "legend": {
+                    "backgroundColor": "#FFF8E1",
+                    "color": "#424242"
+                },
+                "title": {
+                    "color": "#424242",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                },
+                "segments": {
+                    "baseColor": "#D32F2F",
+                    "dataLabels": {
+                        "color": "#424242"
+                    },
+                    "ticks": {
+                        "stroke": "#424242"
+                    }
+                },
+                "target": {
+                    "color": "#3A3A3A"
+                },
+                "valueBar": {
+                    "color": "#3A3A3A",
+                    "stroke": "#FFF8E1",
+                    "label": {
+                        "color": "#424242"
+                    }
+                }
+            }
+        }
+    },
+    "celebrationNight": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1E1E1E",
+                "color": "#BDBDBD",
+                "legend": {
+                    "backgroundColor": "#1E1E1E",
+                    "color": "#BDBDBD"
+                },
+                "title": {
+                    "color": "#FFF8E1",
+                    "subtitle": {
+                        "color": "#BDBDBD"
+                    }
+                },
+                "segments": {
+                    "baseColor": "#D32F2F",
+                    "dataLabels": {
+                        "color": "#BDBDBD"
+                    },
+                    "ticks": {
+                        "stroke": "#BDBDBD"
+                    }
+                },
+                "target": {
+                    "color": "#3A3A3A"
+                },
+                "valueBar": {
+                    "color": "#3A3A3A",
+                    "stroke": "#1E1E1E",
+                    "label": {
+                        "color": "#BDBDBD"
+                    }
+                }
+            }
+        }
+    },
+    "hack": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#99AA99",
+                "legend": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#66CC66",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "segments": {
+                    "baseColor": "#00AA00",
+                    "dataLabels": {
+                        "color": "#66CC66"
+                    },
+                    "ticks": {
+                        "stroke": "#00AA00"
+                    }
+                },
+                "target": {
+                    "color": "#023602"
+                },
+                "valueBar": {
+                    "color": "#1b291b",
+                    "stroke": "#1A1A1A",
+                    "label": {
+                        "color": "#66CC66"
+                    }
+                }
+            }
+        }
+    },
+    "zen": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892",
+                "legend": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#99AA99"
+                },
+                "title": {
+                    "color": "#8A9892",
+                    "subtitle": {
+                        "color": "#99AA99"
+                    }
+                },
+                "segments": {
+                    "baseColor": "#8F837A",
+                    "dataLabels": {
+                        "color": "#8A9892"
+                    },
+                    "ticks": {
+                        "stroke": "#8F837A"
+                    }
+                },
+                "target": {
+                    "color": "#40403a"
+                },
+                "valueBar": {
+                    "color": "#8F837A",
+                    "stroke": "#fbfafa",
+                    "label": {
+                        "color": "#8A9892"
+                    }
+                }
+            }
+        }
+    },
+    "concrete": {
+        "style": {
+            "chart": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C",
+                "legend": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#50606C"
+                },
+                "title": {
+                    "color": "#50606C",
+                    "subtitle": {
+                        "color": "#718890"
+                    }
+                },
+                "segments": {
+                    "baseColor": "#718890",
+                    "dataLabels": {
+                        "color": "#50606C"
+                    },
+                    "ticks": {
+                        "stroke": "#50606C"
+                    }
+                },
+                "target": {
+                    "color": "#50606C"
+                },
+                "valueBar": {
+                    "color": "#50606C",
+                    "stroke": "#fbfafa",
+                    "label": {
+                        "color": "#50606C"
+                    }
+                }
+            }
+        }
+    }
+}
