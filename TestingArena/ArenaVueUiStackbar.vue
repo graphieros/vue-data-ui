@@ -304,6 +304,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -312,7 +313,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -521,6 +524,10 @@ const resp = ref(null);
 
 <Box comp="VueUiStackbar" :dataset="dataset">
     <template #title>VueUiStackbar</template>
+
+    <template #theme>
+        <LocalVueUiStackbar :dataset="dataset" :config="configTheme" />
+    </template>
 
     <template #local>
         <LocalVueUiStackbar @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">

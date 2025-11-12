@@ -156,6 +156,7 @@ const testCustomTooltip = ref(false);
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -164,7 +165,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -298,6 +301,10 @@ const step = ref(0)
 
     <Box comp="VueUiRings" :dataset="dataset">
         <template #title>VueUiRings</template>
+
+        <template #theme>
+            <LocalVueUiRings :dataset="dataset" :config="configTheme" />
+        </template>
 
         <template #local>
             <LocalVueUiRings :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">

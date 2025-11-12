@@ -79,6 +79,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -87,7 +88,16 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[5])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ 
+    theme: currentTheme.value,
+    table: {
+        head: {
+            values: ["A", "B", "C", "D", "E", "F", "G", "H", "TOT.", "AVG.", "MED."]
+        }
+    }
+}));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)
@@ -117,6 +127,65 @@ const step = ref(0)
     </div>
     <Box>
         <template #title>VueUiTableHeatmap</template>
+
+        <template #theme>
+            <LocalVueUiTableHeatmap :dataset="dataset" :config="configTheme">
+
+                <template #chart-background>
+                    <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                </template>
+                
+                <template #source>
+                    <div style="width:100%;font-size:10px;text-align:left">
+                        SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
+                    </div>
+                </template>
+                
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #caption>
+                    <div style="width: 100%; height: 40px" class="pb-8 font-black text-2xl text-left pl-2">
+                        TITLE
+                    </div>
+                </template>
+
+                <template #head="{ value, rowIndex, type }">
+                    {{ value }}
+                </template>
+
+                <template #rowTitle="{ value, rowIndex, colIndex, type, isResponsive }">
+                    <div :style="`height: 40px; display: flex; align-items:center; justify-content: flex-start; padding: 0 6px;font-weight:${isResponsive ? 'bold' : 'normal'}`"
+                        class="bg-gray-200 dark:bg-[#2A2A2A] w-full">
+                        {{ value }}
+                    </div>
+                </template>
+                <template #cell="{ value, rowIndex, colIndex, type, color, textColor }">
+                    <div :style="`height: 40px; display: flex; align-items:center; justify-content: flex-end; padding: 0 6px;background:${color};color:${textColor}`"
+                        class="relative">
+                        {{ value }}
+                    </div>
+                </template>
+                <template #sum="{ value }">
+                    <div style="height:40px; display: flex; text-align:center; align-items:center; justify-content: flex-end; padding: 0 6px;"
+                        class="bg-gray-200 dark:bg-[#2A2A2A]">
+                        {{ value }}
+                    </div>
+                </template>
+                <template #average="{ value }">
+                    <div style="height:40px; display: flex; text-align:center; align-items:center; justify-content: flex-end; padding: 0 6px;"
+                        class="bg-gray-200 dark:bg-[#2A2A2A]">
+                        {{ value.toFixed(1) }}
+                    </div>
+                </template>
+                <template #median="{ value }">
+                    <div style="height:40px; display: flex; text-align:center; align-items:center; justify-content: flex-end; padding: 0 6px;"
+                        class="bg-gray-200 dark:bg-[#2A2A2A]">
+                        {{ value.toFixed(1) }}
+                    </div>
+                </template>
+            </LocalVueUiTableHeatmap>
+        </template>
 
         <template #local>
             <LocalVueUiTableHeatmap :dataset="dataset" :config="config" :key="`local_${step}`">

@@ -141,7 +141,7 @@ function alterDataset() {
 }
 
 
-const selectedSerie = ref('longArray');
+const selectedSerie = ref('shortArray');
 
 const model = ref([
     { key: 'debug', def: true, type: 'checkbox'},
@@ -262,6 +262,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -270,7 +271,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const monthValues = computed(() => {
     const yearStart = 2026
@@ -372,6 +375,10 @@ function selectDatapoint(datapoint) {
 
 <Box comp="VueUiQuickChart" :dataset="dataset">
     <template #title>VueUiQuickChart</template>
+
+    <template #theme>
+        <LocalVueUiQuickChart :dataset="dataset" :config="configTheme" />
+    </template>
 
     <template #local>
         <LocalVueUiQuickChart :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">

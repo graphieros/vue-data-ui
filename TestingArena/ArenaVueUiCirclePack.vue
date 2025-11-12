@@ -244,6 +244,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    'dark',
     "hack",
     "zen",
     "concrete",
@@ -252,7 +253,11 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[0]);
+
+const configTheme = computed(() => ({
+  theme: currentTheme.value
+}))
 
 const config = computed(() => {
   const c = convertArrayToObject(model.value);
@@ -301,6 +306,10 @@ onMounted(async() => {
     </div>
   <Box>
     <template #title>VueUiCirclePack</template>
+
+    <template #theme>
+      <LocalVueUiCirclePack :dataset="dataset" :config="configTheme" />
+    </template>
 
     <template #local>
       <LocalVueUiCirclePack :dataset="dataset" :config="config" ref="local" :key="`local_${step}`" @selectDatapoint="selectDatapoint">

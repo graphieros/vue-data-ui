@@ -306,6 +306,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -314,7 +315,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -433,6 +436,10 @@ function selectX({ dataset, index, indexLabel }) {
 
 <Box comp="VueUiStackline" :dataset="dataset">
     <template #title>VueUiStackline</template>
+
+    <template #theme>
+        <LocalVueUiStackline :dataset="dataset" :config="configTheme" />
+    </template>
 
     <template #local>
         <LocalVueUiStackline :dataset="dataset" :config="config" ref="local" @selectX="selectX" :selectedXIndex="selectedX">

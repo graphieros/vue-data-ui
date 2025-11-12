@@ -94,6 +94,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -102,7 +103,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -143,6 +146,12 @@ const step = ref(0)
 
     <Box comp="VueUiSparkTrend" :dataset="datasets.positive">
         <template #title>VueUiSparkTrend</template>
+
+        <template #theme>
+            <LocalVueUiSparkTrend :dataset="datasets.negative" :config="configTheme" />
+            <LocalVueUiSparkTrend :dataset="datasets.neutral" :config="configTheme" />
+            <LocalVueUiSparkTrend :dataset="datasets.positive" :config="configTheme" />
+        </template>
 
         <template #local>
             <div style="width: 100%">

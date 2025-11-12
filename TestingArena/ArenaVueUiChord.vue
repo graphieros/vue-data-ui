@@ -25,7 +25,7 @@ onMounted(() => {
             labels: ['Group A', 'Group B with a long name', 'Group C', 'Group D'],
             colors: []
         }
-    }, 2000)
+    }, 0)
 
     // Test dataset reactivity and skeleton loader behavior
     // setTimeout(() => {
@@ -125,6 +125,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -133,8 +134,11 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1])
 
+const configTheme = computed(() => ({
+    theme: currentTheme.value,
+}))
 
 const config = computed(()=> {
     const c = convertArrayToObject(model.value);
@@ -183,6 +187,18 @@ onMounted(async () => {
 
     <Box comp="VueUiChord" :dataset="dataset">
         <template #title>VueUiChord</template>
+
+        <template #theme>
+            <LocalVueUiChord
+                :dataset="dataset"
+                :config="configTheme"
+            />
+            <!-- <LocalVueDataUi
+                component="VueUiChord"
+                :dataset="dataset"
+                :config="configTheme"
+            /> -->
+        </template>
 
         <template #local>
             <LocalVueUiChord :dataset="dataset" :config="config" ref="local">

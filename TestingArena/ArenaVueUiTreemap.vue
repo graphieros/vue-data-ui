@@ -251,6 +251,7 @@ const testCustomTooltip = ref(false);
 
 const themeOptions = ref([
     "",
+    "dark",
     "default",
     "zen",
     "concrete",
@@ -259,7 +260,11 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({
+    theme: currentTheme.value
+}));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -384,6 +389,10 @@ onMounted(async() => {
 
     <Box comp="VueUiTreemap" :dataset="dataset">
         <template #title>VueUiTreemap</template>
+
+        <template #theme>
+            <LocalVueUiTreemap :dataset="dataset" :config="configTheme"/>
+        </template>
 
         <template #local>
             <LocalVueUiTreemap :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="local">

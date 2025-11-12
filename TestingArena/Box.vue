@@ -34,6 +34,10 @@ function refresh() {
     
     <div class="box">
         <div style="width:100%; max-width: 600px">
+            <p>Local (default config with theme only)</p>
+            <slot name="theme"/>
+        </div>
+        <div style="width:100%; max-width: 600px">
             <p>Local</p>
             <slot name="local"/>
         </div>

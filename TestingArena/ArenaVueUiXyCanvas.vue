@@ -260,6 +260,7 @@ const step = ref(0)
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -268,7 +269,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0]);
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const monthValues = computed(() => {
     const yearStart = 2026
@@ -417,6 +420,10 @@ function selectX({ datapoint, index, indexLabel}) {
 
     <Box comp="VueUiXyCanvas" :dataset="dataset">
         <template #title>VueUiXyCanvas</template>
+
+        <template #theme>
+            <LocalVueUiXyCanvas :dataset="dataset" :config="configTheme" />
+        </template>
 
         <template #local>
             <LocalVueUiXyCanvas @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">

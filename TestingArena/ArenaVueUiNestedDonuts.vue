@@ -177,6 +177,7 @@ const testCustomTooltip = ref(false);
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -185,7 +186,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)
@@ -311,6 +314,10 @@ onMounted(async() => {
 
     <Box comp="VueUiNestedDonuts" :dataset="dataset">
         <template #title>VueUiNestedDonuts</template>
+
+        <template #theme>
+            <LocalVueUiNestedDonuts :dataset="dataset" :config="configTheme" />
+        </template>
 
         <template #local>
             <LocalVueUiNestedDonuts :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="local">

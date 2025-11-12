@@ -116,6 +116,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -124,7 +125,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     return {
@@ -153,6 +156,10 @@ const step = ref(0)
     </div>
     <Box comp="VueUiTableSparkline" :dataset="dataset">
         <template #title>VueUiTableSparkline</template>
+
+        <template #theme>
+            <LocalVueUiTableSparkline :dataset="dataset" :config="configTheme" />
+        </template>
 
         <template #local>
             <LocalVueUiTableSparkline :dataset="dataset" :config="config" :key="`local_${step}`">

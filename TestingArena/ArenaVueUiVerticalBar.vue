@@ -223,6 +223,7 @@ const testCustomTooltip = ref(false);
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -231,7 +232,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -368,6 +371,10 @@ onMounted(async () => {
 
     <Box comp="VueUiVerticalBar" :dataset="dataset">
         <template #title>VueUiVerticalBar</template>
+
+        <template #theme>
+            <LocalVueUiVerticalBar :dataset="dataset" :config="configTheme" />
+        </template>
 
         <template #local>
             <LocalVueUiVerticalBar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">

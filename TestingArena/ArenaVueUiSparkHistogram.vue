@@ -217,6 +217,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -225,7 +226,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -284,6 +287,10 @@ function selectDatapoint(datapoint) {
 
     <Box comp="VueUiSparkHistogram" :dataset="dataset">
         <template #title>VueUiSparkHistogram</template>
+
+        <template #theme>
+            <LocalVueUiSparkHistogram :dataset="dataset" :config="configTheme" />
+        </template>
 
         <template #local>
             <LocalVueUiSparkHistogram :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectDatapoint="selectDatapoint">

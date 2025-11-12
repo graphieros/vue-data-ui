@@ -405,13 +405,22 @@ onMounted(() => {
         useProgression: true,
         // freestyle:
         marks: [10, 20],
-        annotated: true
+        annotated: true,
     },
     {
         name: "Serie B",
         series: createDs(35),
         type: "line",
         dataLabels: false,
+        smooth: true,
+        useArea: true,
+        useProgression: true
+    },
+    {
+        name: "Serie C",
+        series: createDs(35),
+        type: "bar",
+        dataLabels: true,
         smooth: true,
         useArea: true,
         useProgression: true
@@ -900,6 +909,7 @@ const testCustomTooltip = ref(false);
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -908,7 +918,7 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1])
 
 const size = ref({
     height: 600,
@@ -1216,6 +1226,34 @@ function selectX(selectedX) {
     console.log({ selectedX })
 }
 
+const configTheme = computed(() => ({
+    theme: currentTheme.value,
+    chart: {
+        grid: {
+            showVerticalLines: true,
+            showHorizontalLines: true
+        },
+        title: {
+            text: 'Title',
+            subtitle: {
+                text: 'Subtitle'
+            },
+        },
+        zoom: {
+            minimap: { show: true }
+        }
+    },
+    line: {
+        labels: { show: true },
+    },
+    bar: {
+        labels: { show: true },
+    },
+    plot: {
+        labels: { show: true },
+    },
+}))
+
 // const resizable = ref(null);
 
 // onMounted(() => {
@@ -1415,6 +1453,16 @@ function freestyle({ data, drawingArea }) {
 
     <Box :dataset="isPropsToggled ? alternateDataset : dataset" comp="VueUiXy">
         <template #title>VueUiXy</template>
+
+        <template #theme>
+            <LocalVueUiXy
+                :dataset="dataset"
+                :config="{
+                    ...configTheme,
+                    customPalette: ['#6376DD', '#DD3322', '#66DDAA'],
+                }"
+            />
+        </template>
 
         <template #local>
             <LocalVueUiXy 

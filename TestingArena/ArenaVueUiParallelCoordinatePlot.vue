@@ -153,6 +153,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -161,7 +162,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
@@ -284,6 +287,10 @@ onMounted(async() => {
 
     <Box comp="VueUiParallelCoordinatePlot" :dataset="dataset">
         <template #title>VueUiParallelCoordinatePlot</template>
+
+        <template #theme>
+            <LocalVueUiParallelCoordinatePlot :dataset="dataset" :config="configTheme" />
+        </template>
 
         <template #local>
             <LocalVueUiParallelCoordinatePlot :dataset="dataset" :config="config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="local">

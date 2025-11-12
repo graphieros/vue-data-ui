@@ -216,6 +216,7 @@ const testCustomTooltip = ref(false);
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -224,7 +225,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)
@@ -328,6 +331,10 @@ onMounted(async () => {
 
     <Box comp="VueUiStripPlot" :dataset="dataset">
         <template #title>VueUiStripPlot</template>
+
+        <template #theme>
+            <LocalVueUiStripPlot :dataset="dataset" :config="configTheme" />
+        </template>
 
         <template #local>
             <LocalVueUiStripPlot :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">

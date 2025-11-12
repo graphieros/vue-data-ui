@@ -10,6 +10,7 @@ import { VueUiRidgeline as VueUiRidgelineTreeshaken } from "vue-data-ui/vue-ui-r
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -18,7 +19,11 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1])
+
+const configTheme = computed(() => ({
+    theme: currentTheme.value,
+}))
 
 function makeDs(n) {
     let arr = [];
@@ -75,7 +80,7 @@ onMounted(() => {
             { name: 'Istanbul', datapoints: [{ name: 'Average Monthly Temperature (°C)', values: [6, 6, 8, 12, 16, 21, 23, 23, 20, 16, 12, 8] }] },  // Mean ≈ 14°C
             { name: 'Mexico City', datapoints: [{ name: 'Average Monthly Temperature (°C)', values: [13, 14, 15, 16, 16, 16, 15, 15, 15, 14, 13, 13] }] }, // Mean ≈ 15°C
             ]
-    }, 2000)
+    }, 0)
 })
 
 const model = ref([
@@ -209,15 +214,15 @@ const config = computed(() => {
 });
 
 const local = ref(null)
-onMounted(async () => {
-    if (local.value) {
-        const img = await local.value.getImage();
-        console.log(img)
-        setTimeout(() => {
-            local.value.hideSeries('Average Monthly Temperature (°C)')
-        }, 4000)
-    }
-})
+// onMounted(async () => {
+//     if (local.value) {
+//         const img = await local.value.getImage();
+//         console.log(img)
+//         setTimeout(() => {
+//             local.value.hideSeries('Average Monthly Temperature (°C)')
+//         }, 4000)
+//     }
+// })
 
 </script>
 
@@ -240,6 +245,10 @@ onMounted(async () => {
     </div>
     <Box>
         <template #title>VueUiRidgeline</template>
+
+        <template #theme>
+            <LocalVueUiRidgeLine :dataset="dataset" :config="configTheme"/>
+        </template>
 
         <template #local>
             <LocalVueUiRidgeLine :dataset="dataset" :config="config" ref="local">

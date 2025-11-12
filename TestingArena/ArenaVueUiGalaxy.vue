@@ -117,6 +117,7 @@ const testCustomTooltip = ref(false);
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -125,7 +126,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[0])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme : currentTheme.value }));
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value)
@@ -232,6 +235,10 @@ onMounted(async () => {
 
     <Box comp="VueUiGalaxy" :dataset="dataset">
         <template #title>VueUiGalaxy</template>
+
+        <template #theme>
+            <LocalVueUiGalaxy :dataset="dataset" :config="configTheme" />
+        </template>
 
         <template #local>
             <LocalVueUiGalaxy :dataset="dataset" :config="config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint" ref="local">

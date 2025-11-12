@@ -123,6 +123,7 @@ const model = ref([
 
 const themeOptions = ref([
     "",
+    "dark",
     "hack",
     "zen",
     "concrete",
@@ -131,7 +132,9 @@ const themeOptions = ref([
     "celebrationNight"
 ])
 
-const currentTheme = ref(themeOptions.value[6])
+const currentTheme = ref(themeOptions.value[1]);
+
+const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 const config = computed(() => {
     const c = {
@@ -179,6 +182,10 @@ const showTitleSlot = ref(false);
 
     <Box comp="VueUiSparkbar" :dataset="dataset"> 
         <template #title>VueUiSparkbar</template>
+        
+        <template #theme>
+            <LocalVueUiSparkbar :dataset="dataset" :config="configTheme" />
+        </template>
         
         <template #local>
             <LocalVueUiSparkbar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
