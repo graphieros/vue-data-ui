@@ -239,6 +239,7 @@ export function getPalette(palette = 'default') {
 
 export const themePalettes = {
     default: palette,
+    dark: palette,
     celebration: [
         "#D32F2F",
         "#E64A19",
