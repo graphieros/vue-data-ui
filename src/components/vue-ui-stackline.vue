@@ -52,13 +52,14 @@ import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useTimeLabels } from "../useTimeLabels";
+import { useThemeCheck } from "../useThemeCheck";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import { useUserOptionState } from "../useUserOptionState";
 import img from "../img";
 import Shape from "../atoms/Shape.vue";
 import Title from "../atoms/Title.vue";
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_stackline.json";
 import Legend from "../atoms/Legend.vue";
 import locales from '../locales/locales.json';
 import BaseScanner from "../atoms/BaseScanner.vue";
@@ -74,6 +75,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_stackline: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const slots = useSlots();
 
 const props = defineProps({
@@ -236,7 +238,6 @@ function onChartEnter() {
 function onChartLeave() {
     setUserOptionsVisibility(false);
     userHovers.value = false;
-    // more stuff here ?
 }
 
 function prepareConfig(){
@@ -245,20 +246,30 @@ function prepareConfig(){
         defaultConfig: DEFAULT_CONFIG,
     });
     let finalConfig = {};
-    if (mergedConfig.theme) {
-        finalConfig = {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_stackline[mergedConfig.theme] || props.config,
+
+    const theme = mergedConfig.theme;
+
+    if (theme) {
+        if (!isThemeValid.value(mergedConfig)) {
+            warnInvalidTheme(mergedConfig);
+            finalConfig = mergedConfig;
+        } else {
+            const fused = useNestedProp({
+                userConfig: themes[theme] || props.config,
                 defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
+            });
+    
+            finalConfig = {
+                ...useNestedProp({
+                    userConfig: props.config,
+                    defaultConfig: fused
+                }),
+                customPalette: mergedConfig.customPalette.length ? mergedConfig.customPalette : themePalettes[theme] || palette
+            }
         }
     } else {
         finalConfig = mergedConfig;
     }
-    // ------------------------------ OVERRIDES -----------------------------------
-    // TODO ?
-    // ----------------------------------------------------------------------------
 
     return finalConfig;
 }

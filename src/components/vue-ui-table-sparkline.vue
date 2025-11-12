@@ -16,17 +16,19 @@ import {
     palette,
     themePalettes,
 } from "../lib";
-import { usePrinter } from "../usePrinter";
 import { useConfig } from "../useConfig";
+import { usePrinter } from "../usePrinter";
+import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import vClickOutside from "../directives/vClickOutside";
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_table_sparkline.json";
 
 const SparkLine = defineAsyncComponent(() => import('./vue-ui-sparkline.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_table_sparkline: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -71,16 +73,28 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_table_sparkline[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
-        }
-    } else {
+
+    const theme = mergedConfig.theme;
+    if (!theme) return mergedConfig;
+
+    if (!isThemeValid.value(mergedConfig)) {
+        warnInvalidTheme(mergedConfig);
         return mergedConfig;
+    }
+
+    const fused = useNestedProp({
+        userConfig: themes[theme] || props.config,
+        defaultConfig: mergedConfig
+    });
+
+    const finalConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: fused
+    });
+
+    return {
+        ...finalConfig,
+        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
     }
 }
 

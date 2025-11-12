@@ -39,12 +39,13 @@ import { useSvgExport } from "../useSvgExport.js";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useTimeLabels } from "../useTimeLabels";
+import { useThemeCheck } from "../useThemeCheck.js";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_candlestick.json";
 import locales from '../locales/locales.json';
 import BaseScanner from "../atoms/BaseScanner.vue";
 import SlicerPreview from "../atoms/SlicerPreview.vue"; // Must be ready in responsive mode
@@ -59,6 +60,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_candlestick: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -203,12 +205,24 @@ function prepareConfig() {
 
     let finalConfig = {};
 
-    if (mergedConfig.theme) {
-        finalConfig = {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_candlestick[mergedConfig.theme] || props.config,
+    const theme = mergedConfig.theme;
+
+    if (theme) {
+        if (!isThemeValid.value(mergedConfig)) {
+            warnInvalidTheme(mergedConfig);
+            finalConfig = mergedConfig;
+        } else {
+            const fused = useNestedProp({
+                userConfig: themes[theme] || props.config,
                 defaultConfig: mergedConfig
-            }),
+            });
+    
+            finalConfig = {
+                ...useNestedProp({
+                    userConfig: props.config,
+                    defaultConfig: fused
+                }),
+            }
         }
     } else {
         finalConfig = mergedConfig;

@@ -45,11 +45,12 @@ import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useTimeLabels } from "../useTimeLabels";
+import { useThemeCheck } from "../useThemeCheck";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import img from "../img";
 import Slicer from "../atoms/Slicer.vue";
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_quick_chart.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -58,7 +59,8 @@ const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
-const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig()
+const { vue_ui_quick_chart: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -165,13 +167,25 @@ function prepareConfig() {
     });
     let finalConfig = {};
 
-    if (mergedConfig.theme) {
-        finalConfig =  {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_quick_chart[mergedConfig.theme] || props.config,
+    const theme = mergedConfig.theme;
+
+    if (theme) {
+        if (!isThemeValid.value(mergedConfig)) {
+            warnInvalidTheme(mergedConfig);
+            finalConfig = mergedConfig;
+        } else {
+            const fused = useNestedProp({
+                userConfig: themes[theme] || props.config,
                 defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
+            });
+    
+            finalConfig =  {
+                ...useNestedProp({
+                    userConfig: props.config,
+                    defaultConfig: fused
+                }),
+                customPalette: mergedConfig.customPalette.length ? mergedConfig.customPalette : themePalettes[theme] || palette
+            }
         }
     } else {
         finalConfig = mergedConfig;
@@ -189,16 +203,6 @@ function prepareConfig() {
         finalConfig.zoomEndIndex = props.config.zoomEndIndex;
     } else {
         finalConfig.zoomEndIndex = null;
-    }
-
-    if (props.config && !hasDeepProperty(props.config, 'donutStroke')) { 
-        if (hasDeepProperty(props.config, 'backgroundColor')) {
-            donutStroke.value = props.config.backgroundColor;
-        } else {
-            donutStroke.value = '#FFFFFF';
-        }
-    } else {
-        donutStroke.value = props.config.donutStroke;
     }
 
     // ----------------------------------------------------------------------------
@@ -1657,7 +1661,7 @@ defineExpose({
                         v-for="(arc, i) in donut.chart"
                         :d="arc.arcSlice"
                         :fill="arc.color"
-                        :stroke="donutStroke"
+                        :stroke="FINAL_CONFIG.donutStroke || FINAL_CONFIG.backgroundColor"
                         :stroke-width="FINAL_CONFIG.donutStrokeWidth"
                         :filter="getBlurFilter(arc.id)"
                     />

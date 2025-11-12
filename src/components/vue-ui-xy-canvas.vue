@@ -51,10 +51,11 @@ import { useDateTime } from "../useDateTime";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useTimeLabels } from "../useTimeLabels";
+import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import img from "../img";
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_xy_canvas.json";
 import locales from '../locales/locales.json';
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
@@ -70,6 +71,7 @@ const NonSvgPenAndPaper = defineAsyncComponent(() => import('../atoms/NonSvgPenA
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_xy_canvas: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     dataset: {
@@ -219,13 +221,25 @@ function prepareConfig() {
 
     let finalConfig = {};
 
-    if (mergedConfig.theme) {
-        finalConfig = {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_xy_canvas[mergedConfig.theme] || props.config,
+    const theme = mergedConfig.theme;
+
+    if (theme) {
+        if (!isThemeValid.value(mergedConfig)) {
+            warnInvalidTheme(mergedConfig);
+            finalConfig = mergedConfig;
+        } else {
+            const fused = useNestedProp({
+                userConfig: themes[theme] || props.config,
                 defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
+            });
+    
+            finalConfig = {
+                ...useNestedProp({
+                    userConfig: props.config,
+                    defaultConfig: fused
+                }),
+                customPalette: mergedConfig.customPalette.length ? mergedConfig.customPalette : themePalettes[theme] || palette
+            }
         }
     } else {
         finalConfig = mergedConfig;

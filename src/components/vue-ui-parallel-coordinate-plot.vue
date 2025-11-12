@@ -1,5 +1,16 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, defineAsyncComponent, shallowRef, watchEffect, toRefs, nextTick } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick,
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef, 
+    toRefs, 
+    watch, 
+    watchEffect, 
+} from "vue";
 import {
     applyDataLabel,
     calculateNiceScale, 
@@ -31,10 +42,11 @@ import { useLoading } from "../useLoading";
 import { useSvgExport } from "../useSvgExport";
 import { useResponsive } from "../useResponsive";
 import { useNestedProp } from "../useNestedProp";
+import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_parallel_coordinate_plot.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
@@ -51,6 +63,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_parallel_coordinate_plot: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -182,16 +195,28 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_parallel_coordinate_plot[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
-        }
-    } else {
+
+    const theme = mergedConfig.theme;
+    if (!theme) return mergedConfig;
+
+    if (!isThemeValid.value(mergedConfig)) {
+        warnInvalidTheme(mergedConfig);
         return mergedConfig;
+    }
+    
+    const fused = useNestedProp({
+        userConfig: themes[theme] || props.config,
+        defaultConfig: mergedConfig
+    }); 
+
+    const finalConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: fused
+    });
+
+    return {
+        ...finalConfig,
+        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
     }
 }
 

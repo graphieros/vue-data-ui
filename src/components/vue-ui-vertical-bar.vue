@@ -1,4 +1,5 @@
 <script setup>
+// IMPORTANT: This component is made available as VueUiHorizontalBar, but is still usable as VueUiVerticalBar for legacy usage
 import { ref, computed, onMounted, onBeforeUnmount, watch, useSlots, defineAsyncComponent, shallowRef, nextTick, toRefs } from "vue";
 import {
     applyDataLabel,
@@ -28,10 +29,11 @@ import { usePrinter } from "../usePrinter";
 import { useSvgExport } from "../useSvgExport.js";
 import { useResponsive } from "../useResponsive";
 import { useNestedProp } from "../useNestedProp";
+import { useThemeCheck } from "../useThemeCheck.js";
 import { useTableResponsive } from "../useTableResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_horizontal_bar.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
@@ -47,6 +49,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_vertical_bar: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const slots = useSlots();
 
 const props = defineProps({
@@ -176,13 +179,25 @@ function prepareConfig() {
     });
     let finalConfig = {};
 
-    if (mergedConfig.theme) {
-        finalConfig =  {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_vertical_bar[mergedConfig.theme] || props.config,
+    const theme = mergedConfig.theme
+
+    if (theme) {
+        if (!isThemeValid.value(mergedConfig)) {
+            warnInvalidTheme(mergedConfig);
+            finalConfig = mergedConfig;
+        } else {
+            const fused = useNestedProp({
+                userConfig: themes[theme] || props.config,
                 defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
+            });
+    
+            finalConfig =  {
+                ...useNestedProp({
+                    userConfig: props.config,
+                    defaultConfig: fused
+                }),
+                customPalette: mergedConfig.customPalette.length ? mergedConfig.customPalette : themePalettes[theme] || palette
+            }
         }
     } else {
         finalConfig = mergedConfig;

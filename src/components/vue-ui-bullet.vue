@@ -1,31 +1,48 @@
 <script setup>
-import { ref, computed, onMounted, watch, onBeforeUnmount, defineAsyncComponent, toRefs } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    toRefs,
+    watch, 
+} from "vue";
 import { useConfig } from "../useConfig";
-import { XMLNS, createUid, error, getMissingDatasetAttributes, objectIsEmpty, treeShake } from "../lib";
+import { 
+    XMLNS, 
+    createUid, 
+    error, 
+    getMissingDatasetAttributes, 
+    objectIsEmpty, 
+    treeShake,
+    convertColorToHex,
+    lightenHexColor,
+    calculateNiceScale,
+    applyDataLabel,
+    dataLabel
+} from "../lib";
 import { throttle } from "../canvas-lib";
-import { useNestedProp } from "../useNestedProp";
-import { convertColorToHex } from "../lib";
-import { lightenHexColor } from "../lib";
-import { calculateNiceScale } from "../lib";
-import { applyDataLabel } from "../lib";
-import { dataLabel } from "../lib";
 import { usePrinter } from "../usePrinter";
+import { useLoading } from "../useLoading";
+import { useSvgExport } from "../useSvgExport";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
+import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_bullet.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
-import { useResponsive } from "../useResponsive";
-import { useLoading } from "../useLoading";
 import BaseScanner from "../atoms/BaseScanner.vue";
-import { useSvgExport } from "../useSvgExport";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_bullet: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -192,16 +209,26 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_bullet[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-        }
-    } else {
+
+    const theme = mergedConfig.theme;
+    if (!theme) return mergedConfig;
+
+    if (!isThemeValid.value(mergedConfig)) {
+        warnInvalidTheme(mergedConfig);
         return mergedConfig;
     }
+
+    const fused = useNestedProp({
+        userConfig: themes[theme] || props.config,
+        defaultConfig: mergedConfig
+    });
+
+    const finalConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: fused
+    });
+
+    return finalConfig;
 }
 
 const FINAL_CONFIG = ref(prepareConfig());

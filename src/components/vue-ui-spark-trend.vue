@@ -28,12 +28,14 @@ import { useLoading } from "../useLoading";
 import { useFitSvgText } from "../useFitSvgText";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
-import themes from "../themes.json";
+import { useThemeCheck } from "../useThemeCheck";
+import themes from "../themes/vue_ui_spark_trend.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_spark_trend: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -88,16 +90,26 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_spark_trend[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            })
-        }
-    } else {
+
+    const theme = mergedConfig.theme;
+    if (!theme) return mergedConfig;
+
+    if (!isThemeValid.value(mergedConfig)) {
+        warnInvalidTheme(mergedConfig);
         return mergedConfig;
     }
+    
+    const fused = useNestedProp({
+        userConfig: themes[theme] || props.config,
+        defaultConfig: mergedConfig
+    });
+
+    const finalConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: fused
+    });
+
+    return finalConfig;
 }
 
 const downsampled = computed(() => largestTriangleThreeBucketsArray({

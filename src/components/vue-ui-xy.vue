@@ -63,11 +63,12 @@ import { useLoading } from '../useLoading.js';
 import { useDateTime } from '../useDateTime.js';
 import { useSvgExport } from '../useSvgExport.js';
 import { useNestedProp } from '../useNestedProp';
+import { useThemeCheck } from '../useThemeCheck.js';
 import { useTimeLabels } from '../useTimeLabels.js';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import img from '../img.js';
 import Title from '../atoms/Title.vue';
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_xy.json";
 import Shape from '../atoms/Shape.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
@@ -105,7 +106,9 @@ const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDrag
 const emit = defineEmits(['selectTimeLabel', 'selectX', 'selectLegend']);
 const SLOTS = useSlots();
 const instance = getCurrentInstance();
+
 const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const chart = ref(null);
 const chartTitle = ref(null);
@@ -306,16 +309,27 @@ function prepareConfig() {
     }
     // ----------------------------------------------------------------------------
     
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_xy[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || props.palette
-        }
-    } else {
-        return mergedConfig
+    const theme = mergedConfig.theme;
+    if (!theme) return mergedConfig;
+
+    if (!isThemeValid.value(mergedConfig)) {
+        warnInvalidTheme(mergedConfig);
+        return mergedConfig;
+    }
+
+    const fused = useNestedProp({
+        userConfig: themes[theme] || props.config,
+        defaultConfig: mergedConfig
+    });
+
+    const finalConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: fused
+    });
+
+    return {
+        ...finalConfig,
+        customPalette: finalConfig.customPalette.length ? finalConfig.customPalette : themePalettes[theme] || palette
     }
 }
 
@@ -724,18 +738,18 @@ const drawingArea = computed(() => {
         }
     }
 
-    const _width = width.value - _scaleLabelX - FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize - progressionLabelOffsetX - FINAL_CONFIG.value.chart.padding.left - FINAL_CONFIG.value.chart.padding.right;
+    const _width = width.value - _scaleLabelX - FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize - progressionLabelOffsetX - FINAL_CONFIG.value.chart.padding?.left - FINAL_CONFIG.value.chart.padding?.right;
 
     const xPadding = FINAL_CONFIG.value.chart.grid.position === 'middle' ? 0 : _width / maxSeries.value / 2;
 
 
 
     return {
-        top: FINAL_CONFIG.value.chart.padding.top + topOffset,
-        right: width.value - progressionLabelOffsetX - FINAL_CONFIG.value.chart.padding.right,
-        bottom: height.value - timeLabelsY.value - FINAL_CONFIG.value.chart.padding.bottom - FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY,
-        left: _scaleLabelX + FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize - xPadding + FINAL_CONFIG.value.chart.padding.left,
-        height: height.value - timeLabelsY.value - FINAL_CONFIG.value.chart.padding.top -FINAL_CONFIG.value.chart.padding.bottom - topOffset - FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY,
+        top: FINAL_CONFIG.value.chart.padding?.top + topOffset,
+        right: width.value - progressionLabelOffsetX - FINAL_CONFIG.value.chart.padding?.right,
+        bottom: height.value - timeLabelsY.value - FINAL_CONFIG.value.chart.padding?.bottom - FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY,
+        left: _scaleLabelX + FINAL_CONFIG.value.chart.grid.labels.yAxis.crosshairSize - xPadding + FINAL_CONFIG.value.chart.padding?.left,
+        height: height.value - timeLabelsY.value - FINAL_CONFIG.value.chart.padding?.top -FINAL_CONFIG.value.chart.padding?.bottom - topOffset - FINAL_CONFIG.value.chart.grid.labels.axis.xLabelOffsetY,
         width: _width,
         scaleLabelX: _scaleLabelX,
         individualOffsetX
@@ -746,12 +760,12 @@ const gridVerticalLines = computed(() => {
     const extra = FINAL_CONFIG.value.chart.grid.position === 'middle' ? 1 : 0
     const count = maxSeries.value + extra
 
-    const topY = forceValidValue(drawingArea.value.top)
-    const bottomY = forceValidValue(drawingArea.value.bottom)
+    const topY = forceValidValue(drawingArea.value?.top)
+    const bottomY = forceValidValue(drawingArea.value?.bottom)
 
     return Array.from({ length: count })
         .map((_, i) => {
-            const x = (drawingArea.value.width / maxSeries.value) * i + drawingArea.value.left + xPadding.value
+            const x = (drawingArea.value.width / maxSeries.value) * i + drawingArea.value?.left + xPadding.value
             return `M${x},${topY} L${x},${bottomY}`
         })
         .join(' ')
@@ -768,13 +782,13 @@ const crosshairsX = computed(() => {
         .map((label, i) => {
         if (!label || !label.text) return null;
 
-        const x = drawingArea.value.left + segmentWidth * i + segmentWidth / 2;
+        const x = drawingArea.value?.left + segmentWidth * i + segmentWidth / 2;
         const y1 = alwaysAtZero
-            ? zero.value - (zero.value === drawingArea.value.bottom ? 0 : size / 2)
-            : drawingArea.value.bottom;
+            ? zero.value - (zero.value === drawingArea.value?.bottom ? 0 : size / 2)
+            : drawingArea.value?.bottom;
         const y2 = alwaysAtZero
-            ? zero.value + (size / (zero.value === drawingArea.value.bottom ? 1 : 2))
-            : drawingArea.value.bottom + size;
+            ? zero.value + (size / (zero.value === drawingArea.value?.bottom ? 1 : 2))
+            : drawingArea.value?.bottom + size;
 
         return `M${x},${y1} L${x},${y2}`;
         })
@@ -1005,14 +1019,14 @@ function ratioToMax(v) {
 
 const zero = computed(() => {
     if (isNaN(ratioToMax(relativeZero.value))) {
-        return drawingArea.value.bottom;
+        return drawingArea.value?.bottom;
     } else {
-        return drawingArea.value.bottom - (drawingArea.value.height * ratioToMax(relativeZero.value));
+        return drawingArea.value?.bottom - (drawingArea.value.height * ratioToMax(relativeZero.value));
     }
 });
 
 function calcRectHeight(plot) {
-    const zeroForPositiveValuesOnly = ![null, undefined].includes(FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin) && FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin > 0 && min.value >= 0 ? drawingArea.value.bottom : zero.value;
+    const zeroForPositiveValuesOnly = ![null, undefined].includes(FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin) && FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin > 0 && min.value >= 0 ? drawingArea.value?.bottom : zero.value;
 
     if (plot.value >= 0) {
         return checkNaN(zeroForPositiveValuesOnly - plot.y <= 0 ? 0.00001 : zeroForPositiveValuesOnly - plot.y);
@@ -1056,7 +1070,7 @@ function calcRectX(plot) {
 
 function calcRectY(plot) {
     if (plot.value >= 0) return plot.y;
-    return [null, undefined, NaN, Infinity, -Infinity].includes(zero.value) ? drawingArea.bottom.value : zero.value;
+    return [null, undefined, NaN, Infinity, -Infinity].includes(zero.value) ? drawingArea?.bottom.value : zero.value;
 }
 
 function calcIndividualRectY(plot) {
@@ -1090,8 +1104,8 @@ function clientToSvgCoords(evt) {
     const drawnH = vb.height * scale;
     const offsetX = (rect.width - drawnW) / 2;
     const offsetY = (rect.height - drawnH) / 2;
-    const x = (evt.clientX - rect.left - offsetX) / scale + vb.x;
-    const y = (evt.clientY - rect.top  - offsetY) / scale + vb.y;
+    const x = (evt.clientX - rect?.left - offsetX) / scale + vb.x;
+    const y = (evt.clientY - rect?.top  - offsetY) / scale + vb.y;
     return { x, y, ok: true };
 }
 
@@ -1475,24 +1489,24 @@ const annotationsY = computed(() => {
         const textWidth = ctx.measureText(label.text).width;
         const textHeight = label.fontSize;
 
-        const xText = (label.position === 'start' ? left + label.padding.left : right - label.padding.right) + label.offsetX;
+        const xText = (label.position === 'start' ? left + label.padding?.left : right - label.padding?.right) + label.offsetX;
 
         const baselineY = (yTop != null && yBottom != null)
             ? Math.min(yTop, yBottom)
             : (yTop != null ? yTop : yBottom);
 
-        const yText = baselineY - (label.fontSize / 3) + label.offsetY - label.padding.top;
+        const yText = baselineY - (label.fontSize / 3) + label.offsetY - label.padding?.top;
 
         let rectX;
         if (label.textAnchor === 'middle') {
-            rectX = xText - (textWidth / 2) - label.padding.left;
+            rectX = xText - (textWidth / 2) - label.padding?.left;
         } else if (label.textAnchor === 'end') {
-            rectX = xText - textWidth - label.padding.right;
+            rectX = xText - textWidth - label.padding?.right;
         } else {
-            rectX = xText - label.padding.left;
+            rectX = xText - label.padding?.left;
         }
 
-        const rectY = yText - (textHeight * 0.75) - label.padding.top;
+        const rectY = yText - (textHeight * 0.75) - label.padding?.top;
         const show = ![yTop, yBottom, rectY].includes(NaN);
 
         return {
@@ -1509,8 +1523,8 @@ const annotationsY = computed(() => {
             _box: {
                 x: rectX,
                 y: rectY,
-                width: textWidth + label.padding.left + label.padding.right,
-                height: textHeight + label.padding.top + label.padding.bottom,
+                width: textWidth + label.padding?.left + label.padding?.right,
+                height: textHeight + label.padding?.top + label.padding?.bottom,
                 fill: label.backgroundColor,
                 stroke: label.border.stroke,
                 rx: label.border.rx,
@@ -1581,16 +1595,16 @@ const barSet = computed(() => {
         const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
         const individualHeight = stacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
 
-        const zeroPosition = drawingArea.value.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
-        const autoScaleZeroPosition = drawingArea.value.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+        const zeroPosition = drawingArea.value?.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
+        const autoScaleZeroPosition = drawingArea.value?.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
 
         const barLen = absoluteDataset.value.filter(ds => ds.type === 'bar').filter(s => !segregatedSeries.value.includes(s.id)).length;
 
         const plots = datapoint.series.map((plot, j) => {
             const yRatio = mutableConfig.value.useIndividualScale ? ((datapoint.absoluteValues[j] + individualZero) / individualMax) : ratioToMax(plot)
             const x = mutableConfig.value.useIndividualScale && mutableConfig.value.isStacked
-                ? drawingArea.value.left + (drawingArea.value.width / maxSeries.value * j)
-                : drawingArea.value.left
+                ? drawingArea.value?.left + (drawingArea.value.width / maxSeries.value * j)
+                : drawingArea.value?.left
                 + (slot.value.bar * i)
                 + (slot.value.bar * j * barLen)
                 - (barSlot.value / 2)
@@ -1601,7 +1615,7 @@ const barSet = computed(() => {
                 yOffset: checkNaN(yOffset),
                 individualHeight: checkNaN(individualHeight),
                 x: checkNaN(x),
-                y: drawingArea.value.bottom - yOffset - (individualHeight * yRatio),
+                y: drawingArea.value?.bottom - yOffset - (individualHeight * yRatio),
                 value: datapoint.absoluteValues[j],
                 zeroPosition: checkNaN(zeroPosition),
                 individualMax: checkNaN(individualMax),
@@ -1619,13 +1633,13 @@ const barSet = computed(() => {
 
         const autoScalePlots = datapoint.series.map((_, j) => {
             const x = mutableConfig.value.useIndividualScale && mutableConfig.value.isStacked
-                ? drawingArea.value.left + (drawingArea.value.width / maxSeries.value * j)
-                : (drawingArea.value.left - slot.value.bar / 2 + slot.value.bar * i) + (slot.value.bar * j * absoluteDataset.value.filter(ds => ds.type === 'bar').filter(s => !segregatedSeries.value.includes(s.id)).length);
+                ? drawingArea.value?.left + (drawingArea.value.width / maxSeries.value * j)
+                : (drawingArea.value?.left - slot.value.bar / 2 + slot.value.bar * i) + (slot.value.bar * j * absoluteDataset.value.filter(ds => ds.type === 'bar').filter(s => !segregatedSeries.value.includes(s.id)).length);
             return {
                 yOffset: checkNaN(yOffset),
                 individualHeight: checkNaN(individualHeight),
                 x: checkNaN(x),
-                y: checkNaN(drawingArea.value.bottom - checkNaN(yOffset) - ((checkNaN(individualHeight) * autoScaleRatiosToNiceScale[j]) || 0)),
+                y: checkNaN(drawingArea.value?.bottom - checkNaN(yOffset) - ((checkNaN(individualHeight) * autoScaleRatiosToNiceScale[j]) || 0)),
                 value: datapoint.absoluteValues[j],
                 zeroPosition: checkNaN(zeroPosition),
                 individualMax: checkNaN(individualMax),
@@ -1732,9 +1746,9 @@ const lineSet = computed(() => {
         const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
         const individualHeight = stacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
 
-        const zeroPosition = drawingArea.value.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
+        const zeroPosition = drawingArea.value?.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
 
-        const autoScaleZeroPosition = drawingArea.value.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+        const autoScaleZeroPosition = drawingArea.value?.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
 
         const plots = datapoint.series.map((plot, j) => {
             const yRatio = mutableConfig.value.useIndividualScale
@@ -1742,8 +1756,8 @@ const lineSet = computed(() => {
                 : ratioToMax(plot)
 
             return {
-                x: checkNaN((drawingArea.value.left + (slot.value.line / 2)) + (slot.value.line * j)),
-                y: checkNaN(drawingArea.value.bottom - yOffset - (individualHeight * yRatio)),
+                x: checkNaN((drawingArea.value?.left + (slot.value.line / 2)) + (slot.value.line * j)),
+                y: checkNaN(drawingArea.value?.bottom - yOffset - (individualHeight * yRatio)),
                 value: datapoint.absoluteValues[j],
                 comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
             }
@@ -1760,14 +1774,14 @@ const lineSet = computed(() => {
         const autoScalePlots = datapoint.series.map((_, j) => {
             if (![undefined, null].includes(datapoint.absoluteValues[j])) {
                 return {
-                    x: checkNaN((drawingArea.value.left + (slot.value.line / 2)) + (slot.value.line * j)),
-                    y: checkNaN(drawingArea.value.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
+                    x: checkNaN((drawingArea.value?.left + (slot.value.line / 2)) + (slot.value.line * j)),
+                    y: checkNaN(drawingArea.value?.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
                     value: datapoint.absoluteValues[j],
                     comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
                 }
             } else {
                 return {
-                    x: checkNaN((drawingArea.value.left + (slot.value.line / 2)) + (slot.value.line * j)),
+                    x: checkNaN((drawingArea.value?.left + (slot.value.line / 2)) + (slot.value.line * j)),
                     y: zeroPosition,
                     value: datapoint.absoluteValues[j],
                     comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
@@ -1827,7 +1841,7 @@ const lineSet = computed(() => {
         scaleGroups.value[datapoint.scaleLabel].unique = activeSeriesWithStackRatios.value.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
 
         const areaZeroPosition = mutableConfig.value.useIndividualScale ? datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition : zero.value;
-        const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : (scaleYLabels.at(-1) ? scaleYLabels.at(-1).y : 0), drawingArea.value.top), areaZeroPosition);
+        const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : (scaleYLabels.at(-1) ? scaleYLabels.at(-1).y : 0), drawingArea.value?.top), areaZeroPosition);
 
         return {
             ...datapoint,
@@ -1921,14 +1935,14 @@ const plotSet = computed(() => {
         const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
         const individualHeight = stacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
 
-        const zeroPosition = drawingArea.value.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
-        const autoScaleZeroPosition = drawingArea.value.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+        const zeroPosition = drawingArea.value?.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
+        const autoScaleZeroPosition = drawingArea.value?.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
 
         const plots = datapoint.series.map((plot, j) => {
             const yRatio = mutableConfig.value.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : ratioToMax(plot)
             return {
-                x: checkNaN((drawingArea.value.left + (slot.value.plot / 2)) + (slot.value.plot * j)),
-                y: checkNaN(drawingArea.value.bottom - yOffset - (individualHeight * yRatio)),
+                x: checkNaN((drawingArea.value?.left + (slot.value.plot / 2)) + (slot.value.plot * j)),
+                y: checkNaN(drawingArea.value?.bottom - yOffset - (individualHeight * yRatio)),
                 value: datapoint.absoluteValues[j],
                 comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
             }
@@ -1944,8 +1958,8 @@ const plotSet = computed(() => {
 
         const autoScalePlots = datapoint.series.map((_, j) => {
             return {
-                x: checkNaN((drawingArea.value.left + (slot.value.plot / 2)) + (slot.value.plot * j)),
-                y: checkNaN(drawingArea.value.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
+                x: checkNaN((drawingArea.value?.left + (slot.value.plot / 2)) + (slot.value.plot * j)),
+                y: checkNaN(drawingArea.value?.bottom - yOffset - ((individualHeight * autoScaleRatiosToNiceScale[j]) || 0)),
                 value: datapoint.absoluteValues[j],
                 comment: datapoint.comments ? datapoint.comments.slice(slicer.value.start, slicer.value.end)[j] || '' : ''
             }
@@ -2053,7 +2067,7 @@ const allScales = computed(() => {
     return _source.flatMap((el, i) => {
 
         let x = 0;
-        x = mutableConfig.value.isStacked ? drawingArea.value.left : drawingArea.value.left / len * (i + 1);
+        x = mutableConfig.value.isStacked ? drawingArea.value?.left : drawingArea.value?.left / len * (i + 1);
 
         const name = (mutableConfig.value.useIndividualScale && !mutableConfig.value.isStacked) ? el.unique ? el.name : el.groupName : el.name
 
@@ -2690,10 +2704,10 @@ function timeTagX() {
     const W_FO = 200;
     const sectionsX = Math.max(1, maxSeries.value);
     const sectionX = drawingArea.value.width / sectionsX;
-    const centerX = drawingArea.value.left + activeIndex.value * sectionX + sectionX / 2;
+    const centerX = drawingArea.value?.left + activeIndex.value * sectionX + sectionX / 2;
     const desiredX = centerX - w / 2 - (W_FO - w) / 2;
-    const minX = drawingArea.value.left - (W_FO - w) / 2;
-    const _maxX = drawingArea.value.right - (W_FO + w) / 2;
+    const minX = drawingArea.value?.left - (W_FO - w) / 2;
+    const _maxX = drawingArea.value?.right - (W_FO + w) / 2;
     const clamped = Math.max(minX, Math.min(desiredX, _maxX));
     return checkNaN(clamped);
 }
@@ -3083,7 +3097,7 @@ defineExpose({
 
                 <!-- BACKGROUND SLOT -->
                 <foreignObject v-if="$slots['chart-background']"
-                    :x="(drawingArea.left + xPadding) < 0 ? 0 : drawingArea.left + xPadding" :y="drawingArea.top"
+                    :x="(drawingArea?.left + xPadding) < 0 ? 0 : drawingArea?.left + xPadding" :y="drawingArea?.top"
                     :width="(drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)) < 0 ? 0 : drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)"
                     :height="drawingArea.height < 0 ? 0 : drawingArea.height" :style="{
                         pointerEvents: 'none'
@@ -3099,22 +3113,22 @@ defineExpose({
                             data-cy="xy-grid-line-x"
                             :stroke="FINAL_CONFIG.chart.grid.stroke" 
                             stroke-width="1" 
-                            :x1="drawingArea.left + xPadding"
-                            :x2="drawingArea.right - xPadding" 
-                            :y1="forceValidValue(drawingArea.bottom)"
-                            :y2="forceValidValue(drawingArea.bottom)" 
+                            :x1="drawingArea?.left + xPadding"
+                            :x2="drawingArea?.right - xPadding" 
+                            :y1="forceValidValue(drawingArea?.bottom)"
+                            :y2="forceValidValue(drawingArea?.bottom)" 
                             stroke-linecap="round"
                             :style="{ animation: 'none !important' }" 
                         />
                         <template v-if="!mutableConfig.useIndividualScale">
                             <line v-if="FINAL_CONFIG.chart.grid.labels.yAxis.showBaseline" data-cy="xy-grid-line-y"
                                 :stroke="FINAL_CONFIG.chart.grid.stroke" stroke-width="1"
-                                :x1="drawingArea.left + xPadding" :x2="drawingArea.left + xPadding"
-                                :y1="forceValidValue(drawingArea.top)" :y2="forceValidValue(drawingArea.bottom)"
+                                :x1="drawingArea?.left + xPadding" :x2="drawingArea?.left + xPadding"
+                                :y1="forceValidValue(drawingArea?.top)" :y2="forceValidValue(drawingArea?.bottom)"
                                 stroke-linecap="round" :style="{ animation: 'none !important' }" />
                             <g v-if="FINAL_CONFIG.chart.grid.showHorizontalLines">
                                 <line data-cy="xy-grid-horizontal-line" v-for="l in yLabels"
-                                    :x1="drawingArea.left + xPadding" :x2="drawingArea.right"
+                                    :x1="drawingArea?.left + xPadding" :x2="drawingArea?.right"
                                     :y1="forceValidValue(l.y)" :y2="forceValidValue(l.y)"
                                     :stroke="FINAL_CONFIG.chart.grid.stroke" :stroke-width="0.5" stroke-linecap="round"
                                     :style="{ animation: 'none !important' }" />
@@ -3123,14 +3137,14 @@ defineExpose({
                         <template v-else-if="FINAL_CONFIG.chart.grid.showHorizontalLines">
                             <g v-for="grid in allScales">
                                 <template v-if="grid.id === selectedScale && grid.yLabels.length">
-                                    <line v-for="l in grid.yLabels" :x1="drawingArea.left + xPadding"
-                                        :x2="drawingArea.right - xPadding" :y1="forceValidValue(l.y)"
+                                    <line v-for="l in grid.yLabels" :x1="drawingArea?.left + xPadding"
+                                        :x2="drawingArea?.right - xPadding" :y1="forceValidValue(l.y)"
                                         :y2="forceValidValue(l.y)" :stroke="grid.color" :stroke-width="0.5"
                                         stroke-linecap="round" :style="{ animation: 'none !important' }" />
                                 </template>
                                 <template v-else-if="grid.yLabels.length">
-                                    <line v-for="l in grid.yLabels" :x1="drawingArea.left + xPadding"
-                                        :x2="drawingArea.right - xPadding" :y1="forceValidValue(l.y)"
+                                    <line v-for="l in grid.yLabels" :x1="drawingArea?.left + xPadding"
+                                        :x2="drawingArea?.right - xPadding" :y1="forceValidValue(l.y)"
                                         :y2="forceValidValue(l.y)" :stroke="FINAL_CONFIG.chart.grid.stroke"
                                         :stroke-width="0.5" stroke-linecap="round"
                                         :style="{ animation: 'none !important' }" />
@@ -3208,16 +3222,16 @@ defineExpose({
                                     transition: 'none',
                                     opacity: (oneArea.from + i >= slicer.start && (oneArea.from + i <= slicer.end - 1)) ? 1 : 0
                                 }"
-                                    :x="drawingArea.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start)"
-                                    :y="drawingArea.top" :height="drawingArea.height < 0 ? 10 : drawingArea.height"
+                                    :x="drawingArea?.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start)"
+                                    :y="drawingArea?.top" :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                                     :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
                                     :fill="setOpacity(oneArea.color, oneArea.opacity)" />
                             </g>
                             <!-- HIGHLIGHT AREA CAPTION -->
                             <g v-for="(_, i) in oneArea.span">
                                 <foreignObject v-if="oneArea.caption.text && i === 0"
-                                    :x="drawingArea.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start) - (oneArea.caption.width === 'auto' ? 0 : oneArea.caption.width / 2 - (drawingArea.width / maxSeries) * oneArea.span / 2)"
-                                    :y="drawingArea.top + oneArea.caption.offsetY" :style="{
+                                    :x="drawingArea?.left + (drawingArea.width / maxSeries) * ((oneArea.from + i) - slicer.start) - (oneArea.caption.width === 'auto' ? 0 : oneArea.caption.width / 2 - (drawingArea.width / maxSeries) * oneArea.span / 2)"
+                                    :y="drawingArea?.top + oneArea.caption.offsetY" :style="{
                                         overflow: 'visible',
                                         opacity: (oneArea.to >= slicer.start && oneArea.from < slicer.end) ? 1 : 0
                                     }" height="1"
@@ -3234,8 +3248,8 @@ defineExpose({
                     <!-- HIGHLIGHTERS -->
                     <g v-if="userHovers">
                         <g v-for="(_, i) in maxSeries" :key="`tooltip_trap_highlighter_${i}`">
-                            <rect data-cy="highlighter" :x="drawingArea.left + (drawingArea.width / maxSeries) * i"
-                                :y="drawingArea.top" :height="drawingArea.height < 0 ? 10 : drawingArea.height"
+                            <rect data-cy="highlighter" :x="drawingArea?.left + (drawingArea.width / maxSeries) * i"
+                                :y="drawingArea?.top" :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                                 :width="drawingArea.width / maxSeries < 0 ? 0.00001 : drawingArea.width / maxSeries"
                                 :fill="[selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(i) ? setOpacity(FINAL_CONFIG.chart.highlighter.color, FINAL_CONFIG.chart.highlighter.opacity) : 'transparent'"
                                 :style="{ transition: 'none !important', animation: 'none !important' }"
@@ -3292,7 +3306,7 @@ defineExpose({
                     <!-- ZERO LINE (AFTER BAR DATASETS, BEFORE LABELS) -->
                     <template v-if="!mutableConfig.useIndividualScale && FINAL_CONFIG.chart.grid.labels.zeroLine.show">
                         <line data-cy="xy-grid-line-x" :stroke="FINAL_CONFIG.chart.grid.stroke" stroke-width="1"
-                            :x1="drawingArea.left + xPadding" :x2="drawingArea.right"
+                            :x1="drawingArea?.left + xPadding" :x2="drawingArea?.right"
                             :y1="forceValidValue(zero)" :y2="forceValidValue(zero)" stroke-linecap="round"
                             :style="{ animation: 'none !important' }" />
                     </template>
@@ -3300,9 +3314,9 @@ defineExpose({
                     <g
                         v-if="FINAL_CONFIG.chart.highlighter.useLine && (![null, undefined].includes(selectedSerieIndex) || ![null, undefined].includes(selectedMinimapIndex))">
                         <line
-                            :x1="drawingArea.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) + (drawingArea.width / maxSeries / 2)"
-                            :x2="drawingArea.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) + (drawingArea.width / maxSeries / 2)"
-                            :y1="forceValidValue(drawingArea.top)" :y2="forceValidValue(drawingArea.bottom)"
+                            :x1="drawingArea?.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) + (drawingArea.width / maxSeries / 2)"
+                            :x2="drawingArea?.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) + (drawingArea.width / maxSeries / 2)"
+                            :y1="forceValidValue(drawingArea?.top)" :y2="forceValidValue(drawingArea?.bottom)"
                             :stroke="FINAL_CONFIG.chart.highlighter.color"
                             :stroke-width="FINAL_CONFIG.chart.highlighter.lineWidth"
                             :stroke-dasharray="FINAL_CONFIG.chart.highlighter.lineDasharray" stroke-linecap="round"
@@ -3312,7 +3326,7 @@ defineExpose({
                     <!-- FRAME -->
                     <rect data-cy="frame" v-if="FINAL_CONFIG.chart.grid.frame.show"
                         :style="{ pointerEvents: 'none', transition: 'none', animation: 'none !important' }"
-                        :x="(drawingArea.left + xPadding) < 0 ? 0 : drawingArea.left + xPadding" :y="drawingArea.top"
+                        :x="(drawingArea?.left + xPadding) < 0 ? 0 : drawingArea?.left + xPadding" :y="drawingArea?.top"
                         :width="(drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)) < 0 ? 0 : drawingArea.width - (FINAL_CONFIG.chart.grid.position === 'middle' ? 0 : drawingArea.width / maxSeries)"
                         :height="drawingArea.height < 0 ? 0 : drawingArea.height" fill="transparent"
                         :stroke="FINAL_CONFIG.chart.grid.frame.stroke"
@@ -3326,8 +3340,8 @@ defineExpose({
                         <template v-if="mutableConfig.useIndividualScale">
                             <g v-for="el in allScales">
                                 <line :x1="el.x + xPadding - drawingArea.individualOffsetX" :x2="el.x + xPadding - drawingArea.individualOffsetX"
-                                    :y1="mutableConfig.isStacked ? forceValidValue((drawingArea.bottom - el.yOffset - el.individualHeight)) : forceValidValue(drawingArea.top)"
-                                    :y2="mutableConfig.isStacked ? forceValidValue((drawingArea.bottom - el.yOffset)) : forceValidValue(drawingArea.bottom)"
+                                    :y1="mutableConfig.isStacked ? forceValidValue((drawingArea?.bottom - el.yOffset - el.individualHeight)) : forceValidValue(drawingArea?.top)"
+                                    :y2="mutableConfig.isStacked ? forceValidValue((drawingArea?.bottom - el.yOffset)) : forceValidValue(drawingArea?.bottom)"
                                     :stroke="el.color" :stroke-width="FINAL_CONFIG.chart.grid.stroke"
                                     stroke-linecap="round"
                                     :style="`opacity:${selectedScale ? selectedScale === el.groupId ? 1 : 0.3 : 1};transition:opacity 0.2s ease-in-out; animation: none !important`" />
@@ -3338,7 +3352,7 @@ defineExpose({
                                     :fill="el.color" 
                                     :font-size="fontSizes.dataLabels * 0.8" 
                                     text-anchor="middle"
-                                    :transform="`translate(${el.x - ((fontSizes.dataLabels * 0.8) / 2) + xPadding}, ${mutableConfig.isStacked ? drawingArea.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea.top + drawingArea.height / 2}) rotate(-90)`">
+                                    :transform="`translate(${el.x - ((fontSizes.dataLabels * 0.8) / 2) + xPadding}, ${mutableConfig.isStacked ? drawingArea?.bottom - el.yOffset - (el.individualHeight / 2) : drawingArea?.top + drawingArea.height / 2}) rotate(-90)`">
                                     {{ el.name }} {{ el.scaleLabel && el.unique && el.scaleLabel !== el.id ? `-
                                     ${el.scaleLabel}` : '' }}
                                 </text>
@@ -3375,8 +3389,8 @@ defineExpose({
                             <g v-for="(yLabel, i) in yLabels" :key="`yLabel_${i}`">
                                 <line data-cy="axis-y-tick"
                                     v-if="canShowValue(yLabel) && yLabel.value >= niceScale.min && yLabel.value <= niceScale.max && FINAL_CONFIG.chart.grid.labels.yAxis.showCrosshairs"
-                                    :x1="drawingArea.left + xPadding"
-                                    :x2="drawingArea.left + xPadding - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
+                                    :x1="drawingArea?.left + xPadding"
+                                    :x2="drawingArea?.left + xPadding - FINAL_CONFIG.chart.grid.labels.yAxis.crosshairSize"
                                     :y1="forceValidValue(yLabel.y)" :y2="forceValidValue(yLabel.y)"
                                     :stroke="FINAL_CONFIG.chart.grid.stroke" stroke-width="1" stroke-linecap="round"
                                     :style="{ animation: 'none !important' }" />
@@ -3638,7 +3652,7 @@ defineExpose({
                                 <template v-else>
                                     <line class="vue-ui-xy-tag-plot"
                                         v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag"
-                                        :x1="drawingArea.left" :x2="drawingArea.right" :y1="plot.y" :y2="plot.y"
+                                        :x1="drawingArea?.left" :x2="drawingArea?.right" :y1="plot.y" :y2="plot.y"
                                         :stroke-width="1" stroke-linecap="round" stroke-dasharray="2"
                                         :stroke="serie.color" />
                                 </template>
@@ -3717,7 +3731,7 @@ defineExpose({
                                 <template v-else>
                                     <line class="vue-ui-xy-tag-line"
                                         v-if="([selectedMinimapIndex, selectedSerieIndex, selectedRowIndex].includes(j)) && serie.useTag"
-                                        :x1="drawingArea.left" :x2="drawingArea.right" :y1="plot.y" :y2="plot.y"
+                                        :x1="drawingArea?.left" :x2="drawingArea?.right" :y1="plot.y" :y2="plot.y"
                                         :stroke-width="1" stroke-linecap="round" stroke-dasharray="2"
                                         :stroke="serie.color" />
                                 </template>
@@ -3867,7 +3881,7 @@ defineExpose({
                         </defs>
                         <rect v-for="(trap, i) in allScales"
                             :x="trap.x - FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + xPadding - drawingArea.individualOffsetX"
-                            :y="drawingArea.top" 
+                            :y="drawingArea?.top" 
                             :width="FINAL_CONFIG.chart.grid.labels.yAxis.labelWidth + drawingArea.individualOffsetX"
                             :height="drawingArea.height < 0 ? 10 : drawingArea.height"
                             :fill="selectedScale === trap.groupId ? `url(#individual_scale_gradient_${uniqueId}_${i})` : 'transparent'"
@@ -3879,7 +3893,7 @@ defineExpose({
                         <text ref="yAxisLabel" data-cy="xy-axis-yLabel"
                             v-if="FINAL_CONFIG.chart.grid.labels.axis.yLabel && !mutableConfig.useIndividualScale"
                             :font-size="fontSizes.yAxis" :fill="FINAL_CONFIG.chart.grid.labels.color"
-                            :transform="`translate(${FINAL_CONFIG.chart.grid.labels.axis.fontSize}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                            :transform="`translate(${FINAL_CONFIG.chart.grid.labels.axis.fontSize}, ${drawingArea?.top + drawingArea.height / 2}) rotate(-90)`"
                             text-anchor="middle" style="transition: none">
                             {{ FINAL_CONFIG.chart.grid.labels.axis.yLabel }}
                         </text>
@@ -3897,11 +3911,11 @@ defineExpose({
                         <template v-if="$slots['time-label']">
                             <template v-for="(label, i) in displayedTimeLabels" :key="`time_label_${label.id}`">
                                 <slot name="time-label" v-bind="{
-                                    x: drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2),
-                                    y: drawingArea.bottom,
+                                    x: drawingArea?.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2),
+                                    y: drawingArea?.bottom,
                                     fontSize: fontSizes.xAxis,
                                     fill: FINAL_CONFIG.chart.grid.labels.xAxisLabels.color,
-                                    transform: `translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`,
+                                    transform: `translate(${drawingArea?.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.3 + FINAL_CONFIG.chart.grid.labels.xAxisLabels.yOffset}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`,
                                     absoluteIndex: label.absoluteIndex,
                                     content: label.text,
                                     textAnchor: FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle',
@@ -3919,7 +3933,7 @@ defineExpose({
                                         :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                                         :font-size="fontSizes.xAxis"
                                         :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                                        :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                        :transform="`translate(${drawingArea?.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                         :style="{
                                             cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
                                         }" @click="() => selectTimeLabel(label, i)">
@@ -3932,7 +3946,7 @@ defineExpose({
                                         :text-anchor="FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                                         :font-size="fontSizes.xAxis"
                                         :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
-                                        :transform="`translate(${drawingArea.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
+                                        :transform="`translate(${drawingArea?.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                         :style="{
                                             cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
                                         }" v-html="createTSpansFromLineBreaksOnX({
@@ -3986,7 +4000,7 @@ defineExpose({
                         style="pointer-events:none">
                         <foreignObject
                             :x="timeTagX()"
-                            :y="drawingArea.bottom" width="200" height="40" style="overflow: visible !important;">
+                            :y="drawingArea?.bottom" width="200" height="40" style="overflow: visible !important;">
                             <div 
                                 ref="timeTagEl"
                                 data-cy="time-tag"
@@ -3996,8 +4010,8 @@ defineExpose({
                             />
                         </foreignObject>
                         <circle
-                            :cx="drawingArea.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) + (drawingArea.width / maxSeries / 2)"
-                            :cy="drawingArea.bottom" :r="FINAL_CONFIG.chart.timeTag.circleMarker.radius"
+                            :cx="drawingArea?.left + (drawingArea.width / maxSeries) * ((selectedSerieIndex !== null ? selectedSerieIndex : 0) || (selectedMinimapIndex !== null ? selectedMinimapIndex : 0)) + (drawingArea.width / maxSeries / 2)"
+                            :cy="drawingArea?.bottom" :r="FINAL_CONFIG.chart.timeTag.circleMarker.radius"
                             :fill="FINAL_CONFIG.chart.timeTag.circleMarker.color" />
                     </g>
                 </g>
@@ -4031,18 +4045,18 @@ defineExpose({
                         position: 'fixed',
                         top: placeXYTag({
                             svgElement: svgRef,
-                            x: drawingArea.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
+                            x: drawingArea?.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
                             y: plot.y,
                             element: tagRefs[`${i}_${j}_right_line`],
                             position: 'right'
-                        }).top + 'px',
+                        })?.top + 'px',
                         left: placeXYTag({
                             svgElement: svgRef,
-                            x: drawingArea.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
+                            x: drawingArea?.right + FINAL_CONFIG.line.tag.fontSize / 1.5,
                             y: plot.y,
                             element: tagRefs[`${i}_${j}_right_line`],
                             position: 'right'
-                        }).left + 'px',
+                        })?.left + 'px',
                         height: 'fit-content',
                         width: 'fit-content',
                         background: serie.color,
@@ -4071,18 +4085,18 @@ defineExpose({
                         position: 'fixed',
                         top: placeXYTag({
                             svgElement: svgRef,
-                            x: drawingArea.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
+                            x: drawingArea?.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
                             y: plot.y,
                             element: tagRefs[`${i}_${j}_left_line`],
                             position: 'left'
-                        }).top + 'px',
+                        })?.top + 'px',
                         left: placeXYTag({
                             svgElement: svgRef,
-                            x: drawingArea.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
+                            x: drawingArea?.left - FINAL_CONFIG.line.tag.fontSize / 1.5,
                             y: plot.y,
                             element: tagRefs[`${i}_${j}_left_line`],
                             position: 'left'
-                        }).left + 'px',
+                        })?.left + 'px',
                         height: 'fit-content',
                         width: 'fit-content',
                         background: serie.color,
@@ -4117,18 +4131,18 @@ defineExpose({
                         position: 'fixed',
                         top: placeXYTag({
                             svgElement: svgRef,
-                            x: drawingArea.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                            x: drawingArea?.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
                             y: plot.y,
                             element: tagRefs[`${i}_${j}_right_plot`],
                             position: 'right'
-                        }).top + 'px',
+                        })?.top + 'px',
                         left: placeXYTag({
                             svgElement: svgRef,
-                            x: drawingArea.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                            x: drawingArea?.right + FINAL_CONFIG.plot.tag.fontSize / 1.5,
                             y: plot.y,
                             element: tagRefs[`${i}_${j}_right_plot`],
                             position: 'right'
-                        }).left + 'px',
+                        })?.left + 'px',
                         height: 'fit-content',
                         width: 'fit-content',
                         background: serie.color,
@@ -4157,18 +4171,18 @@ defineExpose({
                         position: 'fixed',
                         top: placeXYTag({
                             svgElement: svgRef,
-                            x: drawingArea.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                            x: drawingArea?.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
                             y: plot.y,
                             element: tagRefs[`${i}_${j}_left_plot`],
                             position: 'left'
-                        }).top + 'px',
+                        })?.top + 'px',
                         left: placeXYTag({
                             svgElement: svgRef,
-                            x: drawingArea.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
+                            x: drawingArea?.left - FINAL_CONFIG.plot.tag.fontSize / 1.5,
                             y: plot.y,
                             element: tagRefs[`${i}_${j}_left_plot`],
                             position: 'left'
-                        }).left + 'px',
+                        })?.left + 'px',
                         height: 'fit-content',
                         width: 'fit-content',
                         background: serie.color,

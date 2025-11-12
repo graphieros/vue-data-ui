@@ -34,9 +34,10 @@ import { useLoading } from "../useLoading";
 import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
+import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_flow.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import img from "../img";
@@ -52,6 +53,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_flow: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -208,14 +210,26 @@ function prepareConfig() {
 
     let final = mergedConfig;
 
-    if (mergedConfig.theme) {
-        final = {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_flow[mergedConfig.theme] || props.config,
+    const theme = mergedConfig.theme;
+
+    if (theme) {
+        if (!isThemeValid.value(mergedConfig)) {
+            warnInvalidTheme(mergedConfig);
+            final = mergedConfig;
+        } else {
+            const fused = useNestedProp({
+                userConfig: themes[theme] || props.config,
                 defaultConfig: mergedConfig,
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette,
-        };
+            });
+    
+            final = {
+                ...useNestedProp({
+                    userConfig: props.config,
+                    defaultConfig: fused,
+                }),
+                customPalette: mergedConfig.customPalette.length ? mergedConfig.customPalette : themePalettes[theme] || palette,
+            };
+        }
     } else {
         final = mergedConfig;
     }

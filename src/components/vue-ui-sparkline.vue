@@ -20,20 +20,22 @@ import {
     treeShake,
     XMLNS
 } from "../lib";
-import { useNestedProp } from "../useNestedProp";
-import { useConfig } from "../useConfig";
-import { useResponsive } from "../useResponsive";
 import { throttle } from "../canvas-lib";
-import { useChartAccessibility } from "../useChartAccessibility";
+import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
-import themes from "../themes.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
+import { useNestedProp } from "../useNestedProp";
+import { useResponsive } from "../useResponsive";
+import { useThemeCheck } from "../useThemeCheck";
 import { useTimeLabels } from "../useTimeLabels";
+import { useChartAccessibility } from "../useChartAccessibility";
+import themes from "../themes/vue_ui_sparkline.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const SparkTooltip = defineAsyncComponent(() => import('../atoms/SparkTooltip.vue'));
 
 const { vue_ui_sparkline: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -121,12 +123,24 @@ function prepareConfig() {
     });
     let finalConfig = {};
 
-    if (mergedConfig.theme) {
-        finalConfig = {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_sparkline[mergedConfig.theme] || props.config,
+    const theme = mergedConfig.theme;
+
+    if (theme) {
+        if (!isThemeValid.value(mergedConfig)) {
+            warnInvalidTheme(mergedConfig);
+            finalConfig = mergedConfig;
+        } else {
+            const fused = useNestedProp({
+                userConfig: themes[theme] || props.config,
                 defaultConfig: mergedConfig
-            }),
+            });
+    
+            finalConfig = {
+                ...useNestedProp({
+                    userConfig: props.config,
+                    defaultConfig: fused
+                }),
+            }
         }
     } else {
         finalConfig = mergedConfig;

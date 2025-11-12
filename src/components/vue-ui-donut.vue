@@ -48,12 +48,13 @@ import { useLoading } from "../useLoading";
 import { useSvgExport } from "../useSvgExport";
 import { useResponsive } from "../useResponsive";
 import { useNestedProp } from "../useNestedProp";
+import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import img from "../img";
 import Shape from "../atoms/Shape.vue";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_donut.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
 
@@ -67,6 +68,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_donut: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 const slots = useSlots();
 
 const props = defineProps({
@@ -305,8 +307,6 @@ function prepareChart() {
 }
 
 const uid = ref(createUid());
-
-const details = ref(null);
 const isTooltip = ref(false);
 const tooltipContent = ref("");
 const selectedSerie = ref(null);
@@ -319,17 +319,28 @@ function prepareConfig() {
     });
 
     let finalConfig =  {}
-    
-    if (mergedConfig.theme) {
-        finalConfig = {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_donut[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
-        }
-    } else {
+
+    const theme = mergedConfig.theme;
+    if (!theme) {
         finalConfig = mergedConfig;
+    } else {
+        if (!isThemeValid.value(mergedConfig)) {
+            warnInvalidTheme(mergedConfig);
+            finalConfig = mergedConfig;
+        } else {
+            const fused = useNestedProp({
+                userConfig: themes[theme] || props.config,
+                defaultConfig: mergedConfig
+            });
+
+            finalConfig = {
+                ...useNestedProp({
+                    userConfig: props.config,
+                    defaultConfig: fused
+                }),
+                customPalette: mergedConfig.customPalette.length ? mergedConfig.customPalette : themePalettes[theme] || palette
+            }
+        }
     }
 
     // ------------------------------ OVERRIDES -----------------------------------

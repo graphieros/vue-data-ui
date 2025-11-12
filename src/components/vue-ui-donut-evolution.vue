@@ -1,6 +1,17 @@
 
 <script setup>
-import { ref, computed, nextTick, onMounted, watch, defineAsyncComponent, watchEffect, onBeforeUnmount, toRefs, shallowRef } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    nextTick, 
+    onBeforeUnmount, 
+    onMounted, 
+    ref, 
+    shallowRef,
+    toRefs, 
+    watch, 
+    watchEffect, 
+} from "vue";
 import {
     applyDataLabel,
     calcMarkerOffsetX, 
@@ -37,12 +48,13 @@ import { useSvgExport } from "../useSvgExport.js";
 import { useTimeLabels } from "../useTimeLabels";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive.js";
+import { useThemeCheck } from "../useThemeCheck.js";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_donut_evolution.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
@@ -57,6 +69,7 @@ const VueUiDonut = defineAsyncComponent(() => import('./vue-ui-donut.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const { vue_ui_donut_evolution: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -340,14 +353,27 @@ function prepareConfig() {
 
     let finalConfig = {};
 
-    if (mergedConfig.theme) {
-        finalConfig = {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_donut_evolution[mergedConfig.theme] || props.config,
+    const theme = mergedConfig.theme;
+
+    if (theme) {
+        if (!isThemeValid.value(mergedConfig)) {
+            warnInvalidTheme(mergedConfig);
+            finalConfig = mergedConfig;
+        } else {
+            const fused = useNestedProp({
+                userConfig: themes[theme] || props.config,
                 defaultConfig: mergedConfig
-            }),
-            customPalette: themePalettes[mergedConfig.theme] || palette
+            });
+    
+            finalConfig = {
+                ...useNestedProp({
+                    userConfig: props.config,
+                    defaultConfig: fused
+                }),
+                customPalette: mergedConfig.customPalette ? mergedConfig.customPalette : themePalettes[theme] || palette
+            }
         }
+
     } else {
         finalConfig = mergedConfig;
     }

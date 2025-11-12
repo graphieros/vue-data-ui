@@ -22,13 +22,15 @@ import {
 } from "../lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
+import { useThemeCheck } from "../useThemeCheck";
 import { useChartAccessibility } from "../useChartAccessibility";
-import themes from "../themes.json";
+import themes from "../themes/vue_ui_sparkgauge.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 
 const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig();
+const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const props = defineProps({
     config: {
@@ -87,16 +89,26 @@ function prepareConfig() {
         userConfig: props.config,
         defaultConfig: DEFAULT_CONFIG
     });
-    if (mergedConfig.theme) {
-        return {
-            ...useNestedProp({
-                userConfig: themes.vue_ui_sparkgauge[mergedConfig.theme] || props.config,
-                defaultConfig: mergedConfig
-            }),
-        }
-    } else {
+
+    const theme = mergedConfig.theme;
+    if (!theme) return mergedConfig;
+
+    if (!isThemeValid.value(mergedConfig)) {
+        warnInvalidTheme(mergedConfig);
         return mergedConfig;
     }
+
+    const fused =  useNestedProp({
+        userConfig: themes[theme] || props.config,
+        defaultConfig: mergedConfig
+    });
+
+    const finalConfig = useNestedProp({
+        userConfig: props.config,
+        defaultConfig: fused
+    });
+
+    return finalConfig;
 }
 
 onMounted(() => {
