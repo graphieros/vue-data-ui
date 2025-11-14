@@ -1103,7 +1103,7 @@ defineExpose({
                             style="overflow: visible; position: relative"
                             v-if="!loading"
                         >
-                            <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}`">
+                            <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}; font-weight:${FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'}`">
                                 {{ applyDataLabel(
                                     FINAL_CONFIG.style.chart.dataLabel.formatter,
                                     bar.value,
@@ -1155,6 +1155,7 @@ defineExpose({
                                         :y="calcMarkerOffsetY(arc, 12, 12)"
                                         :fill="FINAL_CONFIG.style.chart.legend.color"
                                         :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                        :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
                                     >
                                         {{ applyDataLabel(
                                             FINAL_CONFIG.style.chart.dataLabel.formatter,
@@ -1174,6 +1175,7 @@ defineExpose({
                                         :y="calcMarkerOffsetY(arc, 12, 12) + FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
                                         :fill="FINAL_CONFIG.style.chart.legend.color"
                                         :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                        :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
                                     >
                                         {{ arc.name }}
                                     </text>
@@ -1267,7 +1269,7 @@ defineExpose({
                             style="overflow: visible; position: relative"
                             v-if="!loading"
                         >
-                            <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}`">
+                            <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color};font-weight:${FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'}`">
                                 {{ applyDataLabel(
                                     FINAL_CONFIG.style.chart.dataLabel.formatter,
                                     bar.value,
@@ -1319,6 +1321,7 @@ defineExpose({
                                         :y="calcMarkerOffsetY(arc, 12, 12)"
                                         :fill="FINAL_CONFIG.style.chart.legend.color"
                                         :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                        :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
                                     >
                                         {{ applyDataLabel(
                                             FINAL_CONFIG.style.chart.dataLabel.formatter,
@@ -1338,6 +1341,7 @@ defineExpose({
                                         :y="calcMarkerOffsetY(arc, 12, 12) + FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
                                         :fill="FINAL_CONFIG.style.chart.legend.color"
                                         :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                        :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
                                     >
                                         {{ arc.name }}
                                     </text>
