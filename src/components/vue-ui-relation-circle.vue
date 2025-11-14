@@ -615,6 +615,7 @@ async function generateSvg({ isCb }) {
 defineExpose({
     getImage,
     generatePdf,
+    generateSvg,
     generateImage,
     toggleAnnotator,
     toggleFullscreen
