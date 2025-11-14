@@ -3934,6 +3934,7 @@ declare module "vue-data-ui" {
                         };
                     };
                     donut?: {
+                        radiusRatio?: number;
                         borderWidth?: number;
                         strokeWidth?: number;
                         useShadow?: boolean;
