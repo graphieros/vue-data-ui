@@ -659,11 +659,10 @@ watch(
 onMounted(() => updateDataLabelOverflow());
 
 const drawingArea = computed(() => {
-    const left = childColumnWidth.value + Math.abs(FINAL_CONFIG.value.style.chart.layout.bars.nameLabels.offsetX) + dataLabelOverflowLeft.value;
+    const left = childColumnWidth.value + Math.abs(FINAL_CONFIG.value.style.chart.layout.bars.nameLabels.offsetX) + dataLabelOverflowLeft.value + FINAL_CONFIG.value.style.chart.layout.bars.offsetX;
 
     const right = svg.value.width - svg.value.padding.right;
-
-    const availableWidth = Math.max(0,right - left - dataLabelOverflow.value - dataLabelOverflowLeft.value);
+    const availableWidth = Math.max(0,right - left - dataLabelOverflow.value - dataLabelOverflowLeft.value - FINAL_CONFIG.value.style.chart.layout.bars.offsetX);
 
     return {
         top: svg.value.padding.top,
