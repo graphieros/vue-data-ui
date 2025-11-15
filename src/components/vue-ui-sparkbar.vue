@@ -414,6 +414,7 @@ function onTrapLeave(datapoint, index) {
                             :data-cy="`sparkbar-value-${i}`"
                             v-if="FINAL_CONFIG.style.labels.value.show"
                             :style="`font-weight:${FINAL_CONFIG.style.labels.value.bold ? 'bold' : 'normal'}`"
+                            class="vue-ui-sparkbar-datapoint-name"
                         >: {{ applyDataLabel(
                             bar.formatter,
                             bar.value,
@@ -430,6 +431,7 @@ function onTrapLeave(datapoint, index) {
                         <span
                             :data-cy="`sparkbar-target-value-${i}`"
                             v-if="FINAL_CONFIG.style.layout.showTargetValue"
+                            class="vue-ui-sparkbar-datapoint-value"
                             >
                             {{ ' ' + FINAL_CONFIG.style.layout.targetValueText }}  
                             {{ applyDataLabel(
