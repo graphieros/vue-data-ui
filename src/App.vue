@@ -12,7 +12,7 @@ import ArenaVueUiWheel from "../TestingArena/ArenaVueUiWheel.vue";
 import ArenaVueUiTiremarks from "../TestingArena/ArenaVueUiTiremarks.vue";
 import ArenaVueUiChestnut from "../TestingArena/ArenaVueUiChestnut.vue";
 import ArenaVueUiOnion from "../TestingArena/ArenaVueUiOnion.vue";
-import ArenaVueUiVerticalBar from "../TestingArena/ArenaVueUiVerticalBar.vue";
+import ArenaVueUiHorizontalBar from "../TestingArena/ArenaVueUiHorizontalBar.vue";
 import ArenaVueUiHeatmap from "../TestingArena/ArenaVueUiHeatmap.vue";
 import ArenaVueUiScatter from "../TestingArena/ArenaVueUiScatter.vue";
 import ArenaVueUiCandlestick from "../TestingArena/ArenaVueUiCandlestick.vue";
@@ -80,7 +80,7 @@ const mapping = ref({
   VueUiTiremarks: markRaw(ArenaVueUiTiremarks), 
   VueUiChestnut: markRaw(ArenaVueUiChestnut),
   VueUiOnion: markRaw(ArenaVueUiOnion),
-  VueUiVerticalBar: markRaw(ArenaVueUiVerticalBar),
+  VueUiHorizontalBar: markRaw(ArenaVueUiHorizontalBar),
   VueUiHeatmap: markRaw(ArenaVueUiHeatmap),
   VueUiScatter: markRaw(ArenaVueUiScatter),
   VueUiCandlestick: markRaw(ArenaVueUiCandlestick),
@@ -130,7 +130,7 @@ const mapping = ref({
 })
 
 const options = computed(() => Object.keys(mapping.value));
-const selectedComponent = ref('VueUiStackline');
+const selectedComponent = ref('VueUiHorizontalBar');
 
 /**
  * Legacy testing arena where some non chart components can be tested

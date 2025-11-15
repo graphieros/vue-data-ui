@@ -1962,7 +1962,7 @@ export const components = [
         wrapperClass: ".vue-ui-treemap",
     },
     {
-        name: "VueUiVerticalBar",
+        name: "VueUiHorizontalBar",
         dataset: [
             {
                 name: "Serie 1",

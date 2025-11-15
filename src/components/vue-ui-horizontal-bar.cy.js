@@ -1,12 +1,12 @@
-import VueUiVerticalBar from './vue-ui-vertical-bar.vue';
+import VueUiHorizontalBar from './vue-ui-horizontal-bar.vue';
 import { components } from '../../cypress/fixtures/vdui-components';
 import { testCommonFeatures } from '../../cypress/fixtures';
 
-const { config, dataset } = components.find(c => c.name === 'VueUiVerticalBar');
+const { config, dataset } = components.find(c => c.name === 'VueUiHorizontalBar');
 
-describe('<VueUiVerticalBar />', () => {
+describe('<VueUiHorizontalBar />', () => {
 	it('renders', () => {
-		cy.mount(VueUiVerticalBar, {
+		cy.mount(VueUiHorizontalBar, {
 			props: {
 				dataset,
 				config
@@ -35,7 +35,7 @@ describe('<VueUiVerticalBar />', () => {
 	});
 	
 	it('emits', () => {
-		cy.mount(VueUiVerticalBar, {
+		cy.mount(VueUiHorizontalBar, {
 			props: {
 				dataset,
 				config

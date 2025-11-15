@@ -47,8 +47,8 @@ export { default as VueUiThermometer } from "./components/vue-ui-thermometer.vue
 export { default as VueUiTimer } from "./components/vue-ui-timer.vue";
 export { default as VueUiTiremarks } from "./components/vue-ui-tiremarks.vue";
 export { default as VueUiTreemap } from "./components/vue-ui-treemap.vue";
-export { default as VueUiVerticalBar } from "./components/vue-ui-vertical-bar.vue";
-export { default as VueUiHorizontalBar } from "./components/vue-ui-vertical-bar.vue";
+export { default as VueUiVerticalBar } from "./components/vue-ui-horizontal-bar.vue"; // Legacy support
+export { default as VueUiHorizontalBar } from "./components/vue-ui-horizontal-bar.vue";
 export { default as VueUiWaffle } from "./components/vue-ui-waffle.vue";
 export { default as VueUiWheel } from "./components/vue-ui-wheel.vue";
 export { default as VueUiWordCloud } from "./components/vue-ui-word-cloud.vue";

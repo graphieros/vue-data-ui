@@ -2090,7 +2090,7 @@ export function useConfig() {
     const vue_ui_vertical_bar = { // v3 renamed to _horizontal_ (yet still works)
         debug: false, // v3
         loading: false, // v3
-        autoSize: true, // v3
+        autoSize: true, // Legacy - removed
         responsive: false,
         theme: '',
         customPalette: [],
@@ -2105,12 +2105,14 @@ export function useConfig() {
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
+                width: 512,
+                height: 316,
                 layout: {
                     bars: {
                         sort: SORT.DESC,
                         useStroke: false,
                         strokeWidth: 2,
-                        height: 32,
+                        height: 32, // legacy - unused now
                         gap: 6,
                         borderRadius: 4,
                         offsetX: 64,

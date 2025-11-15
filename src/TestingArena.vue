@@ -22,7 +22,7 @@ import QuadrantTest from "./components/vue-ui-quadrant.vue";
 import GaugeTest from "./components/vue-ui-gauge.vue";
 import ChestnutTest from "./components/vue-ui-chestnut.vue";
 import OnionTest from "./components/vue-ui-onion.vue";
-import VerticalTest from "./components/vue-ui-vertical-bar.vue";
+import HorizontalTest from "./components/vue-ui-horizontal-bar.vue";
 import RatingTest from "./components/vue-ui-rating.vue";
 import SkeletonTest from "./components/vue-ui-skeleton.vue";
 import SparklineTest from "./components/vue-ui-sparkline.vue";

@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import LocalVueUiVerticalBar from '../src/components/vue-ui-vertical-bar.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
@@ -8,6 +7,8 @@ import { useArena } from "../src/useArena";
 
 import { VueUiHorizontalBar } from "vue-data-ui";
 import { VueUiHorizontalBar as VueUiHorizontalBarTreeshaken } from "vue-data-ui/vue-ui-horizontal-bar";
+
+import LocalVueUiHorizontalBar from "../src/components/vue-ui-horizontal-bar.vue";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleSort } = useArena()
 
@@ -18,11 +19,11 @@ onMounted(() => {
         dataset.value =[
     {
         name: "Serie 1 with",
-        value: 100.987987,
+        value: 220,
         children: [
             {
                 name: "serie 1 child 1",
-                value: 12
+                value: 200
             },
             {
                 name: "serie 1 child 2",
@@ -112,7 +113,7 @@ function alterDataset() {
 const model = ref([
     { key: 'debug', def: true, type: 'checkbox'},
     { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'autoSize', def: true, type: 'checkbox'},
+    { key: 'autoSize', def: false, type: 'checkbox'},
     { key: 'responsive', def: false, type: 'checkbox'},
     { key: 'userOptions.show', def: true, type: 'checkbox'},
     { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
@@ -134,7 +135,7 @@ const model = ref([
     { key: 'style.chart.layout.bars.sort', def: 'desc', type: 'select', options: ['asc', 'desc', 'none']},
     { key: 'style.chart.layout.bars.useStroke', def: false, type: 'checkbox'},
     { key: 'style.chart.layout.bars.strokeWidth', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.layout.bars.height', def: 56, type: 'number', min: 12, max: 64},
+    { key: 'style.chart.layout.bars.height', def: 32, type: 'number', min: 12, max: 64},
     { key: 'style.chart.layout.bars.gap', def: 6, type: 'number', min: 0, max: 24},
     { key: 'style.chart.layout.bars.borderRadius', def: 4, type: 'range', min: 0, max: 48}, // IDEA: max could be based on height to always be harmonious
     { key: 'style.chart.layout.bars.offsetX', def: 0, type: 'number', min: 0, max: 100},
@@ -156,13 +157,13 @@ const model = ref([
     { key: 'style.chart.layout.bars.nameLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.bars.nameLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.bars.nameLabels.bold', def: false, type: 'checkbox'},
-    { key: 'style.chart.layout.bars.nameLabels.fontSize', def: 20, type: 'range', min: 8, max: 48},
-    { key: 'style.chart.layout.bars.nameLabels.offsetX', def: -12, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.layout.bars.nameLabels.fontSize', def: 14, type: 'range', min: 8, max: 48},
+    { key: 'style.chart.layout.bars.nameLabels.offsetX', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.layout.bars.parentLabels.show', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.bars.parentLabels.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.bars.parentLabels.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.layout.bars.parentLabels.fontSize', def: 14, type: 'range', min: 8, max: 48},
-    { key: 'style.chart.layout.bars.parentLabels.offsetX', def: 24, type: 'number', min: -100, max: 100},
+    { key: 'style.chart.layout.bars.parentLabels.offsetX', def: 0, type: 'number', min: -100, max: 100},
     { key: 'style.chart.layout.highlighter.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.layout.highlighter.opacity', def: 5, type: 'range', min: 0, max: 100},
     { key: 'style.chart.layout.separators.show', def: true, type: 'checkbox'},
@@ -178,7 +179,7 @@ const model = ref([
     { key: 'style.chart.title.subtitle.color', def: '#CCCCCC', type: 'color'},
     { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
     { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 48},
-    { key: 'style.chart.legend.position', def: 'top', type: 'select', options: ['top', 'bottom']},
+    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
     { key: 'style.chart.legend.show', def: true, type: 'checkbox' },
     { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color'},
@@ -338,7 +339,7 @@ onMounted(async () => {
     </div>
 
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiVerticalBar :key="`responsive_${step}`" :dataset="dataset" :config="{
+        <LocalVueUiHorizontalBar :key="`responsive_${step}`" :dataset="dataset" :config="{
             ...config,
             responsive: true
         }">
@@ -366,18 +367,18 @@ onMounted(async () => {
                 SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
             </div>
         </template> -->
-    </LocalVueUiVerticalBar>
+    </LocalVueUiHorizontalBar>
     </div>
 
     <Box comp="VueUiVerticalBar" :dataset="dataset">
         <template #title>VueUiVerticalBar</template>
 
         <template #theme>
-            <LocalVueUiVerticalBar :dataset="dataset" :config="configTheme" />
+            <LocalVueUiHorizontalBar :dataset="dataset" :config="configTheme" />
         </template>
 
         <template #local>
-            <LocalVueUiVerticalBar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+            <LocalVueUiHorizontalBar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
                 <template #optionSort>
                     SORT
                 </template>
@@ -402,7 +403,7 @@ onMounted(async () => {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
-            </LocalVueUiVerticalBar>
+            </LocalVueUiHorizontalBar>
         </template>
 
         <template #VDUI-local>
