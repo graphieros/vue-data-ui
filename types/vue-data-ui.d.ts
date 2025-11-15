@@ -8820,6 +8820,7 @@ declare module "vue-data-ui" {
 
     export type VueUiCirclePackConfig = {
         debug?: boolean; // v3
+        responsive?: boolean;
         loading?: boolean; // v3
         events?: { // v3
             datapointEnter?: VueUiCirclePackEvent; // v3
@@ -8843,6 +8844,8 @@ declare module "vue-data-ui" {
         style?: {
             fontFamily?: string;
             chart?: {
+                width?: number;
+                height?: number;
                 backgroundColor?: string;
                 color?: string;
                 title?: ChartTitle;

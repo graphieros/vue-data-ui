@@ -29,12 +29,12 @@ function makeDs({ name, qty, maxVal }) {
   return datapoints;
 }
 
-const dataset = ref(undefined);
+const dataset = ref(makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 }));
 
 onMounted(() => {
-  setTimeout(() => {
-    dataset.value = makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 })
-  }, 2000)
+  // setTimeout(() => {
+  //   dataset.value = makeDs({ name: "Pack 1", qty: 5, maxVal: 12000 })
+  // }, 2000)
 
   // setTimeout(() => {
   //   dataset.value = undefined;
@@ -79,7 +79,9 @@ const model = ref([
   { key: "debug", def: true, type: "checkbox" },
   { key: "loading", def: false, type: "checkbox" },
   { key: "userOptions.show", def: true, type: "checkbox" },
-  { key: "style.chart.backgroundColor", def: "#FFFFFF", type: "color" },
+  { key: "style.chart.backgroundColor", def: "#FFFFDD", type: "color" },
+  { key: "style.chart.width", def: 512, type: "number", min: 0, max: 1000 },
+  { key: "style.chart.height", def: 512, type: "number", min: 0, max: 1000 },
   { key: "style.chart.color", def: "#1A1A1A", type: "color" },
   { key: "style.chart.title.text", def: "Title", type: "text" },
   { key: "style.chart.title.subtitle.text", def: "Subtitle", type: "text" },
@@ -302,7 +304,7 @@ onMounted(async() => {
     </div>
 
     <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-      <LocalVueUiCirclePack :dataset="dataset" :config="config" ref="local" :key="`local_${step}`" @selectDatapoint="selectDatapoint"></LocalVueUiCirclePack>
+      <LocalVueUiCirclePack :dataset="dataset" :config="{...config, responsive: true}" ref="local" :key="`local_${step}`" @selectDatapoint="selectDatapoint"></LocalVueUiCirclePack>
     </div>
   <Box>
     <template #title>VueUiCirclePack</template>

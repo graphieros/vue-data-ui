@@ -6327,6 +6327,7 @@ export function useConfig() {
     const vue_ui_circle_pack = {
         debug: false, // v3
         loading: false, // v3
+        responsive: false,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -6362,6 +6363,8 @@ export function useConfig() {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
                 title: TITLE,
+                width: 512,
+                height: 316,
                 circles: {
                     stroke: COLOR_WHITE,
                     strokeWidth: 1,
