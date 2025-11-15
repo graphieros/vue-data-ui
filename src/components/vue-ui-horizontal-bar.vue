@@ -553,7 +553,11 @@ const parentLabelOffsets = computed(() => {
 const barHeight = computed(() => {
     const p = Math.max(0, ...parentLabelOffsets.value);
     const parentOffsets = p * parentLabelBlockHeight.value;
-    return (HEIGHT.value - barCount.value * BAR_GAP.value - parentOffsets) / barCount.value;
+    const innerHeight = HEIGHT.value - 24;
+    return (
+        (innerHeight - (barCount.value - 1) * BAR_GAP.value - parentOffsets) /
+        barCount.value
+    );
 });
 
 const svg = computed(() => {
