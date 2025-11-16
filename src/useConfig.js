@@ -2115,7 +2115,7 @@ export function useConfig() {
                         height: 32, // legacy - unused now
                         gap: 6,
                         borderRadius: 4,
-                        offsetX: 64,
+                        offsetX: 0,
                         paddingRight: 0,
                         useGradient: true,
                         gradientIntensity: 20,
