@@ -287,10 +287,12 @@ The following charts bear these slots:
 
 - VueUiAgePyramid
 - VueUiCandlestick
+- VueUiCirclePack
 - VueUiDonut
 - VueUiGalaxy
 - VueUiHeatmap
 - VueUiHistoryPlot
+- VueUiHorizontalBar
 - VueUiMolecule
 - VueUiNestedDonuts
 - VueUiOnion
@@ -304,12 +306,11 @@ The following charts bear these slots:
 - VueUiStackbar
 - VueUiStackline
 - VueUiTreemap
-- VueUiHorizontalBar
 - VueUiWordCloud
+- VueUiWorld
 - VueUiXy \*
 - VueUiXyCanvas
 - VueUiwaffle
-- VueUiWorld
 
 \* VueUiXy slots specifically expose the following additional attributes:
 
@@ -451,7 +452,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiCandlestick`            | `Array<Array<string / number>>`            | `VueUiCandlestickConfig`            | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`, `getImage`                                                                                                                         | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`                                                                               | ✅             | ✅     |
 | `VueUiChestnut`               | `VueUiChestnutDatasetRoot[]`               | `VueUiChestnutConfig`               | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage`                                                                                 | `#svg`, `#legend`, `#watermark`, `#chart-background`                                                                                                                                     | ❌             | ✅     |
 | `VueUiChord`                  | `VueUiChordDataset`                        | `VueUiChordConfig`                  | `@selectLegend`, `@selectGroup`, `@selectRibbon`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage`                                                                             | `#svg`, `#legend`, `#watermark`, `#chart-background`, `#pattern`                                                                                                                         | ❌             | ✅     |
-| `VueUiCirclePack`             | `VueUiCirclePackDatasetItem[]`             | `VueUiCirclePackConfig`             | `@selectDatapoint`, `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `getImage`                                                                                                           | `#svg`, `#legend`, `#watermark`, `#chart-background` , `#pattern`, `#zoom-label`, `#data-label`                                                                                          | ✅             | ✅     |
+| `VueUiCirclePack`             | `VueUiCirclePackDatasetItem[]`             | `VueUiCirclePackConfig`             | `@selectDatapoint`, `getData`, `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `getImage`                                                                                                           | `#svg`, `#legend`, `#watermark`, `#chart-background` , `#pattern`, `#zoom-label`, `#data-label`, `#tooltip-before`, `#tooltip-after`                                                     | ✅             | ✅     |
 | `VueUiDonutEvolution`         | `VueUiDonutEvolutionDatasetItem[]`         | `VueUiDonutEvolutionConfig`         | `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable` , `getImage`                                                                                 | `#svg`, `#legend`, `#reset-action`, `#watermark`, `#chart-background`                                                                                                                    | ❌             | ✅     |
 | `VueUiDonut`                  | `VueUiDonutDatasetItem[]`                  | `VueUiDonutConfig`                  | `@selectDatapoint`, `@selectLegend`, `hideSeries`, `showSeries`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `toggleLabels`, `toggleTooltip`, `getImage`                             | `#svg`, `#legend`, `#dataLabel`, `#tooltip-before`, `#tooltip-after`, `#plot-comment`, `#watermark`, `#chart-background`, `#pattern`                                                     | ✅             | ✅     |
 | `VueUiDumbbell`               | `VueUiDumbbellDataset[]`                   | `VueUiDumbbellConfig`               | `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage`                                                                                                                               | `#svg`, `#legend`, `#watermark`, `#chart-background`                                                                                                                                     | ❌             | ✅     |
@@ -628,7 +629,7 @@ User options actions available per chart:
 | VueUiCarouselTable          | optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen                                                        |
 | VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiChord                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
-| VueUiCirclePack             | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiCirclePack             | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiDonut                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
 | VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
@@ -763,7 +764,7 @@ However the following charts can be made fully responsive, making them better to
 | VueUiCarouselTable          | -                              |
 | VueUiChestnut               | -                              |
 | VueUiChord                  | ✅                             |
-| VueUiCirclePack             | ✅ (built-in)                  |
+| VueUiCirclePack             | ✅                             |
 | VueUiDonut                  | ✅                             |
 | VueUiDonutEvolution         | ✅                             |
 | VueUiDumbbell               | ✅                             |

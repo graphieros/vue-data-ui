@@ -8852,6 +8852,7 @@ declare module "vue-data-ui" {
                 circles?: {
                     stroke?: string;
                     strokeWidth?: number;
+                    selectedShadowColor?: string;
                     gradient?: {
                         show?: boolean;
                         intensity?: number;
@@ -8876,32 +8877,18 @@ declare module "vue-data-ui" {
                             fontSizeRatio?: number;
                         };
                     };
-                    zoom?: {
-                        show?: boolean;
-                        shadowForce?: number;
-                        opacity?: number;
-                        animationFrameMs?: number;
-                        zoomRatio?: number;
-                        label?: {
-                            name?: {
-                                fontSize?: number;
-                                bold?: boolean;
-                                offsetY?: number;
-                                color?: string;
-                            };
-                            value?: {
-                                fontSize?: number;
-                                bold?: boolean;
-                                offsetY?: number;
-                                rounding?: number;
-                                prefix?: string;
-                                suffix?: string;
-                                formatter?: Formatter;
-                                color?: string;
-                            };
-                        };
-                    };
                 };
+                tooltip?: ChartTooltip & {
+                    customFormat?:
+                    | null
+                    | ((
+                        params: VueUiTooltipParams<
+                            VueUiCirclePackDatapoint,
+                            VueUiCirclePackDatapoint[],
+                            VueUiCirclePackConfig
+                        >
+                    ) => string);
+                }
             };
         };
     };

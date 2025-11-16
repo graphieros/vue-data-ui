@@ -2115,7 +2115,7 @@ export function useConfig() {
                         height: 32, // legacy - unused now
                         gap: 6,
                         borderRadius: 4,
-                        offsetX: 0,
+                        offsetX: 12,
                         paddingRight: 0,
                         useGradient: true,
                         gradientIntensity: 20,
@@ -6336,7 +6336,7 @@ export function useConfig() {
         theme: '',
         customPalette: [],
         userOptions: USER_OPTIONS({
-            tooltip: false,
+            tooltip: true,
             pdf: true,
             csv: true,
             img: true,
@@ -6368,6 +6368,7 @@ export function useConfig() {
                 circles: {
                     stroke: COLOR_WHITE,
                     strokeWidth: 1,
+                    selectedShadowColor: COLOR_BLACK,
                     gradient: {
                         show: true,
                         intensity: 40
@@ -6392,32 +6393,8 @@ export function useConfig() {
                             offsetY: 0
                         },
                     },
-                    zoom: {
-                        show: true,
-                        shadowForce: 1,
-                        opacity: 0.8,
-                        animationFrameMs: 200, // The higher the slower
-                        zoomRatio: 1,
-                        label: {
-                            name: {
-                                fontSize: FONT._14,
-                                bold: false,
-                                offsetY: 0,
-                                color: 'auto'
-                            },
-                            value: {
-                                fontSize: FONT._14,
-                                bold: false,
-                                offsetY: 0,
-                                rounding: 0,
-                                prefix: '',
-                                suffix: '',
-                                formatter: null,
-                                color: 'auto'
-                            }
-                        }
-                    }
-                }
+                },
+                tooltip: TOOLTIP,
             }
         }
     }

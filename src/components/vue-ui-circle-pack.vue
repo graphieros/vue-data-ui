@@ -24,6 +24,7 @@ import {
     dataLabel,
     downloadCsv,
     error,
+    isFunction,
     lightenHexColor,
     objectIsEmpty,
     palette,
@@ -45,6 +46,7 @@ import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_circle_pack.json";
 import BaseScanner from '../atoms/BaseScanner.vue';
 
+const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -87,6 +89,9 @@ const step = ref(0);
 const source = ref(null);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
+const isTooltip = ref(false);
+const tooltipContent = ref("");
+const selectedDatapoint = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -184,12 +189,14 @@ const hasOptionsNoTitle = computed(() => {
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
 });
 
 // v3 - Essential to make shifting between loading config and final config work
 watch(FINAL_CONFIG, () => {
     mutableConfig.value = {
         showTable: FINAL_CONFIG.value.table.show,
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
     }
 }, { immediate: true });
 
@@ -373,7 +380,8 @@ function calcOffsetY(radius, offset) {
 }
 
 function onTrapLeave(datapoint, seriesIndex) {
-    zoom.value = null;
+    isTooltip.value = false;
+    selectedDatapoint.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
     }
@@ -386,71 +394,59 @@ function onTrapClick(datapoint, seriesIndex) {
     }
 }
 
+const dataTooltipSlot = ref(null);
+const useCustomFormat = ref(false);
+
 function onTrapEnter(datapoint, seriesIndex) {
-    zoomTo(datapoint);
+    selectedDatapoint.value = datapoint;
+
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
     }
-}
 
-const zoom = ref(null);
-function zoomTo(circle) {
-    if (!FINAL_CONFIG.value.style.chart.circles.zoom.show) return;
-    zoom.value = circle;
-}
+    dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: formattedDataset.value };
+    isTooltip.value = true;
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    useCustomFormat.value = false;
 
-const zoomRadiusStart = computed(() => {
-    return zoom.value ? zoom.value.r : 0;
-})
-
-const zoomRadiusEnd = computed(() => {
-    if (isAnnotator.value) return zoomRadiusStart.value;
-    if (!zoom.value) return 0;
-    const minZoomR = boundValues.value[3] / 6 * FINAL_CONFIG.value.style.chart.circles.zoom.zoomRatio;
-    return zoom.value.r > minZoomR ? zoom.value.r : minZoomR;
-})
-
-const zoomOpacity = ref(0);
-
-const zoomStyle = computed(() => ({
-    pointerEvents: 'none',
-    opacity: zoomOpacity.value,
-    filter: zoom.value
-        ? `drop-shadow(0px 0px 6px ${darkenHexColor(zoom.value.color, FINAL_CONFIG.value.style.chart.circles.zoom.shadowForce)})`
-        : 'none'
-}));
-
-const currentRadius = ref(zoomRadiusStart.value);
-
-watchEffect(() => {
-    currentRadius.value = zoomRadiusStart.value;
-    zoomOpacity.value = 0;
-    let start = null;
-    function animate(timestamp) {
-        if (!start) {
-            start = timestamp;
-        }
-        const progress = (timestamp - start) / FINAL_CONFIG.value.style.chart.circles.zoom.animationFrameMs;
-        if (progress < 1) {
-            currentRadius.value = zoomRadiusStart.value + (zoomRadiusEnd.value - zoomRadiusStart.value) * progress;
-            zoomOpacity.value = FINAL_CONFIG.value.style.chart.circles.zoom.opacity * progress;
-            requestAnimationFrame(animate);
-        } else {
-            currentRadius.value = zoomRadiusEnd.value;
-            zoomOpacity.value = FINAL_CONFIG.value.style.chart.circles.zoom.opacity;
+    if (isFunction(customFormat)) {
+        try {
+            const customFormatString = customFormat({
+                seriesIndex,
+                datapoint,
+                series: formattedDataset.value,
+                config: FINAL_CONFIG.value
+            });
+            if (typeof customFormatString === 'string') {
+                tooltipContent.value = customFormatString;
+                useCustomFormat.value = true;
+            }
+        } catch (err) {
+            console.warn('Custom format cannot be applied.');
+            useCustomFormat.value = false;
         }
     }
-    if (zoom.value && FINAL_CONFIG.value.style.chart.circles.zoom.show) {
-        requestAnimationFrame(animate);
-    }
-});
 
-const zoomLabelFontSizes = computed(() => {
-    return {
-        name: FINAL_CONFIG.value.style.chart.circles.zoom.label.name.fontSize * boundValues.value[3] / 300,
-        value: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.fontSize * boundValues.value[3] / 300
+    if (!useCustomFormat.value) {
+        let html = '';
+
+        html += `
+            <div style="display:flex;align-items:center;gap:4px;">
+                <svg viewBox="0 0 10 10" height="${FINAL_CONFIG.value.style.chart.tooltip.fontSize}" width="${FINAL_CONFIG.value.style.chart.tooltip.fontSize}">
+                    <circle
+                        cx="5"
+                        cy="5"
+                        r="5"
+                        fill="${FINAL_CONFIG.value.style.chart.circles.gradient.show ? `url(#${datapoint.id})` : datapoint.color}"
+                    />
+                </svg>
+                <span>${datapoint.name}: <b>${getCircleLabel(datapoint)}</b></span>
+            </div>
+        `
+
+        tooltipContent.value = html;
     }
-});
+}
 
 function getCircleLabel(circle) {
     return applyDataLabel(
@@ -461,20 +457,6 @@ function getCircleLabel(circle) {
             v: circle.value,
             s: FINAL_CONFIG.value.style.chart.circles.labels.value.suffix,
             r: FINAL_CONFIG.value.style.chart.circles.labels.value.rounding
-        })
-    )
-}
-
-function getZoomLabel() {
-    if (!zoom.value) return '';
-    return applyDataLabel(
-        FINAL_CONFIG.value.style.chart.circles.zoom.label.value.formatter,
-        zoom.value.value,
-        dataLabel({
-            p: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.prefix,
-            v: zoom.value.value,
-            s: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.suffix,
-            r: FINAL_CONFIG.value.style.chart.circles.zoom.label.value.rounding
         })
     )
 }
@@ -585,6 +567,10 @@ const dataTable = computed(() => {
 
 function toggleTable() {
     mutableConfig.value.showTable = !mutableConfig.value.showTable;
+}
+
+function toggleTooltip() {
+    mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
 function getData() {
@@ -765,7 +751,8 @@ defineExpose({
             :isPrinting="isPrinting"
             :isImaging="isImaging"
             :uid="uid"
-            :hasTooltip="false"
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip"
+            :isTooltip="mutableConfig.showTooltip" 
             :hasLabel="false"
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf"
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
@@ -788,6 +775,7 @@ defineExpose({
             @generateImage="generateImage"
             @generateSvg="generateSvg"
             @toggleTable="toggleTable"
+            @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
             :style="{ visibility: keepUserOptionState ? (userOptionsVisible ? 'visible' : 'hidden') : 'visible' }"
         >
@@ -869,6 +857,7 @@ defineExpose({
                         :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * (maxRadius || 1) / 100"
                         :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${circle.id})` : circle.color"
                         :rx="circle.r"
+
                         @mouseenter="onTrapEnter(circle, i)"
                         @mouseout="onTrapLeave(circle, i)"
                         @click="onTrapClick(circle, i)"
@@ -886,7 +875,32 @@ defineExpose({
                         :rx="circle.r"
                         :style="{ pointerEvents: 'none' }"
                     />
-    
+                </template>
+
+                <!-- OVERLAYS -->
+                <template v-for="(circle, i) in circles" :key="circle.id">
+                    <rect
+                        data-cy="datapoint-circle-overlay"
+                        :x="circle.x - circle.r"
+                        :y="circle.y - circle.r"
+                        :width="circle.r * 2"
+                        :height="circle.r * 2"
+                        stroke="none"
+                        :fill="selectedDatapoint && selectedDatapoint.id === circle.id ? FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${circle.id})` : circle.color : 'transparent'"
+                        :rx="circle.r"
+                        :style="{
+                            filter: selectedDatapoint && selectedDatapoint.id === circle.id
+                                ? `drop-shadow(0px 0px 6px ${FINAL_CONFIG.style.chart.circles.selectedShadowColor})`
+                                : 'none',
+                            opacity: selectedDatapoint ? 1 : 0,
+                            pointerEvents: 'none',
+                            transition: 'opacity 0.2s ease-in-out'
+                        }"
+                    />
+                </template>
+
+                <!-- LABELS -->
+                <template v-for="(circle, i) in circles" :key="circle.id">
                     <slot
                         name="data-label"
                         v-if="$slots['data-label']"
@@ -912,7 +926,6 @@ defineExpose({
                                 pointerEvents: 'none',
                                 transition: 'opacity 0.2s ease-in-out'
                             }"
-                            :opacity="(zoom && !isAnnotator) ? 0.2 : 1"
                             :x="circle.x"
                             :y="
                                 circle.y +
@@ -920,7 +933,7 @@ defineExpose({
                                 circle.r / 10
                             "
                             :font-size="(circle.r / 3) * FINAL_CONFIG.style.chart.circles.labels.name.fontSizeRatio"
-                            :fill="!FINAL_CONFIG.style.chart.circles.labels.name.color
+                            :fill="FINAL_CONFIG.style.chart.circles.labels.name.color === 'auto'
                                 ? adaptColorToBackground(circle.color)
                                 : FINAL_CONFIG.style.chart.circles.labels.name.color"
                             :font-weight="FINAL_CONFIG.style.chart.circles.labels.name.bold ? 'bold' : 'normal'"
@@ -937,7 +950,6 @@ defineExpose({
                                 pointerEvents: 'none',
                                 transition: 'opacity 0.2s ease-in-out'
                             }"
-                            :opacity="(zoom && !isAnnotator) ? 0.2 : 1"
                             :x="circle.x"
                             :y="
                                 circle.y +
@@ -945,7 +957,7 @@ defineExpose({
                                 circle.r / 2.5
                             "
                             :font-size="getValueFontSize(circle) * FINAL_CONFIG.style.chart.circles.labels.value.fontSizeRatio"
-                            :fill="!FINAL_CONFIG.style.chart.circles.labels.value.color
+                            :fill="FINAL_CONFIG.style.chart.circles.labels.value.color === 'auto'
                                 ? adaptColorToBackground(circle.color)
                                 : FINAL_CONFIG.style.chart.circles.labels.value.color"
                             :font-weight="FINAL_CONFIG.style.chart.circles.labels.value.bold ? 'bold' : 'normal'"
@@ -954,63 +966,6 @@ defineExpose({
                             {{ getCircleLabel(circle) }}
                         </text>
                     </template>
-                </template>
-    
-                <template v-if="zoom && FINAL_CONFIG.style.chart.circles.zoom.show && !isAnnotator">
-                    <circle
-                        data-cy="datapoint-zoom"
-                        :style="zoomStyle"
-                        :cx="zoom.x"
-                        :cy="zoom.y"
-                        :r="currentRadius"
-                        :opacity="zoomOpacity"
-                        :stroke="FINAL_CONFIG.style.chart.circles.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.circles.strokeWidth * (maxRadius || 1) / 100"
-                        :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${zoom.id})` : zoom.color"
-                    />
-    
-                    <g v-if="$slots['zoom-label']" :style="{ pointerEvents: 'none' }">
-                        <slot
-                            name="zoom-label"
-                            v-bind="{ ...zoom, zoomOpacity, currentRadius, fontSize: zoomLabelFontSizes }"
-                        />
-                    </g>
-    
-                    <g v-else>
-                        <!-- ZOOM LABEL NAME -->
-                        <text
-                            data-cy="datapoint-zoom-label-name"
-                            :style="{ pointerEvents: 'none' }"
-                            :opacity="zoomOpacity"
-                            :x="zoom.x"
-                            :y="zoom.y + FINAL_CONFIG.style.chart.circles.zoom.label.name.offsetY - (zoomLabelFontSizes.name / 4)"
-                            text-anchor="middle"
-                            :font-size="zoomLabelFontSizes.name"
-                            :fill="!FINAL_CONFIG.style.chart.circles.zoom.label.name.color
-                                ? adaptColorToBackground(zoom.color)
-                                : FINAL_CONFIG.style.chart.circles.zoom.label.name.color"
-                            :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.name.bold ? 'bold' : 'normal'"
-                        >
-                            {{ zoom.name }}
-                        </text>
-    
-                        <!-- ZOOM LABEL VALUE -->
-                        <text
-                            data-cy="datapoint-zoom-label-value"
-                            :style="{ pointerEvents: 'none' }"
-                            :opacity="zoomOpacity"
-                            :x="zoom.x"
-                            :y="zoom.y + zoomLabelFontSizes.value + FINAL_CONFIG.style.chart.circles.zoom.label.value.offsetY"
-                            text-anchor="middle"
-                            :font-size="zoomLabelFontSizes.value"
-                            :fill="!FINAL_CONFIG.style.chart.circles.zoom.label.value.color
-                                ? adaptColorToBackground(zoom.color)
-                                : FINAL_CONFIG.style.chart.circles.zoom.label.value.color"
-                            :font-weight="FINAL_CONFIG.style.chart.circles.zoom.label.value.bold ? 'bold' : 'normal'"
-                        >
-                            {{ getZoomLabel() }}
-                        </text>
-                    </g>
                 </template>
     
                 <slot name="svg" :svg="{ ...viewBox }" />
@@ -1024,6 +979,35 @@ defineExpose({
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>
+
+        <!-- TOOLTIP -->
+        <Tooltip 
+            :show="mutableConfig.showTooltip && isTooltip"
+            :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
+            :color="FINAL_CONFIG.style.chart.tooltip.color" 
+            :fontSize="FINAL_CONFIG.style.chart.tooltip.fontSize"
+            :borderRadius="FINAL_CONFIG.style.chart.tooltip.borderRadius"
+            :borderColor="FINAL_CONFIG.style.chart.tooltip.borderColor"
+            :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
+            :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"
+            :position="FINAL_CONFIG.style.chart.tooltip.position" 
+            :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
+            :parent="circlePackChart" 
+            :content="tooltipContent" 
+            :isCustom="useCustomFormat" 
+            :isFullscreen="isFullscreen"
+            :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
+            :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
+            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
+            :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThrehsold"
+        >
+            <template #tooltip-before>
+                <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
+            </template>
+            <template #tooltip-after>
+                <slot name="tooltip-after" v-bind="{ ...dataTooltipSlot }"></slot>
+            </template>
+        </Tooltip>
 
         <component
             v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
@@ -1083,18 +1067,6 @@ defineExpose({
     width: 100%;
     height: 100%;
     overflow: visible;
-}
-
-@keyframes zoomCircle {
-    from {
-        r: v-bind(zoomRadiusStart);
-        opacity: 0;
-    }
-
-    to {
-        r: v-bind(zoomRadiusEnd);
-        opacity: 1;
-    }
 }
 
 rect,
