@@ -1384,8 +1384,8 @@ defineExpose({
                 <PackageVersion />
 
                 <!-- BACKGROUND SLOT -->
-                <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="drawingArea.width"
-                    :height="drawingArea.height" :style="{
+                <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="WIDTH"
+                    :height="HEIGHT" :style="{
                         pointerEvents: 'none',
                     }">
                     <slot name="chart-background" />
