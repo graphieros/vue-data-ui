@@ -10,6 +10,8 @@
  * - position words inside a given area using a spiral placement algorithm (the actual function of this file used in the component @generateWordCloud)
  */
 
+import { createUid } from "./lib";
+
 function getTightBoundingBox(canvas, ctx) {
     const { width, height } = canvas;
     const img = ctx.getImageData(0, 0, width, height);
@@ -147,6 +149,7 @@ export function dilateWordMask({ wordMask, w, h, dilation }) {
 }
 
 /**
+ * LEGACY (blocks main thread, but we keep it for now in case we can make it faster some day)
  * Attempts to position an array of words inside a given SVG region without overlap.
  * Words are sorted by value and placed largest-first.
  * @param {Object} params
@@ -262,8 +265,259 @@ export function positionWords({
     return positionedWords.sort((a, b) => b.fontSize - a.fontSize);
 }
 
+/**
+ * Attempts to position an array of words inside a given SVG region without overlap.
+ * Words are sorted by value and placed largest-first.
+ * @param {Object} params
+ * @param {Array<{ name: string, value: number }>} params.words - List of word objects to place.
+ * @param {number} [params.proximity=0] - Padding between words (in pixels).
+ * @param {Object} params.svg - SVG config (must include width, height, minFontSize, maxFontSize, and optionally style).
+ * @param {Function} params.onProgress - Callback gradually returning positioned words
+ * @returns {Array<Object>} The positioned word objects, each with { x, y, fontSize, width, height, angle, ... }.
+ */
+export async function positionWordsAsync({
+    words,
+    proximity = 0,
+    svg,
+    strictPixelPadding,
+    onProgress
+}) {
+    function yieldAfterWord() {
+        return new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    const { width, height } = svg;
+    const maskW = Math.round(width);
+    const maskH = Math.round(height);
+    const minFontSize = 1;
+    const configMinFontSize = svg.minFontSize;
+    const maxFontSize = Math.min(svg.maxFontSize, 100);
+    const values = words.map(w => w.value);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const mask = new Uint8Array(maskW * maskH);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    canvas.width = maskW;
+    canvas.height = maskH;
+
+    const spiralStep = 6, spiralRadiusStep = 2;
+    const fallbackSpiralStep = 2, fallbackSpiralRadiusStep = 1;
+    const cx = Math.floor(maskW / 2), cy = Math.floor(maskH / 2);
+
+    const wordsWithId = words.map((w, index) => ({
+        ...w,
+        __wcIndex: index,
+        id: w.id != null ? w.id : `${w.name}__${index}`
+    }));
+
+    const sorted = [...wordsWithId].sort((a, b) => b.value - a.value);
+    const positionedWords = [];
+
+    for (const wordRaw of sorted) {
+        const beforeLen = positionedWords.length;
+
+        let targetFontSize = configMinFontSize;
+        if (maxValue !== minValue) {
+            targetFontSize =
+                (wordRaw.value - minValue) /
+                (maxValue - minValue) *
+                (maxFontSize - configMinFontSize) +
+                configMinFontSize;
+        }
+        targetFontSize = Math.max(
+            configMinFontSize,
+            Math.min(maxFontSize, targetFontSize)
+        );
+
+        let placed = false;
+        let fontSize = targetFontSize;
+
+        while (!placed && fontSize >= minFontSize) {
+            let {
+                w,
+                h,
+                wordMask,
+                minX,
+                minY,
+                maxX,
+                maxY
+            } = getWordBitmap({
+                word: wordRaw,
+                fontSize,
+                pad: proximity,
+                canvas,
+                ctx,
+                svg
+            });
+
+            if (strictPixelPadding) {
+                wordMask = dilateWordMask({ wordMask, w, h, dilation: 2 });
+            }
+
+            let r = 0;
+            let attempts = 0;
+
+            while (
+                r < Math.max(maskW, maskH) &&
+                !placed &&
+                attempts < 10000
+            ) {
+                for (let theta = 0; theta < 360; theta += spiralStep) {
+                    attempts += 1;
+                    const px = Math.round(
+                        cx + r * Math.cos((theta * Math.PI) / 180) - w / 2
+                    );
+                    const py = Math.round(
+                        cy + r * Math.sin((theta * Math.PI) / 180) - h / 2
+                    );
+                    if (
+                        px < 0 ||
+                        py < 0 ||
+                        px + w > maskW ||
+                        py + h > maskH
+                    ) continue;
+                    if (
+                        canPlaceAt({
+                            mask,
+                            maskW,
+                            maskH,
+                            wx: px,
+                            wy: py,
+                            wordMask
+                        })
+                    ) {
+                        const { __wcIndex, ...wordClean } = wordRaw;
+                        positionedWords.push({
+                            ...wordClean,
+                            x: px - maskW / 2,
+                            y: py - maskH / 2,
+                            fontSize,
+                            width: w,
+                            height: h,
+                            angle: 0,
+                            minX,
+                            minY,
+                            maxX,
+                            maxY
+                        });
+                        markMask({
+                            mask,
+                            maskW,
+                            maskH,
+                            wx: px,
+                            wy: py,
+                            wordMask
+                        });
+                        placed = true;
+                        break;
+                    }
+                }
+                r += spiralRadiusStep;
+            }
+            if (!placed) fontSize -= 1;
+        }
+
+        if (!placed && fontSize < minFontSize) {
+            fontSize = minFontSize;
+            const {
+                w,
+                h,
+                wordMask,
+                minX,
+                minY,
+                maxX,
+                maxY
+            } = getWordBitmap({
+                word: wordRaw,
+                fontSize,
+                pad: proximity,
+                canvas,
+                ctx,
+                svg
+            });
+
+            let r = 0;
+            let attempts = 0;
+
+            while (
+                r < Math.max(maskW, maskH) &&
+                !placed &&
+                attempts < 25000
+            ) {
+                for (
+                    let theta = 0;
+                    theta < 360;
+                    theta += fallbackSpiralStep
+                ) {
+                    attempts += 1;
+                    const px = Math.round(
+                        cx + r * Math.cos((theta * Math.PI) / 180) - w / 2
+                    );
+                    const py = Math.round(
+                        cy + r * Math.sin((theta * Math.PI) / 180) - h / 2
+                    );
+                    if (
+                        px < 0 ||
+                        py < 0 ||
+                        px + w > maskW ||
+                        py + h > maskH
+                    ) continue;
+                    if (
+                        canPlaceAt({
+                            mask,
+                            maskW,
+                            maskH,
+                            wx: px,
+                            wy: py,
+                            wordMask
+                        })
+                    ) {
+                        const { __wcIndex, ...wordClean } = wordRaw;
+                        positionedWords.push({
+                            ...wordClean,
+                            x: px - maskW / 2,
+                            y: py - maskH / 2,
+                            fontSize,
+                            width: w,
+                            height: h,
+                            angle: 0,
+                            minX,
+                            minY,
+                            maxX,
+                            maxY
+                        });
+                        markMask({
+                            mask,
+                            maskW,
+                            maskH,
+                            wx: px,
+                            wy: py,
+                            wordMask
+                        });
+                        placed = true;
+                        break;
+                    }
+                }
+                r += fallbackSpiralRadiusStep;
+            }
+        }
+
+        if (onProgress && positionedWords.length > beforeLen) {
+            const last = positionedWords[positionedWords.length - 1];
+            onProgress({ word: last, all: positionedWords });
+        }
+
+        await yieldAfterWord();
+    }
+
+    return positionedWords.sort((a, b) => b.fontSize - a.fontSize);
+}
+
 const wordcloud = {
     positionWords,
+    positionWordsAsync,
     getWordBitmap,
     canPlaceAt,
     markMask,

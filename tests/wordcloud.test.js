@@ -5,6 +5,7 @@ import {
     markMask,
     dilateWordMask,
     positionWords,
+    positionWordsAsync
 } from "../src/wordcloud"
 
 function createMockContext2D() {
@@ -325,5 +326,50 @@ describe("positionWords", () => {
         const result = positionWords({ words, svg });
         expect(result[0].fontSize).toBe(svg.minFontSize);
         expect(result[1].fontSize).toBe(svg.minFontSize);
+    });
+});
+
+describe("positionWordsAsync", () => {
+    test("places words asynchronously and calls onProgress", async () => {
+        const words = [
+            { name: "one", value: 10 },
+            { name: "two", value: 5 },
+        ];
+
+        const svg = {
+            width: 100,
+            height: 100,
+            minFontSize: 10,
+            maxFontSize: 20,
+            style: {},
+        };
+
+        const onProgress = vi.fn();
+
+        const result = await positionWordsAsync({
+            words,
+            svg,
+            onProgress,
+        });
+
+        expect(result.length).toBe(words.length);
+
+        for (const w of result) {
+            expect(typeof w.x).toBe("number");
+            expect(typeof w.y).toBe("number");
+            expect(typeof w.fontSize).toBe("number");
+            expect(w.fontSize).toBeGreaterThanOrEqual(svg.minFontSize);
+            expect(w.fontSize).toBeLessThanOrEqual(svg.maxFontSize);
+            expect(w.width).toBeGreaterThan(0);
+            expect(w.height).toBeGreaterThan(0);
+        }
+
+        expect(onProgress).toHaveBeenCalled();
+        expect(onProgress.mock.calls.length).toBeLessThanOrEqual(words.length);
+
+        const [firstCallArg] = onProgress.mock.calls[0];
+        expect(firstCallArg).toHaveProperty("word");
+        expect(firstCallArg).toHaveProperty("all");
+        expect(Array.isArray(firstCallArg.all)).toBe(true);
     });
 });

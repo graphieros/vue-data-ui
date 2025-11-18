@@ -32,11 +32,11 @@ import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
 import { useSvgExport } from '../useSvgExport';
-import { positionWords } from '../wordcloud';
 import { useNestedProp } from '../useNestedProp';
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
 import { useUserOptionState } from '../useUserOptionState';
+import { positionWordsAsync } from '../wordcloud';
 import { useChartAccessibility } from '../useChartAccessibility';
 import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
@@ -90,6 +90,8 @@ const tableStep = ref(0);
 const isTooltip = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
+const cloudFinalized = ref(false);
+const isRelayout = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -181,12 +183,6 @@ function setupWordCloud() {
     })
 }
 
-watch(() => props.dataset, () => {
-    drawableDataset.value = setupWordCloud();
-    generateWordCloud();
-    applyInitialViewBox();
-})
-
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
@@ -239,16 +235,17 @@ function applyInitialViewBox() {
 
 const debounceUpdateCloud = debounce(() => {
     generateWordCloud()
-}, 10);
+}, 100);
 
 const resizing = ref(false);
 
 watch(() => resizing.value, v => {
     if (v === false) {
+        isRelayout.value = true;
         debounceUpdateCloud();
         applyInitialViewBox();
     }
-})
+});
 
 watch(() => props.config, (_newCfg) => {
     FINAL_CONFIG.value = prepareConfig();
@@ -270,8 +267,7 @@ const svg = ref({
     bold: FINAL_CONFIG.value.style.chart.words.bold
 });
 
-const handleResize = throttle(() => {
-    resizing.value = true;
+const resizeJob = debounce(() => {
     const { width, height } = useResponsive({
         chart: wordCloudChart.value,
         title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
@@ -284,7 +280,12 @@ const handleResize = throttle(() => {
         await nextTick();
         resizing.value = false;
     });
-});
+}, 100);
+
+const handleResize = () => {
+    resizing.value = true;
+    resizeJob();
+};
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
@@ -380,8 +381,7 @@ function measureTextSize(text, fontSize, fontFamily = "Arial") {
 }
 
 const positionedWords = ref([]);
-
-watch(() => props.dataset, generateWordCloud, { immediate: true });
+const wordIndexById = new Map();
 
 function generateWordCloud() {
     const values = [...drawableDataset.value].map(d => d.value);
@@ -394,22 +394,62 @@ function generateWordCloud() {
         const size = measureTextSize(word.name, fontSize);
         return {
             ...word,
-            id: createUid(),
+            id: word.id ?? `${word.name}__${i}`,
             fontSize,
             width: size.width,
             height: size.height,
-            color: FINAL_CONFIG.value.style.chart.words.usePalette ? (FINAL_CONFIG.value.customPalette[i] || FINAL_CONFIG.value.customPalette[i % FINAL_CONFIG.value.customPalette.length] || palette[i] || palette[i % palette.length]) : FINAL_CONFIG.value.style.chart.words.color
+            color: FINAL_CONFIG.value.style.chart.words.usePalette
+                ? (FINAL_CONFIG.value.customPalette[i]
+                    || FINAL_CONFIG.value.customPalette[i % FINAL_CONFIG.value.customPalette.length]
+                    || palette[i]
+                    || palette[i % palette.length])
+                : FINAL_CONFIG.value.style.chart.words.color
         };
     });
 
-    positionedWords.value = positionWords({
+    positionedWords.value.length = 0;
+    wordIndexById.clear();
+
+    positionWordsAsync({
         words: scaledWords,
         svg: svg.value,
         proximity: FINAL_CONFIG.value.style.chart.words.proximity,
-        strictPixelPadding: FINAL_CONFIG.value.strictPixelPadding
-    });
-}
+        strictPixelPadding: FINAL_CONFIG.value.strictPixelPadding,
+        onProgress: ({ all }) => {
+            for (const w of all) {
+                const id = w.id;
+                let idx = wordIndexById.get(id);
 
+                if (idx === undefined) {
+                    // First time we see this word: clone it once and store
+                    idx = positionedWords.value.length;
+                    wordIndexById.set(id, idx);
+                    positionedWords.value.push({ ...w });
+                } else {
+                    const target = positionedWords.value[idx];
+                    target.x = w.x;
+                    target.y = w.y;
+                    target.width = w.width;
+                    target.height = w.height;
+                    target.fontSize = w.fontSize;
+                    target.minX = w.minX;
+                    target.minY = w.minY;
+                    target.maxX = w.maxX;
+                    target.maxY = w.maxY;
+                }
+            }
+        }
+    });
+
+    positionedWords.value.sort((a, b) => b.fontSize - a.fontSize);
+
+    wordIndexById.clear();
+    positionedWords.value.forEach((w, i) => {
+        wordIndexById.set(w.id, i);
+    });
+    cloudFinalized.value = true;
+    isRelayout.value = false;
+}
 const table = computed(() => {
     const head = positionedWords.value.map(w => {
         return {
@@ -515,6 +555,15 @@ const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(svgRef, {
     width: svg.value.width <= 0 ? 10 : svg.value.width,
     height: svg.value.height <= 0 ? 10 : svg.value.height,
 }, 1, active)
+
+watch(() => props.dataset, () => {
+    drawableDataset.value = setupWordCloud();
+
+    if (!FINAL_CONFIG.value.responsive) {
+        generateWordCloud();
+        applyInitialViewBox();
+    }
+}, { immediate: true });
 
 async function getImage({ scale = 2} = {}) {
     if (!wordCloudChart.value) return;
@@ -671,7 +720,12 @@ function useTooltip(word, index) {
 </script>
 
 <template>
-    <div class="vue-data-ui-component vue-ui-word-cloud" ref="wordCloudChart" :id="`wordCloud_${uid}`"
+    <div 
+        class="vue-data-ui-component vue-ui-word-cloud" 
+        ref="wordCloudChart" 
+        :id="`wordCloud_${uid}`"
+        :data-resizing="resizing"
+        :data-relayout="isRelayout"
         :style="`width: 100%; font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
 
         <PenAndPaper
@@ -802,13 +856,19 @@ function useTooltip(word, index) {
                 <slot name="chart-background"/>
             </foreignObject>
             
-            <g :transform="`translate(${cloudOrigin.x}, ${cloudOrigin.y})`">
-                <g v-for="(word, index) in positionedWords">
+            <g :transform="`translate(${cloudOrigin.x}, ${cloudOrigin.y})`" :class="{ 'wc-finalized': cloudFinalized }">
+                <!-- One persistent group per word -->
+                <g
+                    v-for="(word, index) in positionedWords"
+                    :key="word.id"
+                    class="vue-ui-word-cloud-word"
+                    :transform="`translate(${word.x}, ${word.y})`"
+                >
                     <rect
                         v-if="word.minX !== undefined"
                         data-cy="datapoint-word"
-                        :x="word.x + word.minX"
-                        :y="word.y + (word.minY * 1.25)"
+                        :x="word.minX"
+                        :y="word.minY * 1.25"
                         :width="word.maxX - word.minX"
                         :height="word.maxY - word.minY"
                         fill="transparent"
@@ -820,12 +880,10 @@ function useTooltip(word, index) {
                     <text
                         :fill="word.color"
                         :font-weight="FINAL_CONFIG.style.chart.words.bold ? 'bold' : 'normal'"
-                        :key="index"
-                        :x="word.x"
-                        :y="word.y"
+                        :x="0"
+                        :y="0"
                         :font-size="word.fontSize"
                         :transform="`translate(${word.width / 2}, ${word.height / 2})`"
-                        :class="{ 'animated': FINAL_CONFIG.useCssAnimation && !loading }"
                         text-anchor="middle"
                         dominant-baseline="central"
                         paint-order="stroke fill"
@@ -834,10 +892,8 @@ function useTooltip(word, index) {
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         :style="`
-                            animation-delay:${index * FINAL_CONFIG.animationDelayMs}ms !important;
                             pointer-events:none;
-                            fill-opacity:${(!selectedWord || selectedWord === word.id) ? 1 : FINAL_CONFIG.style.chart.words.hoverOpacity} !important;
-                            transition:fill-opacity 0.3s ease-in-out !important;
+                            fill-opacity:${(!selectedWord || selectedWord === word.id || !cloudFinalized) ? 1 : FINAL_CONFIG.style.chart.words.hoverOpacity} !important;
                         `"
                     >
                         {{ word.name }}
@@ -942,19 +998,36 @@ function useTooltip(word, index) {
 <style scoped lang="scss">
 @import "../vue-data-ui.css";
 
-.vue-ui-word-cloud * {
-    transition: unset;
-}
-
 .vue-ui-word-cloud {
     position: relative;
 }
 
+/* Don't animate everything by default */
+.vue-ui-word-cloud * {
+    transition: none;
+}
+
+/* This group moves when the algorithm updates x/y */
+.vue-ui-word-cloud-word {
+    will-change: transform;
+    transition: transform 0.25s ease-out;
+}
+
+/* SVG text stability */
+.vue-ui-word-cloud svg {
+    shape-rendering: geometricPrecision;
+    text-rendering: optimizeLegibility;
+}
+
+.vue-ui-word-cloud text {
+    backface-visibility: hidden;
+}
+
+/* Neutralize any previous fade animation to avoid flicker */
 text.animated {
-    opacity:0;
+    opacity: 1;
     user-select: none;
-    animation: word-opacity 0.2s ease-in forwards;
-    transform-origin: center;
+    animation: none !important;
 }
 
 @keyframes word-opacity {
@@ -998,4 +1071,14 @@ text.animated {
         transform: rotate(-90deg)
     }
 }
+
+.wc-finalized text {
+    transition: fill-opacity 0.25s ease-out;
+}
+
+.vue-ui-word-cloud[data-resizing="true"] .vue-ui-word-cloud-word,
+.vue-ui-word-cloud[data-relayout="true"] .vue-ui-word-cloud-word {
+    transition: none;
+}
+
 </style>

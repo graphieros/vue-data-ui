@@ -58,6 +58,8 @@ const model = ref([
     { key: 'style.chart.words.packingWeight', def: 10, type: 'number', min: 0, max: 50},
     { key: 'style.chart.words.color', def: '#1A1A1A', type:'color'},
     { key: 'style.chart.words.usePalette', def: true, type: 'checkbox'},
+    { key: 'style.chart.words.hoverOpacity', def: 0.5, type: 'number', min: 0, max: 1, step: 0.01},
+
     { key: 'style.chart.title.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
     { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
     { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 48},
