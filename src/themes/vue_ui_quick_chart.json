@@ -20,6 +20,7 @@
     "celebration": {
         "backgroundColor": "#FFF8E1",
         "color": "#424242",
+        "donutStroke": "#FFF8E1",
         "xyAxisStroke": "#5D4037",
         "xyGridStroke": "#5D403760",
         "xyHighlighterColor": "#424242",
@@ -35,6 +36,7 @@
     "celebrationNight": {
         "backgroundColor": "#1E1E1E",
         "color": "#BDBDBD",
+        "donutStroke": "#1E1E1E",
         "xyAxisStroke": "#5D4037",
         "xyGridStroke": "#5D403780",
         "xyHighlighterColor": "#FFF8E1",
@@ -53,6 +55,7 @@
         "color": "#99AA99",
         "xyAxisStroke": "#5F6A5F",
         "xyGridStroke": "#333333",
+        "donutStroke": "#1A1A1A",
         "xyHighlighterColor": "#66CC66",
         "zoomColor": "#5F6A5F",
         "zoomHighlightColor": "#66CC66",
@@ -61,6 +64,7 @@
     "zen": {
         "backgroundColor": "#fbfafa",
         "color": "#8A9892",
+        "donutStroke": "#fbfafa",
         "xyAxisStroke": "transparent",
         "xyGridStroke": "transparent",
         "xyHighlighterColor": "#8F837A",
@@ -70,6 +74,7 @@
     "concrete": {
         "backgroundColor": "#f6f6fb",
         "color": "#50606C",
+        "donutStroke": "#f6f6fb",
         "xyAxisStroke": "#829C98",
         "xyGridStroke": "#CCD6D3",
         "xyHighlighterColor": "#7DA9B5",
