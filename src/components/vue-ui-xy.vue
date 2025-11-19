@@ -3292,7 +3292,7 @@ defineExpose({
 
                                 <template v-if="plot.comment && FINAL_CONFIG.chart.comments.show">
                                     <foreignObject style="overflow: visible" height="12"
-                                        :width="(barWidth / 2) + FINAL_CONFIG.chart.comments.width"
+                                        :width="barWidth + FINAL_CONFIG.chart.comments.width"
                                         :x="calcRectX(plot) - (FINAL_CONFIG.chart.comments.width / 2) + FINAL_CONFIG.chart.comments.offsetX"
                                         :y="checkNaN(plot.y) + FINAL_CONFIG.chart.comments.offsetY + 6">
                                         <slot name="plot-comment"
