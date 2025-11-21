@@ -17,36 +17,36 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = [
     {
-        name: 'Some datapoint',
-        value: 100,
+        name: 'P1',
+        value: 87.5,
         children: [
             {
-                name: 'Some kind of child with a very long name that is way too long',
+                name: 'P1C1',
                 value: 50
             },
             {
-                name: 'Some other child',
+                name: 'P1C2',
                 value: 25
             },
             {
-                name: 'Yet another child with a long name',
+                name: 'P1C3',
                 value: 12.5,
                 children: [
                     {
-                        name: 'Some nested child',
+                        name: 'P1C3G1',
                         value: 6
                     },
                     {
-                        name: 'Some other nested child with a very long name',
+                        name: 'P1C3G2',
                         value: 6.5,
                         children: [
                             {
-                                name: 'kiddo1',
-                                value: 6
+                                name: 'P1C3G2L1',
+                                value: 3
                             },
                             {
-                                name: 'kiddo2',
-                                value: 6.5
+                                name: 'P1C3G2L2',
+                                value: 3.5
                             },
                         ]
                     },
@@ -55,73 +55,73 @@ onMounted(() => {
         ]
     },
     {
-        name: 'S2',
+        name: 'P2',
         value: 200,
         children: [
             {
-                name: 'S2 - C1',
+                name: 'P2C1',
                 value: 100
             },
             {
-                name: 'S2 - C2',
+                name: 'P2C2',
                 value: 50
             },
             {
-                name: 'S2 - C3',
+                name: 'P2C3',
                 value: 25
             }
         ]
     },
     {
-        name: 'S3',
+        name: 'P3',
         value: 100,
         children: [
             {
-                name: 'S3 - C1',
+                name: 'P3C1',
                 value: 50
             },
             {
-                name: 'S3 - C2',
+                name: 'P3C2',
                 value: 25
             },
             {
-                name: 'S3 - C3',
+                name: 'P3C3',
                 value: 12.5
             }
         ]
     },
     {
-        name: 'S4',
+        name: 'P4',
         value: 20,
         children: [
             {
-                name: 'S3 - C1',
+                name: 'P4C1',
                 value: 10
             },
             {
-                name: 'S3 - C2',
+                name: 'P4C2',
                 value: 5
             },
             {
-                name: 'S3 - C3',
+                name: 'P4C3',
                 value: 2.5
             }
         ]
     },
     {
-        name: 'S5',
+        name: 'P5',
         value: 10,
         children: [
             {
-                name: 'S3 - C1',
+                name: 'P5C1',
                 value: 5
             },
             {
-                name: 'S3 - C2',
+                name: 'P5C2',
                 value: 2.5
             },
             {
-                name: 'S3 - C3',
+                name: 'P5C3',
                 value: 1.125
             }
         ]
@@ -185,6 +185,14 @@ const model = ref([
     { key: 'style.chart.layout.rects.selected.stroke', def: '#FFFFFF', type: 'color'},
     { key: 'style.chart.layout.rects.selected.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
     { key: 'style.chart.layout.rects.selected.unselectedOpacity', def: 0.6, type: 'range', min: 0, max: 1, step: 0.01},
+
+    { key: 'style.chart.layout.rects.group.stroke', def: '#CCCCCC', type: 'color'},
+    { key: 'style.chart.layout.rects.group.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
+    { key: 'style.chart.layout.rects.group.useSeriesBackgroundColor', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.rects.group.backgroundLighterRatio', def: 0.4, type: 'number', min: 0, max: 1, step: 0.01 },
+    { key: 'style.chart.layout.rects.group.label.adaptColorToBackground', def: true, type: 'checkbox'},
+    { key: 'style.chart.layout.rects.group.label.color', def: '#FF0000', type: 'color'},
+
     { key: 'style.chart.layout.labels.showDefaultLabels', def: true, type: 'checkbox'},
     { key: 'style.chart.layout.labels.fontSize', def: 14, type: 'range', min: 8, max: 48, step: 1},
     { key: 'style.chart.layout.labels.minFontSize', def: 10, type: 'range', min: 6, max: 48, step: 1},
@@ -396,6 +404,12 @@ onMounted(async() => {
 
         <template #local>
             <LocalVueUiTreemap :dataset="dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectDatapoint="selectDatapoint" @selectLegend="selectLegend" ref="local">
+                <!-- <template #group-label="{ group }">
+                    <div style="width: 100%; text-align:left; padding-left: 12px;">
+                        {{ group.name }}
+                    </div>
+                </template> -->
+
                 <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

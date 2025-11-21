@@ -514,6 +514,16 @@ declare module "vue-data-ui" {
                             strokeWidth?: number;
                             unselectedOpacity?: number;
                         };
+                        group?: {
+                            stroke?: string;
+                            strokeWidth?: number;
+                            useSeriesBackgroundColor?: boolean;
+                            backgroundLighterRatio?: number;
+                            label?: {
+                                adaptColorToBackground?: boolean;
+                                color?: string;
+                            };
+                        };
                     };
                     labels?: {
                         showDefaultLabels?: boolean;

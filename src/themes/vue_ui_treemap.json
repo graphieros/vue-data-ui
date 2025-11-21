@@ -10,6 +10,13 @@
                         "stroke": "#1A1A1A",
                         "selected": {
                             "stroke": "#5A5A5A"
+                        },
+                        "group": {
+                            "stroke": "#8A8A8A",
+                            "label": {
+                                "adaptColorToBackground": false,
+                                "color": "#CCCCCC"
+                            }
                         }
                     }
                 },
@@ -52,6 +59,13 @@
                         "stroke": "#FFF8E1",
                         "selected": {
                             "stroke": "#FFF8E1"
+                        },
+                        "group": {
+                            "stroke": "#424242",
+                            "label": {
+                                "adaptColorToBackground": false,
+                                "color": "#424242"
+                            }
                         }
                     }
                 },
@@ -94,6 +108,13 @@
                         "stroke": "#1E1E1E",
                         "selected": {
                             "stroke": "#1E1E1E"
+                        },
+                        "group": {
+                            "stroke": "#8A8A8A",
+                            "label": {
+                                "adaptColorToBackground": false,
+                                "color": "#BDBDBD"
+                            }
                         }
                     }
                 },
@@ -136,6 +157,13 @@
                         "stroke": "#1A1A1A",
                         "selected": {
                             "stroke": "#1A1A1A"
+                        },
+                        "group": {
+                            "stroke": "#99AA99",
+                            "label": {
+                                "adaptColorToBackground": false,
+                                "color": "#99AA99"
+                            }
                         }
                     }
                 },
@@ -219,6 +247,13 @@
                         "stroke": "#1A1A1A",
                         "selected": {
                             "stroke": "#1A1A1A"
+                        },
+                        "group": {
+                            "stroke": "#50606C",
+                            "label": {
+                                "adaptColorToBackground": false,
+                                "color": "#50606C"
+                            }
                         }
                     }
                 },

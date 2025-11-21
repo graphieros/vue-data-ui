@@ -114,6 +114,8 @@ const breadcrumbsNav = ref(null);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
+const rootLayout = ref(null);
+const rootTextCache = ref(new Map());
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -295,6 +297,31 @@ const immutableDataset = ref(FINAL_DATASET.value);
 const currentSet = ref(immutableDataset.value);
 const rootColorMap = shallowRef(new Map());
 
+watch(
+    [immutableDataset, () => FINAL_CONFIG.value],
+    () => {
+        rootLayout.value = null;
+        rootTextCache.value = new Map();
+    },
+    { deep: true }
+);
+
+watch(
+    () => segregated.value,
+    () => {
+        rootLayout.value = null;
+        rootTextCache.value = new Map();
+    },
+    { deep: true }
+);
+
+watch(
+    [() => chartDimensions.value.width, () => chartDimensions.value.height],
+    () => {
+        rootTextCache.value = new Map();
+    }
+);
+
 function applyIdsAndTopLevelColors(tree) {
     if (!Array.isArray(tree)) return;
 
@@ -448,55 +475,302 @@ function calcRectOpacity(color, rect, totalValue) {
     return lightenHexColor(color, ratio < 0 ? 0 : ratio);
 }
 
-function mapChildren(children, parentColor, parentName, totalValue) {
-    return children.map((item, j) => {
-        const color = calcRectOpacity(convertColorToHex(parentColor) || customPalette.value[j] || palette[j] || palette[j % palette.length], item, totalValue);
+function hasChildren(node) {
+    return Array.isArray(node.children) && node.children.length > 0;
+}
+
+function sortChildrenForTreemap(children) {
+    return [...children].sort((a, b) => {
+        const aIsParent = hasChildren(a);
+        const bIsParent = hasChildren(b);
+
+        // Parents last, to avoid showing a drillable child in the middle of its siblings
+        if (aIsParent !== bIsParent) {
+            return aIsParent - bIsParent; // false(0) before true(1)
+        }
+
+        const av = Number(a.value) || 0;
+        const bv = Number(b.value) || 0;
+        return bv - av;
+    });
+}
+
+function mapChildren(children, parentColor, parentName, totalValue, rootId) {
+    const sortedChildren = sortChildrenForTreemap(children);
+
+    return sortedChildren.map((item, j) => {
+        const color = calcRectOpacity(
+        convertColorToHex(parentColor) || customPalette.value[j] || palette[j] || palette[j % palette.length],
+            item,
+            totalValue
+        );
         const proportion = calcRectProportion(item, totalValue);
+
+        const groupRootId = rootId ?? item.parentId ?? item.id;
+
         return {
             ...item,
             color,
             proportion,
             parentName,
-            children: item.children ? mapChildren(item.children, color, item.name, totalValue) : undefined
+            rootId: groupRootId,
+            children: Array.isArray(item.children) && item.children.length
+                ? mapChildren(
+                    item.children,
+                    color,
+                    item.name,
+                    totalValue,
+                    groupRootId
+                )
+                : undefined
         };
     });
-};
+}
 
-const squarified = computed(() => {
+const squarifiedRaw = computed(() => {
     const levelTotal = orderedDataset.value
         .map(el => Number(el.value) || 0)
         .reduce((a, b) => a + b, 0) || 1;
 
-    return generateTreemap(
-        orderedDataset.value.map(el => {
+    const nodes = orderedDataset.value.map(el => {
         const parentChildrenTotal = el.children
-            ? el.children.reduce((acc, c) => acc + (Number(c.value) || 0), 0)
-            : el.value;
+        ? el.children.reduce((acc, c) => acc + (Number(c.value) || 0), 0)
+        : el.value;
 
         return {
-            value: el.value,
-            id: el.id || createUid(),
-            proportion: (Number(el.value) || 0) / levelTotal,
-            children: el.children
+        value: el.value,
+        id: el.id || createUid(),
+        proportion: (Number(el.value) || 0) / levelTotal,
+        children: el.children
             ? mapChildren(
-                el.children.sort((a, b) => (b.value || 0) - (a.value || 0)),
+                el.children,
                 el.color,
                 el.name,
                 parentChildrenTotal || 1
-                )
+            )
             : undefined,
-            color: el.color,
-            name: el.name,
+        color: el.color,
+        name: el.name,
         };
-        }),
-        {
-            x0: svg.value.left,
-            y0: svg.value.top,
-            x1: svg.value.left + svg.value.width,
-            y1: svg.value.top + svg.value.height,
+    });
+
+    const isRootView = drillStack.value.length === 0;
+
+    if (isRootView) {
+        if (!rootLayout.value) {
+            const normBounds = { x0: 0, y0: 0, x1: 1, y1: 1 };
+            rootLayout.value = generateTreemap(nodes, normBounds);
         }
-    );
+
+        const bounds = {
+        x0: svg.value.left,
+        y0: svg.value.top,
+        x1: svg.value.left + svg.value.width,
+        y1: svg.value.top + svg.value.height,
+        };
+
+        const scaleX = bounds.x1 - bounds.x0;
+        const scaleY = bounds.y1 - bounds.y0;
+
+        return rootLayout.value.map(rect => ({
+            ...rect,
+            x0: bounds.x0 + rect.x0 * scaleX,
+            x1: bounds.x0 + rect.x1 * scaleX,
+            y0: bounds.y0 + rect.y0 * scaleY,
+            y1: bounds.y0 + rect.y1 * scaleY,
+        }));
+    }
+
+    const bounds = {
+        x0: svg.value.left,
+        y0: svg.value.top,
+        x1: svg.value.left + svg.value.width,
+        y1: svg.value.top + svg.value.height,
+    };
+
+    return generateTreemap(nodes, bounds);
 });
+
+function computeParentWrapping(rects) {
+    const visibleRootId = drillStack.value.length
+        ? drillStack.value[drillStack.value.length - 1]
+        : null;
+
+    const wrapperMap = new Map();
+    const ancestorsByLeaf = new Map();
+    const descendantsByParent = new Map();
+    const depthByParent = new Map();
+
+    for (const rect of rects) {
+        let ancestors = getAncestorIds(rect.id);
+
+        if (visibleRootId) {
+            const idx = ancestors.indexOf(visibleRootId);
+            if (idx >= 0) {
+                ancestors = ancestors.slice(idx);
+            } else {
+                // this rect is outside the visible subtree
+                continue;
+            }
+        }
+
+        ancestors = ancestors.filter(id => {
+            const n = findNodeById(id);
+            return n && Array.isArray(n.children) && n.children.length;
+        });
+
+        if (!ancestors.length) continue;
+
+        // Build | update wrappers for each ancestor
+        ancestors.forEach((ancestorId, depthIndex) => {
+            const n = findNodeById(ancestorId);
+            if (!n) return;
+
+            let w = wrapperMap.get(ancestorId);
+            if (!w) {
+                w = {
+                    id: ancestorId,
+                    name: n.name,
+                    value: n.value,
+                    color: n.color,
+                    x0: rect.x0,
+                    y0: rect.y0,
+                    x1: rect.x1,
+                    y1: rect.y1,
+                    depth: depthIndex, // depth from visible root
+                };
+                wrapperMap.set(ancestorId, w);
+            } else {
+                w.x0 = Math.min(w.x0, rect.x0);
+                w.y0 = Math.min(w.y0, rect.y0);
+                w.x1 = Math.max(w.x1, rect.x1);
+                w.y1 = Math.max(w.y1, rect.y1);
+                w.depth = Math.min(w.depth, depthIndex);
+            }
+
+            let set = descendantsByParent.get(ancestorId);
+            if (!set) {
+                set = new Set();
+                descendantsByParent.set(ancestorId, set);
+            }
+            set.add(rect.id);
+
+            const currentDepth = depthByParent.get(ancestorId);
+            if (currentDepth == null || depthIndex < currentDepth) {
+                depthByParent.set(ancestorId, depthIndex);
+            }
+        });
+
+        ancestorsByLeaf.set(rect.id, ancestors);
+    }
+
+    const wrappers = Array.from(wrapperMap.values()).map(w => ({
+        ...w,
+        depth: depthByParent.get(w.id) ?? w.depth ?? 0,
+        childrenIds: Array.from(descendantsByParent.get(w.id) || []),
+    }));
+
+    return {
+        wrappers,
+        ancestorsByLeaf,
+    };
+}
+
+
+const parentWrapping = computed(() => {
+    return computeParentWrapping(squarifiedRaw.value);
+});
+
+const parentWrappers = computed(() => {
+    const wrappers = parentWrapping.value.wrappers;
+    if (!wrappers.length) return [];
+    return wrappers.filter(w => shouldShowParentLabel(w));
+});
+
+function getTitleBandHeight(rect) {
+    return calcFontSize(rect) * 1.2;
+}
+
+function shouldShowParentLabel(parent) {
+    const bandHeight = getTitleBandHeight(parent);
+    if (getHeight(parent) < bandHeight * 1.1) return false;
+    parent.labelY0 = parent.y0;
+    return true;
+}
+
+const squarified = computed(() => {
+    return applyParentPadding({
+        rects: squarifiedRaw.value,
+        wrappers: parentWrapping.value.wrappers,
+        ancestorsByLeaf: parentWrapping.value.ancestorsByLeaf,
+    });
+});
+
+function applyParentPadding({ rects, wrappers, ancestorsByLeaf }) {
+    if (!wrappers.length || !ancestorsByLeaf) return rects;
+
+    const wrapperById = new Map(wrappers.map(w => [w.id, w]));
+
+    return rects.map((rect) => {
+        const ancestorIds = ancestorsByLeaf.get(rect.id);
+        if (!ancestorIds || !ancestorIds.length) return rect;
+
+        // RECT shrinker
+        let r = { ...rect };
+
+        for (const ancestorId of ancestorIds) {
+            const parentRect = wrapperById.get(ancestorId);
+            if (!parentRect) continue;
+
+            const parentHeight = getHeight(parentRect);
+            const bandHeight = getTitleBandHeight(parentRect);
+
+            // If this parent is too small to have a band, ignore it
+            if (parentHeight < bandHeight * 1.1) continue;
+
+            const fontSize = calcFontSize(parentRect);
+            const lineHeight = fontSize * 1.2;
+
+            const paddingSide = fontSize * 0.5;
+            const paddingBottom = fontSize * 0.5;
+            const gapBelowTitle = lineHeight * 0.5;
+
+            const parentWidth = getWidth(parentRect);
+            const maxPadX = parentWidth / 3;
+            const px = Math.min(paddingSide, maxPadX);
+
+            const maxBottom = parentHeight * 0.25;
+            const pyBottom = Math.min(paddingBottom, maxBottom);
+
+            // Use the band top computed in shouldShowParentLabel
+            const labelTop = typeof parentRect.labelY0 === 'number'
+                ? parentRect.labelY0
+                : parentRect.y0;
+
+            const titleBottom = labelTop + bandHeight;
+
+            const x0 = Math.max(r.x0, parentRect.x0 + px);
+            const x1 = Math.min(r.x1, parentRect.x1 - px);
+            const y0 = Math.max(r.y0, titleBottom + gapBelowTitle);
+            const y1 = Math.min(r.y1, parentRect.y1 - pyBottom);
+
+            // If this ancestor would collapse the rect, stop shrinking any further
+            if (x1 <= x0 || y1 <= y0) {
+                break;
+            }
+
+            r = { 
+                ...r, 
+                x0, 
+                y0, 
+                x1, 
+                y1 
+            };
+        }
+
+        return r;
+    });
+}
 
 
 function getHeight({ y0, y1 }) {
@@ -535,8 +809,6 @@ function calcFontSize(rect) {
     return fontSize;
 }
 
-
-
 function toggleFullscreen(state) {
     isFullscreen.value = state;
     step.value += 1;
@@ -565,6 +837,18 @@ function findNodeById(id, nodes = immutableDataset.value) {
     }
     return null;
 };
+
+function getAncestorIds(id) {
+    const ancestors = [];
+    let node = findNodeById(id);
+    while (node && node.parentId) {
+        const parent = findNodeById(node.parentId);
+        if (!parent) break;
+        ancestors.unshift(parent.id);
+        node = parent;
+    }
+    return ancestors;
+}
 
 const isZoom = computed(() => drillStack.value.length > 0);
 
@@ -997,26 +1281,44 @@ async function generateSvg({ isCb }) {
     }
 }
 
-function buildTreemapText({ rect, seriesIndex }) {
-    const showName = FINAL_CONFIG.value.style.chart.layout.labels.name.show;
+function getParentLabelMaxWidth(rect) {
+    const fontSize = calcFontSize(rect);
+    const paddingSide = fontSize * 0.6;
+    return Math.max(0, getWidth(rect) - 2 * paddingSide);
+}
+
+function buildTreemapText({ rect, seriesIndex, isTitle = false }) {
+    const showName  = FINAL_CONFIG.value.style.chart.layout.labels.name.show;
     const showValue = FINAL_CONFIG.value.style.chart.layout.labels.value.show;
 
     if (!showName && !showValue) return '';
 
+    const isRootView = drillStack.value.length === 0;
+    const cacheKey = isRootView
+        ? `${rect.id}:${isTitle ? 'title' : 'rect'}`
+        : null;
+
+    if (isRootView && rootTextCache.value.has(cacheKey)) {
+        return rootTextCache.value.get(cacheKey);
+    }
+
     const padding = Math.max(2, calcFontSize(rect) / 3);
     const fontSize = Math.max(8, calcFontSize(rect));
     const lineHeight = fontSize * 1.2;
-    const rectW = Math.max(0, getWidth(rect) - padding * 2);
+    const rectW = Math.max(0, getWidth(rect)  - padding * 2);
     const rectH = Math.max(0, getHeight(rect) - padding * 2);
 
-    if (rectW <= 2 || rectH <= fontSize * 0.8) return '';
+    if (rectW <= 2 || rectH <= fontSize * 0.8) {
+        if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
+        return '';
+    }
 
     const fontFamily = FINAL_CONFIG.value.style.fontFamily;
-    const fontWeightTitle = FINAL_CONFIG.value.style.chart.layout.labels.name.bold ? '600' : '400';
+    const fontWeightTitle = FINAL_CONFIG.value.style.chart.layout.labels.name.bold  ? '600' : '400';
     const fontWeightValue = FINAL_CONFIG.value.style.chart.layout.labels.value.bold ? '600' : '400';
-    const fill = adaptColorToBackground(rect.color);
+    const fill = isTitle ? !FINAL_CONFIG.value.style.chart.layout.rects.group.label.adaptColorToBackground ? FINAL_CONFIG.value.style.chart.layout.rects.group.label.color : FINAL_CONFIG.value.style.chart.layout.rects.group.useSeriesBackgroundColor ? adaptColorToBackground(lightenHexColor(rect.color, 0.4)) : adaptColorToBackground(FINAL_CONFIG.value.style.chart.backgroundColor) : adaptColorToBackground(rect.color);
 
-    const nameText = showName ? String(rect.name ?? '') : '';
+    const nameText  = showName ? String(rect.name ?? '') : '';
     const valueText = showValue
         ? applyDataLabel(
             FINAL_CONFIG.value.style.chart.layout.labels.formatter,
@@ -1031,13 +1333,17 @@ function buildTreemapText({ rect, seriesIndex }) {
         )
         : '';
 
+    const availableWidth = isTitle
+        ? getParentLabelMaxWidth(rect)
+        : rectW;
+
     function measure(text, size = fontSize, weight = '400') {
-        const svg = document.createElementNS(XMLNS, 'svg');
-        svg.setAttribute('width', '0');
-        svg.setAttribute('height', '0');
-        svg.style.position = 'absolute';
-        svg.style.visibility = 'hidden';
-        svg.style.pointerEvents = 'none';
+        const svgEl = document.createElementNS(XMLNS, 'svg');
+        svgEl.setAttribute('width', '0');
+        svgEl.setAttribute('height', '0');
+        svgEl.style.position = 'absolute';
+        svgEl.style.visibility = 'hidden';
+        svgEl.style.pointerEvents = 'none';
 
         const t = document.createElementNS(XMLNS, 'text');
         t.setAttribute('font-size', String(size));
@@ -1045,11 +1351,75 @@ function buildTreemapText({ rect, seriesIndex }) {
         t.setAttribute('font-weight', String(weight));
         t.textContent = text || '';
 
-        svg.appendChild(t);
-        document.body.appendChild(svg);
+        svgEl.appendChild(t);
+        document.body.appendChild(svgEl);
         const w = t.getComputedTextLength();
-        document.body.removeChild(svg);
+        document.body.removeChild(svgEl);
         return w;
+    }
+
+    // GROUP LABELS
+    if (isTitle) {
+        let titleText = '';
+        if (showName)  titleText = nameText;
+        if (showValue) titleText = titleText
+            ? `${titleText} (${valueText})`
+            : valueText;
+
+        if (!titleText) {
+            if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
+            return '';
+        }
+
+        let label = titleText;
+        if (measure(label, fontSize, fontWeightTitle) > availableWidth) {
+            let tmp = label;
+            while (tmp.length && measure(tmp + '…', fontSize, fontWeightTitle) > availableWidth) {
+                tmp = tmp.slice(0, -1);
+            }
+            label = tmp ? tmp + '…' : '';
+        }
+        if (!label) {
+            if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
+            return '';
+        }
+
+        const bandHeight = getTitleBandHeight(rect);
+        const depth = typeof rect.depth === 'number' ? rect.depth : 0;
+        const levelSpacing = bandHeight * 1.4;
+
+        const labelTop = typeof rect.labelY0 === 'number'
+            ? rect.labelY0
+            : rect.y0 + depth * levelSpacing;
+
+        const x = rect.x0 + padding + fontSize / 2;
+        const y = labelTop + padding + fontSize;
+
+        const result = `<text
+            x="${x}"
+            y="${y}"
+            font-size="${fontSize}"
+            font-family="${escapeXmlAttr(fontFamily)}"
+            font-weight="${fontWeightTitle}"
+            fill="${escapeXmlAttr(fill)}"
+            paint-order="stroke"
+            stroke="transparent"
+            stroke-width="0"
+            style="transition: all 0.2s ease-in-out;"
+        >
+            ${escapeXml(label)}
+        </text>`;
+
+        if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, result);
+        return result;
+    }
+
+    // RECT LABELS
+    const reserveForValue = showValue ? 1 : 0;
+    const maxTitleLines   = Math.max(0, Math.floor(rectH / lineHeight) - reserveForValue);
+    if (maxTitleLines <= 0 && !showValue) {
+        if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
+        return '';
     }
 
     function wrapLines(text, maxWidth, size, weight, maxLines, addEllipsis) {
@@ -1068,7 +1438,7 @@ function buildTreemapText({ rect, seriesIndex }) {
             while (left < word.length) {
                 let lo = 1, hi = word.length - left, best = 1;
                 while (lo <= hi) {
-                    const mid = (lo + hi) >> 1;
+                    const mid   = (lo + hi) >> 1;
                     const slice = word.slice(left, left + mid);
                     if (fits(slice)) {
                         best = mid;
@@ -1084,79 +1454,89 @@ function buildTreemapText({ rect, seriesIndex }) {
         }
 
         const tokens = words.flatMap(w => breakLongWord(w));
-        for (const tok of tokens) {
+        let truncated = false;
+
+        for (let idx = 0; idx < tokens.length; idx += 1) {
+            const tok = tokens[idx];
             const test = cur ? cur + ' ' + tok : tok;
+
             if (fits(test)) {
                 cur = test;
             } else {
-                if (cur) lines.push(cur);
-                cur = tok;
-                if (lines.length === maxLines - 1) break;
+                if (cur) {
+                    lines.push(cur);
+                } else {
+                    let s = tok;
+                    while (s.length && !fits(s)) s = s.slice(0, -1);
+                    if (s) lines.push(s);
+                }
+                cur = '';
+                if (lines.length === maxLines) {
+                    truncated = true;
+                    break;
+                }
+            }
+
+            if (idx === tokens.length - 1 && cur && lines.length < maxLines) {
+                lines.push(cur);
             }
         }
-        if (cur && lines.length < maxLines) lines.push(cur);
 
-        if (addEllipsis && lines.length === maxLines) {
-            const last = lines[lines.length - 1];
+        if (lines.length && lines.join(' ') !== tokens.join(' ')) {
+            truncated = true;
+        }
+
+        if (addEllipsis && truncated && lines.length > 0) {
+            let last = lines[lines.length - 1];
             if (!fits(last)) {
                 let s = last;
                 while (s.length && !fits(s)) s = s.slice(0, -1);
-                lines[lines.length - 1] = s;
+                last = s;
             }
-            let ell = lines[lines.length - 1] + '…';
-            if (!fits(ell)) {
-                let base = lines[lines.length - 1];
-                while (base.length && !fits(base + '…')) base = base.slice(0, -1);
-                ell = base + '…';
+            let withEllipsis = last + '…';
+            if (!fits(withEllipsis)) {
+                let base = last;
+                while (base.length && !fits(base + '…')) {
+                    base = base.slice(0, -1);
+                }
+                withEllipsis = base + '…';
             }
-            lines[lines.length - 1] = ell;
+            lines[lines.length - 1] = withEllipsis;
         }
-
         return lines;
     }
 
-    // Reserve a line for value ONLY if value is shown
-    const reserveForValue = showValue ? 1 : 0;
-    const maxTitleLines = Math.max(0, Math.floor(rectH / lineHeight) - reserveForValue);
-
-    if (maxTitleLines <= 0) {
-        // No room for title lines; optionally show only the value
-        if (!showValue) return '';
-        const x = rect.x0 + padding;
-        const y = rect.y0 + padding + fontSize; // baseline
-        const safeVal = escapeXml(valueText);
-        const valueFits = measure(safeVal, fontSize, fontWeightValue) <= rectW;
-        if (!valueFits) return '';
-        return `
-        <text 
-            x="${x}" 
-            y="${y}" 
-            font-size="${fontSize}" 
-            font-family="${escapeXmlAttr(fontFamily)}" 
-            font-weight="${fontWeightValue}" 
-            fill="${escapeXmlAttr(fill)}"
-        >
-            ${safeVal}
-        </text>`;
-    }
-
     const titleLines = showName
-        ? wrapLines(nameText, rectW, fontSize, fontWeightTitle, maxTitleLines, true)
+        ? wrapLines(
+            nameText,
+            rectW,
+            fontSize,
+            fontWeightTitle,
+            maxTitleLines,
+            true
+        )
         : [];
 
     let valueSize = fontSize;
-    let valueStr = String(valueText);
+    let valueStr  = String(valueText);
 
     if (showValue) {
-        while (measure(valueStr, valueSize, fontWeightValue) > rectW && valueSize > Math.max(8, fontSize * 0.75)) {
+        while (
+            measure(valueStr, valueSize, fontWeightValue) > rectW &&
+            valueSize > Math.max(8, fontSize * 0.75)
+        ) {
             valueSize -= 1;
         }
         if (measure(valueStr, valueSize, fontWeightValue) > rectW) {
-            while (valueStr.length && measure(valueStr + '…', valueSize, fontWeightValue) > rectW) {
-                valueStr = valueStr.slice(0, -1);
+            let tmp = valueStr;
+            while (tmp.length && measure(tmp + '…', valueSize, fontWeightValue) > rectW) {
+                tmp = tmp.slice(0, -1);
             }
-            valueStr += '…';
-            if (!valueStr.length) return '';
+            valueStr = tmp ? tmp + '…' : '';
+            if (!valueStr.length) {
+                if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
+                return '';
+            }
         }
     }
 
@@ -1165,7 +1545,10 @@ function buildTreemapText({ rect, seriesIndex }) {
         while (titleLines.length && (titleLines.length * lineHeight + (showValue ? lineHeight : 0)) > rectH) {
             titleLines.pop();
         }
-        if (!titleLines.length && (!showValue || lineHeight > rectH)) return '';
+        if (!titleLines.length && (!showValue || lineHeight > rectH)) {
+            if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, '');
+            return '';
+        }
     }
 
     const x = rect.x0 + padding;
@@ -1182,8 +1565,7 @@ function buildTreemapText({ rect, seriesIndex }) {
                 font-weight="${fontWeightTitle}"
             >
                 ${escapeXml(line)}
-            </tspan>`
-            );
+            </tspan>`);
         });
     }
 
@@ -1196,11 +1578,10 @@ function buildTreemapText({ rect, seriesIndex }) {
             font-size="${valueSize}"
         >
             ${escapeXml(valueStr)}
-        </tspan>`
-        );
+        </tspan>`);
     }
 
-    return `<text 
+    const result = `<text 
         x="${x}" 
         y="${y}" 
         font-size="${fontSize}" 
@@ -1213,6 +1594,9 @@ function buildTreemapText({ rect, seriesIndex }) {
     >
         ${tspans.join('')}
     </text>`;
+
+    if (isRootView && cacheKey) rootTextCache.value.set(cacheKey, result);
+    return result;
 }
 
 function getSafeRadius(rect) {
@@ -1431,6 +1815,40 @@ defineExpose({
                 </defs>
             </g>
 
+            <!-- PARENT WRAPPERS -->
+            <g
+                v-for="(parent, i) in parentWrappers"
+                :key="`parent_${parent.id}`"
+                class="vue-ui-treemap-parent-wrapper"
+            >
+                <rect
+                    :x="parent.x0"
+                    :y="parent.y0"
+                    :height="getHeight(parent)"
+                    :width="getWidth(parent)"
+                    :fill="FINAL_CONFIG.style.chart.layout.rects.group.useSeriesBackgroundColor ? lightenHexColor(parent.color, FINAL_CONFIG.style.chart.layout.rects.group.backgroundLighterRatio) : FINAL_CONFIG.style.chart.backgroundColor"
+                    :rx="0"
+                    :stroke="FINAL_CONFIG.style.chart.layout.rects.group.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.rects.group.strokeWidth"
+                    class="vue-data-ui-cursor-default vue-ui-treemap-rect"
+                />
+                <foreignObject
+                    v-if="$slots['group-label']"
+                    :width="getWidth(parent)"
+                    :height="getHeight(parent)"
+                    :x="parent.x0"
+                    :y="parent.y0"
+                >
+                    <slot name="group-label" v-bind="{ group: parent }"/>
+                </foreignObject>
+
+                <g v-else-if="!loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels"
+                    style="pointer-events: none"
+                    v-html="buildTreemapText({ rect: parent, seriesIndex: 0, isTitle: true })"
+                    class="vue-data-ui-cursor-default"
+                />
+            </g>
+
             <g v-for="(rect, i) in squarified" :key="`k_${rect.id}`">
                 <rect
                     data-cy="datapoint-rect"
@@ -1459,9 +1877,10 @@ defineExpose({
 
                 <!-- DEFAULT DATALABELS-->
                 <g 
-                    style="pointer-events: none" 
+                    :style="`pointer-events:none; opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
                     v-if="!$slots.rect && !loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels" 
                     v-html="buildTreemapText({ rect, seriesIndex: i })" 
+
                 />
 
                 <!-- SLOTTED CONTENT -->
@@ -1493,6 +1912,7 @@ defineExpose({
                     </div>
                 </foreignObject>
             </g>
+
             <slot name="svg" v-bind="{ svg, isZoom, rect: selectedRect, config: FINAL_CONFIG }"/>
         </svg>
 

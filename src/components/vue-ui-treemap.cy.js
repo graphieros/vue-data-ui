@@ -47,7 +47,7 @@ describe('<VueUiTreemap />', () => {
             }
         }).then(() => {
             cy.get('.vue-ui-treemap-breadcrumbs').should('not.exist')
-            cy.get('.vue-ui-treemap-rect').first().click()
+            cy.get('.vue-ui-treemap-rect').eq(12).click({ force: true })
             cy.get('.vue-ui-treemap-breadcrumbs').should('exist').and('be.visible')
             cy.get('.vue-ui-treemap-crumb').first().click()
             cy.get('.vue-ui-treemap-breadcrumbs').should('not.exist')
@@ -74,6 +74,7 @@ describe('<VueUiTreemap />', () => {
                     'color',
                     'id',
                     'name',
+                    'rootId',
                     'normalizedValue',
                     'parentId',
                     'parentName',

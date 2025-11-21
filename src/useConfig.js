@@ -1200,11 +1200,21 @@ export function useConfig() {
                             show: true,
                             intensity: 30
                         },
+                        group: {
+                            stroke: COLOR_GREY_LIGHT,
+                            strokeWidth: 1,
+                            useSeriesBackgroundColor: false,
+                            backgroundLighterRatio: 0.4,
+                            label: {
+                                adaptColorToBackground: false,
+                                color: COLOR_BLACK
+                            }
+                        },
                         selected: {
                             stroke: COLOR_GREY_LIGHT,
                             strokeWidth: 1,
                             unselectedOpacity: 0.6
-                        }
+                        },
                     },
                     labels: {
                         showDefaultLabels: true,
