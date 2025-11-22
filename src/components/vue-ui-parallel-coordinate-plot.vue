@@ -506,7 +506,7 @@ const legendSet = computed(() => {
             opacity: segregated.value.includes(ds.id) ? 0.5 : 1,
             segregate: () => segregate(ds.id),
             isSegregated: segregated.value.includes(ds.id),
-            shape: 'circle'
+            shape: ds.shape || 'circle'
         }
     });
 });
