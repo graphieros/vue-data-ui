@@ -183,13 +183,6 @@ const resizeAndReflow = () => {
                     sizeRef.value = final;
                 });
             });
-        
-        // if (FINAL_CONFIG.value.autoSize && G_hollow.value && circle_hollow.value) {
-        //     setOpacityIfWithinBBox({
-        //         el: G_hollow.value,
-        //         container: circle_hollow.value,
-        //     });
-        // }
     });
 }
 
@@ -450,13 +443,13 @@ function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
                     animatedValues.value = [...animatedValues.value];
                     if (p < 1) {
                         requestAnimationFrame(animate);
-                        requestAnimationFrame(resizeAndReflow)
+                        requestAnimationFrame(resizeAndReflow);
                     } else {
                         animatedValues.value[i] = target;
                         animatedValues.value = [...animatedValues.value];
                         completed += 1;
                         if (completed === N) resolve();
-                        requestAnimationFrame(resizeAndReflow)
+                        requestAnimationFrame(resizeAndReflow);
                     }
                 }
                 requestAnimationFrame(animate);
@@ -477,17 +470,17 @@ watch(
         const startAnimation = FINAL_CONFIG.value.startAnimation?.show;
 
         if (!isSkeleton && startAnimation) {
-        hasAnimated.value = true;
+            hasAnimated.value = true;
 
-        const finalValues = FINAL_DATASET.value.map(ds =>
-            ds.values.reduce((a, b) => a + b, 0)
-        );
+            const finalValues = FINAL_DATASET.value.map(ds =>
+                ds.values.reduce((a, b) => a + b, 0)
+            );
 
-        await animateWithGhost(
-            finalValues,
-            FINAL_CONFIG.value.startAnimation.durationMs,
-            FINAL_CONFIG.value.startAnimation.staggerMs
-        );
+            await animateWithGhost(
+                finalValues,
+                FINAL_CONFIG.value.startAnimation.durationMs,
+                FINAL_CONFIG.value.startAnimation.staggerMs
+            );
         }
 
         isFirstLoad.value = false;
@@ -601,7 +594,7 @@ const immutableSet = computed(() => {
                 ghost: false,
                 pattern: `pattern_${uid.value}_${i}`
             }
-        })
+        });
 });
 
 // v3 - Stop skeleton loader when props.dataset becomes valid
@@ -611,12 +604,12 @@ watch(() => props.dataset, (newVal) => {
     }
 }, { immediate: true });
 
-const mutableSet = shallowRef(immutableSet.value)
+const mutableSet = shallowRef(immutableSet.value);
 
 watch(() => immutableSet.value, (val) => {
     mutableSet.value = val;
     requestAnimationFrame(resizeAndReflow);
-})
+});
 
 function getData() {
     return immutableSet.value.map(ds => {
