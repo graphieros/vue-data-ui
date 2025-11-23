@@ -147,7 +147,10 @@ const safeDatasetCopy = ref(FINAL_DATASET.value.map((d, i ) => {
 const isAnimating = ref(true);
 
 function animateChart() {
-    if (!FINAL_CONFIG.value.style.animation.show) return;
+    if (!FINAL_CONFIG.value.style.animation.show) {
+        isAnimating.value = false;
+        return;
+    }
 
     const chunks = FINAL_CONFIG.value.style.animation.animationFrames;
     const targets = FINAL_DATASET.value.map(d => d.value || 0);
