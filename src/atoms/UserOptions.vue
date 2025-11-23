@@ -140,6 +140,14 @@ const props = defineProps({
     tableDialog: {
         type: Boolean,
         default: false,
+    },
+    hasZoom: {
+        type: Boolean,
+        default: false,
+    },
+    isZoom: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -155,7 +163,8 @@ const emit = defineEmits([
     'toggleTooltip', 
     'toggleAnimation', 
     'toggleAnnotator', 
-    'generateSvg'
+    'generateSvg',
+    'toggleZoom'
 ]);
 
 async function generatePdf() {
@@ -243,6 +252,17 @@ function toggleAnimation() {
     } else {
         isAnimated.value = !isAnimated.value;
         emit('toggleAnimation');
+    }
+}
+
+const isZoomActive = ref(props.isZoom);
+
+function toggleZoom() {
+    if (props.callbacks.zoom) {
+        props.callbacks.zoom();
+    } else {
+        isZoomActive.value = !isZoomActive.value;
+        emit('toggleZoom');
     }
 }
 
@@ -338,7 +358,8 @@ const isInfo = ref({
     fullscreen: false,
     animation: false,
     annotator: false,
-    svg: false
+    svg: false,
+    zoom: false,
 })
 
 </script>
@@ -481,6 +502,19 @@ const isInfo = ref({
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.fullscreen" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.fullscreen, 'button-info-left-visible': position === 'left' && isInfo.fullscreen }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.fullscreen }}
+                </div>
+            </button>
+
+            <button tabindex="0" v-if="hasZoom" data-cy="user-options-fullscreen" class="vue-ui-user-options-button" @mouseenter="isInfo.zoom = true" @mouseout="isInfo.zoom = false" @click="toggleZoom()">
+                <template v-if="$slots.optionZoom">
+                    <slot name="optionZoom" v-bind="{ toggleZoom, isZoomLocked: !isZoom }"/>
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isZoom" name="zoomUnlock" :stroke="color" style="pointer-events: none;"/>
+                    <BaseIcon v-if="!isZoom" name="zoomLock" :stroke="color" style="pointer-events: none;"/>
+                </template>
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.zoom" :class="{'button-info-left': position === 'left', 'button-info-right' : position === 'right', 'button-info-right-visible': position === 'right' && isInfo.zoom, 'button-info-left-visible': position === 'left' && isInfo.zoom }" :style="{ background: backgroundColor, color: color }">
+                    {{ titles.zoom }}
                 </div>
             </button>
 

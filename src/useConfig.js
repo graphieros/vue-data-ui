@@ -126,6 +126,7 @@ export function useConfig() {
         animation = false,
         annotator = false,
         svg = false,
+        zoom = false,
     }) => {
 
         const buttonTitles = {
@@ -142,7 +143,8 @@ export function useConfig() {
             stack: "Toggle stack mode",
             animation: "Toggle animation",
             annotator: "Toggle annotator",
-            svg: "Download SVG"
+            svg: "Download SVG",
+            zoom: "Toggle zoom lock"
         }
 
         if (!tooltip) delete buttonTitles.tooltip
@@ -157,6 +159,7 @@ export function useConfig() {
         if (!animation) delete buttonTitles.animation
         if (!annotator) delete buttonTitles.annotator
         if (!svg) delete buttonTitles.svg
+        if (!zoom) delete buttonTitles.zoom
 
         return {
             show: true,
@@ -175,7 +178,8 @@ export function useConfig() {
                 stack,
                 animation,
                 annotator,
-                svg
+                svg,
+                zoom,
             },
             callbacks: {
                 animation: null,
@@ -190,6 +194,7 @@ export function useConfig() {
                 table: null,
                 tooltip: null,
                 svg: null,
+                zoom: null
             },
             buttonTitles,
             print: {
@@ -3856,6 +3861,7 @@ export function useConfig() {
                 title: TITLE,
                 tooltip: TOOLTIP,
                 zoom: {
+                    show: true,
                     speed: 1
                 }
             }
@@ -3869,7 +3875,8 @@ export function useConfig() {
             labels: true,
             fullscreen: true,
             annotator: true,
-            svg: true
+            svg: true,
+            zoom: true
         }),
         table: {
             ...TABLE,
@@ -4613,7 +4620,8 @@ export function useConfig() {
             table: true,
             fullscreen: true,
             annotator: true,
-            svg: true
+            svg: true,
+            zoom: true
         }),
         nodeCategories: {},
         nodeCategoryColors: {},

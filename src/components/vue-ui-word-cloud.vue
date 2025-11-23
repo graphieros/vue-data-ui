@@ -99,6 +99,13 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
+    callback: () => {
+        Promise.resolve().then(() => {
+            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+            mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+            mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
+        })
+    },
     skeletonDataset: [
         { name: "Lorem", value: 6 },
         { name: "ipsum",value: 3 },
@@ -257,6 +264,7 @@ watch(() => props.config, (_newCfg) => {
     // Reset mutable config
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+    mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
 }, { deep: true });
 
 const svg = ref({
@@ -358,14 +366,14 @@ const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    showZoom: FINAL_CONFIG.value.style.chart.zoom.show
 });
 
 // v3 - Essential to make shifting between loading config and final config work
 watch(FINAL_CONFIG, () => {
-    mutableConfig.value = {
-        showTable: FINAL_CONFIG.value.table.show,
-        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
-    }
+    mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+    mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+    mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
 }, { immediate: true });
 
 function measureTextSize(text, fontSize, fontFamily = "Arial") {
@@ -547,7 +555,11 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-const active = computed(() => !isAnnotator.value && FINAL_CONFIG.value.style.chart.zoom.show)
+function toggleZoom() {
+    mutableConfig.value.showZoom = !mutableConfig.value.showZoom;
+}
+
+const active = computed(() => !isAnnotator.value && mutableConfig.value.showZoom);
 
 const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(svgRef, {
     x: 0,
@@ -660,7 +672,8 @@ defineExpose({
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    toggleZoom
 });
 
 const selectedWord = ref(null);
@@ -795,6 +808,8 @@ function useTooltip(word, index) {
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
+            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
+            :isZoom="mutableConfig.showZoom"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv" 
@@ -803,6 +818,7 @@ function useTooltip(word, index) {
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            @toggleZoom="toggleZoom"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"
@@ -830,6 +846,9 @@ function useTooltip(word, index) {
             </template>
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            </template>
+            <template v-if="$slots.optionZoom" #optionZoom="{ toggleZoom, isZoomLocked }">
+                <slot name="optionZoom" v-bind="{ toggleZoom , isZoomLocked }"/>
             </template>
         </UserOptions>
 

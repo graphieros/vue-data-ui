@@ -300,6 +300,7 @@ declare module "vue-data-ui" {
             table?: boolean;
             tooltip?: boolean;
             svg?: boolean;
+            zoom?: boolean;
         };
         buttonTitles?: {
             animation?: string;
@@ -316,6 +317,7 @@ declare module "vue-data-ui" {
             table?: string;
             tooltip?: string;
             svg?: string;
+            zoom?: string;
         };
         callbacks?: {
             animation?: null | (() => void);
@@ -330,6 +332,7 @@ declare module "vue-data-ui" {
             table?: null | (() => void);
             tooltip?: null | (() => void);
             svg?: null | (({blob, url, text, dataUrl}: { blob: Blob; url: URL, text: string, dataUrl: string }) => void);
+            zoom?: null | (() => void);
         };
         print?: {
             scale?: number;
@@ -1024,6 +1027,7 @@ declare module "vue-data-ui" {
                     ) => string);
                 };
                 zoom?: {
+                    show?: boolean;
                     speed?: number;
                 };
             };
@@ -1070,6 +1074,7 @@ declare module "vue-data-ui" {
         toggleLabels(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
+        toggleZoom(): void
     }
 
     export const VueUiMolecule: DefineComponent<
@@ -1518,7 +1523,11 @@ declare module "vue-data-ui" {
         | "printer"
         | "save"
         | "svg"
-        | "chartStackline";
+        | "chartStackline"
+        | "zoomLock"
+        | "zoomUnlock"
+        | "lock"
+        | "unlock";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -7065,6 +7074,7 @@ declare module "vue-data-ui" {
         toggleTooltip(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
+        toggleZoom(): void
     }
 
     export const VueUiWordCloud: DefineComponent<

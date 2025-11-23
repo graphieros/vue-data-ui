@@ -176,6 +176,7 @@ const emit = defineEmits([
     'resetZoom',
     'showSeries',
     'hideSeries',
+    'toggleZoom',
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -223,6 +224,7 @@ const autoSize = ref(() => null);
 const resetZoom = ref(() => null);
 const showSeries = ref(() => null);
 const hideSeries = ref(() => null);
+const toggleZoom = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -328,6 +330,9 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.hideSeries) {
             hideSeries.value = newRef.hideSeries;
         }
+        if (newRef.toggleZoom) {
+            toggleZoom.value = newRef.toggleZoom;
+        }
     }
 })
 
@@ -365,7 +370,8 @@ const getEventHandlers = () => {
         'toggleTable',
         'resetZoom',
         'showSeries',
-        'hideSeries'
+        'hideSeries',
+        'toggleZoom'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -444,7 +450,8 @@ defineExpose({
     selectRibbon,
     resetZoom,
     showSeries,
-    hideSeries
+    hideSeries,
+    toggleZoom
 });
 
 const notSupported = computed(() => {

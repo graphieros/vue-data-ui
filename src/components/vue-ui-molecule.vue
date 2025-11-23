@@ -206,6 +206,7 @@ watch(() => props.config, (_newCfg) => {
     // Reset mutable config
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+    mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
 }, { deep: true });
 
 const layoutEpoch = ref(0);
@@ -240,14 +241,16 @@ const customPalette = computed(() => {
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
     showDataLabels: true,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    showZoom: FINAL_CONFIG.value.style.chart.zoom.show
 });
 
 watch(FINAL_CONFIG, () => {
     mutableConfig.value = {
         showTable: FINAL_CONFIG.value.table.show,
         showDataLabels: true,
-        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+        showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+        showZoom: FINAL_CONFIG.value.style.chart.zoom.show
     }
 }, { immediate: true });
 
@@ -564,12 +567,16 @@ function toggleTooltip() {
     mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
+function toggleZoom() {
+    mutableConfig.value.showZoom = !mutableConfig.value.showZoom;
+}
+
 const isAnnotator = ref(false);
 function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-const active = computed(() => !isAnnotator.value)
+const active = computed(() => !isAnnotator.value && mutableConfig.value.showZoom)
 
 const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(svgRef, {
     x: 0,
@@ -680,7 +687,8 @@ defineExpose({
     toggleLabels,
     toggleTooltip,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    toggleZoom
 });
 
 </script>
@@ -696,7 +704,7 @@ defineExpose({
     >
 
         <PenAndPaper
-            v-if="FINAL_CONFIG.userOptions.buttons.annotator"
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator && !!svgRef"
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
@@ -772,6 +780,8 @@ defineExpose({
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
+            :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
+            :isZoom="mutableConfig.showZoom"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -781,6 +791,7 @@ defineExpose({
             @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            @toggleZoom="toggleZoom"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"
@@ -814,6 +825,9 @@ defineExpose({
             </template>
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
+            </template>
+            <template v-if="$slots.optionZoom" #optionZoom="{ toggleZoom, isZoomLocked }">
+                <slot name="optionZoom" v-bind="{ toggleZoom , isZoomLocked }"/>
             </template>
         </UserOptions>
 

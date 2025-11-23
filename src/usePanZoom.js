@@ -228,20 +228,22 @@ export default function usePanZoom(
         svg.removeEventListener('touchcancel', handleTouchEnd);
     }
 
-    onMounted(addEventListeners);
+    onMounted(() => {
+        if (!activeRef || activeRef.value) addEventListeners();
+    });
+
     onUnmounted(removeEventListeners);
 
-    // Rebind if zoom is toggled on/off
     watchEffect(() => {
-        if (activeRef?.value) addEventListeners();
+        if (!activeRef) return;
+        if (activeRef.value) addEventListeners();
         else removeEventListeners();
         return () => removeEventListeners();
     });
 
-    // Rebind if the svg node itself changes
-    watch(svgRef, (_el, _oldEl) => {
+    watch(svgRef, () => {
         removeEventListeners();
-        addEventListeners();
+        if (!activeRef || activeRef.value) addEventListeners();
     });
 
     return { viewBox, resetZoom, isZoom, setInitialViewBox };
