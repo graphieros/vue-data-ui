@@ -1,7 +1,10 @@
 <template>
-  <template v-for="(node, i) in dataset">
+  <template v-for="(node, i) in nodes" :key="`level_${i}`">
     <template v-if="node.polygonPath && node.polygonPath.coordinates">
-      <template v-for="(coordinate, index) in node.polygonPath.coordinates" :key="`node_${i}_${index}`">
+      <template
+        v-for="(coordinate, index) in node.polygonPath.coordinates"
+        :key="`node_${i}_${index}`"
+      >
         <template v-if="node.ancestor && node.ancestor.polygonPath">
           <line
             data-cy="recursive-link-wrapper"
@@ -25,17 +28,22 @@
       </template>
     </template>
   </template>
-  <template v-for="node in dataset">
+  
+  <template v-for="node in nodes" :key="`children_${node.uid || node.name}`">
     <template v-if="node.polygonPath && node.polygonPath.coordinates">
       <template v-if="node.nodes && node.nodes.length > 0">
-        <RecursiveLinks :dataset="node.nodes" :color="color" :backgroundColor="backgroundColor"/>
+        <RecursiveLinks
+          :dataset="node.nodes"
+          :color="color"
+          :backgroundColor="backgroundColor"
+        />
       </template>
     </template>
   </template>
 </template>
 
 <script setup>
-import { toRef } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
   dataset: {
@@ -48,18 +56,29 @@ const props = defineProps({
   },
   backgroundColor: {
     type: String,
-    default: '#FFFFFF'
-  }
+    default: '#FFFFFF',
+  },
 });
 
-const nodes = toRef(props, 'dataset');
+const nodes = ref([]);
 
-nodes.value.forEach((node) => {
-  if (node.nodes && node.nodes.length > 0) {
-    node.nodes.forEach((childNode) => {
-      childNode.ancestor = node;
+watch(
+  () => props.dataset,
+  (newDataset) => {
+    const data = newDataset || [];
+
+    data.forEach((node) => {
+      if (node.nodes && node.nodes.length > 0) {
+        node.nodes.forEach((childNode) => {
+          if (childNode.ancestor !== node) {
+            childNode.ancestor = node;
+          }
+        });
+      }
     });
-  }
-});
-</script>
 
+    nodes.value = data;
+  },
+  { immediate: true }
+);
+</script>

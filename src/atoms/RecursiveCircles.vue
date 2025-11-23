@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { toRef } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
     color: {
@@ -62,7 +62,7 @@ const props = defineProps({
     },
     hoveredUid: {
         type: String,
-        default: null
+        default: null,
     },
     linkColor: {
         type: String,
@@ -70,31 +70,31 @@ const props = defineProps({
     },
     stroke: {
         type: String,
-        default: "#FFFFFF"
+        default: '#FFFFFF',
     },
     strokeHovered: {
         type: String,
-        default: '#000000'
+        default: '#000000',
     },
 });
 
-const emit = defineEmits(["click", 'hover']);
+const emit = defineEmits(['click', 'hover']);
 
 function click(node) {
-    emit('click', node)
+    emit('click', node);
 }
 
 function hover(node) {
-    emit('hover', node)
+    emit('hover', node);
 }
 
-const nodes = toRef(props, 'dataset');
+const nodes = ref([]);
 
-nodes.value.forEach((node) => {
-    if (node.nodes && node.nodes.length > 0) {
-        node.nodes.forEach((childNode) => {
-            childNode.ancestor = node;
-        });
-    }
-});
+watch(
+    () => props.dataset,
+    (newDataset) => {
+        nodes.value = newDataset || [];
+    },
+    { immediate: true }
+);
 </script>
