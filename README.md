@@ -639,7 +639,7 @@ User options actions available per chart:
 | VueUiGauge                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
 | VueUiHeatmap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiHistoryPlot            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiMolecule               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
+| VueUiMolecule               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionZoom  |
 | VueUiMoodRadar              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiNestedDonuts           | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
 | VueUiOnion                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
@@ -668,7 +668,7 @@ User options actions available per chart:
 | VueUiHorizontalBar          | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen, optionAnnotator                |
 | VueUiWaffle                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiWheel                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
-| VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
+| VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionZoom                               |
 | VueUiWorld                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiXy                     | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
 | VueUiXyCanvas               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
