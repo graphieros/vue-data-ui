@@ -119,7 +119,7 @@ describe('useObjectBindings', () => {
         const TestComponent = defineComponent({
             setup() {
                 const bindings = useObjectBindings(configRef)
-                const zoomShow = toRef(bindings, 'chart.zoom.show')
+                const zoomShow = bindings['chart.zoom.show']
                 return { zoomShow }
             },
             template: `
