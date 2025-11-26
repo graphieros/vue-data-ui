@@ -2793,7 +2793,14 @@ declare module "vue-data-ui" {
         VueUiAgePyramidExpose
     >;
 
-    export type OHLC = [string | number, number, number, number, number];
+    export type OHLC = [
+        timestamp: string | number,
+        open: number,
+        high: number,
+        low: number,
+        close: number,
+        volume: number
+    ]
 
     export type VueUiCandlestickConfig = {
         type?: 'ohlc' | 'candlesctick';
