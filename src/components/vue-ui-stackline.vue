@@ -971,7 +971,7 @@ const _formattedDataset = computed(() => {
 
     const scale = (!FINAL_CONFIG.value.style.chart.lines.distributed &&
                     (FINAL_CONFIG.value.style.chart.grid.scale.scaleMax !== null ||
-                     FINAL_CONFIG.value.style.chart.grid.scale.scaleMin !== null))
+                        FINAL_CONFIG.value.style.chart.grid.scale.scaleMin !== null))
         ? calculateNiceScaleWithExactExtremes(
             FINAL_CONFIG.value.style.chart.grid.scale.scaleMin !== null
                 ? FINAL_CONFIG.value.style.chart.grid.scale.scaleMin
@@ -997,7 +997,7 @@ const _formattedDataset = computed(() => {
     const cumPos = Array(winLen).fill(0);
     const cumNeg = Array(winLen).fill(0);
 
-    const xAtRel = (rel) => {
+    const computeXFromRelativeIndex = (rel) => {
         if (winLen <= 1) return drawingArea.value.left + drawingArea.value.width / 2;
         return drawingArea.value.left + (rel / (winLen - 1)) * drawingArea.value.width;
     };
@@ -1054,14 +1054,9 @@ const _formattedDataset = computed(() => {
                 relIndices.push(rel);
                 seriesVals.push(dp);
                 signedVals.push(sign ?? (dp >= 0 ? 1 : -1));
-                
-                if (isMissing) {
-                    baseY[rel] = ZERO_POSITION;
-                    topY[rel]  = ZERO_POSITION;
-                }
             }
 
-            const points = relIndices.map(rel => ({ x: xAtRel(rel), y: topY[rel] }));
+            const points = relIndices.map(rel => ({ x: computeXFromRelativeIndex(rel), y: topY[rel] }));
             const x = points.map(p => p.x);
 
             const absoluteTotal = seriesVals.reduce((a, b) => a + Math.abs(b || 0), 0);
@@ -1090,7 +1085,6 @@ const _formattedDataset = computed(() => {
             };
         });
 });
-
 
 const formattedDataset = computed(() => {
     const stripMove = (d) =>
