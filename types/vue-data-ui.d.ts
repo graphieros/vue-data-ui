@@ -2630,12 +2630,12 @@ declare module "vue-data-ui" {
         dataset: VueUiSparkbarDatasetItem[];
     }>;
 
-    export type VueUiAgePyramidDatasetRow = {
+    export type VueUiAgePyramidDatasetRow = [
         year: string,
         rank: number,
         v1: number | null,
         v2: number | null
-    }
+    ]
 
     export type VueUiAgePyramidDataset = VueUiAgePyramidDatasetRow[];
 
