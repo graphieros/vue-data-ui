@@ -525,7 +525,7 @@
         <!-- CHART MODAL -->
         <div class="vue-ui-table-chart-modal" v-if="showChart && canChart"
             :style="`width: ${modalWidth}px;top:${clientY}px; left:${clientX}px;background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
-            <div class="modal-drag-handle" @mousedown="dragMouseDown">
+            <div class="vue-ui-modal-drag-handle" @mousedown="dragMouseDown">
                 <!-- Your modal title or drag icon here -->
                 <span v-html="icons.grip"/>
                 <button class="close-chart-modal" @click="showChart = false">✖</button>
@@ -2591,7 +2591,7 @@ input.vue-ui-table-dialog-input {
     color: white;
 }
 
-.vue-ui-table-chart-modal .modal-drag-handle {
+.vue-ui-table-chart-modal .vue-ui-modal-drag-handle {
     cursor: move;
     user-select: none;
     display: flex;

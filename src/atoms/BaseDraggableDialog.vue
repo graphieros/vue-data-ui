@@ -210,12 +210,12 @@ onUnmounted(() => {
         <div 
             v-if="isOpen" 
             data-cy="draggable-dialog" 
-            class="modal vue-ui-draggable-dialog" 
+            class="vue-ui-draggable-dialog" 
             :style="modalStyle"
             @click.stop
         >
             <div 
-                class="modal-header"
+                class="vue-ui-draggable-dialog-header"
                 :style="{
                     backgroundColor: headerBg,
                     color: headerColor
@@ -243,7 +243,7 @@ onUnmounted(() => {
 
 
                 </span>
-                <span class="modal-title">
+                <span class="vue-ui-draggable-dialog-title">
                     <slot name="title"/>
                 </span>
                 <div class="draggable-dialog-actions">
@@ -253,7 +253,7 @@ onUnmounted(() => {
                     </button>
                 </div>
             </div>
-            <div :class="{ 'modal-body': !withPadding, 'modal-body-pad': withPadding}">
+            <div :class="{ 'vue-ui-draggable-dialog-body': !withPadding, 'vue-ui-draggable-dialog-body-pad': withPadding}">
                 <slot name="content" />
             </div>
             <div class="resize-handle" @mousedown.stop.prevent="initResize" @touchstart.stop.prevent="initResize" />
@@ -267,7 +267,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.modal-header {
+.vue-ui-draggable-dialog-header {
     display: flex;
     align-items: center;
     user-select: none;
@@ -296,7 +296,7 @@ onUnmounted(() => {
     cursor: grabbing;
 }
 
-.modal-title {
+.vue-ui-draggable-dialog-title {
     flex: 1;
     font-weight: bold;
 }
@@ -310,14 +310,14 @@ onUnmounted(() => {
     justify-content: center;
 }
 
-.modal-body {
+.vue-ui-draggable-dialog-body {
     width: 100%;
     height: 80%;
     overflow: auto;
     transition: all 0.2s ease-in-out;
 }
 
-.modal-body-pad {
+.vue-ui-draggable-dialog-body-pad {
     padding: 0 12px;
     width: calc(100% - 24px);
     height: 80%;
