@@ -1,0 +1,82 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import HomeView from '../views/HomeView.vue'
+
+const components = [
+  'ArenaVueUiStackline',
+  'ArenaVueUiXy', 
+  'ArenaVueUiDonut',
+  'ArenaVueUiTreemap',
+  'ArenaVueUiWaffle',
+  'ArenaVueUiRadar',
+  'ArenaVueUiQuadrant',
+  'ArenaVueUiGauge',
+  'ArenaVueUiWheel',
+  'ArenaVueUiTiremarks', 
+  'ArenaVueUiChestnut',
+  'ArenaVueUiOnion',
+  'ArenaVueUiHorizontalBar',
+  'ArenaVueUiHeatmap',
+  'ArenaVueUiScatter',
+  'ArenaVueUiCandlestick',
+  'ArenaVueUiSparkline',
+  'ArenaVueUiSparkbar', 
+  'ArenaVueUiSparkStackbar',  
+  'ArenaVueUiSparkHistogram',  
+  'ArenaVueUiSparkGauge',  
+  'ArenaVueUiSparkTrend',  
+  'ArenaVueUiQuickChart', 
+  'ArenaVueUiAgePyramid', 
+  'ArenaVueUiRelationCircle', 
+  'ArenaVueUiThermometer',  
+  'ArenaVueUiRings', 
+  'ArenaVueUiDonutEvolution',
+  'ArenaVueUiIcon',
+  'ArenaVueUiMoodRadar',  
+  'ArenaVueUiMolecule',  
+  'ArenaVueUiNestedDonuts', 
+  'ArenaVueUiGalaxy',  
+  'ArenaVueUiStripPlot',  
+  'ArenaVueUiDumbbell',
+  'ArenaVueUi3dBar',  
+  'ArenaVueUiTableSparkline', 
+  'ArenaVueUiTableHeatmap',  
+  'ArenaVueUiWordCloud', 
+  'ArenaVueUiXyCanvas', 
+  'ArenaVueUiFlow',  
+  'ArenaVueUiParallelCoordinatePlot', 
+  'ArenaVueUiTimer', 
+  'ArenaVueUiCarouselTable', 
+  'ArenaVueUiGizmo',  
+  'ArenaVueUiKpi',  
+  'ArenaVueUiStackbar', 
+  'ArenaVueUiRating', 
+  'ArenaVueUiSmiley', 
+  'ArenaVueUiBullet',  
+  'ArenaVueUiFunnel', 
+  'ArenaVueUiHistoryPlot', 
+  'ArenaVueUiCirclePack', 
+  'ArenaVueUiWorld',  
+  'ArenaVueUiTable', 
+  'ArenaVueUiRidgeline', 
+  'ArenaVueUiChord', 
+  'ArenaVueUiDashboard',
+  'ArenaVueUiAnnotator'
+].map(c => ({
+  path: `/${c}`,
+  name: c,
+  component: () => import(`../../../TestingArena/${c}.vue`)
+}))
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'home',
+      component: HomeView,
+    },
+    ...components,
+  ],
+})
+
+export default router

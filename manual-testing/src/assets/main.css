@@ -1,0 +1,30 @@
+@import './base.css';
+
+a,
+.green {
+  text-decoration: none;
+  color: #8A8A8A;
+  transition: 0.4s;
+  padding: 3px;
+}
+
+body {
+  display: flex;
+  place-items: center;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  padding: 0 2rem;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #42d392, #5f8aee);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
