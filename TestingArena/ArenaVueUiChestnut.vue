@@ -8,6 +8,7 @@ import { useArena } from "../src/useArena";
 
 import { VueUiChestnut } from "vue-data-ui";
 import { VueUiChestnut as VueUiChestnutTreeshaken } from "vue-data-ui/vue-ui-chestnut";
+import ConfigKnobs from "./ConfigKnobs.vue";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
@@ -640,24 +641,11 @@ onMounted(async () => {
     </template>
 
     <template #knobs>
-            <div
-                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
-                <div v-for="knob in model">
-                    <label style="font-size: 10px">{{ knob.key }}</label>
-                    <div
-                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
-                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
-                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
-                            <option v-for="opt in knob.options">{{ opt }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+        <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
 
-        <template #config>
-            {{ config }}
-        </template>
+    <template #config>
+        {{ config }}
+    </template>
 </Box>
 </template>

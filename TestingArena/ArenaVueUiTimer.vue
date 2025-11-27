@@ -7,6 +7,7 @@ import convertArrayToObject from "./convertModel";
 
 import { VueUiTimer } from "vue-data-ui";
 import { VueUiTimer as VueUiTimerTreeshaken } from "vue-data-ui";
+import ConfigKnobs from "./ConfigKnobs.vue";
 
 const model = ref([
     { key: 'responsive', def: false, type: 'checkbox'},
@@ -95,21 +96,24 @@ const localActions = computed(() => {
         <button @click="localActions.restart">RESTART</button>
         <button @click="localActions.lap">LAP</button>
     </div>
-    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-            <LocalVueUiTimer ref="local" :key="`responsive_${step}`" :config="{
-                ...config,
-                responsive: true
-            }"> 
-            <!-- <template #controls="{ start, pause, reset }">
-                <button @click="start">START</button>
-                <button @click="pause">PAUSE</button>
-                <button @click="reset">RESET</button>
-            </template> -->
-        </LocalVueUiTimer>
-    </div>
 
     <Box comp="VueUiTimer">
         <template #title>VueUiTimer</template>
+
+        <template #responsive>
+            <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+                <LocalVueUiTimer ref="local" :key="`responsive_${step}`" :config="{
+                        ...config,
+                        responsive: true
+                    }"> 
+                    <!-- <template #controls="{ start, pause, reset }">
+                        <button @click="start">START</button>
+                        <button @click="pause">PAUSE</button>
+                        <button @click="reset">RESET</button>
+                    </template> -->
+                </LocalVueUiTimer>
+            </div>
+        </template>
 
         <template #local>
             <LocalVueUiTimer :config="config" :key="`local_${step}`">
@@ -156,20 +160,7 @@ const localActions = computed(() => {
         </template>
 
         <template #knobs>
-            <div
-                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
-                <div v-for="knob in model">
-                    <label style="font-size: 10px">{{ knob.key }}</label>
-                    <div
-                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
-                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
-                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
-                            <option v-for="opt in knob.options">{{ opt }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
 
         <template #config>

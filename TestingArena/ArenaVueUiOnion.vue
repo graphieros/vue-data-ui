@@ -8,6 +8,7 @@ import { useArena } from "../src/useArena";
 
 import { VueUiOnion } from "vue-data-ui";
 import { VueUiOnion as VueUiOnionTreeshaken } from "vue-data-ui/vue-ui-onion";
+import ConfigKnobs from "./ConfigKnobs.vue";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
@@ -270,30 +271,32 @@ onMounted(async () => {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiOnion :key="`responsive_${step}`" :dataset="dataset" :config="{
-            ...config,
-            responsive: true
-        }">
-        <template #chart-background>
-            <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-        </template>
-        
-        <template #watermark="{ isPrinting }">
-            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
-                WATERMARK
-            </div>
-        </template>
-        <template #source>
-            <div style="width:100%;font-size:10px;text-align:left">
-                SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
-            </div>
-        </template>
-    </LocalVueUiOnion>
-    </div>
-
     <Box comp="VueUiOnion" :dataset="dataset">
         <template #title>VueUiOnion</template>
+
+        <template #responsive>
+            <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+                <LocalVueUiOnion :key="`responsive_${step}`" :dataset="dataset" :config="{
+                    ...config,
+                    responsive: true
+                }">
+                    <template #chart-background>
+                        <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                    </template>
+                    
+                    <template #watermark="{ isPrinting }">
+                        <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                            WATERMARK
+                        </div>
+                    </template>
+                    <template #source>
+                        <div style="width:100%;font-size:10px;text-align:left">
+                            SOURCE: Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
+                        </div>
+                    </template>
+                </LocalVueUiOnion>
+            </div>
+        </template>
 
         <template #theme>
             <LocalVueUiOnion :dataset="dataset" :config="configTheme" />
@@ -408,20 +411,7 @@ onMounted(async () => {
         </template>
 
         <template #knobs>
-            <div
-                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
-                <div v-for="knob in model">
-                    <label style="font-size: 10px">{{ knob.key }}</label>
-                    <div
-                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
-                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
-                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
-                            <option v-for="opt in knob.options">{{ opt }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
 
         <template #config>

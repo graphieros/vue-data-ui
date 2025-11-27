@@ -5,6 +5,7 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import LocalPattern from "../src/atoms/vue-ui-pattern.vue";
+import ConfigKnobs from "./ConfigKnobs.vue";
 
 // const dataset = ref([
 //     {
@@ -403,37 +404,39 @@ onMounted(async () => {
     </div>
     <button @click="addDatapoint">ADD DATAPOINT</button>
 
-    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="{
-            ...config,
-            responsive: true
-        }">
-
-        <!-- <template #chart-background>
-            <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
-        </template> -->
-
-        <template #plot-comment="{ plot }">
-            <div :style="`text-align:${plot.textAlign};font-size: 10px; padding: 6px;`">
-                {{ plot.comment }}
-            </div>
-        </template>
-
-        <template #watermark="{ isPrinting }">
-            <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
-                WATERMARK
-            </div>
-        </template>
-        <template #source>
-            <div style="width:100%;font-size:10px;text-align:left">
-                Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
-            </div>
-        </template>
-    </LocalVueDataUi>
-    </div>
-
     <Box comp="VueUiDonut" :dataset="dataset">
         <template #title>VueUiDonut</template>
+
+        <template #responsive>
+                <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+                    <LocalVueDataUi component="VueUiDonut" :dataset="dataset" :config="{
+                        ...config,
+                        responsive: true
+                    }">
+
+                    <!-- <template #chart-background>
+                        <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
+                    </template> -->
+
+                    <template #plot-comment="{ plot }">
+                        <div :style="`text-align:${plot.textAlign};font-size: 10px; padding: 6px;`">
+                            {{ plot.comment }}
+                        </div>
+                    </template>
+
+                    <template #watermark="{ isPrinting }">
+                        <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
+                            WATERMARK
+                        </div>
+                    </template>
+                    <template #source>
+                        <div style="width:100%;font-size:10px;text-align:left">
+                            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tenetur, molestiae perspiciatis nam quae libero, deserunt in aperiam unde officia sint saepe laboriosam ducimus aspernatur labore! Sapiente aspernatur corrupti quis ad.
+                        </div>
+                    </template>
+                </LocalVueDataUi>
+            </div>
+        </template>
 
         <template #theme>
             <LocalVueUiDonut :dataset="dataset" :config="configTheme"/>
@@ -681,20 +684,7 @@ onMounted(async () => {
         </template>
 
         <template #knobs>
-            <div
-                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
-                <div v-for="knob in model">
-                    <label style="font-size: 10px">{{ knob.key }}</label>
-                    <div
-                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
-                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
-                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
-                            <option v-for="opt in knob.options">{{ opt }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
 
         <template #config>

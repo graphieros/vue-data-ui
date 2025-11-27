@@ -17,13 +17,8 @@ function refresh() {
 </script>
 
 <template>
-    <button class="reset" @click="refresh">RESET</button>
-    <h1><slot name="title"/></h1>
-
-    <div style="width: 100%; max-width: 600px; padding: 12px" v-if="comp">
-        <div style="margin: 12px 0; color: grey">Default config (local VueDataUi universal component):</div>
-        <LocalVueDataUi :component="comp" :dataset="dataset"/>
-    </div>
+    <h1 class="gradient-text" style="width:fit-content; font-weight: 900"><slot name="title"/></h1>
+    <button class="reset" @click="refresh">RELOAD PAGE</button>
 
     <div class="knobs">
         <details>
@@ -31,10 +26,20 @@ function refresh() {
             <slot name="knobs"/>
         </details>
     </div>
+
+    <div v-if="$slots.responsive" style="margin-left:1rem">
+        Reponsive (Local component)
+        <slot name="responsive"/>
+    </div>
+
+    <div style="width: 100%; max-width: 600px; padding: 12px" v-if="comp">
+        <div style="margin: 12px 0; color: grey">Default config (local VueDataUi universal component, knobs don't apply):</div>
+        <LocalVueDataUi :component="comp" :dataset="dataset"/>
+    </div>
     
     <div class="box">
         <div style="width:100%; max-width: 600px">
-            <p>Local (default config with theme only)</p>
+            <p>Local (default config with theme only, knobs don't apply)</p>
             <slot name="theme"/>
         </div>
         <div style="width:100%; max-width: 600px">
@@ -69,12 +74,10 @@ function refresh() {
 <style scoped>
 summary {
     color: white;
-    margin:12px 0;
     user-select: none;
     cursor: pointer;
-    background: #FFFFFF10;
+    background: #2A2A2A;
     padding: 12px;
-    width: calc(100% - 48px);
 }
 h1, p {
     color: #CCCCCC;
@@ -105,6 +108,11 @@ h1, p {
     max-width: 1600px;
     padding: 0 24px;
     margin-top: 24px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 800px;
+    z-index: 10000000;
 }
 .reset {
     background: #ff6400;

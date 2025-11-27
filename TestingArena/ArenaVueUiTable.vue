@@ -308,6 +308,7 @@ onMounted(() => {
   }
 })
 
+// TODO: add knobs
 </script>
 
 <template>

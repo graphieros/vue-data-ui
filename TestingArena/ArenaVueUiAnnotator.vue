@@ -94,6 +94,8 @@ const initLastSelectedShape = ref({
     "isDash": false
 });
 
+// TODO: vdui & build renders; add knobs
+
 </script>
 
 <template>

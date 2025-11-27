@@ -8,6 +8,7 @@ import { useArena } from "../src/useArena";
 
 import { VueUiStackline } from "vue-data-ui";
 import { VueUiStackline as VueUiStacklineTreeshaken } from "vue-data-ui/vue-ui-stackline";
+import ConfigKnobs from "./ConfigKnobs.vue";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
@@ -421,21 +422,23 @@ function selectX({ dataset, index, indexLabel }) {
     </select>
 </div>
 
-<div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-    <LocalVueUiStackline
-        ref="resp"
-        :dataset="dataset"
-        :config="{
-            ...config,
-            responsive: true
-        }"
-    >
-
-    </LocalVueUiStackline>
-</div>
-
 <Box comp="VueUiStackline" :dataset="dataset">
     <template #title>VueUiStackline</template>
+
+    <template #responsive>
+        <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+            <LocalVueUiStackline
+                ref="resp"
+                :dataset="dataset"
+                :config="{
+                    ...config,
+                    responsive: true
+                }"
+            >
+
+            </LocalVueUiStackline>
+        </div>
+    </template>
 
     <template #theme>
         <LocalVueUiStackline :dataset="dataset" :config="configTheme" />
@@ -480,24 +483,11 @@ function selectX({ dataset, index, indexLabel }) {
     </template>
 
     <template #knobs>
-            <div
-                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
-                <div v-for="knob in model">
-                    <label style="font-size: 10px">{{ knob.key }}</label>
-                    <div
-                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
-                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
-                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
-                            <option v-for="opt in knob.options">{{ opt }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </template>
+        <ConfigKnobs :model="model" @change="step += 1"/>
+    </template>
 
-        <template #config>
-            {{ config }}
-        </template>
+    <template #config>
+        {{ config }}
+    </template>
 </Box>
 </template>

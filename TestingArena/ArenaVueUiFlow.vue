@@ -8,6 +8,7 @@ import { useArena } from "../src/useArena";
 
 import { VueUiFlow } from "vue-data-ui";
 import { VueUiFlow as VueUiFlowTreeshaken } from "vue-data-ui/vue-ui-flow";
+import ConfigKnobs from "./ConfigKnobs.vue";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
@@ -427,15 +428,17 @@ onMounted(async () => {
         </select>
     </div>
 
-    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiFlow :dataset="dataset" :config="{
-            ...config,
-            responsive: true
-        }" :key="`local_${step}`" ref="local" />
-    </div>
-
     <Box comp="VueUiFlow" :dataset="dataset">
         <template #title>VueUiFlow</template>
+
+        <template #responsive>
+            <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+                <LocalVueUiFlow :dataset="dataset" :config="{
+                    ...config,
+                    responsive: true
+                }" :key="`local_${step}`" ref="local" />
+            </div>
+        </template>
 
         <template #theme>
             <LocalVueUiFlow :dataset="dataset" :config="configTheme" />
@@ -485,20 +488,7 @@ onMounted(async () => {
         </template>
 
         <template #knobs>
-            <div
-                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
-                <div v-for="knob in model">
-                    <label style="font-size: 10px">{{ knob.key }}</label>
-                    <div
-                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type"
-                            :min="knob.min ?? 0" :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
-                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
-                            <option v-for="opt in knob.options">{{ opt }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
     </Box>
 </template>

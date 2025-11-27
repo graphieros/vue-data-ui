@@ -7,6 +7,7 @@ import SomeTest from "../src/SomeTest.vue";
 
 import { VueUiDashboard } from "vue-data-ui";
 import { VueUiDashboard as VueUiDashboardTreeshaken } from "vue-data-ui/vue-ui-dashboard";
+import ConfigKnobs from "./ConfigKnobs.vue";
 
 const model= ref([
     { key: 'locked', def: false, type: 'checkbox' },
@@ -157,14 +158,15 @@ const dataset = ref([
 </script>
 
 <template>
-  
-  <div style="width: 800px; height: 800px; resize: both; overflow: auto; background: white">    
-    <LocalVueUiDashboard :dataset="dataset" :config="config">
-    </LocalVueUiDashboard>
-  </div>
-
     <Box>
         <template #title>VueUiDashboard</template>
+
+        <template #responsive>
+            <div style="width: 800px; height: 800px; resize: both; overflow: auto; background: white">    
+              <LocalVueUiDashboard :dataset="dataset" :config="config">
+              </LocalVueUiDashboard>
+            </div>
+        </template>
         
         <template #local>
             <LocalVueUiDashboard :dataset="dataset" :config="config">
@@ -180,20 +182,7 @@ const dataset = ref([
         </template>
 
         <template #knobs>
-            <div
-                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
-                <div v-for="knob in model">
-                    <label style="font-size: 10px">{{ knob.key }}</label>
-                    <div
-                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type" :min="knob.min ?? 0"
-                            :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
-                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
-                            <option v-for="opt in knob.options">{{ opt }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+          <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
 
         <template #config>

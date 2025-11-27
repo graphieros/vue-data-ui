@@ -8,6 +8,7 @@ import { useArena } from "../src/useArena";
 
 import { VueUiGalaxy } from "vue-data-ui";
 import { VueUiGalaxy as VueUiGalaxyTreeshaken } from "vue-data-ui/vue-ui-galaxy";
+import ConfigKnobs from "./ConfigKnobs.vue";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
 
@@ -229,12 +230,14 @@ onMounted(async () => {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-        <LocalVueUiGalaxy :dataset="dataset" :config="{ ...config, responsive: true }" />
-    </div>
-
     <Box comp="VueUiGalaxy" :dataset="dataset">
         <template #title>VueUiGalaxy</template>
+
+        <template #responsive>
+            <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+                <LocalVueUiGalaxy :dataset="dataset" :config="{ ...config, responsive: true }" />
+            </div>
+        </template>
 
         <template #theme>
             <LocalVueUiGalaxy :dataset="dataset" :config="configTheme" />
@@ -357,20 +360,7 @@ onMounted(async () => {
         </template>
 
         <template #knobs>
-            <div
-                style="display: flex; flex-direction: row; flex-wrap:wrap; align-items:center; width: 100%; color: #CCCCCC; gap:24px;">
-                <div v-for="knob in model">
-                    <label style="font-size: 10px">{{ knob.key }}</label>
-                    <div
-                        style="display:flex; flex-direction:row; flex-wrap: wrap; align-items:center; gap:6px; height: 40px">
-                        <input v-if="!['none', 'select'].includes(knob.type)" :step="knob.step" :type="knob.type"
-                            :min="knob.min ?? 0" :max="knob.max ?? 0" v-model="knob.def" @change="step += 1">
-                        <select v-if="knob.type === 'select'" v-model="knob.def" @change="step += 1">
-                            <option v-for="opt in knob.options">{{ opt }}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
 
         <template #config>
