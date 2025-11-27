@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, computed, onUnmounted, nextTick, onMounted } from "vue";
 import BaseIcon from "./BaseIcon.vue";
-import { XMLNS } from "../lib";
+import { createUid, XMLNS } from "../lib";
 
 const props = defineProps({
     backgroundColor: { type: String },
@@ -19,6 +19,12 @@ const emit = defineEmits(["close"]);
 const isOpen = ref(false);
 const hasBeenOpened = ref(false);
 const instanceKey = ref(0);
+const draggableDialog = ref(null);
+const closeButtonElement = ref(null);
+const previouslyFocusedElement = ref(null);
+const dialogId = `vue-ui-draggable-dialog-${createUid()}`;
+const dialogTitleId = `${dialogId}-title`;
+const dialogBodyId = `${dialogId}-body`;
 
 function bringToFront() {
     instanceKey.value += 1;
@@ -40,6 +46,9 @@ const modal = reactive({
 });
 
 function open() {
+    previouslyFocusedElement.value =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
     isOpen.value = true;
     nextTick(() => {
         if (!hasBeenOpened.value) {
@@ -47,11 +56,21 @@ function open() {
             modal.top = Math.max(0, window.innerHeight / 2 - modal.height / 2);
             hasBeenOpened.value = true;
         }
+
+        const targetToFocus = closeButtonElement.value || draggableDialog.value;
+        if (targetToFocus && typeof targetToFocus.focus === "function") {
+            targetToFocus.focus();
+        }
     });
 }
+
 function close() {
     isOpen.value = false;
     emit("close");
+
+    if (previouslyFocusedElement.value && typeof previouslyFocusedElement.value.focus === "function") {
+        previouslyFocusedElement.value.focus();
+    }
 }
 
 defineExpose({ open, close });
@@ -169,7 +188,7 @@ function resizeLeft(e) {
     let dx = pointer.x - modal.pointerStartX;
     let newLeft = Math.min(
         Math.max(0, modal.resizeStartLeft + dx),
-        modal.resizeStartLeft + modal.resizeStartW - 240 // min width
+        modal.resizeStartLeft + modal.resizeStartW - 240
     );
     let newWidth = modal.resizeStartW - (newLeft - modal.resizeStartLeft);
     let dy = pointer.y - modal.pointerStartY;
@@ -188,11 +207,11 @@ function endResizeLeft() {
 }
 
 onMounted(() => {
-    document.addEventListener('keydown', onEscape);
+    document.addEventListener("keydown", onEscape);
 });
 
 function onEscape(e) {
-    if (e.key && e.key === 'Escape') {
+    if (e.key && e.key === "Escape") {
         close();
     }
 }
@@ -201,27 +220,72 @@ onUnmounted(() => {
     endDrag();
     endResize();
     endResizeLeft();
-    document.removeEventListener('keydown', onEscape);
+    document.removeEventListener("keydown", onEscape);
 });
+
+function handleDialogKeydown(event) {
+    if (event.key === "Tab") {
+        trapFocus(event);
+    }
+}
+
+function trapFocus(event) {
+    if (!draggableDialog.value) return;
+
+    const focusableSelector =
+        'a[href], area[href], input:not([disabled]), select:not([disabled]), ' +
+        'textarea:not([disabled]), button:not([disabled]), iframe, object, embed, ' +
+        '[tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+
+    const focusableElements = draggableDialog.value.querySelectorAll(focusableSelector);
+    if (!focusableElements.length) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey) {
+        if (document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+        }
+    } else {
+        if (document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+        }
+    }
+}
 </script>
 
 <template>
     <Teleport :to="isFullscreen ? fullscreenParent : 'body'" :key="instanceKey">
-        <div 
-            v-if="isOpen" 
-            data-cy="draggable-dialog" 
-            class="vue-ui-draggable-dialog" 
+        <div
+            v-if="isOpen"
+            ref="draggableDialog"
+            data-cy="draggable-dialog"
+            class="vue-ui-draggable-dialog"
             :style="modalStyle"
+            role="dialog"
+            :aria-modal="true"
+            :aria-labelledby="dialogTitleId"
+            :aria-describedby="dialogBodyId"
+            tabindex="-1"
             @click.stop
+            @keydown="handleDialogKeydown"
         >
-            <div 
+            <div
                 class="vue-ui-draggable-dialog-header"
                 :style="{
                     backgroundColor: headerBg,
                     color: headerColor
                 }"
             >
-                <span class="drag-handle" @mousedown.stop.prevent="initDrag" @touchstart.stop.prevent="initDrag">
+                <span
+                    class="drag-handle"
+                    aria-hidden="true"
+                    @mousedown.stop.prevent="initDrag"
+                    @touchstart.stop.prevent="initDrag"
+                >
                     <svg
                         :xmlns="XMLNS"
                         width="20"
@@ -240,25 +304,46 @@ onUnmounted(() => {
                         <path d="M19 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
                         <path d="M19 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
                     </svg>
-
-
                 </span>
-                <span class="vue-ui-draggable-dialog-title">
-                    <slot name="title"/>
+                <span
+                    class="vue-ui-draggable-dialog-title"
+                    :id="dialogTitleId"
+                >
+                    <slot name="title" />
                 </span>
                 <div class="draggable-dialog-actions">
-                    <slot name="actions"/>
-                    <button data-cy="draggable-dialog-close" class="close" @click="close">
-                        <BaseIcon name="close" :stroke="headerColor"/>
+                    <slot name="actions" />
+                    <button
+                        ref="closeButtonElement"
+                        data-cy="draggable-dialog-close"
+                        class="close"
+                        type="button"
+                        aria-label="Close dialog"
+                        @click="close"
+                    >
+                        <BaseIcon name="close" :stroke="headerColor" />
                     </button>
                 </div>
             </div>
-            <div :class="{ 'vue-ui-draggable-dialog-body': !withPadding, 'vue-ui-draggable-dialog-body-pad': withPadding}">
+            <div
+                :id="dialogBodyId"
+                role="document"
+                :class="{
+                    'vue-ui-draggable-dialog-body': !withPadding,
+                    'vue-ui-draggable-dialog-body-pad': withPadding
+                }"
+            >
                 <slot name="content" />
             </div>
-            <div class="resize-handle" @mousedown.stop.prevent="initResize" @touchstart.stop.prevent="initResize" />
+            <div
+                class="resize-handle"
+                aria-hidden="true"
+                @mousedown.stop.prevent="initResize"
+                @touchstart.stop.prevent="initResize"
+            />
             <div
                 class="resize-handle resize-handle-left"
+                aria-hidden="true"
                 @mousedown.stop.prevent="initResizeLeft"
                 @touchstart.stop.prevent="initResizeLeft"
             />
@@ -280,8 +365,8 @@ onUnmounted(() => {
     display: flex;
     flex-direction: row;
     gap: 6px;
-    align-items:center;
-    justify-content:center;
+    align-items: center;
+    justify-content: center;
 }
 
 .drag-handle {
@@ -306,7 +391,7 @@ onUnmounted(() => {
     border: none;
     cursor: pointer;
     display: flex;
-    align-items:center;
+    align-items: center;
     justify-content: center;
 }
 
