@@ -5,12 +5,24 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
-
 import { VueUiHistoryPlot } from "vue-data-ui";
 import { VueUiHistoryPlot as VueUiHistoryPlotTreeshaken } from "vue-data-ui/vue-ui-history-plot";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
 
-const { local, build, vduiLocal, vduiBuild } = useArena()
+const { local, build, vduiLocal, vduiBuild } = useArena();
+const { vue_ui_history_plot: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
@@ -41,112 +53,114 @@ onMounted(() => {
     }, 2000)
 })
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox' },
-    { key: 'loading', def: false, type: 'checkbox' },
-    { key: 'responsive', def: false, type: 'checkbox' },
-    { key: 'responsiveProportionalSizing', def: false, type: 'checkbox' },
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    CHECKBOX("responsive", { def: false }),
+    CHECKBOX("responsiveProportionalSizing", { def: false }),
 
-    { key: 'useCssAnimation', def: true, type: 'checkbox'},
-    { key: 'style.fontFamily', def: 'inherit', type: 'text' },
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
-    { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.chart.height', def: 500, type: 'range', min: 300, max: 1000 },
-    { key: 'style.chart.width', def: 600, type: 'range', min: 300, max: 1000 },
+    CHECKBOX("useCssAnimation", { def: true }),
+    TEXT("style.fontFamily", { def: "inherit" }),
+    COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.chart.color", { def: "#1A1A1A" }),
+    RANGE("style.chart.height", { def: 500, min: 300, max: 1000 }),
+    RANGE("style.chart.width", { def: 600, min: 300, max: 1000 }),
 
-    { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.right', def:12, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.bottom', def:12, type: 'number', min: 0, max: 100 },
-    { key: 'style.chart.padding.left', def:12, type: 'number', min: 0, max: 100 },
+    NUMBER("style.chart.padding.top", { def: 12, min: 0, max: 100 }),
+    NUMBER("style.chart.padding.right", { def: 12, min: 0, max: 100 }),
+    NUMBER("style.chart.padding.bottom", { def: 12, min: 0, max: 100 }),
+    NUMBER("style.chart.padding.left", { def: 12, min: 0, max: 100 }),
 
-    { key: 'style.chart.grid.xAxis.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.grid.xAxis.stroke', def: '#E1E5E8', type: 'color'},
-    { key: 'style.chart.grid.xAxis.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
+    CHECKBOX("style.chart.grid.xAxis.show", { def: true }),
+    COLOR("style.chart.grid.xAxis.stroke", { def: "#E1E5E8" }),
+    NUMBER("style.chart.grid.xAxis.strokeWidth", { def: 1, min: 0, max: 12 }),
 
-    { key: 'style.chart.grid.horizontalLines.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.grid.horizontalLines.stroke', def: '#E1E5E8', type: 'color'},
-    { key: 'style.chart.grid.horizontalLines.strokeWidth', def: 0.6, type: 'number', min: 0, max: 12, step: 0.1},
+    CHECKBOX("style.chart.grid.horizontalLines.show", { def: true }),
+    COLOR("style.chart.grid.horizontalLines.stroke", { def: "#E1E5E8" }),
+    NUMBER("style.chart.grid.horizontalLines.strokeWidth", { def: 0.6, min: 0, max: 12, step: 0.1 }),
 
-    { key: 'style.chart.grid.yAxis.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.grid.yAxis.stroke', def: '#E1E5E8', type: 'color'},
-    { key: 'style.chart.grid.yAxis.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
+    CHECKBOX("style.chart.grid.yAxis.show", { def: true }),
+    COLOR("style.chart.grid.yAxis.stroke", { def: "#E1E5E8" }),
+    NUMBER("style.chart.grid.yAxis.strokeWidth", { def: 1, min: 0, max: 12 }),
 
-    { key: 'style.chart.grid.verticalLines.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.grid.verticalLines.stroke', def: '#E1E5E8', type: 'color'},
-    { key: 'style.chart.grid.verticalLines.strokeWidth', def: 0.6, type: 'number', min: 0, max: 12, step: 0.1},
+    CHECKBOX("style.chart.grid.verticalLines.show", { def: true }),
+    COLOR("style.chart.grid.verticalLines.stroke", { def: "#E1E5E8" }),
+    NUMBER("style.chart.grid.verticalLines.strokeWidth", { def: 0.6, min: 0, max: 12, step: 0.1 }),
 
-    { key: 'style.chart.axes.x.scaleMin', def: null, type: 'number', min: 0, max: 1000},
-    { key: 'style.chart.axes.x.scaleMax', def: null, type: 'number', min: 0, max: 1000},
-    { key: 'style.chart.axes.x.ticks', def: 10, type: 'select', options: [2, 3, 5, 10, 20]},
+    NUMBER("style.chart.axes.x.scaleMin", { def: null, min: 0, max: 1000 }),
+    NUMBER("style.chart.axes.x.scaleMax", { def: null, min: 0, max: 1000 }),
+    SELECT("style.chart.axes.x.ticks", [2, 3, 5, 10, 20], { def: 10 }),
 
-    { key: 'style.chart.axes.x.labels.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.axes.x.labels.fontSize', def: 16, type: 'number', min: 8, max: 42},
-    { key: 'style.chart.axes.x.labels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.axes.x.labels.bold', def: false, type: 'checkbox'},
-    { key: 'style.chart.axes.x.labels.rounding', def: 1, type: 'number', min: 0, max: 1},
-    { key: 'style.chart.axes.x.labels.rotation', def: 0, type: 'number', min: -90, max: 90},
-    { key: 'style.chart.axes.x.labels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+    CHECKBOX("style.chart.axes.x.labels.show", { def: true }),
+    NUMBER("style.chart.axes.x.labels.fontSize", { def: 16, min: 8, max: 42 }),
+    COLOR("style.chart.axes.x.labels.color", { def: "#1A1A1A" }),
+    CHECKBOX("style.chart.axes.x.labels.bold", { def: false }),
+    NUMBER("style.chart.axes.x.labels.rounding", { def: 1, min: 0, max: 1 }),
+    NUMBER("style.chart.axes.x.labels.rotation", { def: 0, min: -90, max: 90 }),
+    NUMBER("style.chart.axes.x.labels.autoRotate.angle", { def: -90, min: -90, max: 90 }),
 
-    { key: 'style.chart.axes.x.labels.prefix', def: '', type: 'text'},
-    { key: 'style.chart.axes.x.labels.suffix', def: '', type: 'text'},
+    TEXT("style.chart.axes.x.labels.prefix", { def: "" }),
+    TEXT("style.chart.axes.x.labels.suffix", { def: "" }),
 
-    { key: 'style.chart.axes.x.name.text', def: 'X AXIS', type: 'text' },
-    { key: 'style.chart.axes.x.name.fontSize', def: 16, type: 'number', min: 8, max: 42},
-    { key: 'style.chart.axes.x.name.offsetX', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.axes.x.name.offsetY', def:0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.axes.x.name.bold', def: false, type: 'checkbox' },
+    TEXT("style.chart.axes.x.name.text", { def: "X AXIS" }),
+    NUMBER("style.chart.axes.x.name.fontSize", { def: 16, min: 8, max: 42 }),
+    NUMBER("style.chart.axes.x.name.offsetX", { def: 0, min: -100, max: 100 }),
+    NUMBER("style.chart.axes.x.name.offsetY", { def: 0, min: -100, max: 100 }),
+    CHECKBOX("style.chart.axes.x.name.bold", { def: false }),
 
-    { key: 'style.chart.axes.y.scaleMin', def: null, type: 'number', min: 0, max: 1000},
-    { key: 'style.chart.axes.y.scaleMax', def: null, type: 'number', min: 0, max: 1000},
-    { key: 'style.chart.axes.y.ticks', def: 10, type: 'select', options: [2, 3, 5, 10, 20]},
-    { key: 'style.chart.axes.y.name.text', def: 'Y AXIS', type: 'text' },
-    { key: 'style.chart.axes.y.name.fontSize', def: 16, type: 'number', min: 8, max: 42},
-    { key: 'style.chart.axes.y.name.offsetX', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.axes.y.name.offsetY', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.axes.y.name.bold', def: false, type: 'checkbox' },
+    NUMBER("style.chart.axes.y.scaleMin", { def: null, min: 0, max: 1000 }),
+    NUMBER("style.chart.axes.y.scaleMax", { def: null, min: 0, max: 1000 }),
+    SELECT("style.chart.axes.y.ticks", [2, 3, 5, 10, 20], { def: 10 }),
+    TEXT("style.chart.axes.y.name.text", { def: "Y AXIS" }),
+    NUMBER("style.chart.axes.y.name.fontSize", { def: 16, min: 8, max: 42 }),
+    NUMBER("style.chart.axes.y.name.offsetX", { def: 0, min: -100, max: 100 }),
+    NUMBER("style.chart.axes.y.name.offsetY", { def: 0, min: -100, max: 100 }),
+    CHECKBOX("style.chart.axes.y.name.bold", { def: false }),
 
-    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+    SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
 
-    { key: 'style.chart.plots.radius', def: 16, type: 'range', min: 8, max: 42},
-    { key: 'style.chart.plots.stroke', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.plots.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.plots.gradient.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.plots.gradient.intensity', def: 40, type: 'range', min: 0, max: 100},
-    { key: 'style.chart.plots.indexLabels.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.plots.indexLabels.startAtZero', def: false, type: 'checkbox'},
-    { key: 'style.chart.plots.indexLabels.adaptColorToBackground', def: true, type: 'checkbox'},
-    { key: 'style.chart.plots.indexLabels.color', def: '#1A1A1A', type:'color'},
-    { key: 'style.chart.plots.indexLabels.fontSize', def: 16, type: 'number', min: 8, max: 42},
-    { key: 'style.chart.plots.indexLabels.bold', def: false, type: 'checkbox'},
-    { key: 'style.chart.plots.indexLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.plots.indexLabels.offsetX', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.plots.labels.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.plots.labels.fontSize', def: 10, type: 'number', min: 8, max: 42},
-    { key: 'style.chart.plots.labels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.plots.labels.bold', def: false, type: 'checkbox'},
-    { key: 'style.chart.plots.labels.offsetX', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.plots.labels.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    RANGE("style.chart.plots.radius", { def: 16, min: 8, max: 42 }),
+    COLOR("style.chart.plots.stroke", { def: "#FFFFFF" }),
+    NUMBER("style.chart.plots.strokeWidth", { def: 1, min: 0, max: 12 }),
+    CHECKBOX("style.chart.plots.gradient.show", { def: true }),
+    RANGE("style.chart.plots.gradient.intensity", { def: 40, min: 0, max: 100 }),
 
-    { key: 'style.chart.paths.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.paths.strokeWidth', def: 1.6, type: 'number', min: 0, max: 12, step: 0.1},
-    { key: 'style.chart.paths.useSerieColor', def: true, type: 'checkbox'},
-    { key: 'style.chart.paths.stroke', def: '#1A1A1A', type: 'color'},
+    CHECKBOX("style.chart.plots.indexLabels.show", { def: true }),
+    CHECKBOX("style.chart.plots.indexLabels.startAtZero", { def: false }),
+    CHECKBOX("style.chart.plots.indexLabels.adaptColorToBackground", { def: true }),
+    COLOR("style.chart.plots.indexLabels.color", { def: "#1A1A1A" }),
+    NUMBER("style.chart.plots.indexLabels.fontSize", { def: 16, min: 8, max: 42 }),
+    CHECKBOX("style.chart.plots.indexLabels.bold", { def: false }),
+    NUMBER("style.chart.plots.indexLabels.offsetY", { def: 0, min: -100, max: 100 }),
+    NUMBER("style.chart.plots.indexLabels.offsetX", { def: 0, min: -100, max: 100 }),
 
-    { key: 'style.chart.title.text', def: 'Title', type: 'text'},
-    { key: 'style.chart.title.subtitle.text', def: 'Subtitle', type: 'text'},
+    CHECKBOX("style.chart.plots.labels.show", { def: true }),
+    NUMBER("style.chart.plots.labels.fontSize", { def: 10, min: 8, max: 42 }),
+    COLOR("style.chart.plots.labels.color", { def: "#1A1A1A" }),
+    CHECKBOX("style.chart.plots.labels.bold", { def: false }),
+    NUMBER("style.chart.plots.labels.offsetX", { def: 0, min: -100, max: 100 }),
+    NUMBER("style.chart.plots.labels.offsetY", { def: 0, min: -100, max: 100 }),
 
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+    CHECKBOX("style.chart.paths.show", { def: true }),
+    NUMBER("style.chart.paths.strokeWidth", { def: 1.6, min: 0, max: 12, step: 0.1 }),
+    CHECKBOX("style.chart.paths.useSerieColor", { def: true }),
+    COLOR("style.chart.paths.stroke", { def: "#1A1A1A" }),
 
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
+    TEXT("style.chart.title.text", { def: "Title" }),
+    TEXT("style.chart.title.subtitle.text", { def: "Subtitle" }),
 
-    { key: 'table.show', def: false, type: 'checkbox'},
-    { key: 'table.useDialog', def: true, type: 'checkbox'},
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
 
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
+
+    CHECKBOX("table.show", { def: false }),
+    CHECKBOX("table.useDialog", { def: true })
 ]);
+
 
 const themeOptions = ref([
     "",

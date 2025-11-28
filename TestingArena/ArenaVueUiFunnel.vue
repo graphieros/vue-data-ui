@@ -9,8 +9,21 @@ import { useArena } from "../src/useArena"
 import { VueUiFunnel } from "vue-data-ui";
 import { VueUiFunnel as VueUiFunnelTreeshaken } from "vue-data-ui/vue-ui-funnel";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
 
-const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
+const { vue_ui_funnel: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref([
     {
@@ -35,84 +48,85 @@ const dataset = ref([
     },
 ])
 
-const model = ref([
-    { key: 'responsive', def: false, type: 'checkbox'},
-    { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
-    
-    { key: 'useCssAnimation', def: true, type: 'checkbox' },
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
-    { key: 'style.chart.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.chart.width', def: 600, type: 'range', min: 300, max: 1000 },
-    { key: 'style.chart.height', def: 500, type: 'range', min: 300, max: 1000 },
+const model = createModel([
+    CHECKBOX("responsive", { def: false }),
+    CHECKBOX("responsiveProportionalSizing", { def: false }),
 
-    { key: 'style.chart.title.text', def: 'Title', type: 'text', label: 'textContent', category: 'title' },
-    { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'title' },
-    { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 6, max: 48, label: 'fontSize', category: 'title' },
-    { key: 'style.chart.title.bold', def: true, type: 'checkbox', label: 'bold', category: 'title' },
-    { key: 'style.chart.title.textAlign', def: 'center', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'style.chart.title.paddingLeft', def: 0, type: 'number', min: 0, max: 24 },
-    { key: 'style.chart.title.paddingRight', def: 0, type: 'number', min: 0, max: 24 },
+    CHECKBOX("useCssAnimation", { def: true }),
+    COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.chart.color", { def: "#1A1A1A" }),
+    RANGE("style.chart.width", { def: 600, min: 300, max: 1000 }),
+    RANGE("style.chart.height", { def: 500, min: 300, max: 1000 }),
 
-    { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sit amet', type: 'text', label: 'textContent', category: 'subtitle' },
-    { key: 'style.chart.title.subtitle.color', def: '#A1A1A1', type: 'color', label: 'textColor', category: 'subtitle' },
-    { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 6, max: 42, label: 'fontSize', category: 'subtitle' },
-    { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox', label: 'bold', category: 'subtitle' },
+    TEXT("style.chart.title.text", { def: "Title", label: "textContent", category: "title" }),
+    COLOR("style.chart.title.color", { def: "#1A1A1A", label: "textColor", category: "title" }),
+    NUMBER("style.chart.title.fontSize", { def: 20, min: 6, max: 48, label: "fontSize", category: "title" }),
+    CHECKBOX("style.chart.title.bold", { def: true, label: "bold", category: "title" }),
+    SELECT("style.chart.title.textAlign", ["left", "center", "right"], { def: "center" }),
+    NUMBER("style.chart.title.paddingLeft", { def: 0, min: 0, max: 24 }),
+    NUMBER("style.chart.title.paddingRight", { def: 0, min: 0, max: 24 }),
 
-    { key: 'style.chart.padding.top', def: 12, type: 'number', min: 0, max: 200 },
-    { key: 'style.chart.padding.right', def: 128, type: 'number', min: 0, max: 200 },
-    { key: 'style.chart.padding.bottom', def: 24, type: 'number', min: 0, max: 200 },
-    { key: 'style.chart.padding.left', def: 24, type: 'number', min: 0, max: 200 },
+    TEXT("style.chart.title.subtitle.text", { def: "Lorem ipsum dolor sit amet", label: "textContent", category: "subtitle" }),
+    COLOR("style.chart.title.subtitle.color", { def: "#A1A1A1", label: "textColor", category: "subtitle" }),
+    NUMBER("style.chart.title.subtitle.fontSize", { def: 16, min: 6, max: 42, label: "fontSize", category: "subtitle" }),
+    CHECKBOX("style.chart.title.subtitle.bold", { def: false, label: "bold", category: "subtitle" }),
 
-    { key: 'style.chart.barCircleSpacingRatio', def: 0.05, type: 'range', min: 0, max: 0.5, step: 0.01},
-    
-    { key: 'style.chart.circles.stroke', def: '#FFFFFF', type: 'color' },
-    { key: 'style.chart.circles.strokeWidth', def: 1, type: 'range', min: 0, max: 12 },
-    { key: 'style.chart.circles.dataLabels.fontSize', def: 16, min: 8, max: 48, type: 'range'},
-    { key: 'style.chart.circles.dataLabels.offsetY', def: 0, min: -100, max: 100, type: 'number'},
-    { key: 'style.chart.circles.dataLabels.adaptColorToBackground', def: true, type: 'checkbox'},
-    { key: 'style.chart.circles.dataLabels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.circles.dataLabels.rounding', def: 1, type: 'number', min: 0, max: 6},
-    { key: 'style.chart.circles.dataLabels.bold', def: true, type: 'checkbox'},
+    NUMBER("style.chart.padding.top", { def: 12, min: 0, max: 200 }),
+    NUMBER("style.chart.padding.right", { def: 128, min: 0, max: 200 }),
+    NUMBER("style.chart.padding.bottom", { def: 24, min: 0, max: 200 }),
+    NUMBER("style.chart.padding.left", { def: 24, min: 0, max: 200 }),
 
-    { key: 'style.chart.circleLinks.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.circleLinks.color', def: '#E1E5E8', type: 'color'},
-    { key: 'style.chart.circleLinks.widthRatio', def: 1, type: 'range', min: 0.1, max: 2, step: 0.01},
+    RANGE("style.chart.barCircleSpacingRatio", { def: 0.05, min: 0, max: 0.5, step: 0.01 }),
 
-    { key: 'style.chart.area.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.area.color', def: '#e1e5e8', type: 'color' },
+    COLOR("style.chart.circles.stroke", { def: "#FFFFFF" }),
+    RANGE("style.chart.circles.strokeWidth", { def: 1, min: 0, max: 12 }),
+    RANGE("style.chart.circles.dataLabels.fontSize", { def: 16, min: 8, max: 48 }),
+    NUMBER("style.chart.circles.dataLabels.offsetY", { def: 0, min: -100, max: 100 }),
+    CHECKBOX("style.chart.circles.dataLabels.adaptColorToBackground", { def: true }),
+    COLOR("style.chart.circles.dataLabels.color", { def: "#1A1A1A" }),
+    NUMBER("style.chart.circles.dataLabels.rounding", { def: 1, min: 0, max: 6 }),
+    CHECKBOX("style.chart.circles.dataLabels.bold", { def: true }),
 
-    { key: 'style.chart.bars.stroke', def: '#FFFFFF', type: 'color' },
-    { key: 'style.chart.bars.defaultColor', def: '#1f77b4', type: 'color'},
-    { key: 'style.chart.bars.strokeWidth', def: 1, type: 'range', min: 0, max: 12 },
-    { key: 'style.chart.bars.gapRatio', def: 0.2, type: 'range', min: 0, max: 1, step: 0.01 },
-    { key: 'style.chart.bars.borderRadius', def: 3, min: 0, max: 24, type: 'range'},
+    CHECKBOX("style.chart.circleLinks.show", { def: true }),
+    COLOR("style.chart.circleLinks.color", { def: "#E1E5E8" }),
+    RANGE("style.chart.circleLinks.widthRatio", { def: 1, min: 0.1, max: 2, step: 0.01 }),
 
-    { key: 'style.chart.bars.dataLabels.name.fontSize', def: 16, type: 'number', min: 8, max: 42 },
-    { key: 'style.chart.bars.dataLabels.name.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.chart.bars.dataLabels.name.bold', def: true, type: 'checkbox' },
-    { key: 'style.chart.bars.dataLabels.name.offsetX', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.bars.dataLabels.name.offsetY', def: 0, type: 'number', min: -100, max: 100},
+    CHECKBOX("style.chart.area.show", { def: true }),
+    COLOR("style.chart.area.color", { def: "#e1e5e8" }),
 
-    { key: 'style.chart.bars.dataLabels.value.fontSize', def: 16, type: 'number', min: 8, max: 42},
-    { key: 'style.chart.bars.dataLabels.value.rounding', def: 0, type: 'number', min: 0, max: 6 },
-    { key: 'style.chart.bars.dataLabels.value.bold', def: false, type: 'checkbox'},
-    { key: 'style.chart.bars.dataLabels.value.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.chart.bars.dataLabels.value.prefix', def: 'P', type: 'text'},
-    { key: 'style.chart.bars.dataLabels.value.suffix', def: 'S', type: 'text'},
-    { key: 'style.chart.bars.dataLabels.value.offsetX', def: 0, type: 'number', min: -100, max: 100 },
-    { key: 'style.chart.bars.dataLabels.value.offsetY', def: 0, type: 'number', min: -100, max: 100 },
+    COLOR("style.chart.bars.stroke", { def: "#FFFFFF" }),
+    COLOR("style.chart.bars.defaultColor", { def: "#1f77b4" }),
+    RANGE("style.chart.bars.strokeWidth", { def: 1, min: 0, max: 12 }),
+    RANGE("style.chart.bars.gapRatio", { def: 0.2, min: 0, max: 1, step: 0.01 }),
+    RANGE("style.chart.bars.borderRadius", { def: 3, min: 0, max: 24 }),
 
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+    NUMBER("style.chart.bars.dataLabels.name.fontSize", { def: 16, min: 8, max: 42 }),
+    COLOR("style.chart.bars.dataLabels.name.color", { def: "#1A1A1A" }),
+    CHECKBOX("style.chart.bars.dataLabels.name.bold", { def: true }),
+    NUMBER("style.chart.bars.dataLabels.name.offsetX", { def: 0, min: -100, max: 100 }),
+    NUMBER("style.chart.bars.dataLabels.name.offsetY", { def: 0, min: -100, max: 100 }),
 
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
+    NUMBER("style.chart.bars.dataLabels.value.fontSize", { def: 16, min: 8, max: 42 }),
+    NUMBER("style.chart.bars.dataLabels.value.rounding", { def: 0, min: 0, max: 6 }),
+    CHECKBOX("style.chart.bars.dataLabels.value.bold", { def: false }),
+    COLOR("style.chart.bars.dataLabels.value.color", { def: "#1A1A1A" }),
+    TEXT("style.chart.bars.dataLabels.value.prefix", { def: "P" }),
+    TEXT("style.chart.bars.dataLabels.value.suffix", { def: "S" }),
+    NUMBER("style.chart.bars.dataLabels.value.offsetX", { def: 0, min: -100, max: 100 }),
+    NUMBER("style.chart.bars.dataLabels.value.offsetY", { def: 0, min: -100, max: 100 }),
 
-    { key: 'table.show', def: false, type: 'checkbox'},
-    { key: 'table.useDialog', def: true, type: 'checkbox'},
-])
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
+
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
+
+    CHECKBOX("table.show", { def: false }),
+    CHECKBOX("table.useDialog", { def: true })
+]);
+
 
 const themeOptions = ref([
     "",

@@ -4,10 +4,23 @@ import LocalVueUiRelationCircle from '../src/components/vue-ui-relation-circle.v
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiRelationCircle } from "vue-data-ui";
 import { VueUiRelationCircle as VueUiRelationCircleTreeshaken } from "vue-data-ui/vue-ui-relation-circle";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_relation_circle: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
@@ -90,52 +103,48 @@ onMounted(() => {
     }, 2000);
 })
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'responsive', def: false, type: 'checkbox'},
-    { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
-
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
-    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
-
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
-    
-    { key: 'style.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.size', def: 400, type: 'number', min: 100, max: 1000},
-    { key: 'style.limit', def: 50, type: 'range', min: 2, max: 100},
-    { key: 'style.animation.show', def: true, type: 'checkbox'},
-    { key: 'style.animation.speedMs', def: 300, type: 'number', min: 0, max: 1000},
-    { key: 'style.labels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.labels.fontSize', def: 14, type: 'number', min: 8, max: 48},
-    { key: 'style.links.curved', def: false, type: 'checkbox'},
-    { key: 'style.links.maxWidth', def: 5, type: 'number', min: 0, max: 100},
-    
-    { key: 'style.circle.radiusProportion', def: 0.2, type: 'number', min: 0.1, max: 1, step: 0.01},
-    { key: 'style.circle.stroke', def: '#CCCCCC', type: 'color'},
-    { key: 'style.circle.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.circle.offsetY', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.plot.radius', def: 2, type: 'number', min: 0, max: 24},
-    { key: 'style.plot.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.title.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
-    { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.title.fontSize', def: 20, type: 'number', min: 8, max: 48},
-    { key: 'style.title.bold', def: true, type: 'checkbox'},
-    { key: 'style.title.subtitle.color', def: '#CCCCCC', type: 'color'},
-    { key: 'style.title.subtitle.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
-    { key: 'style.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 48},
-    { key: 'style.title.subtitle.bold', def: false, type: 'checkbox' },
-])
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    CHECKBOX("responsive", { def: false }),
+    CHECKBOX("responsiveProportionalSizing", { def: false }),
+    CHECKBOX("userOptions.show", { def: true }),
+    CHECKBOX("userOptions.buttons.pdf", { def: true }),
+    CHECKBOX("userOptions.buttons.img", { def: true }),
+    CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
+    SELECT("userOptions.position", ["left", "right"], { def: "right" }),
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.color", { def: "#1A1A1A" }),
+    COLOR("style.backgroundColor", { def: "#FFFFFF" }),
+    TEXT("style.fontFamily", { def: "inherit" }),
+    NUMBER("style.size", { def: 400, min: 100, max: 1000 }),
+    RANGE("style.limit", { def: 50, min: 2, max: 100 }),
+    CHECKBOX("style.animation.show", { def: true }),
+    NUMBER("style.animation.speedMs", { def: 300, min: 0, max: 1000 }),
+    COLOR("style.labels.color", { def: "#1A1A1A" }),
+    NUMBER("style.labels.fontSize", { def: 14, min: 8, max: 48 }),
+    CHECKBOX("style.links.curved", { def: false }),
+    NUMBER("style.links.maxWidth", { def: 5, min: 0, max: 100 }),
+    NUMBER("style.circle.radiusProportion", { def: 0.2, min: 0.1, max: 1, step: 0.01 }),
+    COLOR("style.circle.stroke", { def: "#CCCCCC" }),
+    NUMBER("style.circle.strokeWidth", { def: 1, min: 0, max: 12 }),
+    NUMBER("style.circle.offsetY", { def: 0, min: -100, max: 100 }),
+    NUMBER("style.plot.radius", { def: 2, min: 0, max: 24 }),
+    COLOR("style.plot.color", { def: "#1A1A1A" }),
+    TEXT("style.title.text", { def: "Lorem ipsum dolor sit amet" }),
+    COLOR("style.title.color", { def: "#1A1A1A" }),
+    NUMBER("style.title.fontSize", { def: 20, min: 8, max: 48 }),
+    CHECKBOX("style.title.bold", { def: true }),
+    COLOR("style.title.subtitle.color", { def: "#CCCCCC" }),
+    TEXT("style.title.subtitle.text", { def: "Lorem ipsum dolor sit amet" }),
+    NUMBER("style.title.subtitle.fontSize", { def: 16, min: 8, max: 48 }),
+    CHECKBOX("style.title.subtitle.bold", { def: false })
+]);
 
 const themeOptions = ref([
     "",

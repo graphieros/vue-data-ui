@@ -4,10 +4,23 @@ import LocalVueUiSparkHistogram from '../src/components/vue-ui-sparkhistogram.vu
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiSparkHistogram } from "vue-data-ui"
 import { VueUiSparkHistogram as VueUiSparkHistogramTreeshaken } from "vue-data-ui/vue-ui-sparkhistogram";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_sparkhistogram: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 

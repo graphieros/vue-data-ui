@@ -9,8 +9,21 @@ import { useArena } from "../src/useArena";
 import { VueUiBullet } from "vue-data-ui";
 import { VueUiBullet as VueUiBulletTreeshaken } from "vue-data-ui/vue-ui-bullet";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
 
-const { local, build, vduiLocal, vduiBuild } = useArena()
+const { local, build, vduiLocal, vduiBuild } = useArena();
+const { vue_ui_bullet: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
@@ -47,78 +60,87 @@ function randomizeData(){
     dataset.value.value = Math.random() * 100
 }
 
-const model = ref([
-    { key: 'userOptions.debug', def: true, type: 'checkbox' },
-    { key: 'userOptions.loading', def: false, type: 'checkbox' },
-    { key: 'userOptions.show', def: true, type: 'checkbox' },
-    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttonTitles.pdf', def: 'PDF', type: 'text'},
-    { key: 'userOptions.buttonTitles.img', def: 'IMG', type: 'text'},
-    { key: 'userOptions.buttonTitles.fullscreen', def: 'FSC', type: 'text'},
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+const model = createModel([
+    CHECKBOX("userOptions.debug", { def: true }),
+    CHECKBOX("userOptions.loading", { def: false }),
+    CHECKBOX("userOptions.show", { def: true }),
 
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
+    CHECKBOX("userOptions.buttons.pdf", { def: true }),
+    CHECKBOX("userOptions.buttons.img", { def: true }),
+    CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
 
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color' },
-    { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.height', def: 96, type: 'range', min: 64, max: 120 },
-    { key: 'style.chart.width', def: 600, type: 'range', min: 400, max: 1000 },
+    TEXT("userOptions.buttonTitles.pdf", { def: "PDF" }),
+    TEXT("userOptions.buttonTitles.img", { def: "IMG" }),
+    TEXT("userOptions.buttonTitles.fullscreen", { def: "FSC" }),
 
-    { key: 'style.chart.padding.top', def: 24, type: 'number', min: 0, max: 64 },
-    { key: 'style.chart.padding.right', def: 24, type: 'number', min: 0, max: 64 },
-    { key: 'style.chart.padding.bottom', def: 24, type: 'number', min: 0, max: 64 },
-    { key: 'style.chart.padding.left', def: 12, type: 'number', min: 0, max: 64 },
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
 
-    { key: 'style.chart.animation.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.animation.animationFrames', def: 60, type:'range', min: 30, max: 255 },
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
 
-    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+    COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.chart.color", { def: "#1A1A1A" }),
 
-    { key: 'style.chart.segments.baseColor', def: '#9A9A9A', type: 'color' },
-    { key: 'style.chart.segments.dataLabels.show', def: true, type: 'checkbox' },
-    { key: 'style.chart.segments.dataLabels.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.chart.segments.dataLabels.fontSize', def: 10, type: 'number', min: 8, max: 42 },
-    { key: 'style.chart.segments.dataLabels.bold', def: false, type: 'checkbox' },
-    { key: 'style.chart.segments.dataLabels.prefix', def: '', type: 'text'},
-    { key: 'style.chart.segments.dataLabels.suffix', def: '', type: 'text'},
-    { key: 'style.chart.segments.dataLabels.offsetY', def: 0, type: 'number', min: -50, max: 50},
-    { key: 'style.chart.segments.ticks.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.segments.ticks.divisions', def: 10, type: 'number', min: 2, max: 20},
-    { key: 'style.chart.segments.ticks.stroke', def: '#8A8A8A', type: 'color'},
+    RANGE("style.chart.height", { def: 96, min: 64, max: 120 }),
+    RANGE("style.chart.width", { def: 600, min: 400, max: 1000 }),
 
-    { key: 'style.chart.target.onTop', def: true, type: 'checkbox' },
-    { key: 'style.chart.target.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.target.rounded', def: true, type: 'checkbox'},
-    { key: 'style.chart.target.heightRatio', def: 0.8, type: 'range', min: 0.2, max: 1, step: 0.01},
-    { key: 'style.chart.target.stroke', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.target.strokeWidth', def: 1, type: 'number', min: 0, max: 6},
-    { key: 'style.chart.target.width', def: 6, type: 'number', min: 1, max: 12},
+    NUMBER("style.chart.padding.top", { def: 24, min: 0, max: 64 }),
+    NUMBER("style.chart.padding.right", { def: 24, min: 0, max: 64 }),
+    NUMBER("style.chart.padding.bottom", { def: 24, min: 0, max: 64 }),
+    NUMBER("style.chart.padding.left", { def: 12, min: 0, max: 64 }),
 
-    { key: 'style.chart.valueBar.color', def: '#3A3A3A', type: 'color' },
-    { key: 'style.chart.valueBar.heightRatio', def: 0.33, type: 'range', min: 0.2, max: 1, step: 0.01 },
-    { key: 'style.chart.valueBar.stroke', def: '#FFFFFF', type: 'color' },
-    { key: 'style.chart.valueBar.strokeWidth', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.valueBar.label.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.valueBar.label.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.valueBar.label.fontSize', def: 14, type: 'number', min: 8, max: 42},
-    { key: 'style.chart.valueBar.label.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.valueBar.label.offsetY', def: 0, type: 'number', min: -50, max: 50},
+    CHECKBOX("style.chart.animation.show", { def: true }),
+    RANGE("style.chart.animation.animationFrames", { def: 60, min: 30, max: 255 }),
 
-    { key: 'style.chart.title.text', def: 'This is a title', type: 'text'},
-    { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 42 },
-    { key: 'style.chart.title.bold', def: true, type: 'checkbox' },
-    { key: 'style.chart.title.subtitle.text', def: 'This is a subtitle', type: 'text'},
-    { key: 'style.chart.title.subtitle.color', def: '#8A8A8A', type: 'color'},
-    { key: 'style.chart.title.subtitle.fontSize', def: 14, type: 'number', min: 8, max: 42 },
-    { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox' },
+    SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+
+    COLOR("style.chart.segments.baseColor", { def: "#9A9A9A" }),
+
+    CHECKBOX("style.chart.segments.dataLabels.show", { def: true }),
+    COLOR("style.chart.segments.dataLabels.color", { def: "#1A1A1A" }),
+    NUMBER("style.chart.segments.dataLabels.fontSize", { def: 10, min: 8, max: 42 }),
+    CHECKBOX("style.chart.segments.dataLabels.bold", { def: false }),
+    TEXT("style.chart.segments.dataLabels.prefix", { def: "" }),
+    TEXT("style.chart.segments.dataLabels.suffix", { def: "" }),
+    NUMBER("style.chart.segments.dataLabels.offsetY", { def: 0, min: -50, max: 50 }),
+
+    CHECKBOX("style.chart.segments.ticks.show", { def: true }),
+    NUMBER("style.chart.segments.ticks.divisions", { def: 10, min: 2, max: 20 }),
+    COLOR("style.chart.segments.ticks.stroke", { def: "#8A8A8A" }),
+
+    CHECKBOX("style.chart.target.onTop", { def: true }),
+    COLOR("style.chart.target.color", { def: "#1A1A1A" }),
+    CHECKBOX("style.chart.target.rounded", { def: true }),
+    RANGE("style.chart.target.heightRatio", { def: 0.8, min: 0.2, max: 1, step: 0.01 }),
+    COLOR("style.chart.target.stroke", { def: "#FFFFFF" }),
+    NUMBER("style.chart.target.strokeWidth", { def: 1, min: 0, max: 6 }),
+    NUMBER("style.chart.target.width", { def: 6, min: 1, max: 12 }),
+
+    COLOR("style.chart.valueBar.color", { def: "#3A3A3A" }),
+    RANGE("style.chart.valueBar.heightRatio", { def: 0.33, min: 0.2, max: 1, step: 0.01 }),
+    COLOR("style.chart.valueBar.stroke", { def: "#FFFFFF" }),
+    NUMBER("style.chart.valueBar.strokeWidth", { def: 1, min: 0, max: 12 }),
+
+    CHECKBOX("style.chart.valueBar.label.show", { def: true }),
+    COLOR("style.chart.valueBar.label.color", { def: "#1A1A1A" }),
+    NUMBER("style.chart.valueBar.label.fontSize", { def: 14, min: 8, max: 42 }),
+    CHECKBOX("style.chart.valueBar.label.bold", { def: true }),
+    NUMBER("style.chart.valueBar.label.offsetY", { def: 0, min: -50, max: 50 }),
+
+    TEXT("style.chart.title.text", { def: "This is a title" }),
+    COLOR("style.chart.title.color", { def: "#1A1A1A" }),
+    NUMBER("style.chart.title.fontSize", { def: 20, min: 8, max: 42 }),
+    CHECKBOX("style.chart.title.bold", { def: true }),
+
+    TEXT("style.chart.title.subtitle.text", { def: "This is a subtitle" }),
+    COLOR("style.chart.title.subtitle.color", { def: "#8A8A8A" }),
+    NUMBER("style.chart.title.subtitle.fontSize", { def: 14, min: 8, max: 42 }),
+    CHECKBOX("style.chart.title.subtitle.bold", { def: false })
 ]);
+
 
 const themeOptions = ref([
     "",

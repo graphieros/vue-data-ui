@@ -9,6 +9,20 @@ import { useArena } from "../src/useArena";
 import { VueUiCandlestick } from "vue-data-ui";
 import { VueUiCandlestick as VueUiCandlestickTreshaken } from "vue-data-ui/vue-ui-candlestick";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_candlestick: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref([]);
 
@@ -87,144 +101,163 @@ function alterDataset() {
     )
 }
 
-const model = ref([
-    { key: 'type', def: 'ohlc', type: 'select', options: ['ohlc', 'candlestick']},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'debug', def: false, type: 'checkbox'},
-    { key: 'responsive', def: false, type: 'checkbox'},
-    { key: 'responsiveProportionalSizing', def: false, type: 'checkbox'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
-    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+const model = createModel([
+    SELECT("type", ["ohlc", "candlestick"], { def: "ohlc" }),
+    CHECKBOX("loading", { def: false }),
+    CHECKBOX("debug", { def: false }),
+    CHECKBOX("responsive", { def: false }),
+    CHECKBOX("responsiveProportionalSizing", { def: false }),
 
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
-    
-    { key: 'useCssAnimation', def: false, type: 'checkbox'},
-    { key: 'style.fontFamily', def: "inherit", type: 'text'},
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.height', def: 316, type: 'number', min: 100, max: 1000},
-    { key: 'style.width', def: 512, type: 'number', min: 100, max: 1000},
-    { key: 'style.layout.padding.top', def: 0, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.right', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.bottom', def: 0, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.padding.left', def: 0, type: 'number', min: 0, max: 100},
-    { key: 'style.layout.selector.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.selector.opacity', def: 10, type: 'range', min: 0, max: 100},
-    { key: 'style.layout.grid.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.grid.stroke', def: '#CCCCCC', type: 'color'},
-    { key: 'style.layout.grid.strokeWidth', def: 1, type: 'range', min: 0, max: 12, step: 0.5},
+    CHECKBOX("userOptions.show", { def: true }),
+    CHECKBOX("userOptions.buttons.pdf", { def: true }),
+    CHECKBOX("userOptions.buttons.csv", { def: true }),
+    CHECKBOX("userOptions.buttons.img", { def: true }),
+    CHECKBOX("userOptions.buttons.table", { def: true }),
+    CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
 
-    { key: 'style.layout.grid.horizontalLines.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.grid.horizontalLines.strokeDasharray', def: 3, type: 'number', min: 0, max: 12},
-    { key: 'style.layout.grid.horizontalLines.stroke', def: '#FF0000', type: 'color'},
-    { key: 'style.layout.grid.horizontalLines.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.1},
+    SELECT("userOptions.position", ["left", "right"], { def: "right" }),
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
 
-    { key: 'style.layout.grid.verticalLines.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.grid.verticalLines.strokeDasharray', def: 3, type: 'number', min: 0, max: 12},
-    { key: 'style.layout.grid.verticalLines.stroke', def: '#0000FF', type: 'color'},
-    { key: 'style.layout.grid.verticalLines.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.1},
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
 
-    { key: 'style.layout.grid.xAxis.dataLabels.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.grid.xAxis.dataLabels.fontSize', def: 10, type: 'number', min: 4, max: 12},
-    { key: 'style.layout.grid.xAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.grid.xAxis.dataLabels.offsetY', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.layout.grid.xAxis.dataLabels.bold', def: false, type: 'checkbox'},
-    { key: 'style.layout.grid.xAxis.dataLabels.rotation', def: -20, type: 'number', min: -360, max: 360},
-    { key: 'style.layout.grid.xAxis.dataLabels.autoRotate.enable', def: true, type: 'checkbox'},
-    { key: 'style.layout.grid.xAxis.dataLabels.autoRotate.angle', def: -90, type: 'number', min: -90, max: 90},
+    CHECKBOX("useCssAnimation", { def: false }),
 
-    { key: 'style.layout.grid.yAxis.dataLabels.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.grid.yAxis.dataLabels.fontSize', def: 10, type: 'number', min: 4, max: 12},
-    { key: 'style.layout.grid.yAxis.dataLabels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.grid.yAxis.dataLabels.offsetX', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.layout.grid.yAxis.dataLabels.bold', def: false, type: 'checkbox'},
-    { key: 'style.layout.grid.yAxis.dataLabels.steps', def: 10, type: 'number', min: 2, max: 20},
-    { key: 'style.layout.grid.yAxis.dataLabels.prefix', def: 'P', type: 'text'},
-    { key: 'style.layout.grid.yAxis.dataLabels.suffix', def: 'S', type: 'text'},
-    { key: 'style.layout.grid.yAxis.scale.min', def: null, type: 'number', min: 0, max: 10000},
-    { key: 'style.layout.grid.yAxis.scale.max', def: null, type: 'number', min: 0, max: 10000},
+    TEXT("style.fontFamily", { def: "inherit" }),
+    COLOR("style.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.color", { def: "#1A1A1A" }),
 
-    { key: 'style.layout.wick.stroke', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.wick.strokeWidth', def: 0.5, type: 'number', min: 0, max: 12, step: 0.5},
-    { key: 'style.layout.wick.extremity.shape', def: 'line', type: 'select', options: ['line', 'circle']},
-    { key: 'style.layout.wick.extremity.size', def: 'auto', type: 'select', options: ['auto', 5, 10, 20, 40]},
-    { key: 'style.layout.wick.extremity.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.candle.borderRadius', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.layout.candle.stroke', def: '#1A1A1A', type: 'color'},
-    { key: 'style.layout.candle.strokeWidth', def: 0.5, type: 'number', min: 0.5, max: 12, step:0.5},
-    { key: 'style.layout.candle.colors.bearish', def: '#dc3912', type: 'color'},
-    { key: 'style.layout.candle.colors.bullish', def: '#109618', type: 'color'},
-    { key: 'style.layout.candle.gradient.show', def: true, type: 'checkbox'},
-    { key: 'style.layout.candle.gradient.intensity', def: 40, type: 'range', min: 0, max: 100}, // not applied ?
-    { key: 'style.layout.candle.gradient.underlayer', def: '#FFFFFF', type: 'color'},
-    { key: 'style.layout.candle.widthRatio', def: 0.5, type: 'number', min: 0.1, max: 1, step: 0.1},
-    
-    { key: 'style.zoom.show', def: true, type: 'checkbox'},
-    { key: 'style.zoom.color', def: '#CCCCCC', type: 'color'},
-    { key: 'style.zoom.highlightColor', def: '#4A4A4A', type: 'color' },
-    { key: 'style.zoom.fontSize', def: 14, type: 'number', min: 8, max: 42},
-    { key: 'style.zoom.useResetSlot', def: false, type: 'checkbox'},
-    { key: 'style.zoom.startIndex', def: null, type: 'number', min: 0, max: 1000},
-    { key: 'style.zoom.endIndex', def: null, type: 'number', min: 0, max: 1000},
-    { key: 'style.zoom.enableRangeHandles', def: true, type: 'chexkbox'},
-    { key: 'style.zoom.enableSelectionDrag', def: true, type: 'chexkbox'},
-    { key: 'style.zoom.focusOnDrag', def: true, type: 'checkbox'},
-    { key: 'style.zoom.focusRangeRatio', def: 0.2, type: 'number', min: 0.1, max: 0.9, step: 0.1},
-    { key: 'style.zoom.minimap.show', def: true, type: 'checkbox' },
-    { key: 'style.zoom.preview.enable', def: true, type: 'checkbox' },
-    
-    { key: 'style.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
-    { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.title.fontSize', def: 20, type: 'number', min: 8, max: 48},
-    { key: 'style.title.bold', def: true, type: 'checkbox'},
-    { key: 'style.title.subtitle.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
-    { key: 'style.title.subtitle.color', def: '#CCCCCC', type: 'color'},
-    { key: 'style.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
-    { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'},
+    NUMBER("style.height", { def: 316, min: 100, max: 1000 }),
+    NUMBER("style.width", { def: 512, min: 100, max: 1000 }),
 
-    { key: 'style.tooltip.show', def: true, type: 'checkbox' },
-    { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },
-    { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.tooltip.fontSize', def: 14, type: 'number', min: 6, max: 24 },
-    { key: 'style.tooltip.showValue', def: true, type: 'checkbox'},
-    { key: 'style.tooltip.roundingValue', def: 0, type: 'number', min: 0, max: 6},
-    { key: 'style.tooltip.prefix', def: 'P', type: 'text'},
-    { key: 'style.tooltip.suffix', def: 'S', type: 'text'},
-    { key: 'style.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100 },
-    { key: 'style.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'style.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
+    NUMBER("style.layout.padding.top", { def: 0, min: 0, max: 100 }),
+    NUMBER("style.layout.padding.right", { def: 12, min: 0, max: 100 }),
+    NUMBER("style.layout.padding.bottom", { def: 0, min: 0, max: 100 }),
+    NUMBER("style.layout.padding.left", { def: 0, min: 0, max: 100 }),
 
-    { key: 'translations.period', def: 'Period', type: 'text'},
-    { key: 'translations.open', def: 'Open', type: 'text'},
-    { key: 'translations.high', def: 'High', type: 'text'},
-    { key: 'translations.low', def: 'Low', type: 'text'},
-    { key: 'translations.last', def: 'Close', type: 'text'},
-    { key: 'translations.volume', def: 'Volume', type: 'text'},
+    COLOR("style.layout.selector.color", { def: "#1A1A1A" }),
+    RANGE("style.layout.selector.opacity", { def: 10, min: 0, max: 100 }),
 
-    { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
-    { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color' },
-    { key: 'table.th.color', def: '#1A1A1A', type: 'color' },
-    { key: 'table.th.outline', def: 'none', type: 'text' },
-    { key: 'table.td.backgroundColor', def: '#FFFFFF', type: 'color' },
-    { key: 'table.td.color', def: '#1A1A1A', type: 'color'},
-    { key: 'table.td.outline', def: 'none', type: 'text' },
-    { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 6 },
-    { key: 'table.td.prefix', def: 'P', type: 'text'},
-    { key: 'table.td.suffix', def: 'S', type: 'text'},
-    
-    { key: 'table.show', def: false, type: 'checkbox' },
-    { key: 'table.useDialog', def: true, type: 'checkbox' },
-])
+    CHECKBOX("style.layout.grid.show", { def: true }),
+    COLOR("style.layout.grid.stroke", { def: "#CCCCCC" }),
+    RANGE("style.layout.grid.strokeWidth", { def: 1, min: 0, max: 12, step: 0.5 }),
+
+    CHECKBOX("style.layout.grid.horizontalLines.show", { def: true }),
+    NUMBER("style.layout.grid.horizontalLines.strokeDasharray", { def: 3, min: 0, max: 12 }),
+    COLOR("style.layout.grid.horizontalLines.stroke", { def: "#FF0000" }),
+    NUMBER("style.layout.grid.horizontalLines.strokeWidth", { def: 0.5, min: 0, max: 12, step: 0.1 }),
+
+    CHECKBOX("style.layout.grid.verticalLines.show", { def: true }),
+    NUMBER("style.layout.grid.verticalLines.strokeDasharray", { def: 3, min: 0, max: 12 }),
+    COLOR("style.layout.grid.verticalLines.stroke", { def: "#0000FF" }),
+    NUMBER("style.layout.grid.verticalLines.strokeWidth", { def: 0.5, min: 0, max: 12, step: 0.1 }),
+
+    CHECKBOX("style.layout.grid.xAxis.dataLabels.show", { def: true }),
+    NUMBER("style.layout.grid.xAxis.dataLabels.fontSize", { def: 10, min: 4, max: 12 }),
+    COLOR("style.layout.grid.xAxis.dataLabels.color", { def: "#1A1A1A" }),
+    NUMBER("style.layout.grid.xAxis.dataLabels.offsetY", { def: 0, min: -100, max: 100 }),
+    CHECKBOX("style.layout.grid.xAxis.dataLabels.bold", { def: false }),
+    NUMBER("style.layout.grid.xAxis.dataLabels.rotation", { def: -20, min: -360, max: 360 }),
+
+    CHECKBOX("style.layout.grid.xAxis.dataLabels.autoRotate.enable", { def: true }),
+    NUMBER("style.layout.grid.xAxis.dataLabels.autoRotate.angle", { def: -90, min: -90, max: 90 }),
+
+    CHECKBOX("style.layout.grid.yAxis.dataLabels.show", { def: true }),
+    NUMBER("style.layout.grid.yAxis.dataLabels.fontSize", { def: 10, min: 4, max: 12 }),
+    COLOR("style.layout.grid.yAxis.dataLabels.color", { def: "#1A1A1A" }),
+    NUMBER("style.layout.grid.yAxis.dataLabels.offsetX", { def: 0, min: -100, max: 100 }),
+    CHECKBOX("style.layout.grid.yAxis.dataLabels.bold", { def: false }),
+    NUMBER("style.layout.grid.yAxis.dataLabels.steps", { def: 10, min: 2, max: 20 }),
+    TEXT("style.layout.grid.yAxis.dataLabels.prefix", { def: "P" }),
+    TEXT("style.layout.grid.yAxis.dataLabels.suffix", { def: "S" }),
+
+    NUMBER("style.layout.grid.yAxis.scale.min", { def: null, min: 0, max: 10000 }),
+    NUMBER("style.layout.grid.yAxis.scale.max", { def: null, min: 0, max: 10000 }),
+
+    COLOR("style.layout.wick.stroke", { def: "#1A1A1A" }),
+    NUMBER("style.layout.wick.strokeWidth", { def: 0.5, min: 0, max: 12, step: 0.5 }),
+
+    SELECT("style.layout.wick.extremity.shape", ["line", "circle"], { def: "line" }),
+    SELECT("style.layout.wick.extremity.size", ["auto", 5, 10, 20, 40], { def: "auto" }),
+    COLOR("style.layout.wick.extremity.color", { def: "#1A1A1A" }),
+
+    NUMBER("style.layout.candle.borderRadius", { def: 1, min: 0, max: 12 }),
+    COLOR("style.layout.candle.stroke", { def: "#1A1A1A" }),
+    NUMBER("style.layout.candle.strokeWidth", { def: 0.5, min: 0.5, max: 12, step: 0.5 }),
+
+    COLOR("style.layout.candle.colors.bearish", { def: "#dc3912" }),
+    COLOR("style.layout.candle.colors.bullish", { def: "#109618" }),
+
+    CHECKBOX("style.layout.candle.gradient.show", { def: true }),
+    RANGE("style.layout.candle.gradient.intensity", { def: 40, min: 0, max: 100 }),
+    COLOR("style.layout.candle.gradient.underlayer", { def: "#FFFFFF" }),
+
+    NUMBER("style.layout.candle.widthRatio", { def: 0.5, min: 0.1, max: 1, step: 0.1 }),
+
+    CHECKBOX("style.zoom.show", { def: true }),
+    COLOR("style.zoom.color", { def: "#CCCCCC" }),
+    COLOR("style.zoom.highlightColor", { def: "#4A4A4A" }),
+    NUMBER("style.zoom.fontSize", { def: 14, min: 8, max: 42 }),
+    CHECKBOX("style.zoom.useResetSlot", { def: false }),
+    NUMBER("style.zoom.startIndex", { def: null, min: 0, max: 1000 }),
+    NUMBER("style.zoom.endIndex", { def: null, min: 0, max: 1000 }),
+
+    CHECKBOX("style.zoom.enableRangeHandles", { def: true }),
+    CHECKBOX("style.zoom.enableSelectionDrag", { def: true }),
+    CHECKBOX("style.zoom.focusOnDrag", { def: true }),
+
+    NUMBER("style.zoom.focusRangeRatio", { def: 0.2, min: 0.1, max: 0.9, step: 0.1 }),
+    CHECKBOX("style.zoom.minimap.show", { def: true }),
+    CHECKBOX("style.zoom.preview.enable", { def: true }),
+
+    TEXT("style.title.text", { def: "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis" }),
+    COLOR("style.title.color", { def: "#1A1A1A" }),
+    NUMBER("style.title.fontSize", { def: 20, min: 8, max: 48 }),
+    CHECKBOX("style.title.bold", { def: true }),
+
+    TEXT("style.title.subtitle.text", { def: "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis" }),
+    COLOR("style.title.subtitle.color", { def: "#CCCCCC" }),
+    RANGE("style.title.subtitle.fontSize", { def: 16, min: 8, max: 48 }),
+    CHECKBOX("style.title.subtitle.bold", { def: false }),
+
+    CHECKBOX("style.tooltip.show", { def: true }),
+    COLOR("style.tooltip.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.tooltip.color", { def: "#1A1A1A" }),
+    NUMBER("style.tooltip.fontSize", { def: 14, min: 6, max: 24 }),
+    CHECKBOX("style.tooltip.showValue", { def: true }),
+    NUMBER("style.tooltip.roundingValue", { def: 0, min: 0, max: 6 }),
+    TEXT("style.tooltip.prefix", { def: "P" }),
+    TEXT("style.tooltip.suffix", { def: "S" }),
+    RANGE("style.tooltip.backgroundOpacity", { def: 100, min: 0, max: 100 }),
+    SELECT("style.tooltip.position", ["left", "center", "right"], { def: "center" }),
+    NUMBER("style.tooltip.offsetY", { def: 24, min: 0, max: 48 }),
+
+    TEXT("translations.period", { def: "Period" }),
+    TEXT("translations.open", { def: "Open" }),
+    TEXT("translations.high", { def: "High" }),
+    TEXT("translations.low", { def: "Low" }),
+    TEXT("translations.last", { def: "Close" }),
+    TEXT("translations.volume", { def: "Volume" }),
+
+    NUMBER("table.responsiveBreakpoint", { def: 400, min: 300, max: 800 }),
+    COLOR("table.th.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("table.th.color", { def: "#1A1A1A" }),
+    TEXT("table.th.outline", { def: "none" }),
+
+    COLOR("table.td.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("table.td.color", { def: "#1A1A1A" }),
+    TEXT("table.td.outline", { def: "none" }),
+    NUMBER("table.td.roundingValue", { def: 2, min: 0, max: 6 }),
+    TEXT("table.td.prefix", { def: "P" }),
+    TEXT("table.td.suffix", { def: "S" }),
+
+    CHECKBOX("table.show", { def: false }),
+    CHECKBOX("table.useDialog", { def: true })
+]);
+
 
 const testCustomTooltip = ref(false);
 

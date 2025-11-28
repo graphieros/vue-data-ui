@@ -4,10 +4,23 @@ import LocalVueUiGizmo from '../src/components/vue-ui-gizmo.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiGizmo } from "vue-data-ui";
 import { VueUiGizmo as VueUiGizmoTreeshaken } from "vue-data-ui/vue-ui-gizmo";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_gizmo: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
@@ -17,18 +30,18 @@ onMounted(() => {
     }, 2000);
 })
 
-const model= ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'type', def: 'battery', type: 'select', options: ['battery', 'gauge']},
-    { key: 'size', def: 64, type: 'range', min: 10, max: 100},
-    { key: 'stroke', def: '#e1e5e8', type: 'color'},
-    { key: 'color', def: '#5f8bee', type: 'color'},
-    { key: 'useGradient', def: true, type: 'checkbox'},
-    { key: 'gradientColor', def: '#9db5ed', type: 'color'},
-    { key: 'showPercentage', def: true, type: 'checkbox'},
-    { key: 'textColor', def: '#CCCCCC', type: 'color'}
-])
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    SELECT("type", ["battery", "gauge"], { def: "battery" }),
+    RANGE("size", { def: 64, min: 10, max: 100 }),
+    COLOR("stroke", { def: "#e1e5e8" }),
+    COLOR("color", { def: "#5f8bee" }),
+    CHECKBOX("useGradient", { def: true }),
+    COLOR("gradientColor", { def: "#9db5ed" }),
+    CHECKBOX("showPercentage", { def: true }),
+    COLOR("textColor", { def: "#CCCCCC" })
+]);
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

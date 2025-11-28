@@ -10,8 +10,21 @@ import VueUiPattern from "../src/atoms/vue-ui-pattern.vue";
 import { VueUiCirclePack } from "vue-data-ui";
 import { VueUiCirclePack as VueUiCirclePackTreeshaken } from "vue-data-ui/vue-ui-circle-pack";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
+const { vue_ui_circle_pack: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 function makeDs({ name, qty, maxVal }) {
   let datapoints = [];
@@ -76,75 +89,39 @@ onMounted(() => {
 //   }, 2000);
 // });
 
-const model = ref([
-  { key: "debug", def: true, type: "checkbox" },
-  { key: "loading", def: false, type: "checkbox" },
-  { key: "userOptions.show", def: true, type: "checkbox" },
-  { key: "style.chart.backgroundColor", def: "#FFFFDD", type: "color" },
-  { key: "style.chart.width", def: 512, type: "number", min: 0, max: 1000 },
-  { key: "style.chart.height", def: 512, type: "number", min: 0, max: 1000 },
-  { key: "style.chart.color", def: "#1A1A1A", type: "color" },
-  { key: "style.chart.title.text", def: "Title", type: "text" },
-  { key: "style.chart.title.subtitle.text", def: "Subtitle", type: "text" },
-  { key: "style.chart.circles.stroke", def: "#000000", type: "color" },
-  {
-    key: "style.chart.circles.strokeWidth",
-    def: 1,
-    type: "number",
-    min: 0,
-    max: 12,
-  },
-  { key: "style.chart.circles.gradient.show", def: true, type: "checkbox" },
-  {
-    key: "style.chart.circles.gradient.intensity",
-    def: 40,
-    min: 0,
-    max: 100,
-    type: "range",
-  },
-
-  { key: "style.chart.circles.labels.name.show", def: true, type: "checkbox" },
-  { key: "style.chart.circles.labels.name.bold", def: false, type: "checkbox" },
-  {
-    key: "style.chart.circles.labels.name.offsetY",
-    def: 0,
-    type: "number",
-    min: -100,
-    max: 100,
-  },
-  { key: "style.chart.circles.labels.name.color", def: "auto", type: "text" },
-  { key: "style.chart.circles.labels.value.show", def: true, type: "checkbox" },
-  { key: "style.chart.circles.labels.value.color", def: "auto", type: "text" },
-  {
-    key: "style.chart.circles.labels.value.rounding",
-    def: 0,
-    type: "number",
-    min: 0,
-    max: 6,
-  },
-  { key: "style.chart.circles.labels.value.prefix", def: "", type: "text" },
-  { key: "style.chart.circles.labels.value.suffix", def: "", type: "text" },
-  {
-    key: "style.chart.circles.labels.value.bold",
-    def: false,
-    type: "checkbox",
-  },
-  {
-    key: "style.chart.circles.labels.value.offsetY",
-    def: 0,
-    type: "number",
-    min: -100,
-    max: 100,
-  },
-
-  { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
-
-    { key: 'table.show', def: false, type: 'checkbox'},
-    { key: 'table.useDialog', def: true, type: 'checkbox'},
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    CHECKBOX("userOptions.show", { def: true }),
+    COLOR("style.chart.backgroundColor", { def: "#FFFFDD" }),
+    NUMBER("style.chart.width", { def: 512, min: 0, max: 1000 }),
+    NUMBER("style.chart.height", { def: 512, min: 0, max: 1000 }),
+    COLOR("style.chart.color", { def: "#1A1A1A" }),
+    TEXT("style.chart.title.text", { def: "Title" }),
+    TEXT("style.chart.title.subtitle.text", { def: "Subtitle" }),
+    COLOR("style.chart.circles.stroke", { def: "#000000" }),
+    NUMBER("style.chart.circles.strokeWidth", { def: 1, min: 0, max: 12 }),
+    CHECKBOX("style.chart.circles.gradient.show", { def: true }),
+    RANGE("style.chart.circles.gradient.intensity", { def: 40, min: 0, max: 100 }),
+    CHECKBOX("style.chart.circles.labels.name.show", { def: true }),
+    CHECKBOX("style.chart.circles.labels.name.bold", { def: false }),
+    NUMBER("style.chart.circles.labels.name.offsetY", { def: 0, min: -100, max: 100 }),
+    TEXT("style.chart.circles.labels.name.color", { def: "auto" }),
+    CHECKBOX("style.chart.circles.labels.value.show", { def: true }),
+    TEXT("style.chart.circles.labels.value.color", { def: "auto" }),
+    NUMBER("style.chart.circles.labels.value.rounding", { def: 0, min: 0, max: 6 }),
+    TEXT("style.chart.circles.labels.value.prefix", { def: "" }),
+    TEXT("style.chart.circles.labels.value.suffix", { def: "" }),
+    CHECKBOX("style.chart.circles.labels.value.bold", { def: false }),
+    NUMBER("style.chart.circles.labels.value.offsetY", { def: 0, min: -100, max: 100 }),
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
+    CHECKBOX("table.show", { def: false }),
+    CHECKBOX("table.useDialog", { def: true })
 ]);
+
 
 const themeOptions = ref([
     "",

@@ -4,10 +4,23 @@ import LocalVueUiTiremarks from '../src/components/vue-ui-tiremarks.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiTiremarks } from "vue-data-ui";
 import { VueUiTiremarks as VueUiTiremarksTreeshaken } from "vue-data-ui/vue-ui-tiremarks";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_tiremarks: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 
 const dataset = ref(undefined)
@@ -40,56 +53,63 @@ function alterDataset() {
     dataset.value.percentage = Math.round(Math.random() * 100);
 }
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
-    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
-    
-    { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF20', type: 'color'},
-    { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.animation.use', def: true, type: 'checkbox'},
-    { key: 'style.chart.animation.speed', def: 0.5, type: 'number', min: 0, max: 2, step: 0.01},
-    { key: 'style.chart.animation.acceleration', def: 1, type: 'number', min: 0, max: 10, step: 0.1},
-    { key: 'style.chart.layout.display', def: 'horizontal', type: 'select', options: ['horizontal', 'vertical']},
-    { key: 'style.chart.layout.crescendo', def: false, type: 'checkbox'},
-    { key: 'style.chart.layout.curved', def: false, type: 'checkbox'},
-    { key: 'style.chart.layout.curveAngleX', def: 10, type:'number', min: -360, max: 360},
-    { key: 'style.chart.layout.curveAngleY', def: 10, type: 'number', min: -360, max: 360},
-    { key: 'style.chart.layout.activeColor', def: '#5f8bee', type: 'color'},
-    { key: 'style.chart.layout.inactiveColor', def: '#e1e5e8', type: 'color'},
-    { key: 'style.chart.layout.ticks.gradient.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.ticks.gradient.shiftHueIntensity', def: 100, type: 'range', min: 0, max: 100},
-    { key: 'style.chart.percentage.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.percentage.fontSize', def: 16, type: 'range', min: 8, max: 100},
-    { key: 'style.chart.percentage.rounding', def: 1, type: 'range', min: 0, max: 12},
-    { key: 'style.chart.percentage.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.percentage.useGradientColor', def: true, type: 'checkbox'},
-    { key: 'style.chart.percentage.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.percentage.verticalPosition', def: 'bottom', type: 'select', options:['top', 'bottom']},
-    { key: 'style.chart.percentage.horizontalPosition', def: 'left', type: 'select', options: ['left', 'right', 'top']},
-    { key: 'style.chart.title.text', def: 'Lorem ipsum dolor sic amet', type: 'text'},
-    { key: 'style.chart.title.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
-    { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 48},
-    { key: 'style.chart.title.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.title.subtitle.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
-    { key: 'style.chart.title.subtitle.color', def: '#CCCCCC', type: 'color'},
-    { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
-    { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
 
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' }
+    CHECKBOX("userOptions.show", { def: true }),
+    CHECKBOX("userOptions.buttons.pdf", { def: true }),
+    CHECKBOX("userOptions.buttons.img", { def: true }),
+    CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
+    SELECT("userOptions.position", ["left", "right"], { def: "right" }),
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
 
-])
+    TEXT("style.fontFamily", { def: "inherit" }),
+    COLOR("style.chart.backgroundColor", { def: "#FFFFFF20" }),
+    COLOR("style.chart.color", { def: "#1A1A1A" }),
+
+    CHECKBOX("style.chart.animation.use", { def: true }),
+    NUMBER("style.chart.animation.speed", { def: 0.5, min: 0, max: 2, step: 0.01 }),
+    NUMBER("style.chart.animation.acceleration", { def: 1, min: 0, max: 10, step: 0.1 }),
+
+    SELECT("style.chart.layout.display", ["horizontal", "vertical"], { def: "horizontal" }),
+    CHECKBOX("style.chart.layout.crescendo", { def: false }),
+    CHECKBOX("style.chart.layout.curved", { def: false }),
+    NUMBER("style.chart.layout.curveAngleX", { def: 10, min: -360, max: 360 }),
+    NUMBER("style.chart.layout.curveAngleY", { def: 10, min: -360, max: 360 }),
+    COLOR("style.chart.layout.activeColor", { def: "#5f8bee" }),
+    COLOR("style.chart.layout.inactiveColor", { def: "#e1e5e8" }),
+
+    CHECKBOX("style.chart.layout.ticks.gradient.show", { def: true }),
+    RANGE("style.chart.layout.ticks.gradient.shiftHueIntensity", { def: 100, min: 0, max: 100 }),
+
+    CHECKBOX("style.chart.percentage.show", { def: true }),
+    RANGE("style.chart.percentage.fontSize", { def: 16, min: 8, max: 100 }),
+    RANGE("style.chart.percentage.rounding", { def: 1, min: 0, max: 12 }),
+    CHECKBOX("style.chart.percentage.bold", { def: true }),
+    CHECKBOX("style.chart.percentage.useGradientColor", { def: true }),
+    COLOR("style.chart.percentage.color", { def: "#1A1A1A" }),
+    SELECT("style.chart.percentage.verticalPosition", ["top", "bottom"], { def: "bottom" }),
+    SELECT("style.chart.percentage.horizontalPosition", ["left", "right", "top"], { def: "left" }),
+
+    TEXT("style.chart.title.text", { def: "Lorem ipsum dolor sic amet" }),
+    TEXT("style.chart.title.text", { def: "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis" }),
+    COLOR("style.chart.title.color", { def: "#1A1A1A" }),
+    NUMBER("style.chart.title.fontSize", { def: 20, min: 8, max: 48 }),
+    CHECKBOX("style.chart.title.bold", { def: true }),
+
+    TEXT("style.chart.title.subtitle.text", { def: "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis" }),
+    COLOR("style.chart.title.subtitle.color", { def: "#CCCCCC" }),
+    RANGE("style.chart.title.subtitle.fontSize", { def: 16, min: 8, max: 48 }),
+    CHECKBOX("style.chart.title.subtitle.bold", { def: false }),
+
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" })
+]);
+
 
 const themeOptions = ref([
     "",

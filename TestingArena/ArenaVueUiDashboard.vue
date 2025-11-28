@@ -8,25 +8,35 @@ import SomeTest from "../src/SomeTest.vue";
 import { VueUiDashboard } from "vue-data-ui";
 import { VueUiDashboard as VueUiDashboardTreeshaken } from "vue-data-ui/vue-ui-dashboard";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
 
-const model= ref([
-    { key: 'locked', def: false, type: 'checkbox' },
+const { vue_ui_dashboard: DEFAULT_CONFIG } = useConfig();
 
-    { key: 'style.board.backgroundColor', def: '#e1e5e8', type: 'color'},
-    { key: 'style.board.color', def: '#4A4A4A', type: 'color'},
-    { key: 'style.board.aspectRatio', def: '1/1.4141', type: 'text'},
-    { key: 'style.board.border', def: 'none', type: 'text'},
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
-    { key: 'style.item.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.item.borderColor', def: '#FF0000', type: 'color'},
 
-    { key: 'style.resizeHandles.backgroundColor', def: '#00F', type: 'color'},
-    { key: 'style.resizeHandles.border', def: '2px solid #FF0000', type: 'text'},
-
-    { key: 'userOptions.show', def: true, type: 'checkbox' },
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-
-])
+const model = createModel([
+    CHECKBOX("locked", { def: false }),
+    COLOR("style.board.backgroundColor", { def: "#e1e5e8" }),
+    COLOR("style.board.color", { def: "#4A4A4A" }),
+    TEXT("style.board.aspectRatio", { def: "1/1.4141" }),
+    TEXT("style.board.border", { def: "none" }),
+    COLOR("style.item.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.item.borderColor", { def: "#FF0000" }),
+    COLOR("style.resizeHandles.backgroundColor", { def: "#00F" }),
+    TEXT("style.resizeHandles.border", { def: "2px solid #FF0000" }),
+    CHECKBOX("userOptions.show", { def: true }),
+    CHECKBOX("userOptions.showOnChartHover", { def: true })
+]);
 
 // TODO: add xy with zoom and fix bubbling fuckup
 

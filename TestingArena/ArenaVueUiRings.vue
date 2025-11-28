@@ -5,12 +5,24 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
-
 import { VueUiRings } from "vue-data-ui";
 import { VueUiRings as VueUiRingsTreeshaken } from "vue-data-ui/vue-ui-rings";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
 
-const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
+const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
+const { vue_ui_rings: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined)
 
@@ -73,85 +85,81 @@ function alterDataset() {
     })
 }
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'responsive', def: false, type: 'checkbox'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
-    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    CHECKBOX("responsive", { def: false }),
+    CHECKBOX("userOptions.show", { def: true }),
+    CHECKBOX("userOptions.buttons.pdf", { def: true }),
+    CHECKBOX("userOptions.buttons.img", { def: true }),
+    CHECKBOX("userOptions.buttons.csv", { def: true }),
+    CHECKBOX("userOptions.buttons.table", { def: true }),
+    CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
+    SELECT("userOptions.position", { def: "right", options: ["left", "right"] }),
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
+    CHECKBOX("useCssAnimation", { def: true }),
+    CHECKBOX("useBlurOnHover", { def: true }),
+    TEXT("style.fontFamily", { def: "inherit" }),
+    COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.chart.color", { def: "#1A1A1A" }),
+    TEXT("style.chart.layout.labels.dataLabels.prefix", { def: "P" }),
+    TEXT("style.chart.layout.labels.dataLabels.suffix", { def: "2" }),
+    NUMBER("style.chart.layout.rings.strokeWidth", { def: 3, min: 0, max: 12 }),
+    COLOR("style.chart.layout.rings.stroke", { def: "#FFFFFF" }),
+    CHECKBOX("style.chart.layout.rings.gradient.show", { def: true }),
+    RANGE("style.chart.layout.rings.gradient.intensity", { def: 40, min: 0, max: 100 }),
+    COLOR("style.chart.layout.rings.gradient.underlayerColor", { def: "#FFFFFF" }),
+    CHECKBOX("style.chart.layout.rings.useShadow", { def: true }),
+    COLOR("style.chart.legend.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.chart.legend.color", { def: "#1A1A1A" }),
+    CHECKBOX("style.chart.legend.show", { def: true }),
+    NUMBER("style.chart.legend.fontSize", { def: 14, min: 8, max: 48 }),
+    CHECKBOX("style.chart.legend.bold", { def: false }),
+    NUMBER("style.chart.legend.roundingValue", { def: 2, min: 0, max: 12 }),
+    NUMBER("style.chart.legend.roundingPercentage", { def: 2, min: 0, max: 12 }),
+    CHECKBOX("style.chart.legend.showValue", { def: true }),
+    CHECKBOX("style.chart.legend.showPercentage", { def: false }),
+    SELECT("style.chart.legend.position", { def: "bottom", options: ["top", "bottom"] }),
+    TEXT("style.chart.title.text", { def: "Lorem ipsum dolor sit amet" }),
+    COLOR("style.chart.title.color", { def: "#1A1A1A" }),
+    NUMBER("style.chart.title.fontSize", { def: 20, min: 8, max: 48 }),
+    CHECKBOX("style.chart.title.bold", { def: true }),
+    COLOR("style.chart.title.subtitle.color", { def: "#CCCCCC" }),
+    TEXT("style.chart.title.subtitle.text", { def: "Lorem ipsum dolor sit amet" }),
+    NUMBER("style.chart.title.subtitle.fontSize", { def: 16, min: 8, max: 48 }),
+    CHECKBOX("style.chart.title.subtitle.bold", { def: false }),
+    CHECKBOX("style.chart.tooltip.show", { def: true }),
+    COLOR("style.chart.tooltip.color", { def: "#1A1A1A" }),
+    COLOR("style.chart.tooltip.backgroundColor", { def: "#FFFFFF" }),
+    NUMBER("style.chart.tooltip.fontSize", { def: 14, min: 8, max: 48 }),
+    CHECKBOX("style.chart.tooltip.showValue", { def: true }),
+    CHECKBOX("style.chart.tooltip.showPercentage", { def: true }),
+    NUMBER("style.chart.tooltip.roundingValue", { def: 2, min: 0, max: 12 }),
+    NUMBER("style.chart.tooltip.roundingPercentage", { def: 2, min: 0, max: 12 }),
+    RANGE("style.chart.tooltip.backgroundOpacity", { def: 100, min: 0, max: 100 }),
+    SELECT("style.chart.tooltip.position", { def: "center", options: ["left", "center", "right"] }),
+    NUMBER("style.chart.tooltip.offsetY", { def: 24, min: 0, max: 48 }),
+    CHECKBOX("table.show", { def: false }),
+    CHECKBOX("table.useDialog", { def: true }),
+    NUMBER("table.responsiveBreakpoint", { def: 400, min: 300, max: 800 }),
+    TEXT("table.columnNames.series", { def: "Series" }),
+    TEXT("table.columnNames.value", { def: "Value" }),
+    TEXT("table.columnNames.percentage", { def: "Percentage" }),
+    COLOR("table.th.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("table.th.color", { def: "#1A1A1A" }),
+    TEXT("table.th.outline", { def: "none" }),
+    COLOR("table.td.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("table.td.color", { def: "#1A1A1A" }),
+    TEXT("table.td.outline", { def: "none" }),
+    NUMBER("table.td.roundingValue", { def: 2, min: 0, max: 12 }),
+    NUMBER("table.td.roundingPercentage", { def: 2, min: 0, max: 12 })
+]);
 
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
-    
-    { key: 'useCssAnimation', def: true, type: 'checkbox'},
-    { key: 'useBlurOnHover', def: true, type: 'checkbox'},
-    { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.labels.dataLabels.prefix', def: 'P', type: 'text'},
-    { key: 'style.chart.layout.labels.dataLabels.suffix', def: '2', type: 'text'},
-    { key: 'style.chart.layout.rings.strokeWidth', def: 3, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.layout.rings.stroke', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.layout.rings.gradient.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.rings.gradient.intensity', def: 40, type: 'range', min: 0, max: 100},
-    { key: 'style.chart.layout.rings.gradient.underlayerColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.layout.rings.useShadow', def: true, type: 'checkbox'},
-    { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.legend.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.legend.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.legend.fontSize', def: 14, type: 'number', min: 8, max: 48},
-    { key: 'style.chart.legend.bold', def: false, type: 'checkbox'},
-    { key: 'style.chart.legend.roundingValue', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.legend.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.legend.showValue', def: true, type: 'checkbox' },
-    { key: 'style.chart.legend.showPercentage', def: false, type: 'checkbox' },
-    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
-
-    { key: 'style.chart.title.text', def: 'Lorem ipsum dolor sit amet', type: 'text'},
-    { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.title.fontSize', def: 20, type: 'number', min: 8, max: 48 },
-    { key: 'style.chart.title.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.title.subtitle.color', def: '#CCCCCC', type: 'color'},
-    { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sit amet'},
-    { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'number', min: 8, max: 48},
-    { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
-
-    { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.tooltip.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.tooltip.fontSize', def: 14, type: 'number', min: 8, max: 48},
-    { key: 'style.chart.tooltip.showValue', def: true, type: 'checkbox'},
-    { key: 'style.chart.tooltip.showPercentage', def: true, type: 'checkbox'},
-    { key: 'style.chart.tooltip.roundingValue', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.tooltip.roundingPercentage', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100},
-    { key: 'style.chart.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
-
-    { key: 'table.show', def: false, type: 'checkbox'},
-    { key: 'table.useDialog', def: true, type: 'checkbox'},
-    { key: 'table.responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800},
-    { key: 'table.columnNames.series', def: 'Series', type: 'text'},
-    { key: 'table.columnNames.value', def: 'Value', type: 'text'},
-    { key: 'table.columnNames.percentage', def: 'Percentage', type: 'text'},
-    { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'table.th.color', def: '#1A1A1A', type: 'color'},
-    { key: 'table.th.outline', def: 'none', type: 'text'},
-    { key: 'table.td.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'table.td.color', def: '#1A1A1A', type: 'color'},
-    { key: 'table.td.outline', def: 'none', type: 'text'},
-    { key: 'table.td.roundingValue', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'table.td.roundingPercentage', def: 2, type: 'number', min: 0, max: 12}
-])
 
 const testCustomTooltip = ref(false);
 

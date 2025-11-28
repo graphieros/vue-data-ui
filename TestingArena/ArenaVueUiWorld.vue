@@ -5,10 +5,23 @@ import LocalVueUiWorld from '../src/components/vue-ui-world.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiWorld } from "vue-data-ui";
 import { VueUiWorld as VueUiWorldTreeshaken } from "vue-data-ui/vue-ui-world";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_world: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
@@ -220,41 +233,39 @@ onMounted(() => {
 //     ESP: {value: 12, category: 'CAT2'}
 // })
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'projection', def: 'globe', type: 'select', options: ['mercator', 'equirectangular', 'mollweide', 'robinson', 'winkelTripel', 'aitoff', 'hammer', 'bonne', 'sinusoidal', 'vanDerGrinten', 'gallPeters', 'globe', 'azimuthalEquidistant']},
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    SELECT("projection", ["mercator","equirectangular","mollweide","robinson","winkelTripel","aitoff","hammer","bonne","sinusoidal","vanDerGrinten","gallPeters","globe","azimuthalEquidistant"], { def: "globe" }),
 
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
+    COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.chart.color", { def: "#1A1A1A" }),
 
-    { key: 'style.chart.territory.stroke', def: '#666666', type: 'color'},
-    { key: 'style.chart.territory.strokeWidth', def: 0.5, type: 'number', min: 0.1, max: 12, step: 0.1},
-    { key: 'style.chart.territory.strokeWidthSelected', def: 2, type: 'number', min: 0.1, max: 12, step: 0.1},
-    { key: 'style.chart.territory.colors.min', def: '#E0E0E0', type: 'color'},
-    { key: 'style.chart.territory.colors.max', def: '#FF0000', type: 'color'},
-    
-    { key: 'style.chart.title.text', def: 'Title', type: 'text' },
-    { key: 'style.chart.title.subtitle.text', def: 'Subtitle', type: 'text' },
-    
-    { key: 'style.chart.dataLabels.prefix', def: 'P', type: 'text'},
-    { key: 'style.chart.dataLabels.suffix', def: 'S', type: 'text'},
-    { key: 'style.chart.dataLabels.rounding', def: 1, type: 'number', min: 0, max: 6},
-    
-    // { key: 'style.chart.dimensions.width', def: 1000, type: 'number', min: 200, max: 2000 },
-    // { key: 'style.chart.dimensions.height', def: 500, type: 'number', min: 200, max: 2000 },
+    COLOR("style.chart.territory.stroke", { def: "#666666" }),
+    NUMBER("style.chart.territory.strokeWidth", { def: 0.5, min: 0.1, max: 12, step: 0.1 }),
+    NUMBER("style.chart.territory.strokeWidthSelected", { def: 2, min: 0.1, max: 12, step: 0.1 }),
+    COLOR("style.chart.territory.colors.min", { def: "#E0E0E0" }),
+    COLOR("style.chart.territory.colors.max", { def: "#FF0000" }),
 
-    { key: 'style.chart.globe.center.x', def: 0, type: 'number', min: -1000, max: 1000 },
-    { key: 'style.chart.globe.center.y', def: 0, type: 'number', min: -1000, max: 1000 },
-    { key: 'style.chart.globe.waterColor', def: '#1F77B4', type: 'color'},
+    TEXT("style.chart.title.text", { def: "Title" }),
+    TEXT("style.chart.title.subtitle.text", { def: "Subtitle" }),
 
-    { key: 'style.chart.tooltip.showMinimap', def: true, type: 'checkbox'},
+    TEXT("style.chart.dataLabels.prefix", { def: "P" }),
+    TEXT("style.chart.dataLabels.suffix", { def: "S" }),
+    NUMBER("style.chart.dataLabels.rounding", { def: 1, min: 0, max: 6 }),
 
-    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+    NUMBER("style.chart.globe.center.x", { def: 0, min: -1000, max: 1000 }),
+    NUMBER("style.chart.globe.center.y", { def: 0, min: -1000, max: 1000 }),
+    COLOR("style.chart.globe.waterColor", { def: "#1F77B4" }),
 
-    { key: 'table.show', def: false, type: 'checkbox' },
-    { key: 'table.useDialog', def: true, type: 'checkbox' },
+    CHECKBOX("style.chart.tooltip.showMinimap", { def: true }),
+
+    SELECT("style.chart.legend.position", ["top","bottom"], { def: "bottom" }),
+
+    CHECKBOX("table.show", { def: false }),
+    CHECKBOX("table.useDialog", { def: true })
 ]);
+
 
 const projections = ref([
     'aitoff',

@@ -4,10 +4,23 @@ import LocalVueUiSparkTrend from '../src/components/vue-ui-spark-trend.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiSparkTrend } from "vue-data-ui"; 
 import { VueUiSparkTrend as VueUiSparkTrendTreeshaken } from "vue-data-ui/vue-ui-spark-trend"; 
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_spark_trend: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 function makeDs(n,m) {
     const arr = [];
@@ -53,45 +66,45 @@ function alterDataset() {
     datasets.value.neutral.push(Math.random() * 10)
 }
 
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    COLOR("style.backgroundColor", { def: "#FFFFFF" }),
+    TEXT("style.fontFamily", { def: "inherit" }),
+    CHECKBOX("style.animation.show", { def: true }),
+    NUMBER("style.animation.animationFrames", { def: 20, min: 0, max: 200 }),
+    COLOR("style.line.stroke", { def: "#1A1A1A" }),
+    NUMBER("style.line.strokeWidth", { def: 2, min: 0, max: 24 }),
+    SELECT("style.line.strokeLinecap", ["round", "square", "butt"], { def: "round" }),
+    SELECT("style.line.strokeLinejoin", ["round", "bevel", "arcs", "miter", "miter-clip"], { def: "round" }),
+    CHECKBOX("style.line.smooth", { def: true }),
+    CHECKBOX("style.line.useColorTrend", { def: true }),
+    CHECKBOX("style.area.show", { def: true }),
+    CHECKBOX("style.area.useGradient", { def: true }),
+    RANGE("style.area.opacity", { def: 20, min: 0, max: 100 }),
+    CHECKBOX("style.dataLabel.show", { def: true }),
+    CHECKBOX("style.dataLabel.useColorTrend", { def: true }),
+    COLOR("style.dataLabel.color", { def: "#1A1A1A" }),
+    NUMBER("style.dataLabel.fontSize", { def: 14, min: 8, max: 24 }),
+    CHECKBOX("style.dataLabel.bold", { def: false }),
+    TEXT("style.dataLabel.prefix", { def: "P" }),
+    TEXT("style.dataLabel.suffix", { def: "S" }),
+    NUMBER("style.dataLabel.rounding", { def: 1, min: 0, max: 12 }),
+    SELECT("style.trendLabel.trendType", ["n-1", "global", "lastToFirst"], { def: "global" }),
+    CHECKBOX("style.trendLabel.useColorTrend", { def: true }),
+    COLOR("style.trendLabel.color", { def: "#1A1A1A" }),
+    NUMBER("style.trendLabel.fontSize", { def: 14, min: 8, max: 24 }),
+    CHECKBOX("style.trendLabel.bold", { def: true }),
+    NUMBER("style.trendLabel.rounding", { def: 1, min: 0, max: 12 }),
+    COLOR("style.arrow.colors.positive", { def: "#2CA02C" }),
+    COLOR("style.arrow.colors.neutral", { def: "#7F7F7F" }),
+    COLOR("style.arrow.colors.negative", { def: "#D62728" }),
+    NUMBER("style.padding.top", { def: 12, min: 0, max: 100 }),
+    NUMBER("style.padding.left", { def: 82, min: 0, max: 100 }),
+    NUMBER("style.padding.right", { def: 12, min: 0, max: 100 }),
+    NUMBER("style.padding.bottom", { def: 12, min: 0, max: 100 })
+]);
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.animation.show', def: true, type: 'checkbox'},
-    { key: 'style.animation.animationFrames', def: 20, type: 'number', min: 0, max: 200},
-    { key: 'style.line.stroke', def: '#1A1A1A', type: 'color'},
-    { key: 'style.line.strokeWidth', def: 2, type: 'number', min: 0, max: 24},
-    { key: 'style.line.strokeLinecap', def: 'round', type: 'select', options: ['round', 'square', 'butt']},
-    { key: 'style.line.strokeLinejoin', def: 'round', type: 'select', options: ['round', 'bevel', 'arcs', 'miter', 'miter-clip']},
-    { key: 'style.line.smooth', def: true, type: 'checkbox'},
-    { key: 'style.line.useColorTrend', def: true, type: 'checkbox'},
-    { key: 'style.area.show', def: true, type: 'checkbox'},
-    { key: 'style.area.useGradient', def: true, type: 'checkbox'},
-    { key: 'style.area.opacity', def: 20, type: 'range', min: 0, max: 100},
-    { key: 'style.dataLabel.show', def: true, type: 'checkbox'},
-    { key: 'style.dataLabel.useColorTrend', def: true, type: 'checkbox'},
-    { key: 'style.dataLabel.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.dataLabel.fontSize', def: 14, type: 'number', min: 8, max: 24},
-    { key: 'style.dataLabel.bold', def: false, type: 'checkbox'},
-    { key: 'style.dataLabel.prefix', def: 'P', type: 'text'},
-    { key: 'style.dataLabel.suffix', def: 'S', type: 'text'},
-    { key: 'style.dataLabel.rounding', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.trendLabel.trendType', def: 'global', type: 'select', options: ['n-1', 'global', 'lastToFirst']},
-    { key: 'style.trendLabel.useColorTrend', def: true, type: 'checkbox'},
-    { key: 'style.trendLabel.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.trendLabel.fontSize', def: 14, type: 'number', min: 8, max: 24},
-    { key: 'style.trendLabel.bold', def: true, type: 'checkbox'},
-    { key: 'style.trendLabel.rounding', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'style.arrow.colors.positive', def: '#2CA02C', type: 'color'},
-    { key: 'style.arrow.colors.neutral', def: '#7F7F7F', type: 'color'},
-    { key: 'style.arrow.colors.negative', def: '#D62728', type: 'color'},
-    { key: 'style.padding.top', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'style.padding.left', def: 82, type: 'number', min: 0, max: 100},
-    { key: 'style.padding.right', def: 12, type: 'number', min: 0, max: 100},
-    { key: 'style.padding.bottom', def: 12, type: 'number', min: 0, max: 100},
-])
 
 const themeOptions = ref([
     "",

@@ -9,98 +9,118 @@ import { useArena } from "../src/useArena";
 import { VueUiCarouselTable } from "vue-data-ui";
 import { VueUiCarouselTable as VueUiCarouselTableTreeshaken } from "vue-data-ui/vue-ui-carousel-table";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena()
 
-const model = ref([
-    { key: 'responsiveBreakpoint', def: 400, type: 'number', min: 300, max: 800 },
-    { key: 'animation.type', def: 'scroll', type:'select', options: ['scroll', 'marquee']},
-    { key: 'animation.use', def: true, type: 'checkbox'},
-    { key: 'animation.speedMs', def: 1000, type: 'number', type: 'range', min: 200, max: 2000},
-    { key: 'animation.pauseOnHover', def: true, type: 'checkbox'},
-    { key: 'border.size', def: 0, type: 'number', min: 0, max: 12 },
-    { key: 'border.color', def: '#1A1A1A', type: 'color'},
-    
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color' },
-    { key: 'style.color', def: '#1A1A1A', type: 'color' },
-    { key: 'style.fontFamily', def: 'inherit', type: 'text' },
-    
-    { key: 'caption.text', def: '', type: 'text'},
+const { vue_ui_carousel_table: DEFAULT_CONFIG } = useConfig();
 
-    { key: 'caption.padding.top', def: 12, type: 'number', min: 0, max: 24},
-    { key: 'caption.padding.right', def: 12, type: 'number', min: 0, max: 24},
-    { key: 'caption.padding.bottom', def: 12, type: 'number', min: 0, max: 24},
-    { key: 'caption.padding.left', def: 12, type: 'number', min: 0, max: 24},
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
-    { key: 'caption.style.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'caption.style.color', def: '#1A1A1A', type: 'color'},
-    { key: 'caption.style.fontSize', def: '16px', type: 'text'},
-    { key: 'caption.style.fontWeight', def: 'bold', type: 'text'},
-    { key: 'caption.style.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
+const model = createModel([
+    NUMBER("responsiveBreakpoint", { def: 400, min: 300, max: 800 }),
 
-    { key: 'scrollbar.showOnlyOnHover', def: false, type: 'checkbox'},
-    { key: 'scrollbar.hide', def: false, type: 'checkbox'},
+    SELECT("animation.type", ["scroll", "marquee"], { def: "scroll" }),
+    CHECKBOX("animation.use", { def: true }),
+    RANGE("animation.speedMs", { def: 1000, min: 200, max: 2000 }),
+    CHECKBOX("animation.pauseOnHover", { def: true }),
 
-    { key: 'thead.tr.style.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'thead.tr.style.boxShadow', def: '0px 6px 12px -6px #1A1A1A50' },
+    NUMBER("border.size", { def: 0, min: 0, max: 12 }),
+    COLOR("border.color", { def: "#1A1A1A" }),
 
-    { key: 'thead.tr.border.size', def: 0, type: 'number', min: 0, max: 12 },
-    { key: 'thead.tr.border.color', def: '#1A1A1A', type: 'color'},
-    { key: 'thead.tr.th.border.size', def: 0, type: 'number', min: 0, max: 12 },
-    { key: 'thead.tr.th.border.color', def: '#1A1A1A', type: 'color'},
-    { key: 'thead.tr.th.style.textAlign', def: 'right', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'thead.tr.th.style.fontVariantNumeric', def: 'tabular-nums', type: 'text'},
+    COLOR("style.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.color", { def: "#1A1A1A" }),
+    TEXT("style.fontFamily", { def: "inherit" }),
 
-    { key: 'thead.tr.th.padding.top', def: 0, type: 'number', min: 0, max: 24},
-    { key: 'thead.tr.th.padding.right', def: 12, type: 'number', min: 0, max: 24},
-    { key: 'thead.tr.th.padding.bottom', def: 0, type: 'number', min: 0, max: 24},
-    { key: 'thead.tr.th.padding.left', def: 0, type: 'number', min: 0, max: 24},
-    
-    { key: 'tbody.tr.visible', def: 5, type: 'number', min: 1, max: 100},
-    { key: 'tbody.tr.height', def: 32, type: 'number', min: 12, max: 100 },
-    { key: 'tbody.tr.style.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'tbody.tr.style.color', def: '#1A1A1A', type: 'color'},
+    TEXT("caption.text", { def: "" }),
 
-    { key: 'tbody.tr.border.size', def: 0, type: 'number', min: 0, max: 12 },
-    { key: 'tbody.tr.border.color', def: '#1A1A1A', type: 'color'},
+    NUMBER("caption.padding.top", { def: 12, min: 0, max: 24 }),
+    NUMBER("caption.padding.right", { def: 12, min: 0, max: 24 }),
+    NUMBER("caption.padding.bottom", { def: 12, min: 0, max: 24 }),
+    NUMBER("caption.padding.left", { def: 12, min: 0, max: 24 }),
 
-    { key: 'tbody.tr.td.alternateColor', def: true, type: 'checkbox'},
-    { key: 'tbody.tr.td.alternateOpacity', def: 0.5, type: 'range', min: 0, max: 1, step: 0.01},
-    { key: 'tbody.tr.td.style.fontVariantNumeric', def: 'tabular-nums', type: 'text'},
-    { key: 'tbody.tr.td.style.textAlign', def: 'right', type:'select', options: ['left', 'center', 'right']},
-    { key: 'tbody.tr.td.style.backgroundColor', def: '#e1e5e8', type: 'color' },
+    COLOR("caption.style.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("caption.style.color", { def: "#1A1A1A" }),
+    TEXT("caption.style.fontSize", { def: "16px" }),
+    TEXT("caption.style.fontWeight", { def: "bold" }),
+    SELECT("caption.style.textAlign", ["left", "center", "right"], { def: "left" }),
 
-    { key: 'tbody.tr.td.border.size', def: 0, type: 'number', min: 0, max: 12 },
-    { key: 'tbody.tr.td.border.color', def: '#1A1A1A', type: 'color'},
+    CHECKBOX("scrollbar.showOnlyOnHover", { def: false }),
+    CHECKBOX("scrollbar.hide", { def: false }),
 
-    { key: 'tbody.tr.td.padding.top', def: 0, type: 'number', min: 0, max: 24},
-    { key: 'tbody.tr.td.padding.right', def: 12, type: 'number', min: 0, max: 24},
-    { key: 'tbody.tr.td.padding.bottom', def: 0, type: 'number', min: 0, max: 24},
-    { key: 'tbody.tr.td.padding.left', def: 0, type: 'number', min: 0, max: 24},
+    COLOR("thead.tr.style.backgroundColor", { def: "#FFFFFF" }),
+    TEXT("thead.tr.style.boxShadow", { def: "0px 6px 12px -6px #1A1A1A50" }),
 
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox' },
-    { key: 'userOptions.buttons.img', def: true, type: 'checkbox' },
-    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox' },
-    { key: 'userOptions.buttons.animation', def: true, type: 'checkbox' },
-    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox' },
-    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+    NUMBER("thead.tr.border.size", { def: 0, min: 0, max: 12 }),
+    COLOR("thead.tr.border.color", { def: "#1A1A1A" }),
 
-    { key: 'userOptions.buttonTitles.pdf', def: 'DOWNLOAD PDF', type: 'text'},
-    { key: 'userOptions.buttonTitles.csv', def: 'DOWNLOAD CSV', type: 'text'},
-    { key: 'userOptions.buttonTitles.img', def: 'DOWNLOAD PNG', type: 'text'},
-    { key: 'userOptions.buttonTitles.animation', def: 'TOGGLE ANIMATION', type: 'text'},
-    { key: 'userOptions.buttonTitles.fullscreen', def: 'TOGGLE FULLSCREEN', type: 'text'},
-    { key: 'userOptions.buttonTitles.open', def: 'OPEN OPTIONS', type: 'text'},
-    { key: 'userOptions.buttonTitles.close', def: 'CLOSE OPTIONS', type: 'text'},
+    NUMBER("thead.tr.th.border.size", { def: 0, min: 0, max: 12 }),
+    COLOR("thead.tr.th.border.color", { def: "#1A1A1A" }),
 
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
-])
+    SELECT("thead.tr.th.style.textAlign", ["left", "center", "right"], { def: "right" }),
+    TEXT("thead.tr.th.style.fontVariantNumeric", { def: "tabular-nums" }),
+
+    NUMBER("thead.tr.th.padding.top", { def: 0, min: 0, max: 24 }),
+    NUMBER("thead.tr.th.padding.right", { def: 12, min: 0, max: 24 }),
+    NUMBER("thead.tr.th.padding.bottom", { def: 0, min: 0, max: 24 }),
+    NUMBER("thead.tr.th.padding.left", { def: 0, min: 0, max: 24 }),
+
+    NUMBER("tbody.tr.visible", { def: 5, min: 1, max: 100 }),
+    NUMBER("tbody.tr.height", { def: 32, min: 12, max: 100 }),
+
+    COLOR("tbody.tr.style.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("tbody.tr.style.color", { def: "#1A1A1A" }),
+
+    NUMBER("tbody.tr.border.size", { def: 0, min: 0, max: 12 }),
+    COLOR("tbody.tr.border.color", { def: "#1A1A1A" }),
+
+    CHECKBOX("tbody.tr.td.alternateColor", { def: true }),
+    RANGE("tbody.tr.td.alternateOpacity", { def: 0.5, min: 0, max: 1, step: 0.01 }),
+    TEXT("tbody.tr.td.style.fontVariantNumeric", { def: "tabular-nums" }),
+    SELECT("tbody.tr.td.style.textAlign", ["left", "center", "right"], { def: "right" }),
+    COLOR("tbody.tr.td.style.backgroundColor", { def: "#e1e5e8" }),
+
+    NUMBER("tbody.tr.td.border.size", { def: 0, min: 0, max: 12 }),
+    COLOR("tbody.tr.td.border.color", { def: "#1A1A1A" }),
+
+    NUMBER("tbody.tr.td.padding.top", { def: 0, min: 0, max: 24 }),
+    NUMBER("tbody.tr.td.padding.right", { def: 12, min: 0, max: 24 }),
+    NUMBER("tbody.tr.td.padding.bottom", { def: 0, min: 0, max: 24 }),
+    NUMBER("tbody.tr.td.padding.left", { def: 0, min: 0, max: 24 }),
+
+    CHECKBOX("userOptions.show", { def: true }),
+    CHECKBOX("userOptions.buttons.pdf", { def: true }),
+    CHECKBOX("userOptions.buttons.img", { def: true }),
+    CHECKBOX("userOptions.buttons.csv", { def: true }),
+    CHECKBOX("userOptions.buttons.animation", { def: true }),
+    CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
+
+    SELECT("userOptions.position", ["left", "right"], { def: "right" }),
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
+
+    TEXT("userOptions.buttonTitles.pdf", { def: "DOWNLOAD PDF" }),
+    TEXT("userOptions.buttonTitles.csv", { def: "DOWNLOAD CSV" }),
+    TEXT("userOptions.buttonTitles.img", { def: "DOWNLOAD PNG" }),
+    TEXT("userOptions.buttonTitles.animation", { def: "TOGGLE ANIMATION" }),
+    TEXT("userOptions.buttonTitles.fullscreen", { def: "TOGGLE FULLSCREEN" }),
+    TEXT("userOptions.buttonTitles.open", { def: "OPEN OPTIONS" }),
+    TEXT("userOptions.buttonTitles.close", { def: "CLOSE OPTIONS" }),
+
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" })
+]);
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

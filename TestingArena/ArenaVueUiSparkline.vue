@@ -4,10 +4,23 @@ import LocalVueUiSparkline from '../src/components/vue-ui-sparkline.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiSparkline } from "vue-data-ui";
 import { VueUiSparkline as VueUiSparklineTreeshaken } from "vue-data-ui/vue-ui-sparkline";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_sparkline: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref([])
 onMounted(() => {
@@ -92,70 +105,79 @@ function alterDataset() {
     })
 }
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'responsive', def: false, type: 'checkbox'},
-    { key: 'type', def: 'line', type: 'select', options: ['line', 'bar']},
-    { key: 'style.scaleMin', def: null, type: 'number', min: -1000, max: 1000},
-    { key: 'style.scaleMax', def: null, type: 'number', min: -1000, max: 1000},
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    CHECKBOX("responsive", { def: false }),
+    SELECT("type", ["line", "bar"], { def: "line" }),
+    NUMBER("style.scaleMin", { def: null, min: -1000, max: 1000 }),
+    NUMBER("style.scaleMax", { def: null, min: -1000, max: 1000 }),
 
-    { key: 'style.padding.top', def: 12, type: 'number', min: 0, max: 100 },
-    { key: 'style.padding.right', def: 12, type: 'number', min: 0, max: 100 },
-    { key: 'style.padding.bottom', def: 3, type: 'number', min: 0, max: 100 },
-    { key: 'style.padding.left', def: 0, type: 'number', min: 0, max: 100 },
+    NUMBER("style.padding.top", { def: 12, min: 0, max: 100 }),
+    NUMBER("style.padding.right", { def: 12, min: 0, max: 100 }),
+    NUMBER("style.padding.bottom", { def: 3, min: 0, max: 100 }),
+    NUMBER("style.padding.left", { def: 0, min: 0, max: 100 }),
 
-    { key: 'style.chartWidth', def: 400, type: 'number', min: 100, max: 500},
-    { key: 'style.animation.show', def: true, type: 'checkbox'},
-    { key: 'style.animation.animationFrames', def: 360, type: 'number', min: 0, max: 1000},
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.line.color', def: '#3366CC', type: 'color'},
-    { key: 'style.line.strokeWidth', def: 3, type: 'number', min: 0, max: 20},
-    { key: 'style.line.smooth', def: true, type: 'checkbox'},
-    { key: 'style.bar.borderRadius', def: 3, type: 'number', min: 0, max: 12},
-    { key: 'style.bar.color', def: '#3366CC', type: 'color'},
-    { key: 'style.zeroLine.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.zeroLine.strokeWidth', def:1, type: 'number', min: 0, max: 12},
-    { key: 'style.plot.show', def: true, type: 'checkbox'},
-    { key: 'style.plot.radius', def: 4, type: 'number', min: 0, max: 12},
-    { key: 'style.plot.stroke', def: '#FFFFFF', type: 'color'},
-    { key: 'style.plot.strokeWidth', def: 1, type: 'number', min: 0, max: 6},
-    { key: 'style.verticalIndicator.show', def: true, type: 'checkbox'},
-    { key: 'style.verticalIndicator.strokeWidth', def: 1.5, type: 'number', min: 0, max: 6, step: 0.5},
-    { key: 'style.verticalIndicator.color', def: '#3366CC', type: 'color'},
-    { key: 'style.verticalIndicator.strokeDasharray', def: 3, type:'number', min: 0, max: 48},
-    { key: 'style.dataLabel.show', def: false, type: 'checkbox'},
-    { key: 'style.dataLabel.position', def: 'left', type: 'select', options:['left', 'right']},
-    { key: 'style.dataLabel.offsetX', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.dataLabel.offsetY', def: 0, type: 'number', min: -100, max: 100},
-    { key: 'style.dataLabel.fontSize', def: 20, type: 'number', min: 8, max: 48},
-    { key: 'style.dataLabel.bold', def: true, type: 'checkbox'},
-    { key: 'style.dataLabel.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.dataLabel.roundingValue',  def: 2, type: 'number', min: 0, max: 12},
-    { key: 'style.dataLabel.valueType', def: 'latest', type: 'select', options: ['latest', 'sum', 'average']},
-    { key: 'style.dataLabel.prefix', def: 'P', type: 'text'},
-    { key: 'style.dataLabel.suffix', def: 'S', type: 'text'},
-    { key: 'style.title.show', def: false, type: 'checkbox'},
-    { key: 'style.title.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.title.fontSize', def: 16, type: 'number', min: 8, max: 48},
-    { key: 'style.title.bold', def: true, type: 'checkbox'},
-    { key: 'style.title.text', def: 'Lorem ipsum dolor sic amet', type: 'text'},
-    { key: 'style.area.show', def: true, type: 'checkbox'},
-    { key: 'style.area.useGradient', def: true, type: 'checkbox'},
-    { key: 'style.area.opacity', def: 30, type: 'range', min: 0, max: 100},
-    { key: 'style.area.color', def: '#CC7033', type: 'color'},
+    NUMBER("style.chartWidth", { def: 400, min: 100, max: 500 }),
+    CHECKBOX("style.animation.show", { def: true }),
+    NUMBER("style.animation.animationFrames", { def: 360, min: 0, max: 1000 }),
+    COLOR("style.backgroundColor", { def: "#FFFFFF" }),
+    TEXT("style.fontFamily", { def: "inherit" }),
 
-    { key: 'style.tooltip.show', def: true, type: 'checkbox' },
-    { key: 'style.tooltip.fontSize', def: 12, type: 'number', min: 8, max: 42 },
-    { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.tooltip.offsetY', def: 0, type: 'number', min: 0, max: 100},
-    { key: 'style.tooltip.borderWidth', def: 1, type: 'number', min: 0, max: 12 },
-    { key: 'style.tooltip.borderColor', def: '#FF0000', type: 'color'},
-    { key: 'style.tooltip.backgroundOpacity', def: 50, type: 'number', min: 0, max: 100}
-])
+    COLOR("style.line.color", { def: "#3366CC" }),
+    NUMBER("style.line.strokeWidth", { def: 3, min: 0, max: 20 }),
+    CHECKBOX("style.line.smooth", { def: true }),
+
+    NUMBER("style.bar.borderRadius", { def: 3, min: 0, max: 12 }),
+    COLOR("style.bar.color", { def: "#3366CC" }),
+
+    COLOR("style.zeroLine.color", { def: "#1A1A1A" }),
+    NUMBER("style.zeroLine.strokeWidth", { def: 1, min: 0, max: 12 }),
+
+    CHECKBOX("style.plot.show", { def: true }),
+    NUMBER("style.plot.radius", { def: 4, min: 0, max: 12 }),
+    COLOR("style.plot.stroke", { def: "#FFFFFF" }),
+    NUMBER("style.plot.strokeWidth", { def: 1, min: 0, max: 6 }),
+
+    CHECKBOX("style.verticalIndicator.show", { def: true }),
+    NUMBER("style.verticalIndicator.strokeWidth", { def: 1.5, min: 0, max: 6, step: 0.5 }),
+    COLOR("style.verticalIndicator.color", { def: "#3366CC" }),
+    NUMBER("style.verticalIndicator.strokeDasharray", { def: 3, min: 0, max: 48 }),
+
+    CHECKBOX("style.dataLabel.show", { def: false }),
+    SELECT("style.dataLabel.position", ["left", "right"], { def: "left" }),
+    NUMBER("style.dataLabel.offsetX", { def: 0, min: -100, max: 100 }),
+    NUMBER("style.dataLabel.offsetY", { def: 0, min: -100, max: 100 }),
+    NUMBER("style.dataLabel.fontSize", { def: 20, min: 8, max: 48 }),
+    CHECKBOX("style.dataLabel.bold", { def: true }),
+    COLOR("style.dataLabel.color", { def: "#1A1A1A" }),
+    NUMBER("style.dataLabel.roundingValue", { def: 2, min: 0, max: 12 }),
+    SELECT("style.dataLabel.valueType", ["latest", "sum", "average"], { def: "latest" }),
+    TEXT("style.dataLabel.prefix", { def: "P" }),
+    TEXT("style.dataLabel.suffix", { def: "S" }),
+
+    CHECKBOX("style.title.show", { def: false }),
+    SELECT("style.title.textAlign", ["left", "center", "right"], { def: "left" }),
+    COLOR("style.title.color", { def: "#1A1A1A" }),
+    NUMBER("style.title.fontSize", { def: 16, min: 8, max: 48 }),
+    CHECKBOX("style.title.bold", { def: true }),
+    TEXT("style.title.text", { def: "Lorem ipsum dolor sic amet" }),
+
+    CHECKBOX("style.area.show", { def: true }),
+    CHECKBOX("style.area.useGradient", { def: true }),
+    RANGE("style.area.opacity", { def: 30, min: 0, max: 100 }),
+    COLOR("style.area.color", { def: "#CC7033" }),
+
+    CHECKBOX("style.tooltip.show", { def: true }),
+    NUMBER("style.tooltip.fontSize", { def: 12, min: 8, max: 42 }),
+    COLOR("style.tooltip.color", { def: "#1A1A1A" }),
+    COLOR("style.tooltip.backgroundColor", { def: "#FFFFFF" }),
+    NUMBER("style.tooltip.offsetY", { def: 0, min: 0, max: 100 }),
+    NUMBER("style.tooltip.borderWidth", { def: 1, min: 0, max: 12 }),
+    COLOR("style.tooltip.borderColor", { def: "#FF0000" }),
+    NUMBER("style.tooltip.backgroundOpacity", { def: 50, min: 0, max: 100 })
+]);
+
 
 const themeOptions = ref([
     "",

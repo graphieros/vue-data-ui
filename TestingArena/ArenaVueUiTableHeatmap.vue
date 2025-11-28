@@ -4,10 +4,23 @@ import LocalVueUiTableHeatmap from '../src/components/vue-ui-table-heatmap.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiTableHeatmap } from "vue-data-ui";
 import { VueUiTableHeatmap as VueUiTableHeatmapTreeshaken } from "vue-data-ui/vue-ui-table-heatmap";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_table_heatmap: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref([
     {
@@ -48,35 +61,37 @@ onMounted(() => {
     }, 3000)
 })
 
-const model = ref([
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
-    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
+const model = createModel([
+    CHECKBOX("userOptions.show", { def: true }),
+    CHECKBOX("userOptions.buttons.pdf", { def: true }),
+    CHECKBOX("userOptions.buttons.img", { def: true }),
+    CHECKBOX("userOptions.buttons.csv", { def: true }),
+    CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
+    SELECT("userOptions.position", ["left", "right"], { def: "right" }),
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
 
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' },
-    
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.shapeSize', def: 14, type: 'number', min: 8, max: 24},
-    { key: 'style.heatmapColors.useIndividualScale', def: false, type: 'checkbox'},
-    { key: 'style.heatmapColors.min', def: '#FFFFFF', type: 'color'},
-    { key: 'style.heatmapColors.max', def: '#5F8BEE', type: 'color'},
-    { key: 'table.responsiveBreakpoint', def: 300, type: 'number', min: 300, max: 800},
-    { key: 'table.borderWidth', def: 1, type: 'number', min: 0, max: 12},
-    { key: 'table.showSum', def: true, type: 'checkbox'},
-    { key: 'table.showAverage', def: true, type: 'checkbox'},
-    { key: 'table.showMedian', def: true, type: 'checkbox'},
-    { key: 'table.head.backgroundColor', def: '#FFFFFF', type: 'color'},
-])
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
+
+    COLOR("style.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.color", { def: "#1A1A1A" }),
+    TEXT("style.fontFamily", { def: "inherit" }),
+    NUMBER("style.shapeSize", { def: 14, min: 8, max: 24 }),
+    CHECKBOX("style.heatmapColors.useIndividualScale", { def: false }),
+    COLOR("style.heatmapColors.min", { def: "#FFFFFF" }),
+    COLOR("style.heatmapColors.max", { def: "#5F8BEE" }),
+
+    NUMBER("table.responsiveBreakpoint", { def: 300, min: 300, max: 800 }),
+    NUMBER("table.borderWidth", { def: 1, min: 0, max: 12 }),
+    CHECKBOX("table.showSum", { def: true }),
+    CHECKBOX("table.showAverage", { def: true }),
+    CHECKBOX("table.showMedian", { def: true }),
+    COLOR("table.head.backgroundColor", { def: "#FFFFFF" })
+]);
+
 
 const themeOptions = ref([
     "",

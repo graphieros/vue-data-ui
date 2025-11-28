@@ -89,10 +89,14 @@ const filteredModel = computed(() => {
 
 .nav-search-wrapper {
     position: sticky;
+    width: 100%;
+    background: #2A2A2A;
     top: 0;
     display: flex;
     flex-direction: row;
     align-items: center;
+    padding-bottom: 1rem;
+    padding-left: 1rem;
 }
 
 .nav-search-wrapper button {

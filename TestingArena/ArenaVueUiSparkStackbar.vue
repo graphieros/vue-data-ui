@@ -4,10 +4,23 @@ import LocalVueUiSparkStackbar from '../src/components/vue-ui-sparkstackbar.vue'
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiSparkStackbar } from "vue-data-ui";
 import { VueUiSparkStackbar as VueUiSparkStackbarTreeshaken } from "vue-data-ui/vue-ui-sparkstackbar";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_sparkstackbar: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
@@ -62,51 +75,51 @@ function alterDataset() {
     })
 }
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'style.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.animation.show', def: true, type: 'checkbox'},
-    { key: 'style.animation.animationFrames', def: 60, type: 'number', min: 0, max: 300},
-    { key: 'style.bar.gradient.show', def: true, type: 'checkbox'},
-    { key: 'style.bar.gradient.intensity', def: 40, type: 'range', min: 0, max: 100},
-    { key: 'style.bar.gradient.underlayerColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.legend.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'style.legend.show', def: true, type: 'checkbox'},
-    { key: 'style.legend.fontSize', def: 12, type: 'number', min: 8, max: 48},
-    { key: 'style.legend.margin', def: '0 0 6px 0', type: 'text'},
-    { key: 'style.legend.name.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.legend.name.bold', def: false, type: 'checkbox'},
-    { key: 'style.legend.value.show', def: true, type: 'checkbox'},
-    { key: 'style.legend.value.bold', def: false, type: 'checkbox'},
-    { key: 'style.legend.value.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.legend.value.prefix', def: 'P', type: 'text'},
-    { key: 'style.legend.value.suffix', def: 'S', type: 'text'},
-    { key: 'style.legend.value.rounding', def: 0, type: 'number', min: 0, max: 12},
-    { key: 'style.legend.percentage.show', def: true, type: 'checkbox'},
-    { key: 'style.legend.percentage.bold', def: true, type: 'checkbox'},
-    { key: 'style.legend.percentage.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.legend.percentage.rounding', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'style.title.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'style.title.text', def: 'Lorem ipsum dolor sic amet', type: 'text'},
-    { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.title.fontSize', def: 16, type: 'number', min: 8, max: 48},
-    { key: 'style.title.bold', def: true, type: 'checkbox'},
-    { key: 'style.title.margin', def: '0 0 6px 0', type: 'text'},
-    { key: 'style.title.subtitle.color', def: '#A1A1A1', type: 'color'},
-    { key: 'style.title.subtitle.text', def: 'Lorem ipsum dolor sic amet'},
-    { key: 'style.title.subtitle.fontSize', def: 12, type: 'number', min:8, max: 24},
-    { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'},
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    COLOR("style.backgroundColor", { def: "#FFFFFF" }),
+    TEXT("style.fontFamily", { def: "inherit" }),
+    CHECKBOX("style.animation.show", { def: true }),
+    NUMBER("style.animation.animationFrames", { def: 60, min: 0, max: 300 }),
+    CHECKBOX("style.bar.gradient.show", { def: true }),
+    RANGE("style.bar.gradient.intensity", { def: 40, min: 0, max: 100 }),
+    COLOR("style.bar.gradient.underlayerColor", { def: "#FFFFFF" }),
+    SELECT("style.legend.textAlign", ["left", "center", "right"], { def: "left" }),
+    CHECKBOX("style.legend.show", { def: true }),
+    NUMBER("style.legend.fontSize", { def: 12, min: 8, max: 48 }),
+    TEXT("style.legend.margin", { def: "0 0 6px 0" }),
+    COLOR("style.legend.name.color", { def: "#1A1A1A" }),
+    CHECKBOX("style.legend.name.bold", { def: false }),
+    CHECKBOX("style.legend.value.show", { def: true }),
+    CHECKBOX("style.legend.value.bold", { def: false }),
+    COLOR("style.legend.value.color", { def: "#1A1A1A" }),
+    TEXT("style.legend.value.prefix", { def: "P" }),
+    TEXT("style.legend.value.suffix", { def: "S" }),
+    NUMBER("style.legend.value.rounding", { def: 0, min: 0, max: 12 }),
+    CHECKBOX("style.legend.percentage.show", { def: true }),
+    CHECKBOX("style.legend.percentage.bold", { def: true }),
+    COLOR("style.legend.percentage.color", { def: "#1A1A1A" }),
+    NUMBER("style.legend.percentage.rounding", { def: 2, min: 0, max: 12 }),
+    SELECT("style.title.textAlign", ["left", "center", "right"], { def: "left" }),
+    TEXT("style.title.text", { def: "Lorem ipsum dolor sic amet" }),
+    COLOR("style.title.color", { def: "#1A1A1A" }),
+    NUMBER("style.title.fontSize", { def: 16, min: 8, max: 48 }),
+    CHECKBOX("style.title.bold", { def: true }),
+    TEXT("style.title.margin", { def: "0 0 6px 0" }),
+    COLOR("style.title.subtitle.color", { def: "#A1A1A1" }),
+    TEXT("style.title.subtitle.text", { def: "Lorem ipsum dolor sic amet" }),
+    NUMBER("style.title.subtitle.fontSize", { def: 12, min: 8, max: 24 }),
+    CHECKBOX("style.title.subtitle.bold", { def: false }),
+    CHECKBOX("style.tooltip.show", { def: true }),
+    COLOR("style.tooltip.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.tooltip.color", { def: "#1A1A1A" }),
+    NUMBER("style.tooltip.fontSize", { def: 14, min: 6, max: 24 }),
+    RANGE("style.tooltip.backgroundOpacity", { def: 60, min: 0, max: 100 }),
+    SELECT("style.tooltip.position", ["left", "center", "right"], { def: "center" }),
+    NUMBER("style.tooltip.offsetY", { def: 24, min: 0, max: 48 })
+]);
 
-    { key: 'style.tooltip.show', def: true, type: 'checkbox', label: 'show', category: 'tooltip' },
-    { key: 'style.tooltip.backgroundColor', def: '#FFFFFF', type: 'color', label: 'backgroundColor', category: 'tooltip' },
-    { key: 'style.tooltip.color', def: '#1A1A1A', type: 'color', label: 'textColor', category: 'tooltip' },
-    { key: 'style.tooltip.fontSize', def: 14, type: 'number', min: 6, max: 24, label: 'fontSize', category: 'tooltip' },
-    { key: 'style.tooltip.backgroundOpacity', def: 60, type: 'range', min: 0, max: 100},
-    { key: 'style.tooltip.position', def: 'center', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'style.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
-])
 
 const themeOptions = ref([
     "",

@@ -4,10 +4,23 @@ import LocalVueUiSparkgauge from '../src/components/vue-ui-sparkgauge.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiSparkgauge } from "vue-data-ui";
 import { VueUiSparkgauge as VueUiSparkgaugeTreeshaken } from "vue-data-ui/vue-ui-sparkgauge";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
@@ -26,38 +39,39 @@ onMounted(() => {
     }, 4000)
 })
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.background', def: '#FFFFFF', type: 'color'},
-    { key: 'style.height', def: 100, type: 'number', min: 10, max: 200},
-    { key: 'style.basePosition', def: 72, type: 'number', min: 0, max: 100},
-    { key: 'style.animation.show', def: true, type: 'checkbox'},
-    { key: 'style.animation.speedMs', def: 150, type: 'number', min: 0, max: 1000},
-    { key: 'style.title.show', def: true, type: 'checkbox'},
-    { key: 'style.title.fontSize', def: 12, type: 'number', min: 8, max: 24},
-    { key: 'style.title.position', def: 'top', type: 'select', options: ['top', 'bottom']},
-    { key: 'style.title.textAlign', def: 'center', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'style.title.bold', def: false, type: 'checkbox'},
-    { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.dataLabel.fontSize', def: 20, type: 'number', min: 8, max: 48},
-    { key: 'style.dataLabel.autoColor', def: true, type: 'checkbox'},
-    { key: 'style.dataLabel.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.dataLabel.offsetY', def: 0, type:'number', min: -100, max: 100},
-    { key: 'style.dataLabel.bold', def: true, type: 'checkbox'},
-    { key: 'style.dataLabel.rounding', def: 2, type: 'number', min: 0, max: 12},
-    { key: 'style.dataLabel.prefix', def: 'P', type: 'text'},
-    { key: 'style.dataLabel.suffix', def: 'S', type: 'text'},
-    { key: 'style.colors.min', def: '#DD6633', type: 'color'},
-    { key: 'style.colors.max', def: '#33DD66', type: 'color'},
-    { key: 'style.colors.showGradient', def: true, type: 'checkbox'},
-    { key: 'style.track.autoColor', def: true, type: 'checkbox'},
-    { key: 'style.track.color', def: '#5f8bee', type: 'color'},
-    { key: 'style.track.strokeLinecap', def: 'round', type: 'select', options: ['round', 'butt']},
-    { key: 'style.gutter.color', def: '#e1e5e8', type: 'color'},
-    { key: 'style.gutter.strokeLinecap', def: 'round', type: 'select', options: ['round', 'butt']}
-])
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    TEXT("style.fontFamily", { def: "inherit" }),
+    COLOR("style.background", { def: "#FFFFFF" }),
+    NUMBER("style.height", { def: 100, min: 10, max: 200 }),
+    NUMBER("style.basePosition", { def: 72, min: 0, max: 100 }),
+    CHECKBOX("style.animation.show", { def: true }),
+    NUMBER("style.animation.speedMs", { def: 150, min: 0, max: 1000 }),
+    CHECKBOX("style.title.show", { def: true }),
+    NUMBER("style.title.fontSize", { def: 12, min: 8, max: 24 }),
+    SELECT("style.title.position", ["top", "bottom"] , { def: "top"}),
+    SELECT("style.title.textAlign", ["left", "center", "right"], { def: "center" }),
+    CHECKBOX("style.title.bold", { def: false }),
+    COLOR("style.title.color", { def: "#1A1A1A" }),
+    NUMBER("style.dataLabel.fontSize", { def: 20, min: 8, max: 48 }),
+    CHECKBOX("style.dataLabel.autoColor", { def: true }),
+    COLOR("style.dataLabel.color", { def: "#1A1A1A" }),
+    NUMBER("style.dataLabel.offsetY", { def: 0, min: -100, max: 100 }),
+    CHECKBOX("style.dataLabel.bold", { def: true }),
+    NUMBER("style.dataLabel.rounding", { def: 2, min: 0, max: 12 }),
+    TEXT("style.dataLabel.prefix", { def: "P" }),
+    TEXT("style.dataLabel.suffix", { def: "S" }),
+    COLOR("style.colors.min", { def: "#DD6633" }),
+    COLOR("style.colors.max", { def: "#33DD66" }),
+    CHECKBOX("style.colors.showGradient", { def: true }),
+    CHECKBOX("style.track.autoColor", { def: true }),
+    COLOR("style.track.color", { def: "#5f8bee" }),
+    SELECT("style.track.strokeLinecap", ["round", "butt"], { def: "round" }),
+    COLOR("style.gutter.color", { def: "#e1e5e8" }),
+    SELECT("style.gutter.strokeLinecap", ["round", "butt"], { def: "round" })
+]);
+
 
 const themeOptions = ref([
     "",

@@ -5,12 +5,24 @@ import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
 import { useArena } from "../src/useArena";
-
 import { VueUiQuadrant } from "vue-data-ui";
 import { VueUiQuadrant as VueUiQuadrantTreeshaken } from "vue-data-ui/vue-ui-quadrant";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
 
-const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena()
+const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena();
+const { vue_ui_quadrant: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 function makeDs(n,m) {
     const arr = [];
@@ -109,117 +121,133 @@ function alterDataset() {
     })
 }
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'responsive', def: false, type: 'checkbox'},
-    { key: 'style.chart.tooltip.show', def: true, type: 'checkbox'},
-    { key: 'userOptions.show', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.pdf', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.img', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.csv', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.labels', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.table', def: true, type: 'checkbox'},
-    { key: 'userOptions.buttons.fullscreen', def: true, type: 'checkbox'},
-    { key: 'userOptions.position', def: 'right', type: 'select', options: ['left', 'right']},
-    { key: 'userOptions.showOnChartHover', def: true, type: 'checkbox'},
-    { key: 'userOptions.keepStateOnChartLeave', def: true, type: 'checkbox'},
-    
-    { key: 'useCssAnimation', def: true, type: 'checkbox'},
-    { key: 'zoomAnimationFrames', def: 20, type: 'range', min: 0, max: 100},
-    { key: 'style.fontFamily', def: 'inherit', type: "text"},
-    { key: 'style.chart.height', def: 512, type: 'number', min: 100, max: 1000},
-    { key: 'style.chart.width', def: 512, type: 'number', min: 100, max: 1000},
-    { key: 'style.chart.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.labels.quadrantLabels.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.labels.quadrantLabels.tl.text', def: 'Top left label', type: 'text'},
-    { key: 'style.chart.layout.labels.quadrantLabels.tl.color', def: '#FFAA00', type: 'color'},
-    { key: 'style.chart.layout.labels.quadrantLabels.tl.fontSize', def: 16, type: 'range', min: 8, max: 42},
-    { key: 'style.chart.layout.labels.quadrantLabels.tl.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.labels.quadrantLabels.tr.text', def: 'Top right label', type: 'text'},
-    { key: 'style.chart.layout.labels.quadrantLabels.tr.color', def: '#00BB63', type: 'color'},
-    { key: 'style.chart.layout.labels.quadrantLabels.tr.fontSize', def: 16, type: 'range', min: 8, max: 42},
-    { key: 'style.chart.layout.labels.quadrantLabels.tr.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.labels.quadrantLabels.br.text', def: 'Bottom right label', type: 'text'},
-    { key: 'style.chart.layout.labels.quadrantLabels.br.color', def: '#0063BB', type: 'color'},
-    { key: 'style.chart.layout.labels.quadrantLabels.br.fontSize', def: 16, type: 'range', min: 8, max: 42},
-    { key: 'style.chart.layout.labels.quadrantLabels.br.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.labels.quadrantLabels.bl.text', def: 'Bottom right label', type: 'text'},
-    { key: 'style.chart.layout.labels.quadrantLabels.bl.color', def: '#BB0063', type: 'color'},
-    { key: 'style.chart.layout.labels.quadrantLabels.bl.fontSize', def: 16, type: 'range', min: 8, max: 42},
-    { key: 'style.chart.layout.labels.quadrantLabels.bl.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.labels.plotLabels.showAsTag', def: false, type:'checkbox'},
-    { key: 'style.chart.layout.labels.plotLabels.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.labels.plotLabels.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.layout.labels.plotLabels.offsetY', def: 12, type: 'number', min: -100, max: 100},
-    { key: 'style.chart.layout.labels.plotLabels.fontSize', def: 10, type: 'range', min: 8, max: 48},
-    { key: 'style.chart.layout.labels.axisLabels.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.labels.axisLabels.fontSize', def: 14, type: 'range', min: 8, max: 48},
-    { key: 'style.chart.layout.labels.axisLabels.color.positive', def: '#0000FF', type: 'color'},
-    { key: 'style.chart.layout.labels.axisLabels.color.negative', def: '#FF0000', type: 'color'},
-    { key: 'style.chart.layout.grid.stroke', def: '#e1e5e8', type: 'color'},
-    { key: 'style.chart.layout.grid.strokeWidth', def: 1.5, type: 'range', min: 0, max: 12, step: 0.5},
-    { key: 'style.chart.layout.grid.showArrows', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.grid.graduations.stroke', def: '#e1e5e8', type: 'color'},
-    { key: 'style.chart.layout.grid.graduations.strokeWidth', def: 0.5, type: 'range', min: 0, max: 64, step: 0.5},
-    { key: 'style.chart.layout.grid.graduations.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.grid.graduations.steps', def: 5, type: 'number', min: 2, max: 20},
-    { key: 'style.chart.layout.grid.graduations.fill', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.grid.graduations.color', def: '#40AD38', type: 'color'},
-    { key: 'style.chart.layout.grid.graduations.roundingForce', def: 10, type:'range', min: 0, max: 300},
-    { key: 'style.chart.layout.grid.xAxis.min', def: -100, type: 'number', min: -1000, max: 1000},
-    { key: 'style.chart.layout.grid.xAxis.max', def: 100, type: 'number', min: -1000, max: 1000},
-    { key: 'style.chart.layout.grid.xAxis.auto', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.grid.xAxis.name', def: "X axis lorem ipsum dolor sic amet", type: 'checkbox'},
-    { key: 'style.chart.layout.grid.yAxis.min', def: -100, type: 'number', min: -1000, max: 1000},
-    { key: 'style.chart.layout.grid.yAxis.max', def: 100, type: 'number', min: -1000, max: 1000},
-    { key: 'style.chart.layout.grid.yAxis.auto', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.grid.yAxis.name', def: "Y axis lorem ipsum dolor sic amet", type: 'checkbox'},
-    { key: 'style.chart.layout.plots.radius', def: 6, type: 'range', min: 0, max: 48},
-    { key: 'style.chart.layout.plots.outline', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.plots.outlineColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.chart.layout.plots.outlineWidth', def: 1, type: 'range', min: 0, max: 12, step: 0.5},
-    { key: 'style.chart.layout.areas.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.layout.areas.opacity', def: 40, type: 'range', min: 0, max: 100},
-    { key: 'style.chart.layout.areas.useGradient', def: true, type: 'checkbox'},
-    { key: 'style.chart.title.text', def: 'Lorem ipsum dolor sic amet'},
-    { key: 'style.chart.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.title.fontSize', def: 20, type: 'range', min: 8, max: 48},
-    { key: 'style.chart.title.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.title.subtitle.text', def: 'Lorem ipsum dolor sic amet', type: 'text'},
-    { key: 'style.chart.title.subtitle.color', def: '#CCCCCC', type: 'color'},
-    { key: 'style.chart.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
-    { key: 'style.chart.title.subtitle.bold', def: false, type: 'checkbox'},
-    { key: 'style.chart.legend.show', def: true, type: 'checkbox'},
-    { key: 'style.chart.legend.bold', def: true, type: 'checkbox'},
-    { key: 'style.chart.legend.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: "style.chart.legend.color", def: '#1A1A1A', type: 'color'},
-    { key: 'style.chart.legend.fontSize', def: 14, type: 'range', min: 8, max: 48},
-    { key: 'style.chart.legend.position', def: 'bottom', type: 'select', options: ['top', 'bottom']},
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    CHECKBOX("responsive", { def: false }),
+    CHECKBOX("style.chart.tooltip.show", { def: true }),
+    CHECKBOX("userOptions.show", { def: true }),
+    CHECKBOX("userOptions.buttons.pdf", { def: true }),
+    CHECKBOX("userOptions.buttons.img", { def: true }),
+    CHECKBOX("userOptions.buttons.csv", { def: true }),
+    CHECKBOX("userOptions.buttons.labels", { def: true }),
+    CHECKBOX("userOptions.buttons.table", { def: true }),
+    CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
+    SELECT("userOptions.position", ["left", "right"], { def: "right" }),
+    CHECKBOX("userOptions.showOnChartHover", { def: true }),
+    CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
 
-    { key: 'table.show', def: false, type: 'checkbox'},
-    { key: 'table.useDialog', def: true, type: 'checkbox'},
+    CHECKBOX("useCssAnimation", { def: true }),
+    RANGE("zoomAnimationFrames", { def: 20, min: 0, max: 100 }),
+    TEXT("style.fontFamily", { def: "inherit" }),
+    NUMBER("style.chart.height", { def: 512, min: 100, max: 1000 }),
+    NUMBER("style.chart.width", { def: 512, min: 100, max: 1000 }),
+    COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.chart.color", { def: "#1A1A1A" }),
 
-    { key: 'table.responsiveBreakdpoint', def: 400, type: 'number', min: 300, max: 800},
-    { key: 'table.th.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'table.th.color', def: '#1A1A1A', type: 'color'},
-    { key: 'table.th.outline', def: 'none', type: 'text'},
-    { key: 'table.td.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'table.td.color', def: '#1A1A1A', type: 'color'},
-    { key: 'table.td.outline', def: 'none', type: 'text'},
-    { key: 'table.td.roundingValue', def: 2, type: 'range', min: 0, max: 12},
+    CHECKBOX("style.chart.layout.labels.quadrantLabels.show", { def: true }),
+    TEXT("style.chart.layout.labels.quadrantLabels.tl.text", { def: "Top left label" }),
+    COLOR("style.chart.layout.labels.quadrantLabels.tl.color", { def: "#FFAA00" }),
+    RANGE("style.chart.layout.labels.quadrantLabels.tl.fontSize", { def: 16, min: 8, max: 42 }),
+    CHECKBOX("style.chart.layout.labels.quadrantLabels.tl.bold", { def: true }),
 
-    { key: 'style.chart.tooltip.backgroundColor', def: '#FFFFFF', type: 'color' },
-    { key: 'style.chart.tooltip.backgroundOpacity', def: 100, type: 'range', min: 0, max: 100 },
-    { key: 'style.chart.tooltip.position', def: 'center', type:'select', options: ['left', 'center', 'right']},
-    { key: 'style.chart.tooltip.offsetY', def: 24, type: 'number', min: 0, max: 48},
+    TEXT("style.chart.layout.labels.quadrantLabels.tr.text", { def: "Top right label" }),
+    COLOR("style.chart.layout.labels.quadrantLabels.tr.color", { def: "#00BB63" }),
+    RANGE("style.chart.layout.labels.quadrantLabels.tr.fontSize", { def: 16, min: 8, max: 42 }),
+    CHECKBOX("style.chart.layout.labels.quadrantLabels.tr.bold", { def: true }),
 
-    { key: 'userOptions.print.scale', def: 2, type: 'number', min: 1, max: 5},
-    { key: 'userOptions.print.allowTaint', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.useCORS', def: true, type: 'checkbox'},
-    { key: 'userOptions.print.backgroundColor', def: '#FFFFFF' }
-])
+    TEXT("style.chart.layout.labels.quadrantLabels.br.text", { def: "Bottom right label" }),
+    COLOR("style.chart.layout.labels.quadrantLabels.br.color", { def: "#0063BB" }),
+    RANGE("style.chart.layout.labels.quadrantLabels.br.fontSize", { def: 16, min: 8, max: 42 }),
+    CHECKBOX("style.chart.layout.labels.quadrantLabels.br.bold", { def: true }),
+
+    TEXT("style.chart.layout.labels.quadrantLabels.bl.text", { def: "Bottom right label" }),
+    COLOR("style.chart.layout.labels.quadrantLabels.bl.color", { def: "#BB0063" }),
+    RANGE("style.chart.layout.labels.quadrantLabels.bl.fontSize", { def: 16, min: 8, max: 42 }),
+    CHECKBOX("style.chart.layout.labels.quadrantLabels.bl.bold", { def: true }),
+
+    CHECKBOX("style.chart.layout.labels.plotLabels.showAsTag", { def: false }),
+    CHECKBOX("style.chart.layout.labels.plotLabels.show", { def: true }),
+    COLOR("style.chart.layout.labels.plotLabels.color", { def: "#1A1A1A" }),
+    NUMBER("style.chart.layout.labels.plotLabels.offsetY", { def: 12, min: -100, max: 100 }),
+    RANGE("style.chart.layout.labels.plotLabels.fontSize", { def: 10, min: 8, max: 48 }),
+
+    CHECKBOX("style.chart.layout.labels.axisLabels.show", { def: true }),
+    RANGE("style.chart.layout.labels.axisLabels.fontSize", { def: 14, min: 8, max: 48 }),
+    COLOR("style.chart.layout.labels.axisLabels.color.positive", { def: "#0000FF" }),
+    COLOR("style.chart.layout.labels.axisLabels.color.negative", { def: "#FF0000" }),
+
+    COLOR("style.chart.layout.grid.stroke", { def: "#e1e5e8" }),
+    RANGE("style.chart.layout.grid.strokeWidth", { def: 1.5, min: 0, max: 12, step: 0.5 }),
+    CHECKBOX("style.chart.layout.grid.showArrows", { def: true }),
+
+    COLOR("style.chart.layout.grid.graduations.stroke", { def: "#e1e5e8" }),
+    RANGE("style.chart.layout.grid.graduations.strokeWidth", { def: 0.5, min: 0, max: 64, step: 0.5 }),
+    CHECKBOX("style.chart.layout.grid.graduations.show", { def: true }),
+    NUMBER("style.chart.layout.grid.graduations.steps", { def: 5, min: 2, max: 20 }),
+    CHECKBOX("style.chart.layout.grid.graduations.fill", { def: true }),
+    COLOR("style.chart.layout.grid.graduations.color", { def: "#40AD38" }),
+    RANGE("style.chart.layout.grid.graduations.roundingForce", { def: 10, min: 0, max: 300 }),
+
+    NUMBER("style.chart.layout.grid.xAxis.min", { def: -100, min: -1000, max: 1000 }),
+    NUMBER("style.chart.layout.grid.xAxis.max", { def: 100, min: -1000, max: 1000 }),
+    CHECKBOX("style.chart.layout.grid.xAxis.auto", { def: true }),
+    CHECKBOX("style.chart.layout.grid.xAxis.name", { def: "X axis lorem ipsum dolor sic amet" }),
+
+    NUMBER("style.chart.layout.grid.yAxis.min", { def: -100, min: -1000, max: 1000 }),
+    NUMBER("style.chart.layout.grid.yAxis.max", { def: 100, min: -1000, max: 1000 }),
+    CHECKBOX("style.chart.layout.grid.yAxis.auto", { def: true }),
+    CHECKBOX("style.chart.layout.grid.yAxis.name", { def: "Y axis lorem ipsum dolor sic amet" }),
+
+    RANGE("style.chart.layout.plots.radius", { def: 6, min: 0, max: 48 }),
+    CHECKBOX("style.chart.layout.plots.outline", { def: true }),
+    COLOR("style.chart.layout.plots.outlineColor", { def: "#FFFFFF" }),
+    RANGE("style.chart.layout.plots.outlineWidth", { def: 1, min: 0, max: 12, step: 0.5 }),
+
+    CHECKBOX("style.chart.layout.areas.show", { def: true }),
+    RANGE("style.chart.layout.areas.opacity", { def: 40, min: 0, max: 100 }),
+    CHECKBOX("style.chart.layout.areas.useGradient", { def: true }),
+
+    TEXT("style.chart.title.text", { def: "Lorem ipsum dolor sic amet" }),
+    COLOR("style.chart.title.color", { def: "#1A1A1A" }),
+    RANGE("style.chart.title.fontSize", { def: 20, min: 8, max: 48 }),
+    CHECKBOX("style.chart.title.bold", { def: true }),
+
+    TEXT("style.chart.title.subtitle.text", { def: "Lorem ipsum dolor sic amet" }),
+    COLOR("style.chart.title.subtitle.color", { def: "#CCCCCC" }),
+    RANGE("style.chart.title.subtitle.fontSize", { def: 16, min: 8, max: 48 }),
+    CHECKBOX("style.chart.title.subtitle.bold", { def: false }),
+
+    CHECKBOX("style.chart.legend.show", { def: true }),
+    CHECKBOX("style.chart.legend.bold", { def: true }),
+    COLOR("style.chart.legend.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("style.chart.legend.color", { def: "#1A1A1A" }),
+    RANGE("style.chart.legend.fontSize", { def: 14, min: 8, max: 48 }),
+    SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+
+    CHECKBOX("table.show", { def: false }),
+    CHECKBOX("table.useDialog", { def: true }),
+
+    NUMBER("table.responsiveBreakdpoint", { def: 400, min: 300, max: 800 }),
+    COLOR("table.th.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("table.th.color", { def: "#1A1A1A" }),
+    TEXT("table.th.outline", { def: "none" }),
+
+    COLOR("table.td.backgroundColor", { def: "#FFFFFF" }),
+    COLOR("table.td.color", { def: "#1A1A1A" }),
+    TEXT("table.td.outline", { def: "none" }),
+    RANGE("table.td.roundingValue", { def: 2, min: 0, max: 12 }),
+
+    COLOR("style.chart.tooltip.backgroundColor", { def: "#FFFFFF" }),
+    RANGE("style.chart.tooltip.backgroundOpacity", { def: 100, min: 0, max: 100 }),
+    SELECT("style.chart.tooltip.position", ["left", "center", "right"], { def: "center" }),
+    NUMBER("style.chart.tooltip.offsetY", { def: 24, min: 0, max: 48 }),
+
+    NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
+    CHECKBOX("userOptions.print.allowTaint", { def: true }),
+    CHECKBOX("userOptions.print.useCORS", { def: true }),
+    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" })
+]);
 
 const testCustomTooltip = ref(false);
 

@@ -4,10 +4,23 @@ import LocalVueUiSparkbar from '../src/components/vue-ui-sparkbar.vue';
 import LocalVueDataUi from '../src/components/vue-data-ui.vue';
 import Box from "./Box.vue";
 import convertArrayToObject from "./convertModel";
-
 import { VueUiSparkbar } from "vue-data-ui";
 import { VueUiSparkbar as VueUiSparkbarTreeshaken } from "vue-data-ui/vue-ui-sparkbar";
 import ConfigKnobs from "./ConfigKnobs.vue";
+import { useConfigurationControls } from "./createConfigModel";
+import { useConfig } from "../src/useConfig"
+
+const { vue_ui_sparkbar: DEFAULT_CONFIG } = useConfig();
+
+const {
+    CHECKBOX,
+    NUMBER,
+    RANGE,
+    TEXT,
+    COLOR,
+    SELECT,
+    createModel
+} = useConfigurationControls(DEFAULT_CONFIG);
 
 const dataset = ref(undefined);
 
@@ -84,43 +97,44 @@ function toggleProps() {
     isPropsToggled.value = !isPropsToggled.value;
 }
 
-const model = ref([
-    { key: 'debug', def: true, type: 'checkbox'},
-    { key: 'loading', def: false, type: 'checkbox'},
-    { key: 'style.backgroundColor', def: '#FFFFFF20', type: 'color'},
-    { key: 'style.fontFamily', def: 'inherit', type: 'text'},
-    { key: 'style.animation.show', def:  true, type: 'checkbox'},
-    { key: 'style.animation.animationFrames', def: 60, type: 'number', min: 0, max: 300},
-    { key: 'style.layout.independant', def: true, type: 'checkbox'},
-    { key: 'style.layout.percentage', def: true, type: 'checkbox'},
-    { key: 'style.layout.target', def: 200, type: 'number', min: 50, max: 200},
-    { key: 'style.layout.showTargetValue', def: true, type: 'checkbox'},
-    { key: 'style.layout.targetValueText', def: 'Target', type: 'text'},
-    { key: 'style.gutter.backgroundColor', def: '#e1e5e8', type: 'color'},
-    { key: 'style.gutter.opacity', def: 100, type: 'range', min: 0, max: 100},
-    { key: 'style.bar.gradient.show', def: true, type: 'checkbox'},
-    { key: 'style.bar.gradient.intensity', def: 40, type: 'range', min: 0, max: 100},
-    { key: 'style.bar.gradient.underlayerColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.labels.fontSize', def: 16, type: 'number', min: 8, max: 48},
-    { key: 'style.labels.name.position', def: 'top-left', type: 'select', options: ['left', 'top', 'top-left', 'top-center', 'top-right', 'right']},
-    { key: 'style.labels.name.width', def: '100%', type: 'text'},
-    { key: 'style.labels.name.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.labels.name.bold', def: false, type: 'checkbox'},
-    { key: 'style.labels.value.show', def: true, type: 'checkbox'},
-    { key: 'style.labels.value.bold', def: true, type: 'checkbox'},
-    { key: 'style.title.backgroundColor', def: '#FFFFFF', type: 'color'},
-    { key: 'style.title.margin', def: '0 auto', type: 'text'},
-    { key: 'style.title.textAlign', def: 'left', type: 'select', options: ['left', 'center', 'right']},
-    { key: 'style.title.text', def: 'Lorem ipsum dolor sic amet', type: 'text'},
-    { key: 'style.title.color', def: '#1A1A1A', type: 'color'},
-    { key: 'style.title.fontSize', def: 20, type: 'number', min: 8, max: 48},
-    { key: 'style.title.bold', def: true, type: 'checkbox'},
-    { key: 'style.title.subtitle.text', def: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis', type: 'text'},
-    { key: 'style.title.subtitle.color', def: '#A1A1A1', type: 'color'},
-    { key: 'style.title.subtitle.fontSize', def: 16, type: 'range', min: 8, max: 48},
-    { key: 'style.title.subtitle.bold', def: false, type: 'checkbox'},
-    { key: 'style.gap', def: 4, type: 'number', min: 0, max: 24}
-])
+const model = createModel([
+    CHECKBOX("debug", { def: true }),
+    CHECKBOX("loading", { def: false }),
+    COLOR("style.backgroundColor", { def: "#FFFFFF20" }),
+    TEXT("style.fontFamily", { def: "inherit" }),
+    CHECKBOX("style.animation.show", { def: true }),
+    NUMBER("style.animation.animationFrames", { def: 60, min: 0, max: 300 }),
+    CHECKBOX("style.layout.independant", { def: true }),
+    CHECKBOX("style.layout.percentage", { def: true }),
+    NUMBER("style.layout.target", { def: 200, min: 50, max: 200 }),
+    CHECKBOX("style.layout.showTargetValue", { def: true }),
+    TEXT("style.layout.targetValueText", { def: "Target" }),
+    COLOR("style.gutter.backgroundColor", { def: "#e1e5e8" }),
+    RANGE("style.gutter.opacity", { def: 100, min: 0, max: 100 }),
+    CHECKBOX("style.bar.gradient.show", { def: true }),
+    RANGE("style.bar.gradient.intensity", { def: 40, min: 0, max: 100 }),
+    COLOR("style.bar.gradient.underlayerColor", { def: "#FFFFFF" }),
+    NUMBER("style.labels.fontSize", { def: 16, min: 8, max: 48 }),
+    SELECT("style.labels.name.position", ["left", "top", "top-left", "top-center", "top-right", "right"], { def: "top-left" }),
+    TEXT("style.labels.name.width", { def: "100%" }),
+    COLOR("style.labels.name.color", { def: "#1A1A1A" }),
+    CHECKBOX("style.labels.name.bold", { def: false }),
+    CHECKBOX("style.labels.value.show", { def: true }),
+    CHECKBOX("style.labels.value.bold", { def: true }),
+    COLOR("style.title.backgroundColor", { def: "#FFFFFF" }),
+    TEXT("style.title.margin", { def: "0 auto" }),
+    SELECT("style.title.textAlign", ["left", "center", "right"], { def: "left" }),
+    TEXT("style.title.text", { def: "Lorem ipsum dolor sic amet" }),
+    COLOR("style.title.color", { def: "#1A1A1A" }),
+    NUMBER("style.title.fontSize", { def: 20, min: 8, max: 48 }),
+    CHECKBOX("style.title.bold", { def: true }),
+    TEXT("style.title.subtitle.text", { def: "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis" }),
+    COLOR("style.title.subtitle.color", { def: "#A1A1A1" }),
+    RANGE("style.title.subtitle.fontSize", { def: 16, min: 8, max: 48 }),
+    CHECKBOX("style.title.subtitle.bold", { def: false }),
+    NUMBER("style.gap", { def: 4, min: 0, max: 24 })
+]);
+
 
 const themeOptions = ref([
     "",
