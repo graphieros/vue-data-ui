@@ -131,6 +131,72 @@
                     "color": "#5D4037",
                     "highlightColor": "#FF8A65"
                 },
+                "dialog": {
+                    "backgroundColor": "#FFF8E1",
+                    "color": "#424242",
+                    "header": {
+                        "backgroundColor": "##FFF8E1",
+                        "color": "#424242"
+                    },
+                    "donutChart": {
+                        "style": {
+                            "chart": {
+                                "backgroundColor": "##FFF8E1",
+                                "color": "#424242",
+                                "layout": {
+                                    "labels": {
+                                        "percentage": {
+                                            "color": "#424242"
+                                        },
+                                        "name": {
+                                            "color": "#424242"
+                                        },
+                                        "hollow": {
+                                            "total": {
+                                                "color": "#424242",
+                                                "value": {
+                                                    "color": "#424242"
+                                                }
+                                            },
+                                            "average": {
+                                                "color": "#424242",
+                                                "value": {
+                                                    "color": "#424242"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "legend": {
+                                    "backgroundColor": "##FFF8E1",
+                                    "color": "#424242"
+                                },
+                                "title": {
+                                    "color": "#424242",
+                                    "subtitle": {
+                                        "color": "#757575"
+                                    }
+                                },
+                                "tooltip": {
+                                    "backgroundColor": "#FFECB3",
+                                    "backgroundOpacity": 30,
+                                    "color": "#424242",
+                                    "borderColor": "#FF8A65"
+                                }
+                            }
+                        },
+                        "table": {
+                            "th": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            },
+                            "td": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            }
+                        }
+                    }
+                },
                 "layout": {
                     "grid": {
                         "stroke": "#5D4037",
@@ -187,6 +253,72 @@
                 "zoom": {
                     "color": "#5D4037",
                     "highlightColor": "#FF8A65"
+                },
+                "dialog": {
+                    "backgroundColor": "#1E1E1E",
+                    "color": "#BDBDBD",
+                    "header": {
+                        "backgroundColor": "#1E1E1E",
+                        "color": "#BDBDBD"
+                    },
+                    "donutChart": {
+                        "style": {
+                            "chart": {
+                                "backgroundColor": "#1E1E1E",
+                                "color": "#BDBDBD",
+                                "layout": {
+                                    "labels": {
+                                        "percentage": {
+                                            "color": "#BDBDBD"
+                                        },
+                                        "name": {
+                                            "color": "#BDBDBD"
+                                        },
+                                        "hollow": {
+                                            "total": {
+                                                "color": "#BDBDBD",
+                                                "value": {
+                                                    "color": "#BDBDBD"
+                                                }
+                                            },
+                                            "average": {
+                                                "color": "#BDBDBD",
+                                                "value": {
+                                                    "color": "#BDBDBD"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "legend": {
+                                    "backgroundColor": "#1E1E1E",
+                                    "color": "#BDBDBD"
+                                },
+                                "title": {
+                                    "color": "#FFF8E1",
+                                    "subtitle": {
+                                        "color": "#BDBDBD"
+                                    }
+                                },
+                                "tooltip": {
+                                    "backgroundColor": "#1E1E1E",
+                                    "backgroundOpacity": 30,
+                                    "color": "#FFF8E1",
+                                    "borderColor": "#FF8A65"
+                                }
+                            }
+                        },
+                        "table": {
+                            "th": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            },
+                            "td": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            }
+                        }
+                    }
                 },
                 "layout": {
                     "grid": {
@@ -245,6 +377,71 @@
                     "color": "#5F6A5F",
                     "highlightColor": "#66CC66"
                 },
+                "dialog": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#BDBDBD",
+                    "header": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#BDBDBD"
+                    },
+                    "donutChart": {
+                        "style": {
+                            "chart": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#99AA99",
+                                "layout": {
+                                    "labels": {
+                                        "percentage": {
+                                            "color": "#99AA99"
+                                        },
+                                        "name": {
+                                            "color": "#99AA99"
+                                        },
+                                        "hollow": {
+                                            "total": {
+                                                "color": "#99AA99",
+                                                "value": {
+                                                    "color": "#99AA99"
+                                                }
+                                            },
+                                            "average": {
+                                                "color": "#99AA99",
+                                                "value": {
+                                                    "color": "#99AA99"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "legend": {
+                                    "backgroundColor": "#1A1A1A",
+                                    "color": "#99AA99"
+                                },
+                                "title": {
+                                    "color": "#66CC66",
+                                    "subtitle": {
+                                        "color": "#99AA99"
+                                    }
+                                },
+                                "tooltip": {
+                                    "backgroundColor": "#2A2F2A",
+                                    "color": "#AACCAA",
+                                    "borderColor": "#66CC66"
+                                }
+                            }
+                        },
+                        "table": {
+                            "th": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            },
+                            "td": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            }
+                        }
+                    }
+                },
                 "layout": {
                     "grid": {
                         "show": false,
@@ -302,6 +499,70 @@
                     "color": "#E0CFC3",
                     "highlightColor": "#8F837A"
                 },
+                "dialog": {
+                    "backgroundColor": "#fbfafa",
+                    "color": "#8A9892",
+                    "header": {
+                        "backgroundColor": "#fbfafa",
+                        "color": "#8A9892"
+                    },
+                    "donutChart": {
+                        "style": {
+                            "chart": {
+                                "backgroundColor": "#fbfafa",
+                                "color": "#99AA99",
+                                "layout": {
+                                    "labels": {
+                                        "percentage": {
+                                            "color": "#A0AC94"
+                                        },
+                                        "name": {
+                                            "color": "#A0AC94"
+                                        },
+                                        "hollow": {
+                                            "total": {
+                                                "color": "#A0AC94",
+                                                "value": {
+                                                    "color": "#A0AC94"
+                                                }
+                                            },
+                                            "average": {
+                                                "color": "#A0AC94",
+                                                "value": {
+                                                    "color": "#A0AC94"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "legend": {
+                                    "backgroundColor": "#fbfafa",
+                                    "color": "#A0AC94"
+                                },
+                                "title": {
+                                    "color": "#8A9892",
+                                    "subtitle": {
+                                        "color": "#99AA99"
+                                    }
+                                },
+                                "tooltip": {
+                                    "backgroundColor": "#fbfafa",
+                                    "color": "#8A9892"
+                                }
+                            }
+                        },
+                        "table": {
+                            "th": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            },
+                            "td": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            }
+                        }
+                    }
+                },
                 "layout": {
                     "grid": {
                         "show": false,
@@ -357,6 +618,70 @@
                 "zoom": {
                     "color": "#92B0AB",
                     "highlightColor": "#50606C"
+                },
+                "dialog": {
+                    "backgroundColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "header": {
+                        "backgroundColor": "#f6f6fb",
+                        "color": "#50606C"
+                    },
+                    "donutChart": {
+                        "style": {
+                            "chart": {
+                                "backgroundColor": "#f6f6fb",
+                                "color": "#50606C",
+                                "layout": {
+                                    "labels": {
+                                        "percentage": {
+                                            "color": "#61747E"
+                                        },
+                                        "name": {
+                                            "color": "#61747E"
+                                        },
+                                        "hollow": {
+                                            "total": {
+                                                "color": "#61747E",
+                                                "value": {
+                                                    "color": "#61747E"
+                                                }
+                                            },
+                                            "average": {
+                                                "color": "#61747E",
+                                                "value": {
+                                                    "color": "#61747E"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "legend": {
+                                    "backgroundColor": "#f6f6fb",
+                                    "color": "#61747E"
+                                },
+                                "title": {
+                                    "color": "#50606C",
+                                    "subtitle": {
+                                        "color": "#718890"
+                                    }
+                                },
+                                "tooltip": {
+                                    "backgroundColor": "#f6f6fb",
+                                    "color": "#50606C"
+                                }
+                            }
+                        },
+                        "table": {
+                            "th": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            },
+                            "td": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            }
+                        }
+                    }
                 },
                 "layout": {
                     "grid": {
