@@ -1298,7 +1298,7 @@ defineExpose({
                     <text
                         data-cy="axis-y-label"
                         v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
-                        :x="svg.left + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.offsetX" 
+                        :x="svg.left + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.offsetX - 7" 
                         :y="yLabel.y + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize / 3" 
                         :font-size="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize" 
                         text-anchor="end"
