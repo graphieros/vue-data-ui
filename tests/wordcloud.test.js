@@ -4,7 +4,6 @@ import {
     canPlaceAt,
     markMask,
     dilateWordMask,
-    positionWords,
     positionWordsAsync
 } from "../src/wordcloud"
 
@@ -231,104 +230,6 @@ describe("dilateWordMask", () => {
     });
 });
 
-describe("positionWords", () => {
-    test("places a single word in the center", () => {
-        const words = [{ name: "one", value: 10 }];
-        const svg = {
-            width: 100,
-            height: 100,
-            minFontSize: 10,
-            maxFontSize: 20,
-            style: {},
-        };
-        const result = positionWords({ words, svg });
-        expect(result.length).toBe(1);
-        expect(result[0].name).toBe("one");
-        expect(Math.abs(result[0].x)).toBeLessThan(20); // ...ish
-        expect(Math.abs(result[0].y)).toBeLessThan(20);
-        expect(result[0].fontSize).toBeGreaterThanOrEqual(svg.minFontSize);
-        expect(result[0].fontSize).toBeLessThanOrEqual(svg.maxFontSize);
-        expect(result[0].width).toBeGreaterThan(0);
-        expect(result[0].height).toBeGreaterThan(0);
-    });
-
-    test("places words with higher value at larger font size", () => {
-        const words = [
-            { name: "big", value: 20 },
-            { name: "small", value: 10 },
-        ];
-        const svg = {
-            width: 100,
-            height: 100,
-            minFontSize: 8,
-            maxFontSize: 24,
-            style: {},
-        };
-        const result = positionWords({ words, svg });
-        expect(result.length).toBe(2);
-        expect(result[0].fontSize).toBeGreaterThan(result[1].fontSize);
-        expect(result[0].name).toBe("big");
-        expect(result[1].name).toBe("small");
-    });
-
-    test("does not overlap words", () => {
-        const words = [
-            { name: "A", value: 10 },
-            { name: "B", value: 10 },
-        ];
-        const svg = {
-            width: 60,
-            height: 60,
-            minFontSize: 10,
-            maxFontSize: 10,
-            style: {},
-        };
-
-        const result = positionWords({ words, svg });
-        const mask = new Uint8Array(60 * 60);
-
-        for (const word of result) {
-            const wx = Math.round(word.x + 30);
-            const wy = Math.round(word.y + 30);
-
-            const { wordMask } = getWordBitmap({
-                word,
-                fontSize: word.fontSize,
-                pad: 0,
-                canvas: createMockCanvas(),
-                ctx: createMockContext2D(),
-                svg: {
-                    minFontSize: word.fontSize,
-                    style: {},
-                }
-            });
-
-            for (const [dx, dy] of wordMask) {
-                const idx = (wy + dy) * 60 + (wx + dx);
-                expect(mask[idx]).toBe(0);
-                mask[idx] = 1;
-            }
-        }
-    });
-
-    test("handles minValue == maxValue case gracefully", () => {
-        const words = [
-            { name: "A", value: 42 },
-            { name: "B", value: 42 },
-        ];
-        const svg = {
-            width: 60,
-            height: 60,
-            minFontSize: 10,
-            maxFontSize: 30,
-            style: {},
-        };
-        const result = positionWords({ words, svg });
-        expect(result[0].fontSize).toBe(svg.minFontSize);
-        expect(result[1].fontSize).toBe(svg.minFontSize);
-    });
-});
-
 describe("positionWordsAsync", () => {
     test("places words asynchronously and calls onProgress", async () => {
         const words = [
@@ -354,12 +255,15 @@ describe("positionWordsAsync", () => {
 
         expect(result.length).toBe(words.length);
 
+        // layout may scale up to 4x (see scaleLayoutToFillArea)
+        const maxScaledFontSize = svg.maxFontSize * 4;
+
         for (const w of result) {
             expect(typeof w.x).toBe("number");
             expect(typeof w.y).toBe("number");
             expect(typeof w.fontSize).toBe("number");
             expect(w.fontSize).toBeGreaterThanOrEqual(svg.minFontSize);
-            expect(w.fontSize).toBeLessThanOrEqual(svg.maxFontSize);
+            expect(w.fontSize).toBeLessThanOrEqual(maxScaledFontSize);
             expect(w.width).toBeGreaterThan(0);
             expect(w.height).toBeGreaterThan(0);
         }

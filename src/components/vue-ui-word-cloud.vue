@@ -419,6 +419,7 @@ function generateWordCloud() {
     wordIndexById.clear();
 
     positionWordsAsync({
+        debugTiming: debug.value,
         words: scaledWords,
         svg: svg.value,
         proximity: FINAL_CONFIG.value.style.chart.words.proximity,
