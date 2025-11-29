@@ -239,7 +239,7 @@ const local = ref(null)
         </select>
     </div>
 
-    <Box :config="config">
+    <Box comp="VueUiRidgeline" :dataset="dataset" :config="config">
         <template #title>VueUiRidgeline</template>
 
         <template #responsive>

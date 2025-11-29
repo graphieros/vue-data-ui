@@ -183,7 +183,7 @@ onMounted(async () => {
         </select>
     </div>
 
-    <Box :config="config">
+    <Box comp="VueUiBullet" :config="config" :dataset="dataset">
         <template #title>VueUiBullet</template>
 
         <template #reponsive>

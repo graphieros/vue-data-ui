@@ -99,7 +99,7 @@ const initLastSelectedShape = ref({
 </script>
 
 <template>
-    <Box :config="config">
+    <Box comp="VueUiAnnotator" :dataset="dataset" :config="config">
         <template #local>
             <LocalVueUiAnnotator @saveAnnotations="save" :config="config" :dataset="{ shapes }">
                 <div>

@@ -182,7 +182,7 @@ onMounted(async() => {
         </select>
     </div>
 
-  <Box :config="config">
+  <Box comp="VueUiCirclePack" :dataset="dataset" :config="config">
     <template #title>VueUiCirclePack</template>
 
     <template #responsive>

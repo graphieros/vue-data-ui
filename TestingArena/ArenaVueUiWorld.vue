@@ -328,7 +328,7 @@ onMounted(async() => {
     <select v-model="currentProjection">
         <option v-for="p in projections">{{ p }}</option>
     </select>
-    <Box :config="config">
+    <Box comp="VueUiWorld" :dataset="dataset" :config="config">
         <template #title>VueUiWorld</template>
         
         <template #local>

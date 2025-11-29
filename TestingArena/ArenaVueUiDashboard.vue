@@ -168,7 +168,7 @@ const dataset = ref([
 </script>
 
 <template>
-    <Box :config="config">
+    <Box comp="VueUiDashboard" :dataset="dataset" :config="config">
         <template #title>VueUiDashboard</template>
 
         <template #responsive>

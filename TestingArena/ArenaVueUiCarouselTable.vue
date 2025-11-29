@@ -210,7 +210,7 @@ function resumeVduiBuild() {
 </script>
 
 <template>
-    <Box :config="config">
+    <Box comp="VueUiCarouselTable" :dataset="dataset" :config="config">
         <template #title>VueUiCarouselTable</template>
 
         <template #local>

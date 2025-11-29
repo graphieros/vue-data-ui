@@ -242,7 +242,7 @@ onMounted(async() => {
         </select>
     </div>
 
-    <Box :config="config">
+    <Box comp="VueUiHistoryPlot" :dataset="dataset" :config="config">
         <template #title>VueUiHistoryPlot</template>
 
         <template #responsive>
