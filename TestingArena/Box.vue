@@ -141,38 +141,54 @@ const highlightedConfig = computed(() => {
     </div>
 
     <div v-if="$slots.responsive" style="margin-left:1rem">
-        Reponsive (Local component)
+        <div class="title">
+            <div class="tag"><BaseIcon name="resize" :size="16" stroke="#1A1A1A" />Responsive</div> {{ comp }}  (Local)
+        </div>
         <slot name="responsive"/>
     </div>
 
     <div style="width: 100%; max-width: 600px; padding: 12px" v-if="comp">
-        <div style="margin: 12px 0; color: grey">Default config (local VueDataUi universal component, knobs don't apply):</div>
+        <div class="title">
+            <div class="tag"><BaseIcon name="settings" :size="16" stroke="#1A1A1A" />Default config</div> {{ comp }} (local VueDataUi universal component, knobs don't apply)
+        </div>
         <LocalVueDataUi :component="comp" :dataset="dataset"/>
     </div>
     
     <div class="box">
-        <div style="width:100%; max-width: 600px">
-            <p>Local (default config with theme only, knobs don't apply)</p>
+        <div style="width:100%; max-width: 600px" v-if="$slots.theme">
+            <div class="title">
+                <div class="tag"><BaseIcon name="palette" :size="16" stroke="#1A1A1A" />Theme only</div> {{ comp }} (local, knobs don't apply)
+            </div>
             <slot name="theme"/>
         </div>
         <div style="width:100%; max-width: 600px">
-            <p>Local</p>
+            <div class="title">
+                <div class="tag"><BaseIcon name="curlySpread" :size="16" stroke="#1A1A1A" />Local</div> {{ comp }}
+            </div>
             <slot name="local"/>
         </div>
         <div style="width:100%; max-width: 600px">
-            <p>VueDataUi Local</p>
+            <div class="title">
+                <div class="tag"><BaseIcon name="curlySpread" :size="16" stroke="#1A1A1A" />VueDataUi universal</div> (local)
+            </div>
             <slot name="VDUI-local"/>
         </div>
         <div style="width: 100%; max-width: 600px">
-            <p>Build (legacy import)</p>
+            <div class="title">
+                <div class="tag"><BaseIcon name="boxes" :size="16" stroke="#1A1A1A" />Build legacy import</div>{{ comp }}
+            </div>
             <slot name="build"/>
         </div>
         <div style="width: 100%; max-width: 600px">
-            <p>Build (treeshaking import)</p>
+            <div class="title">
+                <div class="tag"><BaseIcon name="boxes" :size="16" stroke="#1A1A1A" />Treeshaken build</div>{{ comp }}
+            </div>
             <slot name="build-treesh"/>
         </div>
         <div style="width: 100%; max-width: 600px">
-            <p>VueDataUi build</p>
+            <div class="title">
+                <div class="tag"><BaseIcon name="vueDataUi" :size="16" stroke="#1A1A1A" />VueDataUi universal build</div>
+            </div>
             <slot name="VDUI-build"/>
         </div>
     </div>
@@ -187,10 +203,12 @@ const highlightedConfig = computed(() => {
             COPYING<span style="color:#42d392">........</span>
         </code>
     </button>
-    <div style="margin-top: 1rem; display:flex;align-items:center;gap:0.5rem; background:#ffbb7820; padding: 0.5rem 1rem">
+    <div style="margin-top: 1rem; display:flex;align-items:start;gap:0.5rem; background:#ffbb7820; padding: 0.5rem 1rem">
         <BaseIcon name="triangle" stroke="#ff7f0e" :size="20"/>
         <span style="color:#ffbb78">
-            Callbacks are displayed inside quotes to be <i>readable</i>
+            Callbacks are displayed inside quotes to be <i>readable</i>.<br>
+            This config is derived from the model created in the <code style="color:#66DDAA;background:#66DDAA20;padding: 0 0.5rem">Arena{{ props.comp }}.vue</code> file and is partial.<br>
+            The library component resolves the model's missing config attributes from the <code style="color:#fdd663;background:#fdd66320;padding:0 0.5rem">useConfig.js</code> definition.
         </span>
     </div>
     <div class="config">
@@ -203,6 +221,30 @@ const highlightedConfig = computed(() => {
 </template>
 
 <style scoped>
+.title {
+    padding: 1rem;
+    background: #5f8aee20;
+    color: #5f8aee;
+    display: flex;
+    align-items:center;
+    gap: 0.5rem;
+}
+
+.tag {
+    padding: 0 0.5rem;
+    border-radius: 1rem;
+    background: radial-gradient(at top left, #83a4f2, #5f8aee);
+    color: #1A1A1A;
+    width: fit-content;
+    display: flex;
+    flex-direction: row;
+    align-items:center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    justify-content:center;
+    white-space: nowrap;
+}
+
 summary {
     color: white;
     user-select: none;
@@ -225,6 +267,7 @@ h1, p {
     max-width: 1600px;
     margin: 0 auto;
 }
+
 .config {
     color: #CCCCCC;
     padding: 1rem !important;
@@ -273,5 +316,14 @@ h1, p {
 }
 .btn:hover {
     background-color: #5A5A5A;
+}
+
+@media screen and (max-width: 1000px) {
+    .box {
+        grid-template-columns: repeat(1, 1fr);
+    }
+    .knobs {
+        width: 400px;
+    }
 }
 </style>
