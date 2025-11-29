@@ -242,7 +242,7 @@ onMounted(async() => {
         </select>
     </div>
 
-    <Box>
+    <Box :config="config">
         <template #title>VueUiHistoryPlot</template>
 
         <template #responsive>
@@ -284,10 +284,6 @@ onMounted(async() => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

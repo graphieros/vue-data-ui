@@ -295,7 +295,7 @@ function selectDatapoint(datapoint) {
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
     <button @click="alterDataset">ALTER DATASET</button>
 
-    <Box comp="VueUiSparkHistogram" :dataset="dataset">
+    <Box comp="VueUiSparkHistogram" :dataset="dataset" :config="config">
         <template #title>VueUiSparkHistogram</template>
 
         <template #respnsive>
@@ -343,10 +343,6 @@ function selectDatapoint(datapoint) {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

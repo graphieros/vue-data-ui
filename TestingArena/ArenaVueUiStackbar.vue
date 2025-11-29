@@ -478,7 +478,7 @@ const resp = ref(null);
         </select>
     </div>
 
-<Box comp="VueUiStackbar" :dataset="dataset">
+<Box comp="VueUiStackbar" :dataset="dataset" :config="config">
     <template #title>VueUiStackbar</template>
 
     <template #responsive>
@@ -674,10 +674,6 @@ const resp = ref(null);
 
     <template #knobs>
         <ConfigKnobs :model="model" @change="step += 1"/>
-    </template>
-
-    <template #config>
-        {{ config }}
     </template>
 </Box>
 

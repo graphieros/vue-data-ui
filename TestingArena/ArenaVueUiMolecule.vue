@@ -313,7 +313,7 @@ onMounted(async () => {
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip"/>
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
-    <Box :dataset="dataset" comp="VueUiMolecule">
+    <Box :dataset="dataset" comp="VueUiMolecule" :config="config">
         <template #title>VueUiMolecule</template>
 
         <template #theme>
@@ -421,10 +421,6 @@ onMounted(async () => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

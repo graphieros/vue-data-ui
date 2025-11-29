@@ -183,7 +183,7 @@ onMounted(async () => {
         </select>
     </div>
 
-    <Box>
+    <Box :config="config">
         <template #title>VueUiBullet</template>
 
         <template #reponsive>
@@ -230,10 +230,6 @@ onMounted(async () => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

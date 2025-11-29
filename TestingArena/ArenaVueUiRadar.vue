@@ -317,7 +317,7 @@ onMounted(async () => {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <Box comp="VueUiRadar" :dataset="isPropsToggled ? alternateDataset : dataset">
+    <Box comp="VueUiRadar" :dataset="isPropsToggled ? alternateDataset : dataset" :config="config">
         <template #title>VueUiRadar</template>
 
         <template #responsive>
@@ -460,10 +460,6 @@ onMounted(async () => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

@@ -59,7 +59,7 @@ const step = ref(0)
 
 <template>
     <div style="color: white">{{ dataset }}</div>
-    <Box comp="VueUiGizmo" :dataset="dataset">
+    <Box comp="VueUiGizmo" :dataset="dataset" :config="config">
         <template #title>VueUiGizmo</template>
         
         <template #local>
@@ -109,10 +109,5 @@ const step = ref(0)
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
-
-        <template #config>
-            {{ config }}
-        </template>
-
     </Box>
 </template>

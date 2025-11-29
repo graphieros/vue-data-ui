@@ -77,7 +77,7 @@ const config = computed(() => {
             </template>
         </LocalVueUiKpi>
     </div>
-    <Box>
+    <Box :config="config">
         <template #title>VueUiKpi</template>
         
         <template #local>

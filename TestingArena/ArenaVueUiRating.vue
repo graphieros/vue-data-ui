@@ -111,7 +111,7 @@ const step = ref(0);
 </script>
 
 <template>
-    <Box comp="VueUiRating" :dataset="dataset">
+    <Box comp="VueUiRating" :dataset="dataset" :config="config">
         <template #title>VueUiRating</template>
 
         <template #local>
@@ -235,10 +235,6 @@ const step = ref(0);
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

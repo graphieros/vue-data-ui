@@ -357,7 +357,7 @@ onMounted(async() => {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <Box comp="VueUiHeatmap" :dataset="dataset">
+    <Box comp="VueUiHeatmap" :dataset="dataset" :config="config">
         <template #title>VueUiHeatmap</template>
 
         <template #responsive>
@@ -497,10 +497,6 @@ onMounted(async() => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

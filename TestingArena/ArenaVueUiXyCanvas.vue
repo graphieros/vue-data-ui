@@ -407,7 +407,7 @@ function selectX({ datapoint, index, indexLabel}) {
         </select>
     </div>
 
-    <Box comp="VueUiXyCanvas" :dataset="dataset">
+    <Box comp="VueUiXyCanvas" :dataset="dataset" :config="config">
         <template #title>VueUiXyCanvas</template>
 
         <template #responsive>
@@ -466,10 +466,6 @@ function selectX({ datapoint, index, indexLabel}) {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

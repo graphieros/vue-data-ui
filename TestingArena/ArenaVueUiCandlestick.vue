@@ -405,7 +405,7 @@ function freestyle({ drawingArea, data }) {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <Box comp="VueUiCandlestick" :dataset="dataset">
+    <Box comp="VueUiCandlestick" :dataset="dataset" :config="config">
         <template #title>VueUiCandlestick</template>
 
         <template #responsive>
@@ -565,10 +565,6 @@ function freestyle({ drawingArea, data }) {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

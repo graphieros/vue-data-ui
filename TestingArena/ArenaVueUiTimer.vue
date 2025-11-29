@@ -126,7 +126,7 @@ const localActions = computed(() => {
         <button @click="localActions.lap">LAP</button>
     </div>
 
-    <Box comp="VueUiTimer">
+    <Box comp="VueUiTimer" :config="config">
         <template #title>VueUiTimer</template>
 
         <template #responsive>
@@ -190,10 +190,6 @@ const localActions = computed(() => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

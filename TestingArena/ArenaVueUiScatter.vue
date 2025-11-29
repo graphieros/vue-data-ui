@@ -128,7 +128,7 @@ const model = createModel([
     CHECKBOX("userOptions.buttons.csv", { def: true }),
     CHECKBOX("userOptions.buttons.table", { def: true }),
     CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
-    SELECT("userOptions.position", { def: "right", options: ["left", "right"] }),
+    SELECT("userOptions.position", ["left", "right"], { def: "right"}),
     CHECKBOX("userOptions.showOnChartHover", { def: true }),
     CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
 
@@ -246,7 +246,7 @@ const model = createModel([
     NUMBER("style.legend.fontSize", { def: 14, min: 6, max: 42 }),
     CHECKBOX("style.legend.bold", { def: false }),
     NUMBER("style.legend.roundingValue", { def: 0, min: 0, max: 6 }),
-    SELECT("style.legend.position", { def: "bottom", options: ["top", "bottom"] }),
+    SELECT("style.legend.position", ["top", "bottom"], { def: "bottom" }),
 
     CHECKBOX("style.tooltip.show", { def: true }),
     COLOR("style.tooltip.backgroundColor", { def: "#FFFFFF" }),
@@ -258,7 +258,7 @@ const model = createModel([
     TEXT("style.tooltip.prefix", { def: "P" }),
     TEXT("style.tooltip.suffix", { def: "S" }),
     RANGE("style.tooltip.backgroundOpacity", { def: 100, min: 0, max: 100 }),
-    SELECT("style.tooltip.position", { def: "center", options: ["left", "center", "right"] }),
+    SELECT("style.tooltip.position", ["left", "center", "right"], { def: "center" }),
     NUMBER("style.tooltip.offsetY", { def: 24, min: 0, max: 48 }),
 
     CHECKBOX("table.show", { def: false }),
@@ -418,7 +418,7 @@ function freestyle({ drawingArea, data }) {
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
     <button @click="alterDataset">ALTER DATASET</button>
 
-    <Box comp="VueUiScatter" :dataset="dataset">
+    <Box comp="VueUiScatter" :dataset="dataset" :config="config">
         <template #title>VueUiScatter</template>
 
         <template #responsive>
@@ -569,10 +569,6 @@ function freestyle({ drawingArea, data }) {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

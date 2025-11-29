@@ -1348,7 +1348,7 @@ function freestyle({ data, drawingArea }) {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <Box :dataset="isPropsToggled ? alternateDataset : dataset" comp="VueUiXy">
+    <Box :dataset="isPropsToggled ? alternateDataset : dataset" comp="VueUiXy" :config="config">
         <template #title>VueUiXy</template>
 
         <template #responsive>
@@ -1688,10 +1688,6 @@ function freestyle({ data, drawingArea }) {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 

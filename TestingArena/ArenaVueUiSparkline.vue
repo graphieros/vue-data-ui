@@ -252,7 +252,7 @@ const step = ref(0)
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
     <button @click="alterDataset">ALTER DATASET</button>
 
-    <Box comp="VueUiSparkline" :dataset="dataset">
+    <Box comp="VueUiSparkline" :dataset="dataset" :config="config">
         <template #title>VueUiSparkline</template>
 
         <template #responsive>
@@ -375,10 +375,6 @@ const step = ref(0)
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

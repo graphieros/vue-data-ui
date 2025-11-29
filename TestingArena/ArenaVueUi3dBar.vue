@@ -265,7 +265,7 @@ onMounted(async () => {
     </div>
     <select v-model="selectedDataset" @change="step += 1"><option>simple</option><option>stacked</option></select>
 
-    <Box comp="VueUi3dBar" :dataset="dataset">
+    <Box comp="VueUi3dBar" :dataset="dataset" :config="config">
         <template #title>VueUi3dBar</template>
 
         <template #responsive>
@@ -328,10 +328,6 @@ onMounted(async () => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

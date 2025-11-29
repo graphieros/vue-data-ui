@@ -239,7 +239,7 @@ const local = ref(null)
         </select>
     </div>
 
-    <Box>
+    <Box :config="config">
         <template #title>VueUiRidgeline</template>
 
         <template #responsive>
@@ -289,10 +289,6 @@ const local = ref(null)
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

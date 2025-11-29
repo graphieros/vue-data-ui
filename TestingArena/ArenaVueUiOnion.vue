@@ -289,7 +289,7 @@ onMounted(async () => {
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <Box comp="VueUiOnion" :dataset="dataset">
+    <Box comp="VueUiOnion" :dataset="dataset" :config="config">
         <template #title>VueUiOnion</template>
 
         <template #responsive>
@@ -430,10 +430,6 @@ onMounted(async () => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

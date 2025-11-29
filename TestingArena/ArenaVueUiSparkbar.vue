@@ -195,7 +195,7 @@ const showTitleSlot = ref(false);
         <label for="toggle-title-slot">Toggle title slot</label>
     </div>
 
-    <Box comp="VueUiSparkbar" :dataset="dataset"> 
+    <Box comp="VueUiSparkbar" :dataset="dataset" :config="config"> 
         <template #title>VueUiSparkbar</template>
         
         <template #theme>
@@ -299,10 +299,6 @@ const showTitleSlot = ref(false);
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1" />
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

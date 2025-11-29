@@ -4,6 +4,7 @@ import { RouterLink, RouterView } from 'vue-router'
 //@ts-ignore
 import BaseIcon from "../../src/atoms/BaseIcon.vue"
 import "../../src/vue-data-ui.css"
+import CURRENT_PACKAGE from "../../package.json"
 
 const components = [
   { name: 'ArenaVueUi3dBar', icon: 'chart3dBar'},  
@@ -94,6 +95,7 @@ const filteredComponents = computed(() => {
               <img alt="Vue logo" src="@/assets/logo.png" width="48" />
               <span class="gradient-text" style="font-weight: bolder">Testing arena</span>
             </div>
+            <code style="text-align:right; margin-top:-0.7rem;">vue-data-ui {{ CURRENT_PACKAGE.version }}</code>
   
             <div class="nav-search-wrapper">
               <input
@@ -135,7 +137,7 @@ const filteredComponents = computed(() => {
     </div>
   </header>
 
-  <main>
+  <main style="width: calc(100vw - 400px)">
     <RouterView />
   </main>
 </template>

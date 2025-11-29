@@ -170,7 +170,7 @@ onMounted(async () => {
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
     <button @click="alterDataset">ALTER DATASET</button>
 
-    <Box comp="VueUiTiremarks" :dataset="dataset">
+    <Box comp="VueUiTiremarks" :dataset="dataset" :config="config">
         <template #title>VueUiTiremarks</template>
 
         <template #responsive>
@@ -242,10 +242,6 @@ onMounted(async () => {
         
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

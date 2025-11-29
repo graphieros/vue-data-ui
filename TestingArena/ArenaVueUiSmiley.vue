@@ -39,7 +39,7 @@ const model = createModel([
     CHECKBOX("style.icons.filled", { def: false }),
     CHECKBOX("style.icons.useGradient", { def: true }),
 
-    SELECT("style.title.textAlign", { def: "center", options: ["left", "center", "right"] }),
+    SELECT("style.title.textAlign", ["left", "center", "right"], { def: "center" }),
     NUMBER("style.title.fontSize", { def: 20, min: 8, max: 42 }),
     COLOR("style.title.color", { def: "#1A1A1A" }),
     CHECKBOX("style.title.bold", { def: true }),
@@ -55,7 +55,7 @@ const model = createModel([
     NUMBER("style.rating.fontSize", { def: 28, min: 8, max: 96 }),
     CHECKBOX("style.rating.bold", { def: true }),
     NUMBER("style.rating.roundingValue", { def: 1, min: 0, max: 6 }),
-    SELECT("style.rating.position", { def: "bottom", options: ["top", "right", "bottom", "left"] }),
+    SELECT("style.rating.position", ["top", "right", "bottom", "left"], { def: "bottom" }),
     NUMBER("style.rating.offsetY", { def: 12, min: -50, max: 50 }),
     NUMBER("style.rating.offsetX", { def: 0, min: -50, max: 50 }),
 
@@ -97,7 +97,7 @@ const config = computed(() => {
 </script>
 
 <template>
-    <Box comp="VueUiSmiley" :dataset="dataset">
+    <Box comp="VueUiSmiley" :dataset="dataset" :config="config">
         <template #title>VueUiSmiley</template>
 
         <template #local>
@@ -126,10 +126,6 @@ const config = computed(() => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

@@ -367,7 +367,7 @@ function selectDatapoint(datapoint) {
 <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
 <button @click="alterDataset">ALTER DATASET (shortArray only)</button>
 
-<Box comp="VueUiQuickChart" :dataset="dataset">
+<Box comp="VueUiQuickChart" :dataset="dataset" :config="config">
     <template #title>VueUiQuickChart</template>
 
     <template #responsive>
@@ -502,10 +502,6 @@ function selectDatapoint(datapoint) {
 
     <template #knobs>
         <ConfigKnobs :model="model" @change="step += 1"/>
-    </template>
-
-    <template #config>
-        {{ config }}
     </template>
 </Box>
 </template>

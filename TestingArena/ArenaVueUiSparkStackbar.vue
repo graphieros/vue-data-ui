@@ -205,7 +205,7 @@ const local = ref(null);
     <button @click="toggleProps">TOGGLE PROPS: {{ isPropsToggled }}</button>
     <button @click="alterDataset">ALTER DATASET</button>
 
-    <Box comp="VueUiSparkStackbar" :dataset="dataset">
+    <Box comp="VueUiSparkStackbar" :dataset="dataset" :config="config">
         <template #title>VueUiSparkStackbar</template>
 
         <template #theme>
@@ -248,10 +248,6 @@ const local = ref(null);
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

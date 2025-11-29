@@ -423,79 +423,75 @@ function selectX({ dataset, index, indexLabel }) {
 </script>
 
 <template>
-<div style="margin: 12px 0; color: white">
-    Theme:
-    <select v-model="currentTheme" @change="step += 1">
-        <option v-for="opt in themeOptions">{{ opt }}</option>
-    </select>
-</div>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
 
-<Box comp="VueUiStackline" :dataset="dataset">
-    <template #title>VueUiStackline</template>
+    <Box comp="VueUiStackline" :dataset="dataset" :config="config">
+        <template #title>VueUiStackline</template>
 
-    <template #responsive>
-        <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-            <LocalVueUiStackline
-                ref="resp"
-                :dataset="dataset"
-                :config="{
-                    ...config,
-                    responsive: true
-                }"
-            >
+        <template #responsive>
+            <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
+                <LocalVueUiStackline
+                    ref="resp"
+                    :dataset="dataset"
+                    :config="{
+                        ...config,
+                        responsive: true
+                    }"
+                >
 
+                </LocalVueUiStackline>
+            </div>
+        </template>
+
+        <template #theme>
+            <LocalVueUiStackline :dataset="dataset" :config="configTheme" />
+        </template>
+
+        <template #local>
+            <LocalVueUiStackline :dataset="dataset" :config="config" ref="local" @selectX="selectX" :selectedXIndex="selectedX">
+                <!-- <template #pattern="{ datapoint, patternId }">
+                    <pattern :id="patternId" width="70" height="8" patternTransform="scale(2)"
+                        patternUnits="userSpaceOnUse" opacity="0.5">
+                        <rect width="100%" height="100%" fill="#FFFFFF20" />
+                        <path fill="none" stroke="#ecc94b"
+                            d="M-.02 22c8.373 0 11.938-4.695 16.32-9.662C20.785 7.258 25.728 2 35 2s14.215 5.258 18.7 10.338C58.082 17.305 61.647 22 70.02 22M-.02 14.002C8.353 14 11.918 9.306 16.3 4.339 20.785-.742 25.728-6 35-6S49.215-.742 53.7 4.339c4.382 4.967 7.947 9.661 16.32 9.664M70 6.004c-8.373-.001-11.918-4.698-16.3-9.665C49.215-8.742 44.272-14 35-14S20.785-8.742 16.3-3.661C11.918 1.306 8.353 6-.02 6.002" />
+                    </pattern>
+                </template> -->
+                <!-- <template #source>
+                    SRC
+                </template> -->
             </LocalVueUiStackline>
-        </div>
-    </template>
+        </template>
 
-    <template #theme>
-        <LocalVueUiStackline :dataset="dataset" :config="configTheme" />
-    </template>
+        <template #VDUI-local>
+            <LocalVueDataUi component="VueUiStackline" :dataset="dataset" :config="config" :selectedXIndex="selectedX"/>
+        </template>
 
-    <template #local>
-        <LocalVueUiStackline :dataset="dataset" :config="config" ref="local" @selectX="selectX" :selectedXIndex="selectedX">
-            <!-- <template #pattern="{ datapoint, patternId }">
-                <pattern :id="patternId" width="70" height="8" patternTransform="scale(2)"
-                    patternUnits="userSpaceOnUse" opacity="0.5">
-                    <rect width="100%" height="100%" fill="#FFFFFF20" />
-                    <path fill="none" stroke="#ecc94b"
-                        d="M-.02 22c8.373 0 11.938-4.695 16.32-9.662C20.785 7.258 25.728 2 35 2s14.215 5.258 18.7 10.338C58.082 17.305 61.647 22 70.02 22M-.02 14.002C8.353 14 11.918 9.306 16.3 4.339 20.785-.742 25.728-6 35-6S49.215-.742 53.7 4.339c4.382 4.967 7.947 9.661 16.32 9.664M70 6.004c-8.373-.001-11.918-4.698-16.3-9.665C49.215-8.742 44.272-14 35-14S20.785-8.742 16.3-3.661C11.918 1.306 8.353 6-.02 6.002" />
-                </pattern>
-            </template> -->
-            <!-- <template #source>
-                SRC
-            </template> -->
-        </LocalVueUiStackline>
-    </template>
+        <template #build>
+            <VueUiStackline :dataset="dataset" :config="config" :selectedXIndex="selectedX">
 
-    <template #VDUI-local>
-        <LocalVueDataUi component="VueUiStackline" :dataset="dataset" :config="config" :selectedXIndex="selectedX"/>
-    </template>
+            </VueUiStackline>
+        </template>
 
-    <template #build>
-        <VueUiStackline :dataset="dataset" :config="config" :selectedXIndex="selectedX">
+        <template #build-treesh>
+            <VueUiStacklineTreeshaken :dataset="dataset" :config="config" :selectedXIndex="selectedX">
 
-        </VueUiStackline>
-    </template>
+            </VueUiStacklineTreeshaken>
+        </template>
 
-    <template #build-treesh>
-        <VueUiStacklineTreeshaken :dataset="dataset" :config="config" :selectedXIndex="selectedX">
+        <template #VDUI-build>
+            <VueDataUi component="VueUiStackline" :dataset="dataset" :config="config" :selectedXIndex="selectedX">
 
-        </VueUiStacklineTreeshaken>
-    </template>
+            </VueDataUi>
+        </template>
 
-    <template #VDUI-build>
-        <VueDataUi component="VueUiStackline" :dataset="dataset" :config="config" :selectedXIndex="selectedX">
-
-        </VueDataUi>
-    </template>
-
-    <template #knobs>
-        <ConfigKnobs :model="model" @change="step += 1"/>
-    </template>
-
-    <template #config>
-        {{ config }}
-    </template>
-</Box>
+        <template #knobs>
+            <ConfigKnobs :model="model" @change="step += 1"/>
+        </template>
+    </Box>
 </template>

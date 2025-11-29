@@ -41,15 +41,36 @@ const filteredModel = computed(() => {
         </div>
 
         <div
-            v-for="knob in filteredModel"
+            v-for="(knob, i) in filteredModel"
             :key="knob.key"
             class="knob"
             :style="getKnobStyle(knob.key)"
         >
             <label><code>{{ knob.key }}</code></label>
             <div>
+                <input 
+                    type="color" 
+                    v-if="knob.type === 'color'" 
+                    v-model="knob.def" @change="$emit('change')"
+                    :list="`preset_${i}`"
+                >
+                    <datalist :id="`preset_${i}`">
+                        <option>#1A1A1A</option>
+                        <option>#8A8A8A</option>
+                        <option>#CCCCCC</option>
+                        <option>#FFFFFF</option>
+                        <option>#1f77b4</option>
+                        <option>#aec7e8</option>
+                        <option>#ff7f0e</option>
+                        <option>#ffbb78</option>
+                        <option>#2ca02c</option>
+                        <option>#d62728</option>
+                        <option>#ff9896</option>
+                    </datalist>
+                </input>
+
                 <input
-                    v-if="!['none', 'select'].includes(knob.type)"
+                    v-if="!['none', 'select', 'color'].includes(knob.type)"
                     :step="knob.step"
                     :type="knob.type"
                     :min="knob.min ?? 0"

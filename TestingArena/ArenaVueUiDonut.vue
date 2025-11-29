@@ -8,6 +8,7 @@ import LocalPattern from "../src/atoms/vue-ui-pattern.vue";
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import { VueUiDonut as VueUiDonutTreeshaken } from "vue-data-ui/vue-ui-donut";
 
 const { vue_ui_donut: DEFAULT_CONFIG } = useConfig();
 
@@ -401,7 +402,7 @@ onMounted(async () => {
     </div>
     <button @click="addDatapoint">ADD DATAPOINT</button>
 
-    <Box comp="VueUiDonut" :dataset="dataset">
+    <Box comp="VueUiDonut" :dataset="dataset" :config="config">
         <template #title>VueUiDonut</template>
 
         <template #responsive>
@@ -622,6 +623,14 @@ onMounted(async () => {
             </VueUiDonut>
         </template>
 
+        <template #build-treesh>
+            <VueUiDonutTreeshaken 
+                :dataset="dataset" 
+                :config="config"
+            >
+            </VueUiDonutTreeshaken>
+        </template>
+
         <template #VDUI-build>
             <VueDataUi component="VueUiDonut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" @selectDatapoint="selectDatapoint">
                 <template #pattern="{ seriesIndex, patternId }">
@@ -682,10 +691,6 @@ onMounted(async () => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

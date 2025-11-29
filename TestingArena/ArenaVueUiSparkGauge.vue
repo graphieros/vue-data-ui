@@ -117,7 +117,7 @@ const step = ref(0);
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
-    <Box comp="VueUiSparkgauge" :dataset="dataset">
+    <Box comp="VueUiSparkgauge" :dataset="dataset" :config="config">
         <template #title>VueUiSparkgauge</template>
 
         <template #theme>
@@ -160,10 +160,6 @@ const step = ref(0);
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

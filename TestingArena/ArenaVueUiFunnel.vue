@@ -200,7 +200,7 @@ onMounted(async () => {
         </select>
     </div>
 
-    <Box>
+    <Box :config="config">
         <template #title>VueUiFunnel</template>
 
         <template #responsive>

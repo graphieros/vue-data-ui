@@ -438,7 +438,7 @@ onMounted(async () => {
         </select>
     </div>
 
-    <Box comp="VueUiFlow" :dataset="dataset">
+    <Box comp="VueUiFlow" :dataset="dataset" :config="config">
         <template #title>VueUiFlow</template>
 
         <template #responsive>

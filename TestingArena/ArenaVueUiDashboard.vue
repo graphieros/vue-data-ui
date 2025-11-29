@@ -168,7 +168,7 @@ const dataset = ref([
 </script>
 
 <template>
-    <Box>
+    <Box :config="config">
         <template #title>VueUiDashboard</template>
 
         <template #responsive>
@@ -194,10 +194,5 @@ const dataset = ref([
         <template #knobs>
           <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
-
-        <template #config>
-            {{ config }}
-        </template>
-
     </Box>
 </template>

@@ -95,7 +95,7 @@ const model = createModel([
     CHECKBOX("userOptions.buttons.csv", { def: true }),
     CHECKBOX("userOptions.buttons.table", { def: true }),
     CHECKBOX("userOptions.buttons.fullscreen", { def: true }),
-    SELECT("userOptions.position", { def: "right", options: ["left", "right"] }),
+    SELECT("userOptions.position", ["left", "right"], { def: "right" }),
     CHECKBOX("userOptions.showOnChartHover", { def: true }),
     CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),
     NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
@@ -124,7 +124,7 @@ const model = createModel([
     NUMBER("style.chart.legend.roundingPercentage", { def: 2, min: 0, max: 12 }),
     CHECKBOX("style.chart.legend.showValue", { def: true }),
     CHECKBOX("style.chart.legend.showPercentage", { def: false }),
-    SELECT("style.chart.legend.position", { def: "bottom", options: ["top", "bottom"] }),
+    SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
     TEXT("style.chart.title.text", { def: "Lorem ipsum dolor sit amet" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A" }),
     NUMBER("style.chart.title.fontSize", { def: 20, min: 8, max: 48 }),
@@ -142,7 +142,7 @@ const model = createModel([
     NUMBER("style.chart.tooltip.roundingValue", { def: 2, min: 0, max: 12 }),
     NUMBER("style.chart.tooltip.roundingPercentage", { def: 2, min: 0, max: 12 }),
     RANGE("style.chart.tooltip.backgroundOpacity", { def: 100, min: 0, max: 100 }),
-    SELECT("style.chart.tooltip.position", { def: "center", options: ["left", "center", "right"] }),
+    SELECT("style.chart.tooltip.position", ["left", "center", "right"], { def: "center"  }),
     NUMBER("style.chart.tooltip.offsetY", { def: 24, min: 0, max: 48 }),
     CHECKBOX("table.show", { def: false }),
     CHECKBOX("table.useDialog", { def: true }),
@@ -278,7 +278,7 @@ const step = ref(0)
         <label for="custom-tooltip" style="color:#CCCCCC">Test custom tooltip</label>
     </div>
 
-    <Box comp="VueUiRings" :dataset="dataset">
+    <Box comp="VueUiRings" :dataset="dataset" :config="config">
         <template #title>VueUiRings</template>
 
         <template #responsive>
@@ -427,10 +427,6 @@ const step = ref(0)
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

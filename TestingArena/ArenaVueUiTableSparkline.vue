@@ -172,7 +172,7 @@ const step = ref(0)
             <option v-for="opt in themeOptions">{{ opt }}</option>
         </select>
     </div>
-    <Box comp="VueUiTableSparkline" :dataset="dataset">
+    <Box comp="VueUiTableSparkline" :dataset="dataset" :config="config">
         <template #title>VueUiTableSparkline</template>
 
         <template #theme>
@@ -217,10 +217,6 @@ const step = ref(0)
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

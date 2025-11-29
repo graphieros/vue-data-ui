@@ -192,7 +192,7 @@ onMounted(async () => {
         </select>
     </div>
 
-    <Box comp="VueUiMoodRadar" :dataset="dataset">
+    <Box comp="VueUiMoodRadar" :dataset="dataset" :config="config">
         <template #title>VueUiMoodRadar</template>
 
         <template #responsive>
@@ -298,10 +298,6 @@ onMounted(async () => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

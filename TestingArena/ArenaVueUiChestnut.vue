@@ -589,97 +589,93 @@ onMounted(async () => {
     </LocalVueUiChestnut>
     </div>
 
-<Box comp="VueUiChestnut" :dataset="dataset">
-    <template #title>VueUiChestnut</template>
+    <Box comp="VueUiChestnut" :dataset="dataset" :config="config">
+        <template #title>VueUiChestnut</template>
 
-    <template #theme>
-        <LocalVueUiChestnut :dataset="dataset" :config="configTheme" />
-    </template>
-
-    <template #local>
-        <LocalVueUiChestnut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="local">
-            <template #optionPdf>
-                PRINT PDF
-            </template>
-            <template #svg="{ svg }">
-                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-            </template>
-            <!-- <template #legend="{ legend }">
-                #LEGEND
-                <div style="font-size: 8px">
-                    {{ legend }}
-                </div>
-            </template> -->
-        </LocalVueUiChestnut>
-    </template>
-    
-    <template #VDUI-local>
-        <LocalVueDataUi component="VueUiChestnut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiLocal">
-            <template #svg="{ svg }">
-                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-            </template>
-            <!-- <template #legend="{ legend }">
-                #LEGEND
-                <div style="font-size: 8px">
-                    {{ legend }}
-                </div>
-            </template> -->
-        </LocalVueDataUi>
-    </template>
-    
-    <template #build>
-        <VueUiChestnut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="build">
-            <template #svg="{ svg }">
-                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-            </template>
-            <!-- <template #legend="{ legend }">
-                #LEGEND
-                <div style="font-size: 8px">
-                    {{ legend }}
-                </div>
-            </template> -->
-        </VueUiChestnut>
-    </template>
-    
-    <template #build-treesh>
-        <VueUiChestnutTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="build">
-            <template #svg="{ svg }">
-                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-            </template>
-            <!-- <template #legend="{ legend }">
-                #LEGEND
-                <div style="font-size: 8px">
-                    {{ legend }}
-                </div>
-            </template> -->
-        </VueUiChestnutTreeshaken>
-    </template>
-    
-    <template #VDUI-build>
-        <VueDataUi component="VueUiChestnut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiBuild">
-            <template #svg="{ svg }">
-                <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
-                <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
-            </template>
-            <!-- <template #legend="{ legend }">
-                #LEGEND
-                <div style="font-size: 8px">
-                    {{ legend }}
-                </div>
-            </template> -->
-        </VueDataUi>
-    </template>
-
-    <template #knobs>
-        <ConfigKnobs :model="model" @change="step += 1"/>
+        <template #theme>
+            <LocalVueUiChestnut :dataset="dataset" :config="configTheme" />
         </template>
 
-    <template #config>
-        {{ config }}
-    </template>
-</Box>
+        <template #local>
+            <LocalVueUiChestnut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="local">
+                <template #optionPdf>
+                    PRINT PDF
+                </template>
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <!-- <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template> -->
+            </LocalVueUiChestnut>
+        </template>
+        
+        <template #VDUI-local>
+            <LocalVueDataUi component="VueUiChestnut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-lodal_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiLocal">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <!-- <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template> -->
+            </LocalVueDataUi>
+        </template>
+        
+        <template #build>
+            <VueUiChestnut :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <!-- <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template> -->
+            </VueUiChestnut>
+        </template>
+        
+        <template #build-treesh>
+            <VueUiChestnutTreeshaken :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="build">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <!-- <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template> -->
+            </VueUiChestnutTreeshaken>
+        </template>
+        
+        <template #VDUI-build>
+            <VueDataUi component="VueUiChestnut" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" @selectRoot="selectRoot" @selectBranch="selectBranch" @selectNut="selectNut" ref="vduiBuild">
+                <template #svg="{ svg }">
+                    <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
+                    <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>
+                </template>
+                <!-- <template #legend="{ legend }">
+                    #LEGEND
+                    <div style="font-size: 8px">
+                        {{ legend }}
+                    </div>
+                </template> -->
+            </VueDataUi>
+        </template>
+
+        <template #knobs>
+            <ConfigKnobs :model="model" @change="step += 1"/>
+        </template>
+    </Box>
 </template>

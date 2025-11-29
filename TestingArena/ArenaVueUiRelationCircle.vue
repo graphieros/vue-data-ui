@@ -211,7 +211,7 @@ onMounted(async() => {
         </select>
     </div>
 
-    <Box comp="VueUiRelationCircle" :dataset="dataset">
+    <Box comp="VueUiRelationCircle" :dataset="dataset" :config="config">
         <template #title>VueUiRelationCircle</template>
 
         <template #responsive>
@@ -300,10 +300,6 @@ onMounted(async() => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>

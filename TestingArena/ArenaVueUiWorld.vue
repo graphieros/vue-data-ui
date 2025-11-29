@@ -328,7 +328,7 @@ onMounted(async() => {
     <select v-model="currentProjection">
         <option v-for="p in projections">{{ p }}</option>
     </select>
-    <Box>
+    <Box :config="config">
         <template #title>VueUiWorld</template>
         
         <template #local>
@@ -363,10 +363,5 @@ onMounted(async() => {
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
         </template>
-
-        <template #config>
-            {{ config }}
-        </template>
-
     </Box>
 </template>

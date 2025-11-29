@@ -307,7 +307,7 @@ onMounted(async() => {
     </div>
     <button @click="addDatapoint">ADD DATAPOINT</button>
 
-    <Box comp="VueUiNestedDonuts" :dataset="dataset">
+    <Box comp="VueUiNestedDonuts" :dataset="dataset" :config="config">
         <template #title>VueUiNestedDonuts</template>
 
         <template #responsive>
@@ -447,10 +447,6 @@ onMounted(async() => {
 
         <template #knobs>
             <ConfigKnobs :model="model" @change="step += 1"/>
-        </template>
-
-        <template #config>
-            {{ config }}
         </template>
     </Box>
 </template>
