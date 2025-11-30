@@ -1,4 +1,12 @@
 <script setup>
+/**
+ * THIS TESTING PAGE IS DEPRECATED.
+ * 
+ * Use the /manual-testing/src/App.vue
+ * cd into manual-testing and npm run dev
+ * 
+ */
+
 import { markRaw, ref, computed } from "vue";
 import TestingArena from "./TestingArena.vue";
 import ArenaVueUiXy from "../TestingArena/ArenaVueUiXy.vue";

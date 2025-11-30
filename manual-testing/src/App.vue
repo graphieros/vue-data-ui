@@ -109,7 +109,7 @@ const filteredComponents = computed(() => {
   
             <div style="display:flex; margin-left: -1rem;">
               <RouterLink to="/">
-                <div style="display:flex;align-items:center;gap:1rem;">
+                <div style="display:flex;align-items:center;gap:1rem; padding: 0 0.5rem">
                   <BaseIcon name="home" /> Home
                 </div>
               </RouterLink>
@@ -225,7 +225,8 @@ nav {
   flex-direction: row;
   gap: 1rem;
   align-items:center;
-  padding: 0.2rem 0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
 }
 
 .nav-item:hover {
@@ -240,7 +241,7 @@ nav {
 }
 
 nav a.router-link-exact-active {
-    background: linear-gradient(90deg, #42d392, #5f8aee);
+  background: linear-gradient(90deg, #42d392, #5f8aee);
   background-size: 100% 100%;
   background-repeat: no-repeat;
   -webkit-background-clip: text;
@@ -254,13 +255,17 @@ nav a.router-link-exact-active:hover {
   background-color: transparent;
 }
 
-nav :has(.router-link-exact-active) svg path {
-  fill: #5f8aee;
+:deep(a.router-link-exact-active .nav-item .nav-icon path) {
+  stroke: #42d392 !important;
+}
+
+:deep(a.router-link-exact-active .nav-item) {
+  background: #FFFFFF10;
 }
 
 nav a {
   display: inline-block;
-  padding: 0 1rem;
+  padding: 0;
   font-size: 1rem;
 }
 </style>

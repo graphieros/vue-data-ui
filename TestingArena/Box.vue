@@ -131,7 +131,12 @@ const highlightedConfig = computed(() => {
 
 <template>
     <h1 class="gradient-text" style="width:fit-content; font-weight: 900"><slot name="title"/></h1>
-    <button class="reset" @click="refresh">RELOAD PAGE</button>
+    <button class="btn btn-reset" @click="refresh">
+        <BaseIcon :size="20" stroke="#ff7f0e" name="restart"/>
+        <code style="font-weight: bold;">
+            RELOAD PAGE
+        </code>
+    </button>
 
     <div class="knobs">
         <details>
@@ -292,14 +297,6 @@ h1, p {
     width: 800px;
     z-index: 10000000;
 }
-.reset {
-    background: #ff6400;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 3px;
-    margin: 12px 0;
-}
 
 .btn {
     background-color: #3A3A3A;
@@ -316,6 +313,10 @@ h1, p {
 }
 .btn:hover {
     background-color: #5A5A5A;
+}
+
+.btn-reset {
+    margin: 0 0 2rem 0;
 }
 
 @media screen and (max-width: 1000px) {
