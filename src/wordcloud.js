@@ -10,6 +10,9 @@
  * - position words inside a given area using a spiral placement algorithm
  */
 
+/* ------------------------------------------------------------------------- */
+/* Bitmap generation                                                         */
+/* ------------------------------------------------------------------------- */
 
 /**
  * Generates a bitmap and mask representing a word, given font size and padding.
@@ -17,9 +20,6 @@
  *  - per-pixel mask: wordMask = Array<[x,y]>
  *  - per-row run-length encoding: runs = Array<[y, xStart, xEnd]>
  *    where xStart and xEnd are inclusive and describe contiguous opaque pixels.
- *
- * This preserves the exact set of opaque pixels as before, but also gives us a
- * compact representation for fast bitwise collision checks.
  *
  * @param {Object} params
  * @param {Object} params.word - The word object, must contain a `name` string.
@@ -44,80 +44,89 @@ export function getWordBitmap({
     fontSize,
     pad,
     canvas,
-    ctx,
+    ctx: context,
     svg
 }) {
-    const bold = svg.style && svg.style.bold;
-    const font = `${bold ? "bold " : ""}${fontSize}px Arial`;
+    const isBold = svg.style && svg.style.bold;
+    const font = `${isBold ? "bold " : ""}${fontSize}px Arial`;
 
-    ctx.font = font;
-    const metrics = ctx.measureText(word.name);
-    const textW = Math.ceil(metrics.width) + 2 + (pad ? pad * 2 : 0);
-    const textH = Math.ceil(fontSize) + 2 + (pad ? pad * 2 : 0);
+    context.font = font;
+    const metrics = context.measureText(word.name);
+    const textWidth = Math.ceil(metrics.width) + 2 + (pad ? pad * 2 : 0);
+    const textHeight = Math.ceil(fontSize) + 2 + (pad ? pad * 2 : 0);
 
-    canvas.width = textW;
-    canvas.height = textH;
+    canvas.width = textWidth;
+    canvas.height = textHeight;
 
-    ctx.font = font;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "black";
-    ctx.fillText(word.name, textW / 2, textH / 2);
+    context.font = font;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = "black";
+    context.fillText(word.name, textWidth / 2, textHeight / 2);
 
-    const image = ctx.getImageData(0, 0, textW, textH);
+    const image = context.getImageData(0, 0, textWidth, textHeight);
     const data = image.data;
 
     const wordMask = [];
     const runs = [];
 
-    let minX = textW;
-    let minY = textH;
-    let maxX = 0;
-    let maxY = 0;
-    let found = false;
+    let minimumX = textWidth;
+    let minimumY = textHeight;
+    let maximumX = 0;
+    let maximumY = 0;
+    let hasOpaquePixel = false;
 
-    for (let y = 0; y < textH; y += 1) {
-        const rowOffset = y * textW * 4;
+    for (let y = 0; y < textHeight; y += 1) {
+        const rowOffset = y * textWidth * 4;
         let runStart = -1;
-        let inRun = false;
+        let isInRun = false;
 
-        for (let x = 0; x < textW; x += 1) {
+        for (let x = 0; x < textWidth; x += 1) {
             const alphaIndex = rowOffset + x * 4 + 3;
-            const opaque = data[alphaIndex] > 1;
+            const isOpaque = data[alphaIndex] > 1;
 
-            if (opaque) {
+            if (isOpaque) {
                 wordMask.push([x, y]);
-                found = true;
+                hasOpaquePixel = true;
 
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                if (y < minY) minY = y;
-                if (y > maxY) maxY = y;
+                if (x < minimumX) minimumX = x;
+                if (x > maximumX) maximumX = x;
+                if (y < minimumY) minimumY = y;
+                if (y > maximumY) maximumY = y;
 
-                if (!inRun) {
-                    inRun = true;
+                if (!isInRun) {
+                    isInRun = true;
                     runStart = x;
                 }
-            } else if (inRun) {
+            } else if (isInRun) {
                 runs.push([y, runStart, x - 1]);
-                inRun = false;
+                isInRun = false;
                 runStart = -1;
             }
         }
 
-        if (inRun) {
-            runs.push([y, runStart, textW - 1]);
+        if (isInRun) {
+            runs.push([y, runStart, textWidth - 1]);
         }
     }
 
-    if (!found) {
-        minX = 0;
-        minY = 0;
-        maxX = 0;
-        maxY = 0;
+    if (!hasOpaquePixel) {
+        minimumX = 0;
+        minimumY = 0;
+        maximumX = 0;
+        maximumY = 0;
     }
 
-    return { w: textW, h: textH, wordMask, runs, minX, minY, maxX, maxY };
+    return {
+        w: textWidth,
+        h: textHeight,
+        wordMask,
+        runs,
+        minX: minimumX,
+        minY: minimumY,
+        maxX: maximumX,
+        maxY: maximumY
+    };
 }
 
 /* ------------------------------------------------------------------------- */
@@ -137,41 +146,81 @@ function createRunsFromMask(wordMask) {
     const runs = [];
     if (!wordMask.length) return runs;
 
-    let currentY = wordMask[0][1];
-    let runStart = wordMask[0][0];
-    let prevX = runStart;
+    let currentRowY = wordMask[0][1];
+    let currentRunStart = wordMask[0][0];
+    let previousX = currentRunStart;
 
-    for (let i = 1; i < wordMask.length; i += 1) {
-        const x = wordMask[i][0];
-        const y = wordMask[i][1];
+    for (let index = 1; index < wordMask.length; index += 1) {
+        const x = wordMask[index][0];
+        const y = wordMask[index][1];
 
-        if (y !== currentY) {
-            runs.push([currentY, runStart, prevX]);
-            currentY = y;
-            runStart = x;
-            prevX = x;
+        if (y !== currentRowY) {
+            runs.push([currentRowY, currentRunStart, previousX]);
+            currentRowY = y;
+            currentRunStart = x;
+            previousX = x;
+        } else if (x === previousX + 1) {
+            previousX = x;
         } else {
-            if (x === prevX + 1) {
-                prevX = x;
-            } else {
-                runs.push([currentY, runStart, prevX]);
-                runStart = x;
-                prevX = x;
-            }
+            runs.push([currentRowY, currentRunStart, previousX]);
+            currentRunStart = x;
+            previousX = x;
         }
     }
 
-    runs.push([currentY, runStart, prevX]);
+    runs.push([currentRowY, currentRunStart, previousX]);
 
     return runs;
 }
 
 /* ------------------------------------------------------------------------- */
+/* Bit-packed mask helpers                                                   */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Builds a 32-bit mask for a contiguous run of bits between bitStart and bitEnd (inclusive).
+ * Example: bitStart = 2, bitEnd = 4 -> 0b00011100
+ *
+ * @param {number} bitStart - Index of the first bit in the run (0–31).
+ * @param {number} bitEnd - Index of the last bit in the run (0–31), inclusive.
+ * @returns {number} A 32-bit unsigned integer with bits [bitStart, bitEnd] set to 1.
+ */
+export function buildSingleWordMask(bitStart, bitEnd) {
+    const widthBits = bitEnd - bitStart + 1;
+    // 0xFFFFFFFF >>> (32 - widthBits) => low `widthBits` bits set to 1
+    // then shift left by bitStart to position the run.
+    return ((0xFFFFFFFF >>> (32 - widthBits)) << bitStart) >>> 0;
+}
+
+/**
+ * Builds a 32-bit mask for all bits from bitStart to the most-significant bit (31) set to 1.
+ * Example: bitStart = 3 -> 0b11111000 (for a truncated 8-bit view).
+ *
+ * @param {number} bitStart - Index of the first bit to set (0–31).
+ * @returns {number} A 32-bit unsigned integer with bits [bitStart, 31] set to 1.
+ */
+export function buildFirstWordMask(bitStart) {
+    // Shift an all-ones word left; bits below bitStart become 0, above remain 1.
+    return (0xFFFFFFFF << bitStart) >>> 0;
+}
+
+/**
+ * Builds a 32-bit mask for all bits from the least-significant bit (0) up to bitEnd set to 1.
+ * Example: bitEnd = 4 -> 0b00011111 (for a truncated 8-bit view).
+ *
+ * @param {number} bitEnd - Index of the last bit to set (0–31), inclusive.
+ * @returns {number} A 32-bit unsigned integer with bits [0, bitEnd] set to 1.
+ */
+export function buildLastWordMask(bitEnd) {
+    // Shift an all-ones word right; bits above bitEnd become 0, below remain 1.
+    return (0xFFFFFFFF >>> (31 - bitEnd)) >>> 0;
+}
+/* ------------------------------------------------------------------------- */
 /* Bit-packed mask and run-based collision                                   */
 /* ------------------------------------------------------------------------- */
 
 /**
- * Internal: check if a word (encoded as row runs) can be placed at (wx, wy)
+ * Internal: check if a word (encoded as row runs) can be placed at (wordX, wordY)
  * on a bit-packed occupancy mask without overlap or out-of-bounds.
  *
  * maskBits layout:
@@ -183,51 +232,54 @@ function createRunsFromMask(wordMask) {
 function canPlaceAtRuns({
     maskBits,
     maskRowStride,
-    maskW,
-    maskH,
-    wx,
-    wy,
+    maskW: maskWidth,
+    maskH: maskHeight,
+    wx: wordX,
+    wy: wordY,
     runs
 }) {
-    for (let i = 0; i < runs.length; i += 1) {
-        const localY = runs[i][0];
-        const localXStart = runs[i][1];
-        const localXEnd = runs[i][2];
+    for (let index = 0; index < runs.length; index += 1) {
+        const localY = runs[index][0];
+        const localXStart = runs[index][1];
+        const localXEnd = runs[index][2];
 
-        const yAbs = wy + localY;
-        if (yAbs < 0 || yAbs >= maskH) return false;
+        const absoluteY = wordY + localY;
+        if (absoluteY < 0 || absoluteY >= maskHeight) return false;
 
-        const xStartAbs = wx + localXStart;
-        const xEndAbs = wx + localXEnd;
-        if (xStartAbs < 0 || xEndAbs >= maskW) return false;
+        const absoluteXStart = wordX + localXStart;
+        const absoluteXEnd = wordX + localXEnd;
+        if (absoluteXStart < 0 || absoluteXEnd >= maskWidth) return false;
 
-        const rowBase = yAbs * maskRowStride;
+        const rowBaseIndex = absoluteY * maskRowStride;
 
-        const firstWordIndex = xStartAbs >>> 5;
-        const lastWordIndex = xEndAbs >>> 5;
+        const firstWordIndex = absoluteXStart >>> 5;
+        const lastWordIndex = absoluteXEnd >>> 5;
 
-        const bitStart = xStartAbs & 31;
-        const bitEnd = xEndAbs & 31;
+        const bitStart = absoluteXStart & 31;
+        const bitEnd = absoluteXEnd & 31;
 
         if (firstWordIndex === lastWordIndex) {
-            const maskWord = maskBits[rowBase + firstWordIndex];
-            const widthBits = (bitEnd - bitStart + 1);
-            const maskRun = ((0xFFFFFFFF >>> (32 - widthBits)) << bitStart) >>> 0;
+            const maskWord = maskBits[rowBaseIndex + firstWordIndex];
+            const maskRun = buildSingleWordMask(bitStart, bitEnd);
             if (maskWord & maskRun) return false;
         } else {
             {
-                const maskWord = maskBits[rowBase + firstWordIndex];
-                const maskRun = (0xFFFFFFFF << bitStart) >>> 0;
+                const maskWord = maskBits[rowBaseIndex + firstWordIndex];
+                const maskRun = buildFirstWordMask(bitStart);
                 if (maskWord & maskRun) return false;
             }
 
-            for (let wi = firstWordIndex + 1; wi < lastWordIndex; wi += 1) {
-                if (maskBits[rowBase + wi]) return false;
+            for (
+                let wordIndex = firstWordIndex + 1;
+                wordIndex < lastWordIndex;
+                wordIndex += 1
+            ) {
+                if (maskBits[rowBaseIndex + wordIndex]) return false;
             }
 
             {
-                const maskWord = maskBits[rowBase + lastWordIndex];
-                const maskRun = (0xFFFFFFFF >>> (31 - bitEnd)) >>> 0;
+                const maskWord = maskBits[rowBaseIndex + lastWordIndex];
+                const maskRun = buildLastWordMask(bitEnd);
                 if (maskWord & maskRun) return false;
             }
         }
@@ -243,128 +295,149 @@ function canPlaceAtRuns({
 function markMaskRuns({
     maskBits,
     maskRowStride,
-    maskW,
-    maskH,
-    wx,
-    wy,
+    maskW: maskWidth,
+    maskH: maskHeight,
+    wx: wordX,
+    wy: wordY,
     runs
 }) {
-    for (let i = 0; i < runs.length; i += 1) {
-        const localY = runs[i][0];
-        const localXStart = runs[i][1];
-        const localXEnd = runs[i][2];
+    for (let index = 0; index < runs.length; index += 1) {
+        const localY = runs[index][0];
+        const localXStart = runs[index][1];
+        const localXEnd = runs[index][2];
 
-        const yAbs = wy + localY;
-        if (yAbs < 0 || yAbs >= maskH) continue;
+        const absoluteY = wordY + localY;
+        if (absoluteY < 0 || absoluteY >= maskHeight) continue;
 
-        const xStartAbs = wx + localXStart;
-        const xEndAbs = wx + localXEnd;
-        if (xEndAbs < 0 || xStartAbs >= maskW) continue;
+        const absoluteXStart = wordX + localXStart;
+        const absoluteXEnd = wordX + localXEnd;
+        if (absoluteXEnd < 0 || absoluteXStart >= maskWidth) continue;
 
-        const rowBase = yAbs * maskRowStride;
+        const rowBaseIndex = absoluteY * maskRowStride;
 
-        const firstWordIndex = xStartAbs >>> 5;
-        const lastWordIndex = xEndAbs >>> 5;
+        const firstWordIndex = absoluteXStart >>> 5;
+        const lastWordIndex = absoluteXEnd >>> 5;
 
-        const bitStart = xStartAbs & 31;
-        const bitEnd = xEndAbs & 31;
+        const bitStart = absoluteXStart & 31;
+        const bitEnd = absoluteXEnd & 31;
 
         if (firstWordIndex === lastWordIndex) {
-            const widthBits = (bitEnd - bitStart + 1);
-            const maskRun = ((0xFFFFFFFF >>> (32 - widthBits)) << bitStart) >>> 0;
-            maskBits[rowBase + firstWordIndex] |= maskRun;
+            const maskRun = buildSingleWordMask(bitStart, bitEnd);
+            maskBits[rowBaseIndex + firstWordIndex] |= maskRun;
         } else {
             {
-                const maskRun = (0xFFFFFFFF << bitStart) >>> 0;
-                maskBits[rowBase + firstWordIndex] |= maskRun;
+                const maskRun = buildFirstWordMask(bitStart);
+                maskBits[rowBaseIndex + firstWordIndex] |= maskRun;
             }
 
-            for (let wi = firstWordIndex + 1; wi < lastWordIndex; wi += 1) {
-                maskBits[rowBase + wi] = 0xFFFFFFFF >>> 0;
+            for (
+                let wordIndex = firstWordIndex + 1;
+                wordIndex < lastWordIndex;
+                wordIndex += 1
+            ) {
+                maskBits[rowBaseIndex + wordIndex] = 0xFFFFFFFF >>> 0;
             }
 
             {
-                const maskRun = (0xFFFFFFFF >>> (31 - bitEnd)) >>> 0;
-                maskBits[rowBase + lastWordIndex] |= maskRun;
+                const maskRun = buildLastWordMask(bitEnd);
+                maskBits[rowBaseIndex + lastWordIndex] |= maskRun;
             }
         }
     }
 }
 
-function encodeMaskToBits(mask, maskW, maskH, maskRowStride) {
-    const maskBits = new Uint32Array(maskRowStride * maskH);
+/**
+ * Encodes a byte mask (0/1 per pixel) into a bit-packed mask representation.
+ */
+function encodeMaskToBits(mask, maskWidth, maskHeight, maskRowStride) {
+    const maskBits = new Uint32Array(maskRowStride * maskHeight);
 
-    for (let y = 0; y < maskH; y += 1) {
-        const rowBase8 = y * maskW;
-        const rowBaseBits = y * maskRowStride;
+    for (let y = 0; y < maskHeight; y += 1) {
+        const rowBaseByteIndex = y * maskWidth;
+        const rowBaseBitIndex = y * maskRowStride;
 
-        for (let x = 0; x < maskW; x += 1) {
-            if (!mask[rowBase8 + x]) continue;
+        for (let x = 0; x < maskWidth; x += 1) {
+            if (!mask[rowBaseByteIndex + x]) continue;
 
-            const wordIndex = x >>> 5;       // x / 32
-            const bitIndex = x & 31;         // x % 32
-            maskBits[rowBaseBits + wordIndex] |= (1 << bitIndex) >>> 0;
+            const wordIndex = x >>> 5;
+            const bitIndex = x & 31;
+            maskBits[rowBaseBitIndex + wordIndex] |= (1 << bitIndex) >>> 0;
         }
     }
 
     return maskBits;
 }
 
+/**
+ * Public helper: test placement given a byte mask and a word pixel mask.
+ */
 export function canPlaceAt({
     mask,
-    maskW,
-    maskH,
-    wx,
-    wy,
+    maskW: maskWidth,
+    maskH: maskHeight,
+    wx: wordX,
+    wy: wordY,
     wordMask
 }) {
-    const maskRowStride = (maskW + 31) >>> 5;
-    const maskBits = encodeMaskToBits(mask, maskW, maskH, maskRowStride);
+    const maskRowStride = (maskWidth + 31) >>> 5;
+    const maskBits = encodeMaskToBits(mask, maskWidth, maskHeight, maskRowStride);
     const runs = createRunsFromMask(wordMask);
+
     return canPlaceAtRuns({
         maskBits,
         maskRowStride,
-        maskW,
-        maskH,
-        wx,
-        wy,
+        maskW: maskWidth,
+        maskH: maskHeight,
+        wx: wordX,
+        wy: wordY,
         runs
     });
 }
 
+/**
+ * Public helper: mark placement into a byte mask given a word pixel mask.
+ */
 export function markMask({
     mask,
-    maskW,
-    maskH,
-    wx,
-    wy,
+    maskW: maskWidth,
+    maskH: maskHeight,
+    wx: wordX,
+    wy: wordY,
     wordMask
 }) {
-    const maskRowStride = (maskW + 31) >>> 5;
-    const maskBits = new Uint32Array(maskRowStride * maskH);
+    const maskRowStride = (maskWidth + 31) >>> 5;
+    const maskBits = new Uint32Array(maskRowStride * maskHeight);
     const runs = createRunsFromMask(wordMask);
+
     markMaskRuns({
         maskBits,
         maskRowStride,
-        maskW,
-        maskH,
-        wx,
-        wy,
+        maskW: maskWidth,
+        maskH: maskHeight,
+        wx: wordX,
+        wy: wordY,
         runs
     });
 
-    for (let y = 0; y < maskH; y += 1) {
-        const rowBaseBits = y * maskRowStride;
-        const rowBase8 = y * maskW;
-        for (let wordIndex = 0; wordIndex < maskRowStride; wordIndex += 1) {
-            const bits = maskBits[rowBaseBits + wordIndex];
+    for (let y = 0; y < maskHeight; y += 1) {
+        const rowBaseBitIndex = y * maskRowStride;
+        const rowBaseByteIndex = y * maskWidth;
+
+        for (
+            let wordIndex = 0;
+            wordIndex < maskRowStride;
+            wordIndex += 1
+        ) {
+            const bits = maskBits[rowBaseBitIndex + wordIndex];
             if (!bits) continue;
+
             const baseX = wordIndex << 5;
-            for (let b = 0; b < 32; b += 1) {
-                if (bits & (1 << b)) {
-                    const x = baseX + b;
-                    if (x >= 0 && x < maskW) {
-                        mask[rowBase8 + x] = 1;
+
+            for (let bit = 0; bit < 32; bit += 1) {
+                if (bits & (1 << bit)) {
+                    const x = baseX + bit;
+                    if (x >= 0 && x < maskWidth) {
+                        mask[rowBaseByteIndex + x] = 1;
                     }
                 }
             }
@@ -376,49 +449,54 @@ export function markMask({
 /* Dilation (legacy pixel-mask version, kept for compatibility)              */
 /* ------------------------------------------------------------------------- */
 
-export function dilateWordMask({ wordMask, w, h, dilation }) {
-    const grid = new Uint8Array(w * h);
+export function dilateWordMask({ wordMask, w: width, h: height, dilation }) {
+    const grid = new Uint8Array(width * height);
     const seeds = [];
 
-    for (let i = 0; i < wordMask.length; i += 1) {
-        const x = wordMask[i][0];
-        const y = wordMask[i][1];
-        const idx = y * w + x;
-        if (!grid[idx]) {
-            grid[idx] = 1;
-            seeds.push(idx);
+    for (let index = 0; index < wordMask.length; index += 1) {
+        const x = wordMask[index][0];
+        const y = wordMask[index][1];
+        const flatIndex = y * width + x;
+
+        if (!grid[flatIndex]) {
+            grid[flatIndex] = 1;
+            seeds.push(flatIndex);
         }
     }
 
-    for (let si = 0; si < seeds.length; si += 1) {
-        const idx = seeds[si];
-        const y = (idx / w) | 0;
-        const x = idx - y * w;
+    for (let seedIndex = 0; seedIndex < seeds.length; seedIndex += 1) {
+        const flatIndex = seeds[seedIndex];
+        const y = (flatIndex / width) | 0;
+        const x = flatIndex - y * width;
 
-        for (let dy = -dilation; dy <= dilation; dy += 1) {
-            const ny = y + dy;
-            if (ny < 0 || ny >= h) continue;
-            const rowOffset = ny * w;
+        for (let deltaY = -dilation; deltaY <= dilation; deltaY += 1) {
+            const neighborY = y + deltaY;
+            if (neighborY < 0 || neighborY >= height) continue;
 
-            for (let dx = -dilation; dx <= dilation; dx += 1) {
-                if (dx === 0 && dy === 0) continue;
-                const nx = x + dx;
-                if (nx < 0 || nx >= w) continue;
-                grid[rowOffset + nx] = 1;
+            const neighborRowOffset = neighborY * width;
+
+            for (let deltaX = -dilation; deltaX <= dilation; deltaX += 1) {
+                if (deltaX === 0 && deltaY === 0) continue;
+
+                const neighborX = x + deltaX;
+                if (neighborX < 0 || neighborX >= width) continue;
+
+                grid[neighborRowOffset + neighborX] = 1;
             }
         }
     }
 
-    const out = [];
-    for (let idx = 0; idx < grid.length; idx += 1) {
-        if (grid[idx]) {
-            const y = (idx / w) | 0;
-            const x = idx - y * w;
-            out.push([x, y]);
+    const dilatedMask = [];
+
+    for (let flatIndex = 0; flatIndex < grid.length; flatIndex += 1) {
+        if (grid[flatIndex]) {
+            const y = (flatIndex / width) | 0;
+            const x = flatIndex - y * width;
+            dilatedMask.push([x, y]);
         }
     }
 
-    return out;
+    return dilatedMask;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -431,74 +509,81 @@ export function dilateWordMask({ wordMask, w, h, dilation }) {
  */
 function dilateRunsToRuns({
     runs,
-    w,
-    h,
+    w: width,
+    h: height,
     dilation
 }) {
-    const grid = new Uint8Array(w * h);
+    const grid = new Uint8Array(width * height);
     const seeds = [];
 
-    for (let i = 0; i < runs.length; i += 1) {
-        const row = runs[i];
+    for (let index = 0; index < runs.length; index += 1) {
+        const row = runs[index];
         const y = row[0];
         const xStart = row[1];
         const xEnd = row[2];
 
-        const rowOffset = y * w;
+        const rowOffset = y * width;
+
         for (let x = xStart; x <= xEnd; x += 1) {
-            const idx = rowOffset + x;
-            if (!grid[idx]) {
-                grid[idx] = 1;
-                seeds.push(idx);
+            const flatIndex = rowOffset + x;
+
+            if (!grid[flatIndex]) {
+                grid[flatIndex] = 1;
+                seeds.push(flatIndex);
             }
         }
     }
 
-    for (let si = 0; si < seeds.length; si += 1) {
-        const idx = seeds[si];
-        const y = (idx / w) | 0;
-        const x = idx - y * w;
+    for (let seedIndex = 0; seedIndex < seeds.length; seedIndex += 1) {
+        const flatIndex = seeds[seedIndex];
+        const y = (flatIndex / width) | 0;
+        const x = flatIndex - y * width;
 
-        for (let dy = -dilation; dy <= dilation; dy += 1) {
-            const ny = y + dy;
-            if (ny < 0 || ny >= h) continue;
-            const rowOffset = ny * w;
+        for (let deltaY = -dilation; deltaY <= dilation; deltaY += 1) {
+            const neighborY = y + deltaY;
+            if (neighborY < 0 || neighborY >= height) continue;
 
-            for (let dx = -dilation; dx <= dilation; dx += 1) {
-                if (dx === 0 && dy === 0) continue;
-                const nx = x + dx;
-                if (nx < 0 || nx >= w) continue;
-                grid[rowOffset + nx] = 1;
+            const neighborRowOffset = neighborY * width;
+
+            for (let deltaX = -dilation; deltaX <= dilation; deltaX += 1) {
+                if (deltaX === 0 && deltaY === 0) continue;
+
+                const neighborX = x + deltaX;
+                if (neighborX < 0 || neighborX >= width) continue;
+
+                grid[neighborRowOffset + neighborX] = 1;
             }
         }
     }
 
-    const outRuns = [];
-    for (let y = 0; y < h; y += 1) {
-        const rowOffset = y * w;
+    const outputRuns = [];
+
+    for (let y = 0; y < height; y += 1) {
+        const rowOffset = y * width;
         let runStart = -1;
-        let inRun = false;
+        let isInRun = false;
 
-        for (let x = 0; x < w; x += 1) {
-            const val = grid[rowOffset + x];
-            if (val) {
-                if (!inRun) {
-                    inRun = true;
+        for (let x = 0; x < width; x += 1) {
+            const value = grid[rowOffset + x];
+
+            if (value) {
+                if (!isInRun) {
+                    isInRun = true;
                     runStart = x;
                 }
-            } else if (inRun) {
-                outRuns.push([y, runStart, x - 1]);
-                inRun = false;
+            } else if (isInRun) {
+                outputRuns.push([y, runStart, x - 1]);
+                isInRun = false;
                 runStart = -1;
             }
         }
 
-        if (inRun) {
-            outRuns.push([y, runStart, w - 1]);
+        if (isInRun) {
+            outputRuns.push([y, runStart, width - 1]);
         }
     }
 
-    return outRuns;
+    return outputRuns;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -510,53 +595,53 @@ function dilateRunsToRuns({
  * This is cheaper than re-rasterizing the text on a canvas for each size.
  */
 function scaleBitmap(bitmap, scaleFactor) {
-    const srcRuns = bitmap.runs;
-    const srcW = bitmap.w;
-    const srcH = bitmap.h;
+    const sourceRuns = bitmap.runs;
+    const sourceWidth = bitmap.w;
+    const sourceHeight = bitmap.h;
 
-    const dstW = Math.max(1, Math.round(srcW * scaleFactor));
-    const dstH = Math.max(1, Math.round(srcH * scaleFactor));
+    const destinationWidth = Math.max(1, Math.round(sourceWidth * scaleFactor));
+    const destinationHeight = Math.max(1, Math.round(sourceHeight * scaleFactor));
 
-    const rowBuckets = new Array(dstH);
+    const rowBuckets = new Array(destinationHeight);
 
-    let minX = dstW;
-    let minY = dstH;
-    let maxX = 0;
-    let maxY = 0;
-    let found = false;
+    let minimumX = destinationWidth;
+    let minimumY = destinationHeight;
+    let maximumX = 0;
+    let maximumY = 0;
+    let hasOpaquePixel = false;
 
-    for (let i = 0; i < srcRuns.length; i += 1) {
-        const row = srcRuns[i];
+    for (let index = 0; index < sourceRuns.length; index += 1) {
+        const row = sourceRuns[index];
         const y = row[0];
         const xStart = row[1];
         const xEnd = row[2];
 
-        const ny = Math.round(y * scaleFactor);
-        if (ny < 0 || ny >= dstH) continue;
+        const newY = Math.round(y * scaleFactor);
+        if (newY < 0 || newY >= destinationHeight) continue;
 
-        const nxStart = Math.round(xStart * scaleFactor);
-        const nxEnd = Math.round((xEnd + 1) * scaleFactor) - 1;
-        if (nxEnd < nxStart) continue;
+        const newXStart = Math.round(xStart * scaleFactor);
+        const newXEnd = Math.round((xEnd + 1) * scaleFactor) - 1;
+        if (newXEnd < newXStart) continue;
 
-        let bucket = rowBuckets[ny];
+        let bucket = rowBuckets[newY];
         if (!bucket) {
             bucket = [];
-            rowBuckets[ny] = bucket;
+            rowBuckets[newY] = bucket;
         }
-        bucket.push([nxStart, nxEnd]);
 
-        found = true;
+        bucket.push([newXStart, newXEnd]);
+        hasOpaquePixel = true;
 
-        if (nxStart < minX) minX = nxStart;
-        if (nxEnd > maxX) maxX = nxEnd;
-        if (ny < minY) minY = ny;
-        if (ny > maxY) maxY = ny;
+        if (newXStart < minimumX) minimumX = newXStart;
+        if (newXEnd > maximumX) maximumX = newXEnd;
+        if (newY < minimumY) minimumY = newY;
+        if (newY > maximumY) maximumY = newY;
     }
 
-    if (!found) {
+    if (!hasOpaquePixel) {
         return {
-            w: dstW,
-            h: dstH,
+            w: destinationWidth,
+            h: destinationHeight,
             runs: [],
             minX: 0,
             minY: 0,
@@ -565,9 +650,9 @@ function scaleBitmap(bitmap, scaleFactor) {
         };
     }
 
-    const outRuns = [];
+    const outputRuns = [];
 
-    for (let y = 0; y < dstH; y += 1) {
+    for (let y = 0; y < destinationHeight; y += 1) {
         const bucket = rowBuckets[y];
         if (!bucket || bucket.length === 0) continue;
 
@@ -576,30 +661,30 @@ function scaleBitmap(bitmap, scaleFactor) {
         let currentStart = bucket[0][0];
         let currentEnd = bucket[0][1];
 
-        for (let i = 1; i < bucket.length; i += 1) {
-            const start = bucket[i][0];
-            const end = bucket[i][1];
+        for (let index = 1; index < bucket.length; index += 1) {
+            const start = bucket[index][0];
+            const end = bucket[index][1];
 
             if (start <= currentEnd + 1) {
                 if (end > currentEnd) currentEnd = end;
             } else {
-                outRuns.push([y, currentStart, currentEnd]);
+                outputRuns.push([y, currentStart, currentEnd]);
                 currentStart = start;
                 currentEnd = end;
             }
         }
 
-        outRuns.push([y, currentStart, currentEnd]);
+        outputRuns.push([y, currentStart, currentEnd]);
     }
 
     return {
-        w: dstW,
-        h: dstH,
-        runs: outRuns,
-        minX,
-        minY,
-        maxX,
-        maxY
+        w: destinationWidth,
+        h: destinationHeight,
+        runs: outputRuns,
+        minX: minimumX,
+        minY: minimumY,
+        maxX: maximumX,
+        maxY: maximumY
     };
 }
 
@@ -621,14 +706,14 @@ function getCachedWordBitmap({
     fontSize,
     pad,
     canvas,
-    ctx,
+    ctx: context,
     svg
 }) {
     const key = makeBitmapKey({ word, fontSize, pad, svg });
     const cached = bitmapCache.get(key);
     if (cached) return { key, bitmap: cached };
 
-    const bitmap = getWordBitmap({ word, fontSize, pad, canvas, ctx, svg });
+    const bitmap = getWordBitmap({ word, fontSize, pad, canvas, ctx: context, svg });
     bitmapCache.set(key, bitmap);
     return { key, bitmap };
 }
@@ -636,17 +721,18 @@ function getCachedWordBitmap({
 function getCachedDilatedMask({
     bitmapKey,
     wordMask,
-    w,
-    h,
+    w: width,
+    h: height,
     dilation
 }) {
     const key = `${bitmapKey}::d${dilation}`;
     const cached = dilatedMaskCache.get(key);
     if (cached) return cached;
 
-    const dilatedWordMask = dilateWordMask({ wordMask, w, h, dilation });
+    const dilatedWordMask = dilateWordMask({ wordMask, w: width, h: height, dilation });
     const runs = createRunsFromMask(dilatedWordMask);
     const result = { wordMask: dilatedWordMask, runs };
+
     dilatedMaskCache.set(key, result);
     return result;
 }
@@ -661,25 +747,31 @@ const degreesToRadians = Math.PI / 180;
 
 const spiralCosValues = [];
 const spiralSinValues = [];
-for (let theta = 0; theta < 360; theta += spiralStep) {
-    const angle = theta * degreesToRadians;
+
+for (let angleDegrees = 0; angleDegrees < 360; angleDegrees += spiralStep) {
+    const angle = angleDegrees * degreesToRadians;
     spiralCosValues.push(Math.cos(angle));
     spiralSinValues.push(Math.sin(angle));
 }
 
 const fallbackSpiralCosValues = [];
 const fallbackSpiralSinValues = [];
-for (let theta = 0; theta < 360; theta += fallbackSpiralStep) {
-    const angle = theta * degreesToRadians;
+
+for (let angleDegrees = 0; angleDegrees < 360; angleDegrees += fallbackSpiralStep) {
+    const angle = angleDegrees * degreesToRadians;
     fallbackSpiralCosValues.push(Math.cos(angle));
     fallbackSpiralSinValues.push(Math.sin(angle));
 }
+
+/* ------------------------------------------------------------------------- */
+/* Layout scaling                                                            */
+/* ------------------------------------------------------------------------- */
 
 /**
  * Uniformly scales all placed words around the center so that the occupied
  * area fills more of the available region, without creating overlaps.
  */
-function scaleLayoutToFillArea(positionedWords, maskW, maskH) {
+function scaleLayoutToFillArea(positionedWords, maskWidth, maskHeight) {
     if (!positionedWords.length) return;
 
     let minimumRelativeX = Infinity;
@@ -687,8 +779,8 @@ function scaleLayoutToFillArea(positionedWords, maskW, maskH) {
     let minimumRelativeY = Infinity;
     let maximumRelativeY = -Infinity;
 
-    for (let i = 0; i < positionedWords.length; i += 1) {
-        const word = positionedWords[i];
+    for (let index = 0; index < positionedWords.length; index += 1) {
+        const word = positionedWords[index];
 
         const left = word.x + word.minX;
         const right = word.x + word.maxX;
@@ -716,20 +808,21 @@ function scaleLayoutToFillArea(positionedWords, maskW, maskH) {
     if (maximumAbsoluteX === 0 || maximumAbsoluteY === 0) return;
 
     const marginFactor = 0.9;
-    const allowedScaleX = (maskW * 0.5 * marginFactor) / maximumAbsoluteX;
-    const allowedScaleY = (maskH * 0.5 * marginFactor) / maximumAbsoluteY;
+    const allowedScaleX = (maskWidth * 0.5 * marginFactor) / maximumAbsoluteX;
+    const allowedScaleY = (maskHeight * 0.5 * marginFactor) / maximumAbsoluteY;
 
     let scaleFactor = Math.min(allowedScaleX, allowedScaleY);
 
     if (scaleFactor <= 1) return;
 
-    const maximumScaleFactor = 4; // allow more growth on tiny layouts
+    const maximumScaleFactor = 4;
     if (scaleFactor > maximumScaleFactor) {
         scaleFactor = maximumScaleFactor;
     }
 
-    for (let i = 0; i < positionedWords.length; i += 1) {
-        const word = positionedWords[i];
+    for (let index = 0; index < positionedWords.length; index += 1) {
+        const word = positionedWords[index];
+
         word.x *= scaleFactor;
         word.y *= scaleFactor;
         word.width *= scaleFactor;
@@ -742,10 +835,331 @@ function scaleLayoutToFillArea(positionedWords, maskW, maskH) {
     }
 }
 
+/* ------------------------------------------------------------------------- */
+/* Time helper (when config.debug === true)                                  */
+/* ------------------------------------------------------------------------- */
+
+function getNowFunction() {
+    const hasPerformance =
+        typeof performance !== "undefined" &&
+        typeof performance.now === "function";
+
+    if (hasPerformance) {
+        return () => performance.now();
+    }
+
+    return () => Date.now();
+}
+
+/* ------------------------------------------------------------------------- */
+/* Font size helper                                                          */
+/* ------------------------------------------------------------------------- */
+
+function computeTargetFontSize({
+    value,
+    minimumValue,
+    maximumValue,
+    configuredMinimumFontSize,
+    maximumFontSize
+}) {
+    if (maximumValue === minimumValue) {
+        return maximumFontSize;
+    }
+
+    const ratio =
+        (value - minimumValue) / (maximumValue - minimumValue);
+
+    const interpolated = ratio *
+        (maximumFontSize - configuredMinimumFontSize) +
+        configuredMinimumFontSize;
+
+    const clamped = Math.max(
+        configuredMinimumFontSize,
+        Math.min(maximumFontSize, interpolated)
+    );
+
+    return clamped;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Placement helpers                                                         */
+/* ------------------------------------------------------------------------- */
+
+function buildRunsForBitmap({
+    currentBitmap,
+    strictPixelPadding,
+    scaleFactor,
+    baseBitmap,
+    bitmapKey
+}) {
+    let runs = currentBitmap.runs;
+    const bitmapWidth = currentBitmap.w;
+    const bitmapHeight = currentBitmap.h;
+    const bitmapMinimumX = currentBitmap.minX;
+    const bitmapMinimumY = currentBitmap.minY;
+    const bitmapMaximumX = currentBitmap.maxX;
+    const bitmapMaximumY = currentBitmap.maxY;
+
+    if (!strictPixelPadding || !runs.length) {
+        return {
+            runs,
+            bitmapWidth,
+            bitmapHeight,
+            bitmapMinimumX,
+            bitmapMinimumY,
+            bitmapMaximumX,
+            bitmapMaximumY
+        };
+    }
+
+    if (scaleFactor === 1) {
+        const dilated = getCachedDilatedMask({
+            bitmapKey,
+            wordMask: baseBitmap.wordMask,
+            w: baseBitmap.w,
+            h: baseBitmap.h,
+            dilation: 2
+        });
+
+        return {
+            runs: dilated.runs,
+            bitmapWidth,
+            bitmapHeight,
+            bitmapMinimumX,
+            bitmapMinimumY,
+            bitmapMaximumX,
+            bitmapMaximumY
+        };
+    }
+
+    const dilatedRuns = dilateRunsToRuns({
+        runs,
+        w: bitmapWidth,
+        h: bitmapHeight,
+        dilation: 2
+    });
+
+    return {
+        runs: dilatedRuns,
+        bitmapWidth,
+        bitmapHeight,
+        bitmapMinimumX,
+        bitmapMinimumY,
+        bitmapMaximumX,
+        bitmapMaximumY
+    };
+}
+
+async function tryPlaceWordOnSpiral({
+    baseBitmap,
+    baseFontSize,
+    minimumScaleFactor,
+    maskBits,
+    maskRowStride,
+    maskWidth,
+    maskHeight,
+    centerX,
+    centerY,
+    maximumRadius,
+    scaleStep,
+    strictPixelPadding,
+    bitmapKey,
+    minimumFontSize,
+    rawWord,
+    cosineArray,
+    sineArray,
+    radiusStep,
+    maximumAttempts,
+    maybeYield
+}) {
+    let scaleFactor = 1;
+
+    while (scaleFactor >= minimumScaleFactor) {
+        const currentBitmap =
+            scaleFactor === 1
+                ? baseBitmap
+                : scaleBitmap(baseBitmap, scaleFactor);
+
+        const placementData = buildRunsForBitmap({
+            currentBitmap,
+            strictPixelPadding,
+            scaleFactor,
+            baseBitmap,
+            bitmapKey
+        });
+
+        const {
+            runs,
+            bitmapWidth,
+            bitmapHeight,
+            bitmapMinimumX,
+            bitmapMinimumY,
+            bitmapMaximumX,
+            bitmapMaximumY
+        } = placementData;
+
+        let radius = 0;
+        let attempts = 0;
+
+        while (radius < maximumRadius && attempts < maximumAttempts) {
+            for (let angleIndex = 0; angleIndex < cosineArray.length; angleIndex += 1) {
+                attempts += 1;
+
+                const placementX = Math.round(
+                    centerX + radius * cosineArray[angleIndex] - bitmapWidth / 2
+                );
+                const placementY = Math.round(
+                    centerY + radius * sineArray[angleIndex] - bitmapHeight / 2
+                );
+
+                if (
+                    placementX < 0 ||
+                    placementY < 0 ||
+                    placementX + bitmapWidth > maskWidth ||
+                    placementY + bitmapHeight > maskHeight
+                ) {
+                    continue;
+                }
+
+                const canPlace = canPlaceAtRuns({
+                    maskBits,
+                    maskRowStride,
+                    maskW: maskWidth,
+                    maskH: maskHeight,
+                    wx: placementX,
+                    wy: placementY,
+                    runs
+                });
+
+                if (canPlace) {
+                    const { __wcIndex: _ignore, ...cleanWord } = rawWord;
+                    const effectiveFontSize = Math.max(
+                        minimumFontSize,
+                        Math.round(baseFontSize * scaleFactor)
+                    );
+
+                    const placedWord = {
+                        ...cleanWord,
+                        x: placementX - maskWidth / 2,
+                        y: placementY - maskHeight / 2,
+                        fontSize: effectiveFontSize,
+                        width: bitmapWidth,
+                        height: bitmapHeight,
+                        angle: 0,
+                        minX: bitmapMinimumX,
+                        minY: bitmapMinimumY,
+                        maxX: bitmapMaximumX,
+                        maxY: bitmapMaximumY
+                    };
+
+                    markMaskRuns({
+                        maskBits,
+                        maskRowStride,
+                        maskW: maskWidth,
+                        maskH: maskHeight,
+                        wx: placementX,
+                        wy: placementY,
+                        runs
+                    });
+
+                    return placedWord;
+                }
+            }
+
+            radius += radiusStep;
+
+            if ((attempts & 1023) === 0) {
+                await maybeYield();
+            }
+        }
+
+        scaleFactor *= scaleStep;
+        await maybeYield();
+    }
+
+    return null;
+}
+
+async function attemptPlaceWordWithFallback({
+    baseBitmap,
+    baseFontSize,
+    minimumScaleFactor,
+    maskBits,
+    maskRowStride,
+    maskWidth,
+    maskHeight,
+    centerX,
+    centerY,
+    maximumRadius,
+    scaleStep,
+    strictPixelPadding,
+    bitmapKey,
+    minimumFontSize,
+    rawWord,
+    maybeYield,
+    spiralRadiusStep,
+    fallbackSpiralRadiusStep
+}) {
+    const primaryPlacement = await tryPlaceWordOnSpiral({
+        baseBitmap,
+        baseFontSize,
+        minimumScaleFactor,
+        maskBits,
+        maskRowStride,
+        maskWidth,
+        maskHeight,
+        centerX,
+        centerY,
+        maximumRadius,
+        scaleStep,
+        strictPixelPadding,
+        bitmapKey,
+        minimumFontSize,
+        rawWord,
+        cosineArray: spiralCosValues,
+        sineArray: spiralSinValues,
+        radiusStep: spiralRadiusStep,
+        maximumAttempts: 10000,
+        maybeYield
+    });
+
+    if (primaryPlacement) {
+        return primaryPlacement;
+    }
+
+    const fallbackPlacement = await tryPlaceWordOnSpiral({
+        baseBitmap,
+        baseFontSize,
+        minimumScaleFactor,
+        maskBits,
+        maskRowStride,
+        maskWidth,
+        maskHeight,
+        centerX,
+        centerY,
+        maximumRadius,
+        scaleStep,
+        strictPixelPadding,
+        bitmapKey,
+        minimumFontSize,
+        rawWord,
+        cosineArray: fallbackSpiralCosValues,
+        sineArray: fallbackSpiralSinValues,
+        radiusStep: fallbackSpiralRadiusStep,
+        maximumAttempts: 25000,
+        maybeYield
+    });
+
+    return fallbackPlacement;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Main layout                                                               */
+/* ------------------------------------------------------------------------- */
+
 /**
  * Attempts to position an array of words inside a given SVG region without overlap.
  * Words are sorted by value and placed largest-first.
- * Same semantics as the synchronous version, but yields between chunks of work.
  */
 export async function positionWordsAsync({
     words,
@@ -755,16 +1169,15 @@ export async function positionWordsAsync({
     onProgress,
     debugTiming = false
 }) {
-    const hasPerf = typeof performance !== "undefined" && typeof performance.now === "function";
-    const now = () => (hasPerf ? performance.now() : Date.now());
+    const now = getNowFunction();
     const startTime = now();
 
     const yieldBudgetMs = 12;
     let lastYieldTime = startTime;
 
     async function maybeYield() {
-        const t = now();
-        if (t - lastYieldTime >= yieldBudgetMs) {
+        const currentTime = now();
+        if (currentTime - lastYieldTime >= yieldBudgetMs) {
             await new Promise(resolve => setTimeout(resolve, 0));
             lastYieldTime = now();
         }
@@ -772,213 +1185,113 @@ export async function positionWordsAsync({
 
     const width = svg.width;
     const height = svg.height;
-    const maskW = Math.round(width);
-    const maskH = Math.round(height);
-    const minFontSize = 1;
-    const configMinFontSize = svg.minFontSize;
-    const maxFontSize = Math.min(svg.maxFontSize, 100);
+    const maskWidth = Math.round(width);
+    const maskHeight = Math.round(height);
 
-    const values = words.map(w => w.value);
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
+    const minimumFontSize = 1;
+    const configuredMinimumFontSize = svg.minFontSize;
+    const maximumFontSize = Math.min(svg.maxFontSize, 100);
 
-    if (maskW <= 0 || maskH <= 0) return [];
+    const values = words.map(word => word.value);
+    const minimumValue = Math.min(...values);
+    const maximumValue = Math.max(...values);
 
-    const maskRowStride = (maskW + 31) >>> 5;
-    const maskBits = new Uint32Array(maskRowStride * maskH);
+    if (maskWidth <= 0 || maskHeight <= 0) return [];
+
+    const maskRowStride = (maskWidth + 31) >>> 5;
+    const maskBits = new Uint32Array(maskRowStride * maskHeight);
 
     const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    canvas.width = maskW;
-    canvas.height = maskH;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    canvas.width = maskWidth;
+    canvas.height = maskHeight;
 
     const spiralRadiusStep = 2;
     const fallbackSpiralRadiusStep = 1;
-    const maxRadius = Math.max(maskW, maskH);
-    const cx = Math.floor(maskW / 2);
-    const cy = Math.floor(maskH / 2);
+    const maximumRadius = Math.max(maskWidth, maskHeight);
+    const centerX = Math.floor(maskWidth / 2);
+    const centerY = Math.floor(maskHeight / 2);
 
-    const wordsWithId = words.map((w, index) => ({
-        ...w,
+    const wordsWithInternalIndex = words.map((word, index) => ({
+        ...word,
         __wcIndex: index,
-        id: w.id != null ? w.id : `${w.name}__${index}`
+        id: word.id != null ? word.id : `${word.name}__${index}`
     }));
 
-    const sorted = [...wordsWithId].sort((a, b) => b.value - a.value);
-    const positionedWords = [];
+    const sortedWords = [...wordsWithInternalIndex].sort(
+        (a, b) => b.value - a.value
+    );
 
+    const positionedWords = [];
     const scaleStep = 0.9;
 
-    for (let si = 0; si < sorted.length; si += 1) {
-        const wordRaw = sorted[si];
-        const beforeLen = positionedWords.length;
+    for (let sortedIndex = 0; sortedIndex < sortedWords.length; sortedIndex += 1) {
+        const rawWord = sortedWords[sortedIndex];
+        const previouslyPlacedCount = positionedWords.length;
 
-        let targetFontSize;
-
-        if (maxValue === minValue) {
-            targetFontSize = maxFontSize;
-        } else {
-            targetFontSize =
-                (wordRaw.value - minValue) /
-                (maxValue - minValue) *
-                (maxFontSize - configMinFontSize) +
-                configMinFontSize;
-        }
-
-        targetFontSize = Math.max(
-            configMinFontSize,
-            Math.min(maxFontSize, targetFontSize)
-        );
+        const targetFontSize = computeTargetFontSize({
+            value: rawWord.value,
+            minimumValue,
+            maximumValue,
+            configuredMinimumFontSize,
+            maximumFontSize
+        });
 
         const baseFontSize = targetFontSize;
 
         const cacheEntry = getCachedWordBitmap({
-            word: wordRaw,
+            word: rawWord,
             fontSize: baseFontSize,
             pad: proximity,
             canvas,
-            ctx,
+            ctx: context,
             svg
         });
+
         const bitmapKey = cacheEntry.key;
         const baseBitmap = cacheEntry.bitmap;
 
-        const baseW = baseBitmap.w;
-        const baseH = baseBitmap.h;
+        const baseWidth = baseBitmap.w;
+        const baseHeight = baseBitmap.h;
 
-        if (baseW <= 0 || baseH <= 0) {
+        if (baseWidth <= 0 || baseHeight <= 0) {
             await maybeYield();
             continue;
         }
 
-        const scaleMin = Math.max(minFontSize / baseFontSize, 0.1);
-        let placed = false;
+        const minimumScaleFactor = Math.max(
+            minimumFontSize / baseFontSize,
+            0.1
+        );
 
-        async function tryPlace(radiusStep, maxAttempts, useFallbackAngles) {
-            let scaleFactor = 1;
+        const placedWord = await attemptPlaceWordWithFallback({
+            baseBitmap,
+            baseFontSize,
+            minimumScaleFactor,
+            maskBits,
+            maskRowStride,
+            maskWidth,
+            maskHeight,
+            centerX,
+            centerY,
+            maximumRadius,
+            scaleStep,
+            strictPixelPadding,
+            bitmapKey,
+            minimumFontSize,
+            rawWord,
+            maybeYield,
+            spiralRadiusStep,
+            fallbackSpiralRadiusStep
+        });
 
-            while (!placed && scaleFactor >= scaleMin) {
-                let currentBitmap;
-                if (scaleFactor === 1) {
-                    currentBitmap = baseBitmap;
-                } else {
-                    currentBitmap = scaleBitmap(baseBitmap, scaleFactor);
-                }
+        if (placedWord) {
+            positionedWords.push(placedWord);
 
-                let runs = currentBitmap.runs;
-                let w = currentBitmap.w;
-                let h = currentBitmap.h;
-                const minX = currentBitmap.minX;
-                const minY = currentBitmap.minY;
-                const maxX = currentBitmap.maxX;
-                const maxY = currentBitmap.maxY;
-
-                if (strictPixelPadding && runs.length) {
-                    if (scaleFactor === 1) {
-                        const dilated = getCachedDilatedMask({
-                            bitmapKey,
-                            wordMask: baseBitmap.wordMask,
-                            w: baseBitmap.w,
-                            h: baseBitmap.h,
-                            dilation: 2
-                        });
-                        runs = dilated.runs;
-                    } else {
-                        runs = dilateRunsToRuns({
-                            runs,
-                            w,
-                            h,
-                            dilation: 2
-                        });
-                    }
-                }
-
-                let r = 0;
-                let attempts = 0;
-
-                const cosArray = useFallbackAngles ? fallbackSpiralCosValues : spiralCosValues;
-                const sinArray = useFallbackAngles ? fallbackSpiralSinValues : spiralSinValues;
-
-                while (r < maxRadius && !placed && attempts < maxAttempts) {
-                    for (let i = 0; i < cosArray.length; i += 1) {
-                        attempts += 1;
-                        const px = Math.round(cx + r * cosArray[i] - w / 2);
-                        const py = Math.round(cy + r * sinArray[i] - h / 2);
-
-                        if (
-                            px < 0 ||
-                            py < 0 ||
-                            px + w > maskW ||
-                            py + h > maskH
-                        ) continue;
-
-                        if (
-                            canPlaceAtRuns({
-                                maskBits,
-                                maskRowStride,
-                                maskW,
-                                maskH,
-                                wx: px,
-                                wy: py,
-                                runs
-                            })
-                        ) {
-                            const { __wcIndex: _ignore, ...wordClean } = wordRaw;
-                            const effectiveFontSize = Math.max(
-                                minFontSize,
-                                Math.round(baseFontSize * scaleFactor)
-                            );
-
-                            positionedWords.push({
-                                ...wordClean,
-                                x: px - maskW / 2,
-                                y: py - maskH / 2,
-                                fontSize: effectiveFontSize,
-                                width: w,
-                                height: h,
-                                angle: 0,
-                                minX,
-                                minY,
-                                maxX,
-                                maxY
-                            });
-                            markMaskRuns({
-                                maskBits,
-                                maskRowStride,
-                                maskW,
-                                maskH,
-                                wx: px,
-                                wy: py,
-                                runs
-                            });
-                            placed = true;
-                            break;
-                        }
-                    }
-                    r += radiusStep;
-
-                    if ((attempts & 1023) === 0) {
-                        await maybeYield();
-                    }
-                }
-
-                if (!placed) {
-                    scaleFactor *= scaleStep;
-                }
-
-                await maybeYield();
+            if (onProgress && positionedWords.length > previouslyPlacedCount) {
+                const lastPlaced = positionedWords[positionedWords.length - 1];
+                onProgress({ word: lastPlaced, all: positionedWords });
             }
-        }
-
-        await tryPlace(spiralRadiusStep, 10000, false);
-
-        if (!placed) {
-            await tryPlace(fallbackSpiralRadiusStep, 25000, true);
-        }
-
-        if (onProgress && positionedWords.length > beforeLen) {
-            const last = positionedWords[positionedWords.length - 1];
-            onProgress({ word: last, all: positionedWords });
         }
 
         await maybeYield();
@@ -988,7 +1301,7 @@ export async function positionWordsAsync({
         return [];
     }
 
-    scaleLayoutToFillArea(positionedWords, maskW, maskH);
+    scaleLayoutToFillArea(positionedWords, maskWidth, maskHeight);
 
     const endTime = now();
     const durationMs = endTime - startTime;
@@ -1008,7 +1321,11 @@ const wordcloud = {
     getWordBitmap,
     canPlaceAt,
     markMask,
-    dilateWordMask
+    dilateWordMask,
+    // Helpers exported for testing
+    buildSingleWordMask,
+    buildFirstWordMask,
+    buildLastWordMask
 };
 
 export default wordcloud;

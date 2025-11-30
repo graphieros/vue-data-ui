@@ -4,7 +4,11 @@ import {
     canPlaceAt,
     markMask,
     dilateWordMask,
-    positionWordsAsync
+    positionWordsAsync,
+    // helpers
+    buildSingleWordMask,
+    buildFirstWordMask,
+    buildLastWordMask
 } from "../src/wordcloud"
 
 function createMockContext2D() {
@@ -275,5 +279,94 @@ describe("positionWordsAsync", () => {
         expect(firstCallArg).toHaveProperty("word");
         expect(firstCallArg).toHaveProperty("all");
         expect(Array.isArray(firstCallArg.all)).toBe(true);
+    });
+
+    test("places words with strictPixelPadding enabled", async () => {
+        const words = [
+            { name: "one", value: 10 },
+            { name: "two", value: 5 },
+        ];
+
+        const svg = {
+            width: 100,
+            height: 100,
+            minFontSize: 10,
+            maxFontSize: 20,
+            style: {},
+        };
+
+        const onProgress = vi.fn();
+
+        const result = await positionWordsAsync({
+            words,
+            svg,
+            strictPixelPadding: true,
+            onProgress,
+        });
+
+        expect(result.length).toBe(words.length);
+
+        const maxScaledFontSize = svg.maxFontSize * 4;
+
+        for (const w of result) {
+            expect(typeof w.x).toBe("number");
+            expect(typeof w.y).toBe("number");
+            expect(typeof w.fontSize).toBe("number");
+            expect(w.fontSize).toBeGreaterThanOrEqual(svg.minFontSize);
+            expect(w.fontSize).toBeLessThanOrEqual(maxScaledFontSize);
+            expect(w.width).toBeGreaterThan(0);
+            expect(w.height).toBeGreaterThan(0);
+        }
+
+        expect(onProgress).toHaveBeenCalled();
+        expect(onProgress.mock.calls.length).toBeLessThanOrEqual(words.length);
+
+        const [firstCallArg] = onProgress.mock.calls[0];
+        expect(firstCallArg).toHaveProperty("word");
+        expect(firstCallArg).toHaveProperty("all");
+        expect(Array.isArray(firstCallArg.all)).toBe(true);
+    });
+});
+
+
+describe("Bitmask builders", () => {
+    describe("buildSingleWordMask", () => {
+        test("creates a mask with bits [bitStart, bitEnd] set", () => {
+            // Expected: bits 2,3,4 set -> binary ...00011100
+            const expected =
+                (0b111 << 2) >>> 0; // shift 3 bits into position 2 → 0b00011100
+            expect(buildSingleWordMask(2, 4)).toBe(expected);
+        });
+
+        test("single bit range works", () => {
+            const expected = (1 << 5) >>> 0; // only bit 5 set
+            expect(buildSingleWordMask(5, 5)).toBe(expected);
+        });
+    });
+
+    describe("buildFirstWordMask", () => {
+        test("sets bits from bitStart to 31", () => {
+            // bitStart = 3 → bits 3..31 set
+            const expected =
+                (~0 << 3) >>> 0; // shift all-ones left by 3
+            expect(buildFirstWordMask(3)).toBe(expected);
+        });
+
+        test("bitStart = 0 sets all bits", () => {
+            expect(buildFirstWordMask(0)).toBe(0xFFFFFFFF >>> 0);
+        });
+    });
+
+    describe("buildLastWordMask", () => {
+        test("sets bits 0..bitEnd", () => {
+            // bitEnd = 4 → 0b00011111
+            const expected =
+                (1 << (4 + 1)) - 1; // (1<<5)-1 = 0b11111
+            expect(buildLastWordMask(4)).toBe(expected >>> 0);
+        });
+
+        test("bitEnd = 31 sets all bits", () => {
+            expect(buildLastWordMask(31)).toBe(0xFFFFFFFF >>> 0);
+        });
     });
 });
