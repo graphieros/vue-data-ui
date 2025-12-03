@@ -13,6 +13,10 @@ const props = defineProps({
     },
     config: {
         type: Object,
+    },
+    showDefault: {
+        type: Boolean,
+        default: true
     }
 })
 
@@ -130,98 +134,100 @@ const highlightedConfig = computed(() => {
 </script>
 
 <template>
-    <h1 class="gradient-text" style="width:fit-content; font-weight: 900"><slot name="title"/></h1>
-    <button class="btn btn-reset" @click="refresh">
-        <BaseIcon :size="20" stroke="#ff7f0e" name="restart"/>
-        <code style="font-weight: bold;">
-            RELOAD PAGE
-        </code>
-    </button>
-
-    <div class="knobs">
-        <details>
-            <summary>Config knobs</summary>
-            <slot name="knobs"/>
-        </details>
-    </div>
-
-    <div v-if="$slots.responsive" style="margin-left:1rem">
-        <div class="title">
-            <div class="tag"><BaseIcon name="resize" :size="16" stroke="#1A1A1A" />Responsive</div> {{ comp }}  (Local)
-        </div>
-        <slot name="responsive"/>
-    </div>
-
-    <div style="width: 100%; max-width: 600px; padding: 12px" v-if="comp">
-        <div class="title">
-            <div class="tag"><BaseIcon name="settings" :size="16" stroke="#1A1A1A" />Default config</div> {{ comp }} (local VueDataUi universal component, knobs don't apply)
-        </div>
-        <LocalVueDataUi :component="comp" :dataset="dataset"/>
-    </div>
+    <div id="BOX">
+        <h1 class="gradient-text" style="width:fit-content; font-weight: 900"><slot name="title"/></h1>
+        <button class="btn btn-reset" @click="refresh">
+            <BaseIcon :size="20" stroke="#ff7f0e" name="restart"/>
+            <code style="font-weight: bold;">
+                RELOAD PAGE
+            </code>
+        </button>
     
-    <div class="box">
-        <div style="width:100%; max-width: 600px" v-if="$slots.theme">
-            <div class="title">
-                <div class="tag"><BaseIcon name="palette" :size="16" stroke="#1A1A1A" />Theme only</div> {{ comp }} (local, knobs don't apply)
-            </div>
-            <slot name="theme"/>
+        <div class="knobs">
+            <details>
+                <summary>Config knobs</summary>
+                <slot name="knobs"/>
+            </details>
         </div>
-        <div style="width:100%; max-width: 600px">
+    
+        <div v-if="$slots.responsive" style="margin-left:1rem">
             <div class="title">
-                <div class="tag"><BaseIcon name="curlySpread" :size="16" stroke="#1A1A1A" />Local</div> {{ comp }}
+                <div class="tag"><BaseIcon name="resize" :size="16" stroke="#1A1A1A" />Responsive</div> {{ comp }}  (Local)
             </div>
-            <slot name="local"/>
+            <slot name="responsive"/>
         </div>
-        <div style="width:100%; max-width: 600px">
+    
+        <div style="width: 100%; max-width: 600px; padding: 12px" v-if="comp && showDefault">
             <div class="title">
-                <div class="tag"><BaseIcon name="curlySpread" :size="16" stroke="#1A1A1A" />VueDataUi universal</div> (local)
+                <div class="tag"><BaseIcon name="settings" :size="16" stroke="#1A1A1A" />Default config</div> {{ comp }} (local VueDataUi universal component, knobs don't apply)
             </div>
-            <slot name="VDUI-local"/>
+            <LocalVueDataUi :component="comp" :dataset="dataset"/>
         </div>
-        <div style="width: 100%; max-width: 600px">
-            <div class="title">
-                <div class="tag"><BaseIcon name="boxes" :size="16" stroke="#1A1A1A" />Build legacy import</div>{{ comp }}
+        
+        <div class="box">
+            <div style="width:100%; max-width: 600px" v-if="$slots.theme">
+                <div class="title">
+                    <div class="tag"><BaseIcon name="palette" :size="16" stroke="#1A1A1A" />Theme only</div> {{ comp }} (local, knobs don't apply)
+                </div>
+                <slot name="theme"/>
             </div>
-            <slot name="build"/>
-        </div>
-        <div style="width: 100%; max-width: 600px">
-            <div class="title">
-                <div class="tag"><BaseIcon name="boxes" :size="16" stroke="#1A1A1A" />Treeshaken build</div>{{ comp }}
+            <div style="width:100%; max-width: 600px" v-if="$slots.local">
+                <div class="title">
+                    <div class="tag"><BaseIcon name="curlySpread" :size="16" stroke="#1A1A1A" />Local</div> {{ comp }}
+                </div>
+                <slot name="local"/>
             </div>
-            <slot name="build-treesh"/>
-        </div>
-        <div style="width: 100%; max-width: 600px">
-            <div class="title">
-                <div class="tag"><BaseIcon name="vueDataUi" :size="16" stroke="#1A1A1A" />VueDataUi universal build</div>
+            <div style="width:100%; max-width: 600px" v-if="$slots['VDUI-local']">
+                <div class="title">
+                    <div class="tag"><BaseIcon name="curlySpread" :size="16" stroke="#1A1A1A" />VueDataUi universal</div> (local)
+                </div>
+                <slot name="VDUI-local"/>
             </div>
-            <slot name="VDUI-build"/>
+            <div style="width: 100%; max-width: 600px" v-if="$slots.build">
+                <div class="title">
+                    <div class="tag"><BaseIcon name="boxes" :size="16" stroke="#1A1A1A" />Build legacy import</div>{{ comp }}
+                </div>
+                <slot name="build"/>
+            </div>
+            <div style="width: 100%; max-width: 600px" v-if="$slots['build-treesh']">
+                <div class="title">
+                    <div class="tag"><BaseIcon name="boxes" :size="16" stroke="#1A1A1A" />Treeshaken build</div>{{ comp }}
+                </div>
+                <slot name="build-treesh"/>
+            </div>
+            <div style="width: 100%; max-width: 600px" v-if="$slots['VDUI-build']">
+                <div class="title">
+                    <div class="tag"><BaseIcon name="vueDataUi" :size="16" stroke="#1A1A1A" />VueDataUi universal build</div>
+                </div>
+                <slot name="VDUI-build"/>
+            </div>
         </div>
-    </div>
-
-    <button v-if="!!config" class="btn" @click="copy(config, true)">
-        <BaseIcon :size="20" stroke="#42d392" v-if="copying" name="hourglass" is-spin/>
-        <BaseIcon :size="20" stroke="#42d392" v-else name="copy"/>
-        <code style="font-weight: bold;" v-if="!copying">
-            COPY CONFIG LOG
-        </code>
-        <code style="font-weight: bold;" v-else>
-            COPYING<span style="color:#42d392">........</span>
-        </code>
-    </button>
-    <div style="margin-top: 1rem; display:flex;align-items:start;gap:0.5rem; background:#ffbb7820; padding: 0.5rem 1rem">
-        <BaseIcon name="triangle" stroke="#ff7f0e" :size="20"/>
-        <span style="color:#ffbb78">
-            Callbacks are displayed inside quotes to be <i>readable</i>.<br>
-            This config is derived from the model created in the <code style="color:#66DDAA;background:#66DDAA20;padding: 0 0.5rem">Arena{{ props.comp }}.vue</code> file and is partial.<br>
-            The library component resolves the model's missing config attributes from the <code style="color:#fdd663;background:#fdd66320;padding:0 0.5rem">useConfig.js</code> definition.
-        </span>
-    </div>
-    <div class="config">
-        <code style="white-space: pre-wrap; display: block;" ref="configContent">
-            <slot name="config">
-                <span v-html="highlightedConfig"/>
-            </slot>
-        </code>
+    
+        <button v-if="!!config" class="btn" @click="copy(config, true)">
+            <BaseIcon :size="20" stroke="#42d392" v-if="copying" name="hourglass" is-spin/>
+            <BaseIcon :size="20" stroke="#42d392" v-else name="copy"/>
+            <code style="font-weight: bold;" v-if="!copying">
+                COPY CONFIG LOG
+            </code>
+            <code style="font-weight: bold;" v-else>
+                COPYING<span style="color:#42d392">........</span>
+            </code>
+        </button>
+        <div style="margin-top: 1rem; display:flex;align-items:start;gap:0.5rem; background:#ffbb7820; padding: 0.5rem 1rem">
+            <BaseIcon name="triangle" stroke="#ff7f0e" :size="20"/>
+            <span style="color:#ffbb78">
+                Callbacks are displayed inside quotes to be <i>readable</i>.<br>
+                This config is derived from the model created in the <code style="color:#66DDAA;background:#66DDAA20;padding: 0 0.5rem">Arena{{ props.comp }}.vue</code> file and is partial.<br>
+                The library component resolves the model's missing config attributes from the <code style="color:#fdd663;background:#fdd66320;padding:0 0.5rem">useConfig.js</code> definition.
+            </span>
+        </div>
+        <div class="config">
+            <code style="white-space: pre-wrap; display: block;" ref="configContent">
+                <slot name="config">
+                    <span v-html="highlightedConfig"/>
+                </slot>
+            </code>
+        </div>
     </div>
 </template>
 

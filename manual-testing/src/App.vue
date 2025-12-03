@@ -66,6 +66,7 @@ const components = [
   { name: 'ArenaVueUiXy', icon: 'chartLine'}, 
   { name: 'ArenaVueUiXyCanvas', icon: 'chartLine'}, 
   { name: 'ArenaVueUiAnnotator', icon: 'annotator'},
+  { name: 'ArenaVueUiCursor', icon: 'cursor'}
 ].map(componentItem => ({
   path: `/${componentItem.name}`,
   name: componentItem.name.replace('Arena', ''),
