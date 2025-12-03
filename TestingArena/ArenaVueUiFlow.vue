@@ -175,9 +175,6 @@ const model = createModel([
     NUMBER("style.chart.padding.left", { def: 12, min: 0, max: 100 }),
 
     NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
-    CHECKBOX("userOptions.print.allowTaint", { def: true }),
-    CHECKBOX("userOptions.print.useCORS", { def: true }),
-    COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
 
     TEXT("style.fontFamily", { def: "inherit" }),
     COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
@@ -198,8 +195,12 @@ const model = createModel([
     NUMBER("style.chart.nodes.minHeight", { def: 20, min: 5, max: 100 }),
     NUMBER("style.chart.nodes.width", { def: 40, min: 10, max: 100 }),
     NUMBER("style.chart.nodes.labels.fontSize", { def: 8, min: 8, max: 42 }),
+
+    CHECKBOX("style.chart.nodes.labels.show", { def: true }),
+    CHECKBOX("style.chart.nodes.labels.showValue", { def: true }),
     CHECKBOX("style.chart.nodes.labels.abbreviation.use", { def: true }),
     NUMBER("style.chart.nodes.labels.abbreviation.length", { def: 3, min: 1, max: 12 }),
+    
     COLOR("style.chart.nodes.stroke", { def: "#FFFFFF" }),
     NUMBER("style.chart.nodes.strokeWidth", { def: 1, min: 0, max: 12 }),
     NUMBER("style.chart.nodes.borderRadius", { def: 3, min: 0, max: 12 }),
@@ -207,7 +208,7 @@ const model = createModel([
     NUMBER("style.chart.links.opacity", { def: 0.8, min: 0, max: 1, step: 0.1 }),
     COLOR("style.chart.links.stroke", { def: "#FFFFFF" }),
     NUMBER("style.chart.links.strokeWidth", { def: 1, min: 0, max: 12 }),
-    NUMBER("style.chart.links.width", { def: 200, min: 40, max: 300 }),
+    CHECKBOX("style.chart.links.smooth", { def: true }),
 
     CHECKBOX("table.show", { def: false }),
     CHECKBOX("table.useDialog", { def: true })

@@ -4897,6 +4897,7 @@ export function useConfig() {
                     width: 40,
                     labels: {
                         show: true, // v3
+                        showValue: true,
                         fontSize: FONT._14,
                         abbreviation: {
                             use: true,
@@ -4915,7 +4916,8 @@ export function useConfig() {
                     // width: 200, // v3 deprecated
                     opacity: 0.8,
                     stroke: COLOR_WHITE,
-                    strokeWidth: 1
+                    strokeWidth: 1,
+                    smooth: true
                 }
             }
         },
