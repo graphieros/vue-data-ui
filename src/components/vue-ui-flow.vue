@@ -322,14 +322,14 @@ function computeSankeyCoordinates(ds) {
 
     function addNode(name, level) {
         if (!nodes[name]) {
-        nodes[name] = {
-            level: null,
-            inflow: 0,
-            outflow: 0,
-            children: [],
-            color: null,
-            uid: createUid(),
-        };
+            nodes[name] = {
+                level: null,
+                inflow: 0,
+                outflow: 0,
+                children: [],
+                color: null,
+                uid: createUid(),
+            };
         }
         if (nodes[name].level === null) nodes[name].level = level;
         if (!levels[level]) levels[level] = [];
@@ -352,25 +352,28 @@ function computeSankeyCoordinates(ds) {
 
     const rootColors = {};
     rootNodes.forEach((n, i) => {
-        rootColors[n] = customPalette.value[i]|| palette[i % palette.length];
+        rootColors[n] = customPalette.value[i] || palette[i % palette.length];
     });
 
     const customColorMap = {};
     ds.forEach(([s, t, _v, c]) => {
-        if (c) { customColorMap[s] = c; customColorMap[t] = c; }
+        if (c) {
+            customColorMap[s] = c;
+            customColorMap[t] = c;
+        }
     });
 
     Object.keys(nodes).forEach((name, idx) => {
         const category = FINAL_CONFIG.value.nodeCategories?.[name];
         const categoryColor = category
-        ? FINAL_CONFIG.value.nodeCategoryColors?.[category]
-        : null;
+            ? FINAL_CONFIG.value.nodeCategoryColors?.[category]
+            : null;
 
         nodes[name].color =
-        customColorMap[name] ||
-        categoryColor ||
-        (rootNodes.includes(name) ? rootColors[name] : null) ||
-        palette[idx % palette.length];
+            customColorMap[name] ||
+            categoryColor ||
+            (rootNodes.includes(name) ? rootColors[name] : null) ||
+            palette[idx % palette.length];
     });
 
     Object.keys(nodes).forEach((k) => {
@@ -381,17 +384,21 @@ function computeSankeyCoordinates(ds) {
     const innerW = innerSize.value.width;
     const innerH = innerSize.value.height;
 
-    const levelKeys = Object.keys(levels).map(Number).sort((a, b) => a - b);
+    const levelKeys = Object.keys(levels)
+        .map(Number)
+        .sort((a, b) => a - b);
     const levelCount = levelKeys.length || 1;
 
     const colSpacing = levelCount > 1 ? innerW / (levelCount - 1) : 0;
     const nodeW = Number(nodeWidth.value);
     const gapPx = Number(
         FINAL_CONFIG.value.style.chart.nodes.gapPx ??
-        FINAL_CONFIG.value.style.chart.nodes.gap ??
-        8
+            FINAL_CONFIG.value.style.chart.nodes.gap ??
+            8
     );
-    const minHeightCfg = Number(FINAL_CONFIG.value.style.chart.nodes.minHeight || 0);
+    const minHeightCfg = Number(
+        FINAL_CONFIG.value.style.chart.nodes.minHeight || 0
+    );
 
     function levelAllowedScale(levelIndex) {
         const names = levels[levelIndex];
@@ -407,21 +414,21 @@ function computeSankeyCoordinates(ds) {
         let remSum = remain.reduce((a, v) => a + v, 0);
 
         for (let iter = 0; iter < 12; iter += 1) {
-        const s = remSum > 0 ? (H - reserved) / remSum : 0;
-        const toClamp = [];
-        for (let i = 0; i < remain.length; i += 1) {
-            const v = remain[i];
-            if (v < 0) continue;
-            if (v * s < effectiveMin) toClamp.push(i);
-        }
-        if (!toClamp.length) return Math.max(0, s);
+            const s = remSum > 0 ? (H - reserved) / remSum : 0;
+            const toClamp = [];
+            for (let i = 0; i < remain.length; i += 1) {
+                const v = remain[i];
+                if (v < 0) continue;
+                if (v * s < effectiveMin) toClamp.push(i);
+            }
+            if (!toClamp.length) return Math.max(0, s);
 
-        for (const i of toClamp) {
-            reserved += effectiveMin;
-            remSum -= remain[i];
-            remain[i] = -1;
-        }
-        if (remSum <= 0) return 0;
+            for (const i of toClamp) {
+                reserved += effectiveMin;
+                remSum -= remain[i];
+                remain[i] = -1;
+            }
+            if (remSum <= 0) return 0;
         }
         return remSum > 0 ? Math.max(0, (H - reserved) / remSum) : 0;
     }
@@ -437,8 +444,8 @@ function computeSankeyCoordinates(ds) {
         const H = Math.max(0, innerH - gaps);
         const effectiveMin = Math.min(minHeightCfg, n ? H / n : 0);
 
-        const heights = names.map(
-        (nm) => Math.max(effectiveMin, (nodes[nm].value || 0) * globalScale)
+        const heights = names.map((nm) =>
+            Math.max(effectiveMin, (nodes[nm].value || 0) * globalScale)
         );
 
         const used = heights.reduce((a, h) => a + h, 0) + gaps;
@@ -457,7 +464,7 @@ function computeSankeyCoordinates(ds) {
                 i,
                 color: nodes[name].color,
                 value: nodes[name].value,
-                id: createUid()
+                id: createUid(),
             };
 
             yCursor += h;
@@ -478,61 +485,94 @@ function computeSankeyCoordinates(ds) {
     const EPS = 1e-6;
     const PIX_EPS = 0.25;
 
+    const smoothLinks = !!FINAL_CONFIG.value.style.chart.links.smooth;
+    const curvature = 0.5;
+
     levelKeys.forEach((levelIndex) => {
         const names = levels[levelIndex];
         names.forEach((name) => {
-        const srcNode = nodes[name];
-        const srcCoord = nodeCoordinates[name];
-        if (!srcNode.children || !srcNode.children.length) return;
+            const srcNode = nodes[name];
+            const srcCoord = nodeCoordinates[name];
+            if (!srcNode.children || !srcNode.children.length) return;
 
-        let srcInnerY = srcCoord.y;
+            let srcInnerY = srcCoord.y;
 
-        srcNode.children.forEach(({ target, value }) => {
-            const tgtCoord = nodeCoordinates[target];
-            const targetNode = nodes[target];
+            srcNode.children.forEach(({ target, value }) => {
+                const tgtCoord = nodeCoordinates[target];
+                const targetNode = nodes[target];
 
-            const srcFrac = srcNode.outflow > 0 ? value / srcNode.outflow : 0;
-            const tgtFrac = targetNode.inflow > 0 ? value / targetNode.inflow : 0;
+                const srcFrac =
+                    srcNode.outflow > 0 ? value / srcNode.outflow : 0;
+                const tgtFrac =
+                    targetNode.inflow > 0 ? value / targetNode.inflow : 0;
 
-            const sY1 = checkNaN(srcInnerY + yOffset);
-            const sY2 = checkNaN(srcInnerY + srcFrac * srcCoord.height + yOffset);
+                const sY1 = checkNaN(srcInnerY + yOffset);
+                const sY2 = checkNaN(
+                    srcInnerY + srcFrac * srcCoord.height + yOffset
+                );
 
-            const tStart = tgtOffsets[target];
-            let tEnd = tStart + tgtFrac * tgtCoord.height;
+                const tStart = tgtOffsets[target];
+                let tEnd = tStart + tgtFrac * tgtCoord.height;
 
-            tgtAccum[target] += value;
-            const isLast =
-            targetNode.inflow > 0 &&
-            tgtAccum[target] >= targetNode.inflow - EPS;
+                tgtAccum[target] += value;
+                const isLast =
+                    targetNode.inflow > 0 &&
+                    tgtAccum[target] >= targetNode.inflow - EPS;
 
-            const nodeBottom = tgtCoord.y + tgtCoord.height;
-            if (isLast || tEnd > nodeBottom - PIX_EPS) tEnd = nodeBottom;
+                const nodeBottom = tgtCoord.y + tgtCoord.height;
+                if (isLast || tEnd > nodeBottom - PIX_EPS) tEnd = nodeBottom;
 
-            const tY1 = checkNaN(tStart + yOffset);
-            const tY2 = checkNaN(tEnd + yOffset);
+                const tY1 = checkNaN(tStart + yOffset);
+                const tY2 = checkNaN(tEnd + yOffset);
 
-            links.push({
-            id: createUid(),
-            source: name,
-            target,
-            path:
-                `M ${checkNaN(srcCoord.x + nodeW)} ${sY1}` +
-                ` L ${checkNaN(srcCoord.x + nodeW)} ${sY2}` +
-                ` L ${checkNaN(tgtCoord.x)} ${tY2}` +
-                ` L ${checkNaN(tgtCoord.x)} ${tY1} Z`,
-            value,
-            sourceColor: srcNode.color,
-            targetColor: nodes[target].color,
+                const xStart = checkNaN(srcCoord.x + nodeW);
+                const xEnd = checkNaN(tgtCoord.x);
+
+                let pathStr;
+
+                if (!smoothLinks || xEnd <= xStart) {
+                    pathStr =
+                        `M ${xStart} ${sY1}` +
+                        ` L ${xStart} ${sY2}` +
+                        ` L ${xEnd} ${tY2}` +
+                        ` L ${xEnd} ${tY1} Z`;
+                } else {
+                    const dx = xEnd - xStart;
+                    const c1x = checkNaN(xStart + dx * curvature);
+                    const c2x = checkNaN(xEnd - dx * curvature);
+
+                    const topYStart = sY1;
+                    const topYEnd = tY1;
+                    const bottomYStart = sY2;
+                    const bottomYEnd = tY2;
+
+                    pathStr =
+                        `M ${xStart} ${topYStart}` +
+                        ` C ${c1x} ${topYStart}, ${c2x} ${topYEnd}, ${xEnd} ${topYEnd}` +
+                        ` L ${xEnd} ${bottomYEnd}` +
+                        ` C ${c2x} ${bottomYEnd}, ${c1x} ${bottomYStart}, ${xStart} ${bottomYStart}` +
+                        ` Z`;
+                }
+
+                links.push({
+                    id: createUid(),
+                    source: name,
+                    target,
+                    path: pathStr,
+                    value,
+                    sourceColor: srcNode.color,
+                    targetColor: nodes[target].color,
+                });
+
+                srcInnerY = sY2 - yOffset;
+                tgtOffsets[target] = tEnd;
             });
-
-            srcInnerY = sY2 - yOffset;
-            tgtOffsets[target] = tEnd;
-        });
         });
     });
 
     return { nodeCoordinates, links };
 }
+
 
 const mutableDataset = computed(() => {
     const d = computeSankeyCoordinates(FINAL_DATASET.value);
@@ -1269,14 +1309,20 @@ defineExpose({
             />
 
             <g v-if="FINAL_CONFIG.style.chart.nodes.labels.show">
-                <text data-cy="node-name" v-for="(node, i) in mutableDataset.nodes" :x="node.x + nodeWidth / 2" :y="checkNaN(
-                    node.absoluteY +
-                    node.height / 2 -
-                    FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4
-                ) + FINAL_CONFIG.style.chart.padding.top
-                    " :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" :fill="adaptColorToBackground(node.color)"
-                    text-anchor="middle" :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1
-                        }`">
+                <text 
+                    data-cy="node-name" 
+                    v-for="(node, i) in mutableDataset.nodes" 
+                    :x="node.x + nodeWidth / 2" 
+                    :y="(FINAL_CONFIG.style.chart.nodes.labels.showValue ? checkNaN(
+                        node.absoluteY +
+                        node.height / 2 -
+                        FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4
+                    ) : node.absoluteY + node.height / 2 + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3) + FINAL_CONFIG.style.chart.padding.top" 
+                    :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" 
+                    :fill="adaptColorToBackground(node.color)"
+                    text-anchor="middle" 
+                    :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1}`"
+                >
                     {{
                         FINAL_CONFIG.style.chart.nodes.labels.abbreviation.use
                             ? abbreviate({
@@ -1287,28 +1333,36 @@ defineExpose({
                             : node.name
                     }}
                 </text>
-                <text data-cy="node-value" v-for="(node, i) in mutableDataset.nodes" :x="node.x + nodeWidth / 2" :y="checkNaN(
-                    node.absoluteY +
-                    node.height / 2 +
-                    FINAL_CONFIG.style.chart.nodes.labels.fontSize
-                ) + FINAL_CONFIG.style.chart.padding.top
-                    " :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" :fill="adaptColorToBackground(node.color)"
-                    text-anchor="middle" :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1
-                        }`">
-                    {{
-                        applyDataLabel(
-                            FINAL_CONFIG.style.chart.nodes.labels.formatter,
-                            node.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
-                                v: node.value,
-                                s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
-                                r: FINAL_CONFIG.style.chart.nodes.labels.rounding,
-                            }),
-                            { datapoint: node, seriesIndex: i }
-                    )
-                    }}
-                </text>
+
+                <template v-if="FINAL_CONFIG.style.chart.nodes.labels.showValue">
+                    <text 
+                        data-cy="node-value" 
+                        v-for="(node, i) in mutableDataset.nodes" 
+                        :x="node.x + nodeWidth / 2" 
+                        :y="checkNaN(
+                            node.absoluteY +
+                            node.height / 2 +
+                            FINAL_CONFIG.style.chart.nodes.labels.fontSize / 1.3
+                        ) + FINAL_CONFIG.style.chart.padding.top" 
+                        :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" 
+                        :fill="adaptColorToBackground(node.color)"
+                        text-anchor="middle" 
+                        :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1}`"
+                    >
+                        {{
+                            applyDataLabel(
+                                FINAL_CONFIG.style.chart.nodes.labels.formatter,
+                                node.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
+                                    v: node.value,
+                                    s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
+                                    r: FINAL_CONFIG.style.chart.nodes.labels.rounding,
+                                }),
+                                { datapoint: node, seriesIndex: i })
+                        }}
+                    </text>
+                </template>
             </g>
 
             <slot name="svg" :svg="drawingArea" />

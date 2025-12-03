@@ -7411,6 +7411,8 @@ declare module "vue-data-ui" {
                     // minHeight?: number; // v3 deprecated
                     width?: number;
                     labels?: {
+                        show?: boolean;
+                        showValue?: boolean;
                         fontSize?: number;
                         abbreviation?: {
                             use?: boolean;
@@ -7430,6 +7432,7 @@ declare module "vue-data-ui" {
                     opacity?: number;
                     stroke?: string;
                     strokeWidth?: number;
+                    smooth?: boolean;
                 };
             };
         };
