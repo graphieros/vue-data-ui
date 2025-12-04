@@ -66,6 +66,7 @@ const maxY = computed(() => {
             :quanta="digit.quanta"
             :color="FINAL_CONFIG.digits.color"
             :backgroundColor="FINAL_CONFIG.digits.skeletonColor"
+            :thickness="FINAL_CONFIG.digits.thickness"
         />
     </svg>
 </template>

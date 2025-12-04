@@ -1092,6 +1092,7 @@ declare module "vue-data-ui" {
         digits?: {
             color?: string;
             skeletonColor?: string;
+            thickness?: number;
         };
     };
 

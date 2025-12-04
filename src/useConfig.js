@@ -5872,7 +5872,8 @@ export function useConfig() {
         backgroundColor: COLOR_WHITE,
         digits: {
             color: COLOR_BLACK,
-            skeletonColor: COLOR_GREY_LIGHT
+            skeletonColor: COLOR_GREY_LIGHT,
+            thickness: 1,
         }
     }
 
