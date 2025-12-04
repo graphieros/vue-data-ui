@@ -29,7 +29,7 @@ const dataset = ref({ rating: {
     '2': 43.12356,
     '3': 27.12356,
     '4': 19.12356,
-    '5': 29.12356
+    '5': 55.12356
 } });
     
 const model = createModel([
@@ -56,7 +56,7 @@ const model = createModel([
     CHECKBOX("style.rating.bold", { def: true }),
     NUMBER("style.rating.roundingValue", { def: 1, min: 0, max: 6 }),
     SELECT("style.rating.position", ["top", "right", "bottom", "left"], { def: "bottom" }),
-    NUMBER("style.rating.offsetY", { def: 12, min: -50, max: 50 }),
+    NUMBER("style.rating.offsetY", { def: 0, min: -50, max: 50 }),
     NUMBER("style.rating.offsetX", { def: 0, min: -50, max: 50 }),
 
     CHECKBOX("style.tooltip.show", { def: true }),
