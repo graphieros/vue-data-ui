@@ -1528,7 +1528,9 @@ declare module "vue-data-ui" {
         | "zoomLock"
         | "zoomUnlock"
         | "lock"
-        | "unlock";
+        | "unlock"
+        | "triangleInformation"
+        | "triangleExclamation";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -6256,7 +6258,7 @@ declare module "vue-data-ui" {
 
     export type VueUiTableHeatmapDatasetItem = {
         name: string;
-        values: Array<number | string>;
+        values: Array<number | string | null>;
         color?: string;
         shape?:
         | "circle"
