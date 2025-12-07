@@ -26,7 +26,7 @@ const {
 
 const dataset = ref({
     nodes: [
-        { id: "A", label: "AAA", backgroundColor: '#FF0000', color: 'white'},
+        { id: "A", label: "AAA\naaa", backgroundColor: '#FF0000', color: 'white'},
         { id: "B", label: "BBB",},
         { id: "C", label: "CCC", color: '#FF0000'},
         { id: "D", label: "DDD" },

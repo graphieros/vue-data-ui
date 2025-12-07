@@ -196,7 +196,7 @@ watch(() => props.config, (_newCfg) => {
     titleStep.value += 1;
     direction.value = FINAL_CONFIG.value.style.chart.layout.rankDirection;
     panZoomActive.value = FINAL_CONFIG.value.style.chart.zoom.active;
-});
+}, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `dag_${uid.value}`,
@@ -740,7 +740,7 @@ defineExpose({
         </div>
 
         <BaseZoomControls 
-            v-if="FINAL_CONFIG.style.chart.controls.position === 'top' && !loading"
+            v-if="FINAL_CONFIG.style.chart.controls.position === 'top' && !loading && FINAL_CONFIG.style.chart.controls.show"
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
@@ -858,8 +858,7 @@ defineExpose({
                         <text
                             v-if="$slots['node-label']"
                             :x="node.x" 
-                            :y="node.y" 
-                            dominant-baseline="middle" 
+                            :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
                             text-anchor="middle" 
                             :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
                             :fill="node.original.color"
@@ -875,8 +874,7 @@ defineExpose({
                             data-cy-node-label
                             v-else
                             :x="node.x" 
-                            :y="node.y" 
-                            dominant-baseline="middle" 
+                            :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
                             text-anchor="middle" 
                             :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
                             :fill="node.original.color"
@@ -930,6 +928,10 @@ defineExpose({
             }"/>
         </svg>
 
+        <div v-if="$slots.watermark" class="vue-data-ui-watermark">
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+        </div>
+
         <!-- Midpoint tooltip -->
         <Transition name="fade">
             <Teleport :to="isFullscreen ? dagChart : 'body'" v-if="isTooltip">
@@ -980,7 +982,7 @@ defineExpose({
         </Transition>
 
         <BaseZoomControls 
-            v-if="FINAL_CONFIG.style.chart.controls.position === 'bottom' && !loading"
+            v-if="FINAL_CONFIG.style.chart.controls.position === 'bottom' && !loading && FINAL_CONFIG.style.chart.controls.show"
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"

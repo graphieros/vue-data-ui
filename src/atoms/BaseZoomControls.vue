@@ -59,7 +59,8 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
         :style="{
             color: config.style.chart.controls.color,
             width: config.style.chart.controls.fontSize * 4 + 'px',
-            borderRadius: config.style.chart.controls.borderRadius
+            borderRadius: config.style.chart.controls.borderRadius,
+            fontSize: config.style.chart.controls.fontSize + 'px'
         }"
     >
         {{ Math.round(scale * 100) }}%
