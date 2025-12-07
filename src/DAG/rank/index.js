@@ -1,0 +1,61 @@
+import * as rankUtil from "./util.js";
+import feasibleTree from "./feasible-tree.js";
+import networkSimplex from "./network-simplex.js";
+
+/*
+ * Assigns a rank to each node in the input graph that respects the "minlen"
+ * constraint specified on edges between nodes.
+ *
+ * This basic structure is derived from Gansner, et al., "A Technique for
+ * Drawing Directed Graphs."
+ *
+ * Pre-conditions:
+ *
+ *    1. Graph must be a connected DAG
+ *    2. Graph nodes must be objects
+ *    3. Graph edges must have "weight" and "minlen" attributes
+ *
+ * Post-conditions:
+ *
+ *    1. Graph nodes will have a "rank" attribute based on the results of the
+ *       algorithm. Ranks can start at any index (including negative), we'll
+ *       fix them up later.
+ */
+
+const longestPath = rankUtil.longestPath;
+
+export default function rank(g) {
+    const ranker = g.graph().ranker;
+
+    if (ranker instanceof Function) {
+        return ranker(g);
+    }
+
+    switch (g.graph().ranker) {
+        case "network-simplex":
+            networkSimplexRanker(g);
+            break;
+        case "tight-tree":
+            tightTreeRanker(g);
+            break;
+        case "longest-path":
+            longestPathRanker(g);
+            break;
+        case "none":
+            break;
+        default:
+            networkSimplexRanker(g);
+    }
+}
+
+// A fast simple ranker (not optimal)
+const longestPathRanker = longestPath;
+
+function tightTreeRanker(g) {
+    longestPath(g);
+    feasibleTree(g);
+}
+
+function networkSimplexRanker(g) {
+    networkSimplex(g);
+}
