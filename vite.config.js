@@ -81,6 +81,7 @@ const entries = {
   "components/vue-ui-world": resolve(__dirname, "src/entries/vue-ui-world.js"),
   "components/vue-ui-ridgeline": resolve(__dirname, "src/entries/vue-ui-ridgeline.js"),
   "components/vue-ui-chord": resolve(__dirname, "src/entries/vue-ui-chord.js"),
+  "components/vue-ui-dag": resolve(__dirname, "src/entries/vue-ui-dag.js")
 };
 
 export default defineConfig({

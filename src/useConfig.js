@@ -6766,6 +6766,90 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_dag = {
+        loading: false,
+        debug: false,
+        theme: '',
+        userOptions: USER_OPTIONS({
+            tooltip: false,
+            pdf: true,
+            csv: false,
+            img: true,
+            fullscreen: true,
+            annotator: true,
+            svg: true,
+            zoom: true
+        }),
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                layout: {
+                    rankDirection: 'TB',
+                    rankSeparation: 60,
+                    nodeSeparation: 50,
+                    edgeSeparation: 30,
+                    nodeWidth: 100,
+                    nodeHeight: 40,
+                    curvedEdges: true,
+                    padding: 48,
+                    arrowShape: 'vee',
+                    arrowSize: 8,
+                    align: undefined
+                },
+                nodes: {
+                    stroke: COLOR_GREY_LIGHT,
+                    strokeWidth: 1,
+                    borderRadius: 3,
+                    backgroundColor: COLOR_WHITE,
+                    labels: {
+                        color: COLOR_BLACK,
+                        fontSize: FONT._12,
+                        bold: false
+                    },
+                    tooltip: {
+                        showOnClick: false,
+                        backgroundColor: COLOR_GREY_LIGHT,
+                        color: COLOR_BLACK,
+                        maxWidth: '300px'
+                    }
+                },
+                edges: {
+                    stroke: COLOR_GREY_MID,
+                    strokeWidth: 1,
+                },
+                midpoints: {
+                    show: false,
+                    radius: 4,
+                    stroke: COLOR_GREY_MID,
+                    fill: COLOR_WHITE,
+                    strokeWidth: 1,
+                    tooltip: {
+                        maxWidth: '300px',
+                        backgroundColor: COLOR_GREY_LIGHT,
+                        color: COLOR_BLACK,
+                    }
+                },
+                controls: {
+                    position: 'bottom',
+                    show: true,
+                    backgroundColor: COLOR_GREY_LIGHT,
+                    buttonColor: COLOR_GREY_LIGHT,
+                    color: COLOR_BLACK,
+                    fontSize: 14,
+                    border: `1px solid ${COLOR_GREY_MID}`,
+                    padding: `0.5rem`,
+                    borderRadius: `0.25rem`
+                },
+                zoom: {
+                    active: true,
+                },
+                title: TITLE
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -6819,6 +6903,7 @@ export function useConfig() {
         vue_ui_ridgeline,
         vue_ui_chord,
         vue_ui_stackline,
+        vue_ui_dag,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,

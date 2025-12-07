@@ -76,7 +76,8 @@ const components = {
     VueUiCirclePack: defineAsyncComponent(() => import('./vue-ui-circle-pack.vue')),
     VueUiWorld: defineAsyncComponent(() => import('./vue-ui-world.vue')),
     VueUiRidgeline: defineAsyncComponent(() => import('./vue-ui-ridgeline.vue')),
-    VueUiChord: defineAsyncComponent(() => import('./vue-ui-chord.vue'))
+    VueUiChord: defineAsyncComponent(() => import('./vue-ui-chord.vue')),
+    VueUiDag: defineAsyncComponent(() => import('./vue-ui-dag.vue'))
 };
 
 const componentProps = {
@@ -143,7 +144,8 @@ const componentProps = {
     VueUiCirclePack: ['config', 'dataset'],
     VueUiWorld: ['config', 'dataset'],
     VueUiRidgeline: ['config', 'dataset'],
-    VueUiChord: ['config', 'dataset']
+    VueUiChord: ['config', 'dataset'],
+    VueUiDag: ['config', 'dataset']
 };
 
 const emit = defineEmits([
@@ -177,6 +179,9 @@ const emit = defineEmits([
     'showSeries',
     'hideSeries',
     'toggleZoom',
+    'onNodeClick',
+    'onMidpointEnter',
+    'onMidpointLeave'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -225,6 +230,12 @@ const resetZoom = ref(() => null);
 const showSeries = ref(() => null);
 const hideSeries = ref(() => null);
 const toggleZoom = ref(() => null);
+const onNodeClick = ref(() => null);
+const onMidpointEnter = ref(() => null);
+const onMidpointLeave = ref(() => null);
+const zoomIn = ref(() => null);
+const zoomOut = ref(() => null);
+const switchOrientation = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -333,6 +344,24 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.toggleZoom) {
             toggleZoom.value = newRef.toggleZoom;
         }
+        if (newRef.onNodeClick) {
+            onNodeClick.value = newRef.onNodeClick;
+        }
+        if (newRef.onMidpointEnter) {
+            onMidpointEnter.value = newRef.onMidpointEnter;
+        }
+        if (newRef.onMidpointLeave) {
+            onMidpointLeave.value = newRef.onMidpointLeave;
+        }
+        if (newRef.zoomIn) {
+            zoomIn.value = newRef.zoomIn;
+        }
+        if (newRef.zoomOut) {
+            zoomOut.value = newRef.zoomOut;
+        }
+        if (newRef.switchOrientation) {
+            switchOrientation.value = newRef.switchOrientation;
+        }
     }
 })
 
@@ -371,7 +400,13 @@ const getEventHandlers = () => {
         'resetZoom',
         'showSeries',
         'hideSeries',
-        'toggleZoom'
+        'toggleZoom',
+        'onNodeClick',
+        'onMidpointEnter',
+        'onMidpointLeave',
+        'zoomIn',
+        'zoomOut',
+        'switchOrientation'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -451,7 +486,10 @@ defineExpose({
     resetZoom,
     showSeries,
     hideSeries,
-    toggleZoom
+    toggleZoom,
+    zoomIn,
+    zoomOut,
+    switchOrientation
 });
 
 const notSupported = computed(() => {

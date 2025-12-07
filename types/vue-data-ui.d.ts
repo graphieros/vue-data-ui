@@ -66,7 +66,8 @@ declare module "vue-data-ui" {
         | VueUiWorldDataset
         | VueUiRidgelineDatasetItem[]
         | VueUiChordDataset
-        | VueUiStacklineDatasetItem[];
+        | VueUiStacklineDatasetItem[]
+        | VueUiDagDataset;
 
     export type VueDataUiAnyConfig =
         | VueUi3dBarConfig
@@ -129,7 +130,8 @@ declare module "vue-data-ui" {
         | VueUiWorldConfig
         | VueUiRidgelineConfig
         | VueUiChordConfig
-        | VueUiStacklineConfig;
+        | VueUiStacklineConfig
+        | VueUiDagConfig;
 
     export type VueDataUiProps = {
         loader?: VueDataUiLoader | null;
@@ -171,6 +173,9 @@ declare module "vue-data-ui" {
         selectGroup?: (...args: any[]) => void;
         selectRibbon?: (...args: any[]) => void;
         resetZoom?: () => void;
+        zoomIn?: () => void;
+        zoomOut?: () => void;
+        switchDirection?: () => void;
         [key: string]: any;
     };
 
@@ -1530,7 +1535,9 @@ declare module "vue-data-ui" {
         | "lock"
         | "unlock"
         | "triangleInformation"
-        | "triangleExclamation";
+        | "triangleExclamation"
+        | "direction"
+        | "chartDag";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -9425,6 +9432,135 @@ declare module "vue-data-ui" {
         VueUiChordExpose
     >
 
+    export type VueUiDagNode = {
+        [key: string]: any;
+        id: string;
+        label: string;
+        backgroundColor?: string;
+        color?: string;
+    }
+
+    export type VueUiDagEdge = {
+        from: string;
+        to: string;
+        color?: string;
+    }
+
+    export type VueUiDagDataset = {
+        nodes: VueUiDagNode[];
+        edges: VueUiDagEdge[];
+    }
+
+    export type VueUiDagConfig = {
+        loading?: boolean;
+        debug?: boolean;
+        theme?: Theme;
+        userOptions?: ChartUserOptions;
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                layout?: {
+                    rankDirection?: 'TB' | 'RL' | 'BT' | 'LR';
+                    rankSeparation?: number;
+                    nodeSeparation?: number;
+                    edgeSeparation?: number;
+                    nodeWidth?: number;
+                    nodeHeight?: number;
+                    curvedEdges?: boolean;
+                    padding?: number;
+                    arrowShape?: 'undirected' | 'normal' | 'vee';
+                    align?: 'UL' | 'UR' | 'DL' | 'DR' | undefined;
+                    arrowSize?: number;
+                };
+                nodes?: {
+                    stroke?: string;
+                    strokeWidth?: number;
+                    borderRadius?: number;
+                    backgroundColor?: string;
+                    labels?: {
+                        color?: string;
+                        fontSize?: number;
+                        bold?: boolean;
+                    };
+                    tooltip?: {
+                        showOnClick?: boolean;
+                        backgroundColor?: string;
+                        color?: string;
+                        maxWidth?: string;
+                    };
+                };
+                edges?: {
+                    stroke?: string;
+                    strokeWidth?: number;
+                };
+                midpoints?: {
+                    show?: boolean;
+                    radius?: number;
+                    stroke?: string;
+                    fill?: string;
+                    strokeWidth?: number;
+                    tooltip?: {
+                        maxWidth?: string;
+                        backgroundColor?: string;
+                        color?: string;
+                    };
+                };
+                controls?: {
+                    position?: 'top' | 'bottom';
+                    show?: boolean;
+                    backgroundColor?: string;
+                    buttonColor?: string;
+                    color?: string;
+                    fontSize?: number;
+                    border?: string;
+                    padding?: string;
+                    borderRadius?: string;
+                };
+                zoom?: {
+                    active?: boolean;
+                };
+                title?: ChartTitle;
+            }
+        }
+    }
+
+    export type VueUiDagExpose = {
+        getData(): Promise<{
+            arrowShape: 'undirected' | 'normal' | 'vee',
+            arrowSize: number,
+            edges: Array<{
+                [key: string]: any;
+                from: string;
+                to: string;
+                id: string;
+            }>,
+            nodes: Array<{
+                [key: string]: any;
+                id: string;
+            }>,
+            viewBox: string
+        }>
+        getImage(options?: { scale?: number }): GetImagePromise
+        generatePdf(): void
+        generateImage(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+        zoomIn(): void
+        zoomOut(): void
+        resetZoom(): void
+        switchDirection(): void
+    }
+
+    export const VueUiDag: DefineComponent<
+        {
+            config?: VueUiDagConfig;
+            dataset: VueUiDagDataset
+        },
+        VueUiDagExpose
+    >
+
     export type VueDataUiConfig =
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -9488,7 +9624,8 @@ declare module "vue-data-ui" {
         | VueUiWorldConfig
         | VueUiRidgelineConfig
         | VueUiChordConfig
-        | VueUiStacklineConfig;
+        | VueUiStacklineConfig
+        | VueUiDagConfig;
 
     export type VueDataUiConfigKey =
         | "vue_ui_3d_bar"
@@ -9553,7 +9690,8 @@ declare module "vue-data-ui" {
         | "vue_ui_world"
         | "vue_ui_ridgeline"
         | "vue_ui_chord"
-        | "vue_ui_stackline";
+        | "vue_ui_stackline"
+        | "vue_ui_dag";
 
     export type VueDataUiWordCloudTransformCallback =
         | ((word: string) => string)
