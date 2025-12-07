@@ -8,7 +8,7 @@ export function useLoading({
     FINAL_CONFIG,
     prepareConfig,
     callback = null,
-    dsIsNumber = false
+    dsIsNumber = false,
 }) {
     const manualLoading = ref(false);
 
@@ -18,6 +18,8 @@ export function useLoading({
         const datasetEmpty = dsIsNumber ? [null, undefined].includes(ds) : ds == null 
             || (Array.isArray(ds) && ds.length === 0) 
             || Object.keys(ds).length === 0
+
+        
 
         return manualLoading.value || configLoading || datasetEmpty;
     });

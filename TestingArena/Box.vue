@@ -9,7 +9,7 @@ const props = defineProps({
         type: String
     },
     dataset: {
-        type: [Object, Array]
+        type: [Object, Array, Number]
     },
     config: {
         type: Object,

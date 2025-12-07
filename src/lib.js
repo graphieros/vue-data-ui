@@ -1755,11 +1755,14 @@ export function createTSpansFromLineBreaksOnX({ content, fontSize, fill, x, y })
         .join('');
 }
 
-export function createTSpansFromLineBreaksOnY({ content, fontSize, fill, x }) {
+export function createTSpansFromLineBreaksOnY({ content, fontSize, fill, x, autoOffset = false }) {
     const lines = content.split('\n');
+
+    const offset = !autoOffset ? 0  : ((lines.length - 1) * fontSize) / 2;
+
     return lines
         .map((line, idx) => {
-            const dy = idx === 0 ? 0 : fontSize;
+            const dy = idx === 0 ? -offset : fontSize;
             return `<tspan x="${x}" dy="${dy}" fill="${fill}">${line}</tspan>`;
         })
         .join('');
@@ -3408,6 +3411,22 @@ export function escapeXmlAttr(str) {
         .replaceAll(">", "&gt;");
 }
 
+export function getPathMidpoint(pathData) {
+    if (!pathData || typeof pathData !== "string") {
+        return null;
+    }
+
+    const svg = document.createElementNS(XMLNS, "svg");
+    svg.setAttribute("xmlns", XMLNS);
+    const path = document.createElementNS(XMLNS, "path");
+    path.setAttribute("d", pathData);
+    svg.appendChild(path);
+    const totalLength = path.getTotalLength();
+    const midpoint = path.getPointAtLength(totalLength / 2);
+
+    return { x: midpoint.x, y: midpoint.y };
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -3479,6 +3498,7 @@ const lib = {
     getCumulativeMedian,
     getMissingDatasetAttributes,
     getPalette,
+    getPathMidpoint,
     getScaleFactorUsingArcSize,
     giftWrap,
     hasDeepProperty,

@@ -65,6 +65,7 @@ export { default as VueUiCirclePack } from "./components/vue-ui-circle-pack.vue"
 export { default as VueUiWorld } from "./components/vue-ui-world.vue";
 export { default as VueUiRidgeline } from "./components/vue-ui-ridgeline.vue";
 export { default as VueUiChord } from "./components/vue-ui-chord.vue";
+export { default as VueUiDag } from "./components/vue-ui-dag.vue";
 export { default as VueDataUi } from "./components/vue-data-ui.vue";
 
 export { default as getVueDataUiConfig} from "./getVueDataUiConfig";

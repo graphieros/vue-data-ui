@@ -4,7 +4,8 @@ export default function usePanZoom(
     svgRef,
     initialViewBox = { x: 0, y: 0, width: 100, height: 100 },
     speed = 1,
-    activeRef
+    activeRef,
+    callbackOnZoom = null
 ) {
     const initial = ref({ ...initialViewBox });
     const viewBox = ref({ ...initial.value });
@@ -77,6 +78,7 @@ export default function usePanZoom(
     }
 
     function zoom(event) {
+        callbackOnZoom && callbackOnZoom();
         event.preventDefault();
         const factor = event.deltaY > 0 ? 0.9 : 1.1;
         applyZoom(factor, toSvgPoint(event));
@@ -85,7 +87,7 @@ export default function usePanZoom(
     function doubleClickZoom(event) {
         event.preventDefault();
         const cursorPoint = toSvgPoint(event);
-        const factor = 1.02 * (1 + speed / 100);
+        const factor = 1.5 * (1 + speed / 100);
         animateZoom(factor, cursorPoint);
     }
 
@@ -93,18 +95,26 @@ export default function usePanZoom(
         if (zoomAnimationFrame) cancelAnimationFrame(zoomAnimationFrame);
         const startScale = scale.value;
         const targetScale = startScale * factor;
-        let progress = 0;
+        let t0 = null;
+        const duration = 200;
 
-        const ease = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+        const ease = t => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
 
-        const step = () => {
-            progress += 0.02;
-            const currentScale = startScale + (targetScale - startScale) * ease(progress);
-            applyZoom(currentScale / startScale, cursorPoint);
-            if (progress < 1) zoomAnimationFrame = requestAnimationFrame(step);
-            else zoomAnimationFrame = null;
+        const step = ts => {
+            if (t0 == null) t0 = ts;
+            const p = Math.min((ts - t0) / duration, 1);
+            const desiredScale = startScale + (targetScale - startScale) * ease(p);
+            const relativeFactor = desiredScale / scale.value;
+            applyZoom(relativeFactor, cursorPoint);
+
+            if (p < 1) {
+                zoomAnimationFrame = requestAnimationFrame(step);
+            } else {
+                zoomAnimationFrame = null;
+            }
         };
-        step();
+
+        requestAnimationFrame(step);
     }
 
     function applyZoom(zoomFactor, cursorPoint) {
@@ -186,8 +196,14 @@ export default function usePanZoom(
 
     function setInitialViewBox(box, opts = {}) {
         const { overwriteCurrentIfNotZoomed = true } = opts;
+        const wasZoomed =
+            viewBox.value.x !== initial.value.x ||
+            viewBox.value.y !== initial.value.y ||
+            viewBox.value.width !== initial.value.width ||
+            viewBox.value.height !== initial.value.height;
+
         initial.value = { ...box };
-        if (!isZoom.value && overwriteCurrentIfNotZoomed) {
+        if (!wasZoomed && overwriteCurrentIfNotZoomed) {
             viewBox.value = { ...initial.value };
             scale.value = 1;
         }
@@ -246,5 +262,17 @@ export default function usePanZoom(
         if (!activeRef || activeRef.value) addEventListeners();
     });
 
-    return { viewBox, resetZoom, isZoom, setInitialViewBox };
+    function zoomByFactor(factor, animated = false) {
+        const center = {
+            x: viewBox.value.x + viewBox.value.width / 2,
+            y: viewBox.value.y + viewBox.value.height / 2
+        };
+        if (animated) {
+            animateZoom(factor, center);
+        } else {
+            applyZoom(factor, center);
+        }
+    }
+
+    return { viewBox, resetZoom, isZoom, setInitialViewBox, scale, zoomByFactor };
 }
