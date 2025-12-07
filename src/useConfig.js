@@ -6799,7 +6799,7 @@ export function useConfig() {
                     align: undefined
                 },
                 nodes: {
-                    stroke: COLOR_GREY_LIGHT,
+                    stroke: COLOR_GREY_MID,
                     strokeWidth: 1,
                     borderRadius: 3,
                     backgroundColor: COLOR_WHITE,

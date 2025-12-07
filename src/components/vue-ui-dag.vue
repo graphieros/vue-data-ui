@@ -597,16 +597,6 @@ async function getImage({ scale = 2} = {}) {
     }
 }
 
-/**
- * TODO:
- * - events
- * - optional knots at mid-edge with events
- * - check if stroke can be made not to bleed out on nodes (like strokes on text elements)
- * - expose:
- *      > control functions
- *      > recomputeLayout
- */
-
 function getData() {
     return layoutData.value;
 }
@@ -817,7 +807,7 @@ defineExpose({
                         :d="edge.pathData" 
                         fill="none" 
                         :stroke="edge.original.color ?? FINAL_CONFIG.style.chart.edges.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * (edge.from === highlightedNodeId ? 2 : 1)" 
+                        :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === highlightedNodeId || edge.id === tooltipEdge?.id) ? 2 : 1)" 
                         stroke-linecap="round" 
                         stroke-linejoin="round" 
                         style="pointer-events: none; transition: stroke-width 0.2s ease-in-out"
@@ -831,7 +821,7 @@ defineExpose({
                         :r="FINAL_CONFIG.style.chart.midpoints.radius"
                         :fill="FINAL_CONFIG.style.chart.midpoints.fill"
                         :stroke="edge.original.color ?? FINAL_CONFIG.style.chart.midpoints.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.midpoints.strokeWidth * (edge.from === highlightedNodeId ? 2 : 1)"
+                        :stroke-width="FINAL_CONFIG.style.chart.midpoints.strokeWidth * ((edge.from === highlightedNodeId || edge.id === tooltipEdge?.id) ? 2 : 1)"
                         style="transition: stroke-width 0.2s ease-in-out"
                         @mouseenter="showMidpointTooltip(edge)"
                         @mouseleave="hideMidpointTooltip"
@@ -924,7 +914,7 @@ defineExpose({
                     :d="edge.pathData" 
                     fill="none" 
                     stroke="transparent"
-                    :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * (edge.from === highlightedNodeId ? 1.3 : 1)" 
+                    :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === highlightedNodeId || edge.id === tooltipEdge?.id) ? 1.3 : 1)" 
                     stroke-linecap="round" 
                     stroke-linejoin="round"
                     :marker-end="layoutData.arrowShape === 'undirected'
