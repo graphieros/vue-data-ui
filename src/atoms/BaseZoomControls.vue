@@ -44,6 +44,7 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
     <button 
         @click="emit('zoomOut')" 
         class="vue-data-ui-zoom-controls-button"
+        data-cy-zoom-out
     >
         <BaseIcon 
             name="zoomMinus" 
@@ -54,6 +55,7 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
     <button 
         class="vue-data-ui-zoom-controls-button-zoom"
         @click="emit('resetZoom')"
+        data-cy-zoom-reset
         :style="{
             color: config.style.chart.controls.color,
             width: config.style.chart.controls.fontSize * 4 + 'px',
@@ -65,6 +67,7 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
     <button 
         @click="emit('zoomIn')" 
         class="vue-data-ui-zoom-controls-button"
+        data-cy-zoom-in
     >
         <BaseIcon 
             name="zoomPlus" 

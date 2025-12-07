@@ -812,7 +812,8 @@ defineExpose({
             <!-- Edges -->
             <g class="vue-ui-dag-edges">
                 <template v-for="edge in layoutData.edges" :key="edge.id">
-                    <path 
+                    <path
+                        data-cy-edge
                         :d="edge.pathData" 
                         fill="none" 
                         :stroke="edge.original.color ?? FINAL_CONFIG.style.chart.edges.stroke"
@@ -822,6 +823,7 @@ defineExpose({
                         style="pointer-events: none; transition: stroke-width 0.2s ease-in-out"
                     />
                     <circle
+                        data-cy-midpoint
                         class="vue-ui-dag-edge-midpoint"
                         v-if="FINAL_CONFIG.style.chart.midpoints.show"
                         :cx="edge.midpoint.x"
@@ -848,7 +850,8 @@ defineExpose({
                     @mouseleave="highlightedNodeId = null"
                 >
                     <template v-if="!$slots.node">
-                        <rect 
+                        <rect
+                            data-cy-node
                             :x="node.x - node.width / 2" 
                             :y="node.y - node.height / 2" 
                             :width="node.width"
@@ -879,6 +882,7 @@ defineExpose({
 
                         <!-- default label, multiline when provided with /n -->
                         <text 
+                            data-cy-node-label
                             v-else
                             :x="node.x" 
                             :y="node.y" 
@@ -940,6 +944,7 @@ defineExpose({
         <Transition name="fade">
             <Teleport :to="isFullscreen ? dagChart : 'body'" v-if="isTooltip">
                 <div
+                    data-cy-tooltip-midpoint
                     ref="tooltipRef"
                     class="vue-ui-dag-tooltip"
                     :style="{
@@ -963,6 +968,7 @@ defineExpose({
         <Transition name="fade">
             <Teleport :to="isFullscreen ? dagChart : 'body'" v-if="isNodeTooltip">
                 <div
+                    data-cy-tooltip-node
                     ref="nodeTooltipRef"
                     class="vue-ui-dag-node-tooltip"
                     :style="{

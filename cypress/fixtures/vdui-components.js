@@ -6,6 +6,41 @@
  */
 export const components = [
     {
+        name: 'VueUiDag',
+        dataset: {
+            nodes: [
+                { id: 'A', label: 'AAA' },
+                { id: 'B', label: 'BBB' },
+                { id: 'C', label: 'CCC' },
+            ],
+            edges: [
+                { from: 'A', to: 'B' },
+                { from: 'A', to: 'C' },
+            ]
+        },
+        config: {
+            style: {
+                chart: {
+                    nodes: {
+                        tooltip: {
+                            showOnClick: true
+                        }
+                    },
+                    midpoints: {
+                        show: true
+                    },
+                    title: {
+                        text: 'Title',
+                        subtitle: {
+                            text: 'Subtitle'
+                        }
+                    }
+                }
+            }
+        },
+        wrapperClass: '.vue-ui-dag'
+    },
+    {
         name: 'VueUiChord',
         dataset: {
             matrix: [
