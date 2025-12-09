@@ -105,7 +105,8 @@ export function useDag(options) {
         rawEdges.forEach(edge => {
             graphInstance.setEdge(edge.from, edge.to, {
                 weight: edge.weight ?? 1,
-                minlen: edge.minLength ?? 1
+                minlen: edge.minLength ?? 1,
+                arrowShape: finalConfiguration.arrowShape ?? 'normal'
             });
         });
 

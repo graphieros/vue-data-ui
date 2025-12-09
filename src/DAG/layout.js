@@ -100,7 +100,7 @@ const edgeDefaults = {
     labeloffset: 10,
     labelpos: "r",
 };
-const edgeAttrs = ["labelpos"];
+const edgeAttrs = ["labelpos", "arrowshape"]; // must be lowercase
 
 function buildLayoutGraph(inputGraph) {
     const graph = canonicalize(inputGraph.graph());
@@ -250,13 +250,37 @@ function translateGraph(graph) {
 }
 
 function assignNodeIntersects(graph) {
-    graph.edges().forEach(edgeObj => {
-        const edge = graph.edge(edgeObj);
-        const nodeV = graph.node(edgeObj.v);
-        const nodeW = graph.node(edgeObj.w);
+    const ENDPOINT_OFFSET = 4;
+
+    function shortenPoint(point, neighborPoint, offset) {
+        if (!offset || !neighborPoint) {
+            return point;
+        }
+
+        const deltaX = neighborPoint.x - point.x;
+        const deltaY = neighborPoint.y - point.y;
+        const segmentLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        if (!segmentLength || segmentLength <= offset) {
+            return point;
+        }
+
+        const ratio = offset / segmentLength;
+
+        return {
+            x: point.x + deltaX * ratio,
+            y: point.y + deltaY * ratio,
+        };
+    }
+
+    graph.edges().forEach(edgeObject => {
+        const edge = graph.edge(edgeObject);
+        const nodeV = graph.node(edgeObject.v);
+        const nodeW = graph.node(edgeObject.w);
 
         let firstPoint;
         let lastPoint;
+
         if (!edge.points || !edge.points.length) {
             edge.points = [];
             firstPoint = nodeW;
@@ -266,10 +290,38 @@ function assignNodeIntersects(graph) {
             lastPoint = edge.points[edge.points.length - 1];
         }
 
-        edge.points.unshift(intersectRect(nodeV, firstPoint));
-        edge.points.push(intersectRect(nodeW, lastPoint));
+        const rawStart = intersectRect(nodeV, firstPoint);
+        const rawEnd = intersectRect(nodeW, lastPoint);
+
+        const startNeighborPoint =
+            edge.points.length ? edge.points[0] : firstPoint;
+        const endNeighborPoint =
+            edge.points.length ? edge.points[edge.points.length - 1] : lastPoint;
+
+        const arrowShape = edge.arrowshape;
+        const shouldApplyOffset =
+            arrowShape === "normal" || arrowShape === "vee";
+
+        const isReversed = !!edge.reversed;
+
+        let shortenedStart = rawStart;
+        let shortenedEnd = rawEnd;
+
+        if (shouldApplyOffset) {
+            if (isReversed) {
+                // This side will become the FINAL tip after reversePointsForReversedEdges
+                shortenedStart = shortenPoint(rawStart, startNeighborPoint, ENDPOINT_OFFSET);
+            } else {
+                // Normal case: FINAL tip is at current end
+                shortenedEnd = shortenPoint(rawEnd, endNeighborPoint, ENDPOINT_OFFSET);
+            }
+        }
+
+        edge.points.unshift(shortenedStart);
+        edge.points.push(shortenedEnd);
     });
 }
+
 
 function fixupEdgeLabelCoords(graph) {
     graph.edges().forEach(edgeObj => {

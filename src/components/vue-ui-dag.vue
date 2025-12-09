@@ -170,7 +170,7 @@ function prepareConfig() {
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
-onMounted(() => {
+onMounted(async () => {
     if (objectIsEmpty(props.dataset)) {
         error({
             componentName: 'VueUiDag',
@@ -193,10 +193,11 @@ onMounted(() => {
     }
     isDataset.value = true;
 
+    await nextTick();
     setupResponsive();
 });
 
-watch(() => props.config, (_newCfg) => {
+watch(() => props.config, async (_newCfg) => {
     if (!loading.value) {
         FINAL_CONFIG.value = prepareConfig();
     }
@@ -206,6 +207,7 @@ watch(() => props.config, (_newCfg) => {
     WIDTH.value = FINAL_CONFIG.value.style.chart.width;
     HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
     panZoomActive.value = FINAL_CONFIG.value.style.chart.zoom.active;
+    await nextTick();
     setupResponsive();
 }, { deep: true });
 
@@ -669,7 +671,7 @@ function setupResponsive() {
         const { width, height } = useResponsive({
             chart: dagChart.value,
             title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
-            legend: FINAL_CONFIG.value.style.chart.controls.show ? zoomControls.value.$el : null,
+            legend: FINAL_CONFIG.value.style.chart.controls.show ? zoomControls.value?.$el : null,
             source: source.value
         });
 
@@ -886,32 +888,31 @@ defineExpose({
                         :id="makeMarkerId(color)"
                         :markerWidth="layoutData.arrowSize"
                         :markerHeight="layoutData.arrowSize"
-                        :refX="layoutData.arrowSize - 1"
+                        :refX="layoutData.arrowSize - 3"
                         :refY="layoutData.arrowSize / 2"
                         orient="auto"
                         markerUnits="strokeWidth"
                     >
-                        <!-- `normal` arrow -->
-                        <path
-                            v-if="layoutData.arrowShape === 'normal'"
-                            :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} Z`"
-                            :fill="color"
-                            :stroke="color"
-                            stroke-width="0"
-                        />
+                    <!-- `normal` arrow -->
+                    <path
+                        v-if="layoutData.arrowShape === 'normal'"
+                        :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} Z`"
+                        :fill="color"
+                        :stroke="color"
+                        stroke-width="0"
+                    />
 
-                        <!-- `vee` arrow -->
-                        <path
-                            v-else
-                            :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} L ${layoutData.arrowSize / 3} ${layoutData.arrowSize / 2} Z`"
-                            :fill="color"
-                            :stroke="color"
-                            stroke-width="0"
-                        />
+                    <!-- `vee` arrow -->
+                    <path
+                        v-else
+                        :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} L ${layoutData.arrowSize / 3} ${layoutData.arrowSize / 2} Z`"
+                        :fill="color"
+                        :stroke="color"
+                        stroke-width="0"
+                    />
                     </marker>
                 </template>
             </defs>
-
 
             <!-- Edges -->
             <g class="vue-ui-dag-edges">
@@ -986,7 +987,7 @@ defineExpose({
                         <!-- default label, multiline when provided with /n -->
                         <text 
                             data-cy-node-label
-                            v-else
+                            v-else-if="!$slots['free-node-label']"
                             :x="node.x" 
                             :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
                             text-anchor="middle" 
@@ -1003,6 +1004,9 @@ defineExpose({
                                 autoOffset: true
                             })"
                         />
+                        <g v-if="$slots['free-node-label']">
+                            <slot name="free-node-label" v-bind="{ node, layoutData }"/>
+                        </g>
                     </template>
 
                     <!-- Full `node` slot to customize the node entirely using a div -->

@@ -224,6 +224,11 @@ const configTheme = computed(() => ({
             <template #tooltip-node="{ node }">
                 {{ node }}
             </template> -->
+            <!-- <template #free-node-label="{ node }">
+                <text :x="node.x" text-anchor="middle" :y="node.y + node.height" fill="red">
+                    {{ node.label }}
+                </text>
+            </template> -->
         </LocalVueUiDag>
         </template>
 
