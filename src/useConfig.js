@@ -6769,6 +6769,7 @@ export function useConfig() {
     const vue_ui_dag = {
         loading: false,
         debug: false,
+        responsive: false,
         theme: '',
         userOptions: USER_OPTIONS({
             tooltip: false,
@@ -6785,6 +6786,8 @@ export function useConfig() {
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
+                width: null,
+                height: null,
                 layout: {
                     rankDirection: 'TB',
                     rankSeparation: 60,

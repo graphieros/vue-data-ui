@@ -769,7 +769,7 @@ However the following charts can be made fully responsive, making them better to
 | VueUiChestnut               | -                              |
 | VueUiChord                  | ✅                             |
 | VueUiCirclePack             | ✅                             |
-| VueUiDag                    | -                              |
+| VueUiDag                    | ✅                             |
 | VueUiDonut                  | ✅                             |
 | VueUiDonutEvolution         | ✅                             |
 | VueUiDumbbell               | ✅                             |

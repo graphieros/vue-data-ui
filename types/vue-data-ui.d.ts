@@ -9455,10 +9455,13 @@ declare module "vue-data-ui" {
         loading?: boolean;
         debug?: boolean;
         theme?: Theme;
+        responsive?: boolean;
         userOptions?: ChartUserOptions;
         style?: {
             fontFamily?: string;
             chart?: {
+                width?: number | null;
+                height?: number | null;
                 backgroundColor?: string;
                 color?: string;
                 layout?: {

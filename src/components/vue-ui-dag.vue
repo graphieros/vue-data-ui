@@ -18,6 +18,7 @@ import {
     treeShake, 
     XMLNS 
 } from "../lib";
+import { throttle } from "../canvas-lib";
 import usePanZoom from "../usePanZoom";
 import { useDag } from "../useDag";
 import { useConfig } from "../useConfig";
@@ -28,10 +29,12 @@ import { useNestedProp } from "../useNestedProp";
 import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { useResponsive } from "../useResponsive";
 import Title from "../atoms/Title.vue";
 import themes from "../themes/vue_ui_dag.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 import BaseZoomControls from "../atoms/BaseZoomControls.vue";
+import img from "../img";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
@@ -65,20 +68,25 @@ const uid = ref(createUid());
 
 const chartTitle = ref(null);
 const source = ref(null);
-const userOptionsRef = ref(null);
+const zoomControls = ref(null);
 const titleStep = ref(0);
 const step = ref(0);
 const userHovers = ref(false);
 const isDataset = ref(false);
 
-// Midpoint tooltip (existing)
+const resizeObserver = ref(null);
+const observedEl = ref(null);
+
+const FINAL_CONFIG = ref(prepareConfig());
+const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
+const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
+
 const tooltipPosition = ref({ x: 0, y: 0 }); // anchor (screen coords)
 const tooltipEdge = ref(null);
 const tooltipRef = ref(null);
 const tooltipStyle = ref({ left: "0px", top: "0px" });
 const tooltipPlacement = ref("top");
 
-// Node tooltip (interactive, showOnClick)
 const isNodeTooltip = ref(false);
 const nodeTooltipPosition = ref({ x: 0, y: 0 });
 const nodeTooltipOffset = ref({ x: 0, y: 0 });
@@ -89,8 +97,6 @@ const nodeTooltipPlacement = ref("top");
 
 const isTooltip = ref(false);
 const isAnnotator = ref(false);
-
-const FINAL_CONFIG = ref(prepareConfig());
 
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
@@ -186,7 +192,9 @@ onMounted(() => {
         manualLoading.value = true;
     }
     isDataset.value = true;
-})
+
+    setupResponsive();
+});
 
 watch(() => props.config, (_newCfg) => {
     if (!loading.value) {
@@ -195,7 +203,10 @@ watch(() => props.config, (_newCfg) => {
     userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
     titleStep.value += 1;
     direction.value = FINAL_CONFIG.value.style.chart.layout.rankDirection;
+    WIDTH.value = FINAL_CONFIG.value.style.chart.width;
+    HEIGHT.value = FINAL_CONFIG.value.style.chart.height;
     panZoomActive.value = FINAL_CONFIG.value.style.chart.zoom.active;
+    setupResponsive();
 }, { deep: true });
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
@@ -339,7 +350,7 @@ const dagConfiguration = computed(() => {
     };
 });
 
-const { layoutData, lastError, arrowMarkerIdentifier, recomputeLayout } = useDag({
+const { layoutData, lastError, arrowMarkerIdentifier } = useDag({
     nodes: initialNodes,
     edges: initialEdges,
     configuration: dagConfiguration
@@ -364,9 +375,27 @@ function makeMarkerId(color) {
     return `${arrowMarkerIdentifier}-${String(color).replace(/[^a-zA-Z0-9_-]/g, "_")}`;
 }
 
+const userViewBox = computed(() => {
+    const widthRaw = WIDTH.value;
+    const heightRaw = HEIGHT.value;
+
+    const width = Number(widthRaw);
+    const height = Number(heightRaw);
+
+    const hasWidth = Number.isFinite(width) && width > 0;
+    const hasHeight = Number.isFinite(height) && height > 0;
+
+    if (!hasWidth && !hasHeight) {
+        return null;
+    }
+
+    return {
+        width: hasWidth ? width : null,
+        height: hasHeight ? height : null
+    };
+});
 
 const highlightedNodeId = ref(null);
-
 const panZoomActive = ref(FINAL_CONFIG.value.style.chart.zoom.active);
 
 const {
@@ -387,27 +416,61 @@ function toggleZoom() {
     panZoomActive.value = !panZoomActive.value;
 }
 
+function updateInitialViewBoxFromLayout() {
+    const layoutViewBox = layoutData.value && layoutData.value.viewBox;
+    if (!layoutViewBox) return;
+
+    const parts = String(layoutViewBox).split(" ").map(Number);
+    if (parts.length !== 4) return;
+
+    const [layoutX, layoutY, layoutWidth, layoutHeight] = parts;
+
+    if (
+        !Number.isFinite(layoutX) ||
+        !Number.isFinite(layoutY) ||
+        !Number.isFinite(layoutWidth) ||
+        !Number.isFinite(layoutHeight)
+    ) {
+        return;
+    }
+
+    let targetWidth = layoutWidth;
+    let targetHeight = layoutHeight;
+    let targetX = layoutX;
+    let targetY = layoutY;
+
+    const userVb = userViewBox.value;
+    if (userVb) {
+        if (userVb.width !== null) {
+            targetWidth = userVb.width;
+        }
+        if (userVb.height !== null) {
+            targetHeight = userVb.height;
+        }
+
+        // Center layout
+        targetX = layoutX - (targetWidth - layoutWidth) / 2;
+        targetY = layoutY - (targetHeight - layoutHeight) / 2;
+    }
+
+    setInitialViewBox(
+        { x: targetX, y: targetY, width: targetWidth, height: targetHeight },
+        { overwriteCurrentIfNotZoomed: true }
+    );
+}
+
 watch(
     () => layoutData.value && layoutData.value.viewBox,
-    newViewBox => {
-        if (!newViewBox) return;
-
-        const [x, y, width, height] = newViewBox.split(" ").map(Number);
-
-        if (
-            Number.isFinite(x) &&
-            Number.isFinite(y) &&
-            Number.isFinite(width) &&
-            Number.isFinite(height)
-        ) {
-            setInitialViewBox(
-                { x, y, width, height },
-                { overwriteCurrentIfNotZoomed: true }
-            );
-        }
+    () => {
+        updateInitialViewBoxFromLayout();
     },
-    {
-        immediate: true
+    { immediate: true }
+);
+
+watch(
+    () => userViewBox.value,
+    () => {
+        updateInitialViewBoxFromLayout();
     }
 );
 
@@ -517,8 +580,6 @@ async function showNodeTooltip(node) {
     const nodeWidthSvg = FINAL_CONFIG.value.style.chart.layout.nodeWidth;
     const nodeHeightSvg = FINAL_CONFIG.value.style.chart.layout.nodeHeight;
 
-    // const scaleX = Math.hypot(ctm.a, ctm.c);
-    // const scaleY = Math.hypot(ctm.b, ctm.d);
     const scaleX = ctm.a;
     const scaleY = ctm.d;
 
@@ -580,7 +641,59 @@ onMounted(() => {
 onBeforeUnmount(() => {
     document.removeEventListener("mousedown", handleDocumentClick);
     document.removeEventListener("keydown", handleDocumentKeydown);
+
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
 });
+
+function setupResponsive() {
+    if (!FINAL_CONFIG.value.responsive) {
+        if (resizeObserver.value) {
+            if (observedEl.value) {
+                resizeObserver.value.unobserve(observedEl.value);
+            }
+            resizeObserver.value.disconnect();
+            resizeObserver.value = null;
+            observedEl.value = null;
+        }
+        return;
+    }
+
+    const handleResize = throttle(() => {
+        if (!dagChart.value) return;
+
+        const { width, height } = useResponsive({
+            chart: dagChart.value,
+            title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+            legend: FINAL_CONFIG.value.style.chart.controls.show ? zoomControls.value.$el : null,
+            source: source.value
+        });
+
+        requestAnimationFrame(() => {
+            WIDTH.value = Math.max(0.1, width);
+            HEIGHT.value = Math.max(0.1, height - 12);
+        });
+    });
+
+    if (resizeObserver.value) {
+        if (observedEl.value) {
+            resizeObserver.value.unobserve(observedEl.value);
+        }
+        resizeObserver.value.disconnect();
+    }
+
+    resizeObserver.value = new ResizeObserver(handleResize);
+    observedEl.value = dagChart.value ? dagChart.value.parentNode : null;
+    if (observedEl.value) {
+        resizeObserver.value.observe(observedEl.value);
+    }
+
+    handleResize();
+}
 
 async function getImage({ scale = 2} = {}) {
     if (!dagChart.value) return
@@ -614,12 +727,12 @@ defineExpose({
     resetZoom,
     switchDirection
 })
-
 </script>
+
 
 <template>
     <div 
-        :class="`vue-data-ui-component vue-ui-dag ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
+        :class="`vue-data-ui-component vue-ui-dag ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.responsive ? 'vue-ui-dag-responsive' : ''}`" 
         :id="`dag_${uid}`"
         ref="dagChart"
         :style="{
@@ -739,7 +852,8 @@ defineExpose({
             />
         </div>
 
-        <BaseZoomControls 
+        <BaseZoomControls
+            ref="zoomControls"
             v-if="FINAL_CONFIG.style.chart.controls.position === 'top' && !loading && FINAL_CONFIG.style.chart.controls.show"
             :config="FINAL_CONFIG"
             :scale="scale"
@@ -981,7 +1095,8 @@ defineExpose({
             </Teleport>
         </Transition>
 
-        <BaseZoomControls 
+        <BaseZoomControls
+            ref="zoomControls"
             v-if="FINAL_CONFIG.style.chart.controls.position === 'bottom' && !loading && FINAL_CONFIG.style.chart.controls.show"
             :config="FINAL_CONFIG"
             :scale="scale"
@@ -1008,6 +1123,10 @@ defineExpose({
 .vue-ui-dag {
     overflow: hidden;
     position: relative;
+}
+
+.vue-ui-dag-responsive {
+    width: 100%;
 }
 
 .dag-chart-error {
