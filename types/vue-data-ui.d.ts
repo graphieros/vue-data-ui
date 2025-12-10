@@ -3905,8 +3905,11 @@ declare module "vue-data-ui" {
                     labels?: {
                         dataLabels?: {
                             show?: boolean;
+                            oneLine?: boolean;
                             useLabelSlots?: boolean;
                             hideUnderValue?: number;
+                            smallArcClusterThreshold?: number;
+                            smallArcClusterFontSize?: number;
                             prefix?: string;
                             suffix?: string;
                         };
