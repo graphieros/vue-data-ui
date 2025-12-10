@@ -127,7 +127,7 @@ function alterDataset() {
 const model = createModel([
     CHECKBOX("debug", { def: true }),
     CHECKBOX("autoSize", { def: true }),
-    CHECKBOX("startAnimation.show", { def: false }),
+    CHECKBOX("startAnimation.show", { def: true }),
     CHECKBOX("pie", { def: false }),
     CHECKBOX("loading", { def: false }),
     SELECT("type", ["classic", "polar"], { def: "classic" }),
@@ -161,7 +161,7 @@ const model = createModel([
     NUMBER("style.chart.padding.right", { def: 24, min: 0, max: 100 }),
     NUMBER("style.chart.padding.bottom", { def: 0, min: 0, max: 100 }),
     NUMBER("style.chart.padding.left", { def: 24, min: 0, max: 100 }),
-    CHECKBOX("style.chart.layout.curvedMarkers", { def: true }),
+    CHECKBOX("style.chart.layout.curvedMarkers", { def: false }),
     CHECKBOX("style.chart.layout.labels.dataLabels.show", { def: true, label: "show", category: "labels" }),
     CHECKBOX("style.chart.layout.labels.dataLabels.oneLine", {def: true }),
     NUMBER("style.chart.layout.labels.dataLabels.hideUnderValue", { def: 3, min: 0, max: 100, label: "hideUnderValue", category: "labels" }),

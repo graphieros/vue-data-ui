@@ -436,68 +436,70 @@ const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
 });
 
 const isFirstLoad = ref(true);
-const animatedValues = shallowRef([]);
+const animationProgress = ref(0);
+const hasAnimated = ref(false);
 
-function animateWithGhost(finalValues, duration = 1000, stagger = 50) {
-    return new Promise(resolve => {
-        const N = finalValues.length;
-        animatedValues.value = Array(N).fill(0);
-        let completed = 0;
+let startAnimationFrameIdentifier = null;
 
-        finalValues.forEach((target, i) => {
-            setTimeout(() => {
-                const start = performance.now();
-                function animate(now) {
-                    const p = Math.min((now - start) / duration, 1);
-                    const eased = easeOutCubic(p);
-                    animatedValues.value[i] = target * eased;
-                    animatedValues.value = [...animatedValues.value];
-                    if (p < 1) {
-                        requestAnimationFrame(animate);
-                        requestAnimationFrame(resizeAndReflow);
-                    } else {
-                        animatedValues.value[i] = target;
-                        animatedValues.value = [...animatedValues.value];
-                        completed += 1;
-                        if (completed === N) resolve();
-                        requestAnimationFrame(resizeAndReflow);
-                    }
-                }
-                requestAnimationFrame(animate);
-            }, i * stagger);
-        });
+function runStartAnimation(durationInMilliseconds = 1000) {
+    return new Promise((resolve) => {
+        const animationStartTime = performance.now();
+
+        function step(currentTime) {
+            const elapsedTime = currentTime - animationStartTime;
+            const progressRatio = Math.min(
+                elapsedTime / durationInMilliseconds,
+                1
+            );
+
+            const easedProgress = easeOutCubic(progressRatio);
+            animationProgress.value = easedProgress;
+
+            if (progressRatio < 1) {
+                startAnimationFrameIdentifier = requestAnimationFrame(step);
+            } else {
+                animationProgress.value = 1;
+                startAnimationFrameIdentifier = null;
+                resolve();
+            }
+        }
+
+        if (startAnimationFrameIdentifier !== null) {
+            cancelAnimationFrame(startAnimationFrameIdentifier);
+        }
+
+        animationProgress.value = 0;
+        startAnimationFrameIdentifier = requestAnimationFrame(step);
     });
 }
 
-const hasAnimated = ref(false);
-
 watch(
     () => loading.value,
-    async (loadingNow) => {
-        if (loadingNow || hasAnimated.value) return;
+    async (isLoadingNow) => {
+        if (isLoadingNow || hasAnimated.value) {
+            return;
+        }
 
-        // Avoid animating skeleton dataset
-        const isSkeleton = FINAL_DATASET.value === skeletonDataset;
-        const startAnimation = FINAL_CONFIG.value.startAnimation?.show;
+        const isSkeletonDataset = FINAL_DATASET.value === skeletonDataset;
+        const startAnimationIsEnabled =
+            FINAL_CONFIG.value.startAnimation?.show;
 
-        if (!isSkeleton && startAnimation) {
+        if (!isSkeletonDataset && startAnimationIsEnabled) {
             hasAnimated.value = true;
 
-            const finalValues = FINAL_DATASET.value.map(ds =>
-                ds.values.reduce((a, b) => a + b, 0)
-            );
+            const durationInMilliseconds =
+                FINAL_CONFIG.value.startAnimation.durationMs || 1000;
 
-            await animateWithGhost(
-                finalValues,
-                FINAL_CONFIG.value.startAnimation.durationMs,
-                FINAL_CONFIG.value.startAnimation.staggerMs
-            );
+            await runStartAnimation(durationInMilliseconds);
+        } else {
+            animationProgress.value = 1;
         }
 
         isFirstLoad.value = false;
     },
     { immediate: true }
 );
+
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -642,6 +644,7 @@ function getData() {
 
 const segregated = ref([]);
 const isAnimating = ref(false);
+const animatingIndex = ref(null);
 
 function animateValue({ from, to, duration, onUpdate, onDone, easing = easeOutCubic }) {
     const start = performance.now();
@@ -666,6 +669,7 @@ function segregate(index) {
     let initVal = source.value;
 
     if (segregated.value.includes(index)) {
+        // Restore series
         segregated.value = segregated.value.filter(s => s !== index);
         const targetVal = target.value;
 
@@ -677,6 +681,8 @@ function segregate(index) {
 
         function doAnimUp() {
             isAnimating.value = true;
+            animatingIndex.value = index;
+
             animateValue({
                 from: initVal,
                 to: targetVal,
@@ -690,6 +696,7 @@ function segregate(index) {
                 onDone: () => {
                     setFinalUpState();
                     isAnimating.value = false;
+                    animatingIndex.value = null;
                 }
             });
         }
@@ -701,6 +708,7 @@ function segregate(index) {
             requestAnimationFrame(resizeAndReflow);
         }
     } else if (segregated.value.length < immutableSet.value.length - 1) {
+        // Hide series
         function setFinalDownState() {
             segregated.value.push(index);
             mutableSet.value = mutableSet.value.map((ds, i) =>
@@ -710,6 +718,8 @@ function segregate(index) {
 
         function doAnimDown() {
             isAnimating.value = true;
+            animatingIndex.value = index;
+
             animateValue({
                 from: initVal,
                 to: 0,
@@ -724,6 +734,7 @@ function segregate(index) {
                     setFinalDownState();
                     requestAnimationFrame(resizeAndReflow);
                     isAnimating.value = false;
+                    animatingIndex.value = null;
                 }
             });
         }
@@ -776,45 +787,57 @@ function hideSeries(name) {
 }
 
 
-const _total = computed(() => FINAL_DATASET.value.reduce((sum, ds) => sum + ds.values.reduce((a, b) => a + b, 0), 0));
+const _total = computed(() =>
+    FINAL_DATASET.value.reduce(
+        (sum, datasetEntry) =>
+            sum + datasetEntry.values.reduce((a, b) => a + b, 0),
+        0
+    )
+);
 
 const donutSet = computed(() => {
     if (isFirstLoad.value && !loading.value) {
-        const arcs = animatedValues.value.map((v, i) => ({
-            ...immutableSet.value[i],
-            value: v,
-            color: immutableSet.value[i].color,
+        const currentProgress = animationProgress.value;
+
+        const arcs = immutableSet.value.map((serie) => ({
+            ...serie,
+            value: serie.value * currentProgress,
+            color: serie.color,
             ghost: false,
         }));
-        const ghost = _total.value - animatedValues.value.reduce((a, b) => a + b, 0);
-        if (ghost > 0) {
+
+        const ghostValue = _total.value * (1 - currentProgress);
+        if (ghostValue > 0) {
             arcs.push({
-                name: '__ghost__',
-                value: ghost,
-                color: 'transparent',
+                name: "__ghost__",
+                value: ghostValue,
+                color: "transparent",
                 ghost: true,
             });
         }
+
         return arcs;
     } else {
-        mutableSet.value.forEach((ds, i) => {
-            if ([null, undefined].includes(ds.values)) {
+        mutableSet.value.forEach((datasetEntry) => {
+            if ([null, undefined].includes(datasetEntry.values)) {
                 return {
-                    ...ds,
-                    values: []
-                }
+                    ...datasetEntry,
+                    values: [],
+                };
             }
-        })
+        });
+
         return mutableSet.value
-            .map((serie, i) => {
+            .map((serie, seriesIndex) => {
                 return {
                     ...serie,
-                    seriesIndex: i
-                }
+                    seriesIndex,
+                };
             })
-            .filter((_, i) => !segregated.value.includes(i))
+            .filter((_, seriesIndex) => !segregated.value.includes(seriesIndex));
     }
 });
+
 
 const legendSet = computed(() => {
 
@@ -932,10 +955,12 @@ function isArcBigEnough(arc) {
     return arc.proportion * 100 > FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.hideUnderValue;
 }
 
-function isSmallArc(arc) {
-    const percentage = arc.proportion * 100;
+function isSmallArc(arc, seriesIndex) {
     const minimumVisible = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.hideUnderValue;
     const threshold = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.smallArcClusterThreshold;
+
+    const baseProportion = baseProportions.value[seriesIndex] ?? arc.proportion ?? 0;
+    const percentage = baseProportion * 100;
 
     return (
         percentage > minimumVisible &&
@@ -984,7 +1009,7 @@ const smallArcLayoutsClassic = computed(() => {
         return `M ${midX} ${midY} Q ${controlPointX} ${controlPointY} ${bandX} ${bandY}`;
     }
 
-    // All small arcs (top and bottom)
+    // All small arcs (top and bottom), excluding segregated / animating ones
     const candidates = arcs
         .map((arc, index) => {
             const { x: midX, y: midY } = findArcMidpoint(arc.path);
@@ -997,7 +1022,6 @@ const smallArcLayoutsClassic = computed(() => {
             const lineHeight = labels_inline_fontSize.value * 1.2;
             const extraHeight = extraNameLines * lineHeight;
 
-            // Row height grows with extra lines, but baseline stays aligned
             const labelHeight = baseLineHeight + extraHeight;
 
             return {
@@ -1010,7 +1034,15 @@ const smallArcLayoutsClassic = computed(() => {
                 labelHeight,
             };
         })
-        .filter(({ arc }) => isSmallArc(arc));
+        .filter(({ arc }) => {
+            const seriesIndex = arc.seriesIndex ?? 0;
+
+            // Do not include arcs that are being animated or are segregated
+            if (animatingIndex.value === seriesIndex) return false;
+            if (segregated.value.includes(seriesIndex)) return false;
+
+            return isSmallArc(arc, seriesIndex);
+        });
 
     const topLeftCandidates = [];
     const topRightCandidates = [];
@@ -1097,7 +1129,6 @@ const smallArcLayoutsClassic = computed(() => {
     });
 
     // BOTTOM LEFT BAND
-    // Only cluster if there is a real cluster; otherwise fall back to inline positioning
     if (bottomLeftCandidates.length > 1) {
         let currentBottomLeftY = bottomPadding;
         bottomLeftCandidates.forEach(candidate => {
@@ -1126,8 +1157,6 @@ const smallArcLayoutsClassic = computed(() => {
             };
         });
     }
-    // if bottomLeftCandidates.length === 0 or 1, we do not populate layouts
-    // and those arcs will use the normal inline label positions
 
     // BOTTOM RIGHT BAND
     if (bottomRightCandidates.length > 1) {
@@ -1162,6 +1191,7 @@ const smallArcLayoutsClassic = computed(() => {
     return layouts;
 });
 
+
 function displayArcPercentage(arc, stepBreakdown) {
     const p = arc.value / sumValues(stepBreakdown);
     return isNaN(p) ? 0 : applyDataLabel(
@@ -1182,6 +1212,14 @@ function sumValues(source) {
 
 const total = computed(() => {
     return donutSet.value.map(s => s.value).reduce((a, b) => a + b, 0);
+});
+
+const baseProportions = computed(() => {
+    const sum = immutableSet.value.reduce((acc, ds) => acc + ds.value, 0);
+    if (sum <= 0) {
+        return [];
+    }
+    return immutableSet.value.map(ds => ds.value / sum);
 });
 
 const average = computed(() => {
@@ -1452,6 +1490,35 @@ function getBlurFilter(index) {
         return '';
     }
 }
+
+function getLabelOpacity(arc) {
+    // No label fading if nothing is animating
+    if (!isAnimating.value || animatingIndex.value === null) {
+        return 1;
+    }
+
+    // Only fade the arc that is currently being toggled
+    if (arc.seriesIndex !== animatingIndex.value) {
+        return 1;
+    }
+
+    const percentage = (arc.proportion ?? 0) * 100;
+
+    const hideUnder = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.hideUnderValue;
+    const smallThreshold = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.smallArcClusterThreshold;
+
+    // Start fading slightly above the small-arc threshold,
+    // fully hidden under the minimum visible threshold
+    const fadeStart = smallThreshold + 2;
+    const fadeEnd = hideUnder;
+
+    if (percentage >= fadeStart) return 1;
+    if (percentage <= fadeEnd) return 0;
+
+    return (percentage - fadeEnd) / (fadeStart - fadeEnd);
+}
+
+
 
 const table = computed(() => {
     const head = donutSet.value.map(ds => {
@@ -2128,6 +2195,7 @@ defineExpose({
                     :filter="getBlurFilter(i)"
                     :class="{ 'animated': FINAL_CONFIG.useCssAnimation }"
                     :key="arc.seriesIndex"
+                    :opacity="getLabelOpacity(arc)"
                 >
                     <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useLabelSlots">
                         <foreignObject
