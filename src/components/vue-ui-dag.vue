@@ -979,7 +979,7 @@ defineExpose({
                             :fill="node.original.color"
                             :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
                         >
-                            <slot name="node-label" v-bind="{ node }">
+                            <slot name="node-label" v-bind="{ node, orientation: direction }">
                                 {{ node.label }}
                             </slot>
                         </text>
@@ -1005,9 +1005,9 @@ defineExpose({
                             })"
                         />
                     </template>
-                    
+
                     <g v-if="$slots['free-node-label']">
-                        <slot name="free-node-label" v-bind="{ node, layoutData }"/>
+                        <slot name="free-node-label" v-bind="{ node, layoutData, orientation: direction }"/>
                     </g>
 
                     <!-- Full `node` slot to customize the node entirely using a div -->
@@ -1018,7 +1018,7 @@ defineExpose({
                         :width="node.width"
                         :height="node.height"
                     >
-                        <slot name="node" v-bind="{ node }"/>
+                        <slot name="node" v-bind="{ node, orientation: direction }"/>
                     </foreignObject>
                 </g>
             </g>
@@ -1043,7 +1043,8 @@ defineExpose({
 
             <slot name="svg" :svg="{ 
                 drawingArea: panZoomViewBox,
-                data: layoutData
+                data: layoutData,
+                orientation: direction
             }"/>
         </svg>
 
