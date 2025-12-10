@@ -46,6 +46,7 @@ const editingTextAnchor = ref({ x: 0, y: 0 });
 const editingTextContent = ref(['']);
 const editingCaret = ref({ row: 0, col: 0 });
 const fontSize = ref(16);
+const editingTextRegistered = ref(false);
 
 const cursorDraw = ref(`url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==') 5 5, auto`);
 
@@ -57,6 +58,7 @@ function startSvgTextEditing(event) {
     editingTextAnchor.value = { x, y };
     editingTextContent.value = [''];
     editingCaret.value = { row: 0, col: 0 };
+    editingTextRegistered.value = false;
 
     const textNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
     textNode.setAttribute("x", x);
@@ -86,6 +88,7 @@ function startSvgTextEditing(event) {
     drawSvgCaret();
 }
 
+
 function handleSvgTextKeydown(e) {
     if (!isEditingText.value) return;
     let { row, col } = editingCaret.value;
@@ -103,17 +106,15 @@ function handleSvgTextKeydown(e) {
         e.preventDefault();
     } else if (e.key === 'Backspace') {
         if (col > 0) {
-            // Delete char before caret
             lines[row] = lines[row].slice(0, col - 1) + lines[row].slice(col);
             col -= 1;
             updated = true;
         } else if (row > 0) {
-            // Merge with previous line
-            const prevLen = lines[row - 1].length;
+            const previousLength = lines[row - 1].length;
             lines[row - 1] += lines[row];
             lines.splice(row, 1);
             row -= 1;
-            col = prevLen;
+            col = previousLength;
             updated = true;
         }
         e.preventDefault();
@@ -168,17 +169,26 @@ function handleSvgTextKeydown(e) {
         cleanupSvgTextEditing(true);
         return;
     } else if (e.key === 'Tab') {
-        // TODO: manage Tab ? Not sure it's that important
         e.preventDefault();
     }
 
     if (updated) {
         editingTextContent.value = lines;
         editingCaret.value = { row, col };
+
+        // As soon as there is some content and this text is not yet registered add it to the undo stack and clear the redo stack
+        const hasContent = lines.some(line => line.length > 0);
+        if (hasContent && !editingTextRegistered.value && editingTextNode.value) {
+            stack.value.push(editingTextNode.value);
+            redoStack.value = [];
+            editingTextRegistered.value = true;
+        }
+
         updateSvgTextDisplay();
         drawSvgCaret();
     }
 }
+
 
 function updateSvgTextDisplay() {
     const textNode = editingTextNode.value;
@@ -193,12 +203,41 @@ function updateSvgTextDisplay() {
     });
 }
 
+const caretBlinkTimer = ref(null);
+
+function stopCaretBlink() {
+    if (caretBlinkTimer.value !== null) {
+        clearInterval(caretBlinkTimer.value);
+        caretBlinkTimer.value = null;
+    }
+}
+
+function startCaretBlink(caretEl) {
+    // reset any previous timer
+    stopCaretBlink();
+
+    let visible = true;
+    caretEl.style.opacity = '1';
+
+    caretBlinkTimer.value = setInterval(() => {
+        // if caret was removed from the DOM, stop
+        if (!G.value || !caretEl || !G.value.contains(caretEl)) {
+            stopCaretBlink();
+            return;
+        }
+        visible = !visible;
+        caretEl.style.opacity = visible ? '1' : '0';
+    }, 500); // 500ms = 1s period (blink)
+}
+
 function drawSvgCaret() {
-    const existingCaret = G.value.querySelector('.vue-data-ui-svg-caret');
-    if (existingCaret) G.value.removeChild(existingCaret);
+    const existingCaret = G.value?.querySelector('.vue-data-ui-svg-caret');
+    if (existingCaret && G.value) {
+        G.value.removeChild(existingCaret);
+    }
 
     const textNode = editingTextNode.value;
-    if (!textNode) return;
+    if (!textNode || !G.value) return;
 
     const { x, y } = editingTextAnchor.value;
     const { row, col } = editingCaret.value;
@@ -206,6 +245,7 @@ function drawSvgCaret() {
 
     const tspan = textNode.childNodes[row];
     if (!tspan) return;
+
     let tempText = tspan.textContent.slice(0, col);
     if (tempText.endsWith(' ')) {
         tempText += '\u00A0';
@@ -221,19 +261,22 @@ function drawSvgCaret() {
     const bbox = measureText.getBBox();
     G.value.removeChild(measureText);
 
-    // Y offset
-    let caretY = y + row * fontPx * 1.2;
-    let caretX = x + bbox.width;
+    const caretY = y + row * fontPx * 1.2;
+    const caretX = x + bbox.width;
 
     const caret = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     caret.setAttribute("x", caretX);
     caret.setAttribute("y", caretY);
+    caret.setAttribute("rx", 1);
     caret.setAttribute("width", 2);
     caret.setAttribute("height", fontPx);
     caret.setAttribute("fill", currentColor.value);
     caret.setAttribute("class", "vue-data-ui-svg-caret");
     G.value.appendChild(caret);
+
+    startCaretBlink(caret);
 }
+
 
 function handleSvgTextBlur(e) {
     if (!editingTextNode.value) return;
@@ -254,8 +297,12 @@ function cleanupSvgTextEditing(remove = false) {
     window.removeEventListener('keydown', handleSvgTextKeydown);
     window.removeEventListener('mousedown', handleSvgTextBlur, true);
 
-    const caret = G.value.querySelector('.vue-data-ui-svg-caret');
-    caret && G.value.removeChild(caret);
+    stopCaretBlink();
+
+    const caret = G.value?.querySelector('.vue-data-ui-svg-caret');
+    if (caret && G.value) {
+        G.value.removeChild(caret);
+    }
 
     const tspans = editingTextNode.value?.children;
     let isEmpty = false;
@@ -265,12 +312,8 @@ function cleanupSvgTextEditing(remove = false) {
     }
 
     if (remove || isEmpty) {
-        if (editingTextNode.value && G.value.contains(editingTextNode.value)) {
+        if (editingTextNode.value && G.value && G.value.contains(editingTextNode.value)) {
             G.value.removeChild(editingTextNode.value);
-        }
-    } else {
-        if (editingTextNode.value && G.value.contains(editingTextNode.value)) {
-            stack.value.push(editingTextNode.value);
         }
     }
 
@@ -278,6 +321,7 @@ function cleanupSvgTextEditing(remove = false) {
     editingTextNode.value = null;
     editingTextContent.value = [''];
     editingCaret.value = { row: 0, col: 0 };
+    editingTextRegistered.value = false;
 }
 
 
@@ -472,13 +516,17 @@ function stopDrawing(event) {
 
 function deleteLastDraw() {
     if (stack.value.length > 0) {
-        const lastPath = stack.value.pop();
-        redoStack.value.push(lastPath);
-        if (G.value) {
-            G.value.removeChild(lastPath);
+        const lastShape = stack.value.pop();
+        redoStack.value.push(lastShape);
+
+        if (lastShape === editingTextNode.value) {
+            cleanupSvgTextEditing(true);
+        } else if (G.value && G.value.contains(lastShape)) {
+            G.value.removeChild(lastShape);
         }
     }
 }
+
 
 function redoLastDraw() {
     if (redoStack.value.length > 0) {
@@ -496,8 +544,10 @@ function reset() {
     }
     stack.value = [];
     redoStack.value = [];
+    editingTextRegistered.value = false;
     addInteractionMask();
 }
+
 
 watch(mode, () => {
     if (!props.active) return;
@@ -572,6 +622,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    stopCaretBlink();
     if (G.value && props.svgRef) {
         G.value.remove();
         disableDrawing();
@@ -735,19 +786,6 @@ input[type="range"].vertical-range {
 
 <style>
 .vue-data-ui-svg-caret {
-    opacity: 0;
-    animation: caret 1s linear infinite;
-}
-
-@keyframes caret {
-    0% {
-        opacity: 0;
-    }
-    40% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0;
-    }
+    opacity: 1;
 }
 </style>
