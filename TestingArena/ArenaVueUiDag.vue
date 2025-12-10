@@ -212,9 +212,9 @@ const configTheme = computed(() => ({
                     <LocalVueUiDag :dataset="dataset" :config="config" ref="local">
             <!-- <template #node-label="{ node }">
                 {{ node.label }}
-            </template> 
-            <template #node="{ node }">
-                <div style="width: 100%; height: 100%; border: 1px solid red; color: black">
+            </template>  -->
+            <!-- <template #node="{ node }">
+                <div style="width: 100%; height: 100%; border: 1px solid red; color: black;">
                     {{ node.label }}
                 </div>
             </template> -->

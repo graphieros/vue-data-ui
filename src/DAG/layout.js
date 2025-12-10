@@ -249,29 +249,29 @@ function translateGraph(graph) {
     graphLabel.height = maximumY - minimumY + marginY;
 }
 
+function shortenPoint(point, neighborPoint, offset) {
+    if (!offset || !neighborPoint) {
+        return point;
+    }
+
+    const deltaX = neighborPoint.x - point.x;
+    const deltaY = neighborPoint.y - point.y;
+    const segmentLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    if (!segmentLength || segmentLength <= offset) {
+        return point;
+    }
+
+    const ratio = offset / segmentLength;
+
+    return {
+        x: point.x + deltaX * ratio,
+        y: point.y + deltaY * ratio,
+    };
+}
+
 function assignNodeIntersects(graph) {
     const ENDPOINT_OFFSET = 4;
-
-    function shortenPoint(point, neighborPoint, offset) {
-        if (!offset || !neighborPoint) {
-            return point;
-        }
-
-        const deltaX = neighborPoint.x - point.x;
-        const deltaY = neighborPoint.y - point.y;
-        const segmentLength = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-        if (!segmentLength || segmentLength <= offset) {
-            return point;
-        }
-
-        const ratio = offset / segmentLength;
-
-        return {
-            x: point.x + deltaX * ratio,
-            y: point.y + deltaY * ratio,
-        };
-    }
 
     graph.edges().forEach(edgeObject => {
         const edge = graph.edge(edgeObject);

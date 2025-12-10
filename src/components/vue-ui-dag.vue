@@ -1004,10 +1004,11 @@ defineExpose({
                                 autoOffset: true
                             })"
                         />
-                        <g v-if="$slots['free-node-label']">
-                            <slot name="free-node-label" v-bind="{ node, layoutData }"/>
-                        </g>
                     </template>
+                    
+                    <g v-if="$slots['free-node-label']">
+                        <slot name="free-node-label" v-bind="{ node, layoutData }"/>
+                    </g>
 
                     <!-- Full `node` slot to customize the node entirely using a div -->
                     <foreignObject 
