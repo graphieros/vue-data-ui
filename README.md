@@ -8,7 +8,7 @@
 # vue-data-ui
 
 [![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
-[![Static Badge](https://img.shields.io/badge/components-65-blue)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-66-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -92,6 +92,7 @@ Available components
 
 ## Maps
 
+- [VueUiGeo](https://vue-data-ui.graphieros.com/docs#vue-ui-geo)
 - [VueUiWorld](https://vue-data-ui.graphieros.com/docs#vue-ui-world)
 
 ## Utilities
@@ -496,9 +497,10 @@ From the dataset you pass into the props, this component will produce the most a
 
 ### Maps
 
-| Name         | dataset type        | config type        | emits / exposed methods                                                                                  | slots                                                 | custom tooltip | themes |
-| ------------ | ------------------- | ------------------ | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------- | ------ |
-| `VueUiWorld` | `VueUiWorldDataset` | `VueUiWorldConfig` | `getData`, `generatePdf`, `generateImage`, `toggleTable`, `toggleTooltip`, `toggleAnnotator`, `getImage` | `#svg`, `#watermark`, `#pattern`, `#chart-background` | ✅             | ❌     |
+| Name         | dataset type            | config type        | emits / exposed methods                                                                                                           | slots                                                               | custom tooltip | themes |
+| ------------ | ----------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------------- | ------ |
+| `VueUiGeo`   | `VueUiGeoDatasetItem[]` | `VueUiGeoConfig`   | `generatePdf`, `generateImage`, `toggleTooltip`, `toggleAnnotator`, `getImage`, `zoomIn`, `zoomOut`, `resetZoom`, `focusLocation` | `#svg`, `#watermark`, `#pattern`, `#chart-background`, `#datapoint` | ✅             | ✅     |
+| `VueUiWorld` | `VueUiWorldDataset`     | `VueUiWorldConfig` | `getData`, `generatePdf`, `generateImage`, `toggleTable`, `toggleTooltip`, `toggleAnnotator`, `getImage`                          | `#svg`, `#watermark`, `#pattern`, `#chart-background`               | ✅             | ❌     |
 
 ### Data tables
 
@@ -641,6 +643,7 @@ User options actions available per chart:
 | VueUiFunnel                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
 | VueUiGalaxy                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiGauge                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
+| VueUiGeo                    | optionPdf, optionImg, optionFullscreen, optionAnnotator, optionZoom                                                       |
 | VueUiHeatmap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiHistoryPlot            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
 | VueUiHorizontalBar          | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen, optionAnnotator                |
@@ -777,6 +780,7 @@ However the following charts can be made fully responsive, making them better to
 | VueUiFunnel                 | ✅                             |
 | VueUiGalaxy                 | ✅                             |
 | VueUiGauge                  | ✅                             |
+| VueUiGeo                    | ✅                             |
 | VueUiHeatmap                | ✅                             |
 | VueUiHistoryPlot            | ✅                             |
 | VueUiHorizontalBar          | ✅                             |
