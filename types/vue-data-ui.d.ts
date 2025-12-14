@@ -67,7 +67,8 @@ declare module "vue-data-ui" {
         | VueUiRidgelineDatasetItem[]
         | VueUiChordDataset
         | VueUiStacklineDatasetItem[]
-        | VueUiDagDataset;
+        | VueUiDagDataset
+        | VueUiGeoDatasetItem[];
 
     export type VueDataUiAnyConfig =
         | VueUi3dBarConfig
@@ -131,7 +132,8 @@ declare module "vue-data-ui" {
         | VueUiRidgelineConfig
         | VueUiChordConfig
         | VueUiStacklineConfig
-        | VueUiDagConfig;
+        | VueUiDagConfig
+        | VueUiGeoConfig;
 
     export type VueDataUiProps = {
         loader?: VueDataUiLoader | null;
@@ -192,6 +194,8 @@ declare module "vue-data-ui" {
     export type VueUiRingsEvent = ChartEvent<VueUiRingsDatapoint>;
     export type VueUiOnionEvent = ChartEvent<VueUiOnionDatapoint>;
     export type VueUiWorldEvent = ChartEvent<VueUiWorldDatapoint>;
+    export type VueUiGeoPointEvent = ChartEvent<VueUiGeoDatapoint>;
+    export type VueUiGeoTerritoryEvent = ChartEvent<VueUiGeoTerritory>;
     export type VueUiGalaxyEvent = ChartEvent<VueUiGalaxyDatapoint>;
     export type VueUiWaffleEvent = ChartEvent<VueUiWaffleDatapoint>;
     export type VueUiScatterEvent = ChartEvent<VueUiScatterDatapoint>;
@@ -9567,6 +9571,206 @@ declare module "vue-data-ui" {
         VueUiDagExpose
     >
 
+
+    export type GeoJsonPosition = [longitude: number, latitude: number] | [number, number, number];
+
+    export type GeoJsonPoint = {
+        type: "Point";
+        coordinates: GeoJsonPosition;
+    };
+
+    export type GeoJsonMultiPoint = {
+        type: "MultiPoint";
+        coordinates: GeoJsonPosition[];
+    };
+
+    export type GeoJsonLineString = {
+        type: "LineString";
+        coordinates: GeoJsonPosition[];
+    };
+
+    export type GeoJsonMultiLineString = {
+        type: "MultiLineString";
+        coordinates: GeoJsonPosition[][];
+    };
+
+    export type GeoJsonPolygon = {
+        type: "Polygon";
+        coordinates: GeoJsonPosition[][];
+    };
+
+    export type GeoJsonMultiPolygon = {
+        type: "MultiPolygon";
+        coordinates: GeoJsonPosition[][][];
+    };
+
+    export type GeoJsonGeometryCollection = {
+        type: "GeometryCollection";
+        geometries: GeoJsonGeometry[];
+    };
+
+    export type GeoJsonGeometry =
+        | GeoJsonPoint
+        | GeoJsonMultiPoint
+        | GeoJsonLineString
+        | GeoJsonMultiLineString
+        | GeoJsonPolygon
+        | GeoJsonMultiPolygon
+        | GeoJsonGeometryCollection;
+
+    export type GeoJsonFeature<Properties extends Record<string, unknown> = Record<string, unknown>> = {
+        type: "Feature";
+        geometry: GeoJsonGeometry | null;
+        properties?: Properties | null;
+        id?: string | number;
+    };
+
+    export type VueUiGeoTerritory<Properties extends Record<string, unknown> = Record<string, unknown>> = {
+        uid: string;
+        path: string;
+        name: string;
+        properties: Properties;
+        geometry: GeoJsonGeometry;
+        feature: GeoJsonFeature;
+    }
+
+    export type GeoJsonFeatureCollection<
+        Properties extends Record<string, unknown> = Record<string, unknown>
+    > = {
+        type: "FeatureCollection";
+        features: Array<GeoJsonFeature<Properties>>;
+    };
+
+    export type VueUiGeoMapGeoJson =
+        | GeoJsonFeatureCollection
+        | GeoJsonFeature
+        | GeoJsonGeometryCollection
+        | GeoJsonGeometry
+        | Array<GeoJsonFeature>;
+
+    export type VueUiGeoDatasetItem = {
+        [key: string]: any;
+        name: string;
+        coordinates: [longitude: number, latitude: number];
+        description?: string;
+        color?: string;
+        radius?: number;
+    }
+
+    export type VueUiGeoDatapoint = {
+        color: string;
+        coordinates: [x: number, y: number];
+        description: string;
+        fill: string;
+        hoverRadiusRatio: number;
+        index: number;
+        name: string;
+        radius: number;
+        original: VueUiGeoDatasetItem;
+        uid: string;
+        x: number;
+        y: number;
+    }
+
+    export type VueUiGeoConfig = {
+        loading?: boolean;
+        debug?: boolean;
+        responsive?: boolean;
+        theme?: Theme;
+        projection?: 'aitoff' | 'azimuthalEquidistant' | 'bonne' | 'equirectangular' | 'gallPeters' | 'globe' | 'hammer' | 'mercator' | 'mollweide' | 'robinson' | 'sinusoidal' | 'vanDerGrinten' | 'winkelTripel';
+        userOptions?: ChartUserOptions;
+        map?: {
+            geoJson?: VueUiGeoMapGeoJson;
+            center?: [x: number, y: number];
+            fitPadding?: number;
+        };
+        events?: {
+            datapointClick?: VueUiGeoPointEvent;
+            datapointEnter?: VueUiGeoPointEvent;
+            datapointLeave?: VueUiGeoPointEvent;
+            territoryEnter?: VueUiGeoTerritoryEvent;
+            territoryLeave?: VueUiGeoTerritoryEvent;
+            territoryClick?: VueUiGeoTerritoryEvent;
+        };
+        style: {
+            fontFamily?: string;
+            chart?: {
+                dimensions?: {
+                    width?: number | null;
+                    height?: number | null;
+                };
+                backgroundColor?: string;
+                color?: string;
+                territory?: {
+                    fill?: string;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    hover?: {
+                        fill?: string;
+                        stroke?: string;
+                        strokeWidth?: number;
+                    };
+                };
+                points?: {
+                    radius?: number;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    fill?: number;
+                    hoverRadiusRatio?: number;
+                    labels?: {
+                        show?: boolean;
+                        fontSizeRatio?: number;
+                        color?: string;
+                        offsetY?: number;
+                    };
+                };
+                controls?: {
+                    position?: 'top' | 'bottom';
+                    show?: boolean;
+                    backgroundColor?: string;
+                    buttonColor?: string;
+                    color?: string;
+                    fontSize?: number;
+                    border?: string;
+                    padding?: string;
+                    borderRadius?: string;
+                };
+                title?: ChartTitle;
+                tooltip?: ChartTooltip;
+                zoom?: {
+                    active?: boolean;
+                };
+            };
+        };
+    };
+
+    export type FocusLocationOptions = {
+        animated?: boolean;
+    };
+
+    export type VueUiGeoExpose = {
+        getImage(options?: { scale?: number }): GetImagePromise
+        generatePdf(): void
+        generateImage(): void
+        toggleAnnotator(): void
+        toggleFullscreen(): void
+        zoomIn(): void
+        zoomOut(): void
+        resetZoom(): void
+        focusLocation(
+            coordinates: [longitude: number, latitude: number],
+            options?: FocusLocationOptions
+        ): Promise<void>;
+    }
+
+    export const VueUiGeo: DefineComponent<
+        {
+            config?: VueUiGeoConfig,
+            dataset?: VueUiGeoDatasetItem[]
+        },
+        VueUiGeoExpose
+    >    
+
     export type VueDataUiConfig =
         | VueUi3dBarConfig
         | VueUiAgePyramidConfig
@@ -9631,7 +9835,8 @@ declare module "vue-data-ui" {
         | VueUiRidgelineConfig
         | VueUiChordConfig
         | VueUiStacklineConfig
-        | VueUiDagConfig;
+        | VueUiDagConfig
+        | VueUiGeoConfig;
 
     export type VueDataUiConfigKey =
         | "vue_ui_3d_bar"
@@ -9697,7 +9902,8 @@ declare module "vue-data-ui" {
         | "vue_ui_ridgeline"
         | "vue_ui_chord"
         | "vue_ui_stackline"
-        | "vue_ui_dag";
+        | "vue_ui_dag"
+        | "vue_ui_geo";
 
     export type VueDataUiWordCloudTransformCallback =
         | ((word: string) => string)

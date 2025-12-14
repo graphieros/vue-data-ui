@@ -6,6 +6,94 @@
  */
 export const components = [
     {
+        name: 'VueUiGeo',
+        dataset: [],
+        config: {
+            map: {
+                geoJson: {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                        "type": "Feature",
+                        "properties": { "name": "Island A" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                            [
+                                [-6, 2],
+                                [-4, 2],
+                                [-4, 4],
+                                [-6, 4],
+                                [-6, 2]
+                            ]
+                            ]
+                        }
+                        },
+                        {
+                        "type": "Feature",
+                        "properties": { "name": "Island B" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                            [
+                                [-2, -1],
+                                [1, -1],
+                                [1, 2],
+                                [-2, 2],
+                                [-2, -1]
+                            ]
+                            ]
+                        }
+                        },
+                        {
+                        "type": "Feature",
+                        "properties": { "name": "Island C" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                            [
+                                [3, -3],
+                                [5, -3],
+                                [5, -1],
+                                [3, -1],
+                                [3, -3]
+                            ]
+                            ]
+                        }
+                        },
+                        {
+                        "type": "Feature",
+                        "properties": { "name": "Island D" },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [
+                            [
+                                [4, 3],
+                                [7, 3],
+                                [7, 5],
+                                [4, 5],
+                                [4, 3]
+                            ]
+                            ]
+                        }
+                        }
+                    ]
+                }
+            },
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: {
+                            text: 'Subtitle'
+                        }
+                    }
+                }
+            }
+        },
+        wrapperClass: '.vue-ui-geo'
+    },
+    {
         name: 'VueUiDag',
         dataset: {
             nodes: [

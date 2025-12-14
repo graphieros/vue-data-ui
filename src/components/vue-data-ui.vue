@@ -77,7 +77,8 @@ const components = {
     VueUiWorld: defineAsyncComponent(() => import('./vue-ui-world.vue')),
     VueUiRidgeline: defineAsyncComponent(() => import('./vue-ui-ridgeline.vue')),
     VueUiChord: defineAsyncComponent(() => import('./vue-ui-chord.vue')),
-    VueUiDag: defineAsyncComponent(() => import('./vue-ui-dag.vue'))
+    VueUiDag: defineAsyncComponent(() => import('./vue-ui-dag.vue')),
+    VueUiGeo: defineAsyncComponent(() => import('./vue-ui-geo.vue'))
 };
 
 const componentProps = {
@@ -145,7 +146,8 @@ const componentProps = {
     VueUiWorld: ['config', 'dataset'],
     VueUiRidgeline: ['config', 'dataset'],
     VueUiChord: ['config', 'dataset'],
-    VueUiDag: ['config', 'dataset']
+    VueUiDag: ['config', 'dataset'],
+    VueUiGeo: ['config', 'dataset']
 };
 
 const emit = defineEmits([
@@ -181,7 +183,8 @@ const emit = defineEmits([
     'toggleZoom',
     'onNodeClick',
     'onMidpointEnter',
-    'onMidpointLeave'
+    'onMidpointLeave',
+    'focusLocation'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -236,6 +239,7 @@ const onMidpointLeave = ref(() => null);
 const zoomIn = ref(() => null);
 const zoomOut = ref(() => null);
 const switchOrientation = ref(() => null);
+const focusLocation = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -362,6 +366,9 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.switchOrientation) {
             switchOrientation.value = newRef.switchOrientation;
         }
+        if (newRef.focusLocation) {
+            focusLocation.value = newRef.focusLocation;
+        }
     }
 })
 
@@ -406,7 +413,8 @@ const getEventHandlers = () => {
         'onMidpointLeave',
         'zoomIn',
         'zoomOut',
-        'switchOrientation'
+        'switchOrientation',
+        'focusLocation'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -489,7 +497,8 @@ defineExpose({
     toggleZoom,
     zoomIn,
     zoomOut,
-    switchOrientation
+    switchOrientation,
+    focusLocation
 });
 
 const notSupported = computed(() => {
