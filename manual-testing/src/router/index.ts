@@ -63,7 +63,8 @@ const components = [
   'ArenaVueUiAnnotator',
   'ArenaVueUiCursor',
   'ArenaVueUiDigits',
-  'ArenaVueUiDag'
+  'ArenaVueUiDag',
+  'ArenaVueUiGeo'
 ].map(c => ({
   path: `/${c}`,
   name: c,

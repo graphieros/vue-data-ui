@@ -6856,6 +6856,89 @@ export function useConfig() {
         }
     }
 
+    const vue_ui_geo = {
+        loading: false,
+        debug: false,
+        responsive: false,
+        projection: 'equirectangular',
+        theme: '',
+        userOptions: USER_OPTIONS({
+            tooltip: true,
+            pdf: true,
+            csv: false,
+            img: true,
+            svg: true,
+            table: false,
+            labels: false,
+            fullscreen: true,
+            annotator: true,
+            zoom: true,
+        }),
+        map: {
+            geoJson: null,
+            center: [0, 0],
+            fitPadding: 0,
+        },
+        events: {
+            datapointEnter: null,
+            datapointLeave: null,
+            datapointClick: null,
+            territoryEnter: null,
+            territoryLeave: null,
+            territoryClick: null,
+        },
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                dimensions: {
+                    width: null,
+                    height: null
+                },
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                territory: {
+                    fill: '#F2F3F5',
+                    stroke: '#D0D4D8',
+                    strokeWidth: 1,
+                    hover: {
+                        fill: '#E7E1EE',
+                        stroke: COLOR_GREY_MID,
+                        strokeWidth: 1.5
+                    }
+                },
+                points: {
+                    radius: 1,
+                    stroke: COLOR_WHITE,
+                    strokeWidth: 1,
+                    fill: COLOR_GREY_DARK,
+                    hoverRadiusRatio: 1.2,
+                    labels: {
+                        show: true,
+                        fontSizeRatio: 1,
+                        color: COLOR_BLACK,
+                        offsetY: 0,
+                    }
+                },
+                controls: {
+                    position: 'bottom',
+                    show: true,
+                    backgroundColor: COLOR_GREY_LIGHT,
+                    buttonColor: COLOR_GREY_LIGHT,
+                    color: COLOR_BLACK,
+                    fontSize: 14,
+                    border: `1px solid ${COLOR_GREY_MID}`,
+                    padding: `0.5rem`,
+                    borderRadius: `0.25rem`
+                },
+                title: TITLE,
+                tooltip: TOOLTIP,
+                zoom: {
+                    active: true,
+                }
+            }
+        },
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -6910,6 +6993,7 @@ export function useConfig() {
         vue_ui_chord,
         vue_ui_stackline,
         vue_ui_dag,
+        vue_ui_geo,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,
