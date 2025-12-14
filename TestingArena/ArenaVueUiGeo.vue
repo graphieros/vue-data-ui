@@ -15,7 +15,7 @@ import FRANCE from "./maps/FRANCE.json"
 import VueDataUi from "../src/components/vue-data-ui.vue";
 
 const { local, build, vduiLocal, vduiBuild } = useArena();
-const { vue_ui_map: DEFAULT_CONFIG } = useConfig();
+const { vue_ui_geo: DEFAULT_CONFIG } = useConfig();
 const step = ref(0);
 
 const {
