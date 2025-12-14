@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { ref, computed } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 //@ts-ignore
@@ -68,7 +68,8 @@ const components = [
   { name: 'ArenaVueUiAnnotator', icon: 'annotator'},
   { name: 'ArenaVueUiCursor', icon: 'cursor'},
   { name: 'ArenaVueUiDigits', icon: 'digit8'},
-  { name: 'ArenaVueUiDag', icon: 'chartDag' }
+  { name: 'ArenaVueUiDag', icon: 'chartDag' },
+  { name: 'ArenaVueUiGeo', icon: 'chartGeo' },
 ].map(componentItem => ({
   path: `/${componentItem.name}`,
   name: componentItem.name.replace('Arena', ''),
