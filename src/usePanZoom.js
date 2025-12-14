@@ -15,6 +15,7 @@ export default function usePanZoom(
     const isPinching = ref(false);
     const pinchStartDist = ref(0);
     const pinchStartViewBox = ref(null);
+    const pinchStartScale = ref(1);
     const startClient = ref({ x: 0, y: 0 });
 
     const isZoom = computed(() =>
@@ -136,6 +137,7 @@ export default function usePanZoom(
             isPinching.value = true;
             pinchStartDist.value = getTouchDistance(event.touches);
             pinchStartViewBox.value = { ...viewBox.value };
+            pinchStartScale.value = scale.value;
         } else {
             event.preventDefault();
             startPan(event);
@@ -145,17 +147,22 @@ export default function usePanZoom(
     function handleTouchMove(event) {
         if (isPinching.value && event.touches.length === 2) {
             event.preventDefault();
+
             const dist = getTouchDistance(event.touches);
-            if (pinchStartDist.value) {
-                const zoomFactor = dist / pinchStartDist.value;
-                const svg = svgRef.value;
-                const rect = svg.getBoundingClientRect();
-                const midX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
-                const midY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
-                const midPoint = toSvgPoint({ clientX: midX, clientY: midY });
-                viewBox.value = { ...pinchStartViewBox.value };
-                applyZoom(zoomFactor, midPoint);
-            }
+            if (!pinchStartDist.value || !dist) return;
+
+            const absoluteFactor = dist / pinchStartDist.value;
+            const targetScale = pinchStartScale.value * absoluteFactor;
+            const relativeFactor = targetScale / scale.value;
+
+            const midX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
+            const midY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+            const midPoint = toSvgPoint({ clientX: midX, clientY: midY });
+
+            viewBox.value = { ...pinchStartViewBox.value };
+            scale.value = pinchStartScale.value;
+
+            applyZoom(relativeFactor, midPoint);
         } else {
             event.preventDefault();
             doPan(event);
