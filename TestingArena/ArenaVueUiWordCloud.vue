@@ -30,13 +30,13 @@ Maecenas convallis libero at nisl lacinia facilisis. Nulla facilisi. Sed bibendu
 
 const shortText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus pulvinar pretium venenatis. Donec imperdiet elit id porttitor tristique. Aenean ac commodo justo. Vestibulum placerat molestie nisl, sit amet lacinia nulla posuere quis. Aenean ullamcorper eu ex vitae facilisis. Aliquam erat volutpat. Proin nunc felis, porttitor quis commodo lacinia, gravida sed orci. Interdum et malesuada fames ac ante ipsum primis in faucibus. Vivamus mattis vitae tellus ac luctus. Vestibulum faucibus sem nec varius eleifend. In gravida venenatis ipsum sit amet ultricies. Nam efficitur, dui ac imperdiet vestibulum, justo metus consectetur libero, posuere tempor neque magna vitae augue. Etiam gravida massa quis turpis vulputate, ac tempus nisi imperdiet.'
 
-const dataset = ref(undefined);
+const dataset = ref(createWordCloudDatasetFromPlainText(longText));
 
-onMounted(() => {
-    setTimeout(() => {
-        dataset.value = createWordCloudDatasetFromPlainText(longText);
-    }, 2000)
-})
+// onMounted(() => {
+//     setTimeout(() => {
+//         dataset.value = createWordCloudDatasetFromPlainText(longText);
+//     }, 2000)
+// })
 
 const model = createModel([
     CHECKBOX("debug", { def: true }),

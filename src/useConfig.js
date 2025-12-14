@@ -4638,6 +4638,17 @@ export function useConfig() {
                 zoom: {
                     show: true,
                 },
+                controls: {
+                    position: 'bottom',
+                    show: true,
+                    backgroundColor: COLOR_GREY_LIGHT,
+                    buttonColor: COLOR_GREY_LIGHT,
+                    color: COLOR_BLACK,
+                    fontSize: 14,
+                    border: `1px solid ${COLOR_GREY_MID}`,
+                    padding: `0.5rem`,
+                    borderRadius: `0.25rem`
+                },
                 words: {
                     maxFontSize: 100,
                     minFontSize: FONT._10,

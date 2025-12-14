@@ -11,6 +11,12 @@
                         "color": "#757575"
                     }
                 },
+                "controls": {
+                    "backgroundColor": "#2A2A2A",
+                    "buttonColor": "#2A2A2A",
+                    "color": "#CCCCCC",
+                    "border": "1px solid #4A4A4A"
+                },
                 "words": {
                     "selectedStroke": "#1A1A1A"
                 },
@@ -43,6 +49,12 @@
                     "subtitle": {
                         "color": "#757575"
                     }
+                },
+                "controls": {
+                    "backgroundColor": "#FFF8E1",
+                    "buttonColor": "#FFF8E1",
+                    "color": "#424242",
+                    "border": "1px solid #d9bbb2"
                 },
                 "words": {
                     "selectedStroke": "#FFF8E1"
@@ -81,6 +93,12 @@
                         "color": "#BDBDBD"
                     }
                 },
+                "controls": {
+                    "backgroundColor": "#1E1E1E",
+                    "buttonColor": "#1E1E1E",
+                    "color": "#BDBDBD",
+                    "border": "1px solid #3A3A3A"
+                },
                 "words": {
                     "selectedStroke": "#1E1E1E"
                 },
@@ -112,6 +130,12 @@
             "chart": {
                 "backgroundColor": "#1A1A1A",
                 "color": "#99AA99",
+                "controls": {
+                    "backgroundColor": "#1A1A1A",
+                    "buttonColor": "#1A1A1A",
+                    "color": "#99AA99",
+                    "border": "1px solid #1e361e"
+                },
                 "title": {
                     "color": "#66CC66",
                     "subtitle": {
@@ -139,6 +163,12 @@
             "chart": {
                 "backgroundColor": "#fbfafa",
                 "color": "#8A9892",
+                "controls": {
+                    "backgroundColor": "#fbfafa",
+                    "buttonColor": "#fbfafa",
+                    "color": "#99AA99",
+                    "border": "1px solid #ebded3"
+                },
                 "title": {
                     "color": "#8A9892",
                     "subtitle": {
@@ -166,6 +196,13 @@
             "chart": {
                 "backgroundColor": "#f6f6fb",
                 "color": "#50606C",
+                "controls": {
+                    "backgroundColor": "#f6f6fb",
+                    "buttonColor": "#f6f6fb",
+                    "color": "#50606C",
+                    "border": "1px solid #98aab8",
+                    "borderRadius": "0"
+                },
                 "title": {
                     "color": "#50606C",
                     "subtitle": {

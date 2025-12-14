@@ -77,6 +77,17 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
         />
     </button>
     <button
+        :disabled="scale === 1"
+        @click="emit('resetZoom')" 
+        class="vue-data-ui-zoom-controls-button"
+    >
+        <BaseIcon 
+            name="revert" 
+            :stroke="config.style.chart.controls.color" 
+            :size="config.style.chart.controls.fontSize * 1.2"
+        />
+    </button>
+    <button
         v-if="withDirection" 
         @click="emit('switchDirection')" 
         class="vue-data-ui-zoom-controls-button"
@@ -133,5 +144,14 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
     left: 50% !important;
     transform: translateX(-50%) !important;
     bottom: 1rem;
+}
+
+button:disabled {
+    cursor:not-allowed;
+    opacity: 0.3;
+}
+
+button:disabled:hover {
+    box-shadow: none;
 }
 </style>

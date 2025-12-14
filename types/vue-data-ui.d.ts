@@ -291,6 +291,18 @@ declare module "vue-data-ui" {
         strokeDasharray?: number;
     }
 
+    export type ChartZoomControls = {
+        position?: 'top' | 'bottom';
+        show?: boolean;
+        backgroundColor?: string;
+        buttonColor?: string;
+        color?: string;
+        fontSize?: number;
+        border?: string;
+        padding?: string;
+        borderRadius?: string;
+    }
+
     export type ChartUserOptions = {
         show?: boolean;
         showOnChartHover?: boolean;
@@ -1541,7 +1553,8 @@ declare module "vue-data-ui" {
         | "triangleInformation"
         | "triangleExclamation"
         | "direction"
-        | "chartDag";
+        | "chartDag"
+        | "revert";
 
     export const VueUiIcon: DefineComponent<{
         name: VueUiIconName;
@@ -7030,6 +7043,7 @@ declare module "vue-data-ui" {
                 height?: number;
                 width?: number;
                 zoom?: Omit<ChartZoom, "fontSize">;
+                controls?: ChartZoomControls;
                 words?: {
                     maxFontSize?: number;
                     minFontSize?: number;
@@ -9517,17 +9531,7 @@ declare module "vue-data-ui" {
                         color?: string;
                     };
                 };
-                controls?: {
-                    position?: 'top' | 'bottom';
-                    show?: boolean;
-                    backgroundColor?: string;
-                    buttonColor?: string;
-                    color?: string;
-                    fontSize?: number;
-                    border?: string;
-                    padding?: string;
-                    borderRadius?: string;
-                };
+                controls?: ChartZoomControls;
                 zoom?: {
                     active?: boolean;
                 };
@@ -9724,17 +9728,7 @@ declare module "vue-data-ui" {
                         offsetY?: number;
                     };
                 };
-                controls?: {
-                    position?: 'top' | 'bottom';
-                    show?: boolean;
-                    backgroundColor?: string;
-                    buttonColor?: string;
-                    color?: string;
-                    fontSize?: number;
-                    border?: string;
-                    padding?: string;
-                    borderRadius?: string;
-                };
+                controls?: ChartZoomControls;
                 title?: ChartTitle;
                 tooltip?: ChartTooltip;
                 zoom?: {

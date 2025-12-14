@@ -27,7 +27,6 @@ import {
     treeShake,
     XMLNS
 } from '../lib';
-import { throttle } from '../canvas-lib';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
@@ -43,6 +42,7 @@ import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_word_cloud.json";
 import usePanZoom from '../usePanZoom';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import BaseZoomControls from '../atoms/BaseZoomControls.vue';
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -92,6 +92,7 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const cloudFinalized = ref(false);
 const isRelayout = ref(false);
+const zoomControls = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -279,6 +280,7 @@ const resizeJob = debounce(() => {
     const { width, height } = useResponsive({
         chart: wordCloudChart.value,
         title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
+        legend: FINAL_CONFIG.value.style.chart.controls.show ? zoomControls.value?.$el : null,
         source: source.value
     });
 
@@ -562,7 +564,7 @@ function toggleZoom() {
 
 const active = computed(() => !isAnnotator.value && mutableConfig.value.showZoom);
 
-const { viewBox, resetZoom, isZoom, setInitialViewBox } = usePanZoom(svgRef, {
+const { viewBox, resetZoom, isZoom, setInitialViewBox, zoomByFactor, scale } = usePanZoom(svgRef, {
     x: 0,
     y: 0,
     width: svg.value.width <= 0 ? 10 : svg.value.width,
@@ -660,6 +662,14 @@ async function generateSvg({ isCb }) {
     } else {
         exportSvg();
     }
+}
+
+function zoomIn() {
+    zoomByFactor(1.5, true);
+}
+
+function zoomOut() {
+    zoomByFactor(1 / 1.5, true);
 }
 
 defineExpose({
@@ -853,12 +863,23 @@ function useTooltip(word, index) {
             </template>
         </UserOptions>
 
+        <BaseZoomControls
+            ref="zoomControls"
+            v-if="FINAL_CONFIG.style.chart.controls.position === 'top' && FINAL_CONFIG.style.chart.controls.show && !loading"
+            :config="FINAL_CONFIG"
+            :scale="scale"
+            :isFullscreen="isFullscreen"
+            @zoomIn="zoomIn"
+            @zoomOut="zoomOut"
+            @resetZoom="resetZoom(true)"
+        />
+
         <svg
             ref="svgRef"
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen  }" 
             :xmlns="XMLNS"
             :viewBox="`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`"
-            :style="`overflow:hidden;background:transparent;`"
+            :style="`overflow:hidden;background:transparent;display:block`"
         >
             <PackageVersion />
 
@@ -929,19 +950,19 @@ function useTooltip(word, index) {
 
         <div v-if="isZoom" data-dom-to-png-ignore class="reset-wrapper">
             <slot name="reset-action" :reset="resetZoom">
-                <button 
-                    data-cy-reset 
-                    tabindex="0" 
-                    role="button" 
-                    class="vue-data-ui-refresh-button"
-                    :style="{
-                        background: FINAL_CONFIG.style.chart.backgroundColor
-                    }"
-                    @click="resetZoom(true)">
-                    <BaseIcon name="refresh" :stroke="FINAL_CONFIG.style.chart.color" />
-                </button>
             </slot>
         </div>
+
+        <BaseZoomControls
+            ref="zoomControls"
+            v-if="FINAL_CONFIG.style.chart.controls.position === 'bottom' && FINAL_CONFIG.style.chart.controls.show && !loading"
+            :config="FINAL_CONFIG"
+            :scale="scale"
+            :isFullscreen="isFullscreen"
+            @zoomIn="zoomIn"
+            @zoomOut="zoomOut"
+            @resetZoom="resetZoom(true)"
+        />
 
         <Tooltip
             :show="mutableConfig.showTooltip && isTooltip"
