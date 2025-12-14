@@ -6856,7 +6856,7 @@ export function useConfig() {
         }
     }
 
-    const vue_ui_map = {
+    const vue_ui_geo = {
         loading: false,
         debug: false,
         responsive: false,
@@ -6993,7 +6993,7 @@ export function useConfig() {
         vue_ui_chord,
         vue_ui_stackline,
         vue_ui_dag,
-        vue_ui_map,
+        vue_ui_geo,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,

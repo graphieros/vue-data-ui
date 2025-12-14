@@ -54,7 +54,7 @@ const props = defineProps({
     },
 });
 
-const { vue_ui_map: DEFAULT_CONFIG } = useConfig();
+const { vue_ui_geo: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
 const uid = ref(createUid());
