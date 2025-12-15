@@ -986,7 +986,7 @@ const smallArcLayoutsClassic = computed(() => {
     const baseLineHeight = labels_inline_fontSize.value * 1.5;
 
     const markerTextGap = 8;
-    const radialOffset = 24;
+    const radialOffset = 6;
 
     const leftBandMarkerX = centerX - (minSize.value + radialOffset);
     const rightBandMarkerX = centerX + (minSize.value + radialOffset);
@@ -1089,7 +1089,7 @@ const smallArcLayoutsClassic = computed(() => {
         layouts[index] = {
             side: "left",
             labelX: bandMarkerX - markerTextGap,
-            labelY,
+            labelY: labelY + labels_inline_fontSize.value / 3,
             textAnchor: "end",
             markerX: bandMarkerX,
             markerY: bandMarkerY,
@@ -1118,7 +1118,7 @@ const smallArcLayoutsClassic = computed(() => {
         layouts[index] = {
             side: "right",
             labelX: bandMarkerX + markerTextGap,
-            labelY,
+            labelY: labelY + labels_inline_fontSize.value / 3,
             textAnchor: "start",
             markerX: bandMarkerX,
             markerY: bandMarkerY,
@@ -1149,7 +1149,7 @@ const smallArcLayoutsClassic = computed(() => {
             layouts[index] = {
                 side: "left",
                 labelX: bandMarkerX - markerTextGap,
-                labelY,
+                labelY: labelY + labels_inline_fontSize.value / 3,
                 textAnchor: "end",
                 markerX: bandMarkerX,
                 markerY: bandMarkerY,
@@ -1179,7 +1179,7 @@ const smallArcLayoutsClassic = computed(() => {
             layouts[index] = {
                 side: "right",
                 labelX: bandMarkerX + markerTextGap,
-                labelY,
+                labelY: labelY + labels_inline_fontSize.value / 3,
                 textAnchor: "start",
                 markerX: bandMarkerX,
                 markerY: bandMarkerY,
@@ -1188,7 +1188,7 @@ const smallArcLayoutsClassic = computed(() => {
         });
     }
 
-    return layouts;
+    return layouts
 });
 
 
@@ -1381,7 +1381,7 @@ function buildClassicInlineLabel(arc, index, isSmall) {
         if (lineIndex === 0) {
             nameTspans += `
                 <tspan
-                    class="vue-data-ui-datalabel-name"
+                    class="${isSmall ? 'vue-data-ui-datalabel-inline' : 'vue-data-ui-datalabel-name'}"
                     fill="${FINAL_CONFIG.value.style.chart.layout.labels.name.color}"
                     font-size="${isSmall ? labels_inline_fontSize.value : labels_name_fontSize.value}px"
                     style="font-weight:${FINAL_CONFIG.value.style.chart.layout.labels.name.bold ? 'bold' : ''}"
@@ -1390,7 +1390,7 @@ function buildClassicInlineLabel(arc, index, isSmall) {
         } else {
             nameTspans += `
                 <tspan
-                    class="vue-data-ui-datalabel-name"
+                    class="${isSmall ? 'vue-data-ui-datalabel-inline' : 'vue-data-ui-datalabel-name'}"
                     x="${x}"
                     dy="${(isSmall ? labels_inline_fontSize.value : labels_name_fontSize.value) * 1.2}"
                     fill="${FINAL_CONFIG.value.style.chart.layout.labels.name.color}"
