@@ -186,12 +186,12 @@ onMounted(async () => {
     <Box comp="VueUiBullet" :config="config" :dataset="dataset">
         <template #title>VueUiBullet</template>
 
-        <template #reponsive>
+        <template #responsive>
             <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
                 <LocalVueUiBullet :dataset="dataset" :config="{
                     ...config,
                     responsive: true
-                }" ref="local"/>
+                }"/>
             </div>
         </template>
 

@@ -174,9 +174,12 @@ function prepareChart() {
                 source: source.value
             });
 
+            const legendOffset = FINAL_CONFIG.value.style.chart.legend.show ? 24 : 0;
+            const offsetY = legendOffset || 12;
+
             requestAnimationFrame(() => {
                 defaultSizes.value.width = width;
-                defaultSizes.value.height = height - 12;
+                defaultSizes.value.height = height - offsetY;
             })
         });
 
@@ -286,22 +289,25 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
-watch(() => props.config, (_newCfg) => {
-    if (!loading.value) {
-        FINAL_CONFIG.value = prepareConfig();
-    }
-    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
-    prepareChart();
-    titleStep.value += 1;
-}, { deep: true });
-
 const defaultSizes = ref({
     width: FINAL_CONFIG.value.style.chart.width,
     height: FINAL_CONFIG.value.style.chart.height
 });
 
 const WIDTH = computed(() => defaultSizes.value.width);
-const HEIGHT = computed(() => defaultSizes.value.height)
+const HEIGHT = computed(() => defaultSizes.value.height);
+
+watch(() => props.config, (_newCfg) => {
+    if (!loading.value) {
+        FINAL_CONFIG.value = prepareConfig();
+    }
+    userOptionsVisible.value = !FINAL_CONFIG.value.userOptions.showOnChartHover;
+    defaultSizes.value.width = FINAL_CONFIG.value.style.chart.width;
+    defaultSizes.value.height = FINAL_CONFIG.value.style.chart.height;
+    prepareChart();
+    titleStep.value += 1;
+}, { deep: true });
+
 
 const svg = computed(() => {
     const height = HEIGHT.value;
@@ -550,7 +556,7 @@ defineExpose({
     <div
         ref="bulletChart"
         :class="`vue-data-ui-component vue-ui-bullet ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
-        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
         :id="`bullet_${uid}`"
         @mouseenter="() => setUserOptionsVisibility(true)" 
         @mouseleave="() => setUserOptionsVisibility(false)"
