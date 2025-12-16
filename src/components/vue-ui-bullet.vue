@@ -129,6 +129,16 @@ segments: [
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
+const padding = computed(() => {
+    const { top, right, bottom, left } = FINAL_CONFIG.value.style.chart.padding;
+    return {
+        top,
+        right,
+        bottom,
+        left
+    }
+})
+
 function prepareChart() {
     if(objectIsEmpty(FINAL_DATASET.value)) {
         error({
@@ -171,7 +181,8 @@ function prepareChart() {
                 chart: bulletChart.value,
                 title: FINAL_CONFIG.value.style.chart.title.text ? chartTitle.value : null,
                 legend: FINAL_CONFIG.value.style.chart.legend.show ? chartLegend.value : null,
-                source: source.value
+                source: source.value,
+                padding: padding.value
             });
 
             const legendOffset = FINAL_CONFIG.value.style.chart.legend.show ? 24 : 0;
