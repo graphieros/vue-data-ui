@@ -5,6 +5,9 @@
             "chart": {
                 "backgroundColor": "#1A1A1A",
                 "color": "#CCCCCC",
+                "backgroundPattern": {
+                    "dotColor": "#3A3A3A"
+                },
                 "nodes": {
                     "stroke": "#6A6A6A",
                     "backgroundColor": "#2A2A2A",
@@ -47,6 +50,9 @@
             "chart": {
                 "backgroundColor": "#FFF8E1",
                 "color": "#424242",
+                "backgroundPattern": {
+                    "dotColor": "#edc7bb"
+                },
                 "nodes": {
                     "stroke": "#5D4037",
                     "backgroundColor": "#fcf9f0",
@@ -89,6 +95,9 @@
             "chart": {
                 "backgroundColor": "#1E1E1E",
                 "color": "#BDBDBD",
+                "backgroundPattern": {
+                    "dotColor": "#3E3E3E"
+                },
                 "nodes": {
                     "stroke": "#965039",
                     "backgroundColor": "#2A2A2A",
@@ -131,6 +140,9 @@
             "chart": {
                 "backgroundColor": "#1A1A1A",
                 "color": "#99AA99",
+                "backgroundPattern": {
+                    "dotColor": "#2f3d2f"
+                },
                 "nodes": {
                     "stroke": "#66CC66",
                     "backgroundColor": "#2A2A2A",
@@ -173,6 +185,9 @@
             "chart": {
                 "backgroundColor": "#fbfafa",
                 "color": "#8A9892",
+                "backgroundPattern": {
+                    "dotColor": "#dbcfc5"
+                },
                 "nodes": {
                     "stroke": "#8F837A",
                     "backgroundColor": "#ffffff",
@@ -215,6 +230,9 @@
             "chart": {
                 "backgroundColor": "#f6f6fb",
                 "color": "#50606C",
+                "backgroundPattern": {
+                    "dotColor": "#c3cfd9"
+                },
                 "layout": {
                     "arrowShape": "normal",
                     "curvedEdges": false

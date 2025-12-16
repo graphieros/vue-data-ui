@@ -6802,6 +6802,13 @@ export function useConfig() {
                 color: COLOR_BLACK,
                 width: null,
                 height: null,
+                backgroundPattern: {
+                    show: false,
+                    spacingRatio: 3,
+                    dotRadiusRatio: 5,
+                    dotColor: COLOR_GREY_LIGHT,
+                    opacity: 1,
+                },
                 layout: {
                     rankDirection: 'TB',
                     rankSeparation: 60,
@@ -6835,6 +6842,10 @@ export function useConfig() {
                 edges: {
                     stroke: COLOR_GREY_MID,
                     strokeWidth: 1,
+                    animations: {
+                        dasharray: '2 6',
+                        animationDurationMs: 1000
+                    }
                 },
                 midpoints: {
                     show: false,
@@ -6846,7 +6857,7 @@ export function useConfig() {
                         maxWidth: '300px',
                         backgroundColor: COLOR_GREY_LIGHT,
                         color: COLOR_BLACK,
-                    }
+                    },
                 },
                 controls: {
                     position: 'bottom',

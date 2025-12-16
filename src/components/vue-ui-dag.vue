@@ -697,6 +697,159 @@ function setupResponsive() {
     handleResize();
 }
 
+function getIdealDashoffsetDelta(pathElement, options = {}) {
+    const {
+        direction = -1,
+        mode = "oneLapNearest",
+        dasharray = null
+    } = options;
+
+    if (!pathElement || typeof pathElement.getTotalLength !== "function") {
+        if (debug.value) {
+            console.warn(
+                "VueUiDag @getIdealDashoffsetDelta: invalid path element",
+                pathElement
+            );
+        }
+        return 0;
+    }
+
+    const pathLength = pathElement.getTotalLength();
+
+    const dasharrayValue =
+        dasharray ??
+        pathElement.getAttribute("stroke-dasharray") ??
+        (typeof getComputedStyle === "function"
+        ? getComputedStyle(pathElement).strokeDasharray
+        : "");
+
+    const patternLength = sumDasharray(dasharrayValue);
+
+    if (!Number.isFinite(patternLength) || patternLength <= 0) {
+        return direction * pathLength;
+    }
+
+    const nearestMultiple = Math.max(1, Math.round(pathLength / patternLength));
+    const ceilMultiple = Math.max(1, Math.ceil(pathLength / patternLength));
+    const floorMultiple = Math.max(1, Math.floor(pathLength / patternLength));
+
+    let delta;
+    if (mode === "pattern") delta = patternLength;
+    else if (mode === "oneLapCeil") delta = ceilMultiple * patternLength;
+    else if (mode === "oneLapFloor") delta = floorMultiple * patternLength;
+    else delta = nearestMultiple * patternLength;
+
+    return direction * delta;
+
+    function sumDasharray(value) {
+        if (!value || value === "none") return NaN;
+
+        const numbers = String(value)
+            .replace(/,/g, " ")
+            .trim()
+            .split(/\s+/)
+            .map((token) => Number.parseFloat(token))
+            .filter((number) => Number.isFinite(number));
+
+        if (!numbers.length) return NaN;
+
+        const sum = numbers.reduce((accumulator, current) => accumulator + current, 0);
+        return numbers.length % 2 === 1 ? sum * 2 : sum;
+    }
+}
+
+const edgePathElementByIdentifier = ref(new Map());
+const edgeAnimationByIdentifier = ref(new Map());
+
+function registerEdgePathElement(edgeIdentifier) {
+    return function register(element) {
+        if (element) {
+            edgePathElementByIdentifier.value.set(edgeIdentifier, element);
+        } else {
+            edgePathElementByIdentifier.value.delete(edgeIdentifier);
+        }
+    };
+}
+
+function stopAllEdgeAnimations() {
+    edgeAnimationByIdentifier.value.forEach((animationHandle) => {
+        try {
+            animationHandle.cancel();
+        } catch {
+            // whatever
+        }
+    });
+    edgeAnimationByIdentifier.value.clear();
+}
+
+function startEdgeAnimations() {
+    stopAllEdgeAnimations();
+
+    const edges = layoutData.value?.edges ?? [];
+    if (!edges.length) return;
+
+    const animationDefaults = FINAL_CONFIG.value.style.chart.edges.animations;
+
+    const referenceDistance =
+        Number(animationDefaults.referenceDistance) > 0
+        ? Number(animationDefaults.referenceDistance)
+        : 24;
+
+    edges.forEach((edge) => {
+        const isAnimated = !!edge?.original?.animated;
+        if (!isAnimated) return;
+
+        const pathElement = edgePathElementByIdentifier.value.get(edge.id);
+        if (!pathElement) return;
+
+        const dasharrayValue = edge?.original?.dasharray ?? animationDefaults.dasharray;
+
+        pathElement.style.strokeDasharray = String(dasharrayValue);
+        pathElement.style.strokeDashoffset = "0";
+
+        const hasEdgeDirection = ![undefined, null].includes(edge?.original?.animationDirection);
+        const hasConfigDirection = ![undefined, null].includes(animationDefaults.animationDirection);
+
+        const direction = hasEdgeDirection
+            ? Number(edge.original.animationDirection)
+            : hasConfigDirection
+                ? Number(animationDefaults.animationDirection)
+                : -1;
+
+        const dashoffsetDelta = getIdealDashoffsetDelta(pathElement, {
+            direction,
+            mode: "oneLapNearest",
+            dasharray: String(dasharrayValue)
+        });
+
+        // Duration is derived from speed (referenceDistance / durationReferenceMs)
+        const durationReferenceMsRaw = edge?.original?.animationDurationMs ?? animationDefaults.animationDurationMs ?? 1000;
+
+        const durationReferenceMs = Number(durationReferenceMsRaw);
+        const hasDurationReference = Number.isFinite(durationReferenceMs) && durationReferenceMs > 0;
+        const speedUnitsPerMs = hasDurationReference ? referenceDistance / durationReferenceMs : referenceDistance / 1000;
+        const durationMilliseconds = Math.max(1, Math.round(Math.abs(dashoffsetDelta) / Math.max(1e-9, speedUnitsPerMs)));
+
+        const animationHandle = pathElement.animate(
+            [{ strokeDashoffset: 0 }, { strokeDashoffset: dashoffsetDelta }],
+            { duration: durationMilliseconds, iterations: Infinity, easing: "linear" }
+        );
+
+        edgeAnimationByIdentifier.value.set(edge.id, animationHandle);
+    });
+}
+
+watch(() => layoutData.value && layoutData.value.edges, async () => {
+        await nextTick();
+        startEdgeAnimations();
+    },
+    { deep: true, immediate: true }
+);
+
+onBeforeUnmount(() => {
+    stopAllEdgeAnimations();
+});
+
 async function getImage({ scale = 2} = {}) {
     if (!dagChart.value) return
     const { width, height } = dagChart.value.getBoundingClientRect()
@@ -711,6 +864,17 @@ async function getImage({ scale = 2} = {}) {
         aspectRatio 
     }
 }
+
+const backgroundPatternGridSpacing = computed(() => {
+    const nodeHeight = Number(FINAL_CONFIG.value.style.chart.layout.nodeHeight);
+    return Number.isFinite(nodeHeight) && nodeHeight > 0
+        ? nodeHeight / FINAL_CONFIG.value.style.chart.backgroundPattern.spacingRatio
+        : 12;
+});
+
+const backgroundPatternDotRadius = computed(() => {
+    return backgroundPatternGridSpacing.value * (FINAL_CONFIG.value.style.chart.backgroundPattern.dotRadiusRatio / 100);
+});
 
 function getData() {
     return layoutData.value;
@@ -730,7 +894,6 @@ defineExpose({
     switchDirection
 })
 </script>
-
 
 <template>
     <div 
@@ -881,6 +1044,41 @@ defineExpose({
         >
             <PackageVersion />
 
+            <defs v-if="FINAL_CONFIG.style.chart.backgroundPattern.show">
+                <pattern
+                    :id="`dag_bg_pattern_${uid}`"
+                    patternUnits="userSpaceOnUse"
+                    :width="backgroundPatternGridSpacing"
+                    :height="backgroundPatternGridSpacing"
+                >
+                    <slot name="background-pattern" v-bind="{
+                        x: backgroundPatternGridSpacing / 2,
+                        y: backgroundPatternGridSpacing / 2,
+                        color: FINAL_CONFIG.style.chart.backgroundPattern.dotColor
+                    }">
+                        <circle
+                            :cx="backgroundPatternGridSpacing / 2"
+                            :cy="backgroundPatternGridSpacing / 2"
+                            :r="backgroundPatternDotRadius"
+                            :fill="FINAL_CONFIG.style.chart.backgroundPattern.dotColor"
+                        />
+                    </slot>
+                </pattern>
+            </defs>
+
+            <rect 
+                v-if="FINAL_CONFIG.style.chart.backgroundPattern.show" 
+                :x="panZoomViewBox?.x ?? 0"
+                :y="panZoomViewBox?.y ?? 0"
+                :width="panZoomViewBox?.width ?? 0"
+                :height="panZoomViewBox?.height ?? 0"
+                :fill="`url(#dag_bg_pattern_${uid})`" 
+                :style="{
+                    pointerEvents: 'none',
+                    opacity: FINAL_CONFIG.style.chart.backgroundPattern.opacity
+                }"
+            />
+
             <!-- Arrow marker. Hidden when arrowShape is "undirected". -->
             <defs v-if="layoutData.arrowShape !== 'undirected'">
                 <template v-for="color in edgeColors" :key="color">
@@ -919,12 +1117,13 @@ defineExpose({
                 <template v-for="edge in layoutData.edges" :key="edge.id">
                     <path
                         data-cy-edge
-                        :d="edge.pathData" 
-                        fill="none" 
+                        :ref="registerEdgePathElement(edge.id)"
+                        :d="edge.pathData"
+                        fill="none"
                         :stroke="edge.original.color ?? FINAL_CONFIG.style.chart.edges.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === highlightedNodeId || edge.id === tooltipEdge?.id) ? 2 : 1)" 
-                        stroke-linecap="round" 
-                        stroke-linejoin="round" 
+                        :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === highlightedNodeId || edge.id === tooltipEdge?.id) ? 2 : 1)"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                         style="pointer-events: none; transition: stroke-width 0.2s ease-in-out"
                     />
                     <circle

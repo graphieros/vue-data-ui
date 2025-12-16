@@ -221,6 +221,8 @@ declare module "vue-data-ui" {
     export type VueUiChordEvent = ChartEvent<VueUiChordDatapointArc | VueUiChordDatapointRibbon>;
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
 
+    export type VueUiConfigNumberString = `${number}`;
+
     export type VueUiPatternName =
         | "bubbles"
         | "flooring"
@@ -9465,6 +9467,10 @@ declare module "vue-data-ui" {
         from: string;
         to: string;
         color?: string;
+        animated?: boolean;
+        dasharray?: `${VueUiConfigNumberString} ${VueUiConfigNumberString}`;
+        animationDurationMs?: number;
+        animationDirection?: 1 | -1;
     }
 
     export type VueUiDagDataset = {
@@ -9485,6 +9491,13 @@ declare module "vue-data-ui" {
                 height?: number | null;
                 backgroundColor?: string;
                 color?: string;
+                backgroundPattern?: {
+                    show?: boolean;
+                    spacingRatio?: number;
+                    dotRadiusRatio?: number;
+                    dotColor?: string;
+                    opacity?: number;
+                };
                 layout?: {
                     rankDirection?: 'TB' | 'RL' | 'BT' | 'LR';
                     rankSeparation?: number;
@@ -9518,6 +9531,10 @@ declare module "vue-data-ui" {
                 edges?: {
                     stroke?: string;
                     strokeWidth?: number;
+                    animations?: {
+                        dasharray?: `${VueUiConfigNumberString} ${VueUiConfigNumberString}`;
+                        animationDurationMs?: number;
+                    }
                 };
                 midpoints?: {
                     show?: boolean;

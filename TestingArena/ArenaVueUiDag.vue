@@ -32,15 +32,29 @@ const dataset = ref({
         { id: "D", label: "DDD" },
     ],
     edges: [
-        { from: "A", to: "B", color: '#FF0000'},
+        { 
+            from: "A", 
+            to: "B", 
+            color: '#FF0000',
+            animated: true,
+            dasharray: '2 6',
+            animationDurationMs: 1000,
+            animationDirection: -1 // force direction
+        },
         { from: "B", to: "A" },
         { from: "B", to: "A" },
         { from: "C", to: "A" },
         { from: "B", to: "D" },
         { from: "C", to: "D" },
-        { from: "D", to: "A" },
+        { from: "D", to: "A", animated: true },
     ]
 });
+
+// onMounted(() => {
+//     setTimeout(() => {
+//         dataset.value.edges.at(-1).animated = false
+//     }, 2000)
+// })
 
 // const dataset = ref(undefined);
 
@@ -80,6 +94,12 @@ const model = createModel([
 
     COLOR('style.chart.backgroundColor', { def: '#FFFFFF' }),
     COLOR('style.chart.color', { def: '#1A1A1A' }),
+
+    CHECKBOX('style.chart.backgroundPattern.show', { def: true }),
+    RANGE('style.chart.backgroundPattern.spacingRatio', { def: 3, min: 1, max: 5, step: 0.1}),
+    RANGE('style.chart.backgroundPattern.dotRadiusRatio', { def: 5, min: 1, max: 12, step: 1}),
+    COLOR('style.chart.backgroundPattern.dotColor', { def: '#E1E5E8' }),
+    RANGE('style.chart.backgroundPattern.opacity', { def: 1, min: 0, max: 1, step: 0.1 }),
 
     SELECT('style.chart.layout.rankDirection', ['TB', 'RL', 'BT', 'LR'],  { def: 'TB'}),
     SELECT('style.chart.layout.rankSeparation', [100, 80, 60, 40, 20, 0], { def: 60} ),
@@ -204,7 +224,12 @@ const configTheme = computed(() => ({
                 <LocalVueUiDag :dataset="dataset" :config="{
                     ...config,
                     responsive: true
-                }"/>
+                }">
+                <!-- <template #background-pattern="{ x, y, color }">
+                    <line :x1="x - 2" :x2="x + 2" :y1="y" :y2="y" :stroke="color" stroke-width="0.5"/>
+                    <line :x1="x" :x2="x" :y1="y - 2" :y2="y + 2" :stroke="color" stroke-width="0.5"/>
+                </template>     -->
+            </LocalVueUiDag>
             </div>
         </template>
 
