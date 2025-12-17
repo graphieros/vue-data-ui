@@ -52,6 +52,7 @@ import { useNestedProp } from "../useNestedProp";
 import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { useSmallArcLayoutsClassic } from "../useSmallArcLayouts";
 import img from "../img";
 import Shape from "../atoms/Shape.vue";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
@@ -968,229 +969,20 @@ function isSmallArc(arc, seriesIndex) {
     );
 }
 
-const smallArcLayoutsClassic = computed(() => {
-    if (FINAL_CONFIG.value.type !== "classic") return {};
-
-    const layouts = {};
-    const arcs = noGhostDonut.value || [];
-    if (!arcs.length) return layouts;
-
-    const configObject = FINAL_CONFIG.value;
-    const centerX = svg.value.width / 2;
-    const centerY = svg.value.height / 2;
-
-    const topPadding = padding.value.top + 16;
-    const bottomPadding = svg.value.height - padding.value.bottom - 16;
-
-    // Base height for a single small label (percentage + one name line)
-    const baseLineHeight = labels_inline_fontSize.value * 1.5;
-
-    const markerTextGap = 8;
-    const radialOffset = 6;
-
-    const leftBandMarkerX = centerX - (minSize.value + radialOffset);
-    const rightBandMarkerX = centerX + (minSize.value + radialOffset);
-
-    const isCurved = !!configObject.style.chart.layout.curvedMarkers;
-
-    function makeConnectorPathForSmallArcs({ midX, midY, bandX, bandY }) {
-        if (!isCurved) {
-            const elbowX = midX;
-            const elbowY = bandY;
-            return `M ${midX} ${midY} L ${elbowX} ${elbowY} L ${bandX} ${bandY}`;
-        }
-
-        const side = bandX < centerX ? -1 : 1;
-        const offset = 12;
-
-        const controlPointX = (midX + bandX) / 2 + side * offset;
-        const controlPointY = midY + (bandY - midY) * 0.5;
-
-        return `M ${midX} ${midY} Q ${controlPointX} ${controlPointY} ${bandX} ${bandY}`;
-    }
-
-    // All small arcs (top and bottom), excluding segregated / animating ones
-    const candidates = arcs
-        .map((arc, index) => {
-            const { x: midX, y: midY } = findArcMidpoint(arc.path);
-            const inlineMarkerX = calcMarkerOffsetX(arc).x;
-            const inlineMarkerY = calcMarkerOffsetY(arc) - 3.5;
-
-            const nameLines = String(arc.name ?? "").split(/\n/g);
-            const extraNameLines = Math.max(0, nameLines.length - 1);
-
-            const lineHeight = labels_inline_fontSize.value * 1.2;
-            const extraHeight = extraNameLines * lineHeight;
-
-            const labelHeight = baseLineHeight + extraHeight;
-
-            return {
-                arc,
-                index,
-                midX,
-                midY,
-                inlineMarkerX,
-                inlineMarkerY,
-                labelHeight,
-            };
-        })
-        .filter(({ arc }) => {
-            const seriesIndex = arc.seriesIndex ?? 0;
-
-            // Do not include arcs that are being animated or are segregated
-            if (animatingIndex.value === seriesIndex) return false;
-            if (segregated.value.includes(seriesIndex)) return false;
-
-            return isSmallArc(arc, seriesIndex);
-        });
-
-    const topLeftCandidates = [];
-    const topRightCandidates = [];
-    const bottomLeftCandidates = [];
-    const bottomRightCandidates = [];
-
-    candidates.forEach(candidate => {
-        const isTop = candidate.inlineMarkerY < centerY;
-        const isLeft = candidate.inlineMarkerX < centerX;
-
-        if (isTop && isLeft) topLeftCandidates.push(candidate);
-        else if (isTop && !isLeft) topRightCandidates.push(candidate);
-        else if (!isTop && isLeft) bottomLeftCandidates.push(candidate);
-        else bottomRightCandidates.push(candidate);
-    });
-
-    const sortByVerticalPositionAscending = (a, b) =>
-        a.inlineMarkerY - b.inlineMarkerY || a.index - b.index;
-
-    const sortByVerticalPositionDescending = (a, b) =>
-        b.inlineMarkerY - a.inlineMarkerY || a.index - b.index;
-
-    topLeftCandidates.sort(sortByVerticalPositionAscending);
-    topRightCandidates.sort(sortByVerticalPositionAscending);
-    bottomLeftCandidates.sort(sortByVerticalPositionDescending);
-    bottomRightCandidates.sort(sortByVerticalPositionDescending);
-
-    // TOP LEFT BAND (always clustered if any)
-    let currentTopLeftY = topPadding;
-    topLeftCandidates.forEach(candidate => {
-        const { index, midX, midY, labelHeight } = candidate;
-
-        const labelY = currentTopLeftY;
-        const bandMarkerX = leftBandMarkerX;
-        const bandMarkerY = labelY;
-
-        const connectorPath = makeConnectorPathForSmallArcs({
-            midX,
-            midY,
-            bandX: bandMarkerX,
-            bandY: bandMarkerY,
-        });
-
-        layouts[index] = {
-            side: "left",
-            labelX: bandMarkerX - markerTextGap,
-            labelY: labelY + labels_inline_fontSize.value / 3,
-            textAnchor: "end",
-            markerX: bandMarkerX,
-            markerY: bandMarkerY,
-            connectorPath,
-        };
-
-        currentTopLeftY += labelHeight;
-    });
-
-    // TOP RIGHT BAND (always clustered if any)
-    let currentTopRightY = topPadding;
-    topRightCandidates.forEach(candidate => {
-        const { index, midX, midY, labelHeight } = candidate;
-
-        const labelY = currentTopRightY;
-        const bandMarkerX = rightBandMarkerX;
-        const bandMarkerY = labelY;
-
-        const connectorPath = makeConnectorPathForSmallArcs({
-            midX,
-            midY,
-            bandX: bandMarkerX,
-            bandY: bandMarkerY,
-        });
-
-        layouts[index] = {
-            side: "right",
-            labelX: bandMarkerX + markerTextGap,
-            labelY: labelY + labels_inline_fontSize.value / 3,
-            textAnchor: "start",
-            markerX: bandMarkerX,
-            markerY: bandMarkerY,
-            connectorPath,
-        };
-
-        currentTopRightY += labelHeight;
-    });
-
-    // BOTTOM LEFT BAND
-    if (bottomLeftCandidates.length > 1) {
-        let currentBottomLeftY = bottomPadding;
-        bottomLeftCandidates.forEach(candidate => {
-            const { index, midX, midY, labelHeight } = candidate;
-
-            currentBottomLeftY -= labelHeight;
-            const labelY = currentBottomLeftY;
-            const bandMarkerX = leftBandMarkerX;
-            const bandMarkerY = labelY;
-
-            const connectorPath = makeConnectorPathForSmallArcs({
-                midX,
-                midY,
-                bandX: bandMarkerX,
-                bandY: bandMarkerY,
-            });
-
-            layouts[index] = {
-                side: "left",
-                labelX: bandMarkerX - markerTextGap,
-                labelY: labelY + labels_inline_fontSize.value / 3,
-                textAnchor: "end",
-                markerX: bandMarkerX,
-                markerY: bandMarkerY,
-                connectorPath,
-            };
-        });
-    }
-
-    // BOTTOM RIGHT BAND
-    if (bottomRightCandidates.length > 1) {
-        let currentBottomRightY = bottomPadding;
-        bottomRightCandidates.forEach(candidate => {
-            const { index, midX, midY, labelHeight } = candidate;
-
-            currentBottomRightY -= labelHeight;
-            const labelY = currentBottomRightY;
-            const bandMarkerX = rightBandMarkerX;
-            const bandMarkerY = labelY;
-
-            const connectorPath = makeConnectorPathForSmallArcs({
-                midX,
-                midY,
-                bandX: bandMarkerX,
-                bandY: bandMarkerY,
-            });
-
-            layouts[index] = {
-                side: "right",
-                labelX: bandMarkerX + markerTextGap,
-                labelY: labelY + labels_inline_fontSize.value / 3,
-                textAnchor: "start",
-                markerX: bandMarkerX,
-                markerY: bandMarkerY,
-                connectorPath,
-            };
-        });
-    }
-
-    return layouts
+const { smallArcLayoutsClassic } = useSmallArcLayoutsClassic({
+    FINAL_CONFIG,
+    noGhostDonut,
+    svg,
+    padding,
+    labels_inline_fontSize,
+    minSize,
+    findArcMidpoint,
+    calcMarkerOffsetX,
+    calcMarkerOffsetY,
+    animatingIndex,
+    segregated,
+    isSmallArc
 });
-
 
 function displayArcPercentage(arc, stepBreakdown) {
     const p = arc.value / sumValues(stepBreakdown);
