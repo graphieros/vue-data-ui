@@ -9768,6 +9768,7 @@ declare module "vue-data-ui" {
                     stroke?: string;
                     strokeWidth?: number;
                     hover?: {
+                        enabledWhenEmpty?: boolean;
                         fill?: string;
                         stroke?: string;
                         strokeWidth?: number;

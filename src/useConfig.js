@@ -6923,7 +6923,8 @@ export function useConfig() {
                     stroke: '#D0D4D8',
                     strokeWidth: 1,
                     hover: {
-                        fill: '#E7E1EE',
+                        enabledWhenEmpty: false,
+                        fill: COLOR_GREY_LIGHT,
                         stroke: COLOR_GREY_MID,
                         strokeWidth: 1.5
                     }

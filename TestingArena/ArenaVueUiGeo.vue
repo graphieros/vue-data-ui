@@ -159,6 +159,7 @@ const config = computed(() => {
         //     chart: {
         //         tooltip: {
         //             customFormat: ({ datapoint }) => {
+        //                 console.log(datapoint)
         //                 return `<div style="color:black">${datapoint.name}</div>`
         //             }
         //         }
