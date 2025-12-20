@@ -17,6 +17,7 @@ import {
     treeShake,
     XMLNS,
 } from "../lib.js";
+
 import usePanZoom from "../usePanZoom.js";
 import { throttle } from "../canvas-lib.js";
 import { useConfig } from "../useConfig.js";
@@ -28,8 +29,10 @@ import { useNestedProp } from "../useNestedProp.js";
 import { useThemeCheck } from "../useThemeCheck.js";
 import { useUserOptionState } from "../useUserOptionState.js";
 import { useChartAccessibility } from "../useChartAccessibility.js";
+
 import img from "../img.js";
 import geo from "../geoProjections.js";
+
 import Title from "../atoms/Title.vue";
 import themes from "../themes/vue_ui_geo.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
@@ -129,13 +132,13 @@ const { loading, FINAL_DATASET } = useLoading({
         userConfig: {
             map: {
                 geoJson: {
-                    type: 'FeatureCollection',
+                    type: "FeatureCollection",
                     features: [
                         {
-                            type: 'Feature',
-                            properties: { name: 'Island A' },
+                            type: "Feature",
+                            properties: { name: "Island A" },
                             geometry: {
-                                type: 'Polygon',
+                                type: "Polygon",
                                 coordinates: [
                                     [
                                         [-6, 2],
@@ -148,10 +151,10 @@ const { loading, FINAL_DATASET } = useLoading({
                             },
                         },
                         {
-                            type: 'Feature',
-                            properties: { name: 'Island B' },
+                            type: "Feature",
+                            properties: { name: "Island B" },
                             geometry: {
-                                type: 'Polygon',
+                                type: "Polygon",
                                 coordinates: [
                                     [
                                         [-2, -1],
@@ -164,10 +167,10 @@ const { loading, FINAL_DATASET } = useLoading({
                             },
                         },
                         {
-                            type: 'Feature',
-                            properties: { name: 'Island C' },
+                            type: "Feature",
+                            properties: { name: "Island C" },
                             geometry: {
-                                type: 'Polygon',
+                                type: "Polygon",
                                 coordinates: [
                                     [
                                         [3, -3],
@@ -180,10 +183,10 @@ const { loading, FINAL_DATASET } = useLoading({
                             },
                         },
                         {
-                            type: 'Feature',
-                            properties: { name: 'Island D' },
+                            type: "Feature",
+                            properties: { name: "Island D" },
                             geometry: {
-                                type: 'Polygon',
+                                type: "Polygon",
                                 coordinates: [
                                     [
                                         [4, 3],
@@ -201,10 +204,10 @@ const { loading, FINAL_DATASET } = useLoading({
             userOptions: { show: false },
             style: {
                 chart: {
-                    backgroundColor: '#99999930',
+                    backgroundColor: "#99999930",
                     territory: {
-                        fill: '#99999950',
-                        stroke: '#8A8A8A',
+                        fill: "#99999950",
+                        stroke: "#8A8A8A",
                         strokeWidth: 0.5,
                     },
                 },
@@ -215,17 +218,17 @@ const { loading, FINAL_DATASET } = useLoading({
 
 const { isPrinting, isImaging, generatePdf, generateImage } = usePrinter({
     elementId: `vue-ui-geo_${uid.value}`,
-    fileName: FINAL_CONFIG.value.style.chart.title.text || 'vue-ui-geo',
+    fileName: FINAL_CONFIG.value.style.chart.title.text || "vue-ui-geo",
     options: FINAL_CONFIG.value.userOptions.print,
 });
 
 const activeZoomControlsElement = computed(() => {
     if (!FINAL_CONFIG.value.style.chart.controls.show) return null;
 
-    if (FINAL_CONFIG.value.style.chart.controls.position === 'top') {
+    if (FINAL_CONFIG.value.style.chart.controls.position === "top") {
         return zoomControlsTop.value?.$el ?? null;
     }
-    if (FINAL_CONFIG.value.style.chart.controls.position === 'bottom') {
+    if (FINAL_CONFIG.value.style.chart.controls.position === "bottom") {
         return zoomControlsBottom.value?.$el ?? null;
     }
     return null;
@@ -252,8 +255,10 @@ watch(
         if (fullscreen) {
             teardownResponsive();
 
-            WIDTH.value = Number(FINAL_CONFIG.value.style.chart.dimensions.width) || WIDTH.value;
-            HEIGHT.value = Number(FINAL_CONFIG.value.style.chart.dimensions.height) || HEIGHT.value;
+            WIDTH.value =
+                Number(FINAL_CONFIG.value.style.chart.dimensions.width) || WIDTH.value;
+            HEIGHT.value =
+                Number(FINAL_CONFIG.value.style.chart.dimensions.height) || HEIGHT.value;
 
             await nextTick();
             didInitialFit.value = false;
@@ -325,13 +330,11 @@ watch(
 );
 
 const { projections } = geo;
-const projectionName = computed(
-    () => FINAL_CONFIG.value?.projection || 'equirectangular'
-);
+const projectionName = computed(() => FINAL_CONFIG.value?.projection || "equirectangular");
 
 const projectionFunction = computed(() => {
     const projectionCandidate = projections?.[projectionName.value];
-    return typeof projectionCandidate === 'function'
+    return typeof projectionCandidate === "function"
         ? projectionCandidate
         : projections.equirectangular;
 });
@@ -359,8 +362,7 @@ const HEIGHT = ref(FINAL_CONFIG.value.style.chart.dimensions.height);
 
 const projectionPlaneSizes = computed(() => {
     const defaults =
-        DEFAULT_PROJECTIONS[projectionName.value] ||
-        DEFAULT_PROJECTIONS.equirectangular;
+        DEFAULT_PROJECTIONS[projectionName.value] || DEFAULT_PROJECTIONS.equirectangular;
     return { width: defaults.width, height: defaults.height };
 });
 
@@ -412,41 +414,50 @@ function projectGeoPoint([longitude, latitude]) {
 
 function normalizeGeoJsonToFeatureCollection(input, options = {}) {
     const {
-        defaultName = '',
+        defaultName = "",
         namePropertyCandidates = [
-            'name',
-            'admin',
-            'NAME',
-            'label',
-            'title',
-            'description',
-            'DESCRIPTION',
+            "name",
+            "nom",
+            "admin",
+            "NAME",
+            "label",
+            "title",
+            "description",
+            "DESCRIPTION",
+            "NAME_1",
+            "NAME_2",
+            "NAME_3",
+            "NAME_EN",
+            "name:en",
+            "name_en",
+            "localname",
+            "local_name",
         ],
         includeNullGeometries = false,
     } = options;
 
-    const empty = { type: 'FeatureCollection', features: [] };
+    const empty = { type: "FeatureCollection", features: [] };
 
     function isObject(value) {
-        return value !== null && typeof value === 'object' && !Array.isArray(value);
+        return value !== null && typeof value === "object" && !Array.isArray(value);
     }
 
     function isGeoJsonGeometry(value) {
         if (!isObject(value)) return false;
-        if (typeof value.type !== 'string') return false;
+        if (typeof value.type !== "string") return false;
 
-        if (value.type === 'GeometryCollection') {
+        if (value.type === "GeometryCollection") {
             return Array.isArray(value.geometries);
         }
 
-        return Object.hasOwn(value, 'coordinates');
+        return Object.hasOwn(value, "coordinates");
     }
 
     function asNameFromProperties(properties) {
-        if (!isObject(properties)) return '';
+        if (!isObject(properties)) return "";
         for (const key of namePropertyCandidates) {
             const candidate = properties[key];
-            if (typeof candidate === 'string' && candidate.trim()) {
+            if (typeof candidate === "string" && candidate.trim()) {
                 return candidate.trim();
             }
         }
@@ -457,7 +468,9 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
         const safeProperties = isObject(properties) ? { ...properties } : {};
         const nameFromProperties = asNameFromProperties(safeProperties);
 
-        const numberedFallback = defaultName ? `${defaultName} ${featureIndex + 1}` : '';
+        const numberedFallback = defaultName
+            ? `${defaultName} ${featureIndex + 1}`
+            : "";
 
         const name =
             nameFromProperties ||
@@ -469,7 +482,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
         }
 
         return {
-            type: 'Feature',
+            type: "Feature",
             geometry,
             properties: safeProperties,
         };
@@ -491,7 +504,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
             const geometry = geometries[geometryIndex];
             if (!geometry) continue;
 
-            if (isObject(geometry) && geometry.type === 'GeometryCollection') {
+            if (isObject(geometry) && geometry.type === "GeometryCollection") {
                 featureIndex = flattenGeometryCollection(
                     geometry,
                     properties,
@@ -504,7 +517,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
 
             if (!isGeoJsonGeometry(geometry)) continue;
 
-            if (geometry.coordinates == null && geometry.type !== 'GeometryCollection') {
+            if (geometry.coordinates == null && geometry.type !== "GeometryCollection") {
                 if (includeNullGeometries) {
                     outputFeatures.push(
                         makeFeature({
@@ -545,11 +558,11 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
             return featureIndex;
         }
 
-        if (!isObject(value) || typeof value.type !== 'string') {
+        if (!isObject(value) || typeof value.type !== "string") {
             return featureIndex;
         }
 
-        if (value.type === 'FeatureCollection') {
+        if (value.type === "FeatureCollection") {
             const features = Array.isArray(value.features) ? value.features : [];
             for (const feature of features) {
                 featureIndex = pushAny(feature, outputFeatures, featureIndex);
@@ -557,7 +570,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
             return featureIndex;
         }
 
-        if (value.type === 'Feature') {
+        if (value.type === "Feature") {
             const properties = isObject(value.properties) ? value.properties : {};
             const featureName = asNameFromProperties(properties);
             const geometry = value.geometry ?? null;
@@ -577,7 +590,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
                 return featureIndex;
             }
 
-            if (isObject(geometry) && geometry.type === 'GeometryCollection') {
+            if (isObject(geometry) && geometry.type === "GeometryCollection") {
                 return flattenGeometryCollection(
                     geometry,
                     properties,
@@ -602,8 +615,8 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
             return featureIndex;
         }
 
-        if (value.type === 'GeometryCollection') {
-            return flattenGeometryCollection(value, {}, '', featureIndex, outputFeatures);
+        if (value.type === "GeometryCollection") {
+            return flattenGeometryCollection(value, {}, "", featureIndex, outputFeatures);
         }
 
         if (isGeoJsonGeometry(value)) {
@@ -611,7 +624,7 @@ function normalizeGeoJsonToFeatureCollection(input, options = {}) {
                 makeFeature({
                     geometry: value,
                     properties: {},
-                    fallbackName: '',
+                    fallbackName: "",
                     featureIndex,
                 })
             );
@@ -632,19 +645,44 @@ function flattenFeatureCollectionToRenderableFeatures(featureCollection) {
         ? featureCollection.features
         : [];
 
+    function resolveName(properties) {
+        if (!properties || typeof properties !== "object") return "";
+
+        const candidates = [
+            properties.name,
+            properties.nom,
+            properties.admin,
+            properties.NAME,
+            properties.label,
+            properties.title,
+            properties.description,
+            properties.DESCRIPTION,
+            properties.NAME_1,
+            properties.NAME_2,
+            properties.NAME_3,
+            properties.NAME_EN,
+            properties["name:en"],
+            properties.name_en,
+            properties.localname,
+            properties.local_name,
+        ];
+
+        for (const candidate of candidates) {
+            if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+        }
+
+        for (const value of Object.values(properties)) {
+            if (typeof value === "string" && value.trim()) return value.trim();
+        }
+
+        return "";
+    }
+
     return features
-        .filter((feature) => feature && feature.type === 'Feature' && feature.geometry)
+        .filter((feature) => feature && feature.type === "Feature" && feature.geometry)
         .map((feature, index) => {
             const properties = feature.properties || {};
-            const name =
-                properties.name ||
-                properties.admin ||
-                properties.NAME ||
-                properties.label ||
-                properties.title ||
-                properties.description ||
-                properties.DESCRIPTION ||
-                '';
+            const name = resolveName(properties);
 
             return {
                 feature,
@@ -656,6 +694,7 @@ function flattenFeatureCollectionToRenderableFeatures(featureCollection) {
             };
         });
 }
+
 
 const geoJsonFeatureCollection = computed(() =>
     normalizeGeoJsonToFeatureCollection(geoJsonInput.value, {
@@ -669,7 +708,15 @@ const renderableFeatures = computed(() =>
 );
 
 function geometryToSvgPath(geometry) {
-    if (!geometry || typeof geometry.type !== 'string') return '';
+    if (!geometry || typeof geometry.type !== "string") return "";
+
+    if (geometry.type === "GeometryCollection") {
+        const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+        return geometries
+            .map((child) => geometryToSvgPath(child))
+            .filter(Boolean)
+            .join(" ");
+    }
 
     const projectPair = (pair) => {
         if (!Array.isArray(pair) || pair.length < 2) return null;
@@ -690,68 +737,104 @@ function geometryToSvgPath(geometry) {
 
     const drawLine = (coordinates) => {
         const projectedPoints = (coordinates || []).map(projectPair).filter(Boolean);
-        if (projectedPoints.length < 2) return '';
-        return 'M' + projectedPoints.map(([x, y]) => `${x},${y}`).join('L');
+        if (projectedPoints.length < 2) return "";
+        return "M" + projectedPoints.map(([x, y]) => `${x},${y}`).join("L");
     };
 
     const drawPolygon = (polygonCoordinates) => {
         return (polygonCoordinates || [])
             .map((ring) => {
                 const ringPath = drawLine(ring);
-                if (!ringPath) return '';
-                return ringPath + 'Z';
+                if (!ringPath) return "";
+                return ringPath + "Z";
             })
             .filter(Boolean)
-            .join(' ');
+            .join(" ");
     };
 
-    if (geometry.type === 'Polygon') return drawPolygon(geometry.coordinates);
+    if (geometry.type === "Polygon") return drawPolygon(geometry.coordinates);
 
-    if (geometry.type === 'MultiPolygon') {
-        return (geometry.coordinates || []).map(drawPolygon).filter(Boolean).join(' ');
+    if (geometry.type === "MultiPolygon") {
+        return (geometry.coordinates || []).map(drawPolygon).filter(Boolean).join(" ");
     }
 
-    if (geometry.type === 'LineString') return drawLine(geometry.coordinates);
+    if (geometry.type === "LineString") return drawLine(geometry.coordinates);
 
-    if (geometry.type === 'MultiLineString') {
-        return (geometry.coordinates || []).map(drawLine).filter(Boolean).join(' ');
+    if (geometry.type === "MultiLineString") {
+        return (geometry.coordinates || []).map(drawLine).filter(Boolean).join(" ");
     }
 
-    return '';
+    return "";
 }
 
 function collectGeoJsonPointCoordinates(geometry) {
     if (!geometry) return [];
 
-    if (geometry.type === 'Point') {
+    if (geometry.type === "GeometryCollection") {
+        const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+        return geometries.flatMap((child) => collectGeoJsonPointCoordinates(child));
+    }
+
+    if (geometry.type === "Point") {
         return Array.isArray(geometry.coordinates) ? [geometry.coordinates] : [];
     }
 
-    if (geometry.type === 'MultiPoint') {
+    if (geometry.type === "MultiPoint") {
         return Array.isArray(geometry.coordinates) ? geometry.coordinates : [];
     }
 
     return [];
 }
 
+function geometryHasAnyPoint(geometry) {
+    if (!geometry || typeof geometry.type !== "string") return false;
+
+    if (geometry.type === "GeometryCollection") {
+        const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+        return geometries.some((child) => geometryHasAnyPoint(child));
+    }
+
+    return geometry.type === "Point" || geometry.type === "MultiPoint";
+}
+
 const areaFeatures = computed(() =>
     renderableFeatures.value.filter((item) => {
-        const type = item.geometry?.type;
-        return type === 'Polygon' || type === 'MultiPolygon';
+        const geometry = item.geometry;
+        if (!geometry) return false;
+
+        if (geometry.type === "GeometryCollection") {
+            const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+            return geometries.some(
+                (child) => child?.type === "Polygon" || child?.type === "MultiPolygon"
+            );
+        }
+
+        return geometry.type === "Polygon" || geometry.type === "MultiPolygon";
     })
 );
 
 const lineFeatures = computed(() =>
     renderableFeatures.value.filter((item) => {
-        const type = item.geometry?.type;
-        return type === 'LineString' || type === 'MultiLineString';
+        const geometry = item.geometry;
+        if (!geometry) return false;
+
+        if (geometry.type === "GeometryCollection") {
+            const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+            return geometries.some(
+                (child) => child?.type === "LineString" || child?.type === "MultiLineString"
+            );
+        }
+
+        return geometry.type === "LineString" || geometry.type === "MultiLineString";
     })
 );
 
 const pointFeatures = computed(() =>
     renderableFeatures.value.filter((item) => {
-        const type = item.geometry?.type;
-        return type === 'Point' || type === 'MultiPoint';
+        const geometry = item.geometry;
+        if (!geometry) return false;
+
+        return geometryHasAnyPoint(geometry);
     })
 );
 
@@ -778,6 +861,50 @@ const linePaths = computed(() => {
 const geoJsonPoints = computed(() => {
     const list = [];
 
+    function normalizeGeoJsonPointStyle(properties = {}) {
+        const style = properties?.style && typeof properties.style === "object" ? properties.style : {};
+
+        const radiusRaw =
+            properties.radius ??
+            properties.r ??
+            style.radius ??
+            style.r;
+
+        const fillRaw =
+            properties.color ??
+            properties.fill ??
+            style.color ??
+            style.fill;
+
+        const strokeRaw =
+            properties.stroke ??
+            style.stroke;
+
+        const strokeWidthRaw =
+            properties.strokeWidth ??
+            properties.stroke_width ??
+            style.strokeWidth ??
+            style.stroke_width;
+
+        const radius = Number.isFinite(Number(radiusRaw))
+            ? Number(radiusRaw)
+            : Number(FINAL_CONFIG.value.style.chart.points.radius);
+
+        const fill = fillRaw != null && String(fillRaw).trim()
+            ? convertColorToHex(String(fillRaw).trim())
+            : FINAL_CONFIG.value.style.chart.points.fill;
+
+        const stroke = strokeRaw != null && String(strokeRaw).trim()
+            ? convertColorToHex(String(strokeRaw).trim())
+            : FINAL_CONFIG.value.style.chart.points.stroke;
+
+        const strokeWidth = Number.isFinite(Number(strokeWidthRaw))
+            ? Number(strokeWidthRaw)
+            : Number(FINAL_CONFIG.value.style.chart.points.strokeWidth);
+
+        return { radius, fill, stroke, strokeWidth };
+    }
+
     for (const item of pointFeatures.value) {
         const coordinatesList = collectGeoJsonPointCoordinates(item.geometry);
 
@@ -794,11 +921,19 @@ const geoJsonPoints = computed(() => {
             const y = projected?.[1];
             if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
 
+            const properties =
+                item?.feature?.properties && typeof item.feature.properties === "object"
+                    ? item.feature.properties
+                    : {};
+
+            const style = normalizeGeoJsonPointStyle(properties);
+
             list.push({
                 uid: `${item.uid}-geojson-point-${pointIndex}`,
-                name: item.name || '',
+                name: item.name || "",
                 x,
                 y,
+                ...style,
                 originalFeature: item.feature,
                 featureIndex: item.index,
                 pointIndex,
@@ -809,8 +944,9 @@ const geoJsonPoints = computed(() => {
     return list;
 });
 
+
 function collectProjectedPointsFromGeometry(geometry) {
-    if (!geometry || typeof geometry.type !== 'string') return [];
+    if (!geometry || typeof geometry.type !== "string") return [];
 
     const points = [];
 
@@ -832,7 +968,11 @@ function collectProjectedPointsFromGeometry(geometry) {
     const walkCoordinates = (value) => {
         if (!Array.isArray(value)) return;
 
-        if (value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number') {
+        if (
+            value.length >= 2 &&
+            typeof value[0] === "number" &&
+            typeof value[1] === "number"
+        ) {
             pushPair(value);
             return;
         }
@@ -842,19 +982,19 @@ function collectProjectedPointsFromGeometry(geometry) {
         }
     };
 
-    if (geometry.type === 'GeometryCollection' && Array.isArray(geometry.geometries)) {
+    if (geometry.type === "GeometryCollection" && Array.isArray(geometry.geometries)) {
         for (const childGeometry of geometry.geometries) {
             points.push(...collectProjectedPointsFromGeometry(childGeometry));
         }
         return points;
     }
 
-    if (geometry.type === 'Point') {
+    if (geometry.type === "Point") {
         pushPair(geometry.coordinates);
         return points;
     }
 
-    if (geometry.type === 'MultiPoint') {
+    if (geometry.type === "MultiPoint") {
         (geometry.coordinates || []).forEach(pushPair);
         return points;
     }
@@ -930,7 +1070,7 @@ function computeFitTransform({ bounds, targetWidth, targetHeight, padding }) {
 
 const mapFitTransform = computed(() => {
     const bounds = projectedBounds.value;
-    if (!bounds) return { scale: 1, translateX: 0, translateY: 0, transform: '' };
+    if (!bounds) return { scale: 1, translateX: 0, translateY: 0, transform: "" };
 
     const fitPaddingRaw = FINAL_CONFIG.value?.map?.fitPadding;
     const padding = Number.isFinite(Number(fitPaddingRaw)) ? Number(fitPaddingRaw) : 0;
@@ -1080,15 +1220,15 @@ watch(
             resetPanZoomToBaseViewBox();
         });
     },
-    { flush: 'post' }
+    { flush: "post" }
 );
 
 function normalizePointsDataset(datasetValue) {
     if (!datasetValue) return [];
 
-    if (datasetValue.type === 'FeatureCollection' && Array.isArray(datasetValue.features)) {
+    if (datasetValue.type === "FeatureCollection" && Array.isArray(datasetValue.features)) {
         return datasetValue.features
-            .filter((feature) => feature?.type === 'Feature' && feature.geometry?.type === 'Point')
+            .filter((feature) => feature?.type === "Feature" && feature.geometry?.type === "Point")
             .map((feature, index) => {
                 const properties = feature.properties || {};
                 const name =
@@ -1124,7 +1264,7 @@ function normalizePointsDataset(datasetValue) {
 
                 if (Array.isArray(row) && row.length >= 2) {
                     coordinates = [Number(row[0]), Number(row[1])];
-                } else if (row && typeof row === 'object') {
+                } else if (row && typeof row === "object") {
                     if (Array.isArray(row.coordinates) && row.coordinates.length >= 2) {
                         coordinates = [Number(row.coordinates[0]), Number(row.coordinates[1])];
                     } else if (
@@ -1134,7 +1274,7 @@ function normalizePointsDataset(datasetValue) {
                         coordinates = [Number(row.lon), Number(row.lat)];
                     }
 
-                    if (typeof row.name === 'string' && row.name.trim()) name = row.name;
+                    if (typeof row.name === "string" && row.name.trim()) name = row.name;
                     if (row.description != null) description = row.description;
                     if (row.color != null) color = row.color;
                     if (row.radius != null) radius = row.radius;
@@ -1160,10 +1300,10 @@ function normalizePointsDataset(datasetValue) {
             .filter(Boolean);
     }
 
-    if (typeof datasetValue === 'object') {
+    if (typeof datasetValue === "object") {
         return Object.entries(datasetValue)
             .map(([key, value], index) => {
-                if (!value || typeof value !== 'object') return null;
+                if (!value || typeof value !== "object") return null;
 
                 const coordinates = Array.isArray(value.coordinates) ? value.coordinates : null;
                 if (!coordinates || coordinates.length < 2) return null;
@@ -1216,7 +1356,7 @@ const projectedPoints = computed(() => {
 });
 
 const isTooltipVisible = ref(false);
-const tooltipContent = ref('');
+const tooltipContent = ref("");
 const useCustomFormat = ref(false);
 const highlightedPointKey = ref(null);
 const highlightedTerritoryKey = ref(null);
@@ -1228,7 +1368,7 @@ function showTooltipWithHtml(html) {
 
 function hideTooltip() {
     isTooltipVisible.value = false;
-    tooltipContent.value = '';
+    tooltipContent.value = "";
 }
 
 function escapeHtml(text) {
@@ -1254,12 +1394,12 @@ function formatPointTooltip(point) {
     if (isFunction(customFormat)) {
         try {
             const customFormatString = customFormat(dataTooltipSlot.value);
-            if (typeof customFormatString === 'string') {
+            if (typeof customFormatString === "string") {
                 useCustomFormat.value = true;
                 return customFormatString;
             }
         } catch (error) {
-            console.warn('Custom format cannot be applied.');
+            console.warn("Custom format cannot be applied.");
             useCustomFormat.value = false;
         }
     }
@@ -1268,14 +1408,13 @@ function formatPointTooltip(point) {
     const extra =
         point.description != null
             ? `<div style="margin-top:6px">${escapeHtml(point.description)}</div>`
-            : '';
+            : "";
 
     return `<div><div style="font-weight:600">${title}</div>${extra}</div>`;
 }
 
 function formatTerritoryTooltip(territory) {
     useCustomFormat.value = false;
-
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
     if (isFunction(customFormat)) {
@@ -1284,18 +1423,19 @@ function formatTerritoryTooltip(territory) {
                 datapoint: territory,
                 config: FINAL_CONFIG.value,
             });
-            if (typeof customFormatString === 'string') {
+            if (typeof customFormatString === "string") {
                 useCustomFormat.value = true;
                 return customFormatString;
             }
         } catch (error) {
-            console.warn('Custom format cannot be applied.');
+            console.warn("Custom format cannot be applied.");
             useCustomFormat.value = false;
         }
     }
 
-    const title = typeof territory?.name === 'string' ? territory.name.trim() : '';
+    const title = typeof territory?.name === "string" ? territory.name.trim() : "";
     if (!title) {
+        useCustomFormat.value = false;
         return "";
     }
 
@@ -1310,12 +1450,10 @@ function onTerritoryEnter(territory) {
         });
     }
 
-    const title = typeof territory?.name === 'string' ? territory.name.trim() : '';
+    const title = typeof territory?.name === "string" ? territory.name.trim() : "";
 
     if (!title && !FINAL_CONFIG.value.style.chart.territory.hover.enabledWhenEmpty) {
-        if (highlightedTerritoryKey.value === territory.uid) {
-            highlightedTerritoryKey.value = null;
-        }
+        highlightedTerritoryKey.value = null;
         hideTooltip();
         return;
     }
@@ -1325,10 +1463,7 @@ function onTerritoryEnter(territory) {
 }
 
 function onTerritoryLeave(territory) {
-    if (highlightedTerritoryKey.value === territory.uid) {
-        highlightedTerritoryKey.value = null;
-    }
-
+    highlightedTerritoryKey.value = null;
     hideTooltip();
 
     if (FINAL_CONFIG.value.events.territoryLeave) {
@@ -1375,7 +1510,7 @@ function onPointLeave(point) {
 const hasPointClickEvent = computed(() => {
     return (
         !!FINAL_CONFIG.value.events.datapointClick &&
-        typeof FINAL_CONFIG.value.events.datapointClick === 'function'
+        typeof FINAL_CONFIG.value.events.datapointClick === "function"
     );
 });
 
@@ -1392,7 +1527,13 @@ const territoryStyle = computed(() => FINAL_CONFIG.value.style.chart.territory);
 const pointStyle = computed(() => FINAL_CONFIG.value.style.chart.points);
 
 function onGeoJsonPointEnter(geoJsonPoint) {
-    const title = typeof geoJsonPoint?.name === 'string' ? geoJsonPoint.name.trim() : '';
+    const title = typeof geoJsonPoint?.name === "string" ? geoJsonPoint.name.trim() : "";
+
+    if (!title) {
+        highlightedTerritoryKey.value = null;
+        hideTooltip();
+        return;
+    }
 
     const territoryLike = {
         name: title,
@@ -1405,10 +1546,8 @@ function onGeoJsonPointEnter(geoJsonPoint) {
     showTooltipWithHtml(formatTerritoryTooltip(territoryLike));
 }
 
-function onGeoJsonPointLeave(geoJsonPoint) {
-    if (geoJsonPoint?.uid && highlightedTerritoryKey.value === geoJsonPoint.uid) {
-        highlightedTerritoryKey.value = null;
-    }
+function onGeoJsonPointLeave() {
+    highlightedTerritoryKey.value = null;
     hideTooltip();
 }
 
@@ -1703,7 +1842,11 @@ defineExpose({
             <template #optionSvg v-if="$slots.optionSvg">
                 <slot name="optionSvg" />
             </template>
-            <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
+            <template
+                v-if="$slots.optionFullscreen"
+                template
+                #optionFullscreen="{ toggleFullscreen, isFullscreen }"
+            >
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }" />
             </template>
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
@@ -1790,13 +1933,13 @@ defineExpose({
                         :key="geoJsonPoint.uid"
                         :cx="geoJsonPoint.x"
                         :cy="geoJsonPoint.y"
-                        :r="pointStyle.radius"
-                        :fill="pointStyle.fill"
-                        :stroke="pointStyle.stroke"
-                        :stroke-width="pointStyle.strokeWidth"
+                        :r="geoJsonPoint.radius"
+                        :fill="geoJsonPoint.fill"
+                        :stroke="geoJsonPoint.stroke"
+                        :stroke-width="geoJsonPoint.strokeWidth"
                         vector-effect="non-scaling-stroke"
                         @mouseenter="onGeoJsonPointEnter(geoJsonPoint)"
-                        @mouseleave="onGeoJsonPointLeave(geoJsonPoint)"
+                        @mouseleave="onGeoJsonPointLeave"
                     />
                 </g>
 
