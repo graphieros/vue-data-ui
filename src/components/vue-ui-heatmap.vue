@@ -1217,8 +1217,8 @@ defineExpose({
                 <!-- Crosshairs -->
                 <g v-if="FINAL_CONFIG.style.layout.crosshairs.show && selectedClone">
                     <line 
-                        :x1="drawingArea.left + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? drawingArea.sumCellXHeight : 0)" 
-                        :x2="selectedClone.x + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? drawingArea.sumCellXHeight : 0)"
+                        :x1="drawingArea.left + drawingArea.sumCellXHeight" 
+                        :x2="selectedClone.x + drawingArea.sumCellXHeight"
                         :y1="selectedClone.y + ((drawingArea.cellSize.height - cellGap) / 2)"
                         :y2="selectedClone.y + ((drawingArea.cellSize.height - cellGap) / 2)"
                         :stroke="FINAL_CONFIG.style.layout.crosshairs.stroke" 
@@ -1227,8 +1227,8 @@ defineExpose({
                         stroke-linecap="round"
                     />
                     <line
-                        :x1="selectedClone.x + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? drawingArea.sumCellXHeight : 0) + ((drawingArea.cellSize.width - cellGap) / 2)"
-                        :x2="selectedClone.x + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? drawingArea.sumCellXHeight : 0) + ((drawingArea.cellSize.width - cellGap) / 2)"
+                        :x1="selectedClone.x + drawingArea.sumCellXHeight + ((drawingArea.cellSize.width - cellGap) / 2)"
+                        :x2="selectedClone.x + drawingArea.sumCellXHeight + ((drawingArea.cellSize.width - cellGap) / 2)"
                         :y1="selectedClone.y"
                         :y2="drawingArea.top"
                         :stroke="FINAL_CONFIG.style.layout.crosshairs.stroke" 
