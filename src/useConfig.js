@@ -2254,6 +2254,12 @@ export function useConfig() {
                 height: 300, // v3
                 width: 1000, // v3
                 padding: PADDING([0, 0, 0, 0]),
+                crosshairs: {
+                    show: false,
+                    stroke: COLOR_BLACK,
+                    strokeWidth: 1,
+                    strokeDasharray: 0,
+                },
                 cells: {
                     // height: 36, // v3 deprecated
                     rowTotal: {

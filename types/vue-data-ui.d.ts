@@ -3326,6 +3326,12 @@ declare module "vue-data-ui" {
                 height?: number;
                 width?: number;
                 padding?: ChartPadding;
+                crosshairs?: {
+                    show?: boolean;
+                    stroke?: string;
+                    strokeWidth?: number;
+                    strokeDasharray?: number;
+                };
                 cells?: {
                     // height?: number; // v3 deprecated
                     columnTotal?: {

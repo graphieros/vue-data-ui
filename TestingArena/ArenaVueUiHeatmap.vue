@@ -124,6 +124,11 @@ const model = createModel([
     NUMBER("style.layout.padding.bottom", { def: 0, min: 0, max: 100 }),
     NUMBER("style.layout.padding.left", { def: 0, min: 0, max: 100 }),
 
+    CHECKBOX('style.layout.crosshairs.show', { def: true }),
+    COLOR('style.layout.crosshairs.stroke', { def: '#1A1A1A'}),
+    NUMBER('style.layout.crosshairs.strokeWidth', { def: 1, min: 1, max: 6}),
+    NUMBER('style.layout.crosshairs.strokeDasharray', { def: 0, min: 0, max: 12 }),
+
     NUMBER("style.layout.cells.height", { def: 36, min: 12, max: 64 }),
     CHECKBOX("style.layout.cells.value.show", { def: true }),
     NUMBER("style.layout.cells.value.fontSize", { def: 18, min: 8, max: 48 }),

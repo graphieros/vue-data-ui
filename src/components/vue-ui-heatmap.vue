@@ -43,7 +43,7 @@ import { useTableResponsive } from "../useTableResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import { useChartAccessibility } from "../useChartAccessibility";
-import { useResizeObserverEffect } from '../useResizeObserverEffect';
+import { useLabelObserverEffect } from '../useLabelObserverEfffect';
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_heatmap.json";
@@ -353,16 +353,28 @@ const svg = computed(() => ({
 }));
 
 const topLabelsHeight = ref(0);
-const updateTopLabelsHeight = throttle((h) => { topLabelsHeight.value = h }, 100);
-useResizeObserverEffect({ elementRef: xAxisLabels, callback: updateTopLabelsHeight, attr: 'height' });
+const updateTopLabelsHeight = throttle((h) => {
+    if (h !== topLabelsHeight.value) {
+        topLabelsHeight.value = h;
+    }
+}, 100);
+useLabelObserverEffect({ elementRef: xAxisLabels, callback: updateTopLabelsHeight, attr: 'height' });
 
 const leftLabelsWidth = ref(0);
-const updateLeftLabelsWidth = throttle((h) => { leftLabelsWidth.value = h }, 100);
-useResizeObserverEffect({ elementRef: yAxisLabels, callback: updateLeftLabelsWidth, attr: 'width' });
+const updateLeftLabelsWidth = throttle((w) => {
+    if (w !== leftLabelsWidth.value) {
+        leftLabelsWidth.value = w;
+    }
+}, 100);
+useLabelObserverEffect({ elementRef: yAxisLabels, callback: updateLeftLabelsWidth, attr: 'width' });
 
 const xAxisSumLabelsHeight = ref(0);
-const updateXAxisSumLabelsHeight = throttle((h) => { xAxisSumLabelsHeight.value = h }, 100);
-useResizeObserverEffect({ elementRef: xAxisSums, callback: updateXAxisSumLabelsHeight, attr: 'height' });
+const updateXAxisSumLabelsHeight = throttle((h) => {
+    if (h !== xAxisSumLabelsHeight.value) {
+        xAxisSumLabelsHeight.value = h;
+    }
+}, 100);
+useLabelObserverEffect({ elementRef: xAxisSums, callback: updateXAxisSumLabelsHeight, attr: 'height' });
 
 onBeforeUnmount(() => {
     topLabelsHeight.value = 0;
@@ -1199,6 +1211,30 @@ defineExpose({
                         :stroke="FINAL_CONFIG.style.layout.cells.selected.color"
                         :stroke-width="FINAL_CONFIG.style.layout.cells.selected.border"
                         :rx="1"
+                    />
+                </g>
+
+                <!-- Crosshairs -->
+                <g v-if="FINAL_CONFIG.style.layout.crosshairs.show && selectedClone">
+                    <line 
+                        :x1="drawingArea.left + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? drawingArea.sumCellXHeight : 0)" 
+                        :x2="selectedClone.x + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? drawingArea.sumCellXHeight : 0)"
+                        :y1="selectedClone.y + ((drawingArea.cellSize.height - cellGap) / 2)"
+                        :y2="selectedClone.y + ((drawingArea.cellSize.height - cellGap) / 2)"
+                        :stroke="FINAL_CONFIG.style.layout.crosshairs.stroke" 
+                        :stroke-width="FINAL_CONFIG.style.layout.crosshairs.strokeWidth"
+                        :stroke-dasharray="FINAL_CONFIG.style.layout.crosshairs.strokeDasharray"
+                        stroke-linecap="round"
+                    />
+                    <line
+                        :x1="selectedClone.x + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? drawingArea.sumCellXHeight : 0) + ((drawingArea.cellSize.width - cellGap) / 2)"
+                        :x2="selectedClone.x + (FINAL_CONFIG.style.layout.cells.rowTotal.color.show ? drawingArea.sumCellXHeight : 0) + ((drawingArea.cellSize.width - cellGap) / 2)"
+                        :y1="selectedClone.y"
+                        :y2="drawingArea.top"
+                        :stroke="FINAL_CONFIG.style.layout.crosshairs.stroke" 
+                        :stroke-width="FINAL_CONFIG.style.layout.crosshairs.strokeWidth"
+                        :stroke-dasharray="FINAL_CONFIG.style.layout.crosshairs.strokeDasharray"
+                        stroke-linecap="round"
                     />
                 </g>
 
