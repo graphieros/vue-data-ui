@@ -5,6 +5,9 @@
             "backgroundColor": "#1A1A1A",
             "color": "#CCCCCC",
             "layout": {
+                "crosshairs": {
+                    "stroke": "#CCCCCC"
+                },
                 "cells": {
                     "selected": {
                         "color": "#CCCCCC"
@@ -52,6 +55,9 @@
             "backgroundColor": "#FFF8E1",
             "color": "#424242",
             "layout": {
+                "crosshairs": {
+                    "stroke": "#424242"
+                },
                 "cells": {
                     "colors": {
                         "hot": "#D32F2F",
@@ -104,6 +110,9 @@
             "backgroundColor": "#1E1E1E",
             "color": "#BDBDBD",
             "layout": {
+                "crosshairs": {
+                    "stroke": "#BDBDBD"
+                },
                 "cells": {
                     "colors": {
                         "hot": "#D32F2F",
@@ -156,6 +165,9 @@
             "backgroundColor": "#1A1A1A",
             "color": "#99AA99",
             "layout": {
+                "crosshairs": {
+                    "stroke": "#33FF33"
+                },
                 "cells": {
                     "colors": {
                         "hot": "#008000",
@@ -207,6 +219,9 @@
             "backgroundColor": "#fbfafa",
             "color": "#8A9892",
             "layout": {
+                "crosshairs": {
+                    "stroke": "#8F837A"
+                },
                 "cells": {
                     "colors": {
                         "hot": "#DFCA99",
@@ -257,6 +272,9 @@
             "backgroundColor": "#f6f6fb",
             "color": "#50606C",
             "layout": {
+                "crosshairs": {
+                    "stroke": "#404C4D"
+                },
                 "cells": {
                     "colors": {
                         "hot": "#6D7D65",
