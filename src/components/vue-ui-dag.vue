@@ -1167,47 +1167,8 @@ defineExpose({
                             :style="{
                                 cursor: FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick ? 'pointer' : 'default'
                             }"
-                        />
-                        <!-- with `node-label` slot -->
-                        <text
-                            v-if="$slots['node-label']"
-                            :x="node.x" 
-                            :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
-                            text-anchor="middle" 
-                            :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                            :fill="node.original.color"
-                            :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
-                        >
-                            <slot name="node-label" v-bind="{ node, orientation: direction }">
-                                {{ node.label }}
-                            </slot>
-                        </text>
-
-                        <!-- default label, multiline when provided with /n -->
-                        <text 
-                            data-cy-node-label
-                            v-else-if="!$slots['free-node-label']"
-                            :x="node.x" 
-                            :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
-                            text-anchor="middle" 
-                            :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                            :fill="node.original.color"
-                            :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
-                            v-html="createTSpansFromLineBreaksOnY({
-                                content: node.label,
-                                fontSize: FINAL_CONFIG.style.chart.nodes.labels.fontSize,
-                                fontWeight: FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal',
-                                fill:node.original.color,
-                                x: node.x,
-                                y: node.y,
-                                autoOffset: true
-                            })"
-                        />
+                        />                        
                     </template>
-
-                    <g v-if="$slots['free-node-label']">
-                        <slot name="free-node-label" v-bind="{ node, layoutData, orientation: direction }"/>
-                    </g>
 
                     <!-- Full `node` slot to customize the node entirely using a div -->
                     <foreignObject 
@@ -1238,6 +1199,59 @@ defineExpose({
                         : `url(#${makeMarkerId(edge.original?.color || FINAL_CONFIG.style.chart.edges.stroke)})`"
                     style="pointer-events: none; transition: stroke-width 0.2s ease-in-out"
                 />
+            </g>
+
+            <!-- Node labels (last layer to overlap edges when offset is applied) -->
+            <g class="vue-ui-dag-node-labels">
+                <g 
+                    v-for="node in layoutData.nodes" 
+                    :key="node.id" 
+                    @click.stop="FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && showNodeTooltip(node)"
+                    @mouseenter="highlightedNodeId = node.id"
+                    @mouseleave="highlightedNodeId = null"
+                >
+                    <template v-if="!$slots['free-node-label']">
+                        <!-- with `node-label` slot -->
+                        <text
+                            v-if="$slots['node-label']"
+                            :x="node.x" 
+                            :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
+                            text-anchor="middle" 
+                            :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
+                            :fill="node.original.color"
+                            :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
+                        >
+                            <slot name="node-label" v-bind="{ node, orientation: direction }">
+                                {{ node.label }}
+                            </slot>
+                        </text>
+
+                        <!-- default label, multiline when provided with /n -->
+                        <text 
+                            data-cy-node-label
+                            v-else-if="!$slots['free-node-label'] && !$slots.node"
+                            :x="node.x" 
+                            :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
+                            text-anchor="middle" 
+                            :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
+                            :fill="node.original.color"
+                            :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
+                            v-html="createTSpansFromLineBreaksOnY({
+                                content: node.label,
+                                fontSize: FINAL_CONFIG.style.chart.nodes.labels.fontSize,
+                                fontWeight: FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal',
+                                fill:node.original.color,
+                                x: node.x,
+                                y: node.y,
+                                autoOffset: true
+                            })"
+                        />
+                    </template>
+
+                    <g v-if="$slots['free-node-label']">
+                        <slot name="free-node-label" v-bind="{ node, layoutData, orientation: direction }"/>
+                    </g>
+                </g>
             </g>
 
             <slot name="svg" :svg="{ 

@@ -236,7 +236,7 @@ const configTheme = computed(() => ({
         <template #local>
                     <LocalVueUiDag :dataset="dataset" :config="config" ref="local">
             <!-- <template #node-label="{ node }">
-                {{ node.label }}
+                TEST
             </template>  -->
             <!-- <template #node="{ node }">
                 <div style="width: 100%; height: 100%; border: 1px solid red; color: black;">
@@ -245,8 +245,8 @@ const configTheme = computed(() => ({
             </template> -->
             <!-- <template #tooltip-midpoint="{ edge }">
                 {{ edge }}
-            </template>
-            <template #tooltip-node="{ node }">
+            </template> -->
+            <!-- <template #tooltip-node="{ node }">
                 {{ node }}
             </template> -->
             <!-- <template #free-node-label="{ node, orientation }">
