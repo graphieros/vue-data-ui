@@ -1991,20 +1991,19 @@ defineExpose({
                         {{ point.name }}
                     </text>
                 </g>
+                <slot
+                    name="svg"
+                    :svg="{
+                        drawingArea: viewBox,
+                        data: {
+                            areaPaths,
+                            linePaths,
+                            geoJsonPoints,
+                            projectedPoints
+                        }
+                    }"
+                />
             </g>
-
-            <slot
-                name="svg"
-                :svg="{
-                    drawingArea: viewBox,
-                    data: {
-                        areaPaths,
-                        linePaths,
-                        geoJsonPoints,
-                        projectedPoints
-                    }
-                }"
-            />
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
