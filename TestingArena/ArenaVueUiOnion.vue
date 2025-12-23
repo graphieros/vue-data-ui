@@ -113,6 +113,10 @@ const model = createModel([
     RANGE("style.chart.layout.gutter.width", { def: 0.62, min: 0.1, max: 1, step: 0.01 }),
     RANGE("style.chart.layout.track.width", { def: 0.62, min: 0.1, max: 1, step: 0.01 }),
 
+    CHECKBOX('style.chart.layout.labels.showValueFirst', { def: false }),
+    CHECKBOX('style.chart.layout.labels.usePercentageParens', { def: false }),
+    CHECKBOX('style.chart.layout.labels.useValueParens', { def: true }),
+
     CHECKBOX("style.chart.layout.labels.show", { def: true }),
     NUMBER("style.chart.layout.labels.fontSize", { def: 14, min: 8, max: 48 }),
     COLOR("style.chart.layout.labels.color", { def: "#1A1A1A" }),
@@ -142,6 +146,8 @@ const model = createModel([
     NUMBER("style.chart.legend.roundingValue", { def: 0, min: 0, max: 6, label: ["rounding", "is", "value"], category: "legend" }),
     NUMBER("style.chart.legend.roundingPercentage", { def: 0, min: 0, max: 6, label: "percentageRounding", category: "legend" }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX("style.chart.legend.showValue", { def: true }),
+    CHECKBOX("style.chart.legend.showPercentage", { def: true }),
 
     CHECKBOX("style.chart.tooltip.show", { def: true }),
     COLOR("style.chart.tooltip.backgroundColor", { def: "#FFFFFF" }),
