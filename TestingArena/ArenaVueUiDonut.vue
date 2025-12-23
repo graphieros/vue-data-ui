@@ -162,6 +162,11 @@ const model = createModel([
     NUMBER("style.chart.padding.bottom", { def: 0, min: 0, max: 100 }),
     NUMBER("style.chart.padding.left", { def: 24, min: 0, max: 100 }),
     CHECKBOX("style.chart.layout.curvedMarkers", { def: true }),
+
+    CHECKBOX('style.chart.layout.labels.dataLabels.showValueFirst', { def: false }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.usePercentageParens', { def: false }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.useValueParens', { def: true }),
+
     CHECKBOX("style.chart.layout.labels.dataLabels.show", { def: true, label: "show", category: "labels" }),
     CHECKBOX("style.chart.layout.labels.dataLabels.oneLine", {def: true }),
     NUMBER("style.chart.layout.labels.dataLabels.hideUnderValue", { def: 0, min: 0, max: 100, label: "hideUnderValue", category: "labels" }),
