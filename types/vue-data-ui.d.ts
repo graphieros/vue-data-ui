@@ -1680,6 +1680,9 @@ declare module "vue-data-ui" {
                             color?: string; // v3
                         };
                         yAxis?: {
+                            scaleMin?: number | null;
+                            scaleMax?: number | null;
+                            autoScale?: boolean;
                             dataLabels?: {
                                 show?: boolean;
                                 fontSize?: number;

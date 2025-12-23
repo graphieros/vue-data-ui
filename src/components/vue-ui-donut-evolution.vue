@@ -38,7 +38,8 @@ import {
     sumByAttribute,
     themePalettes,
     XMLNS,
-    treeShake
+    treeShake,
+    isValidUserValue
 } from '../lib';
 import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
@@ -251,6 +252,9 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                                 xLabel: ''
                             },
                             yAxis: {
+                                scaleMin: null,
+                                scaleMax: null,
+                                autoScale: false,
                                 dataLabels: { show: false }
                             },
                             xAxis: {
@@ -592,7 +596,7 @@ const slit = computed(() => {
     return svg.value.width / (slicer.value.end - slicer.value.start);
 });
 
-const drawableDataset = computed(() => {
+const datasetCopy = computed(() => {
     const arr = [];
     for(let i = 0; i < (slicer.value.end - slicer.value.start); i += 1) {
         const values = mutableDataset.value
@@ -609,7 +613,58 @@ const drawableDataset = computed(() => {
             x,
         });
     }
-    
+    return arr;
+});
+
+const extremes = computed(() => {
+    const maxFromDataset = Math.max(...datasetCopy.value.map(ds => ds.subtotal).filter(n => isValidUserValue(n))) ?? 1;
+    const minFromDataset = Math.min(...datasetCopy.value.map(ds => ds.subtotal).filter(n => isValidUserValue(n))) ?? 0;
+    let max = Math.max(FINAL_CONFIG.value.style.chart.layout.grid.yAxis.scaleMax ?? 0, maxFromDataset);
+    let min;
+
+
+    if (FINAL_CONFIG.value.style.chart.layout.grid.yAxis.scaleMin != null) {
+        min = Math.min(minFromDataset, FINAL_CONFIG.value.style.chart.layout.grid.yAxis.scaleMin)
+    } else {
+        min = 0;
+    }
+
+    if (FINAL_CONFIG.value.style.chart.layout.grid.yAxis.autoScale) {
+        min = minFromDataset;
+        max = maxFromDataset;
+    }
+
+    if (min === max) {
+        min = max / 2;
+        max *= 1.5;
+    }
+
+    return {
+        max,
+        min
+    }
+});
+
+const niceScale = computed(() => {
+    const maxScale = datasetCopy.value.length === 1 ? extremes.value.max * 2 : extremes.value.max
+    return calculateNiceScale(extremes.value.min, maxScale, FINAL_CONFIG.value.style.chart.layout.grid.yAxis.dataLabels.steps)
+});
+
+function ratioToMax(value) {
+    return (value - niceScale.value.min) / (niceScale.value.max - niceScale.value.min);
+}
+
+const yLabels = computed(() => {
+    return niceScale.value.ticks.map(t => {
+        return {
+            y: svg.value.bottom - (svg.value.height * ratioToMax(t)),
+            value: t
+        }
+    })
+});
+
+const drawableDataset = computed(() => {
+    const arr = datasetCopy.value;
     const minSubtotal = 0;
     const maxSubtotal = Math.max(...arr.map(a => a.subtotal))
     const maxScale = arr.length === 1 ? maxSubtotal * 2 : maxSubtotal;
@@ -619,40 +674,23 @@ const drawableDataset = computed(() => {
         const radius = radiusReference > svg.value.width / 16 ? svg.value.width / 16 : radiusReference;
         const activeRadius = hoveredIndex.value === a.index ? svg.value.width / 16 : radius;
         const hoverRadius = arr.length > 4 ? radiusReference * 2 : radiusReference * 2 > (slit.value / 2 * 0.7) ? slit.value / 2 * 0.7 : radiusReference * 2
-        const y = svg.value.bottom - (svg.value.height * a.subtotal / calculateNiceScale(minSubtotal, maxScale, FINAL_CONFIG.value.style.chart.layout.grid.yAxis.dataLabels.steps).max);
+        const y = svg.value.bottom - (svg.value.height * ratioToMax(a.subtotal));
+
+        const series = mutableDataset.value.map((s) => ({
+            color: s.color,
+            name: s.name,
+            value: s.values[i] ?? 0
+        })).toSorted((a, b) => b.value - a.value); // consistent with VueUiDonut imposed series sorting
+
         return {
             ...a,
             y,
             radius,
             activeRadius,
             hoverRadius,
-            donut: makeDonut({
-                series: mutableDataset.value.map((s, k) => {
-                    return {
-                        color: s.color,
-                        name: s.name,
-                        value: s.values[i] ?? 0
-                    }
-                })
-            }, a.x, y, radius, radius, 1.99999, 2, 1, 360, 105.25, radius / 2),
-            donutHover: makeDonut({
-                series: mutableDataset.value.map((s, k) => {
-                    return {
-                        color: s.color,
-                        name: s.name,
-                        value: s.values[i] ?? 0
-                    }
-                })
-            }, a.x, y, hoverRadius, hoverRadius, 1.99999, 2, 1, 360, 105.25, hoverRadius / 2),
-            donutFocus: makeDonut({
-                series: mutableDataset.value.map((s, k) => {
-                    return {
-                        color: s.color,
-                        name: s.name,
-                        value: s.values[i] ?? 0
-                    }
-                })
-            }, svg.value.centerX, svg.value.centerY, svg.value.height / 3.6, svg.value.height / 3.6, 1.99999, 2, 1, 360, 105.25, svg.value.height / 6),
+            donut: makeDonut({ series }, a.x, y, radius, radius, 1.99999, 2, 1, 360, 105.25, radius / 2),
+            donutHover: makeDonut({ series }, a.x, y, hoverRadius, hoverRadius, 1.99999, 2, 1, 360, 105.25, hoverRadius / 2),
+            donutFocus: makeDonut({ series }, svg.value.centerX, svg.value.centerY, svg.value.height / 3.6, svg.value.height / 3.6, 1.99999, 2, 1, 360, 105.25, svg.value.height / 6),
         }
     })
 });
@@ -670,31 +708,6 @@ function labellizeValue(val, datapoint, index) {
         { datapoint, index }
     );
 }
-
-const extremes = computed(() => {
-    return {
-        max: Math.max(...drawableDataset.value.map(ds => ds.subtotal)),
-        min: 0
-    }
-});
-
-const niceScale = computed(() => {
-    const maxScale = drawableDataset.value.length === 1 ? extremes.value.max * 2 : extremes.value.max
-    return calculateNiceScale(extremes.value.min, maxScale, FINAL_CONFIG.value.style.chart.layout.grid.yAxis.dataLabels.steps)
-})
-
-function ratioToMax(value) {
-    return value / niceScale.value.max;
-}
-
-const yLabels = computed(() => {
-    return niceScale.value.ticks.map(t => {
-        return {
-            y: svg.value.bottom - (svg.value.height * ratioToMax(t)),
-            value: t
-        }
-    })
-});
 
 function displayArcPercentage(arc, stepBreakdown) {
     return isNaN(arc.value / sumByAttribute(stepBreakdown, 'value')) ? 0 : ((arc.value / sumByAttribute(stepBreakdown, "value")) * 100).toFixed(0) + "%";

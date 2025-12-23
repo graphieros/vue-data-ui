@@ -3689,6 +3689,9 @@ export function useConfig() {
                             color: COLOR_BLACK,
                         },
                         yAxis: {
+                            scaleMin: null,
+                            scaleMax: null,
+                            autoScale: false,
                             dataLabels: {
                                 show: true,
                                 fontSize: FONT._10,

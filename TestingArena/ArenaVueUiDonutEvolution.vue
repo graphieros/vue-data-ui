@@ -32,20 +32,12 @@ onMounted(() => {
         dataset.value = [
             {
                 name: "Serie 1",
-                values: [55.123425162, 34, 21, 13, 8, 5, 8, 13, 21, 34, 55, 26, 27, 28, 29, 29, 29, 31 ],
+                values: [55.123425162, 34, 21, 13, 8, 5, 8, 13, 21, 34, 55],
             },
             {
                 name: "Serie 2",
-                values: [1, 12, 24, 32, 5, 8, 13, 21, 34, 55, 89 ]
+                values: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50 ]
             },
-            {
-                name: "Serie 3",
-                values: [16, 2, 3, 5, 28, 13, 21, 34, 55, 89, 134 ]
-            },
-            {
-                name: "Serie 4",
-                values: [5, null, 5, 5, 5, 5 ]
-            }
         ]
     }, 2000)
 })
@@ -105,6 +97,9 @@ const model = createModel([
     NUMBER("style.chart.layout.grid.yAxis.dataLabels.offsetX", { def: 0, min: -100, max: 100 }),
     CHECKBOX("style.chart.layout.grid.yAxis.dataLabels.bold", { def: false }),
     NUMBER("style.chart.layout.grid.yAxis.dataLabels.steps", { def: 10, min: 2, max: 20 }),
+    CHECKBOX('style.chart.layout.grid.yAxis.autoScale', { def: false }),
+    NUMBER('style.chart.layout.grid.yAxis.scaleMin', { def: null }),
+    NUMBER('style.chart.layout.grid.yAxis.scaleMax', { def: null }),
 
     CHECKBOX("style.chart.layout.grid.xAxis.dataLabels.show", { def: true }),
     NUMBER("style.chart.layout.grid.xAxis.dataLabels.fontSize", { def: 8, min: 8, max: 24 }),
