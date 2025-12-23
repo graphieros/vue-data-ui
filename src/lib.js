@@ -3427,6 +3427,10 @@ export function getPathMidpoint(pathData) {
     return { x: midpoint.x, y: midpoint.y };
 }
 
+export function parens(str, start = '(', end = ')') {
+    return `${start}${str}${end}`;
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -3517,6 +3521,7 @@ const lib = {
     observeClassPresenceIn,
     opacity,
     palette,
+    parens,
     placeHTMLElementAtSVGCoordinates,
     placeXYTag,
     rotateMatrix,
