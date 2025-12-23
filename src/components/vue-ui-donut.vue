@@ -878,6 +878,7 @@ const legendSet = computed(() => {
                 percentage: !segregated.value.includes(i) ? percentageDisplay : `${dashLabel(el.proportion * 100)}%`,
                 showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
                 showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage,
+                config: FINAL_CONFIG.value.style.chart.legend
             })
 
             return {
@@ -1116,7 +1117,8 @@ function useTooltip({ datapoint, relativeIndex, seriesIndex, show = false }) {
                     relativeIndex,
                     seriesIndex,
                 }
-            )
+            ),
+            config: FINAL_CONFIG.value.style.chart.tooltip
         })}</b></div>`;
 
         if (FINAL_CONFIG.value.style.chart.comments.showInTooltip && datapoint.comment) {
@@ -1385,10 +1387,10 @@ function buildLabel({
     percentage,
     showVal,
     showPercentage,
+    config,
 }) {
-    const cfg = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels;
     return buildValuePercentageLabel({
-        config: cfg,
+        config,
         val,
         percentage,
         showVal,
@@ -1411,7 +1413,8 @@ function arcLabel(arc) {
         ),
         percentage: displayArcPercentage(arc, noGhostDonut.value),
         showVal: FINAL_CONFIG.value.style.chart.layout.labels.value.show,
-        showPercentage: true
+        showPercentage: true,
+        config: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
     });
 }
 

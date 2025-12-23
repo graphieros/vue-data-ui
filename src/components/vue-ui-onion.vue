@@ -397,7 +397,8 @@ const legendSet = computed(() => {
             showVal,
             showPercentage,
             val: valueDisplay,
-            percentage: percentageDisplay
+            percentage: percentageDisplay,
+            config: FINAL_CONFIG.value.style.chart.legend
         });
 
         return {
@@ -651,10 +652,10 @@ function buildLabel({
     percentage,
     showVal,
     showPercentage,
+    config,
 }) {
-    const cfg = FINAL_CONFIG.value.style.chart.layout.labels;
     return buildValuePercentageLabel({
-        config: cfg,
+        config,
         val,
         percentage,
         showVal,
@@ -666,6 +667,7 @@ function onionLabel(onion, i) {
     const showVal = FINAL_CONFIG.value.style.chart.layout.labels.value.show;
     const showPercentage = FINAL_CONFIG.value.style.chart.layout.labels.percentage.show;
     const display = buildLabel({
+        config: FINAL_CONFIG.value.style.chart.layout.labels,
         showVal,
         showPercentage,
         val: applyDataLabel(
@@ -732,6 +734,7 @@ function useTooltip({ datapoint, seriesIndex, show = true }) {
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><circle data-cy="donut-tooltip-marker" cx="30" cy="30" r="30" stroke="none" fill="${datapoint.color}"/></svg>`;
         
         html += `<b>${buildLabel({
+            config: FINAL_CONFIG.value.style.chart.tooltip,
             showVal,
             showPercentage,
             val: `<span data-cy="donut-tooltip-value">${applyDataLabel(

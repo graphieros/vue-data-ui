@@ -673,10 +673,10 @@ function buildLabel({
     percentage,
     showVal,
     showPercentage,
+    config
 }) {
-    const cfg = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels;
     return buildValuePercentageLabel({
-        config: cfg,
+        config,
         val,
         percentage,
         showVal,
@@ -712,10 +712,9 @@ const legendSet = computed(() => {
                 val: valueDisplay,
                 percentage: percentageDisplay,
                 showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
-                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage
+                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage,
+                config: FINAL_CONFIG.value.style.chart.legend
             });
-
-            console.log({display, percentageDisplay})
 
             return {
                 ...el,
@@ -804,6 +803,7 @@ function useTooltip(index) {
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="60" width="60" stroke="none" rx="1" fill="${selected.color}" />${slots.pattern ? `<rect x="0" y="0" height="60" width="60" stroke="none" rx="1" stroke="none" fill="url(#pattern_${uid.value}_${selected.absoluteIndex})"/>`: ''}</svg>`;
 
         html += `<b>${buildLabel({
+            config: FINAL_CONFIG.value.style.chart.tooltip,
             showVal: FINAL_CONFIG.value.style.chart.tooltip.showValue,
             showPercentage: FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
             val: `<span data-cy="waffle-tooltip-value">${applyDataLabel(
@@ -884,7 +884,8 @@ function getCaption(i, position = null) {
         val: valueLabel,
         percentage: percentageLabel,
         showVal: FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue,
-        showPercentage: FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage
+        showPercentage: FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage,
+        config: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels
     });
 
     return `${name} ${display}`;

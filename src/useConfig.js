@@ -1157,6 +1157,7 @@ export function useConfig() {
                 },
                 legend: {
                     ...LEGEND,
+                    ...LABEL_VP_ORDER,
                     roundingValue: 0,
                     roundingPercentage: 0,
                     showPercentage: true,
@@ -1165,6 +1166,7 @@ export function useConfig() {
                 },
                 tooltip: {
                     ...TOOLTIP,
+                    ...LABEL_VP_ORDER,
                     showValue: true,
                     showPercentage: true,
                     roundingValue: 0,
@@ -1340,13 +1342,15 @@ export function useConfig() {
                 title: TITLE,
                 tooltip: {
                     ...TOOLTIP,
+                    ...LABEL_VP_ORDER,
                     showValue: true,
                     showPercentage: true,
                     roundingValue: 0,
-                    roundingPercentage: 0
+                    roundingPercentage: 0,
                 },
                 legend: {
                     ...LEGEND,
+                    ...LABEL_VP_ORDER,
                     roundingValue: 0,
                     roundingPercentage: 0,
                     showValue: true,
@@ -2074,6 +2078,7 @@ export function useConfig() {
                 title: TITLE,
                 legend: {
                     ...LEGEND,
+                    ...LABEL_VP_ORDER,
                     roundingValue: 0,
                     roundingPercentage: 0,
                     showValue: true,
@@ -2082,6 +2087,7 @@ export function useConfig() {
                 },
                 tooltip: {
                     ...TOOLTIP,
+                    ...LABEL_VP_ORDER,
                     showValue: true,
                     showPercentage: true,
                     roundingValue: 0,
@@ -3997,6 +4003,7 @@ export function useConfig() {
                 },
                 legend: {
                     ...LEGEND,
+                    ...LABEL_VP_ORDER,
                     roundingValue: 0,
                     roundingPercentage: 0,
                     showValue: true,
@@ -4006,6 +4013,7 @@ export function useConfig() {
                 title: TITLE,
                 tooltip: {
                     ...TOOLTIP,
+                    ...LABEL_VP_ORDER,
                     showAllItemsAtIndex: true,
                     showValue: true,
                     showPercentage: true,

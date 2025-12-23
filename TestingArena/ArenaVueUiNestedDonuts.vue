@@ -154,6 +154,10 @@ const model = createModel([
     CHECKBOX("style.chart.legend.showPercentage", { def: true }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
 
+    CHECKBOX('style.chart.legend.showValueFirst', { def: true }),
+    CHECKBOX('style.chart.legend.usePercentageParens', { def: true }),
+    CHECKBOX('style.chart.legend.useValueParens', { def: false }),
+
     TEXT("style.chart.title.text", { def: "Lorem ipsum dolor sit amet" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A" }),
     NUMBER("style.chart.title.fontSize", { def: 20, min: 8, max: 48 }),
@@ -175,6 +179,10 @@ const model = createModel([
     RANGE("style.chart.tooltip.backgroundOpacity", { def: 100, min: 0, max: 100 }),
     SELECT("style.chart.tooltip.position", ["left", "center", "right"], { def: "center" }),
     NUMBER("style.chart.tooltip.offsetY", { def: 24, min: 0, max: 48 }),
+
+    CHECKBOX('style.chart.tooltip.showValueFirst', { def: true }),
+    CHECKBOX('style.chart.tooltip.usePercentageParens', { def: true }),
+    CHECKBOX('style.chart.tooltip.useValueParens', { def: false }),
 
     CHECKBOX("table.show", { def: false }),
     CHECKBOX("table.useDialog", { def: true }),

@@ -154,6 +154,10 @@ const model = createModel([
     SELECT("style.chart.tooltip.position", ["left", "center", "right"], { def: "center" }),
     NUMBER("style.chart.tooltip.offsetY", { def: 24, min: 0, max: 48 }),
 
+    CHECKBOX('style.chart.tooltip.showValueFirst', { def: false }),
+    CHECKBOX('style.chart.tooltip.usePercentageParens', { def: false }),
+    CHECKBOX('style.chart.tooltip.useValueParens', { def: true }),
+
     CHECKBOX("table.show", { def: false }),
     CHECKBOX("table.useDialog", { def: true }),
     NUMBER("table.responsiveBreakpoint", { def: 400, min: 300, max: 800 }),
@@ -179,7 +183,11 @@ const model = createModel([
 
     CHECKBOX("style.chart.legend.showValue", { def: true }),
     CHECKBOX("style.chart.legend.showPercentage", { def: true }),
-    SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" })
+    SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+
+    CHECKBOX('style.chart.legend.showValueFirst', { def: false }),
+    CHECKBOX('style.chart.legend.usePercentageParens', { def: false }),
+    CHECKBOX('style.chart.legend.useValueParens', { def: true }),
 ]);
 
 

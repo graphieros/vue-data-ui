@@ -227,6 +227,11 @@ const model = createModel([
     NUMBER("style.chart.legend.roundingPercentage", { def: 0, min: 0, max: 6, label: "percentageRounding", category: "legend" }),
     CHECKBOX("style.chart.legend.showPercentage", { def: true }),
     CHECKBOX("style.chart.legend.showValue", { def: true }),
+
+    CHECKBOX('style.chart.legend.showValueFirst', { def: false }),
+    CHECKBOX('style.chart.legend.usePercentageParens', { def: false }),
+    CHECKBOX('style.chart.legend.useValueParens', { def: true }),
+
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
     TEXT("style.chart.title.text", { def: "Title", label: "textContent", category: "title" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A", label: "textColor", category: "title" }),
@@ -253,6 +258,11 @@ const model = createModel([
     TEXT("table.td.outline", { def: "none", label: "outlineRow", category: "table" }),
     NUMBER("table.td.roundingValue", { def: 0, min: 0, max: 6, label: ["rounding", "is", "value"], category: "table" }),
     NUMBER("table.td.roundingPercentage", { def: 0, min: 0, max: 6, label: ["rounding", "is", "percentage"], category: "table" }),
+
+    CHECKBOX('style.chart.tooltip.showValueFirst', { def: false }),
+    CHECKBOX('style.chart.tooltip.usePercentageParens', { def: false }),
+    CHECKBOX('style.chart.tooltip.useValueParens', { def: true }),
+
     CHECKBOX("style.chart.tooltip.show", { def: true, label: "show", category: "tooltip" }),
     COLOR("style.chart.tooltip.backgroundColor", { def: "#FFFFFF", label: "backgroundColor", category: "tooltip" }),
     COLOR("style.chart.tooltip.color", { def: "#1A1A1A", label: "textColor", category: "tooltip" }),
@@ -325,58 +335,57 @@ const config = computed(() => {
     } else {
         return {
             ...c,
-            // style: {
-            //     ...c.style,
-            //     chart: {
-            //         ...c.style.chart,
-            //         layout: {
-            //             ...c.style.chart.layout,
-            //             labels: {
-            //                 ...c.style.chart.layout.labels,
-            //                 hollow: {
-            //                     ...c.style.chart.layout.labels.hollow,
-            //                     total: {
-            //                         ...c.style.chart.layout.labels.hollow.total,
-            //                         value: {
-            //                             ...c.style.chart.layout.labels.hollow.total.value,
-            //                             // formatter: ({value}) => {
-            //                             //     return `f  - ${value}`
-            //                             // }
-            //                         }
-            //                     },
-            //                     average: {
-            //                         ...c.style.chart.layout.labels.hollow.average,
-            //                         value: {
-            //                             ...c.style.chart.layout.labels.hollow.average.value,
-            //                             // formatter: ({value}) => {
-            //                             //     return `f  - ${value}`
-            //                             // }
-            //                         }
-            //                     },
-            //                 },
-            //                 value: {
-            //                     ...c.style.chart.layout.labels.value,
-            //                     // formatter: ({value, config}) => {
+            style: {
+                ...c.style,
+                chart: {
+                    ...c.style.chart,
+                    layout: {
+                        ...c.style.chart.layout,
+                        labels: {
+                            ...c.style.chart.layout.labels,
+                            hollow: {
+                                ...c.style.chart.layout.labels.hollow,
+                                total: {
+                                    ...c.style.chart.layout.labels.hollow.total,
+                                    value: {
+                                        ...c.style.chart.layout.labels.hollow.total.value,
+                                        // formatter: ({value}) => {
+                                        //     return `f  - ${value}`
+                                        // }
+                                    }
+                                },
+                                average: {
+                                    ...c.style.chart.layout.labels.hollow.average,
+                                    value: {
+                                        ...c.style.chart.layout.labels.hollow.average.value,
+                                        // formatter: ({value}) => {
+                                        //     return `f  - ${value}`
+                                        // }
+                                    }
+                                },
+                            },
+                            value: {
+                                ...c.style.chart.layout.labels.value,
+                                formatter: ({value, config}) => {
 
-            //                     //     return `f  - ${value}`
-            //                     // }
-            //                 },
-            //                 percentage: {
-            //                     // formatter: ({value}) => {
-            //                     //     return `f - ${value}`
-            //                     // }
-            //                 },
-            //                 dataLabels: {
-            //                     ...c.style.chart.layout.labels.dataLabels,
-            //                     // formatter: ({value}) => {
-            //                     //     return `f - ${value}`
-            //                     // }
-            //                 }
-            //             }
-            //         },
-            //     }
-            // },
-            theme: currentTheme.value,
+                                    return `f  - ${value}`
+                                }
+                            },
+                            percentage: {
+                                // formatter: ({value}) => {
+                                //     return `f - ${value}`
+                                // }
+                            },
+                            dataLabels: {
+                                ...c.style.chart.layout.labels.dataLabels,
+                                formatter: ({value}) => {
+                                    return `f - ${value}`
+                                }
+                            }
+                        }
+                    },
+                }
+            },
             // customPalette: ['#6376DD', "#DD3322", "#66DDAA"]
         }
     }

@@ -39,7 +39,6 @@ import {
 } from "../lib";
 import{
     buildValuePercentageLabel,
-    fillLabel
 } from "../labelUtils";
 import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
@@ -931,10 +930,10 @@ function buildLabel({
     percentage,
     showVal,
     showPercentage,
+    config
 }) {
-    const cfg = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels;
     return buildValuePercentageLabel({
-        config: cfg,
+        config,
         val,
         percentage,
         showVal,
@@ -1010,6 +1009,7 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }) {
                         <span>
                             <b>
                                 ${buildLabel({
+                                    config: FINAL_CONFIG.value.style.chart.tooltip,
                                     showVal: FINAL_CONFIG.value.style.chart.tooltip.showValue,
                                     showPercentage: FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
                                     val: applyDataLabel(
@@ -1141,8 +1141,6 @@ const legendSets = computed(() => {
             );
             const displayValue = isFirstLoad.value ? rawValue : s.value;
 
-            console.log(segregated.value, s.id)
-
             const valueDisplay = applyDataLabel(
                 FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
                 displayValue,
@@ -1165,7 +1163,8 @@ const legendSets = computed(() => {
                 val: valueDisplay,
                 percentage: percentageDisplay,
                 showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
-                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage
+                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage,
+                config: FINAL_CONFIG.value.style.chart.legend
             });
 
             const display = `${s.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${_display}`
