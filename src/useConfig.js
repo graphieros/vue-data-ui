@@ -56,6 +56,12 @@ export function useConfig() {
         threshold: 1095, // v2 = 500
     }
 
+    const LABEL_VP_ORDER = {
+        showValueFirst: true,
+        usePercentageParens: true,
+        useValueParens: false,
+    }
+
     const TITLE = {
         text: "",
         color: COLOR_BLACK,
@@ -1061,6 +1067,7 @@ export function useConfig() {
                     curvedMarkers: false,
                     labels: {
                         dataLabels: {
+                            ...LABEL_VP_ORDER,
                             show: true,
                             useLabelSlots: false,
                             hideUnderValue: 3,
@@ -1297,6 +1304,7 @@ export function useConfig() {
                 layout: {
                     labels: {
                         dataLabels: {
+                            ...LABEL_VP_ORDER,
                             prefix: '',
                             suffix: '',
                             formatter: null
@@ -2044,6 +2052,7 @@ export function useConfig() {
                         width: 0.62
                     },
                     labels: {
+                        ...LABEL_VP_ORDER,
                         show: true,
                         fontSize: FONT._14,
                         minFontSize: MIN_FONT_SIZE, // v3
@@ -2067,6 +2076,8 @@ export function useConfig() {
                     ...LEGEND,
                     roundingValue: 0,
                     roundingPercentage: 0,
+                    showValue: true,
+                    showPercentage: true,
                     position: 'bottom'
                 },
                 tooltip: {
@@ -3519,6 +3530,7 @@ export function useConfig() {
                 layout: {
                     labels: {
                         dataLabels: {
+                            ...LABEL_VP_ORDER,
                             prefix: '',
                             suffix: '',
                             formatter: null
@@ -3946,6 +3958,7 @@ export function useConfig() {
                 layout: {
                     labels: {
                         dataLabels: {
+                            ...LABEL_VP_ORDER,
                             show: true,
                             prefix: '',
                             suffix: '',
@@ -4054,6 +4067,7 @@ export function useConfig() {
                     },
                     labels: {
                         dataLabels: {
+                            ...LABEL_VP_ORDER,
                             prefix: '',
                             suffix: '',
                             formatter: null

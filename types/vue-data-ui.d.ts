@@ -731,6 +731,9 @@ declare module "vue-data-ui" {
                     };
                     labels?: {
                         dataLabels?: {
+                            showValueFirst?: boolean;
+                            usePercentageParens?: boolean;
+                            useValueParens?: boolean;
                             prefix?: string;
                             suffix?: string;
                             formatter?: Formatter;
@@ -1958,6 +1961,9 @@ declare module "vue-data-ui" {
                 layout?: {
                     labels?: {
                         dataLabels?: {
+                            showValueFirst?: boolean;
+                            usePercentageParens?: boolean;
+                            useValueParens?: boolean;
                             prefix?: string;
                             suffix?: string;
                             formatter?: Formatter;
@@ -3978,6 +3984,9 @@ declare module "vue-data-ui" {
                             smallArcClusterFontSize?: number;
                             prefix?: string;
                             suffix?: string;
+                            showValueFirst?: boolean;
+                            usePercentageParens?: boolean;
+                            useValueParens?: boolean;
                         };
                         value?: {
                             rounding?: number;
@@ -4199,6 +4208,9 @@ declare module "vue-data-ui" {
                 layout?: {
                     labels?: {
                         dataLabels?: {
+                            showValueFirst?: boolean;
+                            usePercentageParens?: boolean;
+                            useValueParens?: boolean;
                             boldPercentage?: boolean;
                             boldValue?: boolean;
                             color?: string;
@@ -4394,6 +4406,9 @@ declare module "vue-data-ui" {
                             prefix?: string;
                             suffix?: string;
                             formatter?: Formatter;
+                            showValueFirst?: boolean;
+                            usePercentageParens?: boolean;
+                            useValueParens?: boolean;
                         };
                         captions?: {
                             show?: boolean;
@@ -5282,6 +5297,9 @@ declare module "vue-data-ui" {
                         width?: number;
                     };
                     labels?: {
+                        showValueFirst?: boolean;
+                        usePercentageParens?: boolean;
+                        useValueParens?: boolean;
                         show?: boolean;
                         fontSize?: number;
                         minFontSize?: number; // v3
@@ -5306,6 +5324,8 @@ declare module "vue-data-ui" {
                     roundingValue?: number;
                     roundingPercentage?: number;
                     position?: 'bottom' | 'top';
+                    showValue?: boolean;
+                    showPercentage?: boolean;
                 };
                 tooltip?: ChartTooltip & {
                     showValue?: boolean;
