@@ -28,6 +28,7 @@ import {
     makeDonut,
     objectIsEmpty,
     palette,
+    parens,
     sanitizeArray,
     setOpacity,
     themePalettes,
@@ -36,6 +37,10 @@ import {
     treeShake,
     hasDeepProperty,
 } from "../lib";
+import{
+    buildValuePercentageLabel,
+    fillLabel
+} from "../labelUtils";
 import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
@@ -921,6 +926,22 @@ function handleDatapointLeave({ datapoint, seriesIndex }) {
     selectedDatapointIndex.value = null;
 }
 
+function buildLabel({
+    val,
+    percentage,
+    showVal,
+    showPercentage,
+}) {
+    const cfg = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels;
+    return buildValuePercentageLabel({
+        config: cfg,
+        val,
+        percentage,
+        showVal,
+        showPercentage
+    })
+} 
+
 function useTooltip({ datapoint, _relativeIndex, seriesIndex }) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex })
@@ -987,35 +1008,28 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex }) {
                             </span>
                         </div>
                         <span>
-                            ${FINAL_CONFIG.value.style.chart.tooltip.showValue
-                        ? `<b>${applyDataLabel(
-                            FINAL_CONFIG.value.style.chart.layout.labels
-                                .dataLabels.formatter,
-                            datapoint.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.value.style.chart.layout
-                                    .labels.dataLabels.prefix,
-                                v: datapoint.value,
-                                s: FINAL_CONFIG.value.style.chart.layout
-                                    .labels.dataLabels.suffix,
-                                r: FINAL_CONFIG.value.style.chart.tooltip
-                                    .roundingValue,
-                            }),
-                            { datapoint, seriesIndex }
-                        )}
-                        </b>`
-                        : ""
-                    }
-                            ${FINAL_CONFIG.value.style.chart.tooltip
-                        .showPercentage
-                        ? `(${dataLabel({
-                            v: item.proportion * 100,
-                            s: "%",
-                            r: FINAL_CONFIG.value.style.chart.tooltip
-                                .roundingPercentage,
-                        })})`
-                        : ""
-                    }
+                            <b>
+                                ${buildLabel({
+                                    showVal: FINAL_CONFIG.value.style.chart.tooltip.showValue,
+                                    showPercentage: FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
+                                    val: applyDataLabel(
+                                        FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
+                                        datapoint.value,
+                                        dataLabel({
+                                            p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+                                            v: datapoint.value,
+                                            s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+                                            r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue,
+                                        }),
+                                        { datapoint, seriesIndex }
+                                    ),
+                                    percentage: dataLabel({
+                                        v: item.proportion * 100,
+                                        s: "%",
+                                        r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage,
+                                    })
+                                })}
+                            </b>
                         </span>
                     </div>
                 `;
@@ -1127,7 +1141,9 @@ const legendSets = computed(() => {
             );
             const displayValue = isFirstLoad.value ? rawValue : s.value;
 
-            const display = `${s.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${!FINAL_CONFIG.value.style.chart.legend.showValue ? '' : applyDataLabel(
+            console.log(segregated.value, s.id)
+
+            const valueDisplay = applyDataLabel(
                 FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
                 displayValue,
                 dataLabel({
@@ -1137,11 +1153,22 @@ const legendSets = computed(() => {
                     r: FINAL_CONFIG.value.style.chart.legend.roundingValue,
                 }),
                 { datapoint: s, seriesIndex: j }
-            )}${!FINAL_CONFIG.value.style.chart.legend.showPercentage ? '' : !segregated.value.includes(s.id) ? `${FINAL_CONFIG.value.style.chart.legend.showValue ? '(' : ''}${isNaN(displayValue / total) ? '-' : dataLabel({
+            );
+
+            const percentageDisplay = isNaN(displayValue / total) ? '-' : segregated.value.includes(s.id) ? '-' : dataLabel({
                 v: (displayValue / total) * 100,
                 s: "%",
                 r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage,
-            })}${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` : `${FINAL_CONFIG.value.style.chart.legend.showValue ? '(' : ''}- %${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}`}`
+            });
+
+            const _display = buildLabel({
+                val: valueDisplay,
+                percentage: percentageDisplay,
+                showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
+                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage
+            });
+
+            const display = `${s.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${_display}`
 
             return {
                 name: s.name,
@@ -1699,110 +1726,75 @@ defineExpose({
                 <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
                     <g v-for="(item, i) in donuts">
                         <g v-for="(arc, j) in item.donut.filter((el) => !el.ghost)" :filter="getBlurFilter(arc, j)">
-                            <text data-cy="datapoint-percentage" :class="{ animated: FINAL_CONFIG.useCssAnimation }" v-show="mutableConfig.dataLabels.show &&
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage
-                                " :opacity="isArcBigEnough(arc) ? 1 : 0" :text-anchor="calcMarkerOffsetX(arc, true).anchor"
+                            <text 
+                                data-cy="datapoint-percentage" 
+                                :class="{ animated: FINAL_CONFIG.useCssAnimation }" 
+                                v-show="mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage" 
+                                :opacity="isArcBigEnough(arc) ? 1 : 0" 
+                                :text-anchor="calcMarkerOffsetX(arc, true).anchor"
                                 :x="calcMarkerOffsetX(
                                     arc,
                                     false,
                                     FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
-                                ).x || 0
-                                    " :y="calcMarkerOffsetY(
-                        arc,
-                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
-                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
-                    )
-                        " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor
-                        ? arc.color
-                        : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color
-                        " :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                        " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldPercentage
-                        ? 'bold'
-                        : 'normal'
-                        ">
+                                ).x || 0" 
+                                :y="calcMarkerOffsetY(
+                                    arc,
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
+                                ) + (FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValueFirst && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue ? FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize : 0)" 
+                                :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color" 
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" 
+                                :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldPercentage ? 'bold' : 'normal'"
+                            >
                                 {{
-                                    dataLabel({
-                                        v: arc.proportion * 100,
-                                        s: "%",
-                                        r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                            .roundingPercentage,
-                                    })
+                                    parens(
+                                        dataLabel({
+                                            v: arc.proportion * 100,
+                                            s: "%",
+                                            r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
+                                                .roundingPercentage,
+                                        }),
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.usePercentageParens ? '(' : '',
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.usePercentageParens ? ')' : '',
+                                    )
                                 }}
                             </text>
-                            <text data-cy="datapoint-value" :class="{ animated: FINAL_CONFIG.useCssAnimation }" v-show="mutableConfig.dataLabels.show &&
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                    .showPercentage &&
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue
-                                " :opacity="isArcBigEnough(arc) ? 1 : 0" :text-anchor="calcMarkerOffsetX(arc, true).anchor"
+
+                            <text 
+                                data-cy="datapoint-value" 
+                                :class="{ animated: FINAL_CONFIG.useCssAnimation }" 
+                                v-show="mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue" 
+                                :opacity="isArcBigEnough(arc) ? 1 : 0" 
+                                :text-anchor="calcMarkerOffsetX(arc, true).anchor"
                                 :x="calcMarkerOffsetX(
                                     arc,
                                     false,
                                     FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
-                                ).x || 0
-                                    " :y="calcMarkerOffsetY(
-                        arc,
-                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
-                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
-                    ) + FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                        " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor
-                        ? arc.color
-                        : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color
-                        " :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                        " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue
-                        ? 'bold'
-                        : 'normal'
-                        ">
-                                ({{
-                                    applyDataLabel(
-                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                                        arc.value,
-                                        dataLabel({
-                                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
-                                            v: arc.value,
-                                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                            r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                                .roundingValue,
-                                        }),
-                                        { datapoint: arc, seriesIndex: i, datapointIndex: j }
-                                    )
-                                }})
-                            </text>
-                            <text :class="{ animated: FINAL_CONFIG.useCssAnimation }" v-if="
-                                isArcBigEnough(arc) &&
-                                mutableConfig.dataLabels.show &&
-                                !FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                    .showPercentage &&
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValue
-                            " :text-anchor="calcMarkerOffsetX(arc, true).anchor" :x="calcMarkerOffsetX(
-                                arc,
-                                false,
-                                FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX
-                            ).x || 0
-                                " :y="calcMarkerOffsetY(
-                        arc,
-                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
-                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
-                    )
-                        " :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor
-                        ? arc.color
-                        : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color
-                        " :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize
-                        " :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue
-                        ? 'bold'
-                        : 'normal'
-                        ">
+                                ).x || 0" 
+                                :y="calcMarkerOffsetY(
+                                    arc,
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY,
+                                    FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetY
+                                ) + (FINAL_CONFIG.style.chart.layout.labels.dataLabels.showValueFirst || !FINAL_CONFIG.style.chart.layout.labels.dataLabels.showPercentage ? 0 : FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize)" 
+                                :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.useSerieColor ? arc.color : FINAL_CONFIG.style.chart.layout.labels.dataLabels.color" 
+                                :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize" 
+                                :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.boldValue ? 'bold' : 'normal'"
+                            >
                                 {{
-                                    applyDataLabel(
-                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
-                                        arc.value,
-                                        dataLabel({
-                                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
-                                            v: arc.value,
-                                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
-                                            r: FINAL_CONFIG.style.chart.layout.labels.dataLabels
-                                                .roundingValue,
-                                        }),
-                                        { datapoint: arc, seriesIndex: i, datapointIndex: j }
+                                    parens(
+                                        applyDataLabel(
+                                            FINAL_CONFIG.style.chart.layout.labels.dataLabels.formatter,
+                                            arc.value,
+                                            dataLabel({
+                                                p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                                                v: arc.value,
+                                                s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                                                r: FINAL_CONFIG.style.chart.layout.labels.dataLabels.roundingValue,
+                                            }),
+                                            { datapoint: arc, seriesIndex: i, datapointIndex: j }
+                                        ),
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.useValueParens ? '(' : '',
+                                        FINAL_CONFIG.style.chart.layout.labels.dataLabels.useValueParens ? ')' : '',
                                     )
                                 }}
                             </text>

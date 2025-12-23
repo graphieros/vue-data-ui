@@ -100,7 +100,7 @@ const model = createModel([
     TEXT("style.fontFamily", { def: "inherit" }),
     CHECKBOX("style.chart.useGradient", { def: true }),
     RANGE("style.chart.gradientIntensity", { def: 40, min: 0, max: 100 }),
-    COLOR("style.chart.backgroundColor", { def: "#FFFFFF20" }),
+    COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
     COLOR("style.chart.color", { def: "#1A1A1A" }),
 
     NUMBER("style.chart.width", { def: 512, min: 0, max: 512 }),
@@ -110,6 +110,10 @@ const model = createModel([
     NUMBER("style.chart.padding.right", { def: 48, min: 0, max: 100 }),
     NUMBER("style.chart.padding.bottom", { def: 0, min: 0, max: 100 }),
     NUMBER("style.chart.padding.left", { def: 48, min: 0, max: 100 }),
+
+    CHECKBOX('style.chart.layout.labels.dataLabels.showValueFirst', { def: true }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.usePercentageParens', { def: true }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.useValueParens', { def: false }),
 
     CHECKBOX("style.chart.layout.labels.dataLabels.show", { def: true }),
     TEXT("style.chart.layout.labels.dataLabels.prefix", { def: "P" }),
@@ -250,10 +254,10 @@ const config = computed(() => {
                             ...c.style.chart.layout.labels,
                             dataLabels: {
                                 ...c.style.chart.layout.labels.dataLabels,
-                                formatter: ({value, config}) => {
-                                    // console.log(config)
-                                    return `f | ${value}`
-                                }
+                                // formatter: ({value, config}) => {
+                                //     // console.log(config)
+                                //     return `f | ${value}`
+                                // }
                             }
                         }
                     }
