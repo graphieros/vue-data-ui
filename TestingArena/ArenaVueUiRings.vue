@@ -107,6 +107,11 @@ const model = createModel([
     TEXT("style.fontFamily", { def: "inherit" }),
     COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
     COLOR("style.chart.color", { def: "#1A1A1A" }),
+
+    CHECKBOX('style.chart.layout.labels.dataLabels.showValueFirst', { def: false }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.usePercentageParens', { def: false }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.useValueParens', { def: true }),
+
     TEXT("style.chart.layout.labels.dataLabels.prefix", { def: "P" }),
     TEXT("style.chart.layout.labels.dataLabels.suffix", { def: "2" }),
     NUMBER("style.chart.layout.rings.strokeWidth", { def: 3, min: 0, max: 12 }),
@@ -123,7 +128,7 @@ const model = createModel([
     NUMBER("style.chart.legend.roundingValue", { def: 2, min: 0, max: 12 }),
     NUMBER("style.chart.legend.roundingPercentage", { def: 2, min: 0, max: 12 }),
     CHECKBOX("style.chart.legend.showValue", { def: true }),
-    CHECKBOX("style.chart.legend.showPercentage", { def: false }),
+    CHECKBOX("style.chart.legend.showPercentage", { def: true }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
     TEXT("style.chart.title.text", { def: "Lorem ipsum dolor sit amet" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A" }),
