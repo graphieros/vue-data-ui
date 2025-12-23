@@ -28,6 +28,9 @@ import {
     treeShake,
     XMLNS
 } from "../lib";
+import{
+    buildValuePercentageLabel,
+} from "../labelUtils";
 import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
@@ -441,6 +444,22 @@ function onTrapClick(datapoint) {
     }
 }
 
+function buildLabel({
+    val,
+    percentage,
+    showVal,
+    showPercentage,
+}) {
+    const cfg = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels;
+    return buildValuePercentageLabel({
+        config: cfg,
+        val,
+        percentage,
+        showVal,
+        showPercentage
+    })
+} 
+
 function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.absoluteIndex });
@@ -474,8 +493,10 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
         html += `<div data-cy="galaxy-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${datapoint.name}</div>`;
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 12 12" height="14" width="14"><circle data-cy="galaxy-tooltip-marker" cx="6" cy="6" r="6" stroke="none" fill="${datapoint.color}"/></svg>`;
 
-        if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-            html += `<b data-cy="galaxy-tooltip-value">${ applyDataLabel(
+        html += `<b>${buildLabel({
+            showVal: FINAL_CONFIG.value.style.chart.tooltip.showValue,
+            showPercentage: FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
+            val: applyDataLabel(
                 FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
                 datapoint.value,
                 dataLabel({
@@ -485,24 +506,13 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
                 }),
                 { datapoint, seriesIndex }
-            )}</b>`;
-        }
-
-        if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
-            if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-                html += `<b>${dataLabel({
+            ),
+            percentage: dataLabel({
                     v: datapoint.proportion * 100,
                     s: '%',
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
-                })}</b></div>`;
-            } else {
-                html += `<span>(${dataLabel({
-                    v: datapoint.proportion * 100,
-                    s: '%',
-                    r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
-                })})</span></div>`;
-            }
-        }
+                })
+        })}</b></div>`;
 
         tooltipContent.value = `<div>${html}</div>`;
     }
@@ -511,6 +521,22 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
 const legendSet = computed(() => {
     return immutableSet.value
         .map((el, i) => {
+            const valueDisplay = applyDataLabel(FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter, el.value, dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+                    v: el.value,
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue
+                }), { datapoint: el, index: i });
+
+            const percentageDisplay = isNaN(el.value / total.value) || segregated.value.includes(el.id) ? '-' : dataLabel({v: el.value / total.value * 100, s: '%', r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage });
+
+            const display = buildLabel({
+                showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
+                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage,
+                val: valueDisplay,
+                percentage: percentageDisplay
+            });
+
             return {
                 ...el,
                 proportion: (el.value || 0) / FINAL_DATASET.value.map(m => (m.values || []).reduce((a, b) => a + b, 0)).reduce((a, b) => a + b, 0),
@@ -518,13 +544,7 @@ const legendSet = computed(() => {
                 shape: el.shape || 'circle',
                 segregate: () => segregate(el),
                 isSegregated: segregated.value.includes(el.id),
-                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${!FINAL_CONFIG.value.style.chart.legend.showValue ? '' : applyDataLabel(FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter, el.value, dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
-                    v: el.value,
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
-                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue
-                }), { datapoint: el, index: i })}${!FINAL_CONFIG.value.style.chart.legend.showPercentage ? '' :
-                !segregated.value.includes(el.id) ? `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}${isNaN(el.value / total.value) ? '-' : dataLabel({v: el.value / total.value * 100, s: '%', r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage })}${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` : `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}- %${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` }`
+                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${display}`
             }
         });
 });

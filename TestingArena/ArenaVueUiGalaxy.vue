@@ -79,6 +79,11 @@ const model = createModel([
     CHECKBOX("style.chart.layout.arcs.gradient.show", { def: true }),
     RANGE("style.chart.layout.arcs.gradient.intensity", { def: 30, min: 0, max: 100 }),
     COLOR("style.chart.layout.arcs.gradient.color", { def: "#FFFFFF20" }),
+
+    CHECKBOX('style.chart.layout.labels.dataLabels.showValueFirst', { def: false }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.usePercentageParens', { def: false }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.useValueParens', { def: true }),
+    
     TEXT("style.chart.layout.labels.dataLabels.prefix", { def: "P" }),
     TEXT("style.chart.layout.labels.dataLabels.suffix", { def: "S" }),
 
@@ -89,7 +94,7 @@ const model = createModel([
     CHECKBOX("style.chart.legend.bold", { def: false }),
     NUMBER("style.chart.legend.roundingValue", { def: 2, min: 0, max: 12 }),
     NUMBER("style.chart.legend.roundingPercentage", { def: 2, min: 0, max: 12 }),
-    CHECKBOX("style.chart.legend.showValue", { def: false }),
+    CHECKBOX("style.chart.legend.showValue", { def: true }),
     CHECKBOX("style.chart.legend.showPercentage", { def: true }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
 
