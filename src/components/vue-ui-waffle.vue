@@ -33,6 +33,9 @@ import {
     treeShake,
     XMLNS
 } from "../lib";
+import { 
+    buildValuePercentageLabel 
+} from "../labelUtils";
 import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
@@ -665,6 +668,22 @@ function hideSeries(name) {
     }
 }
 
+function buildLabel({
+    val,
+    percentage,
+    showVal,
+    showPercentage,
+}) {
+    const cfg = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels;
+    return buildValuePercentageLabel({
+        config: cfg,
+        val,
+        percentage,
+        showVal,
+        showPercentage
+    })
+} 
+
 const legendSet = computed(() => {
     return datasetCopy.value
         .map((serie, i) => {
@@ -680,18 +699,30 @@ const legendSet = computed(() => {
             }
         })
         .map((el, i) => {
+            const valueDisplay = applyDataLabel(FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter, el.value, dataLabel({
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+                    v: el.value,
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
+                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue
+                }), { datapoint: el, index: i });
+            
+            const percentageDisplay = isNaN(el.value / total.value) ? '-' : dataLabel({v: el.value /total.value * 100, s: '%', r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage });
+
+            const display = buildLabel({
+                val: valueDisplay,
+                percentage: percentageDisplay,
+                showVal: FINAL_CONFIG.value.style.chart.legend.showValue,
+                showPercentage: FINAL_CONFIG.value.style.chart.legend.showPercentage
+            });
+
+            console.log({display, percentageDisplay})
+
             return {
                 ...el,
                 opacity: segregated.value.includes(el.uid) ? 0.5 : 1,
                 segregate: () => segregate(el.uid),
                 isSegregated: segregated.value.includes(el.uid),
-                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${!FINAL_CONFIG.value.style.chart.legend.showValue ? '' : applyDataLabel(FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter, el.value, dataLabel({
-                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
-                    v: el.value,
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
-                    r: FINAL_CONFIG.value.style.chart.legend.roundingValue
-                }), { datapoint: el, index: i })}${!FINAL_CONFIG.value.style.chart.legend.showPercentage ? '' :
-                !segregated.value.includes(el.uid) ? `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}${isNaN(el.value / total.value) ? '-' : dataLabel({v: el.value /total.value * 100, s: '%', r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage })}${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` : `${FINAL_CONFIG.value.style.chart.legend.showValue ? ' (' : ''}- %${FINAL_CONFIG.value.style.chart.legend.showValue ? ')' : ''}` }`
+                display: `${el.name}${FINAL_CONFIG.value.style.chart.legend.showPercentage || FINAL_CONFIG.value.style.chart.legend.showValue ? ': ' : ''}${display}`
             }
         })
 });
@@ -771,35 +802,32 @@ function useTooltip(index) {
     
         html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
         html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="60" width="60" stroke="none" rx="1" fill="${selected.color}" />${slots.pattern ? `<rect x="0" y="0" height="60" width="60" stroke="none" rx="1" stroke="none" fill="url(#pattern_${uid.value}_${selected.absoluteIndex})"/>`: ''}</svg>`;
-        if(FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-            html += `<b data-cy="waffle-tooltip-value">${applyDataLabel(
+
+        html += `<b>${buildLabel({
+            showVal: FINAL_CONFIG.value.style.chart.tooltip.showValue,
+            showPercentage: FINAL_CONFIG.value.style.chart.tooltip.showPercentage,
+            val: `<span data-cy="waffle-tooltip-value">${applyDataLabel(
                 FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.formatter,
                 selected.value,
                 dataLabel({
-                    p:FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix, 
-                    v: selected.value, 
-                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix, 
+                    p: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.prefix,
+                    v: selected.value,
+                    s: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.suffix,
                     r: FINAL_CONFIG.value.style.chart.tooltip.roundingValue
                 }),
-                { 
+                {
                     datapoint: selected,
                     seriesIndex: rects.value[index].absoluteIndex,
                     series: datasetCopy.value
                 }
-            )}</b>`;
-        }
-        if(FINAL_CONFIG.value.style.chart.tooltip.showPercentage) {
-            const dp = dataLabel({
+            )}</span>`,
+            percentage: `<span data-cy="waffle-tooltip-percentage">${dataLabel({
                 v: allDatapointsAreEmpty.value ? 1 / FINAL_DATASET.value.length * 100 : selected.value / total.value * 100,
                 s: '%',
                 r: FINAL_CONFIG.value.style.chart.tooltip.roundingPercentage
-            });
-            if(!FINAL_CONFIG.value.style.chart.tooltip.showValue) {
-                html += `<b>${dp}%</b></div>`;
-            } else {
-                html += `<span data-cy="waffle-tooltip-percentage">(${dp})</span></div>`;
-            }
-        }
+            })}</span>`
+        })}</b></div>`;
+
         tooltipContent.value = html;
     }
 }
@@ -851,17 +879,15 @@ function getCaption(i, position = null) {
     const nameLabel = (FINAL_CONFIG.value.style.chart.layout.labels.captions.serieNameAbbreviation ? abbreviate({ source: rects.value[i].name, length: FINAL_CONFIG.value.style.chart.layout.labels.captions.serieNameMaxAbbreviationSize}) : rects.value[i].name) + (FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage || FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue ? ':' : '');
 
     const name = FINAL_CONFIG.value.style.chart.layout.labels.captions.showSerieName ? nameLabel : '';
-    let val = '';
 
-    if (FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue) {
-        val = `${percentageLabel} (${valueLabel})`;
-    } else if (FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage && !FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue) {
-        val = percentageLabel;
-    } else if (!FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage && FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue) {
-        val = valueLabel;
-    }
+    const display = buildLabel({
+        val: valueLabel,
+        percentage: percentageLabel,
+        showVal: FINAL_CONFIG.value.style.chart.layout.labels.captions.showValue,
+        showPercentage: FINAL_CONFIG.value.style.chart.layout.labels.captions.showPercentage
+    });
 
-    return `${name}${val}`;
+    return `${name} ${display}`;
 }
 
 function generateCsv(callback=null) {

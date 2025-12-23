@@ -102,6 +102,10 @@ const model = createModel([
     COLOR("style.chart.backgroundColor", { def: "#FFFFFF20" }),
     COLOR("style.chart.color", { def: "#1A1A1A" }),
 
+    CHECKBOX('style.chart.layout.labels.dataLabels.showValueFirst', { def: false }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.usePercentageParens', { def: false }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.useValueParens', { def: true }),
+
     TEXT("style.chart.layout.labels.dataLabels.prefix", { def: "$" }),
     TEXT("style.chart.layout.labels.dataLabels.suffix", { def: "€" }),
 
@@ -174,7 +178,7 @@ const model = createModel([
     COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" }),
 
     CHECKBOX("style.chart.legend.showValue", { def: true }),
-    CHECKBOX("style.chart.legend.showPercentage", { def: false }),
+    CHECKBOX("style.chart.legend.showPercentage", { def: true }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" })
 ]);
 
