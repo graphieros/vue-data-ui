@@ -43,7 +43,7 @@ watch(() => props.open, (state) => {
     setTimeout(() => {
         state && focusSearch();
     }, 20)
-}, { deep: true })
+})
 
 </script>
 
