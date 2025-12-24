@@ -277,8 +277,8 @@ const configTheme = computed(() => ({
             <VueDataUi component="VueUiDag" :dataset="dataset" :config="config"/>
         </template>
 
-        <template #knobs>
-            <ConfigKnobs :model="model" />
+        <template #knobs="{ summaryOpen }">
+            <ConfigKnobs :model="model" :open="summaryOpen"/>
         </template>
     </Box>
 </template>

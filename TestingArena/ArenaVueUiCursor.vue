@@ -60,8 +60,8 @@ const config = computed(() => {
             <LocalVueUiCursor :config="config" ref="local"/>
         </template>
 
-        <template #knobs>
-            <ConfigKnobs :model="model"/>
+        <template #knobs="{ summaryOpen }">
+            <ConfigKnobs :model="model" @change="step += 1" :open="summaryOpen"/>
         </template>
     </Box>
 </template>

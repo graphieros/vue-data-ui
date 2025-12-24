@@ -672,9 +672,9 @@ const resp = ref(null);
         </VueDataUi>
     </template>
 
-    <template #knobs>
-        <ConfigKnobs :model="model" @change="step += 1"/>
-    </template>
+    <template #knobs="{ summaryOpen }">
+            <ConfigKnobs :model="model" @change="step += 1" :open="summaryOpen"/>
+        </template>
 </Box>
 
 </template>

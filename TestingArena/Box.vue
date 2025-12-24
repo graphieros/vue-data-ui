@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import LocalVueDataUi from "../src/components/vue-data-ui.vue";
 import BaseIcon from "../src/atoms/BaseIcon.vue";
 import { adaptColorToBackground } from "../src/lib";
@@ -130,6 +130,9 @@ const highlightedConfig = computed(() => {
     }
 });
 
+const details = ref(null);
+const summaryOpen = ref(false);
+
 
 </script>
 
@@ -144,9 +147,9 @@ const highlightedConfig = computed(() => {
         </button>
     
         <div class="knobs">
-            <details>
-                <summary>Config knobs</summary>
-                <slot name="knobs"/>
+            <details ref="details">
+                <summary @click="summaryOpen = !summaryOpen">Config knobs</summary>
+                <slot name="knobs" v-bind="{ summaryOpen }"/>
             </details>
         </div>
     

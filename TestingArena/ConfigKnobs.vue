@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, nextTick, watch } from "vue";
 import BaseIcon from "../src/atoms/BaseIcon.vue";
 
 const props = defineProps({
@@ -8,6 +8,9 @@ const props = defineProps({
     },
     step: {
         type: Number
+    },
+    open: {
+        type: Boolean
     }
 });
 
@@ -26,6 +29,22 @@ const filteredModel = computed(() => {
         knob.key.toLowerCase().includes(search.value.toLowerCase())
     );
 });
+
+const configSearch = ref(null);
+
+async function focusSearch() {
+    search.value = '';
+    await nextTick();
+    await nextTick();
+    configSearch.value?.focus();
+}
+
+watch(() => props.open, (state) => {
+    setTimeout(() => {
+        state && focusSearch();
+    }, 20)
+}, { deep: true })
+
 </script>
 
 <template>
@@ -33,11 +52,12 @@ const filteredModel = computed(() => {
         <div class="nav-search-wrapper">
             <input
                 v-model="search"
+                ref="configSearch"
                 type="text"
                 class="nav-search"
                 placeholder="Filter config keys"
             />
-            <button @click="search = ''"><BaseIcon name="close"/> </button>
+            <button @click="focusSearch"><BaseIcon name="close"/> </button>
         </div>
 
         <div

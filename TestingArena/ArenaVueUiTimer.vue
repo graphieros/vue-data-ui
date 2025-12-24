@@ -188,8 +188,8 @@ const localActions = computed(() => {
             </VueDataUi>
         </template>
 
-        <template #knobs>
-            <ConfigKnobs :model="model" @change="step += 1"/>
+        <template #knobs="{ summaryOpen }">
+            <ConfigKnobs :model="model" @change="step += 1" :open="summaryOpen"/>
         </template>
     </Box>
 </template>
