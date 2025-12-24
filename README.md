@@ -1138,6 +1138,7 @@ Below is a table of the places where such line breaks can be used:
 | VueUiStackline              | Time labels (x axis) | config.style.chart.grid.x.timeLabels.values            |
 | VueUiStripPlot              | x axis labels        | dataset names                                          |
 | VueUiXy                     | Time labels (x axis) | config.chart.grid.labels.xAxisLabels.values            |
+| VueUiHorizontalBar          | Series labels        | dataset names                                          |
 
 ## PDF generation
 

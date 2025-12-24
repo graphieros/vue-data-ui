@@ -60,6 +60,7 @@ import {
     getCloserPoint,
     getCumulativeAverage,
     getCumulativeMedian,
+    getLineCountFromString,
     getMissingDatasetAttributes,
     getPathLengthFromCoordinates,
     getScaleFactorUsingArcSize,
@@ -4254,3 +4255,21 @@ describe('escapeXmlAttr', () => {
         expect(escapeXmlAttr('&lt; &gt; &quot; &amp;')).toBe('&amp;lt; &amp;gt; &amp;quot; &amp;amp;');
     });
 });
+
+describe('getLineCountFromString', () => {
+    test('returns 1 for an empty string', () => {
+        expect(getLineCountFromString('')).toBe(1)
+    });
+    test('returns 1 for an invalid input', () => {
+        expect(getLineCountFromString(undefined)).toBe(1)
+        expect(getLineCountFromString(null)).toBe(1)
+        expect(getLineCountFromString(NaN)).toBe(1)
+        expect(getLineCountFromString(Infinity)).toBe(1)
+    });
+    test('returns 2 for a line break', () => {
+        expect(getLineCountFromString('A\nB')).toBe(2);
+    });
+    test('returns 3 for a 2 line breaks', () => {
+        expect(getLineCountFromString('A\nB\nC')).toBe(3);
+    });
+})

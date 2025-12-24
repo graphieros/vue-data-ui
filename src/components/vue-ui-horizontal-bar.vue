@@ -17,11 +17,14 @@ import {
     convertColorToHex,
     convertCustomPalette,
     createCsvContent,
+    createTSpansFromLineBreaksOnX,
+    createTSpansFromLineBreaksOnY,
     createUid,
     dataLabel,
     downloadCsv,
     error,
     functionReturnsString,
+    getLineCountFromString,
     hasDeepProperty,
     isFunction,
     objectIsEmpty,
@@ -528,7 +531,7 @@ const legendConfig = computed(() => {
 
 const parentLabelBlockHeight = computed(() => {
     return FINAL_CONFIG.value.style.chart.layout.bars.parentLabels.show
-        ? FINAL_CONFIG.value.style.chart.layout.bars.parentLabels.fontSize * 2 + 10
+        ? FINAL_CONFIG.value.style.chart.layout.bars.parentLabels.fontSize * 3 + FINAL_CONFIG.value.style.chart.layout.bars.parentLabels.paddingBottom
         : 0;
 });
 
@@ -1539,13 +1542,19 @@ defineExpose({
                             :x="FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
                             :font-weight="FINAL_CONFIG.style.chart.layout.bars.parentLabels.bold ? 'bold' : 'normal'"
                             text-anchor="start"
-                        >
-                            {{ getParentName(serie, i) }}
-                        </text>
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: `${getParentName(serie, i)}`,
+                                fontSize: FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.layout.bars.parentLabels.color,
+                                x: FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize,
+                                y: getParentData(serie, i).y,
+                                translateY: false
+                            })"
+                        />
                         <text 
                             data-cy="datapoint-parent-value"  
                             v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"  
-                            :y="getParentData(serie, i).y + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize * 1.2" 
+                            :y="getParentData(serie, i).y + getLineCountFromString(getParentName(serie, i)) *FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize * 1.1" 
                             :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize" 
                             :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color" 
                             :x="FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
@@ -1573,9 +1582,15 @@ defineExpose({
                                 : 'normal'
                             "
                             style="user-select: none;"
-                            >
-                            {{ serie.name }}
-                        </text>
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: serie.name,
+                                fontSize: FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize,
+                                fill: 'transparent',
+                                x: Math.abs(FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX),
+                                y: checkNaN(drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 2 + parentLabelOffsets[i] * parentLabelBlockHeight),
+                                translateY: true
+                            })"
+                        />
                     </g>
                 </g>
 
@@ -1592,9 +1607,16 @@ defineExpose({
                             :font-weight="FINAL_CONFIG.style.chart.layout.bars.nameLabels.bold
                                 ? 'bold'
                                 : 'normal'
-                            ">
-                            {{ serie.name }}
-                        </text>
+                            "
+                                v-html="createTSpansFromLineBreaksOnX({
+                                    content: serie.name,
+                                    fontSize: FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize,
+                                    fill: FINAL_CONFIG.style.chart.layout.bars.nameLabels.color,
+                                    x: drawingArea.left + FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX - 6,
+                                    y: drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 3 + parentLabelOffsets[i] * parentLabelBlockHeight,
+                                    translateY: true
+                                })"
+                        />
                     </g>
                 </g>
 

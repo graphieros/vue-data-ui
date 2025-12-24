@@ -2185,7 +2185,8 @@ export function useConfig() {
                             color: COLOR_BLACK,
                             bold: false,
                             fontSize: FONT._14, // v3 increased
-                            offsetX: 0
+                            offsetX: 0,
+                            paddingBottom: 0,
                         }
                     },
                     highlighter: {

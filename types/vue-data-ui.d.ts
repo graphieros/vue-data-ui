@@ -5539,6 +5539,7 @@ declare module "vue-data-ui" {
                             bold?: boolean;
                             fontSize?: number;
                             offsetX?: number;
+                            paddingBottom?: number;
                         };
                     };
                     highlighter?: {

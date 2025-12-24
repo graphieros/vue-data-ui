@@ -30,11 +30,11 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value =[
     {
-        name: "Serie 1 with",
+        name: "Serie 1 with\nsingle break",
         value: 220,
         children: [
             {
-                name: "serie 1 child 1",
+                name: "serie 1\nchild 1",
                 value: 200
             },
             {
@@ -44,7 +44,7 @@ onMounted(() => {
         ]
     },
     {
-        name: "Serie 2 has a long name",
+        name: "Serie 2 has a long name\nthat should be broken into\nseveral lines",
         value: 345,
     },
     {

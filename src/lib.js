@@ -1746,13 +1746,38 @@ export function calcTrend(numbers) {
     return averagePercentageChange;
 }
 
-export function createTSpansFromLineBreaksOnX({ content, fontSize, fill, x, y }) {
+export function createTSpansFromLineBreaksOnX({
+    content,
+    fontSize,
+    fill,
+    x,
+    y,
+    translateY = false
+}) {
     const lines = content.split('\n');
+    const lineCount = lines.length;
+
+    const totalHeight = lineCount * fontSize;
+    const offsetY = translateY ? (totalHeight - fontSize) / 2 : 0;
+
     return lines
         .map((line, idx) =>
-            `<tspan x="${x}" y="${y + idx * (fontSize)}" fill="${fill}">${line}</tspan>`
+            `<tspan x="${x}" y="${y - offsetY + idx * fontSize}" fill="${fill}">${line}</tspan>`
         )
         .join('');
+}
+
+export function getLineCountFromString(content) {
+    if (!isValidUserValue(content)) return 1;
+    const tspans = createTSpansFromLineBreaksOnX({
+        content,
+        fontSize: 1,
+        fill: '',
+        x: 0,
+        y: 0
+    });
+
+    return (tspans.match(/<tspan\b/g) || []).length;
 }
 
 export function createTSpansFromLineBreaksOnY({ content, fontSize, fill, x, autoOffset = false }) {
@@ -3500,6 +3525,7 @@ const lib = {
     getCloserPoint,
     getCumulativeAverage,
     getCumulativeMedian,
+    getLineCountFromString,
     getMissingDatasetAttributes,
     getPalette,
     getPathMidpoint,
