@@ -216,11 +216,14 @@ onBeforeUnmount(() => {
     
         <div class="knobs" ref="knobsElement" @mousedown="onKnobsPointerDown" @touchstart="onKnobsPointerDown">
             <div class="knobs-resize-handle">
-                <BaseIcon name="arrowLeft" style="pointer-events: none;"/>
-                <BaseIcon name="arrowRight" style="pointer-events: none;"/>
+                <BaseIcon name="arrowLeft" style="pointer-events: none;" stroke="#42d392"/>
+                <BaseIcon name="arrowRight" style="pointer-events: none;" stroke="#42d392"/>
             </div>
             <details ref="details">
-                <summary @click="summaryOpen = !summaryOpen">Config knobs</summary>
+                <summary @click="summaryOpen = !summaryOpen" class="knobs-summary">
+                    <BaseIcon :name="summaryOpen ? 'arrowTop' : 'arrowBottom'" stroke="#42d392" :size="18" style="margin-bottom:-4px"/>
+                    Config knobs
+                </summary>
                 <slot name="knobs" v-bind="{ summaryOpen }"/>
             </details>
         </div>
@@ -425,6 +428,18 @@ h1, p {
 
 .btn-reset {
     margin: 0 0 2rem 0;
+}
+
+.knobs-summary {
+    background: linear-gradient(90deg, #42d392, #5f8aee);
+    background-size: 100% 100%;
+    width: fit-content;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+    font-weight: 900 !important;
 }
 
 @media screen and (max-width: 1000px) {
