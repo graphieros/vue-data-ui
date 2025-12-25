@@ -384,6 +384,7 @@ h1, p {
     overflow-x: auto;
     position: fixed;
     background: #2A2A2A;
+    box-shadow: 0 6px 12px #000;
 }
 
 .knobs-resize-handle {

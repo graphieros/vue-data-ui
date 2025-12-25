@@ -63,8 +63,12 @@ const selectedItem = ref(null);
                 type="text"
                 class="nav-search"
                 placeholder="Filter config keys"
+                style="z-index: 1"
             />
-            <button @click="focusSearch"><BaseIcon name="close"/> </button>
+            <button @click="focusSearch" style="position:relative">
+                <BaseIcon name="blur" stroke="#42d392"/>
+                <BaseIcon name="close" stroke="#5f8aee" style="position: absolute;"/>
+            </button>
         </div>
 
         <div
