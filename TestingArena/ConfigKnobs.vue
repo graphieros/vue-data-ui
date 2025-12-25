@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick, watch } from "vue";
 import BaseIcon from "../src/atoms/BaseIcon.vue";
+import { createUid } from "../src/lib";
 
 const props = defineProps({
     model: {
@@ -17,17 +18,20 @@ const props = defineProps({
 defineEmits(['change']);
 
 function getKnobStyle(key) {
-    const depth = key.split('.').length;
-    return `margin-left:${depth}rem;`
+    return `margin-left:${getDepth(key)}rem;`
+}
+
+function getDepth(key) {
+    return key.split('.').length -1;
 }
 
 const search = ref('');
 
 const filteredModel = computed(() => {
-    if (!search.value) return props.model;
+    if (!search.value) return props.model.map(k => ({...k, uid: createUid()}));
     return props.model.filter(knob =>
         knob.key.toLowerCase().includes(search.value.toLowerCase())
-    );
+    ).map(k => ({ ...k, uid: createUid() }))
 });
 
 const configSearch = ref(null);
@@ -44,6 +48,9 @@ watch(() => props.open, (state) => {
         state && focusSearch();
     }, 20)
 })
+
+
+const selectedItem = ref(null);
 
 </script>
 
@@ -64,11 +71,18 @@ watch(() => props.open, (state) => {
             v-for="(knob, i) in filteredModel"
             :key="knob.key"
             class="knob"
-            :style="getKnobStyle(knob.key)"
         >
-            <label><code>{{ knob.key }}</code></label>
+            <label :for="knob.uid" @mouseenter="selectedItem = knob.uid" @mouseout="selectedItem = null">
+                <code style="display:flex;flex-direction:row;flex-wrap:nowrap;cursor:pointer;">
+                    <div style="color:#6A6A6A">{{ getDepth(knob.key) }}</div>
+                    <span v-for="d in getDepth(knob.key)" :style="`margin-top:-7px; color: ${selectedItem === knob.uid ? '#42d392' : '#5A5A5A'}; transition:color 0.1s`">_</span>
+                    <span v-if="getDepth(knob.key) > 0" :style="`color: ${selectedItem === knob.uid ? '#42d392' : '#5A5A5A'}; transition: color 0.1s`">{</span>
+                    <span style="padding-left:0.5rem">{{ knob.key.split('.').slice(0,-1).join('.') }}</span><span v-if="getDepth(knob.key) > 0">.</span><span style="font-weight: bold; color: #42d392">{{ knob.key.split('.').at(-1) }}</span>
+                </code>
+            </label>
             <div>
-                <input 
+                <input
+                    :id="knob.uid"
                     type="color" 
                     v-if="knob.type === 'color'" 
                     v-model="knob.def" @change="$emit('change')"
@@ -90,6 +104,7 @@ watch(() => props.open, (state) => {
                 </input>
 
                 <input
+                    :id="knob.uid"
                     v-if="!['none', 'select', 'color'].includes(knob.type)"
                     :step="knob.step"
                     :type="knob.type"
@@ -100,6 +115,7 @@ watch(() => props.open, (state) => {
                 />
 
                 <select
+                    :id="knob.uid"
                     v-if="knob.type === 'select'"
                     v-model="knob.def"
                     @change="$emit('change')"

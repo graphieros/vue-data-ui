@@ -174,7 +174,7 @@ function onKnobsPointerMove(event) {
     const deltaX = knobsStartClientX - clientX;
     const nextWidthPx = knobsStartWidthPx + deltaX;
 
-    const maxWidthPx = window.innerWidth;
+    const maxWidthPx = window.innerWidth - 316;
     const clampedWidthPx = Math.min(Math.max(nextWidthPx, knobsMinimumWidthPx), maxWidthPx);
 
     if (knobsElement.value) {
@@ -373,13 +373,13 @@ h1, p {
 .knobs {
     margin: 0 auto;
     padding: 0 24px;
-    margin-top: 24px;
+    margin-top: 0px;
     position: fixed;
     top: 0;
     right: 0;
     z-index: 10000000;
-    width: 360px;
-    max-width: 100%;
+    width: 600px;
+    max-width: calc(100vw - 300px);
     resize: none;
     overflow-x: auto;
     position: fixed;
