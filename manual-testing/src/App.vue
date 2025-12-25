@@ -107,8 +107,13 @@ const filteredComponents = computed(() => {
                 type="text"
                 class="nav-search"
                 placeholder="Search components"
+                style="z-index:1"
               />
-              <button @click="searchText = ''"><BaseIcon name="close"/> </button>
+
+              <button @click="searchText = ''" style="position:relative">
+                <BaseIcon name="blur" stroke="#42d392"/>
+                <BaseIcon name="close" stroke="#5f8aee" style="position: absolute;"/>
+            </button>
             </div>
   
             <div style="display:flex; margin-left: -1rem;">

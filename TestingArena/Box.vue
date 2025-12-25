@@ -221,8 +221,10 @@ onBeforeUnmount(() => {
             </div>
             <details ref="details">
                 <summary @click="summaryOpen = !summaryOpen" class="knobs-summary">
-                    <BaseIcon :name="summaryOpen ? 'arrowTop' : 'arrowBottom'" stroke="#42d392" :size="18" style="margin-bottom:-4px"/>
-                    Config knobs
+                    <BaseIcon :name="summaryOpen ? 'chipBinary' : 'chipAi'" stroke="#CCCCCC" :size="24" style="margin-bottom:-5.5px"/>
+                    <span style="margin-left:5px; font-weight:bold;">
+                        Config knobs
+                    </span>
                 </summary>
                 <slot name="knobs" v-bind="{ summaryOpen }"/>
             </details>
