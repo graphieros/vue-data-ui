@@ -5,7 +5,6 @@ import { RouterLink, RouterView } from 'vue-router'
 import BaseIcon from "../../src/atoms/BaseIcon.vue"
 import "../../src/vue-data-ui.css"
 import CURRENT_PACKAGE from "../../package.json"
-import BaseConsole from './components/BaseConsole.vue'
 
 const components = [
   { name: 'ArenaVueUi3dBar', icon: 'chart3dBar'},  
@@ -145,7 +144,6 @@ const filteredComponents = computed(() => {
   <main style="width: calc(100vw - 400px)">
     <RouterView />
   </main>
-  <BaseConsole/>
 </template>
 
 <style scoped>
