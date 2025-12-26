@@ -114,6 +114,8 @@ const model = createModel([
 
     TEXT("style.chart.layout.labels.dataLabels.prefix", { def: "P" }),
     TEXT("style.chart.layout.labels.dataLabels.suffix", { def: "2" }),
+    CHECKBOX('style.chart.layout.labels.dataLabels.show', { def: true }),
+
     NUMBER("style.chart.layout.rings.strokeWidth", { def: 3, min: 0, max: 12 }),
     COLOR("style.chart.layout.rings.stroke", { def: "#FFFFFF" }),
     CHECKBOX("style.chart.layout.rings.gradient.show", { def: true }),

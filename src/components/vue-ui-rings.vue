@@ -17,6 +17,7 @@ import {
   convertColorToHex,
   convertCustomPalette,
   createCsvContent,
+  createTSpansFromLineBreaksOnX,
   createUid,
   dataLabel,
   downloadCsv,
@@ -132,6 +133,11 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
               gradient: {
                 underlayerColor: '#FFFFFF'
               }
+            },
+            labels: {
+              dataLabels: {
+                show: false,
+              }
             }
           },
           legend: {
@@ -189,7 +195,34 @@ watch(() => props.config, (_newCfg) => {
     // Reset mutable config
     mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
     mutableConfig.value.showTooltip = FINAL_CONFIG.value.style.chart.tooltip.show;
+    mutableConfig.value.showLabels = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show;
+
+    svg.value.width = FINAL_CONFIG.value.style.chart.size;
+    svg.value.height = FINAL_CONFIG.value.style.chart.size;
 }, { deep: true });
+
+const computedOffset = computed(() => {
+  const { markers } = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels;
+  const r = maxHeight.value / 2;
+
+  const x = !mutableConfig.value.showLabels ? 0 : markers.position === 'left' ? r : -r;
+
+  const _xResp = !mutableConfig.value.showLabels ? 0 : svg.value.width / 2 - r;
+  const xResp = markers.position === 'left' ? _xResp : -_xResp;
+  const y = 0;
+
+  return {
+    x: FINAL_CONFIG.value.responsive ? xResp : x / FINAL_CONFIG.value.style.chart.size * svg.value.width,
+    y: y / FINAL_CONFIG.value.style.chart.size  * svg.value.height
+  }
+})
+
+const CENTER = computed(() => {
+  return {
+    x: svg.value.width / 2 + computedOffset.value.x,
+    y: svg.value.height / 2 + computedOffset.value.y
+  }
+});
 
 watch(() => props.dataset, (_) => {
   if (Array.isArray(_) && _.length > 0) {
@@ -304,20 +337,22 @@ const customPalette = computed(() => {
 
 const mutableConfig = ref({
     showTable: FINAL_CONFIG.value.table.show,
-    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+    showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+    showLabels: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show
 });
 
 // v3 - Essential to make shifting between loading config and final config work
 watch(FINAL_CONFIG, () => {
     mutableConfig.value = {
       showTable: FINAL_CONFIG.value.table.show,
-      showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show
+      showTooltip: FINAL_CONFIG.value.style.chart.tooltip.show,
+      showLabels: FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.show
     }
 }, { immediate: true });
 
 const svg = ref({
-    height: 360,
-    width: 360,
+    height: FINAL_CONFIG.value.style.chart.size,
+    width: FINAL_CONFIG.value.style.chart.size,
 });
 
 const chartRadius = computed(() => {
@@ -522,7 +557,50 @@ function buildLabel({
         showVal,
         showPercentage
     })
-} 
+}
+
+function getRingLabel(ring) {
+  const cfg = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels;
+  const valueDisplay = applyDataLabel(
+    cfg.formatter,
+    ring.value,
+    dataLabel({
+      p: cfg.prefix,
+      v: ring.value,
+      s: cfg.suffix,
+      r: cfg.roundingValue
+    })
+  );
+  const percentageDisplay = dataLabel({
+    v: ring.percentage,
+    s: '%',
+    r: cfg.roundingPercentage
+  })
+
+  return `${ring.name}\n${buildLabel({
+    val: valueDisplay,
+    percentage: percentageDisplay,
+    showVal: cfg.showValue,
+    showPercentage: cfg.showPercentage
+  })}`
+}
+
+function getRadius(ring) {
+  return checkNaN(((maxHeight.value * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight.value * ring.proportion) / 2) * 0.9)
+}
+
+function getY(ring, i) {
+  return i === 0 ? CENTER.value.y : CENTER.value.y + ((maxHeight.value * convertedDataset.value[0].proportion) / 2) - ((maxHeight.value * ring.proportion) / 2) - (2 * (i + 1))
+}
+
+function getMarkerCoordinates(ring, i) {
+  const side = FINAL_CONFIG.value.style.chart.layout.labels.dataLabels.markers.position;
+  const x = side === 'left' ? - (maxHeight.value / 2) : maxHeight.value / 2
+  return {
+    x: CENTER.value.x + x,
+    y: getY(ring, i) - getRadius(ring),
+  }
+}
 
 const dataTooltipSlot = ref(null);
 
@@ -680,6 +758,10 @@ function toggleTooltip() {
   mutableConfig.value.showTooltip = !mutableConfig.value.showTooltip;
 }
 
+function toggleLabels() {
+    mutableConfig.value.showLabels = !mutableConfig.value.showLabels;
+}
+
 const isAnnotator = ref(false);
 function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
@@ -791,7 +873,8 @@ defineExpose({
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    toggleLabels
 });
 
 </script>
@@ -883,6 +966,7 @@ defineExpose({
         :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
         :hasTable="FINAL_CONFIG.userOptions.buttons.table"
         :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+        :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
         :isTooltip="mutableConfig.showTooltip"
         :isFullscreen="isFullscreen"
         :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
@@ -901,6 +985,7 @@ defineExpose({
         @toggleTable="toggleTable"
         @toggleTooltip="toggleTooltip"
         @toggleAnnotator="toggleAnnotator"
+        @toggleLabels="toggleLabels"
         :style="{
             visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
         }"
@@ -926,6 +1011,9 @@ defineExpose({
           <template #optionTable v-if="$slots.optionTable">
               <slot name="optionTable" />
           </template>
+          <template #optionLabels v-if="$slots.optionLabels">
+            <slot name="optionLabels"/>
+          </template>
           <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
               <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
           </template>
@@ -941,7 +1029,7 @@ defineExpose({
       :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'resizing': resizing || loading }"
       data-cy="rings-svg"
       :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-      :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+      :style="`max-width:100%;overflow:hidden;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
     >
       <PackageVersion />
 
@@ -995,9 +1083,9 @@ defineExpose({
           }"
           :style="`animation-delay:${i * 100}ms`"
           :stroke="FINAL_CONFIG.style.chart.layout.rings.stroke"
-          :cx="svg.width / 2"
-          :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
-          :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
+          :cx="CENTER.x"
+          :cy="getY(ring, i)"
+          :r="getRadius(ring)"
           :fill="FINAL_CONFIG.style.chart.layout.rings.gradient.underlayerColor"
         />
 
@@ -1012,9 +1100,9 @@ defineExpose({
           :style="`animation-delay:${i * 100}ms`"
           :stroke="FINAL_CONFIG.style.chart.layout.rings.stroke"
           :stroke-width="ring.strokeWidth < 0.5 ? 0.5 : ring.strokeWidth"
-          :cx="svg.width / 2"
-          :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
-          :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
+          :cx="CENTER.x"
+          :cy="getY(ring, i)"
+          :r="getRadius(ring)"
           :fill="
             FINAL_CONFIG.style.chart.layout.rings.gradient.show
               ? `url(#gradient_${uid}_${i})`
@@ -1023,34 +1111,92 @@ defineExpose({
         />
 
         <circle
-        v-if="$slots.pattern"
+          v-if="$slots.pattern"
           :data-cy="`ring-pattern-${i}`"
           :class="{
-            'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
-            'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation && !loading,
-            'vue-ui-rings-shadow': FINAL_CONFIG.style.chart.layout.rings.useShadow,
-            'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
-          }"
+              'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
+              'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation && !loading,
+              'vue-ui-rings-shadow': FINAL_CONFIG.style.chart.layout.rings.useShadow,
+              'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
+            }"
           :style="`animation-delay:${i * 100}ms`"
           :stroke="FINAL_CONFIG.style.chart.layout.rings.stroke"
           :stroke-width="ring.strokeWidth < 0.5 ? 0.5 : ring.strokeWidth"
-          :cx="svg.width / 2"
-          :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
-          :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
+          :cx="CENTER.x"
+          :cy="getY(ring, i)"
+          :r="getRadius(ring)"
           :fill="`url(#pattern_${uid}_${ring.absoluteIndex})`"
-        />
+      />
         
         <circle
           data-cy="tooltip-trap"
           stroke="none"
-          :cx="svg.width / 2"
-          :cy="i === 0 ? svg.height / 2 : svg.height / 2 + ((maxHeight * convertedDataset[0].proportion) / 2) - ((maxHeight * ring.proportion) / 2) - (2 * (i + 1))"
-          :r="checkNaN(((maxHeight * ring.proportion) / 2) * 0.9 <= 0 ? 0.0001 : ((maxHeight * ring.proportion) / 2) * 0.9)"
+          :cx="CENTER.x"
+          :cy="getY(ring, i)"
+          :r="getRadius(ring)"
           fill="transparent"
           @mouseenter="useTooltip(ring, i)"
           @mouseleave="onTrapLeave(ring, i)"
           @click="onTrapClick(ring, i)"
         />
+
+        <!-- DATA LABELS -->
+        <template v-if="mutableConfig.showLabels">
+          <rect
+            :x="FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.position === 'left' ? getMarkerCoordinates(ring, i).x : CENTER.x"
+            :y="getMarkerCoordinates(ring, i).y - FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.strokeWidth / 2"
+            :width="Math.abs(CENTER.x - getMarkerCoordinates(ring, i).x)"
+            :height="FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.strokeWidth"
+            :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.stroke"
+            :rx="FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.strokeWidth"
+            :class="{
+              'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
+              'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation && !loading,
+              'vue-ui-rings-shadow': FINAL_CONFIG.style.chart.layout.rings.useShadow,
+              'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
+            }"
+          />
+
+          <circle 
+            :cx="getMarkerCoordinates(ring, i).x"
+            :cy="getMarkerCoordinates(ring, i).y"
+            :r="FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.radius"
+            :fill="ring.color"
+            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+            :class="{
+              'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
+              'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation && !loading,
+              'vue-ui-rings-shadow': FINAL_CONFIG.style.chart.layout.rings.useShadow,
+              'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
+            }"
+          />
+
+          <text
+            :x="getMarkerCoordinates(ring, i).x + (FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.position === 'left' ? - FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX : FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX)"
+            :y="getMarkerCoordinates(ring, i).y + FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize / 3"
+            :text-anchor="FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.position === 'left' ? 'end' : 'start'"
+            :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
+            :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
+            :font-weight="FINAL_CONFIG.style.chart.layout.labels.dataLabels.bold ? 'bold' : 'normal'"
+            :class="{
+              'vue-ui-rings-item': isLoaded && FINAL_CONFIG.useCssAnimation,
+              'vue-rings-item-onload': !isLoaded && FINAL_CONFIG.useCssAnimation && !loading,
+              'vue-ui-rings-shadow': FINAL_CONFIG.style.chart.layout.rings.useShadow,
+              'vue-ui-rings-blur': selectedSerie !== null && selectedSerie !== i,
+            }"
+            @mouseenter="useTooltip(ring, i)"
+            @mouseleave="onTrapLeave(ring, i)"
+            @click="onTrapClick(ring, i)"
+            v-html="createTSpansFromLineBreaksOnX({
+              content: getRingLabel(ring),
+              fontSize: FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize,
+              fill: FINAL_CONFIG.style.chart.layout.labels.dataLabels.color,
+              x: getMarkerCoordinates(ring, i).x + (FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.position === 'left' ? - FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX - 6 - FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.radius : FINAL_CONFIG.style.chart.layout.labels.dataLabels.offsetX + 6 + FINAL_CONFIG.style.chart.layout.labels.dataLabels.markers.radius),
+              y: getMarkerCoordinates(ring, i).y + FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize / 3,
+              translateY: true
+            })"
+          />
+        </template>
       </g>
       <slot name="svg" :svg="svg"/>
     </svg>

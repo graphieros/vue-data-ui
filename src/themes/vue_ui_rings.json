@@ -8,6 +8,14 @@
                 "layout": {
                     "rings": {
                         "stroke": "#3A3A3A"
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#CCCCCC",
+                            "markers": {
+                                "stroke": "#4A4A4A"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -48,6 +56,14 @@
                     "rings": {
                         "stroke": "#5D4037",
                         "strokeWidth": 10
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#424242",
+                            "markers": {
+                                "stroke": "#5D4037"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -88,6 +104,14 @@
                     "rings": {
                         "stroke": "#2E2E2E",
                         "strokeWidth": 10
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#BDBDBD",
+                            "markers": {
+                                "stroke": "#2E2E2E"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -128,6 +152,14 @@
                     "rings": {
                         "stroke": "#1A1A1A",
                         "strokeWidth": 10
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#BDBDBD",
+                            "markers": {
+                                "stroke": "#3A3A3A"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -167,6 +199,14 @@
                     "rings": {
                         "stroke": "#fbfafa",
                         "strokeWidth": 10
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#8A9892",
+                            "markers": {
+                                "stroke": "#FFFFFF"
+                            }
+                        }
                     }
                 },
                 "legend": {
@@ -205,6 +245,14 @@
                     "rings": {
                         "stroke": "#fbfafa",
                         "strokeWidth": 10
+                    },
+                    "labels": {
+                        "dataLabels": {
+                            "color": "#50606C",
+                            "markers": {
+                                "stroke": "#50606C"
+                            }
+                        }
                     }
                 },
                 "legend": {

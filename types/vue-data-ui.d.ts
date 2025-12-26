@@ -1961,6 +1961,7 @@ declare module "vue-data-ui" {
             chart?: {
                 backgroundColor?: string;
                 color?: string;
+                size?: number;
                 layout?: {
                     labels?: {
                         dataLabels?: {
@@ -1970,6 +1971,21 @@ declare module "vue-data-ui" {
                             prefix?: string;
                             suffix?: string;
                             formatter?: Formatter;
+                            show?: boolean;
+                            offsetX?: number;
+                            fontSize?: number;
+                            color?: number;
+                            bold?: number;
+                            showValue?: boolean;
+                            showPercentage?: boolean;
+                            roundingValue?: number;
+                            roundingPercentage?: number;
+                            markers?: {
+                                position?: 'left' | 'right';
+                                stroke?: string;
+                                strokeWidth?: number;
+                                radius?: number;
+                            }
                         };
                     };
                     rings?: {

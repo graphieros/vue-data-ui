@@ -3534,13 +3534,30 @@ export function useConfig() {
             chart: {
                 backgroundColor: COLOR_WHITE,
                 color: COLOR_BLACK,
+                size: 360,
                 layout: {
                     labels: {
                         dataLabels: {
                             ...LABEL_VP_ORDER,
                             prefix: '',
                             suffix: '',
-                            formatter: null
+                            formatter: null,
+                            show: false,
+                            offsetX: 0,
+                            fontSize: 10,
+                            color: COLOR_BLACK,
+                            bold: false,
+                            roundingValue: 0,
+                            roundingPercentage: 0,
+                            showValue: true,
+                            showPercentage: true,
+                            // Markers are applied when labels are enabled
+                            markers: {
+                                stroke: '#8A8A8A',
+                                strokeWidth: 1,
+                                radius: 3,
+                                position: 'right'
+                            }
                         }
                     },
                     rings: {
@@ -3580,7 +3597,8 @@ export function useConfig() {
             table: true,
             fullscreen: true,
             annotator: true,
-            svg: true
+            svg: true,
+            labels: true,
         }),
         table: {
             ...TABLE,

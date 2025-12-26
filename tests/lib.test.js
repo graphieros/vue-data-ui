@@ -4258,13 +4258,13 @@ describe('escapeXmlAttr', () => {
 
 describe('getLineCountFromString', () => {
     test('returns 1 for an empty string', () => {
-        expect(getLineCountFromString('')).toBe(1)
+        expect(getLineCountFromString('')).toBe(1);
     });
     test('returns 1 for an invalid input', () => {
-        expect(getLineCountFromString(undefined)).toBe(1)
-        expect(getLineCountFromString(null)).toBe(1)
-        expect(getLineCountFromString(NaN)).toBe(1)
-        expect(getLineCountFromString(Infinity)).toBe(1)
+        expect(getLineCountFromString(undefined)).toBe(1);
+        expect(getLineCountFromString(null)).toBe(1);
+        expect(getLineCountFromString(NaN)).toBe(1);
+        expect(getLineCountFromString(Infinity)).toBe(1);
     });
     test('returns 2 for a line break', () => {
         expect(getLineCountFromString('A\nB')).toBe(2);
