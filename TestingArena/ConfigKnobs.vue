@@ -28,10 +28,10 @@ function getDepth(key) {
 const search = ref('');
 
 const filteredModel = computed(() => {
-    if (!search.value) return props.model.map(k => ({...k, uid: createUid()}));
+    if (!search.value) return props.model
     return props.model.filter(knob =>
         knob.key.toLowerCase().includes(search.value.toLowerCase())
-    ).map(k => ({ ...k, uid: createUid() }))
+    )
 });
 
 const configSearch = ref(null);
@@ -76,17 +76,17 @@ const selectedItem = ref(null);
             :key="knob.key"
             class="knob"
         >
-            <label :for="knob.uid" @mouseenter="selectedItem = knob.uid" @mouseout="selectedItem = null">
+            <label :for="`${knob.key}_${i}`" @mouseenter="selectedItem = `${knob.key}_${i}`" @mouseout="selectedItem = null">
                 <code style="display:flex;flex-direction:row;flex-wrap:nowrap;cursor:pointer;">
                     <div style="color:#6A6A6A">{{ getDepth(knob.key) }}</div>
-                    <span v-for="d in getDepth(knob.key)" :style="`margin-top:-7px; color: ${selectedItem === knob.uid ? '#42d392' : '#5A5A5A'}; transition:color 0.1s`">_</span>
-                    <span v-if="getDepth(knob.key) > 0" :style="`color: ${selectedItem === knob.uid ? '#42d392' : '#5A5A5A'}; transition: color 0.1s`">{</span>
+                    <span v-for="d in getDepth(knob.key)" :style="`margin-top:-7px; color: ${selectedItem === `${knob.key}_${i}` ? '#42d392' : '#5A5A5A'}; transition:color 0.1s`">_</span>
+                    <span v-if="getDepth(knob.key) > 0" :style="`color: ${selectedItem === `${knob.key}_${i}` ? '#42d392' : '#5A5A5A'}; transition: color 0.1s`">{</span>
                     <span style="padding-left:0.5rem">{{ knob.key.split('.').slice(0,-1).join('.') }}</span><span v-if="getDepth(knob.key) > 0">.</span><span style="font-weight: bold; color: #42d392">{{ knob.key.split('.').at(-1) }}</span>
                 </code>
             </label>
             <div>
                 <input
-                    :id="knob.uid"
+                    :id="`${knob.key}_${i}`"
                     type="color" 
                     v-if="knob.type === 'color'" 
                     v-model="knob.def" @change="$emit('change')"
@@ -108,7 +108,7 @@ const selectedItem = ref(null);
                 </input>
 
                 <input
-                    :id="knob.uid"
+                    :id="`${knob.key}_${i}`"
                     v-if="!['none', 'select', 'color'].includes(knob.type)"
                     :step="knob.step"
                     :type="knob.type"
@@ -119,7 +119,7 @@ const selectedItem = ref(null);
                 />
 
                 <select
-                    :id="knob.uid"
+                    :id="`${knob.key}_${i}`"
                     v-if="knob.type === 'select'"
                     v-model="knob.def"
                     @change="$emit('change')"
