@@ -291,7 +291,7 @@ const expProps = computed(() => {
         strokeWidth: p['stroke-width'] ?? p.strokeWidth ?? props.strokeWidth,
         size: typeof p.size === "number" ? p.size : null,
         isSpin: !!p.isSpin || !!p['is-spin'],
-        spinDuration: p.spinDirection || p['spin-direction'] || '1s'
+        spinDuration: p.spinDuration || p['spin-duration'] || '1s'
     };
 });
 
@@ -303,7 +303,7 @@ const subProps = computed(() => {
         strokeWidth: p['stroke-width'] ?? p.strokeWidth ?? props.strokeWidth,
         size: typeof p.size === "number" ? p.size : null,
         isSpin: !!p.isSpin || !!p['is-spin'],
-        spinDuration: p.spinDirection || p['spin-direction'] || '1s'
+        spinDuration: p.spinDuration || p['spin-duration'] || '1s'
     };
 });
 
