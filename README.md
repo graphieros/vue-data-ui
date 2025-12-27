@@ -531,7 +531,7 @@ From the dataset you pass into the props, this component will produce the most a
 | `VueUiMiniLoader` | ❌                        | `VueUiMiniLoaderConfig` | ❌                                               | ❌                                                      |
 | `VueUiSkeleton`   | ❌                        | `VueUiSkeletonConfig`   | ❌                                               | ❌                                                      |
 | `VueUiTimer`      | ❌                        | `VueUiTimerConfig`      | `@start`, `@pause`, `@reset`, `@restart`, `@lap` | `#time`, `#controls`, `#laps`, `#chart-background`      |
-| `VueUiIcon`       | see below                 |
+| `VueUiIcon`       | see below                 | -                       | -                                                | `#exp`, `#sub`                                          |
 
 ### Icons
 
@@ -542,6 +542,17 @@ Tailor made icons are available through the VueUiIcon component:
 ```
 
 All names of available icons are available in the vue-data-ui.d.ts file under the `VueUiIconName` type.
+
+`VueUiIcon` props:
+
+| Name           | type             | Default value |
+| -------------- | ---------------- | ------------- |
+| `name`         | `VueUiIconName`  | `undefined`   |
+| `size`         | `number`         | `24`          |
+| `stroke`       | `string` (color) | `'#CCCCCC'`   |
+| `strokeWidth`  | `number`         | `1.5`         |
+| `isSpin`       | `boolean`        | `false`       |
+| `spinDuration` | `string`         | `'1s'`        |
 
 # User options
 
