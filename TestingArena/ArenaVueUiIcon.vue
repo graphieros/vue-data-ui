@@ -12,6 +12,61 @@ const icons = ref([
 </script>
 
 <template>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px; align-items:center;">
+        Exp
+        <BaseIcon name="square" :isSpin="true" spin-duration="5s">
+            <template #exp>
+                <BaseIcon name="hourglass" stroke="#42d392" :is-spin="true">
+                </BaseIcon>
+            </template>
+        </BaseIcon>
+
+        <BaseIcon name="image">
+            <template #exp>
+                <BaseIcon name="download" stroke="#42d392"/>
+            </template>
+        </BaseIcon>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px; align-items:center;">
+        Sub
+        <BaseIcon name="square">
+            <template #sub>
+                <BaseIcon name="square" stroke="#42d392" :is-spin="true">
+                </BaseIcon>
+            </template>
+        </BaseIcon>
+
+        <BaseIcon name="image">
+            <template #sub>
+                <BaseIcon name="download" stroke="#42d392"/>
+            </template>
+        </BaseIcon>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px; align-items:center;">
+        Exp & Sub
+        <BaseIcon name="square">
+            <template #exp>
+                <BaseIcon name="square" stroke="#42d392" >
+                </BaseIcon>
+            </template>
+            <template #sub>
+                <BaseIcon name="square" stroke="#42d392" >
+                </BaseIcon>
+            </template>
+        </BaseIcon>
+
+        <BaseIcon name="person">
+            <template #exp>
+                <BaseIcon name="circleQuestion" stroke="#42d392"/>
+            </template>
+            <template #sub>
+                <BaseIcon name="hourglass" stroke="#42d392"/>
+            </template>
+        </BaseIcon>
+    </div>
+
     <div style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin: 0 auto; margin-top: 64px; max-width: 600px">
         <BaseIcon v-for="icon in icons" :name="icon" stroke="#42d392"/>
         <!-- <VueUiIcon v-for="icon in icons" :name="icon" stroke="#42d392"/>

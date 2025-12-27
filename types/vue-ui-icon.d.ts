@@ -10,6 +10,7 @@ declare const VueUiIcon: DefineComponent<{
     strokeWidth?: number;
     size?: number | string;
     isSpin?: boolean;
+    spinDuration?: string;
 }>;
 
 export default VueUiIcon;

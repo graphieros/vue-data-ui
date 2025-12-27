@@ -1608,6 +1608,7 @@ declare module "vue-data-ui" {
         strokeWidth?: number;
         size?: number | string;
         isSpin?: boolean;
+        spinDuration?: string;
     }>;
 
     export type VueUiDonutEvolutionDatapoint = {
