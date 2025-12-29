@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 //@ts-ignore
 import BaseIcon from "../../src/atoms/BaseIcon.vue"
 import "../../src/vue-data-ui.css"
-import CURRENT_PACKAGE from "../../package.json"
+import CURRENT_PACKAGE from "../../package.json";
+import TodoList from './components/TodoList.vue';
 
 const components = [
   { name: 'ArenaVueUi3dBar', icon: 'chart3dBar'},  
@@ -87,6 +88,7 @@ const filteredComponents = computed(() => {
     componentItem.name.toLowerCase().includes(term)
   )
 })
+
 </script>
 
 <template>
@@ -148,7 +150,9 @@ const filteredComponents = computed(() => {
 
   <main style="width: calc(100vw - 400px)">
     <RouterView />
+    <TodoList />
   </main>
+
 </template>
 
 <style scoped>

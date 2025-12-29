@@ -1,0 +1,15 @@
+{
+  "items": [
+    {
+      "title": "Add scoped slots",
+      "component": "VueUiHorizontalBar",
+      "description": "Find a way to add foreignObjects in scoped slots for nameLabels and parentLabels, allowing the display of richer content. Problem is using foreignObjects fails the auto size feature related to the parent g element width.",
+      "priority": 0,
+      "author": "graphieros",
+      "done": false,
+      "id": "2b103ff3-de84-4843-9ccd-29b88daf9393",
+      "createdAt": 1767035715509,
+      "updatedAt": 1767035715509
+    }
+  ]
+}
