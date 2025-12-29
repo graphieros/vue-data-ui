@@ -497,6 +497,7 @@ declare module "vue-data-ui" {
     }>
 
     export type VueUiTreemapDatasetItem = {
+        [key: string]: any;
         name: string;
         value: number;
         children?: VueUiTreemapDatasetItem[];
@@ -1607,6 +1608,7 @@ declare module "vue-data-ui" {
         | "triangleExclamation"
         | "triangleFill"
         | "triangleInformation"
+        | "twig"
         | "unlock"
         | "unstack"
         | "upload"
@@ -5499,6 +5501,7 @@ declare module "vue-data-ui" {
     export type VueUiHorizontalBarDatasetChild = VueUiVerticalBarDatasetChild; // v3 renaming
 
     export type VueUiVerticalBarDatasetItem = {
+        [key: string]: any;
         name: string;
         value: number | null;
         color?: string;
