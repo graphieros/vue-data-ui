@@ -10,6 +10,17 @@
       "id": "2b103ff3-de84-4843-9ccd-29b88daf9393",
       "createdAt": 1767035715509,
       "updatedAt": 1767035715509
+    },
+    {
+      "title": "Add stats tab in todo app",
+      "component": "TodoList.vue",
+      "description": "Add some stats in a tab of the todo app. A donut with breakdown per open/closed, another per priority",
+      "priority": 0,
+      "author": "graphieros",
+      "done": false,
+      "id": "36d9df24-93cd-4da9-a652-1bdf8efc7ed1",
+      "createdAt": 1767036688923,
+      "updatedAt": 1767036688923
     }
   ]
 }
