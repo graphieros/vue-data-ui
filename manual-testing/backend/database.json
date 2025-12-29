@@ -21,6 +21,17 @@
       "id": "36d9df24-93cd-4da9-a652-1bdf8efc7ed1",
       "createdAt": 1767036688923,
       "updatedAt": 1767036688923
+    },
+    {
+      "title": "Add filter by priority",
+      "component": "TodoList.vue",
+      "description": "Add a filter feature by priority and filter by component, description, in the Open tab of the todo list.",
+      "priority": 1,
+      "author": "graphieros",
+      "done": false,
+      "id": "43545a6f-c728-4d17-b5c0-a6ad3d539853",
+      "createdAt": 1767037191862,
+      "updatedAt": 1767037191862
     }
   ]
 }
