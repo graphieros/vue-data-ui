@@ -286,6 +286,7 @@ function getIconPath(name, { stroke, strokeWidth }) {
         unpin: `<path d="M 2 18 L 6 14 M 3 10 L 10 17 M 10 17 L 11 16 C 12 14 12 12 12 12 L 16 7 C 17 7 17 7 18 6 L 14 2 C 13 3 13 3 13 4 L 8 8 C 8 8 6 8 4 9 L 3 10 M 2 2 L 18 18" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
         building: `<path d="M 1 18 L 19 18 M 3 18 L 3 2 L 10 2 L 10 18 M 5 4 L 5 5 M 8 4 L 8 5 M 5 8 L 5 9 M 8 8 L 8 9 M 5 12 L 5 13 M 8 12 L 8 13 M 10 10 L 17 10 L 17 18 M 12 18 L 12 15 C 12 14 15 14 15 15 L 15 18 M 13 12 L 14 12" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
         twig: `<path d="M 5 15 A 1 1 0 0 0 5 19 A 1 1 0 0 0 5 15 M 5 1 A 1 1 0 0 0 5 5 A 1 1 0 0 0 5 1 M 15 5 A 1 1 0 0 0 15 9 A 1 1 0 0 0 15 5 M 5 15 L 5 5 M 7 17 L 11 17 C 13 17 15 15 15 13 L 15 9" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        check: `<path d="M 18 2 L 8 18 L 2 12" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
     };
 
     return map[name] || '';
