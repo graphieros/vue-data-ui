@@ -7,6 +7,7 @@
       "priority": 0,
       "author": "graphieros",
       "done": false,
+      "exchanges": [],
       "id": "2b103ff3-de84-4843-9ccd-29b88daf9393",
       "createdAt": 1767035715509,
       "updatedAt": 1767035715509
@@ -18,6 +19,7 @@
       "priority": 0,
       "author": "graphieros",
       "done": false,
+      "exchanges": [],
       "id": "36d9df24-93cd-4da9-a652-1bdf8efc7ed1",
       "createdAt": 1767036688923,
       "updatedAt": 1767036688923
@@ -29,6 +31,7 @@
       "priority": 1,
       "author": "graphieros",
       "done": false,
+      "exchanges": [],
       "id": "43545a6f-c728-4d17-b5c0-a6ad3d539853",
       "createdAt": 1767037191862,
       "updatedAt": 1767037191862

@@ -13,9 +13,9 @@ const allowedOrigins = new Set([
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:5174",
-    "http://127.0.0.1:5175",
-    "http://localhost:5175",
     "http://127.0.0.1:5174",
+    "http://localhost:5175",
+    "http://127.0.0.1:5175",
     "http://localhost:3030",
     "http://127.0.0.1:3030",
 ]);
@@ -34,15 +34,14 @@ function applyCors(request, response) {
 
 const databaseFilePath = path.join(currentDirectoryPath, "database.json");
 
-function writeJsonResponse(response, statusCode, payload, request) {
+function writeJsonResponse(request, response, statusCode, payload) {
     const body = JSON.stringify(payload, null, 2);
 
-    response.writeHead(statusCode, {
-        "Content-Type": "application/json; charset=utf-8",
-        "Content-Length": Buffer.byteLength(body),
-    });
-
     applyCors(request, response);
+    response.statusCode = statusCode;
+    response.setHeader("Content-Type", "application/json; charset=utf-8");
+    response.setHeader("Content-Length", Buffer.byteLength(body));
+
     response.end(body);
 }
 
@@ -119,8 +118,8 @@ function matchRoute(pathName) {
 const server = http.createServer(async (request, response) => {
     try {
         if (request.method === "OPTIONS") {
-            response.writeHead(204);
             applyCors(request, response);
+            response.statusCode = 204;
             response.end();
             return;
         }
@@ -129,35 +128,35 @@ const server = http.createServer(async (request, response) => {
         const { routeName, identifier } = matchRoute(pathName);
 
         if (routeName === "notFound") {
-            writeJsonResponse(response, 404, { error: "Not found" }, request);
+            writeJsonResponse(request, response, 404, { error: "Not found" });
             return;
         }
 
         const database = await readDatabase();
 
         if (routeName === "itemsRoot" && request.method === "GET") {
-            writeJsonResponse(response, 200, { items: database.items }, request);
+            writeJsonResponse(request, response, 200, { items: database.items });
             return;
         }
 
         if (routeName === "itemsByIdentifier" && request.method === "GET") {
             const item = database.items.find((entry) => String(entry.id) === String(identifier));
             if (!item) {
-                writeJsonResponse(response, 404, { error: "Item not found" }, request);
+                writeJsonResponse(request, response, 404, { error: "Item not found" });
                 return;
             }
-            writeJsonResponse(response, 200, { item }, request);
+            writeJsonResponse(request, response, 200, { item });
             return;
         }
 
         if (routeName === "itemsRoot" && request.method === "POST") {
             const body = await readRequestBodyAsJson(request);
             if (body === undefined) {
-                writeJsonResponse(response, 400, { error: "Invalid JSON body" }, request);
+                writeJsonResponse(request, response, 400, { error: "Invalid JSON body" });
                 return;
             }
             if (!body || typeof body !== "object") {
-                writeJsonResponse(response, 400, { error: "Body must be a JSON object" }, request);
+                writeJsonResponse(request, response, 400, { error: "Body must be a JSON object" });
                 return;
             }
 
@@ -169,24 +168,24 @@ const server = http.createServer(async (request, response) => {
             database.items.push(item);
             await writeDatabase(database);
 
-            writeJsonResponse(response, 201, { item }, request);
+            writeJsonResponse(request, response, 201, { item });
             return;
         }
 
         if (routeName === "itemsByIdentifier" && request.method === "PUT") {
             const body = await readRequestBodyAsJson(request);
             if (body === undefined) {
-                writeJsonResponse(response, 400, { error: "Invalid JSON body" }, request);
+                writeJsonResponse(request, response, 400, { error: "Invalid JSON body" });
                 return;
             }
             if (!body || typeof body !== "object") {
-                writeJsonResponse(response, 400, { error: "Body must be a JSON object" }, request);
+                writeJsonResponse(request, response, 400, { error: "Body must be a JSON object" });
                 return;
             }
 
             const index = database.items.findIndex((entry) => String(entry.id) === String(identifier));
             if (index === -1) {
-                writeJsonResponse(response, 404, { error: "Item not found" }, request);
+                writeJsonResponse(request, response, 404, { error: "Item not found" });
                 return;
             }
 
@@ -196,31 +195,37 @@ const server = http.createServer(async (request, response) => {
             database.items[index] = updated;
             await writeDatabase(database);
 
-            writeJsonResponse(response, 200, { item: updated }, request);
+            writeJsonResponse(request, response, 200, { item: updated });
             return;
         }
 
         if (routeName === "itemsByIdentifier" && request.method === "DELETE") {
             const index = database.items.findIndex((entry) => String(entry.id) === String(identifier));
             if (index === -1) {
-                writeJsonResponse(response, 404, { error: "Item not found" }, request);
+                writeJsonResponse(request, response, 404, { error: "Item not found" });
                 return;
             }
 
             const [removed] = database.items.splice(index, 1);
             await writeDatabase(database);
 
-            writeJsonResponse(response, 200, { deleted: removed }, request);
+            writeJsonResponse(request, response, 200, { deleted: removed });
             return;
         }
 
-        writeJsonResponse(response, 405, { error: "Method not allowed" }, request);
+        writeJsonResponse(request, response, 405, { error: "Method not allowed" });
     } catch (error) {
+        if (response.headersSent || response.writableEnded) return;
+
         if (String(error?.message) === "Request body too large") {
-            writeJsonResponse(response, 413, { error: "Payload too large" }, request);
+            writeJsonResponse(request, response, 413, { error: "Payload too large" });
             return;
         }
-        writeJsonResponse(response, 500, { error: "Server error", details: String(error?.message ?? error) }, request);
+
+        writeJsonResponse(request, response, 500, {
+            error: "Server error",
+            details: String(error?.message ?? error),
+        });
     }
 });
 

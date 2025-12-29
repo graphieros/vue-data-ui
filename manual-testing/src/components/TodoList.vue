@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import useCrud from "../composables/useCrud";
+import { createUid } from "../../../src/lib";
 import { VueUiIcon } from "vue-data-ui";
 
 const {
@@ -22,6 +23,7 @@ onMounted(() => {
 
 const dialog = ref(null);
 const todoDialog = ref(null);
+const exchangeDialog = ref(null);
 const confirmDialog = ref(null);
 
 const priority = {
@@ -37,15 +39,61 @@ const todoTemplate = ref({
     priority: 0,
     author: '',
     done: false,
+    exchanges: [],
 });
 
+const exchangeTemplate = ref({ author: '', comment: '' });
+
 const pendingTodo = ref(JSON.parse(JSON.stringify(todoTemplate.value)));
+const pendingExchange = ref(JSON.parse(JSON.stringify(exchangeTemplate.value)));
+
+function resetPending() {
+    pendingTodo.value = JSON.parse(JSON.stringify(todoTemplate.value));
+}
+
+function resetExchange() {
+    pendingExchange.value = JSON.parse(JSON.stringify(exchangeTemplate.value));
+}
 
 const hasErrors = computed(() => {
     return !pendingTodo.value.title || !pendingTodo.value.author || !pendingTodo.value.description;
+});
+
+const hasExchangeErrors = computed(() => {
+    return !pendingExchange.value.author || !pendingExchange.value.comment;
 })
 
 const mode = ref('Create');
+
+function openExchangeDialog(item) {
+    pendingTodo.value = item;
+    exchangeDialog.value?.showModal();
+}
+
+function closeExchangeDialog() {
+    resetExchange();
+    resetPending();
+    exchangeDialog.value?.close();
+}
+
+async function addExchange() {
+    pendingTodo.value.exchanges.push({
+        ...pendingExchange.value,
+        id: createUid(),
+        createdAt: Date.now()
+    });
+    await updateTodo();
+    closeExchangeDialog();
+}
+
+async function deleteExchange(item, exchange) {
+    pendingTodo.value = {
+        ...item,
+        exchanges: item.exchanges.filter(i => i.id !== exchange.id)
+    };
+    await updateTodo();
+    resetPending();
+}
 
 function openConfirmDialog(item) {
     pendingTodo.value = item;
@@ -54,17 +102,18 @@ function openConfirmDialog(item) {
 
 function closeConfirmDialog() {
     confirmDialog.value?.close();
-    pendingTodo.value = JSON.parse(JSON.stringify(todoTemplate.value));
+    resetPending();
 }
 
 function openTodoDialog(_mode = 'Create') {
+    _mode === 'Create' && resetPending();
     mode.value = _mode;
     if (!todoDialog.value) return;
     todoDialog.value.showModal();
 }
 
 function closeTodoDialog() {
-    pendingTodo.value = JSON.parse(JSON.stringify(todoTemplate.value));
+    resetPending();
     if (todoDialog.value) todoDialog.value.close();
 }
 
@@ -92,7 +141,7 @@ async function deleteTodo(id) {
     await deleteOne(id);
     readAll();
     closeConfirmDialog();
-    pendingTodo.value = JSON.parse(JSON.stringify(todoTemplate.value));
+    resetPending();
 }
 
 function cancelTodo() {
@@ -188,6 +237,9 @@ const currentTab = ref(0);
                         <button @click="editTodo(item)">
                             <VueUiIcon name="annotator" :size="20" stroke="#CCCCCC"/>
                         </button>
+                        <button @click="openExchangeDialog(item)">
+                            <VueUiIcon name="tooltip" :size="20" stroke="#CCCCCC"/>
+                        </button>
                         <button @click="markDone(item)" class="btn-green">
                             <VueUiIcon name="check" :size="20" stroke="#42d392"/>
                         </button>
@@ -211,6 +263,25 @@ const currentTab = ref(0);
                             <span class="item-content">{{ item.description }}</span>
                         </div>
                     </div>
+
+                    <details v-if="item.exchanges?.length">
+                        <summary>Exchanges</summary>
+                        <div class="exchanges-wrapper">
+                            <div class="exchange" v-for="exchange in item.exchanges">
+                                <div class="exchange-header">                                    
+                                    <button @click="deleteExchange(item, exchange)" class="btn-red">
+                                        <VueUiIcon name="trash" :size="20" stroke="#ec9393"/>
+                                    </button>
+                                    <span>By {{ exchange.author }} | {{ exchange.createdAt }}</span>
+                                </div>
+                                <article>
+                                    <i>
+                                        {{ exchange.comment }}
+                                    </i>
+                                </article>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
 
@@ -248,6 +319,22 @@ const currentTab = ref(0);
                             <span class="item-content">{{ item.description }}</span>
                         </div>
                     </div>
+
+                    <details v-if="item.exchanges?.length">
+                        <summary>Exchanges</summary>
+                        <div class="exchanges-wrapper">
+                            <div class="exchange" v-for="exchange in item.exchanges">
+                                <div class="exchange-header">                                    
+                                    <span>By {{ exchange.author }} | {{ exchange.createdAt }}</span>
+                                </div>
+                                <article>
+                                    <i>
+                                        {{ exchange.comment }}
+                                    </i>
+                                </article>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
         </div>
@@ -317,6 +404,35 @@ const currentTab = ref(0);
         </div>
     </dialog>
 
+    <dialog ref="exchangeDialog"  class="exchange-dialog">
+        <header>Add comment</header>
+
+        <label class="todo-label-inline">
+            <div class="todo-label">
+                <VueUiIcon name="person" :size="18" :stroke="!pendingExchange.author ? '#e76969' : '#42d392'"/>
+                Author <span v-if="!pendingExchange.author" class="required">*</span><VueUiIcon v-else name="check" stroke="#42d392" :size="12"/>
+            </div>
+            <input type="text" v-model="pendingExchange.author" :class="{ error: !pendingExchange.author }" />
+        </label>
+
+        <label>
+            <div class="todo-label">
+                <VueUiIcon name="tooltip" :size="18" :stroke="!pendingExchange.comment ? '#e76969' : '#42d392'"/>
+                Comment <span v-if="!pendingExchange.comment" class="required">*</span><VueUiIcon v-else name="check" stroke="#42d392" :size="12"/>
+            </div>
+            <textarea v-model="pendingExchange.comment" :class="{ error: !pendingExchange.comment }"/>
+        </label>
+
+        <div class="todo-dialog-actions">
+            <button @click="closeExchangeDialog()" class="todo-dialog-action-close">
+                CANCEL
+            </button>
+            <button @click="addExchange()" :class="{ 'todo-dialog-action-add': true, error: hasExchangeErrors }" :disabled="hasExchangeErrors">
+                ADD COMMENT
+            </button>
+        </div>
+    </dialog>
+
     <dialog ref="confirmDialog" class="confirm-dialog">
         Delete <span style="color: #CCCCCC; font-weight: bold; color: #e76969;">{{ pendingTodo.title }}</span> ?
         <div class="cancel-wrapper">
@@ -378,7 +494,8 @@ const currentTab = ref(0);
     }
 
     .dialog header,
-    .todo-dialog header {
+    .todo-dialog header,
+    .exchange-dialog header {
         background: linear-gradient(90deg, #42d392, #5f8aee);
         background-size: 100% 100%;
         background-repeat: no-repeat;
@@ -461,7 +578,8 @@ const currentTab = ref(0);
     .actions button:hover {
         background-color: #81a2f0;
     }
-    .todo-dialog {
+    .todo-dialog,
+    .exchange-dialog {
         position: fixed;
         top: 50%;
         left: 50%;
@@ -475,7 +593,11 @@ const currentTab = ref(0);
         box-shadow: 0 6px 12px -6px black;
         overflow-x: hidden;
     }
-    .todo-dialog header {
+    .exchange-dialog {
+        height: 305px;
+    }
+    .todo-dialog header,
+    .exchange-dialog header {
         line-height: 1.5rem;
         align-items: start;
         gap: 1rem;
@@ -520,7 +642,8 @@ const currentTab = ref(0);
     .todo-dialog-action-add:hover {
         background-color:#75e6b3;
     }
-    .todo-dialog-content label {
+    .todo-dialog-content label,
+    .exchange-dialog label {
         display: flex;
         flex-direction: column;
         color: #CCCCCC;
@@ -620,7 +743,7 @@ const currentTab = ref(0);
         color: #CCCCCC;
         font-weight: bold;
         font-size: 1.2rem;
-        padding-right: 120px;
+        padding-right: 160px;
     }
     .item-label {
         color: #9A9A9A;
@@ -632,8 +755,8 @@ const currentTab = ref(0);
     }
     .item-actions {
         position: absolute;
-        top: 1.25rem;
-        right: 0.5rem;
+        top: 0.25rem;
+        right: 0.25rem;
         display: flex;
         gap: 0.5rem;
     }
@@ -735,5 +858,55 @@ const currentTab = ref(0);
         justify-content: center;
         height: 64px;
         width: 64px;
+    }
+    summary {
+        background-color: #FFFFFF10;
+        color: #CCCCCC;
+        cursor: pointer;
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        user-select: none;
+    }
+    details[open] summary {
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    .exchanges-wrapper {
+        background-color: #FFFFFF10;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .exchange-header {
+        display: flex;
+        align-items:center;
+        gap: 0.5rem;
+        color: #CCCCCC;
+        margin-bottom: 1rem;
+        font-size: 0.8rem;
+    }
+    .exchange-header button {
+        background-color: #5A5A5A;
+        border: none;
+        padding: 0.25rem;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s;
+        cursor: pointer;
+        display: flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow: 0 3px 6px rgb(0 0 0 / 0.3);
+    }
+    .exchange {
+        width: 100%;
+        padding: 0.5rem;
+        background-color: #FFFFFF10;
+        border-radius: 0.25rem;
+    }
+    .exchange article {
+        color: #E1E5E8
     }
 </style>
