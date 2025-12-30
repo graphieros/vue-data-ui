@@ -1717,7 +1717,9 @@ defineExpose({
         </div>
 
         <!-- TOOLTIP -->
-        <Tooltip :show="mutableConfig.showTooltip &&
+        <Tooltip 
+            :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
+            :show="mutableConfig.showTooltip &&
             isTooltip &&
             segregated.length < props.dataset.length
             " :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"

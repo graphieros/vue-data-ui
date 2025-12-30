@@ -1573,7 +1573,7 @@ function freestyle({ data, drawingArea }) {
         </template>
 
         <template #build>
-            <VueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend"
+            <VueUiXy :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`build_${step}`" @selectLegend="selectLegend" :selectedXIndex="selectedIndex"
                 @selectX="selectX" ref="build">
                 <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                     <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
@@ -1635,7 +1635,7 @@ function freestyle({ data, drawingArea }) {
         </template>
 
         <template #VDUI-build>
-            <VueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`"
+            <VueDataUi component="VueUiXy" :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`VDUI-build_${step}`" :selectedXIndex="selectedIndex"
                 @selectLegend="selectLegend" @selectX="selectX" ref="vduiBuild">
                 <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                     <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                

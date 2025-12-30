@@ -4328,6 +4328,7 @@ defineExpose({
 
         <!-- TOOLTIP -->
         <Tooltip 
+            :teleportTo="FINAL_CONFIG.chart.tooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltip"
             :backgroundColor="FINAL_CONFIG.chart.tooltip.backgroundColor" 
             :color="FINAL_CONFIG.chart.tooltip.color"

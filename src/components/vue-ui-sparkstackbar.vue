@@ -565,6 +565,7 @@ defineExpose({
         </div>
 
         <Tooltip
+            :teleportTo="FINAL_CONFIG.style.tooltip.teleportTo"
             :show="isTooltip && FINAL_CONFIG.style.tooltip.show"
             :parent="sparkstackbarChart"
             :backgroundColor="FINAL_CONFIG.style.tooltip.backgroundColor"

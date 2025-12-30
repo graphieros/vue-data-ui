@@ -1243,6 +1243,7 @@ defineExpose({
 
     <!-- TOOLTIP -->
     <Tooltip
+      :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
       :show="
         mutableConfig.showTooltip &&
         isTooltip &&

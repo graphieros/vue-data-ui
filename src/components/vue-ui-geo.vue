@@ -2022,6 +2022,7 @@ defineExpose({
         />
 
         <Tooltip
+            :teleportTo="FINAL_CONFIG.style.chart.tooltip.teleportTo"
             :show="mutableConfig.showTooltip && isTooltipVisible"
             :backgroundColor="FINAL_CONFIG.style.chart.tooltip.backgroundColor"
             :color="FINAL_CONFIG.style.chart.tooltip.color"
