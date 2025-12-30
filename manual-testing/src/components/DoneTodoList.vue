@@ -42,30 +42,36 @@ const emit = defineEmits([
                 <span>| Created {{ new Date(item.createdAt).toLocaleDateString() }}</span>
                 <span v-if="item.createdAt !== item.updatedAt">| Closed {{ new Date(item.updatedAt).toLocaleDateString() }}</span>
             </div>
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #5A5A5A">
-                <div v-if="item.component" class="item-component">
-                    <span class="item-label">Component:</span>
-                    <span class="item-content">{{ item.component }}</span>
-                </div>
-                <div v-if="item.description" class="item-description">
-                    <span class="item-label">Description:</span>
-                    <span class="item-content">{{ item.description }}</span>
-                </div>
-            </div>
 
-            <details v-if="item.exchanges?.length">
-                <summary>Exchanges</summary>
-                <div class="exchanges-wrapper">
-                    <div class="exchange" v-for="exchange in item.exchanges">
-                        <div class="exchange-header">                                    
-                            <span>By {{ exchange.author }} | {{ new Date(exchange.createdAt).toLocaleDateString() }}</span>
+            <details>
+                <summary>Details</summary>
+                <div style="background: #FFFFFF10; padding: 1rem;">
+                    <div>
+                        <div v-if="item.component" class="item-component">
+                            <span class="item-label">Component:</span>
+                            <span class="item-content">{{ item.component }}</span>
                         </div>
-                        <article>
-                            <i>
-                                {{ exchange.comment }}
-                            </i>
-                        </article>
+                        <div v-if="item.description" class="item-description">
+                            <span class="item-label">Description:</span>
+                            <span class="item-content">{{ item.description }}</span>
+                        </div>
                     </div>
+        
+                    <details v-if="item.exchanges?.length">
+                        <summary>Exchanges</summary>
+                        <div class="exchanges-wrapper">
+                            <div class="exchange" v-for="exchange in item.exchanges">
+                                <div class="exchange-header">                                    
+                                    <span>By {{ exchange.author }} | {{ new Date(exchange.createdAt).toLocaleDateString() }}</span>
+                                </div>
+                                <article>
+                                    <i>
+                                        {{ exchange.comment }}
+                                    </i>
+                                </article>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </details>
         </div>
