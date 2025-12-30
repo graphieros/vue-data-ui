@@ -195,6 +195,7 @@ const stats = computed(() => {
     const doneAuthor = Object.groupBy(done.value, item => item.author);
     const commonConfig = {
         theme: 'dark',
+        userOptions: { show: false },
         style: {
             chart: {
                 backgroundColor: '#4A4A4A',
@@ -212,6 +213,9 @@ const stats = computed(() => {
                 title: {
                     textAlign: 'left',
                     fontSize: 16
+                },
+                tooltip: {
+                    teleportTo: '#mainDialog'
                 },
                 useGradient: false,
             }
@@ -322,7 +326,7 @@ const stats = computed(() => {
         </div>
     </button>
 
-    <dialog ref="dialog" class="dialog">
+    <dialog ref="dialog" class="dialog" id="mainDialog">
         <header>
             <VueUiIcon name="legend" stroke="#6A6A6A"/>
             Todo list
@@ -481,7 +485,7 @@ const stats = computed(() => {
             </div>
 
             <!-- STATS -->
-            <div v-if="currentTab === 2" class="card-container stats">
+            <div v-if="currentTab === 2" class="card-container stats" id="stats">
                 <div v-if="toBeDone.length + done.length === 0" class="empty">
                     <VueUiIcon name="chartDonut" stroke="#7A7A7A" :size="36" />
                     <span>No data yet</span>
@@ -642,18 +646,17 @@ const stats = computed(() => {
 
     .badge {
         position: absolute;
-        top: -0.25rem;
-        right: -0.25rem;
-        padding: 0.3rem 0.35rem;
+        top: -0.3rem;
+        right: -0.3rem;
+        padding: 0.35rem 0.35rem;
         border-radius: 1rem;
         background: #7c9fef;
         color: #1A1A1A;
-        height: 1rem;
+        height: 1.1rem;
         font-weight: bold;
         width: fit-content;
         display: flex;
         align-items:center;
-        font-size: 0.6rem;
         box-shadow: 0 3px 6px rgba(0 0 0 / 0.6);
     }
 
@@ -668,6 +671,7 @@ const stats = computed(() => {
         background: #2A2A2A;
         border: 1px solid #4A4A4A;
         border-radius: 1rem;
+        overflow: hidden;
     }
 
     .dialog header,

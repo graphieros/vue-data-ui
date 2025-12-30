@@ -42,6 +42,18 @@
       "id": "43545a6f-c728-4d17-b5c0-a6ad3d539853",
       "createdAt": 1767037191862,
       "updatedAt": 1767037191862
+    },
+    {
+      "title": "Tooltips in dialogs",
+      "component": "Tooltip.vue",
+      "description": "Since tooltips are teleported to the body, they appear behind a dialog if the chart is placed inside. Add a tooltip.teleportTo config property, defaulting to 'body'. It should work with an id selector.",
+      "priority": 2,
+      "author": "graphieros",
+      "done": true,
+      "exchanges": [],
+      "id": "817f52c7-0ab8-4068-aeb0-49e10cbb27ac",
+      "createdAt": 1767078433963,
+      "updatedAt": 1767086431392
     }
   ]
 }
