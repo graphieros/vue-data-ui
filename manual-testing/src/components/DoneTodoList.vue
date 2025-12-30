@@ -49,7 +49,7 @@ const emit = defineEmits([
                     <div>
                         <div v-if="item.component" class="item-component">
                             <span class="item-label">Component:</span>
-                            <span class="item-content">{{ item.component }}</span>
+                            <span class="item-content" style="color:#42d392">{{ item.component }}</span>
                         </div>
                         <div v-if="item.description" class="item-description">
                             <span class="item-label">Description:</span>

@@ -287,6 +287,13 @@ function getIconPath(name, { stroke, strokeWidth }) {
         building: `<path d="M 1 18 L 19 18 M 3 18 L 3 2 L 10 2 L 10 18 M 5 4 L 5 5 M 8 4 L 8 5 M 5 8 L 5 9 M 8 8 L 8 9 M 5 12 L 5 13 M 8 12 L 8 13 M 10 10 L 17 10 L 17 18 M 12 18 L 12 15 C 12 14 15 14 15 15 L 15 18 M 13 12 L 14 12" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
         twig: `<path d="M 5 15 A 1 1 0 0 0 5 19 A 1 1 0 0 0 5 15 M 5 1 A 1 1 0 0 0 5 5 A 1 1 0 0 0 5 1 M 15 5 A 1 1 0 0 0 15 9 A 1 1 0 0 0 15 5 M 5 15 L 5 5 M 7 17 L 11 17 C 13 17 15 15 15 13 L 15 9" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
         check: `<path d="M 18 2 L 8 18 L 2 12" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        doubleCheck: `<path d="M 17 2 L 7 18 L 2 12 M 7 11 L 8 12 M 11 15 L 13 17 L 19 6" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        plug: `<path d="M 14 5 L 14 15 C 14 16 12 16 12 15 L 12 5 C 12 4 14 4 14 5 M 12 5 C 3 5 3 15 12 15 M 5 10 C 0 10 6 19 1 19 M 15 7 L 19 7 M 15 13 L 19 13" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        unplug: `<path d="M 14 5 L 14 15 C 14 16 12 16 12 15 L 12 5 C 12 4 14 4 14 5 M 12 5 C 3 5 3 15 12 15 M 5 10 C 0 10 6 19 1 19 M 15 7 L 19 7 M 15 13 L 19 13 M 2 1 L 6 6 M 16 19 L 14 16.405 M 7.609 8.008 L 10.637 11.989" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        spinner1: `<path d="M 10 1 A 1 1 0 0 0 10 19 M 10 17 A 1 1 0 0 0 10 3 M 10 5 A 1 1 0 0 0 10 15 M 10 13 A 1 1 0 0 0 10 7 M 10 9 A 1 1 0 0 0 10 11" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        spinner2: `<path d="M 10 1 A 1 1 0 0 0 10 19 M -3 0" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        spinner3: `<path d="M 10 1 L 10 4 M 1 10 L 4 10 M 10 19 L 10 16 M 19 10 L 16 10" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        spinner4: `<path d="M 10 1 L 10 2 M 1 10 L 2 10 M 10 19 L 10 18 M 19 10 L 18 10" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
     };
 
     return map[name] || '';

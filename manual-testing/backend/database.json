@@ -2,7 +2,7 @@
   "items": [
     {
       "title": "Add scoped slots",
-      "component": "VueUiHorizontalBar",
+      "component": "vue-ui-horizontal-bar.vue",
       "description": "Find a way to add foreignObjects in scoped slots for nameLabels and parentLabels, allowing the display of richer content. Problem is using foreignObjects fails the auto size feature related to the parent g element width.",
       "priority": 0,
       "author": "graphieros",
@@ -17,7 +17,7 @@
       ],
       "id": "2b103ff3-de84-4843-9ccd-29b88daf9393",
       "createdAt": 1767035715509,
-      "updatedAt": 1767077128316
+      "updatedAt": 1767117463133
     },
     {
       "title": "Add stats tab in todo app",
@@ -54,6 +54,18 @@
       "id": "817f52c7-0ab8-4068-aeb0-49e10cbb27ac",
       "createdAt": 1767078433963,
       "updatedAt": 1767086431392
+    },
+    {
+      "title": "User options cropped",
+      "component": "UserOptions.vue",
+      "description": "When placed inside a parent with hidden overflow, UserOptions gets cropped, making it impossible to select actions.",
+      "priority": 1,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "id": "9b075f5f-4791-4349-9a90-6ec936240ab7",
+      "createdAt": 1767117444470,
+      "updatedAt": 1767117444470
     }
   ]
 }
