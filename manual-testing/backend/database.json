@@ -37,11 +37,11 @@
       "description": "Add a filter feature by priority and filter by component, description, in the Open tab of the todo list.",
       "priority": 1,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "id": "43545a6f-c728-4d17-b5c0-a6ad3d539853",
       "createdAt": 1767037191862,
-      "updatedAt": 1767037191862
+      "updatedAt": 1767098908436
     },
     {
       "title": "Tooltips in dialogs",

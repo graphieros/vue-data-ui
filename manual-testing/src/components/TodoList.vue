@@ -18,7 +18,6 @@ const {
 
 onMounted(() => {
     readAll();
-    console.log(items.value);
 });
 
 const dialog = ref(null);
@@ -46,6 +45,49 @@ const todoTemplate = ref({
     author: '',
     done: false,
     exchanges: [],
+});
+
+const filters = ref({
+    priority: null,
+    author: null,
+    description: null,
+    component: null
+});
+
+const noFilters = computed(() => {
+    return filters.value.priority == null && filters.value.author == null && filters.value.description === null && filters.value.component == null;
+})
+
+function resetFilter(key, all = false) {
+    if (all) {
+        filters.value = {
+            priority: null,
+            author: null,
+            description: null,
+            component: null
+        }
+    } else {
+        filters.value[key] = null;
+    }
+}
+
+const authors = computed(() => {
+    return ['', ...new Set(...[items.value.map(n => n.author)])]
+});
+
+const filtered = computed(() => {
+    return {
+        _todo: toBeDone.value
+            .filter(el => filters.value.description ? (el.description).toUpperCase().includes(filters.value.description.toUpperCase()) : true)
+            .filter(el => filters.value.author ? el.author === filters.value.author : true)
+            .filter(el => ![null, '', undefined].includes(filters.value.priority) ? el.priority == filters.value.priority : true)
+            .filter(el => filters.value.component ? el.component.toUpperCase().includes(filters.value.component.toUpperCase()) : true),
+        _done: done.value
+            .filter(el => filters.value.description ? (el.description).toUpperCase().includes(filters.value.description.toUpperCase()) : true)
+            .filter(el => filters.value.author ? el.author === filters.value.author : true)
+            .filter(el => ![null, '', undefined].includes(filters.value.priority) ? el.priority == filters.value.priority : true)
+            .filter(el => filters.value.component ? el.component.toUpperCase().includes(filters.value.component.toUpperCase()) : true),
+    }
 });
 
 const exchangeTemplate = ref({ author: '', comment: '' });
@@ -339,6 +381,32 @@ const stats = computed(() => {
         <button class="btn-close" @click="closeDialog()">
             <VueUiIcon name="close"/>
         </button>
+        <div class="filters">
+            <label>
+                Priority
+                <select v-model="filters.priority">
+                    <option></option>
+                    <option v-for="p in Object.keys(priority)" :value="p">{{ priority[p] }}</option>
+                </select>
+            </label>
+            <label>
+                Author
+                <select v-model="filters.author">
+                    <option v-for="author in authors">{{ author }}</option>
+                </select>
+            </label>
+            <label>
+                Component
+                <input v-model="filters.component">
+            </label>
+            <label>
+                Description
+                <input v-model="filters.description">
+            </label>
+            <button class="reset" @click="resetFilter(null, true)" :disabled="noFilters">
+                <VueUiIcon name="revert" stroke="#e76969"/>
+            </button>
+        </div>
         <div class="tabs">
             <div class="tab" :style="{
                 backgroundColor: currentTab === 0 ? '#3A3A3A' : '#212121'
@@ -346,7 +414,7 @@ const stats = computed(() => {
                 <button @click="currentTab = 0" class="counter-button">
                     Open
                     <div class="counter">
-                        {{ toBeDone.length }}
+                        {{ filtered._todo.length }}
                     </div>
                 </button>
             </div>
@@ -356,7 +424,7 @@ const stats = computed(() => {
                 <button class="counter-button">
                     Closed
                     <div class="counter">
-                        {{ done.length }}
+                        {{ filtered._done.length }}
                     </div>
                 </button>
             </div>
@@ -375,7 +443,7 @@ const stats = computed(() => {
                     <VueUiIcon name="legend" stroke="#7A7A7A" :size="36"/>
                     <span>No items to display</span>
                 </div>
-                <div v-for="item in toBeDone" class="card">
+                <div v-for="item in filtered._todo" class="card">
                     <div class="item-actions">
                         <button @click="openConfirmDialog(item)" class="btn-red">
                             <VueUiIcon name="trash" :size="20" stroke="#ec9393"/>
@@ -438,7 +506,7 @@ const stats = computed(() => {
                     <span>No items to display</span>
                 </div>
 
-                <div v-for="item in done" class="card">
+                <div v-for="item in filtered._done" class="card">
                     <div class="item-actions">
                         <button @click="openConfirmDialog(item)" class="btn-red">
                             <VueUiIcon name="trash" :size="20" stroke="#ec9393"/>
@@ -713,7 +781,7 @@ const stats = computed(() => {
     .dialog-content-wrapper {
         display: flex;
         width: 100%;
-        height: calc(100% - 5rem);
+        height: calc(100% - 9.75rem);
         background: #3A3A3A;
         border-radius: 0 0.25rem 0.5rem 0.5rem;
     }
@@ -1103,5 +1171,51 @@ const stats = computed(() => {
         min-width: 0;
         overflow: hidden;
         height: fit-content;
+    }
+    .filters {
+        margin-top: 1rem;
+        display: flex;
+        align-items: end;
+        gap: 1rem;
+        border: 1px solid #4A4A4A;
+        padding: 0.25rem 0.5rem 0.5rem 0.5rem;
+        border-radius: 0.5rem;
+
+    }
+    .filters label {
+        display: flex;
+        flex-direction: column;
+        font-size: 0.8rem;
+        color: #8A8A8A;
+    }
+    .filters select,
+    .filters input {
+        padding: 0.25rem;
+        background-color: #4A4A4A;
+        color: #CCCCCC;
+        border-radius: 0.25rem;
+        border: none;
+    }
+    .reset {
+        opacity: 1;
+        border: none;
+        padding: 0;
+        height: 1.75rem;
+        width: 1.75rem;
+        padding: 0.25rem;
+        border-radius: 50%;
+        display: flex;
+        align-items:center;
+        justify-content: center;
+        background-color: #2A2A2A;
+        transition: background-color 0.2s, opacity 0.2s;
+        cursor: pointer;
+    }
+    .reset:hover {
+        background-color: #3A3A3A;
+    }
+    .reset:disabled {
+        cursor:not-allowed;
+        opacity: 0.3;
     }
 </style>
