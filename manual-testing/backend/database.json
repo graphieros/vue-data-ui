@@ -7,10 +7,17 @@
       "priority": 0,
       "author": "graphieros",
       "done": false,
-      "exchanges": [],
+      "exchanges": [
+        {
+          "author": "graphieros",
+          "comment": "Try out an #image slot in parentLabels & nameLabels using an image tag in the svg. It's very specific, but would make sense for some use cases.",
+          "id": "4300e984-1cc9-4e42-8b97-c90739dd1b80",
+          "createdAt": 1767077128316
+        }
+      ],
       "id": "2b103ff3-de84-4843-9ccd-29b88daf9393",
       "createdAt": 1767035715509,
-      "updatedAt": 1767035715509
+      "updatedAt": 1767077128316
     },
     {
       "title": "Add stats tab in todo app",

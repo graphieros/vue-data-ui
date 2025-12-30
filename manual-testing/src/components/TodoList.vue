@@ -316,7 +316,7 @@ const stats = computed(() => {
 
 <template>
     <button class="open-btn" @click="openDialog()">
-        <VueUiIcon name="legend"/>
+        <VueUiIcon name="legend" stroke="#8A8A8A"/>
         <div class="badge" v-if="toBeDone.length">
             {{ toBeDone.length }}
         </div>
@@ -414,7 +414,7 @@ const stats = computed(() => {
                                     <button @click="deleteExchange(item, exchange)" class="btn-red">
                                         <VueUiIcon name="trash" :size="20" stroke="#ec9393"/>
                                     </button>
-                                    <span>By {{ exchange.author }} | {{ exchange.createdAt }}</span>
+                                    <span>By {{ exchange.author }} | {{ new Date(exchange.createdAt).toLocaleDateString() }}</span>
                                 </div>
                                 <article>
                                     <i>
@@ -467,7 +467,7 @@ const stats = computed(() => {
                         <div class="exchanges-wrapper">
                             <div class="exchange" v-for="exchange in item.exchanges">
                                 <div class="exchange-header">                                    
-                                    <span>By {{ exchange.author }} | {{ exchange.createdAt }}</span>
+                                    <span>By {{ exchange.author }} | {{ new Date(exchange.createdAt).toLocaleDateString() }}</span>
                                 </div>
                                 <article>
                                     <i>
@@ -646,9 +646,10 @@ const stats = computed(() => {
         right: -0.25rem;
         padding: 0.3rem 0.35rem;
         border-radius: 1rem;
-        background: #d62728;
-        color: #FFF;
+        background: #7c9fef;
+        color: #1A1A1A;
         height: 1rem;
+        font-weight: bold;
         width: fit-content;
         display: flex;
         align-items:center;
