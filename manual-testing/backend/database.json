@@ -18,11 +18,11 @@
       "description": "Add some stats in a tab of the todo app. A donut with breakdown per open/closed, another per priority",
       "priority": 0,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "id": "36d9df24-93cd-4da9-a652-1bdf8efc7ed1",
       "createdAt": 1767036688923,
-      "updatedAt": 1767036688923
+      "updatedAt": 1767076725682
     },
     {
       "title": "Add filter by priority",

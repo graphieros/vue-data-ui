@@ -1,8 +1,8 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import useCrud from "../composables/useCrud";
-import { createUid } from "../../../src/lib";
-import { VueUiIcon } from "vue-data-ui";
+import { createUid, treeShake } from "../../../src/lib";
+import { VueUiDonut, VueUiIcon } from "vue-data-ui";
 
 const {
     items,
@@ -30,6 +30,12 @@ const priority = {
     0: 'Low',
     1: 'Medium',
     2: 'High'
+}
+
+const priorityColors = {
+    0: '#5f8aee',
+    1: '#ff7f0e',
+    2: '#e84242'
 }
 
 const todoTemplate = ref({
@@ -175,7 +181,136 @@ function closeDialog() {
     dialog.value && dialog.value.close();
 }
 
+function donutHasDs(d) {
+    return d.flatMap(_ => _.values).reduce((a, b) => a + b, 0) > 0
+}
+
 const currentTab = ref(0);
+
+const stats = computed(() => {
+    const _ = toBeDone.value;
+    const openPriority = Object.groupBy(toBeDone.value, item => item.priority);
+    const openAuthor = Object.groupBy(toBeDone.value, item => item.author);
+    const donePriority = Object.groupBy(done.value, item => item.priority);
+    const doneAuthor = Object.groupBy(done.value, item => item.author);
+    const commonConfig = {
+        theme: 'dark',
+        style: {
+            chart: {
+                backgroundColor: '#4A4A4A',
+                height: 330,
+                layout: {
+                    curvedMarkers: true,
+                    donut:{
+                        radiusRatio: 0.4,
+                        strokeWidth: 80
+                    }
+                },
+                legend: {
+                    backgroundColor: '#4A4A4A',
+                },
+                title: {
+                    textAlign: 'left',
+                    fontSize: 16
+                },
+                useGradient: false,
+            }
+        }
+    }
+    return {
+        priority: {
+            open: {
+                dataset: Object.keys(priority).map(key => {
+                    const items = openPriority[key] || [];
+                    return {
+                        name: priority[key],
+                        values: [items.length],
+                        color: priorityColors[key]
+                    }
+                }),
+                config: treeShake({
+                    defaultConfig: commonConfig,
+                    userConfig: {
+                        style: {
+                            chart: {
+                                title: {
+                                    text: 'Priority - Open'
+                                }
+                            }
+                        }
+                    }
+                })
+            },
+            done: {
+                dataset: Object.keys(priority).map(key => {
+                    const items = donePriority[key] || [];
+                    return {
+                        name: priority[key],
+                        values: [items.length],
+                        color: priorityColors[key]
+                    }
+                }),
+                config: treeShake({
+                    defaultConfig: commonConfig,
+                    userConfig: {
+                        style: {
+                            chart: {
+                                title: {
+                                    text: 'Priority - Done'
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        },
+        author: {
+            open: {
+                dataset: Object.keys(openAuthor).map(key => {
+                    const items = openAuthor[key] || [];
+                    return {
+                        name: key,
+                        values: [items.length],
+                    }
+                }),
+                config: treeShake({
+                    defaultConfig: commonConfig,
+                    userConfig: {
+                        style: {
+                            chart: {
+                                title: {
+                                    text: 'Authors - Open'
+                                }
+                            }
+                        }
+                    }
+                })
+            },
+            done: {
+                dataset: (Object.keys(doneAuthor)).map(key => {
+                    const items = doneAuthor[key] || [];
+                    return {
+                        name: key ?? '',
+                        values: [items.length ?? 0],
+                    }
+                }),
+                config: treeShake({
+                    defaultConfig: commonConfig,
+                    userConfig: {
+                        style: {
+                            chart: {
+                                title: {
+                                    text: 'Authors - Done'
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        }
+    }
+})
+
 
 </script>
 
@@ -202,7 +337,7 @@ const currentTab = ref(0);
         </button>
         <div class="tabs">
             <div class="tab" :style="{
-                backgroundColor: currentTab === 0 ? '#3A3A3A' : '#2A2A2A'
+                backgroundColor: currentTab === 0 ? '#3A3A3A' : '#212121'
             }">
                 <button @click="currentTab = 0" class="counter-button">
                     Open
@@ -212,13 +347,20 @@ const currentTab = ref(0);
                 </button>
             </div>
             <div class="tab" @click="currentTab = 1" :style="{
-                backgroundColor: currentTab === 1 ? '#3A3A3A' : '#2A2A2A'
+                backgroundColor: currentTab === 1 ? '#3A3A3A' : '#212121'
             }">
                 <button class="counter-button">
                     Closed
                     <div class="counter">
                         {{ done.length }}
                     </div>
+                </button>
+            </div>
+            <div class="tab" @click="currentTab = 2" :style="{
+                backgroundColor: currentTab === 2 ? '#3A3A3A' : '#212121'
+            }">
+                <button class="counter-button">
+                    Stats
                 </button>
             </div>
         </div>
@@ -336,6 +478,40 @@ const currentTab = ref(0);
                         </div>
                     </details>
                 </div>
+            </div>
+
+            <!-- STATS -->
+            <div v-if="currentTab === 2" class="card-container stats">
+                <div v-if="toBeDone.length + done.length === 0" class="empty">
+                    <VueUiIcon name="chartDonut" stroke="#7A7A7A" :size="36" />
+                    <span>No data yet</span>
+                </div>
+                <template v-else>
+                    <div class="card stat" v-if="donutHasDs(stats.priority.open.dataset)">
+                        <VueUiDonut
+                            :dataset="stats.priority.open.dataset"
+                            :config="stats.priority.open.config"
+                        />
+                    </div>
+                    <div class="card stat" v-if="donutHasDs(stats.priority.done.dataset)">
+                        <VueUiDonut
+                            :dataset="stats.priority.done.dataset"
+                            :config="stats.priority.done.config"
+                        />
+                    </div>
+                    <div class="card stat" v-if="donutHasDs(stats.author.open.dataset)">
+                        <VueUiDonut
+                            :dataset="stats.author.open.dataset"
+                            :config="stats.author.open.config"
+                        />
+                    </div>
+                    <div class="card stat" v-if="donutHasDs(stats.author.done.dataset)">
+                        <VueUiDonut
+                            :dataset="stats.author.done.dataset"
+                            :config="stats.author.done.config"
+                        />
+                    </div>
+                </template>
             </div>
         </div>
     </dialog>
@@ -907,6 +1083,20 @@ const currentTab = ref(0);
         border-radius: 0.25rem;
     }
     .exchange article {
-        color: #E1E5E8
+        color: #E1E5E8;
+    }
+    .stats {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .stat {
+        flex: 0 0 calc(50% - 8px);
+        aspect-ratio: 1 / 1;
+        min-width: 0;
+        overflow: hidden;
+        height: fit-content;
     }
 </style>
