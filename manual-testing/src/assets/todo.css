@@ -136,7 +136,7 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        height: 70vh;
+        height: 80vh;
         width: 100vw;
         max-width: 400px;
         background: #3A3A3A;
@@ -527,4 +527,11 @@
         left: 0;
         height: 100%;
         width: 3px;
+    }
+    .type-badge {
+        width: fit-content;
+        padding: 0 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.7rem;
+        font-weight: bold;
     }

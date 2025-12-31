@@ -39,6 +39,12 @@ const priorityColors = {
     2: '#e84242'
 }
 
+const typeColors = {
+    bug: '#e84242',
+    feature: '#42d392',
+    dev: '#1A1A1A'
+}
+
 const todoTemplate = ref({
     title: '',
     component: '',
@@ -47,17 +53,19 @@ const todoTemplate = ref({
     author: '',
     done: false,
     exchanges: [],
+    type: 'feature' // 'feature', 'bug', 'dev'
 });
 
 const filters = ref({
     priority: null,
     author: null,
     description: null,
-    component: null
+    component: null,
+    type: null
 });
 
 const noFilters = computed(() => {
-    return filters.value.priority == null && filters.value.author == null && filters.value.description === null && filters.value.component == null;
+    return filters.value.priority == null && filters.value.author == null && filters.value.description === null && filters.value.component == null && filters.value.type == null;
 })
 
 function resetFilter(key, all = false) {
@@ -66,7 +74,8 @@ function resetFilter(key, all = false) {
             priority: null,
             author: null,
             description: null,
-            component: null
+            component: null,
+            type: null
         }
     } else {
         filters.value[key] = null;
@@ -83,11 +92,13 @@ const filtered = computed(() => {
             .filter(el => filters.value.description ? (el.description).toUpperCase().includes(filters.value.description.toUpperCase()) : true)
             .filter(el => filters.value.author ? el.author === filters.value.author : true)
             .filter(el => ![null, '', undefined].includes(filters.value.priority) ? el.priority == filters.value.priority : true)
+            .filter(el => ![null, '', undefined].includes(filters.value.type) ? el.type == filters.value.type : true)
             .filter(el => filters.value.component ? el.component.toUpperCase().includes(filters.value.component.toUpperCase()) : true),
         _done: done.value
             .filter(el => filters.value.description ? (el.description).toUpperCase().includes(filters.value.description.toUpperCase()) : true)
             .filter(el => filters.value.author ? el.author === filters.value.author : true)
             .filter(el => ![null, '', undefined].includes(filters.value.priority) ? el.priority == filters.value.priority : true)
+            .filter(el => ![null, '', undefined].includes(filters.value.type) ? el.type == filters.value.type : true)
             .filter(el => filters.value.component ? el.component.toUpperCase().includes(filters.value.component.toUpperCase()) : true),
     }
 });
@@ -385,6 +396,15 @@ const stats = computed(() => {
         </button>
         <div class="filters">
             <label>
+                Type
+                <select v-model="filters.type">
+                    <option></option>
+                    <option>bug</option>
+                    <option>feature</option>
+                    <option>dev</option>
+                </select>
+            </label>
+            <label>
                 Priority
                 <select v-model="filters.priority">
                     <option></option>
@@ -444,6 +464,7 @@ const stats = computed(() => {
                 v-if="currentTab === 0"
                 :items="filtered._todo"
                 :priority="priority"
+                :typeColors="typeColors"
                 @openConfirmDialog="openConfirmDialog"
                 @editTodo="editTodo"
                 @openExchangeDialog="openExchangeDialog"
@@ -455,6 +476,7 @@ const stats = computed(() => {
             <DoneTodoList
                 v-if="currentTab === 1"
                 :items="filtered._done"
+                :typeColors="typeColors"
                 :priorityColors="priorityColors"
                 @openConfirmDialog="openConfirmDialog"
                 @reopenTodo="reopenTodo"
@@ -501,6 +523,24 @@ const stats = computed(() => {
             <div>{{ mode + ' - ' + pendingTodo.title }}</div>
         </header>
         <div class="todo-dialog-content">
+            <label>
+                Type
+                <div class="priority-fields" style="margin-bottom: 1rem">
+                    <div class="radio-field">
+                        <input type="radio" v-model="pendingTodo.type" value="feature" id="feature">
+                        <label for="feature">Feature</label>
+                    </div>
+                    <div class="radio-field">
+                        <input type="radio" v-model="pendingTodo.type" value="bug" id="bug">
+                        <label for="bug">Bug</label>
+                    </div>
+                    <div class="radio-field">
+                        <input type="radio" v-model="pendingTodo.type" value="dev" id="dev">
+                        <label for="dev">Dev environment</label>
+                    </div>
+                </div>
+            </label>
+
             <label class="todo-label-inline">
                 <div class="todo-label">
                     <VueUiIcon name="person" :size="18" :stroke="!pendingTodo.author ? '#e76969' : '#42d392'"/>

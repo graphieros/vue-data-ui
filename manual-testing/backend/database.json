@@ -17,6 +17,7 @@
       ],
       "id": "2b103ff3-de84-4843-9ccd-29b88daf9393",
       "createdAt": 1767035715509,
+      "type": "feature",
       "updatedAt": 1767117463133
     },
     {
@@ -29,6 +30,7 @@
       "exchanges": [],
       "id": "36d9df24-93cd-4da9-a652-1bdf8efc7ed1",
       "createdAt": 1767036688923,
+      "type": "dev",
       "updatedAt": 1767076725682
     },
     {
@@ -41,6 +43,7 @@
       "exchanges": [],
       "id": "43545a6f-c728-4d17-b5c0-a6ad3d539853",
       "createdAt": 1767037191862,
+      "type": "dev",
       "updatedAt": 1767098908436
     },
     {
@@ -60,13 +63,14 @@
       ],
       "id": "817f52c7-0ab8-4068-aeb0-49e10cbb27ac",
       "createdAt": 1767078433963,
+      "type": "bug",
       "updatedAt": 1767172522614
     },
     {
       "title": "User options cropped",
       "component": "UserOptions.vue",
       "description": "When placed inside a parent with hidden overflow, UserOptions gets cropped, making it impossible to select actions. Solution: use the popover api, and default to current behavior if not supported.",
-      "priority": 1,
+      "priority": 2,
       "author": "graphieros",
       "done": true,
       "exchanges": [
@@ -79,7 +83,21 @@
       ],
       "id": "9b075f5f-4791-4349-9a90-6ec936240ab7",
       "createdAt": 1767117444470,
-      "updatedAt": 1767172499089
+      "type": "bug",
+      "updatedAt": 1767177706324
+    },
+    {
+      "title": "qsd",
+      "component": "qsd",
+      "description": "qssd",
+      "priority": 0,
+      "author": "qsd",
+      "done": false,
+      "exchanges": [],
+      "type": "bug",
+      "id": "8d9c8552-cd6c-408c-a332-c0cc8751badd",
+      "createdAt": 1767178556910,
+      "updatedAt": 1767178556910
     }
   ]
 }

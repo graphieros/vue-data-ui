@@ -11,6 +11,9 @@ const props = defineProps({
     },
     priority: {
         type: Object,
+    },
+    typeColors: {
+        type: Object
     }
 });
 
@@ -45,6 +48,11 @@ const emit = defineEmits([
                     <VueUiIcon name="check" :size="20" stroke="#42d392"/>
                 </button>
             </div>
+
+            <div class="type-badge" :style="{
+                backgroundColor: typeColors[item.type],
+                color: item.type === 'feature' ? '#1A1A1A' : '#FFFFFF'
+            }">{{ item.type.toUpperCase() }}</div>
 
             <div class="item-title">{{ item.title }}</div>
             <div class="item-priority">
