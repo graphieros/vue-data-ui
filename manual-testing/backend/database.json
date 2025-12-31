@@ -85,19 +85,6 @@
       "createdAt": 1767117444470,
       "type": "bug",
       "updatedAt": 1767177706324
-    },
-    {
-      "title": "qsd",
-      "component": "qsd",
-      "description": "qssd",
-      "priority": 0,
-      "author": "qsd",
-      "done": false,
-      "exchanges": [],
-      "type": "bug",
-      "id": "8d9c8552-cd6c-408c-a332-c0cc8751badd",
-      "createdAt": 1767178556910,
-      "updatedAt": 1767178556910
     }
   ]
 }
