@@ -297,6 +297,9 @@ function getIconPath(name, { stroke, strokeWidth }) {
         magnify: `<path d="M 8 1 A 1 1 0 0 0 8 15 A 1 1 0 0 0 8 1 M 12.95 12.95 L 19 19" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
         frameLine: `<path d="M 1 1 L 19 1 L 19 19 L 1 19 L 1 1 M 4 13 L 7 16 L 10 8 L 13 14 L 16 4" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
         pointer: `<path d="M 2 2 L 7.015 17.998 L 9.611 11.614 L 16 18 L 18 16 L 11.486 9.595 L 18.302 7.431 L 2 2" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        monument: `<path d="M 2 6 L 18 6 C 19 6 19 8 18 8 L 2 8 C 1 8 1 6 2 6 M 4 6 L 10 1 L 16 6 M 2 17 L 18 17 M 3 8 L 3 17 M 5 8 L 5 17 M 17 8 L 17 17 M 15 8 L 15 17 M 9 8 L 9 17 M 11 8 L 11 17 M 1 19 L 19 19" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        spark: `<path d="M 10 1 C 8 8 8 8 1 10 C 8 12 8 12 10 19 C 12 12 12 12 19 10 C 12 8 12 8 10 1" fill="${stroke}" stroke="none"/>`,
+        doubleSpark: `<path d="M 1 13 C 6 12 6 12 7 7 C 8 12 8 12 13 13 C 8 14 8 14 7 19 C 6 14 6 14 1 13 M 15 1 C 14.486 4.478 14.486 4.478 11 5 C 14.505 5.505 14.499 5.505 15 9 C 15.513 5.511 15.513 5.505 19 5 C 15.526 4.497 15.52 4.49 15 1" fill="${stroke}" stroke="none"/>`,
     };
 
     return map[name] || '';
