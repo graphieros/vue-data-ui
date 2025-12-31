@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import useCrud from "../composables/useCrud";
 import { createUid, treeShake } from "../../../src/lib";
-import { VueUiDonut, VueUiIcon } from "vue-data-ui";
+import { VueUiDonut, VueUiHorizontalBar, VueUiIcon } from "vue-data-ui";
 import PendingTodoList from "./PendingTodoList.vue";
 import DoneTodoList from "./DoneTodoList.vue";
 
@@ -240,6 +240,10 @@ function donutHasDs(d) {
     return d.flatMap(_ => _.values).reduce((a, b) => a + b, 0) > 0
 }
 
+function barHasDs(d) {
+    return d.map(_ => _.value).reduce((a, b) => a + b, 0) > 0
+}
+
 const currentTab = ref(0);
 
 const stats = computed(() => {
@@ -248,7 +252,9 @@ const stats = computed(() => {
     const openAuthor = Object.groupBy(toBeDone.value, item => item.author);
     const donePriority = Object.groupBy(done.value, item => item.priority);
     const doneAuthor = Object.groupBy(done.value, item => item.author);
-    const commonConfig = {
+    const openType = Object.groupBy(toBeDone.value, item => item.type);
+    const doneType = Object.groupBy(done.value, item => item.type);
+    const commonConfigDonut = {
         theme: 'dark',
         userOptions: { show: false },
         style: {
@@ -264,10 +270,6 @@ const stats = computed(() => {
                 legend: {
                     backgroundColor: '#4A4A4A',
                 },
-                title: {
-                    textAlign: 'left',
-                    fontSize: 16
-                },
                 tooltip: {
                     teleportTo: '#mainDialog',
                     backgroundColor: '#3A3A3A'
@@ -276,7 +278,66 @@ const stats = computed(() => {
             }
         }
     }
+
+    const commonConfigBar = {
+        theme: 'dark',
+        userOptions: { show: false },
+        style: {
+            chart: {
+                backgroundColor: '#4A4A4A',
+                height: 180,
+                layout: {
+                    bars: {
+                        gap: 12,
+                        useGradient: false,
+                        dataLabels: {
+                            offsetX: 12,
+                            fontSize: 18,
+                        },
+                        nameLabels: {
+                            offsetX: -12,
+                            fontSize: 18,
+                        }
+                    }
+                },
+                legend: {
+                    show: false,
+                    backgroundColor: '#4A4A4A',
+                    position: 'bottom'
+                },
+                tooltip: {
+                    teleportTo: '#mainDialog',
+                    backgroundColor: '#3A3A3A'
+                },
+            }
+        }
+    }
+
     return {
+        type: {
+            open: {
+                dataset: ['bug', 'feature', 'dev'].map(key => {
+                    const items = openType[key] || [];
+                    return {
+                        name: key,
+                        value: items.length,
+                        color: typeColors[key]
+                    }
+                }),
+                config: commonConfigBar
+            },
+            done: {
+                dataset: ['bug', 'feature', 'dev'].map(key => {
+                    const items = doneType[key] || [];
+                    return {
+                        name: key,
+                        value: items.length,
+                        color: typeColors[key]
+                    }
+                }),
+                config: commonConfigBar
+            }
+        },
         priority: {
             open: {
                 dataset: Object.keys(priority).map(key => {
@@ -287,18 +348,7 @@ const stats = computed(() => {
                         color: priorityColors[key]
                     }
                 }),
-                config: treeShake({
-                    defaultConfig: commonConfig,
-                    userConfig: {
-                        style: {
-                            chart: {
-                                title: {
-                                    text: 'Priority - Open'
-                                }
-                            }
-                        }
-                    }
-                })
+                config: commonConfigDonut
             },
             done: {
                 dataset: Object.keys(priority).map(key => {
@@ -309,18 +359,7 @@ const stats = computed(() => {
                         color: priorityColors[key]
                     }
                 }),
-                config: treeShake({
-                    defaultConfig: commonConfig,
-                    userConfig: {
-                        style: {
-                            chart: {
-                                title: {
-                                    text: 'Priority - Done'
-                                }
-                            }
-                        }
-                    }
-                })
+                config: commonConfigDonut
             }
         },
         author: {
@@ -332,18 +371,7 @@ const stats = computed(() => {
                         values: [items.length],
                     }
                 }),
-                config: treeShake({
-                    defaultConfig: commonConfig,
-                    userConfig: {
-                        style: {
-                            chart: {
-                                title: {
-                                    text: 'Authors - Open'
-                                }
-                            }
-                        }
-                    }
-                })
+                config: commonConfigDonut
             },
             done: {
                 dataset: (Object.keys(doneAuthor)).map(key => {
@@ -353,18 +381,7 @@ const stats = computed(() => {
                         values: [items.length ?? 0],
                     }
                 }),
-                config: treeShake({
-                    defaultConfig: commonConfig,
-                    userConfig: {
-                        style: {
-                            chart: {
-                                title: {
-                                    text: 'Authors - Done'
-                                }
-                            }
-                        }
-                    }
-                })
+                config: commonConfigDonut
             }
         }
     }
@@ -490,24 +507,47 @@ const stats = computed(() => {
                 </div>
                 <template v-else>
                     <div class="card stat" v-if="donutHasDs(stats.priority.open.dataset)">
+                        <div class="card-title">Priority - Open</div>
                         <VueUiDonut
                             :dataset="stats.priority.open.dataset"
                             :config="stats.priority.open.config"
                         />
                     </div>
+                    <div class="card stat" v-if="barHasDs(stats.type.open.dataset)">
+                        <div class="card-title">Type - Open</div>
+                        <div class="card-flex">
+                            <VueUiHorizontalBar
+                                :dataset="stats.type.open.dataset"
+                                :config="stats.type.open.config"
+                            />
+                        </div>
+                    </div>
                     <div class="card stat" v-if="donutHasDs(stats.priority.done.dataset)">
+                        <div class="card-title">Priority - Closed</div>
                         <VueUiDonut
                             :dataset="stats.priority.done.dataset"
                             :config="stats.priority.done.config"
                         />
                     </div>
+
+                    <div class="card stat" v-if="barHasDs(stats.type.done.dataset)">
+                        <div class="card-title">Type - Closed</div>
+                        <div class="card-flex">
+                            <VueUiHorizontalBar
+                                :dataset="stats.type.done.dataset"
+                                :config="stats.type.done.config"
+                            />
+                        </div>
+                    </div>
                     <div class="card stat" v-if="donutHasDs(stats.author.open.dataset)">
+                        <div class="card-title">Authors - Open</div>
                         <VueUiDonut
                             :dataset="stats.author.open.dataset"
                             :config="stats.author.open.config"
                         />
                     </div>
                     <div class="card stat" v-if="donutHasDs(stats.author.done.dataset)">
+                        <div class="card-title">Authors - Closed</div>
                         <VueUiDonut
                             :dataset="stats.author.done.dataset"
                             :config="stats.author.done.config"

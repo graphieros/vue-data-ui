@@ -535,3 +535,13 @@
         font-size: 0.7rem;
         font-weight: bold;
     }
+    .card-title {
+        color: #CCCCCC;
+        font-size: 1rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+    .card-flex {
+        padding-top: 18%;
+        margin-top: 2rem;
+    }
