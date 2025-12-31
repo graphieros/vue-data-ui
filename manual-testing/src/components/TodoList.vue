@@ -455,6 +455,7 @@ const stats = computed(() => {
             <DoneTodoList
                 v-if="currentTab === 1"
                 :items="filtered._done"
+                :priorityColors="priorityColors"
                 @openConfirmDialog="openConfirmDialog"
                 @reopenTodo="reopenTodo"
             />
