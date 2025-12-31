@@ -58,27 +58,14 @@
     {
       "title": "User options cropped",
       "component": "UserOptions.vue",
-      "description": "When placed inside a parent with hidden overflow, UserOptions gets cropped, making it impossible to select actions.",
+      "description": "When placed inside a parent with hidden overflow, UserOptions gets cropped, making it impossible to select actions. Solution: use the popover api, and default to current behavior if not supported.",
       "priority": 1,
       "author": "graphieros",
-      "done": false,
-      "exchanges": [
-        {
-          "author": "graphieros",
-          "comment": "Option 1: teleport. Comes with problems related to anchoring in all container setup scenarios.",
-          "id": "dd0fa3ae-91f3-4a8b-a649-c29a694bc6e2",
-          "createdAt": 1767117865818
-        },
-        {
-          "author": "graphieros",
-          "comment": "Option 2: wrap icons on several columns. In this scenario, the tooltip behavior needs a solution.",
-          "id": "996cd6ae-6c60-47dd-8614-9bfcb56d793f",
-          "createdAt": 1767117949418
-        }
-      ],
+      "done": true,
+      "exchanges": [],
       "id": "9b075f5f-4791-4349-9a90-6ec936240ab7",
       "createdAt": 1767117444470,
-      "updatedAt": 1767117949418
+      "updatedAt": 1767170097288
     }
   ]
 }
