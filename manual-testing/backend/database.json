@@ -50,10 +50,17 @@
       "priority": 2,
       "author": "graphieros",
       "done": true,
-      "exchanges": [],
+      "exchanges": [
+        {
+          "author": "graphieros",
+          "comment": "Fixed in 3.9.21",
+          "id": "a2cb81b3-1525-4f58-ac4d-c2d0a9b7061a",
+          "createdAt": 1767172521830
+        }
+      ],
       "id": "817f52c7-0ab8-4068-aeb0-49e10cbb27ac",
       "createdAt": 1767078433963,
-      "updatedAt": 1767086431392
+      "updatedAt": 1767172522614
     },
     {
       "title": "User options cropped",
@@ -62,10 +69,17 @@
       "priority": 1,
       "author": "graphieros",
       "done": true,
-      "exchanges": [],
+      "exchanges": [
+        {
+          "author": "graphieros",
+          "comment": "Fixed in 3.9.22",
+          "id": "386f7927-5e9c-464e-a4e1-1ab5119d5627",
+          "createdAt": 1767172494542
+        }
+      ],
       "id": "9b075f5f-4791-4349-9a90-6ec936240ab7",
       "createdAt": 1767117444470,
-      "updatedAt": 1767170097288
+      "updatedAt": 1767172499089
     }
   ]
 }
