@@ -83,7 +83,7 @@ function resetFilter(key, all = false) {
 }
 
 const authors = computed(() => {
-    return ['', ...new Set(...[items.value.map(n => n.author)])]
+    return new Set(...[items.value.map(n => n.author)])
 });
 
 const filtered = computed(() => {
@@ -415,7 +415,7 @@ const stats = computed(() => {
             <label>
                 Type
                 <select v-model="filters.type">
-                    <option></option>
+                    <option :value="null">All</option>
                     <option>bug</option>
                     <option>feature</option>
                     <option>dev</option>
@@ -424,23 +424,26 @@ const stats = computed(() => {
             <label>
                 Priority
                 <select v-model="filters.priority">
-                    <option></option>
+                    <option :value="null">All</option>
                     <option v-for="p in Object.keys(priority)" :value="p">{{ priority[p] }}</option>
                 </select>
             </label>
             <label>
                 Author
                 <select v-model="filters.author">
+                    <option :value="null">all</option>
                     <option v-for="author in authors">{{ author }}</option>
                 </select>
             </label>
-            <label>
+            <label class="search-input-wrapper">
                 Component
-                <input v-model="filters.component">
+                <VueUiIcon name="magnify" class="search-icon" :size="15" stroke="#9A9A9A"/>
+                <input v-model="filters.component" class="search-input" placeholder="...">
             </label>
-            <label>
+            <label class="search-input-wrapper">
                 Description
-                <input v-model="filters.description">
+                <VueUiIcon name="magnify" class="search-icon" :size="15" stroke="#9A9A9A"/>
+                <input v-model="filters.description" class="search-input" placeholder="...">
             </label>
             <button class="reset" @click="resetFilter(null, true)" :disabled="noFilters">
                 <VueUiIcon name="revert" stroke="#e76969"/>

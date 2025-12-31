@@ -545,3 +545,17 @@
         padding-top: 18%;
         margin-top: 2rem;
     }
+    .search-input-wrapper {
+        position: relative;
+    }
+    .search-input {
+        padding-left: 1.5rem !important;
+    }
+    .search-input::placeholder {
+        color: #CCCCCC;
+    }
+    .search-icon {
+        position: absolute;
+        bottom: 0.25rem;
+        left: 0.25rem;
+    }
