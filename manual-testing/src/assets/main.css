@@ -17,10 +17,16 @@ body {
   display: grid;
   grid-template-columns: 300px 1fr;
   padding: 0 2rem;
+  cursor: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'>\
+  <g transform='rotate(20 10 10)'>\
+    <path d='M 2 2 L 7.015 17.998 L 9.611 11.614 L 16 18 L 18 16 L 11.486 9.595 L 18.302 7.431 L 2 2' fill='black' stroke='rgb(117, 230, 179)'/>\
+  </g>\
+</svg>") 2 2, auto;
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, #42d392, #5f8aee);
+  background: linear-gradient(90deg, rgb(66, 211, 146), #5f8aee);
   background-size: 100% 100%;
   background-repeat: no-repeat;
   -webkit-background-clip: text;
