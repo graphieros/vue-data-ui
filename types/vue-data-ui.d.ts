@@ -1529,6 +1529,7 @@ declare module "vue-data-ui" {
         | "legend"
         | "lineUp"
         | "lock"
+        | "magnify"
         | "menu"
         | "minimap"
         | "minus"

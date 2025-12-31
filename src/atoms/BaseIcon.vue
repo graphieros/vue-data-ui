@@ -294,6 +294,7 @@ function getIconPath(name, { stroke, strokeWidth }) {
         spinner2: `<path d="M 10 1 A 1 1 0 0 0 10 19 M -3 0" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
         spinner3: `<path d="M 10 1 L 10 4 M 1 10 L 4 10 M 10 19 L 10 16 M 19 10 L 16 10" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
         spinner4: `<path d="M 10 1 L 10 2 M 1 10 L 2 10 M 10 19 L 10 18 M 19 10 L 18 10" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+        magnify: `<path d="M 8 1 A 1 1 0 0 0 8 15 A 1 1 0 0 0 8 1 M 12.95 12.95 L 19 19" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
     };
 
     return map[name] || '';
