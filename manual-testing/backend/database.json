@@ -85,6 +85,19 @@
       "createdAt": 1767117444470,
       "type": "bug",
       "updatedAt": 1767177706324
+    },
+    {
+      "title": "Bump chart",
+      "component": "VueUiBump",
+      "description": "Create a bump chart",
+      "priority": 0,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "feature",
+      "id": "36df6443-e204-495c-8d74-a70e147397cd",
+      "createdAt": 1767245054032,
+      "updatedAt": 1767245054032
     }
   ]
 }
