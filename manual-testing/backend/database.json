@@ -92,7 +92,7 @@
       "description": "Create a bump chart",
       "priority": 0,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [
         {
           "author": "graphieros",
@@ -104,7 +104,7 @@
       "type": "feature",
       "id": "36df6443-e204-495c-8d74-a70e147397cd",
       "createdAt": 1767245054032,
-      "updatedAt": 1767263333552
+      "updatedAt": 1767377554990
     },
     {
       "title": "Add scoped slots for data tables",
