@@ -88,16 +88,36 @@
     },
     {
       "title": "Bump chart",
-      "component": "VueUiBump",
+      "component": "vue-ui-bump.vue",
       "description": "Create a bump chart",
+      "priority": 0,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [
+        {
+          "author": "graphieros",
+          "comment": "Features: start & end labels; display rank in markers; highlight series on hover; no tooltip;",
+          "id": "a19948c7-df64-40c9-98f3-525b5c9cf14e",
+          "createdAt": 1767263333551
+        }
+      ],
+      "type": "feature",
+      "id": "36df6443-e204-495c-8d74-a70e147397cd",
+      "createdAt": 1767245054032,
+      "updatedAt": 1767263333552
+    },
+    {
+      "title": "Add scoped slots for data tables",
+      "component": "All components with built-in tables",
+      "description": "Add #data-table-th and #data-table-td scoped slots where DataTable.vue is used",
       "priority": 0,
       "author": "graphieros",
       "done": false,
       "exchanges": [],
       "type": "feature",
-      "id": "36df6443-e204-495c-8d74-a70e147397cd",
-      "createdAt": 1767245054032,
-      "updatedAt": 1767245054032
+      "id": "4592ae44-f2ad-4ee4-8604-fe40c6369f25",
+      "createdAt": 1767291561889,
+      "updatedAt": 1767291561889
     }
   ]
 }

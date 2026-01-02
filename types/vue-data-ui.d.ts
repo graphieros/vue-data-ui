@@ -68,7 +68,8 @@ declare module "vue-data-ui" {
         | VueUiChordDataset
         | VueUiStacklineDatasetItem[]
         | VueUiDagDataset
-        | VueUiGeoDatasetItem[];
+        | VueUiGeoDatasetItem[]
+        | VueUiBumpDatasetItem[];
 
     export type VueDataUiAnyConfig =
         | VueUi3dBarConfig
@@ -133,7 +134,8 @@ declare module "vue-data-ui" {
         | VueUiChordConfig
         | VueUiStacklineConfig
         | VueUiDagConfig
-        | VueUiGeoConfig;
+        | VueUiGeoConfig
+        | VueUiBumpConfig;
 
     export type VueDataUiProps = {
         loader?: VueDataUiLoader | null;
@@ -147,6 +149,7 @@ declare module "vue-data-ui" {
         getImage?: (options?: { scale?: number }) => Promise<any>;
         generateCsv?: () => void;
         generateImage?: () => void;
+        generateSvg(): () => void;
         generatePdf?: () => void;
         toggleAnnotator?: () => void;
         toggleFullscreen?: () => void;
@@ -220,6 +223,7 @@ declare module "vue-data-ui" {
     export type VueUiSparkHistogramEvent = ChartEvent<VueUiSparkHistogramDatasetItem>;
     export type VueUiChordEvent = ChartEvent<VueUiChordDatapointArc | VueUiChordDatapointRibbon>;
     export type VueUiParallelCoordinatePlotEvent = ChartEvent<VueUiParallelCoordinatePlotEventDatapoint>;
+    export type VueUiBumpEvent = ChartEvent<VueUiBumpDatapoint>;
 
     export type VueUiConfigNumberString = `${number}`;
 
@@ -641,6 +645,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         generatePdf(): void
         toggleTable(): void
         toggleTooltip(): void
@@ -814,6 +819,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleTable(): void
         toggleTooltip(): void
         toggleAnnotator(): void
@@ -1097,6 +1103,7 @@ declare module "vue-data-ui" {
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleTooltip(): void
         toggleLabels(): void
@@ -1245,6 +1252,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
+        generateSvg(): void
         generateImage(): void
         toggleTable(): void
         toggleAnnotator(): void
@@ -1369,6 +1377,7 @@ declare module "vue-data-ui" {
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
@@ -1410,6 +1419,7 @@ declare module "vue-data-ui" {
         | "chartAgePyramid"
         | "chartBar"
         | "chartBullet"
+        | "chartBump"
         | "chartCandlestick"
         | "chartChestnut"
         | "chartChord"
@@ -1812,6 +1822,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         generatePdf(): void
         toggleAnnotator(): void
         toggleTable(): void
@@ -1885,6 +1896,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
     }
@@ -1967,6 +1979,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
     }
@@ -2108,6 +2121,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleTable(): void
         toggleTooltip(): void
         toggleAnnotator(): void
@@ -2424,6 +2438,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
     }
@@ -2515,6 +2530,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateImage(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
     }
@@ -2910,6 +2926,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleTable(): void
         toggleAnnotator(): void
         toggleTooltip(): void
@@ -3107,6 +3124,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleTable(): void
         toggleAnnotator(): void
         toggleTooltip(): void
@@ -3358,6 +3376,7 @@ declare module "vue-data-ui" {
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleTooltip(): void
         toggleAnnotator(): void
@@ -3543,6 +3562,7 @@ declare module "vue-data-ui" {
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleTooltip(): void
         toggleAnnotator(): void
@@ -3973,6 +3993,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
         toggleLabels(): void
@@ -4210,6 +4231,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
         toggleLabels(): void
@@ -4430,6 +4452,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
         toggleLabels(): void
@@ -4594,6 +4617,7 @@ declare module "vue-data-ui" {
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
         toggleTable(): void
@@ -4766,6 +4790,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         toggleTable(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleTooltip(): void
         toggleFullscreen(): void
@@ -4969,6 +4994,7 @@ declare module "vue-data-ui" {
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleLabels(): void
         toggleTooltip(): void
@@ -5097,6 +5123,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
     }
@@ -5316,6 +5343,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         generatePdf(): void
         toggleTable(): void
         toggleAnnotator(): void
@@ -5491,6 +5519,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleTooltip(): void
         toggleTable(): void
@@ -5696,6 +5725,7 @@ declare module "vue-data-ui" {
         recalculateHeight(): void,
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         generatePdf(): void
         toggleTable(): void
         toggleSort(): void
@@ -6662,6 +6692,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
         toggleTooltip(): void
@@ -6940,6 +6971,7 @@ declare module "vue-data-ui" {
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleTooltip(): void
         toggleLabels(): void
@@ -7141,6 +7173,7 @@ declare module "vue-data-ui" {
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
@@ -7259,6 +7292,7 @@ declare module "vue-data-ui" {
         generatePdf(): void
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleTooltip(): void
         toggleAnnotator(): void
@@ -7486,6 +7520,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleTable(): void
         toggleAnnotator(): void
         toggleLabels(): void
@@ -7666,6 +7701,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generatePdf(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleLabels(): void
         toggleTooltip(): void
@@ -7857,6 +7893,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generatePdf(): void
         generateImage(): void
+        generateSvg(): void
         toggleTable(): void
         toggleLabels(): void
         toggleSort(): void
@@ -8292,6 +8329,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleTable(): void
         toggleLabels(): void
@@ -8537,6 +8575,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         generatePdf(): void
         toggleAnnotator(): void
         toggleTable(): void
@@ -8655,6 +8694,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
     }
@@ -8765,6 +8805,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         generatePdf(): void
         toggleAnnotator(): void
         toggleTable(): void
@@ -8998,6 +9039,7 @@ declare module "vue-data-ui" {
         generateCsv(): void
         generateImage(): void
         generatePdf(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleTooltip(): void
         toggleTable(): void
@@ -9110,6 +9152,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         generatePdf(): void
         toggleTable(): void
         toggleAnnotator(): void
@@ -9240,6 +9283,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateCsv(): void
+        generateSvg(): void
         generateImage(): void
         toggleTable(): void
         toggleTooltip(): void
@@ -9436,6 +9480,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generateCsv(): void
         generateImage(): void
+        generateSvg(): void
         generatePdf(): void
         toggleAnnotator(): void
         toggleTable(): void
@@ -9589,6 +9634,7 @@ declare module "vue-data-ui" {
         }>
         getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
+        generateSvg(): void
         generateCsv(): void
         generateImage(): void
         toggleTable(): void
@@ -9724,6 +9770,7 @@ declare module "vue-data-ui" {
         }>
         getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
+        generateSvg(): void
         generateImage(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
@@ -9913,6 +9960,7 @@ declare module "vue-data-ui" {
         getImage(options?: { scale?: number }): GetImagePromise
         generatePdf(): void
         generateImage(): void
+        generateSvg(): void
         toggleAnnotator(): void
         toggleFullscreen(): void
         zoomIn(): void
@@ -9930,7 +9978,162 @@ declare module "vue-data-ui" {
             dataset?: VueUiGeoDatasetItem[]
         },
         VueUiGeoExpose
-    >    
+    >
+
+    export type VueUiBumpDatasetItem = {
+        [key: string]: any;
+        name: string;
+        values: Array<number | null>;
+        color?: string;
+    }
+
+    export type VueUiBumpDatapoint = {
+        [key: string]: any;
+        color: string;
+        displayValue: string;
+        id: string;
+        labelColor: string;
+        name: string;
+        pointIndex: string;
+        rank: number;
+        value: number;
+        x: number;
+        y: number;
+    }
+
+    export type VueUiBumpConfig = {
+        loading?: boolean;
+        debug?: boolean;
+        responsive?: boolean;
+        theme?: Theme;
+        customPalette?: string[];
+        useCssAnimation?: boolean;
+        events?: {
+            datapointEnter?: VueUiBumpEvent;
+            datapointLeave?: VueUiBumpEvent;
+            datapointClick?: VueUiBumpEvent;
+        };
+        userOptions?: ChartUserOptions;
+        table?: {
+            show?: boolean;
+            useDialog?: boolean;
+            responsiveBreakpoint?: number;
+            columnNames?: {
+                series?: string;
+                period?: string;
+                values?: string;
+                ranking?: string;
+            };
+            th: ChartTableCell;
+            td: ChartTableCell & {
+                roundingValue?: number;
+            };
+        };
+        style?: {
+            fontFamily?: string;
+            chart?: {
+                backgroundColor?: string;
+                color?: string;
+                width?: number;
+                height?: number;
+                layout?: {
+                    timeLabels?: {
+                        show?: boolean;
+                        values?: Array<string | number>;
+                        datetimeFormatter?: AxisDateFormatter;
+                        offsetY?: number;
+                        rotation?: number;
+                        autoRotate?: {
+                            enable?: boolean;
+                            angle?: number;
+                        };
+                        fontSize?: number;
+                        color?: string;
+                        bold?: boolean;
+                        showOnlyFirstAndLast?: boolean;
+                        showOnlyAtModulo?: boolean;
+                        modulo?: number;
+                    };
+                    lines?: {
+                        smooth?: boolean;
+                        strokeWidth?: number;
+                        coatingColor?: string;
+                    };
+                    plots?: {
+                        stroke?: string;
+                        strokeWidth?: number;
+                        radius?: number;
+                        labels?: {
+                            color?: 'auto' | string;
+                            show?: boolean;
+                            bold?: boolean;
+                            displayedValue?: 'value' | 'rank';
+                            fontSize?: number;
+                            prefix?: string;
+                            suffix?: string;
+                            rounding?: number;
+                            formatter?: Formatter;
+                        };
+                    };
+                    nameLabels?: {
+                        fontSize?: number;
+                        color?: string;
+                        useSerieColor?: boolean;
+                        bold?: boolean;
+                        offsetX?: number;
+                        leftLabels?: {
+                            show?: boolean;
+                        };
+                        rightLabels?: {
+                            show?: boolean;
+                        };
+                    };
+                };
+                title?: ChartTitle;
+                padding?: ChartPadding;
+            }
+        }
+    }
+
+    export type VueUiBumpExpose = {
+        getData(): Promise<Array<{
+            [key: string]: any;
+            absoluteIndex: number;
+            color: string;
+            coordinates: Array<{
+                color: string;
+                displayValue: string;
+                id: string;
+                labelColor: string;
+                name: string;
+                rank: number;
+                value: number | null;
+                x: number;
+                y: number;
+            }>;
+            id: string;
+            name: string;
+            path: string;
+            positions: Array<number | null>;
+            values: Array<number | null>;
+        }>>
+        getImage(options?: { scale?: number }): GetImagePromise
+        generateCsv(): void
+        generateSvg(): void
+        generateImage(): void
+        generatePdf(): void
+        toggleAnnotator(): void
+        toggleTable(): void
+        toggleFullscreen(): void
+    }
+
+    export const VueUiBump: DefineComponent<
+        {
+            config?: VueUiBumpConfig;
+            dataset: VueUiBumpDatasetItem[];
+        }, 
+        VueUiBumpExpose
+    >;
 
     export type VueDataUiConfig =
         | VueUi3dBarConfig
@@ -9997,7 +10200,8 @@ declare module "vue-data-ui" {
         | VueUiChordConfig
         | VueUiStacklineConfig
         | VueUiDagConfig
-        | VueUiGeoConfig;
+        | VueUiGeoConfig
+        | VueUiBumpConfig;
 
     export type VueDataUiConfigKey =
         | "vue_ui_3d_bar"
@@ -10064,7 +10268,8 @@ declare module "vue-data-ui" {
         | "vue_ui_chord"
         | "vue_ui_stackline"
         | "vue_ui_dag"
-        | "vue_ui_geo";
+        | "vue_ui_geo"
+        | "vue_ui_bump";
 
     export type VueDataUiWordCloudTransformCallback =
         | ((word: string) => string)

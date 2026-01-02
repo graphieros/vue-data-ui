@@ -6,6 +6,27 @@
  */
 export const components = [
     {
+        name: 'VueUiBump',
+        dataset: [
+            { name: 'A', values: [1, 2, 3] },
+            { name: 'B', values: [2, 3, 1] },
+            { name: 'C', values: [3, 1, 2] },
+        ],
+        config: {
+            style: {
+                chart: {
+                    title: {
+                        text: 'Title',
+                        subtitle: {
+                            text: 'Subtitle'
+                        }
+                    }
+                }
+            }
+        },
+        wrapperClass: '.vue-ui-bump'
+    },
+    {
         name: 'VueUiGeo',
         dataset: [],
         config: {

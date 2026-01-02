@@ -7014,6 +7014,114 @@ export function useConfig() {
         },
     }
 
+    const vue_ui_bump = {
+        loading: false,
+        debug: false,
+        responsive: false,
+        theme: '',
+        customPalette: [],
+        useCssAnimation: false,
+        events: {
+            datapointEnter: null,
+            datapointLeave: null,
+            datapointClick: null,
+        },
+        userOptions: USER_OPTIONS({
+            tooltip: false,
+            pdf: true,
+            csv: true,
+            img: true,
+            svg: true,
+            table: true,
+            labels: false,
+            fullscreen: true,
+            sort: false,
+            stack: false,
+            animation: false,
+            annotator: true,
+            zoom: false,
+        }),
+        table: {
+            ...TABLE,
+            useDialog: false,
+            columnNames: {
+                series: 'Series',
+                period: 'Period',
+                values: 'Values',
+                ranking: 'Ranking'
+            },
+            th: TABLE_TH,
+            td: {
+                ...TABLE_TD,
+                roundingValue: 0
+            },
+        },
+        style: {
+            fontFamily: 'inherit',
+            chart: {
+                backgroundColor: COLOR_WHITE,
+                color: COLOR_BLACK,
+                height: 500,
+                width: 800,
+                layout: {
+                    timeLabels: {
+                        show: true,
+                        values: [],
+                        datetimeFormatter: AXIS_DATE_FORMATTER,
+                        offsetY: 0,
+                        rotation: 0,
+                        autoRotate: {
+                            enable: true,
+                            angle: -30
+                        },
+                        fontSize: FONT._14,
+                        color: COLOR_BLACK,
+                        bold: false,
+                        showOnlyFirstAndLast: false,
+                        showOnlyAtModulo: false,
+                        modulo: 12
+                    },
+                    lines: {
+                        smooth: true,
+                        strokeWidth: 4,
+                        coatingColor: COLOR_WHITE
+                    },
+                    plots: {
+                        stroke: COLOR_WHITE,
+                        strokeWidth: 1,
+                        radius: 12,
+                        labels: {
+                            color: 'auto',
+                            show: true,
+                            bold: true,
+                            displayedValue: 'value', // 'rank' | 'value'
+                            fontSize: FONT._12,
+                            prefix: '',
+                            suffix: '',
+                            rounding: 0,
+                            formatter: null
+                        }
+                    },
+                    nameLabels: {
+                        fontSize: FONT._14,
+                        color: COLOR_BLACK,
+                        useSerieColor: false,
+                        bold: false,
+                        offsetX: 0,
+                        leftLabels: {
+                            show: true,
+                        },
+                        rightLabels: {
+                            show: true
+                        }
+                    }
+                },
+                padding: PADDING([12, 12, 12, 12]),
+                title: TITLE,
+            }
+        }
+    }
+
     return {
         vue_ui_xy,
         vue_ui_donut,
@@ -7069,6 +7177,7 @@ export function useConfig() {
         vue_ui_stackline,
         vue_ui_dag,
         vue_ui_geo,
+        vue_ui_bump,
         // non chart components
         vue_ui_cursor,
         vue_ui_accordion,

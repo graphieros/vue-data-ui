@@ -8,7 +8,7 @@
 # vue-data-ui
 
 [![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
-[![Static Badge](https://img.shields.io/badge/components-66-blue)](https://github.com/graphieros/vue-data-ui)
+[![Static Badge](https://img.shields.io/badge/components-67-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
@@ -24,6 +24,7 @@ Available components
 ## Charts
 
 - [VueUiAgePyramid](https://vue-data-ui.graphieros.com/docs#vue-ui-age-pyramid)
+- [VueUiBump](https://vue-data-ui.graphieros.com/docs#vue-ui-bump)
 - [VueUiCandlestick](https://vue-data-ui.graphieros.com/docs#vue-ui-candlestick)
 - [VueUiChestnut](https://vue-data-ui.graphieros.com/docs#vue-ui-chestnut)
 - [VueUiChord](https://vue-data-ui.graphieros.com/docs#vue-ui-chord)
@@ -452,6 +453,7 @@ From the dataset you pass into the props, this component will produce the most a
 | Name                          | dataset type                               | config type                         | emits / exposed methods                                                                                                                                                                                                  | slots                                                                                                                                                                                    | custom tooltip | themes |
 | ----------------------------- | ------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------ |
 | `VueUiAgePyramid`             | `Array<Array<string / number>>`            | `VueUiSparklineConfig`              | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`, `getImage`                                                                                                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#watermark`, `#chart-background`                                                                                                | ✅             | ✅     |
+| `VueUiBump`                   | `VueUiBumpDatapointItem[]`                 | `VueUiBumpConfig`                   | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `getData`, `getImage`                                                                                                                                      | `#svg`, `#watermark`, `#chart-background`, `#time-label`                                                                                                                                 | ❌             | ✅     |
 | `VueUiCandlestick`            | `Array<Array<string / number>>`            | `VueUiCandlestickConfig`            | `generatePdf`, `generateImage`, `generateCsv`, `toggleTable`, `toggleTooltip`, `getImage`                                                                                                                                | `#svg`, `#legend`, `#tooltip-before`, `#tooltip-after`, `#reset-action`, `#watermark`, `#chart-background`                                                                               | ✅             | ✅     |
 | `VueUiChestnut`               | `VueUiChestnutDatasetRoot[]`               | `VueUiChestnutConfig`               | `@selectRoot`, `@selectBranch`, `@selectNut`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage`                                                                                        | `#svg`, `#legend`, `#watermark`, `#chart-background`                                                                                                                                     | ❌             | ✅     |
 | `VueUiChord`                  | `VueUiChordDataset`                        | `VueUiChordConfig`                  | `@selectLegend`, `@selectGroup`, `@selectRibbon`, `getData`, `generatePdf`, `generateCsv`, `generateImage`, `toggleTable`, `getImage`                                                                                    | `#svg`, `#legend`, `#watermark`, `#chart-background`, `#pattern`                                                                                                                         | ❌             | ✅     |
@@ -554,6 +556,19 @@ All names of available icons are available in the vue-data-ui.d.ts file under th
 | `isSpin`       | `boolean`        | `false`       |
 | `spinDuration` | `string`         | `'1s'`        |
 
+Icons have 2 slots that can be used to display exp or sub icons:
+
+```html
+<VueUiIcon name="database">
+  <template #exp v-if="isLoading">
+    <VueUiIcon name="spinner2" :is-spin="true"/>
+  </template>
+  <template #sub>
+    <VueUiIcon name="person"/>
+  </sub>
+</VueUiIcon>
+```
+
 # User options
 
 User options menu is accessible in the burger menu located on the top right of the charts, and visible by default.
@@ -636,60 +651,61 @@ const config = {
 
 User options actions available per chart:
 
-| Chart name                  | User options actions slot names                                                                                           |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| VueUi3dBar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
-| VueUiAgePyramid             | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiBullet                 | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
-| VueUiCandlestick            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiCarouselTable          | optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen                                                        |
-| VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
-| VueUiChord                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
-| VueUiCirclePack             | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiDag                    | optionPdf, optionImg, optionSvg, optionFullscreen, optionAnnotator, optionZoom                                            |
-| VueUiDonut                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
-| VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
-| VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
-| VueUiFlow                   | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiFunnel                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
-| VueUiGalaxy                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiGauge                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
-| VueUiGeo                    | optionPdf, optionImg, optionFullscreen, optionAnnotator, optionZoom                                                       |
-| VueUiHeatmap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiHistoryPlot            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiHorizontalBar          | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen, optionAnnotator                |
-| VueUiMolecule               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionZoom  |
-| VueUiMoodRadar              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
-| VueUiNestedDonuts           | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
-| VueUiOnion                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiParallelCoordinatePlot | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
-| VueUiQuadrant               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
-| VueUiQuickChart             | optionTooltip, optionPdf, optionImg, optionFullscreen, optionAnnotator                                                    |
-| VueUiRadar                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiRelationCircle         | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
-| VueUiRidgeline              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                                           |
-| VueUiRings                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionLabels              |
-| VueUiScatter                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiSparkHistogram         | (no user options menu)                                                                                                    |
-| VueUiSparkStackbar          | (no user options menu)                                                                                                    |
-| VueUiSparkTrend             | (no user options menu)                                                                                                    |
-| VueUiSparkbar               | (no user options menu)                                                                                                    |
-| VueUiSparkgauge             | (no user options menu)                                                                                                    |
-| VueUiSparkline              | (no user options menu)                                                                                                    |
-| VueUiStackbar               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
-| VueUiStackline              | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
-| VueUiStripPlot              | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator              |
-| VueUiTableHeatmap           | optionPdf, optionImg, optionCsv, optionFullscreen                                                                         |
-| VueUiTableSparkline         | optionPdf, optionImg, optionCsv, optionFullscreen                                                                         |
-| VueUiThermometer            | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
-| VueUiTiremarks              | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
-| VueUiTreemap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiWaffle                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiWheel                  | optionPdf, optionImg, optionFullscreen, optionAnnotator                                                                   |
-| VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionZoom                               |
-| VueUiWorld                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator                            |
-| VueUiXy                     | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
-| VueUiXyCanvas               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator |
+| Chart name                  | User options actions slot names                                                                                                      |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| VueUi3dBar                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
+| VueUiAgePyramid             | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiBump                   | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
+| VueUiBullet                 | optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
+| VueUiCandlestick            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiCarouselTable          | optionPdf, optionImg, optionCsv, optionAnimation, optionFullscreen                                                                   |
+| VueUiChestnut               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
+| VueUiChord                  | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
+| VueUiCirclePack             | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiDag                    | optionPdf, optionImg, optionSvg, optionFullscreen, optionAnnotator, optionZoom                                                       |
+| VueUiDonut                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
+| VueUiDonutEvolution         | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
+| VueUiDumbbell               | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
+| VueUiFlow                   | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiFunnel                 | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
+| VueUiGalaxy                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiGauge                  | optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
+| VueUiGeo                    | optionPdf, optionImg, optionFullscreen, optionAnnotator, optionZoom, optionSvg                                                       |
+| VueUiHeatmap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiHistoryPlot            | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiHorizontalBar          | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionSort, optionFullscreen, optionAnnotator, optionSvg                |
+| VueUiMolecule               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionZoom, optionSvg  |
+| VueUiMoodRadar              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
+| VueUiNestedDonuts           | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
+| VueUiOnion                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiParallelCoordinatePlot | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
+| VueUiQuadrant               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
+| VueUiQuickChart             | optionTooltip, optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                    |
+| VueUiRadar                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiRelationCircle         | optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
+| VueUiRidgeline              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                                           |
+| VueUiRings                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionLabels, optionSvg              |
+| VueUiScatter                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiSparkHistogram         | (no user options menu)                                                                                                               |
+| VueUiSparkStackbar          | (no user options menu)                                                                                                               |
+| VueUiSparkTrend             | (no user options menu)                                                                                                               |
+| VueUiSparkbar               | (no user options menu)                                                                                                               |
+| VueUiSparkgauge             | (no user options menu)                                                                                                               |
+| VueUiSparkline              | (no user options menu)                                                                                                               |
+| VueUiStackbar               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
+| VueUiStackline              | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
+| VueUiStripPlot              | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionAnnotator, optionSvg              |
+| VueUiTableHeatmap           | optionPdf, optionImg, optionCsv, optionFullscreen                                                                                    |
+| VueUiTableSparkline         | optionPdf, optionImg, optionCsv, optionFullscreen                                                                                    |
+| VueUiThermometer            | optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
+| VueUiTiremarks              | optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
+| VueUiTreemap                | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator , optionSvg                           |
+| VueUiWaffle                 | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator , optionSvg                           |
+| VueUiWheel                  | optionPdf, optionImg, optionFullscreen, optionAnnotator, optionSvg                                                                   |
+| VueUiWordCloud              | optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionZoom, optionSvg                               |
+| VueUiWorld                  | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionFullscreen, optionAnnotator, optionSvg                            |
+| VueUiXy                     | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator, optionSvg |
+| VueUiXyCanvas               | optionTooltip, optionPdf, optionImg, optionCsv, optionTable, optionLabels, optionFullscreen, optionStack, optionAnnotator            |
 
 User options menu icon can be customized using the #menuIcon slot:
 
@@ -730,6 +746,7 @@ Since version 3.5.1, slots are exposed to customize the chart annotator sub-menu
 It is possible to provide a custom palette in the config prop through config.customPalette (string[]) for the following components:
 
 - VueUi3dBar
+- VueUiBump
 - VueUiChestnut
 - VueUiChord
 - VueUiCirclePack
@@ -739,6 +756,7 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiGalaxy
 - VueUiGauge
 - VueUiHistoryPlot
+- VueUiHorizontalBar
 - VueUiMolecule
 - VueUiNestedDonuts
 - VueUiOnion
@@ -758,7 +776,6 @@ It is possible to provide a custom palette in the config prop through config.cus
 - VueUiTableSparkline
 - VueUiThermometer
 - VueUiTreemap
-- VueUiHorizontalBar
 - VueUiWaffle
 - VueUiWordCloud
 - VueUiWorld
@@ -779,6 +796,7 @@ However the following charts can be made fully responsive, making them better to
 | VueUiAgePyramid             | ✅                             |
 | VueUiAgePyramid             | ✅                             |
 | VueUiBullet                 | ✅                             |
+| VueUiBump                   | ✅                             |
 | VueUiCarouselTable          | -                              |
 | VueUiChestnut               | -                              |
 | VueUiChord                  | ✅                             |
@@ -1133,11 +1151,12 @@ const merged = mergeConfigs({
 
 ## Multiline data labels
 
-Some components will display labels on multiple lines when the provided text contains a line break. (example: "I contain\na line break").
+Some components will display labels on multiple lines when the provided text contains a line break. (example: "I contain a\nline break").
 Below is a table of the places where such line breaks can be used:
 
 | Component                   | Label displayed      | Where to use line breaks                               |
 | --------------------------- | -------------------- | ------------------------------------------------------ |
+| VueUiBump                   | Series labels        | dataset names                                          |
 | VueUiDag                    | Node labels          | dataset label                                          |
 | VueUiDonutEvolution         | Time labels (x axis) | config.style.chart.layout.grid.xAxis.dataLabels.values |
 | VueUiHistoryPlot            | Plot labels          | dataset names                                          |

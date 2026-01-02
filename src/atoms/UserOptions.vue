@@ -726,7 +726,7 @@ onBeforeUnmount(() => {
                     <slot name="optionPdf" />
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isPrinting" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-if="isPrinting" name="spinner2" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="pdf" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.pdf" :class="{
@@ -761,7 +761,7 @@ onBeforeUnmount(() => {
                     <slot name="optionImg" />
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isImaging" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-if="isImaging" name="spinner2" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="image" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.img" :class="{
@@ -990,7 +990,7 @@ onBeforeUnmount(() => {
                     <slot name="optionPdf" />
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isPrinting" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-if="isPrinting" name="spinner2" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="pdf" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.pdf" :class="{
@@ -1025,7 +1025,7 @@ onBeforeUnmount(() => {
                     <slot name="optionImg" />
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isImaging" name="spin" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-if="isImaging" name="spinner2" isSpin :stroke="color" style="pointer-events: none;" />
                     <BaseIcon v-else name="image" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.img" :class="{

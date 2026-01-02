@@ -120,6 +120,7 @@ th,
 td {
     padding: 0.5rem;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 caption {

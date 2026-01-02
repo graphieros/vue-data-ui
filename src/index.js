@@ -68,6 +68,7 @@ export { default as VueUiChord } from "./components/vue-ui-chord.vue";
 export { default as VueUiDag } from "./components/vue-ui-dag.vue";
 export { default as VueDataUi } from "./components/vue-data-ui.vue";
 export { default as VueUiGeo } from "./components/vue-ui-geo.vue";
+export { default as VueUiBump } from "./components/vue-ui-bump.vue";
 
 export { default as getVueDataUiConfig} from "./getVueDataUiConfig";
 export { default as getThemeConfig } from "./getThemeConfig";

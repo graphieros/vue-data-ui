@@ -344,12 +344,12 @@
     "concrete": {
         "table": {
             "th": {
-                "backgroundColor": "#1A1A1A",
-                "color": "#99AA99"
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
             },
             "td": {
-                "backgroundColor": "#1A1A1A",
-                "color": "#AACCAA"
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
             }
         },
         "style": {

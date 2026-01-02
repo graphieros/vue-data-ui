@@ -78,7 +78,8 @@ const components = {
     VueUiRidgeline: defineAsyncComponent(() => import('./vue-ui-ridgeline.vue')),
     VueUiChord: defineAsyncComponent(() => import('./vue-ui-chord.vue')),
     VueUiDag: defineAsyncComponent(() => import('./vue-ui-dag.vue')),
-    VueUiGeo: defineAsyncComponent(() => import('./vue-ui-geo.vue'))
+    VueUiGeo: defineAsyncComponent(() => import('./vue-ui-geo.vue')),
+    VueUiBump: defineAsyncComponent(() => import('./vue-ui-bump.vue')),
 };
 
 const componentProps = {
@@ -147,7 +148,8 @@ const componentProps = {
     VueUiRidgeline: ['config', 'dataset'],
     VueUiChord: ['config', 'dataset'],
     VueUiDag: ['config', 'dataset'],
-    VueUiGeo: ['config', 'dataset']
+    VueUiGeo: ['config', 'dataset'],
+    VueUiBump: ['config', 'dataset']
 };
 
 const emit = defineEmits([

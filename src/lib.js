@@ -3347,7 +3347,7 @@ export function cacheLastResult(fn) {
     };
 }
 
-// VueUiXy, VueUiStackbar
+// VueUiXy, VueUiStackbar, VueUiStackline
 export const buildDisplayedTimeLabels = cacheLastResult((
     showOnlyFirstAndLast,
     showOnlyAtModulo,
