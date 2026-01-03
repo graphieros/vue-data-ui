@@ -112,12 +112,32 @@
       "description": "Add #data-table-th and #data-table-td scoped slots where DataTable.vue is used",
       "priority": 0,
       "author": "graphieros",
-      "done": false,
-      "exchanges": [],
+      "done": true,
+      "exchanges": [
+        {
+          "author": "graphieros",
+          "comment": "Will not be worked on for now.\nSome <th> els just expose html content.",
+          "id": "9fa4060b-7c5c-470e-a3df-6ab915fc9d39",
+          "createdAt": 1767464750951
+        }
+      ],
       "type": "feature",
       "id": "4592ae44-f2ad-4ee4-8604-fe40c6369f25",
       "createdAt": 1767291561889,
-      "updatedAt": 1767291561889
+      "updatedAt": 1767464755760
+    },
+    {
+      "title": "Donut rounded corners",
+      "component": "All donuts",
+      "description": "Add confir attr to set rounded corners on donut arcs.",
+      "priority": 0,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "feature",
+      "id": "a58adff2-516e-463b-9d57-dab105a57cc0",
+      "createdAt": 1767464832809,
+      "updatedAt": 1767464832809
     }
   ]
 }
