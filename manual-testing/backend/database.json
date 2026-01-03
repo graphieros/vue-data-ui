@@ -125,19 +125,6 @@
       "id": "4592ae44-f2ad-4ee4-8604-fe40c6369f25",
       "createdAt": 1767291561889,
       "updatedAt": 1767464755760
-    },
-    {
-      "title": "Donut rounded corners",
-      "component": "All donuts",
-      "description": "Add confir attr to set rounded corners on donut arcs.",
-      "priority": 0,
-      "author": "graphieros",
-      "done": false,
-      "exchanges": [],
-      "type": "feature",
-      "id": "a58adff2-516e-463b-9d57-dab105a57cc0",
-      "createdAt": 1767464832809,
-      "updatedAt": 1767464832809
     }
   ]
 }
