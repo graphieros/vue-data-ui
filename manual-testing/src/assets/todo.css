@@ -43,6 +43,7 @@
         border: 1px solid #4A4A4A;
         border-radius: 1rem;
         overflow: hidden;
+        animation: show-dialog 0.3s;
     }
 
     .dialog header,

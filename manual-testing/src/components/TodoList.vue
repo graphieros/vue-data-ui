@@ -409,7 +409,8 @@ const stats = computed(() => {
             </div>
         </header>
         <button class="btn-close" @click="closeDialog()">
-            <VueUiIcon name="close"/>
+            <VueUiIcon name="blur" stroke="#42d392"/>
+            <VueUiIcon name="close" stroke="#5f8aee" style="position: absolute;"/>
         </button>
         <div class="filters">
             <label>

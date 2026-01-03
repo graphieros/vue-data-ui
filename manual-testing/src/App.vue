@@ -283,3 +283,19 @@ nav a {
   font-size: 1rem;
 }
 </style>
+
+<style>
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  body:has(dialog[open]) {
+    overflow-y: hidden;
+    touch-action: none;
+  }
+
+  dialog::backdrop {
+    background: #1A1A1A90;
+    backdrop-filter: blur(4px);
+  }
+</style>
