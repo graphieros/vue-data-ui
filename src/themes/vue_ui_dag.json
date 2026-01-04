@@ -1,5 +1,58 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "backgroundPattern": {
+                    "dotColor": "#3A3A3A"
+                },
+                "nodes": {
+                    "stroke": "#6A6A6A",
+                    "backgroundColor": "#2A2A2A",
+                    "labels": {
+                        "color": "#CCCCCC"
+                    },
+                    "tooltip": {
+                        "backgroundColor": "#3A3A3A",
+                        "color": "#CCCCCC"
+                    }
+                },
+                "edges": {
+                    "stroke": "#6A6A6A"
+                },
+                "midpoints": {
+                    "stroke": "#6A6A6A",
+                    "fill": "#1A1A1A",
+                    "tooltip": {
+                        "backgroundColor": "#3A3A3A",
+                        "color": "#CCCCCC"
+                    }
+                },
+                "controls": {
+                    "backgroundColor": "#2A2A2A",
+                    "buttonColor": "#2A2A2A",
+                    "color": "#CCCCCC",
+                    "border": "1px solid #4A4A4A"
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        }
+    },
     "dark": {
         "style": {
             "chart": {

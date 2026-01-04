@@ -1,5 +1,30 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "title": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC",
+            "subtitle": {
+                "color": "#757575"
+            }
+        },
+        "thead": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC"
+        },
+        "tbody": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC"
+        }
+    },
     "dark": {
         "title": {
             "backgroundColor": "#1A1A1A",

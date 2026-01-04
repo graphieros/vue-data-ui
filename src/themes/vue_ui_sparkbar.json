@@ -1,5 +1,29 @@
 {
     "default": {},
+    "minimal": {
+
+    },
+    "minimalDark": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "gutter": {
+                "backgroundColor": "#3A3A3A"
+            },
+            "bar": {
+                "gradient": {
+                    "underlayerColor": "#1A1A1A"
+                }
+            },
+            "labels": {
+                "name": {
+                    "color": "#CCCCCC"
+                }
+            },
+            "title": {
+                "color": "#CCCCCC"
+            }
+        }
+    },
     "dark": {
         "style": {
             "backgroundColor": "#1A1A1A",

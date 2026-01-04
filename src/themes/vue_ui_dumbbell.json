@@ -1,5 +1,81 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "grid": {
+                    "verticalGrid": {
+                        "show": false
+                    }
+                },
+                "legend": {
+                    "show": false
+                }
+            }
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "comparisonLines": {
+                    "rectColor": "#CCCCCC",
+                    "labelColor": "#CCCCCC"
+                },
+                "plots": {
+                    "stroke": "#1A1A1A"
+                },
+                "grid": {
+                    "horizontalGrid": {
+                        "stroke": "#4A4A4A"
+                    },
+                    "verticalGrid": {
+                        "show": false,
+                        "stroke": "#4A4A4A"
+                    }
+                },
+                "highlighter": {
+                    "color": "#CCCCCC"
+                },
+                "labels": {
+                    "yAxisLabels": {
+                        "color": "#CCCCCC"
+                    },
+                    "xAxisLabels": {
+                        "color": "#CCCCCC"
+                    }
+                },
+                "legend": {
+                    "show": false,
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC"
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
     "dark": {
         "style": {
             "chart": {

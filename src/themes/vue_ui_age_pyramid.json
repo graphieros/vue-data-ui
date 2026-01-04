@@ -1,5 +1,74 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "layout": {
+                "bars": {
+                    "gradient": {
+                        "show": false
+                    }
+                }
+            }
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC",
+            "layout": {
+                "bars": {
+                    "gradient": {
+                        "show": false
+                    }
+                },
+                "grid": {
+                    "stroke": "#5A5A5A"
+                },
+                "dataLabels": {
+                    "sideTitles": {
+                        "color": "#CCCCCC"
+                    },
+                    "xAxis": {
+                        "color": "#CCCCCC"
+                    },
+                    "yAxis": {
+                        "color": "#CCCCCC"
+                    }
+                }
+            },
+            "highlighter": {
+                "color": "#CCCCCC"
+            },
+            "title": {
+                "color": "#CCCCCC",
+                "subtitle": {
+                    "color": "#757575"
+                }
+            },
+            "tooltip": {
+                "backgroundColor": "#1A1A1A",
+                "backgroundOpacity": 70,
+                "color": "#CCCCCC",
+                "borderColor": "#3A3A3A"
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
     "dark": {
         "style": {
             "backgroundColor": "#1A1A1A",

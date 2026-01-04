@@ -1,5 +1,167 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "layout": {
+                    "grid": {
+                        "showVerticalLines": false
+                    }
+                },
+                "dialog": {
+                    "donutChart": {
+                        "userOptions": {
+                            "show": false
+                        },
+                        "style": {
+                            "chart": {
+                                "legend": {
+                                    "show": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "legend": {
+                    "show": false
+                }
+            }
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "zoom": {
+                    "color": "#4A4A4A",
+                    "highlightColor": "#9A9A9A"
+                },
+                "dialog": {
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC",
+                    "header": {
+                        "backgroundColor": "#1A1A1A",
+                        "color": "#CCCCCC"
+                    },
+                    "donutChart": {
+                        "userOptions": {
+                            "show": false
+                        },
+                        "style": {
+                            "chart": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC",
+                                "layout": {
+                                    "labels": {
+                                        "percentage": {
+                                            "color": "#CCCCCC"
+                                        },
+                                        "name": {
+                                            "color": "#CCCCCC"
+                                        },
+                                        "hollow": {
+                                            "total": {
+                                                "color": "#CCCCCC",
+                                                "value": {
+                                                    "color": "#CCCCCC"
+                                                }
+                                            },
+                                            "average": {
+                                                "color": "#CCCCCC",
+                                                "value": {
+                                                    "color": "#CCCCCC"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "legend": {
+                                    "show": false,
+                                    "backgroundColor": "#1A1A1A",
+                                    "color": "#CCCCCC"
+                                },
+                                "title": {
+                                    "color": "#CCCCCC",
+                                    "subtitle": {
+                                        "color": "#757575"
+                                    }
+                                },
+                                "tooltip": {
+                                    "backgroundColor": "#1A1A1A",
+                                    "backgroundOpacity": 70,
+                                    "color": "#CCCCCC",
+                                    "borderColor": "#5A5A5A"
+                                }
+                            }
+                        },
+                        "table": {
+                            "th": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            },
+                            "td": {
+                                "backgroundColor": "#1A1A1A",
+                                "color": "#CCCCCC"
+                            }
+                        }
+                    }
+                },
+                "layout": {
+                    "grid": {
+                        "showVerticalLines": false,
+                        "stroke": "#5A5A5A",
+                        "yAxis": {
+                            "dataLabels": {
+                                "color": "#CCCCCC"
+                            }
+                        },
+                        "xAxis": {
+                            "dataLabels": {
+                                "color": "#CCCCCC"
+                            }
+                        }
+                    },
+                    "line": {
+                        "stroke": "#4A4A4A"
+                    },
+                    "highlighter": {
+                        "color": "#CCCCCC"
+                    },
+                    "dataLabels": {
+                        "color": "#CCCCCC"
+                    }
+                },
+                "legend": {
+                    "show": false,
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC"
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
     "dark": {
         "style": {
             "chart": {

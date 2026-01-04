@@ -1,5 +1,48 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "layout": {
+                    "activeColor": "#678681",
+                    "ticks": {
+                        "gradient": {
+                            "shiftHueIntensity": 0
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "layout": {
+                    "inactiveColor": "#4A4A4A",
+                    "activeColor": "#7FA09B",
+                    "ticks": {
+                        "gradient": {
+                            "shiftHueIntensity": 0
+                        }
+                    }
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                }
+            }
+        }
+    },
     "dark": {
         "style": {
             "chart": {

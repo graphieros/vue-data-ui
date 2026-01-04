@@ -1,5 +1,31 @@
 {
     "default": {},
+    "minimal": {},
+    "minimalDark": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "labels": {
+                "value": {
+                    "color": "#CCCCCC"
+                },
+                "valueLabel": {
+                    "color": "#CCCCCC"
+                },
+                "timeLabel": {
+                    "color": "#CCCCCC"
+                }
+            },
+            "selector": {
+                "stroke": "#5A5A5A"
+            },
+            "title": {
+                "color": "#CCCCCC",
+                "subtitle": {
+                    "color": "#757575"
+                }
+            }
+        }
+    },
     "dark": {
         "style": {
             "backgroundColor": "#1A1A1A",

@@ -1,5 +1,34 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "color": "#CCCCCC",
+            "labels": {
+                "color": "#CCCCCC"
+            },
+            "circle": {
+                "stroke": "#5A5A5A"
+            },
+            "plot": {
+                "color": "#1A1A1A"
+            },
+            "title": {
+                "color": "#CCCCCC",
+                "subtitle": {
+                    "color": "#757575"
+                }
+            }
+        }
+    },
     "dark": {
         "style": {
             "backgroundColor": "#1A1A1A",

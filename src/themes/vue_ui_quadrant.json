@@ -1,5 +1,99 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "legend": {
+                    "show": false
+                },
+                "layout": {
+                    "grid": {
+                        "graduations": {
+                            "show": false
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "layout": {
+                    "labels": {
+                        "quadrantLabels": {
+                            "tl": {
+                                "color": "#CCCCCC"
+                            },
+                            "tr": {
+                                "color": "#CCCCCC"
+                            },
+                            "br": {
+                                "color": "#CCCCCC"
+                            },
+                            "bl": {
+                                "color": "#CCCCCC"
+                            }
+                        },
+                        "plotLabels": {
+                            "color": "#CCCCCC"
+                        },
+                        "axisLabels": {
+                            "color": {
+                                "positive": "#CCCCCC",
+                                "negative": "#CCCCCC"
+                            }
+                        }
+                    },
+                    "grid": {
+                        "stroke": "#5A5A5A",
+                        "graduations": {
+                            "show": false,
+                            "stroke": "#5A5A5A"
+                        }
+                    },
+                    "plots": {
+                        "outlineColor": "#1A1A1A"
+                    }
+                },
+                "legend": {
+                    "show": false,
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC"
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#1A1A1A",
+                    "backgroundOpacity": 70,
+                    "color": "#CCCCCC",
+                    "borderColor": "#3A3A3A"
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
     "dark": {
         "style": {
             "chart": {

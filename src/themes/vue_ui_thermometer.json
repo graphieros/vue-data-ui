@@ -1,5 +1,33 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "graduations": {
+                    "stroke": "#2A2A2A"
+                },
+                "label": {
+                    "color": "#CCCCCC"
+                }
+            },
+            "title": {
+                "color": "#CCCCCC",
+                "subtitle": {
+                    "color": "#757575"
+                }
+            }
+        }
+    },
     "dark": {
         "style": {
             "chart": {

@@ -1,5 +1,81 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "useGradient": false,
+                "legend": {
+                    "show": false
+                }
+            }
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "useGradient": false,
+                "layout": {
+                    "labels": {
+                        "percentage": {
+                            "color": "#CCCCCC"
+                        },
+                        "name": {
+                            "color": "#CCCCCC"
+                        },
+                        "hollow": {
+                            "total": {
+                                "color": "#CCCCCC",
+                                "value": {
+                                    "color": "#CCCCCC"
+                                }
+                            },
+                            "average": {
+                                "color": "#CCCCCC",
+                                "value": {
+                                    "color": "#CCCCCC"
+                                }
+                            }
+                        }
+                    }
+                },
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                },
+                "tooltip": {
+                    "backgroundColor": "#1A1A1A",
+                    "backgroundOpacity": 70,
+                    "color": "#CCCCCC",
+                    "borderColor": "#3A3A3A"
+                },
+                "legend": {
+                    "show": false,
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC"
+                }
+            }
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        }
+    },
     "dark": {
         "style": {
             "chart": {

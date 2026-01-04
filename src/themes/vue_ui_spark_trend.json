@@ -1,5 +1,32 @@
 {
     "default": {},
+    "minimal": {
+        "style": {
+            "arrow": {
+                "colors": {
+                    "positive": "#7FA09B",
+                    "negative": "#9D7D92"
+                }
+            }
+        }
+    },
+    "minimalDark": {
+        "style": {
+            "backgroundColor": "#1A1A1A",
+            "dataLabel": {
+                "color": "#CCCCCC"
+            },
+            "trendLabel": {
+                "color": "#CCCCCC"
+            },
+            "arrow": {
+                "colors": {
+                    "positive": "#7FA09B",
+                    "negative": "#9D7D92"
+                }
+            }
+        }
+    },
     "dark": {
         "style": {
             "backgroundColor": "#1A1A1A",

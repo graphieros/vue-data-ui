@@ -1,5 +1,30 @@
 {
     "default": {},
+    "minimal": {
+        "showUserOptions": false,
+        "showLegend": false,
+        "xyShowGrid": false
+    },
+    "minimalDark": {
+        "showUserOptions": false,
+        "showLegend": false,
+        "backgroundColor": "#1A1A1A",
+        "color": "#CCCCCC",
+        "donutStroke": "#1A1A1A",
+        "xyAxisStroke": "#5A5A5A",
+        "xyGridStroke": "#4A4A4A",
+        "xyShowGrid": false,
+        "xyHighlighterColor": "#CCCCCC",
+        "zoomColor": "#4A4A4A",
+        "zoomHighlightColor": "#9A9A9A",
+        "zoomMinimap": {
+            "lineColor": "#424242",
+            "selectedColor": "#8A8A8A",
+            "indicatorColor": "#CCCCCC"
+        },
+        "tooltipBorderColor": "#3A3A3A",
+        "tooltipBackgroundOpacity": 70
+    },
     "dark": {
         "backgroundColor": "#1A1A1A",
         "color": "#CCCCCC",

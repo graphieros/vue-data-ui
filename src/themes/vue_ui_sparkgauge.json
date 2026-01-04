@@ -1,5 +1,31 @@
 {
     "default": {},
+    "minimal": {
+        "style": {
+            "colors": {
+                "min": "#9D7D92",
+                "max": "#678681"
+            }
+        }
+    },
+    "minimalDark": {
+        "style": {
+            "background": "#1A1A1A",
+            "title": {
+                "color": "#CCCCCC"
+            },
+            "dataLabel": {
+                "color": "#CCCCCC"
+            },
+            "colors": {
+                "min": "#9D7D92",
+                "max": "#678681"
+            },
+            "gutter": {
+                "color": "#3A3A3A"
+            }
+        }
+    },
     "dark": {
         "style": {
             "background": "#1A1A1A",

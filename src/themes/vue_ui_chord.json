@@ -1,5 +1,67 @@
 {
     "default": {},
+    "minimal": {
+        "userOptions": {
+            "show": false
+        },
+        "style": {
+            "chart": {
+                "legend": {
+                    "show": false
+                }
+            }
+        }
+    },
+    "minimalDark": {
+        "userOptions": {
+            "show": false
+        },
+        "table": {
+            "th": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            },
+            "td": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC"
+            }
+        },
+        "style": {
+            "chart": {
+                "backgroundColor": "#1A1A1A",
+                "color": "#CCCCCC",
+                "title": {
+                    "color": "#CCCCCC",
+                    "subtitle": {
+                        "color": "#757575"
+                    }
+                },
+                "legend": {
+                    "show": false,
+                    "backgroundColor": "#1A1A1A",
+                    "color": "#CCCCCC"
+                },
+                "arcs": {
+                    "stroke": "#1A1A1A",
+                    "labels": {
+                        "color": "#CCCCCC"
+                    }
+                },
+                "ribbons": {
+                    "stroke": "#1A1A1A",
+                    "labels": {
+                        "color": "#CCCCCC",
+                        "connector": {
+                            "stroke": "#CCCCCC"
+                        },
+                        "marker": {
+                            "stroke": "#1A1A1A"
+                        }
+                    }
+                }
+            }
+        }
+    },
     "dark": {
         "table": {
             "th": {
