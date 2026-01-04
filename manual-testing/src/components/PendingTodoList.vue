@@ -51,7 +51,7 @@ const emit = defineEmits([
 
             <div class="type-badge" :style="{
                 backgroundColor: typeColors[item.type],
-                color: item.type === 'feature' ? '#1A1A1A' : '#FFFFFF'
+                color: ['feature', 'docs'].includes(item.type) ? '#1A1A1A' : '#FFFFFF'
             }">{{ item.type.toUpperCase() }}</div>
 
             <div class="item-title">{{ item.title }}</div>

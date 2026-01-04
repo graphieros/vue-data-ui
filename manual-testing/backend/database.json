@@ -125,6 +125,45 @@
       "id": "4592ae44-f2ad-4ee4-8604-fe40c6369f25",
       "createdAt": 1767291561889,
       "updatedAt": 1767464755760
+    },
+    {
+      "title": "Minimal themes",
+      "component": "All",
+      "description": "Minimal theme with: greyscales, no legend, no user options menu. 2 variants: minimal-light; minimal-dark",
+      "priority": 1,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "feature",
+      "id": "eef5958d-4e2e-40e9-af8b-31cc52b48b49",
+      "createdAt": 1767474015565,
+      "updatedAt": 1767474027039
+    },
+    {
+      "title": "Themes page",
+      "component": "Docs website",
+      "description": "Add a page dedicated to themes. Set up a dashboard with major chart types, with a theme toggle",
+      "priority": 1,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "docs",
+      "id": "61122b28-40a8-4a3e-89f6-6ea778c7c7d1",
+      "createdAt": 1767508921021,
+      "updatedAt": 1767509718768
+    },
+    {
+      "title": "Remove installation.md",
+      "component": "Build",
+      "description": "Remove the documentation directory from the build, because the main README has all the info already.",
+      "priority": 0,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "docs",
+      "id": "7b8fc776-4651-4e0e-bc1a-008549eb8b50",
+      "createdAt": 1767509634289,
+      "updatedAt": 1767509652871
     }
   ]
 }
