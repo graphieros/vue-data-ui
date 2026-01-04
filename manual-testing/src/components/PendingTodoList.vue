@@ -50,6 +50,20 @@ function deleteChecklistItem(key, item) {
     }
 }
 
+function toggleCheckList(item) {
+    if (item.withCustomCheckList) {
+        item.withCustomCheckList = false;
+        item.customCheckList = {};
+        emit('updateTodo', item);
+    } else if (item.withComponentCheckList) {
+        item.withComponentCheckList = false;
+        item.checkList = {};
+        emit('updateTodo', item);
+    } else {
+        emit('toggleChecklist', item);
+    }
+}
+
 function getChecklistDone(item) {
     const done = Object.values(item.checkList).filter(el => !!el).length;
     return done / Object.keys(item.checkList).length * 100;
@@ -79,7 +93,7 @@ function getCustomChecklistDone(item) {
                 <button @click="emit('openExchangeDialog', item)">
                     <VueUiIcon name="tooltip" :size="20" stroke="#CCCCCC"/>
                 </button>
-                <button @click="emit('toggleChecklist', item)" style="position: relative">
+                <button @click="toggleCheckList(item)" style="position: relative">
                     <VueUiIcon name="legend" :size="20" stroke="#CCCCCC"/>
                     <VueUiIcon name="close" v-if="(Object.keys(item.checkList).length > 0) || item.withCustomCheckList" stroke="#ff3700" :stroke-width="2" :style="{
                         position: 'absolute',
