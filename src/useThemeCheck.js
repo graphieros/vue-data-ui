@@ -1,5 +1,15 @@
 import { computed } from "vue";
 
+/**
+ * When adding themes, also update
+ * 1. lib.js
+ *  - getPalette
+ *  - themePalettes
+ *  - all individual component theme json files
+ * 
+ * 2. useThemeOptions composable
+ */
+
 export function useThemeCheck() {
     const isThemeValid = computed(() => {
         return (config) => {
@@ -11,7 +21,9 @@ export function useThemeCheck() {
                 'celebrationNight',
                 'hack',
                 'zen',
-                'concrete'
+                'concrete',
+                'minimal',
+                'minimalDark'
             ].includes(config.theme)
         }
     });

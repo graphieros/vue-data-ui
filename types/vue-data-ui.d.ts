@@ -428,7 +428,9 @@ declare module "vue-data-ui" {
         | "hack"
         | "concrete"
         | "celebration"
-        | "celebrationNight";
+        | "celebrationNight"
+        | "minimal"
+        | "minimalDark";
     export type TextAlign = "left" | "center" | "right";
     export type TooltipPosition = TextAlign;
     export type FontVariantNumeric =

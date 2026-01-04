@@ -215,6 +215,8 @@ export const palette = [
     "#e7969c", "#7b4173", "#a55194", "#ce6dbd", "#de9ed6"
 ];
 
+// When adding themes, also update useThemeOptions and useThemeCheck composables
+
 export function getPalette(palette = 'default') {
     switch (palette) {
         case 'hack':
@@ -231,15 +233,67 @@ export function getPalette(palette = 'default') {
 
         case 'celebrationNight':
             return themePalettes.celebrationNight;
+        
+        case 'minimal':
+            return themePalettes.minimal;
+
+        case 'minimalDark':
+            return themePalettes.minimalDark;
 
         default:
             return themePalettes.default;
     }
 }
 
+// When adding themes, also update useThemeOptions and useThemeCheck composables
+
 export const themePalettes = {
     default: palette,
     dark: palette,
+    minimal: [
+        "#2A2929",
+        "#454862",
+        "#65698E",
+        "#8D99AE",
+        "#678681",
+        "#7FA09B",
+        "#9CBCA8",
+        "#76645D",
+        "#877675",
+        "#A9998C",
+        "#C6B7AB",
+        "#906C70",
+        "#B08C91",
+        "#C9ACB0",
+        "#9F816B",
+        "#B39783",
+        "#D8C3B3",
+        "#825E76",
+        "#9D7D92",
+        "#C2A6B9"
+    ],
+    minimalDark: [
+        "#524f4f",
+        "#454862",
+        "#65698E",
+        "#8D99AE",
+        "#678681",
+        "#7FA09B",
+        "#9CBCA8",
+        "#76645D",
+        "#877675",
+        "#A9998C",
+        "#C6B7AB",
+        "#906C70",
+        "#B08C91",
+        "#C9ACB0",
+        "#9F816B",
+        "#B39783",
+        "#D8C3B3",
+        "#825E76",
+        "#9D7D92",
+        "#C2A6B9"
+    ],
     celebration: [
         "#D32F2F",
         "#E64A19",
