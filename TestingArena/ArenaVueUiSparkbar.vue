@@ -9,6 +9,7 @@ import { VueUiSparkbar as VueUiSparkbarTreeshaken } from "vue-data-ui/vue-ui-spa
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import useThemeOptions from "./useThemeOptions";
 
 const { vue_ui_sparkbar: DEFAULT_CONFIG } = useConfig();
 
@@ -135,19 +136,7 @@ const model = createModel([
     NUMBER("style.gap", { def: 4, min: 0, max: 24 })
 ]);
 
-
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({ theme: currentTheme.value }));
 

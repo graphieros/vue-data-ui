@@ -10,6 +10,7 @@ import { VueUiXy as VueUiXyTreeshaken } from "vue-data-ui/vue-ui-xy";
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import useThemeOptions from "./useThemeOptions";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena();
 const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
@@ -917,18 +918,7 @@ const model = createModel([
 
 const testCustomTooltip = ref(false);
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1])
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const size = ref({
     height: 600,
@@ -1238,21 +1228,6 @@ function selectX(selectedX) {
 
 const configTheme = computed(() => ({
     theme: currentTheme.value,
-    chart: {
-        grid: {
-            showVerticalLines: true,
-            showHorizontalLines: true
-        },
-        title: {
-            text: 'Title',
-            subtitle: {
-                text: 'Subtitle'
-            },
-        },
-        zoom: {
-            minimap: { show: true }
-        }
-    },
     line: {
         labels: { show: true },
     },
@@ -1471,7 +1446,6 @@ function freestyle({ data, drawingArea }) {
                 :dataset="dataset"
                 :config="{
                     ...configTheme,
-                    customPalette: ['#6376DD', '#DD3322', '#66DDAA'],
                 }"
             />
         </template>

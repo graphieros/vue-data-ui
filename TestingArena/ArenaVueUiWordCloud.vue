@@ -11,6 +11,7 @@ import { VueUiWordCloud as VueUiWordCloudTreeshaken } from "vue-data-ui/vue-ui-w
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import useThemeOptions from "./useThemeOptions";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
 const { vue_ui_word_cloud: DEFAULT_CONFIG } = useConfig();
@@ -109,19 +110,7 @@ const model = createModel([
     NUMBER("style.chart.tooltip.offsetY", { def: 24, min: 0, max: 48 })
 ]);
 
-
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({ theme: currentTheme.value }));
 

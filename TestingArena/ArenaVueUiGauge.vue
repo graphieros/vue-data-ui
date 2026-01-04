@@ -10,6 +10,7 @@ import { VueUiGauge as VueUiGaugeTreeshaken } from "vue-data-ui/vue-ui-gauge";
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import useThemeOptions from "./useThemeOptions";
 
 const { vue_ui_gauge: DEFAULT_CONFIG } = useConfig();
 
@@ -171,18 +172,7 @@ const model = createModel([
     COLOR("userOptions.print.backgroundColor", { def: "#FFFFFF" })
 ]);
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({ theme: currentTheme.value }));
 

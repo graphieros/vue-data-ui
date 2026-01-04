@@ -10,6 +10,7 @@ import { VueUiScatter as VueUiScatterTreeshaken } from "vue-data-ui/vue-ui-scatt
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import useThemeOptions from "./useThemeOptions";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
 const { vue_ui_scatter: DEFAULT_CONFIG } = useConfig();
@@ -281,18 +282,7 @@ const model = createModel([
 
 const testCustomTooltip = ref(false);
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({ theme: currentTheme.value }));
 
@@ -409,6 +399,12 @@ function freestyle({ drawingArea, data }) {
 </script>
 
 <template>
+    <div style="margin: 12px 0; color: white">
+        Theme:
+        <select v-model="currentTheme" @change="step += 1">
+            <option v-for="opt in themeOptions">{{ opt }}</option>
+        </select>
+    </div>
     <button @click="toggleTable">TOGGLE TABLE</button>
     <div style="margin: 12px 0">
         <input type="checkbox" v-model="testCustomTooltip" id="custom-tooltip" />

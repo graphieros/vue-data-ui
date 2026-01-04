@@ -10,6 +10,7 @@ import { VueUi3dBar as VueUi3dBarTreeshaken } from "vue-data-ui/vue-ui-3d-bar";
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import useThemeOptions from "./useThemeOptions";
 
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena()
@@ -192,18 +193,7 @@ const model = createModel([
     NUMBER("table.td.roundingPercentage", { def: 2, min: 0, max: 12 })
 ]);
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({ theme: currentTheme.value }));
 

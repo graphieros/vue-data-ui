@@ -11,6 +11,7 @@ import { treeShake } from "../src/lib";
 import { useArena } from "../src/useArena";
 import { VueUiBump } from "vue-data-ui"; 
 import { VueUiBump as VueUiBumpTreeshaken } from "vue-data-ui/vue-ui-bump";
+import useThemeOptions from "./useThemeOptions";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena();
 const { vue_ui_bump: DEFAULT_CONFIG } = useConfig();
@@ -201,18 +202,8 @@ const config = computed(() => {
     })
 })
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
+const { themeOptions, currentTheme } = useThemeOptions();
 
-const currentTheme = ref(themeOptions.value[1]);
 const configTheme = computed(() => ({ theme: currentTheme.value }));
 
 onMounted(async () => {

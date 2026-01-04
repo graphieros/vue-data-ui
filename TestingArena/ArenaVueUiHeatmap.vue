@@ -10,6 +10,7 @@ import { VueUiHeatmap as VueUiHeatmapTreeshaken } from "vue-data-ui/vue-ui-heatm
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import useThemeOptions from "./useThemeOptions";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable } = useArena();
 const { vue_ui_heatmap: DEFAULT_CONFIG } = useConfig();
@@ -211,21 +212,9 @@ const model = createModel([
     RANGE("table.td.roundingValue", { def: 0, min: 0, max: 12 })
 ]);
 
-
 const testCustomTooltip = ref(false);
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({ theme: currentTheme.value }));
 

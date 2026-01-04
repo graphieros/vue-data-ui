@@ -10,6 +10,7 @@ import { VueUiAgePyramid as VueUiAgePyramidTreeshaken } from "vue-data-ui/vue-ui
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfig } from "../src/useConfig"
 import { useConfigurationControls } from "./createConfigModel";
+import useThemeOptions from "./useThemeOptions";
 
 const { vue_ui_age_pyramid: DEFAULT_CONFIG } = useConfig();
 
@@ -176,18 +177,7 @@ const model = createModel([
 
 const testCustomTooltip = ref(false);
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({ theme: currentTheme.value }));
 

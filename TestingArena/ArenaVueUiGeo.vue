@@ -13,6 +13,7 @@ import {VueUiGeo as VueUiGeoTreeshaken } from "vue-data-ui/vue-ui-geo";
 
 import FRANCE from "./maps/FRANCE.json"
 import VueDataUi from "../src/components/vue-data-ui.vue";
+import useThemeOptions from "./useThemeOptions";
 
 const { local, build, vduiLocal, vduiBuild } = useArena();
 const { vue_ui_geo: DEFAULT_CONFIG } = useConfig();
@@ -129,18 +130,7 @@ const model = createModel([
     CHECKBOX('style.chart.title.subtitle.bold', { def: false })
 ]);
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[4]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const config = computed(() => {
     const c = convertArrayToObject(model.value);

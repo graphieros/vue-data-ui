@@ -9,6 +9,7 @@ import { VueUiRidgeline as VueUiRidgelineTreeshaken } from "vue-data-ui/vue-ui-r
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import useThemeOptions from "./useThemeOptions";
 
 const { vue_ui_ridgeline: DEFAULT_CONFIG } = useConfig();
 
@@ -22,18 +23,7 @@ const {
     createModel
 } = useConfigurationControls(DEFAULT_CONFIG);
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1])
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({
     theme: currentTheme.value,

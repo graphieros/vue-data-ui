@@ -9,6 +9,7 @@ import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
 import { VueUiDonut as VueUiDonutTreeshaken } from "vue-data-ui/vue-ui-donut";
+import useThemeOptions from "./useThemeOptions";
 
 const { vue_ui_donut: DEFAULT_CONFIG } = useConfig();
 
@@ -297,18 +298,8 @@ const model = createModel([
 
 
 const testCustomTooltip = ref(false);
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
 
-const currentTheme = ref(themeOptions.value[1]);
+const { currentTheme, themeOptions } = useThemeOptions();
 
 const configTheme = computed(() => ({
     theme: currentTheme.value,

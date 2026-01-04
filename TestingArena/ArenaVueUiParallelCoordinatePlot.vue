@@ -10,6 +10,7 @@ import { VueUiParallelCoordinatePlot as VueUiParallelCoordinatePlotTreeshaken } 
 import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
+import useThemeOptions from "./useThemeOptions";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels } = useArena();
 const { vue_ui_parallel_coordinate_plot: DEFAULT_CONFIG } = useConfig();
@@ -177,19 +178,7 @@ const model = createModel([
     CHECKBOX("table.useDialog", { def: true }),
 ]);
 
-
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[1]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({ theme: currentTheme.value }));
 

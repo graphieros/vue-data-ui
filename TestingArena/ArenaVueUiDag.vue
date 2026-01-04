@@ -10,6 +10,7 @@ import { useConfig } from "../src/useConfig"
 import { useArena } from "../src/useArena";
 import { VueUiDag } from "vue-data-ui";
 import {VueUiDag as VueUiDagTreeshaken } from "vue-data-ui/vue-ui-dag";
+import useThemeOptions from "./useThemeOptions";
 
 const { local, build, vduiLocal, vduiBuild } = useArena();
 const { vue_ui_dag: DEFAULT_CONFIG } = useConfig();
@@ -175,18 +176,7 @@ const config = computed(() => {
 //     }
 // })
 
-const themeOptions = ref([
-    "",
-    "dark",
-    "hack",
-    "zen",
-    "concrete",
-    "default",
-    "celebration",
-    "celebrationNight"
-])
-
-const currentTheme = ref(themeOptions.value[4]);
+const { themeOptions, currentTheme } = useThemeOptions();
 
 const configTheme = computed(() => ({
     theme: currentTheme.value,
