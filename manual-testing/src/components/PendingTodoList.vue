@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-import { VueUiIcon } from "vue-data-ui";
+import { VueUiGizmo, VueUiIcon } from "vue-data-ui";
 
 const props = defineProps({
     items: {
@@ -22,8 +22,43 @@ const emit = defineEmits([
     'editTodo',
     'openExchangeDialog',
     'markDone',
-    'deleteExchange'
+    'deleteExchange',
+    'toggleChecklist',
+    'updateTodo',
+    'updateCustomCheckList'
 ])
+
+const temporaryCustomChecklistItem = ref('');
+
+function resetCustomChecklistItem() {
+    temporaryCustomChecklistItem.value = '';
+}
+
+function addCustomCheckListItem(item) {
+    if (temporaryCustomChecklistItem.value === '') return;
+    item.customCheckList[temporaryCustomChecklistItem.value] = false;
+    emit('updateCustomCheckList', item);
+    resetCustomChecklistItem();
+}
+
+function deleteChecklistItem(key, item) {
+    delete item.customCheckList[key];
+    emit('updateCustomCheckList', item);
+    if (Object.keys(item.customCheckList).length === 0) {
+        item.withComponentCheckList = false;
+        emit('updateTodo', item);
+    }
+}
+
+function getChecklistDone(item) {
+    const done = Object.values(item.checkList).filter(el => !!el).length;
+    return done / Object.keys(item.checkList).length * 100;
+}
+
+function getCustomChecklistDone(item) {
+    const done = Object.values(item.customCheckList).filter(el => !!el).length;
+    return done / Object.keys(item.customCheckList).length * 100;
+}
 
 </script>
 
@@ -43,6 +78,15 @@ const emit = defineEmits([
                 </button>
                 <button @click="emit('openExchangeDialog', item)">
                     <VueUiIcon name="tooltip" :size="20" stroke="#CCCCCC"/>
+                </button>
+                <button @click="emit('toggleChecklist', item)" style="position: relative">
+                    <VueUiIcon name="legend" :size="20" stroke="#CCCCCC"/>
+                    <VueUiIcon name="close" v-if="(Object.keys(item.checkList).length > 0) || item.withCustomCheckList" stroke="#ff3700" :stroke-width="2" :style="{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)'
+                    }"/>
                 </button>
                 <button @click="emit('markDone', item)" class="btn-green">
                     <VueUiIcon name="check" :size="20" stroke="#42d392"/>
@@ -72,6 +116,69 @@ const emit = defineEmits([
                     <span class="item-content">{{ item.description }}</span>
                 </div>
             </div>
+
+            <details v-if="Object.keys(item.checkList).length">
+                <summary style="display: flex; flex-direction: row; align-items:center; gap: 1rem;">
+                    <VueUiGizmo 
+                        :dataset="getChecklistDone(item)"
+                        :config="{
+                            type: 'gauge',
+                            size: 36,
+                            stroke: '#8A8A8A',
+                            color: '#42d392',
+                            textColor: '#FFFFFF'
+                        }"
+                    />
+                    Components checklist
+                </summary>
+                <div class="components-checklist-wrapper">
+                    <div v-for="c in Object.keys(item.checkList)" class="components-checklist-item">
+                        <label>
+                            <input type="checkbox" v-model="item.checkList[c]" @change="emit('updateTodo', item)">
+                            <span :style="{
+                                color: item.checkList[c] ? '#42d392' : '#CCCCCC',
+                                fontWeight: item.checkList[c] ? 'bold' : 'normal'
+                            }">{{ c }}</span>
+                        </label>
+                    </div>
+                </div>
+            </details>
+
+            <details v-if="item.withCustomCheckList">
+                <summary style="display: flex; flex-direction: row; align-items:center; gap: 1rem;">
+                    <VueUiGizmo 
+                        :dataset="getCustomChecklistDone(item)"
+                        :config="{
+                            type: 'gauge',
+                            size: 36,
+                            stroke: '#8A8A8A',
+                            color: '#42d392',
+                            textColor: '#FFFFFF'
+                        }"
+                    />
+                    Custom checklist
+                </summary>
+                <div class="components-checklist-wrapper">
+                    <div v-for="c in Object.keys(item.customCheckList)" class="components-checklist-item">
+                        <button @click="deleteChecklistItem(c, item)" class="btn-red btn-trash">
+                            <VueUiIcon name="trash" stroke="#ec9393"/>
+                        </button>
+                        <label>
+                            <input type="checkbox" v-model="item.customCheckList[c]" @change="emit('updateTodo', item)">
+                            <span :style="{
+                                color: item.customCheckList[c] ? '#42d392' : '#CCCCCC',
+                                fontWeight: item.customCheckList[c] ? 'bold' : 'normal'
+                            }">{{ c }}</span>
+                        </label>
+                    </div>
+                    <div class="components-checklist-actions">
+                        <input ref="inputAddCustom" type="text" v-model="temporaryCustomChecklistItem">
+                        <button @click="addCustomCheckListItem(item)" class="action-green btn-plus" :disabled="!temporaryCustomChecklistItem">
+                            <VueUiIcon name="plus" stroke="#1A1A1A"/>
+                        </button>
+                    </div>
+                </div>
+            </details>
 
             <details v-if="item.exchanges?.length">
                 <summary>Exchanges</summary>

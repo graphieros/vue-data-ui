@@ -132,7 +132,8 @@
         background-color: #81a2f0;
     }
     .todo-dialog,
-    .exchange-dialog {
+    .exchange-dialog,
+    .checklist-dialog {
         position: fixed;
         top: 50%;
         left: 50%;
@@ -559,4 +560,115 @@
         position: absolute;
         bottom: 0.25rem;
         left: 0.25rem;
+    }
+    .components-checklist-wrapper {
+        background: #FFFFFF10;
+        padding: 0 1rem 1rem 1.7rem;
+    }
+    .components-checklist-item {
+        color: #CCCCCC;
+    }
+    .components-checklist-item input[type="checkbox"] {
+        accent-color: #42d392;
+    }
+    .components-checklist-item label {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+    .checklist-dialog {
+        height: 8rem;
+        width: fit-content;
+        flex-direction: column;
+        justify-content:center;
+        gap: 1rem;
+    }
+    .checklist-dialog-content {
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        align-items:center;
+        justify-content:center;
+    }
+    .checklist-dialog-content button {
+        border: none;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .action-cancel {
+        background-color: #4A4A4A;
+        color: #CCCCCC;
+        box-shadow: 0 3px 6px rgb(0 0 0 / 0.3);
+    }
+    .action-cancel:hover {
+        background-color: #5A5A5A;
+    }
+    .action-green {
+        background-color: #42d392;
+        box-shadow: 0 3px 6px rgb(0 0 0 / 0.3);
+    }
+    .action-green:hover {
+        background-color: #62e9ac;
+    }
+    .action-blue {
+        background-color: #5f8aee;
+        color: #FFFFFF;
+        box-shadow: 0 3px 6px rgb(0 0 0 / 0.3);
+    }
+    .action-blue:hover {
+        background-color: #81a3f1;
+    }
+    .btn-plus {
+        border: none;
+        display: flex;
+        align-items:center;
+        justify-content:center;
+        border-radius: 0.25rem;
+        height: 2rem;
+        width: 2rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        box-shadow: 0 3px 6px rgb(0 0 0 / 0.3);
+    }
+    .btn-plus:disabled {
+        opacity: 0.3;
+        cursor:not-allowed;
+    }
+    label.custom-checklist-item {
+        display: flex;
+        flex-direction: row;
+    }
+    .components-checklist-item {
+        display: flex;
+        flex-direction: row;
+        align-items:center;
+        gap: 1rem;
+        padding: 0.25rem 0;
+    }
+    .btn-trash {
+        transition: background-color 0.2s;
+        border: none;
+        display: flex;
+        align-items:center;
+        justify-content: center;
+        border-radius: 0.25rem;
+        height: 2rem;
+        width: 2rem;
+        cursor: pointer;
+        box-shadow: 0 3px 6px rgb(0 0 0 / 0.3);
+    }
+    .components-checklist-actions {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        align-items:center;
+    }
+    .components-checklist-actions input[type="text"] {
+        margin-top: 1rem;
+        outline: 1px solid #8A8A8A;
+        background: #2A2A2A;
+        color: #CCCCCC;
     }

@@ -5,6 +5,7 @@ import { createUid, treeShake } from "../../../src/lib";
 import { VueUiDonut, VueUiHorizontalBar, VueUiIcon } from "vue-data-ui";
 import PendingTodoList from "./PendingTodoList.vue";
 import DoneTodoList from "./DoneTodoList.vue";
+import { components } from '../../../cypress/fixtures/vdui-components';
 
 const {
     items,
@@ -26,6 +27,7 @@ const dialog = ref(null);
 const todoDialog = ref(null);
 const exchangeDialog = ref(null);
 const confirmDialog = ref(null);
+const chooseChecklistDialog = ref(null);
 
 const priority = {
     0: 'Low',
@@ -54,7 +56,11 @@ const todoTemplate = ref({
     author: '',
     done: false,
     exchanges: [],
-    type: 'feature' // 'feature', 'bug', 'dev', 'docs'
+    type: 'feature', // 'feature', 'bug', 'dev', 'docs'
+    withComponentCheckList: false,
+    checkList: {},
+    withCustomCheckList: false,
+    customCheckList: {}
 });
 
 const filters = ref({
@@ -157,6 +163,57 @@ async function deleteExchange(item, exchange) {
     resetPending();
 }
 
+function closeCheckListDialog() {
+    chooseChecklistDialog.value?.close();
+}
+
+function chooseChecklist(item) {
+    pendingTodo.value = item;
+
+    if (pendingTodo.value.withComponentCheckList || pendingTodo.value.withCustomCheckList) {
+        pendingTodo.value.withComponentCheckList = false;
+        pendingTodo.value.withCustomCheckList = false;
+        pendingTodo.value.checkList = {};
+        pendingTodo.value.customCheckList = {};
+        return;
+    }
+    chooseChecklistDialog.value?.showModal();
+}
+
+function chooseChecklistType(type) {
+    if (type === 'components') {
+        toggleChecklist(pendingTodo.value);
+    } else {
+        toggleCustomChecklist(pendingTodo.value);
+    }
+    closeCheckListDialog();
+}
+
+async function toggleCustomChecklist(item) {
+    item.withCustomCheckList = !item.withCustomCheckList;
+    item.withComponentCheckList = false;
+    await updateThisTodo(item);
+}
+
+async function toggleChecklist(item) {
+    item.withComponentCheckList = !item.withComponentCheckList;
+    item.withCustomCheckList = false;
+    if (!item.withComponentCheckList) {
+        item.checkList = {};
+    } else {
+        item.checkList = components.toSorted((a, b) => a.name.localeCompare(b.name)).reduce((acc, { name }) => {
+            acc[name] = false;
+        return acc;
+        }, {});
+    }
+    await updateThisTodo(item);
+}
+
+async function updateThisTodo(item) {
+    pendingTodo.value = item;
+    await updateTodo();
+}
+
 function openConfirmDialog(item) {
     pendingTodo.value = item;
     confirmDialog.value?.showModal();
@@ -188,6 +245,11 @@ async function addTodo() {
     await createOne(pendingTodo.value);
     closeTodoDialog();
     readAll();
+}
+
+async function updateCustomCheckList(item) {
+    pendingTodo.value = item;
+    updateTodo();
 }
 
 async function updateTodo() {
@@ -493,6 +555,9 @@ const stats = computed(() => {
                 @openExchangeDialog="openExchangeDialog"
                 @markDone="markDone"
                 @deleteExchange="deleteExchange"
+                @toggleChecklist="chooseChecklist"
+                @updateTodo="updateThisTodo"
+                @updateCustomCheckList="updateCustomCheckList"
             />
 
             <!-- DONE -->
@@ -688,6 +753,22 @@ const stats = computed(() => {
             <button @click="deleteTodo(pendingTodo.id)" class="btn-green">
                 <VueUiIcon name="check" stroke="#42d392" :size="36"/>
             </button>
+        </div>
+    </dialog>
+
+    <dialog ref="chooseChecklistDialog" class="checklist-dialog">
+        <div style="display:flex; align-items:center;justify-content:center;flex-direction:column; gap: 1rem; align-items:center;">
+            <span style="color: #CCCCCC;">Add a checklist</span>
+            <div class="checklist-dialog-content">
+                <button class="action-cancel" @click="closeCheckListDialog">Cancel</button>
+                <button class="action-green" @click="chooseChecklistType('components')">
+                    Components
+                </button>
+                <button class="action-blue" @click="chooseChecklistType('custom')">
+                    Custom
+                </button>
+            </div>
+
         </div>
     </dialog>
 </template>
