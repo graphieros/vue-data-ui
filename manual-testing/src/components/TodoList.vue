@@ -42,7 +42,8 @@ const priorityColors = {
 const typeColors = {
     bug: '#e84242',
     feature: '#42d392',
-    dev: '#1A1A1A'
+    dev: '#1A1A1A',
+    docs: '#579ecf'
 }
 
 const todoTemplate = ref({
@@ -53,7 +54,7 @@ const todoTemplate = ref({
     author: '',
     done: false,
     exchanges: [],
-    type: 'feature' // 'feature', 'bug', 'dev'
+    type: 'feature' // 'feature', 'bug', 'dev', 'docs'
 });
 
 const filters = ref({
@@ -316,7 +317,7 @@ const stats = computed(() => {
     return {
         type: {
             open: {
-                dataset: ['bug', 'feature', 'dev'].map(key => {
+                dataset: ['bug', 'feature', 'dev', 'docs'].map(key => {
                     const items = openType[key] || [];
                     return {
                         name: key,
@@ -327,7 +328,7 @@ const stats = computed(() => {
                 config: commonConfigBar
             },
             done: {
-                dataset: ['bug', 'feature', 'dev'].map(key => {
+                dataset: ['bug', 'feature', 'dev', 'docs'].map(key => {
                     const items = doneType[key] || [];
                     return {
                         name: key,
@@ -420,6 +421,7 @@ const stats = computed(() => {
                     <option>bug</option>
                     <option>feature</option>
                     <option>dev</option>
+                    <option>docs</option>
                 </select>
             </label>
             <label>
@@ -581,6 +583,10 @@ const stats = computed(() => {
                     <div class="radio-field">
                         <input type="radio" v-model="pendingTodo.type" value="dev" id="dev">
                         <label for="dev">Dev environment</label>
+                    </div>
+                    <div class="radio-field">
+                        <input type="radio" v-model="pendingTodo.type" value="docs" id="docs">
+                        <label for="docs">Docs</label>
                     </div>
                 </div>
             </label>
