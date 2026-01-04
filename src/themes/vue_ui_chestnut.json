@@ -3,6 +3,25 @@
     "minimal": {
         "userOptions": {
             "show": false
+        },
+        "style": {
+            "chart": {
+                "layout": {
+                    "branches": {
+                        "useGradient": false,
+                        "underlayerColor": "#FFFFFF"
+                    },
+                    "nuts": {
+                        "useGradient": false,
+                        "selected": {
+                            "gradientIntensity": 0
+                        }
+                    },
+                    "roots": {
+                        "useGradient": false
+                    }
+                }
+            }
         }
     },
     "minimalDark": {
@@ -18,6 +37,7 @@
                         "color": "#CCCCCC"
                     },
                     "roots": {
+                        "useGradient": false,
                         "stroke": "#1A1A1A",
                         "labels": {
                             "name": {
@@ -29,12 +49,16 @@
                         "stroke": "#1A1A1A"
                     },
                     "branches": {
+                        "useGradient": false,
+                        "underlayerColor": "#1A1A1A",
                         "labels": {
                             "color": "#CCCCCC"
                         }
                     },
                     "nuts": {
+                        "useGradient": false,
                         "selected": {
+                            "gradientIntensity": 0,
                             "labels": {
                                 "dataLabels": {
                                     "color": "#CCCCCC"

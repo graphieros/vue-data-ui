@@ -3,6 +3,15 @@
     "minimal": {
         "userOptions": {
             "show": false
+        },
+        "style": {
+            "chart": {
+                "layout": {
+                    "track": {
+                        "useGradient": false
+                    }
+                }
+            }
         }
     },
     "minimalDark": {
@@ -23,6 +32,9 @@
                             "stroke": "#1A1A1A",
                             "color": "#5A5A5A"
                         }
+                    },
+                    "track": {
+                        "useGradient": false
                     }
                 },
                 "title": {

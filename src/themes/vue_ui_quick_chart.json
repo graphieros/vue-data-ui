@@ -3,7 +3,10 @@
     "minimal": {
         "showUserOptions": false,
         "showLegend": false,
-        "xyShowGrid": false
+        "xyShowGrid": false,
+        "zoomMinimap": {
+            "show": true
+        }
     },
     "minimalDark": {
         "showUserOptions": false,
@@ -18,6 +21,7 @@
         "zoomColor": "#4A4A4A",
         "zoomHighlightColor": "#9A9A9A",
         "zoomMinimap": {
+            "show": true,
             "lineColor": "#424242",
             "selectedColor": "#8A8A8A",
             "indicatorColor": "#CCCCCC"
@@ -61,7 +65,7 @@
     "celebrationNight": {
         "backgroundColor": "#1E1E1E",
         "color": "#BDBDBD",
-        "donutStroke": "#1E1E1E",
+        "donutStro:ke": "#1E1E1E",
         "xyAxisStroke": "#5D4037",
         "xyGridStroke": "#5D403780",
         "xyHighlighterColor": "#FFF8E1",

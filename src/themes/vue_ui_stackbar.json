@@ -9,6 +9,11 @@
                 "legend": {
                     "show": false
                 },
+                "bars": {
+                    "gradient": {
+                        "show": false
+                    }
+                },
                 "zoom": {
                     "minimap": {
                         "show": true
@@ -66,6 +71,9 @@
                     "borderColor": "#3A3A3A"
                 },
                 "bars": {
+                    "gradient": {
+                        "show": false
+                    },
                     "totalValues": {
                         "color": "#CCCCCC"
                     }

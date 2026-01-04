@@ -13,6 +13,11 @@
                 },
                 "legend": {
                     "show": false
+                },
+                "plots": {
+                    "gradient": {
+                        "show": false
+                    }
                 }
             }
         }
@@ -30,7 +35,10 @@
                     "labelColor": "#CCCCCC"
                 },
                 "plots": {
-                    "stroke": "#1A1A1A"
+                    "stroke": "#1A1A1A",
+                    "gradient": {
+                        "show": false
+                    }
                 },
                 "grid": {
                     "horizontalGrid": {
