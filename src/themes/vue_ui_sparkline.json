@@ -1,11 +1,32 @@
 {
     "default": {},
-    "minimal": {},
+    "minimal": {
+        "style": {
+            "line": {
+                "color": "#2A2929"
+            },
+            "area": {
+                "color": "#65698E"
+            },
+            "bar": {
+                "color": "#2A2929"
+            }
+        }
+    },
     "minimalDark": {
         "style": {
             "backgroundColor": "#1A1A1A",
             "zeroLine": {
                 "color": "#5A5A5A"
+            },
+            "line": {
+                "color": "#65698E"
+            },
+            "area": {
+                "color": "#8D99AE"
+            },
+            "bar": {
+                "color": "#65698E"
             },
             "plot": {
                 "stroke": "#1A1A1A"
@@ -80,6 +101,12 @@
             },
             "area": {
                 "color": "#E64A19"
+            },
+            "tooltip": {
+                "backgroundColor": "#FFECB3",
+                "backgroundOpacity": 30,
+                "color": "#424242",
+                "borderColor": "#FF8A65"
             }
         }
     },
@@ -110,6 +137,12 @@
             },
             "area": {
                 "color": "#E64A19"
+            },
+            "tooltip": {
+                "backgroundColor": "#1E1E1E",
+                "backgroundOpacity": 30,
+                "color": "#FFF8E1",
+                "borderColor": "#FF8A65"
             }
         }
     },
@@ -140,6 +173,11 @@
             },
             "area": {
                 "color": "#66CC66"
+            },
+            "tooltip": {
+                "backgroundColor": "#2A2F2A",
+                "color": "#AACCAA",
+                "borderColor": "#66CC66"
             }
         }
     },
@@ -171,6 +209,10 @@
             },
             "area": {
                 "color": "#B9B99D"
+            },
+            "tooltip": {
+                "backgroundColor": "#fbfafa",
+                "color": "#8A9892"
             }
         }
     },
@@ -201,6 +243,10 @@
             },
             "area": {
                 "color": "#4A6A75"
+            },
+            "tooltip": {
+                "backgroundColor": "#f6f6fb",
+                "color": "#50606C"
             }
         }
     }

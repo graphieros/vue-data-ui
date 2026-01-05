@@ -243,6 +243,7 @@ const absoluteDataset = computed(() => {
 
         return {
             ...d,
+            color: convertColorToHex(FINAL_DATASET.value[i]?.color ? FINAL_DATASET.value[i]?.color : customPalette.value[i] || palette[i] || palette[i % palette.length]),
             value: dValue,
             proportion: dProportion,
             width: dWidth,
