@@ -2930,8 +2930,6 @@ defineExpose({
             </div>
         </Teleport>
 
-        <div :id="`legend-bottom-${uid}`" />
-
         <component
             v-if="isDataset && FINAL_CONFIG.userOptions.buttons.table"
             :is="tableComponent.component"
@@ -3031,6 +3029,8 @@ defineExpose({
                 <g v-html="makeMinimap({ minimapW, minimapH, unitW})"/>
             </template>
         </SlicerPreview>
+
+        <div :id="`legend-bottom-${uid}`" />
 
         <!-- TOOLTIP -->
         <Tooltip
