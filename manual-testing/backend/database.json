@@ -240,18 +240,18 @@
       "description": "Add a page dedicated to themes. Set up a dashboard with major chart types, with a theme toggle",
       "priority": 1,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "docs",
       "id": "61122b28-40a8-4a3e-89f6-6ea778c7c7d1",
       "createdAt": 1767508921021,
-      "updatedAt": 1767540636047,
+      "updatedAt": 1767596514628,
       "withComponentCheckList": false,
       "withCustomCheckList": true,
       "checkList": {},
       "customCheckList": {
-        "Dashboard component": false,
-        "Themes toggle": false
+        "Dashboard component": true,
+        "Themes toggle": true
       }
     },
     {
@@ -287,6 +287,23 @@
       "createdAt": 1767519203208,
       "updatedAt": 1767540246275,
       "customCheckList": {}
+    },
+    {
+      "title": "Bad legend placement",
+      "component": "vue-ui-stackline.vue",
+      "description": "Position the legend below the zoom component.",
+      "priority": 2,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "bug",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "f63e1a9e-2433-4ca3-917b-6514d7a00f47",
+      "createdAt": 1767596506923,
+      "updatedAt": 1767596506923
     }
   ]
 }
