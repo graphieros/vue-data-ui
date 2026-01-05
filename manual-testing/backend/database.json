@@ -294,7 +294,7 @@
       "description": "Position the legend below the zoom component.",
       "priority": 2,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "bug",
       "withComponentCheckList": false,
@@ -303,7 +303,7 @@
       "customCheckList": {},
       "id": "f63e1a9e-2433-4ca3-917b-6514d7a00f47",
       "createdAt": 1767596506923,
-      "updatedAt": 1767596506923
+      "updatedAt": 1767597515448
     }
   ]
 }
