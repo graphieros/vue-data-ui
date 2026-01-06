@@ -30,6 +30,13 @@ const emit = defineEmits([
 
 const temporaryCustomChecklistItem = ref('');
 
+const now = computed(() => Date.now());
+
+function getElapsedDays(timestamp) {
+    const millisecondsPerDay = 1000 * 60 * 60 * 24;
+    return Math.floor((now.value - timestamp) / millisecondsPerDay);
+}
+
 function resetCustomChecklistItem() {
     temporaryCustomChecklistItem.value = '';
 }
@@ -119,6 +126,14 @@ function getCustomChecklistDone(item) {
                 <span>| By {{ item.author }}</span>
                 <span>| Created {{ new Date(item.createdAt).toLocaleDateString() }}</span>
                 <span v-if="item.createdAt !== item.updatedAt">| Updated {{ new Date(item.updatedAt).toLocaleDateString() }}</span>
+            </div>
+            <div style="font-size: 0.8rem;">
+                <span style="color: #CCCCCC">
+                    Days since creation:
+                </span>
+                <span style="color: #CCCCCC; font-weight: bold">
+                    {{ getElapsedDays(item.createdAt) }}
+                </span>
             </div>
             <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #5A5A5A">
                 <div v-if="item.component" class="item-component">
