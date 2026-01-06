@@ -97,7 +97,7 @@
     "cy": "node run-cy.cjs"
   },
   "peerDependencies": {
-    "jspdf": "^3.0.1",
+    "jspdf": ">=3.0.1",
     "vue": ">=3.3.0"
   },
   "peerDependenciesMeta": {
