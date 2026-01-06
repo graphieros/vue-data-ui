@@ -25,7 +25,7 @@ export default () => {
         "minimalDark"
     ]);
 
-    const currentTheme = ref(themeOptions.value[9]);
+    const currentTheme = ref(themeOptions.value[0]);
 
     return {
         currentTheme,

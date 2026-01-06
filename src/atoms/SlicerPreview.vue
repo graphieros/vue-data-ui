@@ -403,12 +403,13 @@ const unitWidthX = computed(() => {
 
 const barTypeQty = computed(() => {
     if (!props.allMinimaps.length) return 0;
-    return props.allMinimaps.filter(ds => ds.type === 'bar').length
+    return props.allMinimaps
+        .filter(ds => ds.type === 'bar' && ds.isVisible).length
 });
 
 const barWidth = computed(() => {
     return unitWidthX.value / (barTypeQty.value || 1) * 0.8
-})
+});
 
 function getBarX(x, i, j) {
     const w = barWidth.value;
@@ -1122,10 +1123,10 @@ defineExpose({
                             />
     
                             <template v-else-if="!minimapMerged">
-                                <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
+                                <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar' && d.isVisible)">
                                     <template v-for="(r, j) in dp.points">
                                         <rect
-                                            v-if="dp.isVisible && !isNaN(r.y)"
+                                            v-if="dp && !isNaN(r.y)"
                                             :x="getBarX(r.x, i, j)"
                                             :y="r.v >= 0 ? r.y : r.y0"
                                             :width="getBarWidth(i, j)"
@@ -1261,10 +1262,10 @@ defineExpose({
     
                             <!-- SPLIT TREE (lines) -->
                             <g v-else :key="'split-tree'">
-                                <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar')">
+                                <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'bar' && d.isVisible)">
                                     <template v-for="(r, j) in dp.points">
                                         <rect
-                                            v-if="dp && dp.isVisible && !isNaN(r.y)"
+                                            v-if="dp && !isNaN(r.y)"
                                             :x="getBarX(r.x, i, j)"
                                             :y="r.v >= 0 ? r.y : r.y0"
                                             :width="getBarWidth(i, j)"
