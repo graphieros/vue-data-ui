@@ -304,6 +304,23 @@
       "id": "f63e1a9e-2433-4ca3-917b-6514d7a00f47",
       "createdAt": 1767596506923,
       "updatedAt": 1767597515448
+    },
+    {
+      "title": "Serie segregation bars in minimap",
+      "component": "vue-ui-xy.vue",
+      "description": "When bars are segregated, barWidth is not recalculated in zoom minimap",
+      "priority": 1,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "bug",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "5d75ccd1-30ff-41ae-98c1-d1009227f338",
+      "createdAt": 1767683890024,
+      "updatedAt": 1767683922303
     }
   ]
 }
