@@ -311,7 +311,7 @@
       "description": "When bars are segregated, barWidth is not recalculated in zoom minimap",
       "priority": 1,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "bug",
       "withComponentCheckList": false,
@@ -320,7 +320,7 @@
       "customCheckList": {},
       "id": "5d75ccd1-30ff-41ae-98c1-d1009227f338",
       "createdAt": 1767683890024,
-      "updatedAt": 1767683922303
+      "updatedAt": 1767694625666
     }
   ]
 }
