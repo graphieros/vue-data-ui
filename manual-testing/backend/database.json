@@ -321,6 +321,23 @@
       "id": "5d75ccd1-30ff-41ae-98c1-d1009227f338",
       "createdAt": 1767683890024,
       "updatedAt": 1767694625666
+    },
+    {
+      "title": "Improve VueUiDag config for selected nodes",
+      "component": "vue-ui-dag.vue",
+      "description": "Add config attributes for selected nodes to set stroke, strokeWidth, fill, and related edges stroke and animated states, with distinction for upstream & downstream edges.",
+      "priority": 0,
+      "author": "graphieros",
+      "done": true,
+      "exchanges": [],
+      "type": "feature",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "33b4453a-6c9b-4997-9e65-33f2739f9b70",
+      "createdAt": 1767782417794,
+      "updatedAt": 1767801222353
     }
   ]
 }
