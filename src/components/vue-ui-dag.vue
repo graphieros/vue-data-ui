@@ -368,14 +368,15 @@ const edgeColors = computed(() => {
     const defaultColor = FINAL_CONFIG.value.style.chart.edges.stroke;
     const colors = new Set();
     layoutData.value.edges.forEach(edge => {
-        colors.add(edge.original?.color || defaultColor);
+        colors.add({
+            id: edge.id,
+            from: edge.from,
+            to: edge.to,
+            color: edge.original?.color || defaultColor,
+        });
     });
     return Array.from(colors);
 });
-
-function makeMarkerId(color) {
-    return `${arrowMarkerIdentifier}-${String(color).replace(/[^a-zA-Z0-9_-]/g, "_")}`;
-}
 
 const userViewBox = computed(() => {
     const widthRaw = WIDTH.value;
@@ -397,7 +398,6 @@ const userViewBox = computed(() => {
     };
 });
 
-const highlightedNodeId = ref(null);
 const panZoomActive = ref(FINAL_CONFIG.value.style.chart.zoom.active);
 
 const {
@@ -533,6 +533,8 @@ const updateNodeTooltipPlacement = createTooltipPlacementUpdater({
     offsetRef: nodeTooltipOffset
 });
 
+const hoveredEdgeId = ref(null);
+
 async function showMidpointTooltip(edge) {
     emit('onMidpointEnter', edge);
     const svg = svgRef.value;
@@ -551,10 +553,15 @@ async function showMidpointTooltip(edge) {
         x: screenPoint.x,
         y: screenPoint.y
     };
-
+    
     tooltipEdge.value = edge;
     isTooltip.value = true;
 
+    if (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+        hoveredEdgeId.value = edge.id;
+        startEdgeAnimations();
+    }
+    
     await nextTick();
     updateTooltipPlacement();
 }
@@ -562,7 +569,12 @@ async function showMidpointTooltip(edge) {
 function hideMidpointTooltip() {
     isTooltip.value = false;
     tooltipEdge.value = null;
-    emit('onMidpointLeave');
+    emit("onMidpointLeave");
+
+    if (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+        hoveredEdgeId.value = null;
+        startEdgeAnimations();
+    }
 }
 
 async function showNodeTooltip(node) {
@@ -796,11 +808,20 @@ function startEdgeAnimations() {
         : 24;
 
     edges.forEach((edge) => {
-        const isAnimated = !!edge?.original?.animated;
-        if (!isAnimated) return;
+        const isMidpointSelectedAnimated = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true 
+            && hoveredEdgeId.value != null 
+            && edge.id === hoveredEdgeId.value;
+
+        const isAnimated = !!edge?.original?.animated || !!edge?.animated || isMidpointSelectedAnimated;
 
         const pathElement = edgePathElementByIdentifier.value.get(edge.id);
         if (!pathElement) return;
+
+        if (!isAnimated) {
+            pathElement.style.strokeDasharray = "0";
+            pathElement.style.strokeDashoffset = "0";
+            return;
+        }
 
         const dasharrayValue = edge?.original?.dasharray ?? animationDefaults.dasharray;
 
@@ -819,22 +840,21 @@ function startEdgeAnimations() {
         const dashoffsetDelta = getIdealDashoffsetDelta(pathElement, {
             direction,
             mode: "oneLapNearest",
-            dasharray: String(dasharrayValue)
+            dasharray: String(dasharrayValue),
         });
 
-        // Duration is derived from speed (referenceDistance / durationReferenceMs)
         const durationReferenceMsRaw = edge?.original?.animationDurationMs ?? animationDefaults.animationDurationMs ?? 1000;
 
         const durationReferenceMs = Number(durationReferenceMsRaw);
         const hasDurationReference = Number.isFinite(durationReferenceMs) && durationReferenceMs > 0;
-        const speedUnitsPerMs = hasDurationReference ? referenceDistance / durationReferenceMs : referenceDistance / 1000;
+
+        const speedUnitsPerMs = hasDurationReference
+            ? referenceDistance / durationReferenceMs
+            : referenceDistance / 1000;
+
         const durationMilliseconds = Math.max(1, Math.round(Math.abs(dashoffsetDelta) / Math.max(1e-9, speedUnitsPerMs)));
 
-        const animationHandle = pathElement.animate(
-            [{ strokeDashoffset: 0 }, { strokeDashoffset: dashoffsetDelta }],
-            { duration: durationMilliseconds, iterations: Infinity, easing: "linear" }
-        );
-
+        const animationHandle = pathElement.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: dashoffsetDelta }], { duration: durationMilliseconds, iterations: Infinity, easing: "linear" });
         edgeAnimationByIdentifier.value.set(edge.id, animationHandle);
     });
 }
@@ -875,6 +895,155 @@ const backgroundPatternGridSpacing = computed(() => {
 const backgroundPatternDotRadius = computed(() => {
     return backgroundPatternGridSpacing.value * (FINAL_CONFIG.value.style.chart.backgroundPattern.dotRadiusRatio / 100);
 });
+
+const hoveredNodeId = ref(null);
+let clearHoverTimer = null;
+let hoverSessionStep = 0;
+
+function setHoveredNode(nodeId) {
+    // Cancel any pending clear (moving between label and node)
+    if (clearHoverTimer) {
+        clearTimeout(clearHoverTimer);
+        clearHoverTimer = null;
+    }
+
+    if (hoveredNodeId.value === nodeId) return;
+
+    hoveredNodeId.value = nodeId;
+
+
+    if (
+        FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.animated === true ||
+        FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated === true
+    ) {
+        // restart only when actual hovered node changes
+        startEdgeAnimations();
+    }
+}
+
+function scheduleClearHoveredNode(nodeId) {
+    const step = ++hoverSessionStep;
+
+    if (clearHoverTimer) clearTimeout(clearHoverTimer);
+
+    clearHoverTimer = setTimeout(() => {
+        if (step !== hoverSessionStep) return;
+
+        // Only clear if we are still leaving the same node
+        if (hoveredNodeId.value === nodeId) {
+            hoveredNodeId.value = null;
+            if (FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.animated === true || FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated === true) {
+                startEdgeAnimations();
+            }
+        }
+    }, 20);
+}
+
+function setEdge(edge) {
+    const isHighlightedFrom = edge.from === hoveredNodeId.value;
+    const isHighlightedTo = edge.to === hoveredNodeId.value;
+    let stroke = edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
+
+    if ((hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id) && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
+        stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
+    } else if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke != null) {
+        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke;
+    } else if (isHighlightedTo && FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke != null) {
+        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
+    }
+
+    if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.animated === true) {
+        edge.animated = true;
+    } else if (isHighlightedTo && FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated === true) {
+        edge.animated = true;
+    } else {
+        const thisEdge = layoutData.value?.edges.find(e => e.id === edge.id);
+        edge.animated = thisEdge?.original?.animated ?? false;
+    }
+
+    return {
+        d: edge.pathData,
+        fill: "none",
+        stroke,
+        "stroke-width": FINAL_CONFIG.value.style.chart.edges.strokeWidth * ((hoveredEdgeId.value === edge.id || edge.from === hoveredNodeId.value || edge.id === tooltipEdge.value?.id) ? 2 : 1),
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round",
+    };
+}
+
+function setNode(node) {
+    const isHighlighted = hoveredNodeId.value === node.id;
+
+    const fill =
+        isHighlighted && FINAL_CONFIG.value.style.chart.nodes.selected.backgroundColor != null
+            ? FINAL_CONFIG.value.style.chart.nodes.selected.backgroundColor
+            : node.original.backgroundColor;
+
+    const stroke =
+        isHighlighted && FINAL_CONFIG.value.style.chart.nodes.selected.stroke != null
+            ? FINAL_CONFIG.value.style.chart.nodes.selected.stroke
+            : FINAL_CONFIG.value.style.chart.nodes.stroke;
+
+    const strokeWidth =
+        isHighlighted && FINAL_CONFIG.value.style.chart.nodes.selected.strokeWidth != null
+            ? FINAL_CONFIG.value.style.chart.nodes.selected.strokeWidth
+            : FINAL_CONFIG.value.style.chart.nodes.strokeWidth;
+
+    return {
+        x: node.x - node.width / 2,
+        y: node.y - node.height / 2,
+        width: node.width,
+        height: node.height,
+        rx: FINAL_CONFIG.value.style.chart.nodes.borderRadius,
+        fill,
+        stroke,
+        "stroke-width": strokeWidth,
+    };
+}
+
+function setMidpoint(edge) {
+    const isHighlightedFrom = edge.from === hoveredNodeId.value;
+    const isHighlightedTo = edge.to === hoveredNodeId.value;
+    let stroke = edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
+
+    if ((hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id) && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
+        stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
+    } else if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke != null) {
+        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke;
+    } else if (isHighlightedTo && FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke != null) {
+        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
+    }
+
+    return {
+        cx: edge.midpoint.x,
+        cy: edge.midpoint.y,
+        r: FINAL_CONFIG.value.style.chart.midpoints.radius,
+        fill: FINAL_CONFIG.value.style.chart.midpoints.fill,
+        stroke,
+        "stroke-width": FINAL_CONFIG.value.style.chart.edges.strokeWidth * ((edge.from === hoveredNodeId.value || edge.id === tooltipEdge.value?.id) ? 2 : 1),
+    };
+}
+
+function arrowColor(edge) {
+    const isHighlightedFrom = edge.from === hoveredNodeId.value;
+    const isHighlightedTo = edge.to === hoveredNodeId.value;
+
+    let stroke = edge.color ?? edge.original?.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
+
+    if ((hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id) && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
+        stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
+    } else if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke != null) {
+        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke;
+    } else if (isHighlightedTo && FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke != null) {
+        stroke = FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.stroke;
+    }
+
+    return stroke;
+}
+
+function makeMarkerId(edgeIdentifier) {
+    return `${arrowMarkerIdentifier}-${String(edgeIdentifier).replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+}
 
 function getData() {
     return layoutData.value;
@@ -1081,9 +1250,9 @@ defineExpose({
 
             <!-- Arrow marker. Hidden when arrowShape is "undirected". -->
             <defs v-if="layoutData.arrowShape !== 'undirected'">
-                <template v-for="color in edgeColors" :key="color">
+                <template v-for="edge in layoutData.edges" :key="`marker_${edge.id}`">
                     <marker
-                        :id="makeMarkerId(color)"
+                        :id="makeMarkerId(edge.id)"
                         :markerWidth="layoutData.arrowSize"
                         :markerHeight="layoutData.arrowSize"
                         :refX="layoutData.arrowSize - 3"
@@ -1091,26 +1260,29 @@ defineExpose({
                         orient="auto"
                         markerUnits="strokeWidth"
                     >
-                    <!-- `normal` arrow -->
-                    <path
-                        v-if="layoutData.arrowShape === 'normal'"
-                        :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} Z`"
-                        :fill="color"
-                        :stroke="color"
-                        stroke-width="0"
-                    />
+                        <!-- `normal` arrow -->
+                        <path
+                            v-if="layoutData.arrowShape === 'normal'"
+                            :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} Z`"
+                            :fill="arrowColor(edge)"
+                            :stroke="arrowColor(edge)"
+                            stroke-width="0"
+                            style="transition: stroke 0.2s ease-in-out, fill 0.2s ease-in-out, stroke-width 0.2s ease-in-out"
+                        />
 
-                    <!-- `vee` arrow -->
-                    <path
-                        v-else
-                        :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} L ${layoutData.arrowSize / 3} ${layoutData.arrowSize / 2} Z`"
-                        :fill="color"
-                        :stroke="color"
-                        stroke-width="0"
-                    />
+                        <!-- `vee` arrow -->
+                        <path
+                            v-else
+                            :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} L ${layoutData.arrowSize / 3} ${layoutData.arrowSize / 2} Z`"
+                            :fill="arrowColor(edge)"
+                            :stroke="arrowColor(edge)"
+                            stroke-width="0"
+                            style="transition: stroke 0.2s ease-in-out, fill 0.2s ease-in-out, stroke-width 0.2s ease-in-out"
+                        />
                     </marker>
                 </template>
             </defs>
+
 
             <!-- Edges -->
             <g class="vue-ui-dag-edges">
@@ -1118,25 +1290,15 @@ defineExpose({
                     <path
                         data-cy-edge
                         :ref="registerEdgePathElement(edge.id)"
-                        :d="edge.pathData"
-                        fill="none"
-                        :stroke="edge.original.color ?? FINAL_CONFIG.style.chart.edges.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === highlightedNodeId || edge.id === tooltipEdge?.id) ? 2 : 1)"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        style="pointer-events: none; transition: stroke-width 0.2s ease-in-out"
+                        v-bind="setEdge(edge)"
+                        style="pointer-events: none; transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out;"
                     />
                     <circle
                         data-cy-midpoint
                         class="vue-ui-dag-edge-midpoint"
                         v-if="FINAL_CONFIG.style.chart.midpoints.show"
-                        :cx="edge.midpoint.x"
-                        :cy="edge.midpoint.y"
-                        :r="FINAL_CONFIG.style.chart.midpoints.radius"
-                        :fill="FINAL_CONFIG.style.chart.midpoints.fill"
-                        :stroke="edge.original.color ?? FINAL_CONFIG.style.chart.midpoints.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.midpoints.strokeWidth * ((edge.from === highlightedNodeId || edge.id === tooltipEdge?.id) ? 2 : 1)"
-                        style="transition: stroke-width 0.2s ease-in-out"
+                        v-bind="setMidpoint(edge)"
+                        style="transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out;"
                         @mouseenter="showMidpointTooltip(edge)"
                         @mouseleave="hideMidpointTooltip"
                     />
@@ -1145,27 +1307,21 @@ defineExpose({
 
             <!-- Nodes -->
             <g class="vue-ui-dag-nodes">
-                <g 
-                    v-for="node in layoutData.nodes" 
-                    :key="node.id" 
+                <g
+                    v-for="node in layoutData.nodes"
+                    :key="node.id"
                     class="vue-ui-dag-node"
                     @click.stop="FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && showNodeTooltip(node)"
-                    @mouseenter="highlightedNodeId = node.id"
-                    @mouseleave="highlightedNodeId = null"
+                    @mouseenter="setHoveredNode(node.id)"
+                    @mouseleave="scheduleClearHoveredNode(node.id)"
                 >
                     <template v-if="!$slots.node">
                         <rect
                             data-cy-node
-                            :x="node.x - node.width / 2" 
-                            :y="node.y - node.height / 2" 
-                            :width="node.width"
-                            :height="node.height" 
-                            :rx="FINAL_CONFIG.style.chart.nodes.borderRadius"  
-                            :fill="node.original.backgroundColor" 
-                            :stroke="FINAL_CONFIG.style.chart.nodes.stroke" 
-                            :stroke-width="FINAL_CONFIG.style.chart.nodes.strokeWidth"
+                            v-bind="setNode(node)"
                             :style="{
-                                cursor: FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick ? 'pointer' : 'default'
+                                cursor: FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick ? 'pointer' : 'default',
+                                transition: 'stroke 0.2s ease-in-out, stroke-width 0.2s ease-in-out, fill 0.2s ease-in-out'
                             }"
                         />                        
                     </template>
@@ -1191,13 +1347,13 @@ defineExpose({
                     :d="edge.pathData" 
                     fill="none" 
                     stroke="transparent"
-                    :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === highlightedNodeId || edge.id === tooltipEdge?.id) ? 1.3 : 1)" 
+                    :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === hoveredNodeId || edge.id === tooltipEdge?.id) ? 1.3 : 1)" 
                     stroke-linecap="round" 
                     stroke-linejoin="round"
                     :marker-end="layoutData.arrowShape === 'undirected'
                         ? null
-                        : `url(#${makeMarkerId(edge.original?.color || FINAL_CONFIG.style.chart.edges.stroke)})`"
-                    style="pointer-events: none; transition: stroke-width 0.2s ease-in-out"
+                        : `url(#${makeMarkerId(edge.id)})`"
+                    style="pointer-events: none; transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out"
                 />
             </g>
 
@@ -1207,8 +1363,8 @@ defineExpose({
                     v-for="node in layoutData.nodes" 
                     :key="node.id" 
                     @click.stop="FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && showNodeTooltip(node)"
-                    @mouseenter="highlightedNodeId = node.id"
-                    @mouseleave="highlightedNodeId = null"
+                    @mouseenter="setHoveredNode(node.id)"
+                    @mouseleave="scheduleClearHoveredNode(node.id)"
                 >
                     <template v-if="!$slots['free-node-label']">
                         <!-- with `node-label` slot -->
@@ -1218,8 +1374,9 @@ defineExpose({
                             :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
                             text-anchor="middle" 
                             :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                            :fill="node.original.color"
+                            :fill="hoveredNodeId === node.id && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null ? FINAL_CONFIG.style.chart.nodes.selected.labelColor : node.original.color"
                             :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
+                            style="transition: fill 0.2s ease-in-out;"
                         >
                             <slot name="node-label" v-bind="{ node, orientation: direction }">
                                 {{ node.label }}
@@ -1234,13 +1391,14 @@ defineExpose({
                             :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
                             text-anchor="middle" 
                             :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                            :fill="node.original.color"
+                            :fill="hoveredNodeId === node.id && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null ? FINAL_CONFIG.style.chart.nodes.selected.labelColor : node.original.color"
                             :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
+                            style="transition: fill 0.2s ease-in-out"
                             v-html="createTSpansFromLineBreaksOnY({
                                 content: node.label,
                                 fontSize: FINAL_CONFIG.style.chart.nodes.labels.fontSize,
                                 fontWeight: FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal',
-                                fill:node.original.color,
+                                fill:hoveredNodeId === node.id && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null ? FINAL_CONFIG.style.chart.nodes.selected.labelColor : node.original.color,
                                 x: node.x,
                                 y: node.y,
                                 autoOffset: true

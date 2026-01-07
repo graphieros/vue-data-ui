@@ -1415,6 +1415,10 @@ declare module "vue-data-ui" {
         | "branches"
         | "bringToBack"
         | "bringToFront"
+        | "bucket"
+        | "bucketEmpty"
+        | "bucketFill"
+        | "bucketRecycle"
         | "building"
         | "carouselTable"
         | "chart3dBar"
@@ -1526,6 +1530,7 @@ declare module "vue-data-ui" {
         | "gisLayerSearch"
         | "hexagon"
         | "hexagonFill"
+        | "hierarchy"
         | "histogram"
         | "histogramDown"
         | "histogramUp"
@@ -1536,6 +1541,7 @@ declare module "vue-data-ui" {
         | "icons"
         | "image"
         | "key"
+        | "knobs"
         | "kpi"
         | "kpiBox"
         | "labelClose"
@@ -1547,6 +1553,7 @@ declare module "vue-data-ui" {
         | "lightBulbOff"
         | "lightBulbOn"
         | "lineUp"
+        | "listType"
         | "lock"
         | "magnify"
         | "menu"
@@ -9730,6 +9737,20 @@ declare module "vue-data-ui" {
                         color?: string;
                         maxWidth?: string;
                     };
+                    selected?: {
+                        stroke?: string | null;
+                        strokeWidth?: number | null;
+                        backgroundColor?: string | null;
+                        labelColor?: string | null;
+                        downstreamEdges?: {
+                            stroke?: string | null;
+                            animated?: boolean | null;
+                        };
+                        upstreamEdges?: {
+                            stroke?: string | null;
+                            animated?: string | null;
+                        }
+                    }
                 };
                 edges?: {
                     stroke?: string;
@@ -9749,6 +9770,10 @@ declare module "vue-data-ui" {
                         maxWidth?: string;
                         backgroundColor?: string;
                         color?: string;
+                    };
+                    selectedEdge?: {
+                        stroke?: string | null;
+                        animated?: boolean | null;
                     };
                 };
                 controls?: ChartZoomControls;

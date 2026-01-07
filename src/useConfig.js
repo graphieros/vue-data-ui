@@ -6889,6 +6889,20 @@ export function useConfig() {
                         backgroundColor: COLOR_GREY_LIGHT,
                         color: COLOR_BLACK,
                         maxWidth: '300px'
+                    },
+                    selected: {
+                        stroke: null,
+                        strokeWidth: null,
+                        backgroundColor: null,
+                        labelColor: null,
+                        downstreamEdges: {
+                            stroke: null,
+                            animated: null,
+                        },
+                        upstreamEdges: {
+                            stroke: null,
+                            animated: null,
+                        }
                     }
                 },
                 edges: {
@@ -6910,6 +6924,10 @@ export function useConfig() {
                         backgroundColor: COLOR_GREY_LIGHT,
                         color: COLOR_BLACK,
                     },
+                    selectedEdge: {
+                        stroke: null,
+                        animated: null
+                    }
                 },
                 controls: {
                     position: 'bottom',

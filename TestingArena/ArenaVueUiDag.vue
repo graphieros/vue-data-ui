@@ -124,6 +124,15 @@ const model = createModel([
     COLOR('style.chart.nodes.tooltip.color', { def: '#1A1A1A' }),
     TEXT('style.chart.nodes.tooltip.maxWidth', { def: '300px'}),
 
+    COLOR('style.chart.nodes.selected.stroke', { def: '#00FF00'}),
+    COLOR('style.chart.nodes.selected.backgroundColor', { def: '#00FF00'}),
+    COLOR('style.chart.nodes.selected.strokeWidth', { def: 3}),
+    COLOR('style.chart.nodes.selected.downstreamEdges.stroke', { def: '#FF0000' }),
+    COLOR('style.chart.nodes.selected.downstreamEdges.animated', { def: true }),
+    COLOR('style.chart.nodes.selected.upstreamEdges.animated', { def: true }),
+    COLOR('style.chart.nodes.selected.upstreamEdges.stroke', { def: '#0000FF' }),
+    COLOR('style.chart.nodes.selected.labelColor', { def: '#FF0000' }),
+
     COLOR('style.chart.edges.stroke', { def: '#CCCCCC' }),
     RANGE('style.chart.edges.strokeWidth', { def: 1, min: 0.5, max: 6, step: 0.1 }),
     
@@ -135,6 +144,9 @@ const model = createModel([
     TEXT('style.chart.midpoints.tooltip.maxWidth', { def: '300px'}),
     COLOR('style.chart.midpoints.tooltip.backgroundColor', { def: '#E1E5E8'}),
     COLOR('style.chart.midpoints.tooltip.color', { def: '#1A1A1A'}),
+
+    CHECKBOX('style.chart.midpoints.selectedEdge.animated', { def: true }),
+    COLOR('style.chart.midpoints.selectedEdge.stroke', { def: '#6376DD' }),
 
     CHECKBOX('style.chart.controls.show', { def: true }),
     SELECT('style.chart.controls.position', ['top', 'bottom'], { def: 'bottom' }),
