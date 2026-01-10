@@ -281,6 +281,12 @@ onBeforeUnmount(() => {
                 </div>
                 <slot name="VDUI-build"/>
             </div>
+            <div style="width: 100%; max-width: 600px" v-if="$slots['custom-config']">
+                <div class="title">
+                    <div class="tag"><BaseIcon name="palette" :size="16" stroke="#1A1A1A" />Custom config (local)</div>
+                </div>
+                <slot name="custom-config"/>
+            </div>
         </div>
     
         <button v-if="!!config" class="btn" @click="copy(config, true)">

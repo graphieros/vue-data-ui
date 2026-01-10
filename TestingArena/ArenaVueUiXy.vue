@@ -11,6 +11,7 @@ import ConfigKnobs from "./ConfigKnobs.vue";
 import { useConfigurationControls } from "./createConfigModel";
 import { useConfig } from "../src/useConfig"
 import useThemeOptions from "./useThemeOptions";
+import { getVueDataUiConfig, mergeConfigs, useObjectBindings } from "../src";
 
 const { local, build, vduiLocal, vduiBuild, toggleTable, toggleLabels, toggleStack } = useArena();
 const { vue_ui_xy: DEFAULT_CONFIG } = useConfig();
@@ -1304,6 +1305,30 @@ function freestyle({ data, drawingArea }) {
     `
 }
 
+const custom = getVueDataUiConfig('vue_ui_xy', {
+    colorBackground: '#1A1A1A',
+    colorTextPrimary: '#CD9077',
+    colorTextSecondary: '#825848',
+    colorGrid: '#CD9077',
+    colorBorder: '#CD9077'
+});
+
+const customConfig = computed(() => {
+    return mergeConfigs({
+        defaultConfig: custom,
+        userConfig: {
+            chart: {
+                title: {
+                    text: 'Title',
+                    subtitle: {
+                        text: 'Subtitle'
+                    }
+                }
+            }
+        }
+    })
+})
+
 </script>
 
 <template>
@@ -1658,6 +1683,10 @@ function freestyle({ data, drawingArea }) {
                     </div>
                 </template> 
             </VueDataUi>
+        </template>
+
+        <template #custom-config>
+            <LocalVueUiXy :dataset="dataset" :config="customConfig"/>
         </template>
 
         <template #knobs="{ summaryOpen }">
