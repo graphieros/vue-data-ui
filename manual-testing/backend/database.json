@@ -338,6 +338,23 @@
       "id": "33b4453a-6c9b-4997-9e65-33f2739f9b70",
       "createdAt": 1767782417794,
       "updatedAt": 1767801222353
+    },
+    {
+      "title": "scaleMin & scaleMax not reflected in minimap",
+      "component": "vue-ui-xy.vue",
+      "description": "When scaleMin and / or scaleMax are set in config, the minimap remains with default min & max settings. ",
+      "priority": 1,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "bug",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "529c7783-2a45-4a08-b26b-0ef8b2d8d0e1",
+      "createdAt": 1768065094039,
+      "updatedAt": 1768065094039
     }
   ]
 }
