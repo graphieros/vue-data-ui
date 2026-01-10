@@ -398,13 +398,17 @@ const defaultConfigXy = getVueDataUiConfig("vue_ui_xy");
 
 All charts are set by default without a theme, and use the default color palette.
 
-5 themes are available for all charts:
+9 themes are available for all charts:
 
+- default (or '')
+- dark
 - zen
 - hack
 - concrete
-- celebration (v2.4.70+)
-- celebrationNight (v2.4.70+)
+- celebration
+- celebrationNight
+- minimal
+- minimalDark
 
 Any color provided in dataset props will override the colors used by the theme for datapoints.
 
@@ -415,6 +419,40 @@ const donutConfig = ref({
   theme: 'zen',
   ...
 })
+```
+
+# Quick custom theme
+
+You can quickly setup your own theme for a given chart:
+
+```js
+import { getVueDataUiConfig, mergeConfigs } from "vue-data-ui";
+
+// Get the default config and set color options
+const customTheme = getVueDataUiConfig("vue_ui_xy", {
+  colorBackground: "#1A1A1A",
+  colorTextPrimary: "#CD9077",
+  colorTextSecondary: "#825848",
+  colorGrid: "#CD9077",
+  ocolorBorder: "#CD9077",
+});
+
+const config = computed(() => {
+  // Use the `mergeConfigs` utility to set additional configurations while preserving your theme
+  return mergeConfigs({
+    defaultConfig: customTheme,
+    userConfig: {
+      chart: {
+        title: {
+          text: "Title",
+          subtitle: {
+            text: "Subtitle",
+          },
+        },
+      },
+    },
+  });
+});
 ```
 
 # Available components : details
