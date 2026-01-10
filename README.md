@@ -434,7 +434,7 @@ const customTheme = getVueDataUiConfig("vue_ui_xy", {
   colorTextPrimary: "#CD9077",
   colorTextSecondary: "#825848",
   colorGrid: "#CD9077",
-  ocolorBorder: "#CD9077",
+  colorBorder: "#CD9077",
 });
 
 const config = computed(() => {
