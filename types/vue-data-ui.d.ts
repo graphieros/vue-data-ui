@@ -10521,6 +10521,14 @@ declare module "vue-data-ui" {
      */
     export const getPalette: (theme: Theme) => string[];
 
+    export type VueDataUiGetConfigOptions = {
+        colorBackground?: string;
+        colorTextPrimary?: string;
+        colorTextSecondary?: string;
+        colorGrid?: string;
+        colorBorder?: string;
+    };
+
     /**
      * Vue Data UI utility
      * ---
@@ -10528,13 +10536,14 @@ declare module "vue-data-ui" {
      * ___
      * @typeParam T - The config type for the component
      * @param key - Component key in snake_case (e.g. `"vue_ui_xy"`).
+     * @param options - Optional general color settings
      * @returns The default configuration of type `T`.
      * @example
      * ```ts
      * const defaultConfig = getVueDataUiConfig<VueUiXyConfig>("vue_ui_xy");
      * ```
      */
-    export const getVueDataUiConfig: <T>(key: VueDataUiConfigKey) => T;
+    export const getVueDataUiConfig: <T>(key: VueDataUiConfigKey, options?: VueDataUiGetConfigOptions) => T;
 
     /**
      * Vue Data UI utility

@@ -1,4 +1,4 @@
-export function useConfig() {
+export function useConfig(options = {}) {
     const COLOR_BLACK = '#2D353C'
     const COLOR_GREY = '#A1A1A1'
     const COLOR_GREY_LIGHT = '#e1e5e8'
@@ -11,6 +11,12 @@ export function useConfig() {
     const COLOR_GREEN = '#2ca02c'
     const COLOR_VUE = '#42d392'
     const COLOR_YELLOW = '#FFD055'
+
+    const COLOR_BACKGROUND = options.colorBackground ?? COLOR_WHITE;
+    const COLOR_TEXT_PRIMARY = options.colorTextPrimary ?? COLOR_BLACK;
+    const COLOR_TEXT_SECONDARY = options.colorTextSecondary ?? COLOR_GREY;
+    const COLOR_GRID = options.colorGrid ?? COLOR_GREY_LIGHT;
+    const COLOR_BORDER = options.colorBorder ?? COLOR_GREY_LIGHT;
 
     const FONT = {
         _6: 6,
@@ -64,14 +70,14 @@ export function useConfig() {
 
     const TITLE = {
         text: "",
-        color: COLOR_BLACK,
+        color: COLOR_TEXT_PRIMARY,
         fontSize: FONT._20,
         bold: true,
         textAlign: POSITION.CENTER,
         paddingLeft: 0,
         paddingRight: 0,
         subtitle: {
-            color: COLOR_GREY,
+            color: COLOR_TEXT_SECONDARY,
             text: "",
             fontSize: FONT._16,
             bold: false
@@ -81,19 +87,19 @@ export function useConfig() {
     const LEGEND = {
         show: true,
         bold: false,
-        backgroundColor: COLOR_WHITE,
-        color: COLOR_BLACK,
+        backgroundColor: COLOR_BACKGROUND,
+        color: COLOR_TEXT_PRIMARY,
         fontSize: FONT._14
     }
 
     const TOOLTIP = {
         show: true,
-        color: COLOR_BLACK,
-        backgroundColor: COLOR_WHITE,
+        color: COLOR_TEXT_PRIMARY,
+        backgroundColor: COLOR_BACKGROUND,
         fontSize: FONT._14,
         customFormat: null,
         borderRadius: 4,
-        borderColor: COLOR_GREY_LIGHT,
+        borderColor: COLOR_BORDER,
         borderWidth: 1,
         backgroundOpacity: 100,
         position: POSITION.CENTER,
@@ -225,14 +231,14 @@ export function useConfig() {
     }
 
     const TABLE_TH = {
-        backgroundColor: COLOR_WHITE_ALMOST,
-        color: COLOR_BLACK,
+        backgroundColor: COLOR_BACKGROUND,
+        color: COLOR_TEXT_PRIMARY,
         outline: 'none'
     }
 
     const TABLE_TD = {
-        backgroundColor: COLOR_WHITE,
-        color: COLOR_BLACK,
+        backgroundColor: COLOR_BACKGROUND,
+        color: COLOR_TEXT_PRIMARY,
         outline: 'none',
     }
 
@@ -312,8 +318,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 500,
                 width: 800,
                 padding: PADDING([12, 12, 12, 12]),
@@ -337,7 +343,7 @@ export function useConfig() {
                     customFormat: null // overrides all if callback => string
                 },
                 highlighter: {
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     opacity: 5,
                     useLine: false,
                     lineDasharray: 2,
@@ -363,7 +369,7 @@ export function useConfig() {
                     },
                     frame: {
                         show: false,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 2,
                         strokeLinecap: 'round',
                         strokeLinejoin: 'round',
@@ -372,8 +378,8 @@ export function useConfig() {
                     x: {
                         showAxis: true,
                         showHorizontalLines: false,
-                        axisColor: COLOR_GREY_LIGHT,
-                        linesColor: COLOR_GREY_LIGHT,
+                        axisColor: COLOR_GRID,
+                        linesColor: COLOR_GRID,
                         linesThickness: 1,
                         linesStrokeDasharray: 0,
                         axisThickness: 2,
@@ -381,7 +387,7 @@ export function useConfig() {
                             show: true,
                             text: '',
                             fontSize: FONT._14,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             offsetY: 0,
                         },
@@ -396,7 +402,7 @@ export function useConfig() {
                                 angle: -30
                             },
                             fontSize: FONT._14,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             showOnlyFirstAndLast: false,
                             showOnlyAtModulo: false,
@@ -406,23 +412,23 @@ export function useConfig() {
                     y: {
                         showAxis: true,
                         showVerticalLines: false,
-                        linesColor: COLOR_GREY_LIGHT,
+                        linesColor: COLOR_GRID,
                         linesThickness: 1,
                         linesStrokeDasharray: 0,
-                        axisColor: COLOR_GREY_LIGHT,
+                        axisColor: COLOR_GRID,
                         axisThickness: 2,
                         axisName: {
                             show: true,
                             text: '',
                             fontSize: FONT._14,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             offsetX: 0,
                         },
                         axisLabels: {
                             formatter: null,
                             show: true,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             fontSize: FONT._14,
                             bold: false,
                             rounding: 0
@@ -452,7 +458,7 @@ export function useConfig() {
                         offsetY: 0,
                         fontSize: FONT._16,
                         bold: true,
-                        color: COLOR_BLACK
+                        color: COLOR_TEXT_PRIMARY
                     },
                     dataLabels: {
                         hideAboveMaxSerieLength: 62,
@@ -462,7 +468,7 @@ export function useConfig() {
                         hideUnderValue: null,
                         hideEmptyPercentages: true,
                         hideUnderPercentage: null,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         fontSize: FONT._14,
                         bold: false,
                         rounding: 0,
@@ -515,8 +521,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 500,
                 width: 800,
                 padding: PADDING([12, 12, 12, 12]),
@@ -552,7 +558,7 @@ export function useConfig() {
                     timeFormat: 'yyyy-MM-dd HH:mm:ss' // When datetimeFormatter is enabled and useDefaultFormat is false
                 },
                 highlighter: {
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     opacity: 5
                 },
                 bars: {
@@ -571,7 +577,7 @@ export function useConfig() {
                         offsetX: 0,
                         fontSize: FONT._16,
                         bold: false,
-                        color: COLOR_BLACK
+                        color: COLOR_TEXT_PRIMARY
                     },
                     dataLabels: {
                         show: true,
@@ -580,7 +586,7 @@ export function useConfig() {
                         hideEmptyPercentages: false,
                         hideUnderPercentage: null,
                         adaptColorToBackground: true,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         fontSize: FONT._14,
                         bold: false,
                         rounding: 0,
@@ -597,7 +603,7 @@ export function useConfig() {
                     },
                     frame: {
                         show: false,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 2,
                         strokeLinecap: 'round',
                         strokeLinejoin: 'round',
@@ -606,8 +612,8 @@ export function useConfig() {
                     x: {
                         showAxis: true,
                         showHorizontalLines: false,
-                        axisColor: COLOR_GREY_LIGHT,
-                        linesColor: COLOR_GREY_LIGHT,
+                        axisColor: COLOR_GRID,
+                        linesColor: COLOR_GRID,
                         linesThickness: 1,
                         linesStrokeDasharray: 0,
                         axisThickness: 2,
@@ -615,7 +621,7 @@ export function useConfig() {
                             show: true,
                             text: '',
                             fontSize: FONT._14,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             offsetY: 0,
                         },
@@ -630,7 +636,7 @@ export function useConfig() {
                                 angle: -30 // v3
                             },
                             fontSize: FONT._14,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             showOnlyFirstAndLast: false,
                             showOnlyAtModulo: false,
@@ -640,23 +646,23 @@ export function useConfig() {
                     y: {
                         showAxis: true,
                         showVerticalLines: false,
-                        linesColor: COLOR_GREY_LIGHT,
+                        linesColor: COLOR_GRID,
                         linesThickness: 1,
                         linesStrokeDasharray: 0,
-                        axisColor: COLOR_GREY_LIGHT,
+                        axisColor: COLOR_GRID,
                         axisThickness: 2,
                         axisName: {
                             show: true,
                             text: '',
                             fontSize: FONT._14,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             offsetX: 0,
                         },
                         axisLabels: {
                             formatter: null,
                             show: true,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             fontSize: FONT._14,
                             bold: false,
                             rounding: 0
@@ -684,8 +690,8 @@ export function useConfig() {
         downsample: LTTB,
         chart: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             height: 600,
             width: 1000,
             // Annotations are hidden in stack mode
@@ -709,8 +715,8 @@ export function useConfig() {
                                 ry: 0,
                             },
                             fontSize: 14,
-                            color: COLOR_BLACK,
-                            backgroundColor: COLOR_GREY_LIGHT
+                            color: COLOR_TEXT_PRIMARY,
+                            backgroundColor: COLOR_GRID
                         },
                         line: {
                             stroke: COLOR_BLACK,
@@ -718,7 +724,7 @@ export function useConfig() {
                             strokeDasharray: 0,
                         },
                         area: {
-                            fill: COLOR_GREY_LIGHT,
+                            fill: COLOR_GRID,
                             opacity: 30
                         }
                     }
@@ -740,7 +746,7 @@ export function useConfig() {
             },
             padding: PADDING([12, 12, 6, 6]),
             highlighter: {
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 opacity: 5,
                 useLine: false,
                 lineDasharray: 2,
@@ -757,7 +763,7 @@ export function useConfig() {
                 caption: {
                     text: '',
                     fontSize: FONT._10,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     bold: false,
                     offsetY: 0,
                     width: 'auto',
@@ -767,25 +773,25 @@ export function useConfig() {
             },
             timeTag: {
                 show: false,
-                backgroundColor: COLOR_GREY_LIGHT,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_GRID,
+                color: COLOR_TEXT_PRIMARY,
                 fontSize: FONT._12,
                 circleMarker: {
                     radius: 3,
-                    color: COLOR_BLACK
+                    color: COLOR_TEXT_PRIMARY
                 },
                 useDefaultFormat: true,
                 timeFormat: 'yyyy-MM-dd HH:mm:ss', // When datetimeFormatter is enabled
                 customFormat: null // overrides all if callback => string
             },
             grid: {
-                stroke: COLOR_GREY_LIGHT,
+                stroke: COLOR_GRID,
                 showVerticalLines: false,
                 showHorizontalLines: false,
                 position: 'middle', // or 'start'
                 frame: {
                     show: false,
-                    stroke: COLOR_GREY_LIGHT,
+                    stroke: COLOR_GRID,
                     strokeWidth: 2,
                     strokeLinecap: 'round',
                     strokeLinejoin: 'round',
@@ -793,7 +799,7 @@ export function useConfig() {
                 },
                 labels: {
                     show: true,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     fontSize: FONT._16,
                     axis: {
                         yLabel: '',
@@ -832,7 +838,7 @@ export function useConfig() {
                         serieNameFormatter: null // v3, for individual scale & stacked modes
                     },
                     xAxisLabels: {
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         show: true,
                         values: [],
                         datetimeFormatter: AXIS_DATE_FORMATTER,
@@ -862,7 +868,7 @@ export function useConfig() {
                 suffix: ''
             },
             legend: {
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 show: true,
                 fontSize: FONT._14,
                 position: 'bottom', // bottom | top
@@ -910,7 +916,7 @@ export function useConfig() {
                 show: false,
                 offsetY: -6,
                 rounding: 0,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 formatter: null
             },
             serieName: {
@@ -919,7 +925,7 @@ export function useConfig() {
                 useAbbreviation: true,
                 abbreviationSize: 3,
                 useSerieColor: true,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 bold: false
             }
         },
@@ -945,7 +951,7 @@ export function useConfig() {
                 show: false,
                 offsetY: -6,
                 rounding: 0,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 formatter: null
             },
             area: {
@@ -972,7 +978,7 @@ export function useConfig() {
                 show: false,
                 offsetY: -6,
                 rounding: 0,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 formatter: null
             },
             tag: {
@@ -1059,8 +1065,8 @@ export function useConfig() {
             chart: {
                 useGradient: true,
                 gradientIntensity: 40,
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 padding: PADDING([0,0,0,0]),
                 width: 512,
                 height: 360,
@@ -1084,7 +1090,7 @@ export function useConfig() {
                             formatter: null
                         },
                         percentage: {
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: true,
                             fontSize: FONT._18,
                             minFontSize: MIN_FONT_SIZE, // v3
@@ -1092,7 +1098,7 @@ export function useConfig() {
                             formatter: null
                         },
                         name: {
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             fontSize: FONT._14,
                             minFontSize: MIN_FONT_SIZE, // v3
@@ -1103,11 +1109,11 @@ export function useConfig() {
                                 show: true,
                                 bold: false,
                                 fontSize: FONT._18,
-                                color: COLOR_GREY,
+                                color: COLOR_TEXT_PRIMARY,
                                 text: 'Total',
                                 offsetY: 0,
                                 value: {
-                                    color: COLOR_BLACK,
+                                    color: COLOR_TEXT_PRIMARY,
                                     fontSize: FONT._18,
                                     bold: true,
                                     suffix: '',
@@ -1121,11 +1127,11 @@ export function useConfig() {
                                 show: true,
                                 bold: false,
                                 fontSize: FONT._18,
-                                color: COLOR_GREY,
+                                color: COLOR_TEXT_SECONDARY,
                                 text: 'Average',
                                 offsetY: 0,
                                 value: {
-                                    color: COLOR_BLACK,
+                                    color: COLOR_TEXT_PRIMARY,
                                     fontSize: FONT._18,
                                     bold: true,
                                     suffix: '',
@@ -1143,10 +1149,10 @@ export function useConfig() {
                         borderWidth: 1,
                         useShadow: false,
                         shadowColor: COLOR_BLACK,
-                        emptyFill: COLOR_GREY_LIGHT,
+                        emptyFill: COLOR_GRID,
                         selectedColor: '#0000001A',
                         borderColorAuto: true,
-                        borderColor: '#CCCCCC'
+                        borderColor: COLOR_BORDER
                     }
                 },
                 comments: {
@@ -1202,15 +1208,15 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 500,
                 width: 800,
                 padding: PADDING([0, 0, 0, 0]),
                 layout: {
                     sorted: true,
                     rects: {
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 1,
                         borderRadius: 0,
                         colorRatio: 0.3,
@@ -1219,17 +1225,17 @@ export function useConfig() {
                             intensity: 30
                         },
                         group: {
-                            stroke: COLOR_GREY_LIGHT,
+                            stroke: COLOR_GRID,
                             strokeWidth: 1,
                             useSeriesBackgroundColor: false,
                             backgroundLighterRatio: 0.4,
                             label: {
                                 adaptColorToBackground: false,
-                                color: COLOR_BLACK
+                                color: COLOR_TEXT_PRIMARY
                             }
                         },
                         selected: {
-                            stroke: COLOR_GREY_LIGHT,
+                            stroke: COLOR_GRID,
                             strokeWidth: 1,
                             unselectedOpacity: 0.6
                         },
@@ -1302,8 +1308,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 layout: {
                     labels: {
                         dataLabels: {
@@ -1402,8 +1408,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 layout: {
                     plots: {
                         show: true,
@@ -1421,7 +1427,7 @@ export function useConfig() {
                     },
                     grid: {
                         show: true,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 0.5,
                         graduations: 5
                     },
@@ -1429,7 +1435,7 @@ export function useConfig() {
                         dataLabels: {
                             show: true,
                             fontSize: FONT._12,
-                            color: COLOR_BLACK
+                            color: COLOR_TEXT_PRIMARY
                         }
                     }
                 },
@@ -1498,33 +1504,33 @@ export function useConfig() {
             chart: {
                 height: 512,
                 width: 512,
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 layout: {
                     labels: {
                         quadrantLabels: {
                             show: true,
                             tl: {
                                 text: '',
-                                color: COLOR_BLACK,
+                                color: COLOR_TEXT_PRIMARY,
                                 fontSize: FONT._16,
                                 bold: true
                             },
                             tr: {
                                 text: '',
-                                color: COLOR_BLACK,
+                                color: COLOR_TEXT_PRIMARY,
                                 fontSize: FONT._16,
                                 bold: true
                             },
                             br: {
                                 text: '',
-                                color: COLOR_BLACK,
+                                color: COLOR_TEXT_PRIMARY,
                                 fontSize: FONT._16,
                                 bold: true
                             },
                             bl: {
                                 text: '',
-                                color: COLOR_BLACK,
+                                color: COLOR_TEXT_PRIMARY,
                                 fontSize: FONT._16,
                                 bold: true
                             }
@@ -1533,7 +1539,7 @@ export function useConfig() {
                             showAsTag: false,
                             show: true,
                             fontSize: FONT._10,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             offsetY: 8,
                             rounding: 0,
                             x: {
@@ -1547,22 +1553,22 @@ export function useConfig() {
                             show: true,
                             fontSize: FONT._14,
                             color: {
-                                positive: COLOR_BLACK,
-                                negative: COLOR_BLACK
+                                positive: COLOR_TEXT_PRIMARY,
+                                negative: COLOR_TEXT_PRIMARY
                             }
                         }
                     },
                     grid: {
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 1.5,
                         showArrows: true,
                         graduations: {
-                            stroke: COLOR_GREY_LIGHT,
+                            stroke: COLOR_GRID,
                             strokeWidth: 0.5,
                             show: true,
                             steps: 5,
                             fill: true,
-                            color: COLOR_GREY_LIGHT,
+                            color: COLOR_GRID,
                             roundingForce: 10
                         },
                         xAxis: {
@@ -1638,8 +1644,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 animation: {
                     use: true,
                     speed: 1,
@@ -1654,7 +1660,7 @@ export function useConfig() {
                     },
                     markers: {
                         show: true,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: true,
                         fontSizeRatio: 1,
                         offsetY: 0,
@@ -1677,13 +1683,13 @@ export function useConfig() {
                         fontSize: FONT._16,
                         minFontSize: MIN_FONT_SIZE, // v3
                         useSerieColor: true,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                     },
                     indicatorArc: {
                         show: false,
                         radius: 123,
-                        fill: COLOR_GREY_LIGHT,
+                        fill: COLOR_GRID,
                     },
                     pointer: {
                         show: true,
@@ -1709,7 +1715,7 @@ export function useConfig() {
                     roundingValue: 1,
                     showPlusSymbol: true,
                     useRatingColor: true,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     formatter: null
                 },
                 title: TITLE
@@ -1736,8 +1742,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 animation: {
                     use: true,
                     speed: 0.5,
@@ -1750,7 +1756,7 @@ export function useConfig() {
                         ticks: {
                             type: 'classic', // or 'arc'
                             rounded: true,
-                            inactiveColor: COLOR_GREY_LIGHT,
+                            inactiveColor: COLOR_GRID,
                             activeColor: COLOR_BLUE,
                             sizeRatio: 0.9,
                             quantity: 100, // min: 12, max: 200
@@ -1767,7 +1773,7 @@ export function useConfig() {
                     },
                     innerCircle: {
                         show: true,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 1,
                         radiusRatio: 1,
                     },
@@ -1803,8 +1809,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 width: 312, // v3
                 height: 56, // v3
                 animation: {
@@ -1819,7 +1825,7 @@ export function useConfig() {
                     curveAngleX: 10,
                     curveAngleY: 10,
                     activeColor: COLOR_BLUE,
-                    inactiveColor: COLOR_GREY_LIGHT,
+                    inactiveColor: COLOR_GRID,
                     ticks: {
                         gradient: {
                             show: true,
@@ -1858,8 +1864,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 layout: {
                     grandTotal: {
                         show: true,
@@ -1868,7 +1874,7 @@ export function useConfig() {
                         prefix: '',
                         suffix: '',
                         roundingValue: 0,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         text: 'Grand total',
                         offsetY: 0,
                         formatter: null,
@@ -1890,7 +1896,7 @@ export function useConfig() {
                             suffix: '',
                             formatter: null,
                             name: {
-                                color: COLOR_BLACK,
+                                color: COLOR_TEXT_PRIMARY,
                                 fontSize: FONT._16,
                                 bold: true
                             }
@@ -1914,7 +1920,7 @@ export function useConfig() {
                         labels: {
                             show: true,
                             fontSize: FONT._14,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: true,
                             dataLabels: {
                                 show: true,
@@ -1941,7 +1947,7 @@ export function useConfig() {
                             labels: {
                                 dataLabels: {
                                     hideUnderValue: 5,
-                                    color: COLOR_BLACK,
+                                    color: COLOR_TEXT_PRIMARY,
                                     fontSize: FONT._12,
                                     bold: true,
                                     prefix: '',
@@ -1950,12 +1956,12 @@ export function useConfig() {
                                 },
                                 core: {
                                     total: {
-                                        color: COLOR_BLACK,
+                                        color: COLOR_TEXT_PRIMARY,
                                         fontSize: FONT._24,
                                         bold: false
                                     },
                                     value: {
-                                        color: COLOR_BLACK,
+                                        color: COLOR_TEXT_PRIMARY,
                                         fontSize: FONT._24,
                                         bold: true,
                                         prefix: '',
@@ -1967,7 +1973,7 @@ export function useConfig() {
                     },
                     legend: {
                         fontSize: FONT._16,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         roundingValue: 0,
                         roundingPercentage: 0,
                         prefix: '',
@@ -2043,14 +2049,14 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 useGradient: true,
                 gradientIntensity: 20,
                 layout: {
                     maxThickness: 64,
                     gutter: {
-                        color: COLOR_GREY_LIGHT,
+                        color: COLOR_GRID,
                         width: 0.62
                     },
                     track: {
@@ -2061,7 +2067,7 @@ export function useConfig() {
                         show: true,
                         fontSize: FONT._14,
                         minFontSize: MIN_FONT_SIZE, // v3
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         roundingValue: 0,
                         roundingPercentage: 0,
                         bold: true,
@@ -2139,8 +2145,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 width: 512,
                 height: 316,
                 layout: {
@@ -2158,7 +2164,7 @@ export function useConfig() {
                         fillOpacity: 90,
                         underlayerColor: COLOR_WHITE,
                         dataLabels: {
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: true,
                             fontSize: FONT._14, // v3 increased
                             value: {
@@ -2176,14 +2182,14 @@ export function useConfig() {
                         },
                         nameLabels: {
                             show: true,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             fontSize: FONT._14, // v3 increased
                             offsetX: 0
                         },
                         parentLabels: {
                             show: true,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             fontSize: FONT._14, // v3 increased
                             offsetX: 0,
@@ -2196,7 +2202,7 @@ export function useConfig() {
                     },
                     separators: {
                         show: false,
-                        color: COLOR_GREY_LIGHT,
+                        color: COLOR_GRID,
                         strokeWidth: 1,
                         fullWidth: true,
                     }
@@ -2267,8 +2273,8 @@ export function useConfig() {
         theme: '',
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             layout: {
                 height: 300, // v3
                 width: 1000, // v3
@@ -2309,7 +2315,7 @@ export function useConfig() {
                         fontSize: FONT._18,
                         bold: false,
                         roundingValue: 0,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         formatter: null
                     },
                     colors: {
@@ -2337,7 +2343,7 @@ export function useConfig() {
                             angle: -30, // v3
                         },
                         fontSize: FONT._10,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                         offsetX: 0,
                         offsetY: 0
@@ -2347,7 +2353,7 @@ export function useConfig() {
                         values: [],
                         datetimeFormatter: AXIS_DATE_FORMATTER,
                         fontSize: FONT._10,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                         offsetX: 0,
                         offsetY: 0
@@ -2408,15 +2414,15 @@ export function useConfig() {
         usePerformanceMode: false,
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             layout: {
                 height: 316,
                 width: 512,
                 padding: PADDING([0, 0, 0, 0]), // v3 modification
                 axis: {
                     show: true,
-                    stroke: COLOR_GREY_LIGHT,
+                    stroke: COLOR_GRID,
                     strokeWidth: 1
                 },
                 marginalBars: {
@@ -2469,7 +2475,7 @@ export function useConfig() {
                         strokeDasharray: 0,
                         labels: {
                             fontSize: FONT._12,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             rounding: 2,
                             bold: false,
                             showName: true,
@@ -2497,7 +2503,7 @@ export function useConfig() {
                     label: {
                         show: true,
                         fontSize: FONT._12,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: true,
                         roundingValue: 2,
                         useSerieColor: true
@@ -2508,7 +2514,7 @@ export function useConfig() {
                         name: '',
                         show: true,
                         fontSize: FONT._10,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                         offsetX: 0,
                         offsetY: 0,
@@ -2518,7 +2524,7 @@ export function useConfig() {
                         name: '',
                         show: true,
                         fontSize: FONT._10,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                         offsetX: 0,
                         offsetY: 0,
@@ -2583,31 +2589,31 @@ export function useConfig() {
         useCssAnimation: false, // v3 (v2 = true)
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             height: 316,
             width: 512,
             layout: {
                 padding: PADDING([0, 0, 0, 0]),
                 selector: {
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     opacity: 10
                 },
                 grid: {
                     show: true,
-                    stroke: COLOR_GREY_LIGHT,
+                    stroke: COLOR_GRID,
                     strokeWidth: 0.5,
                     verticalLines: {
                         show: false,
                         strokeDasharray: 0,
                         strokeWidth: 0.5,
-                        stroke: COLOR_GREY_LIGHT
+                        stroke: COLOR_GRID 
                     },
                     horizontalLines: {
                         show: false,
                         strokeDasharray: 0,
                         strokeWidth: 0.5,
-                        stroke: COLOR_GREY_LIGHT
+                        stroke: COLOR_GRID
                     },
                     xAxis: {
                         ticks: {
@@ -2616,7 +2622,7 @@ export function useConfig() {
                         dataLabels: {
                             show: true,
                             fontSize: FONT._10,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             offsetY: 0,
                             bold: false,
                             rotation: 0,
@@ -2638,7 +2644,7 @@ export function useConfig() {
                         dataLabels: {
                             show: true,
                             fontSize: FONT._12,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             roundingValue: 0,
                             offsetX: 0,
                             bold: false,
@@ -2748,7 +2754,7 @@ export function useConfig() {
             },
             padding: PADDING([12, 12, 3, 0]),
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             scaleMin: null,
             scaleMax: null,
             line: {
@@ -2783,7 +2789,7 @@ export function useConfig() {
                 offsetY: 0,
                 fontSize: FONT._20,
                 bold: true,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 roundingValue: 0,
                 valueType: 'latest',
                 prefix: '',
@@ -2794,7 +2800,7 @@ export function useConfig() {
             title: {
                 show: true,
                 textAlign: POSITION.LEFT,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 fontSize: FONT._16,
                 bold: true,
                 text: ''
@@ -2802,11 +2808,11 @@ export function useConfig() {
             tooltip: {
                 show: false,
                 fontSize: FONT._14,
-                color: COLOR_BLACK,
-                backgroundColor: COLOR_WHITE,
+                color: COLOR_TEXT_PRIMARY,
+                backgroundColor: COLOR_BACKGROUND,
                 offsetY: 0,
                 borderWidth: 0,
-                borderColor: COLOR_GREY_LIGHT,
+                borderColor: COLOR_BORDER,
                 borderRadius: 2,
                 backgroundOpacity: 100
             },
@@ -2831,7 +2837,7 @@ export function useConfig() {
         customPalette: [],
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             animation: {
                 show: true,
                 animationFrames: 60
@@ -2844,7 +2850,7 @@ export function useConfig() {
                 targetValueText: ''
             },
             gutter: {
-                backgroundColor: COLOR_GREY_LIGHT,
+                backgroundColor: COLOR_GRID,
                 opacity: 100
             },
             bar: {
@@ -2859,7 +2865,7 @@ export function useConfig() {
                 name: {
                     position: 'top-left',
                     width: '100%',
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     bold: false
                 },
                 value: {
@@ -2869,13 +2875,13 @@ export function useConfig() {
             },
             title: {
                 text: '',
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 fontSize: FONT._16,
                 bold: true,
                 textAlign: POSITION.LEFT,
                 margin: '0 0 6px 0',
                 subtitle: { 
-                    color: COLOR_GREY,
+                    color: COLOR_TEXT_SECONDARY,
                     text: '', 
                     fontSize: FONT._12, 
                     bold: false 
@@ -2897,7 +2903,7 @@ export function useConfig() {
         customPalette: [],
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             animation: {
                 show: true,
                 animationFrames: 60
@@ -2915,13 +2921,13 @@ export function useConfig() {
                 fontSize: FONT._12,
                 margin: '6px 0 0 0',
                 name: {
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     bold: false
                 },
                 value: {
                     show: true,
                     bold: false,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     prefix: '',
                     suffix: '',
                     rounding: 0,
@@ -2930,7 +2936,7 @@ export function useConfig() {
                 percentage: {
                     show: true,
                     bold: true,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     rounding: 1
                 }
             },
@@ -2957,7 +2963,7 @@ export function useConfig() {
         theme: '',
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             animation: {
                 show: true,
                 speedMs: 500
@@ -2985,7 +2991,7 @@ export function useConfig() {
                     show: true,
                     fontSize: FONT._14,
                     minFontSize: MIN_FONT_SIZE, // v3
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     bold: true,
                     rounding: 1,
                     prefix: '',
@@ -2997,7 +3003,7 @@ export function useConfig() {
                     show: true,
                     fontSize: FONT._14,
                     minFontSize: MIN_FONT_SIZE, // v3
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     bold: false,
                     rounding: 0,
                 },
@@ -3005,7 +3011,7 @@ export function useConfig() {
                     show: true,
                     fontSize: FONT._12,
                     minFontSize: MIN_FONT_SIZE, // v3
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     bold: false,
                 }
             },
@@ -3018,12 +3024,12 @@ export function useConfig() {
             },
             title: {
                 text: '',
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 fontSize: FONT._16,
                 bold: true,
                 textAlign: POSITION.LEFT,
                 subtitle: { 
-                    color: COLOR_GREY,
+                    color: COLOR_TEXT_SECONDARY,
                     text: '', 
                     fontSize: FONT._12, 
                     bold: false 
@@ -3052,12 +3058,12 @@ export function useConfig() {
                 position: POSITION.TOP,
                 textAlign: POSITION.CENTER,
                 bold: false,
-                color: COLOR_BLACK
+                color: COLOR_TEXT_PRIMARY
             },
             dataLabel: {
                 fontSize: FONT._20,
                 autoColor: true,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 offsetY: 0,
                 bold: true,
                 rounding: 0,
@@ -3076,7 +3082,7 @@ export function useConfig() {
                 strokeLinecap: SHAPE.ROUND
             },
             gutter: {
-                color: COLOR_GREY_LIGHT,
+                color: COLOR_GRID,
                 strokeLinecap: SHAPE.ROUND
             }
         }
@@ -3090,7 +3096,7 @@ export function useConfig() {
         downsample: LTTB,
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             height: 80,
             width: 300,
             animation: {
@@ -3113,7 +3119,7 @@ export function useConfig() {
             dataLabel: {
                 show: true,
                 useColorTrend: true,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 fontSize: FONT._14,
                 bold: false,
                 prefix: '',
@@ -3124,7 +3130,7 @@ export function useConfig() {
             trendLabel: {
                 trendType: 'global',
                 useColorTrend: true,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 fontSize: FONT._14,
                 bold: true,
                 rounding: 0
@@ -3151,13 +3157,13 @@ export function useConfig() {
         responsive: false,
         theme: '',
         axisLabelsFontSize: FONT._12,
-        backgroundColor: COLOR_WHITE,
+        backgroundColor: COLOR_BACKGROUND,
         barGap: 12,
         barAnimated: true,
         barStrokeWidth: 1,
         blurOnHover: true,
         chartIsBarUnderDatasetLength: 6,
-        color: COLOR_BLACK,
+        color: COLOR_TEXT_PRIMARY,
         customPalette: [],
         dataLabelFontSize: FONT._14,
         dataLabelRoundingPercentage: 1,
@@ -3168,7 +3174,7 @@ export function useConfig() {
         donutRadiusRatio: 0.4,
         donutShowTotal: true,
         donutStrokeWidth: 2,
-        donutStroke: '#FFFFFF',
+        donutStroke: COLOR_BACKGROUND,
         donutThicknessRatio: 0.18,
         donutTotalLabelFontSize: FONT._24,
         donutTotalLabelOffsetY: 0,
@@ -3246,9 +3252,9 @@ export function useConfig() {
         valueSuffix: '',
         width: 512,
         xAxisLabel: '',
-        xyAxisStroke: COLOR_GREY_MID,
+        xyAxisStroke: COLOR_GRID,
         xyAxisStrokeWidth: 1,
-        xyGridStroke: COLOR_GREY_LIGHT,
+        xyGridStroke: COLOR_GRID,
         xyGridStrokeWidth: 0.5,
         xyHighlighterColor: COLOR_BLACK,
         xyHighlighterOpacity: 0.05,
@@ -3298,22 +3304,22 @@ export function useConfig() {
         theme: '',
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             height: 500,
             width: 500,
             layout: {
                 padding: PADDING([12, 12, 36, 12]),
                 grid: {
                     show: true,
-                    stroke: COLOR_GREY_LIGHT,
+                    stroke: COLOR_GRID,
                     strokeWidth: 1
                 },
                 dataLabels: {
                     sideTitles: {
                         show: true,
                         fontSize: FONT._18,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         useSideColor: true,
                         bold: false,
                         offsetY: 0
@@ -3321,7 +3327,7 @@ export function useConfig() {
                     xAxis: {
                         show: true,
                         fontSize: FONT._12,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                         scale: 1000,
                         translation: 'in thousands',
@@ -3336,7 +3342,7 @@ export function useConfig() {
                         show: true,
                         display: 'age',
                         fontSize: FONT._12,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                         showEvery: 5,
                         formatter: null
@@ -3411,8 +3417,8 @@ export function useConfig() {
         customPalette: [],
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             size: 400,
             limit: 50,
             animation: {
@@ -3420,7 +3426,7 @@ export function useConfig() {
                 speedMs: 300
             },
             labels: {
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 fontSize: FONT._14,
                 minFontSize: MIN_FONT_SIZE, // v3
             },
@@ -3467,8 +3473,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 360,
                 width: 256, // v3
                 thermometer: {
@@ -3483,7 +3489,7 @@ export function useConfig() {
                     show: true,
                     sides: 'both',
                     height: 2,
-                    stroke: COLOR_GREY_LIGHT,
+                    stroke: COLOR_GRID,
                     strokeWidth: 1,
                     showIntermediate: true,
                     gradient: {
@@ -3501,7 +3507,7 @@ export function useConfig() {
                     minFontSize: MIN_FONT_SIZE, // v3
                     rounding: 1,
                     bold: true,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     prefix: '',
                     suffix: '',
                     formatter: null
@@ -3534,8 +3540,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 size: 360,
                 layout: {
                     labels: {
@@ -3547,7 +3553,7 @@ export function useConfig() {
                             show: false,
                             offsetX: 0,
                             fontSize: 10,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             roundingValue: 0,
                             roundingPercentage: 0,
@@ -3564,7 +3570,7 @@ export function useConfig() {
                     },
                     rings: {
                         strokeWidth: 2,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         gradient: {
                             show: true,
                             intensity: 40,
@@ -3633,8 +3639,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 zoom: ZOOM,
                 donuts: {
                     hover: {
@@ -3643,11 +3649,11 @@ export function useConfig() {
                 },
                 dialog: {
                     show: true,
-                    backgroundColor: COLOR_WHITE,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_BACKGROUND,
+                    color: COLOR_TEXT_PRIMARY,
                     header: {
-                        backgroundColor: COLOR_WHITE,
-                        color: COLOR_BLACK
+                        backgroundColor: COLOR_BACKGROUND,
+                        color: COLOR_TEXT_PRIMARY
                     },
                     donutChart: {
                         ...vue_ui_donut,
@@ -3698,7 +3704,7 @@ export function useConfig() {
                     padding: PADDING([5, 10, 5, 10]),
                     grid: {
                         show: true,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 0.7,
                         showVerticalLines: true,
                         axis: {
@@ -3707,7 +3713,7 @@ export function useConfig() {
                             xLabel: '',
                             xLabelOffsetY: 0,
                             fontSize: FONT._14,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                         },
                         yAxis: {
                             scaleMin: null,
@@ -3716,7 +3722,7 @@ export function useConfig() {
                             dataLabels: {
                                 show: true,
                                 fontSize: FONT._10,
-                                color: COLOR_BLACK,
+                                color: COLOR_TEXT_PRIMARY,
                                 roundingValue: 0,
                                 offsetX: 0,
                                 bold: false,
@@ -3730,7 +3736,7 @@ export function useConfig() {
                                 datetimeFormatter: AXIS_DATE_FORMATTER,
                                 fontSize: FONT._10,
                                 showOnlyFirstAndLast: false,
-                                color: COLOR_BLACK,
+                                color: COLOR_TEXT_PRIMARY,
                                 rotation: 0,
                                 autoRotate: { // v3
                                     enable: true, // v3
@@ -3752,7 +3758,7 @@ export function useConfig() {
                     dataLabels: {
                         show: true,
                         fontSize: FONT._10,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                         rounding: 0,
                         prefix: '',
@@ -3810,16 +3816,16 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 layout: {
                     grid: {
                         show: true,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 0.5,
                     },
                     outerPolygon: {
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 1
                     },
                     dataPolygon: {
@@ -3843,7 +3849,7 @@ export function useConfig() {
                         }
                     },
                     dataLabel: {
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         roundingValue: 0,
                         roundingPercentage: 0,
                         bold: true,
@@ -3900,8 +3906,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 nodes: {
                     stroke: COLOR_WHITE,
                     strokeHovered: COLOR_BLACK
@@ -3978,8 +3984,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 useGradient: true,
                 gradientIntensity: 40,
                 padding: PADDING([0,0,0,0]),
@@ -3997,7 +4003,7 @@ export function useConfig() {
                             offsetX: 4,
                             offsetY: 12,
                             useSerieColor: false,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             showValue: true,
                             showPercentage: true,
                             boldValue: false,
@@ -4019,10 +4025,10 @@ export function useConfig() {
                         spacingRatio: 0.5,
                         useShadow: false,
                         shadowColor: COLOR_BLACK,
-                        emptyFill: COLOR_GREY_LIGHT,
+                        emptyFill: COLOR_GRID,
                         selectedColor: '#0000001A',
                         borderColorAuto: true,
-                        borderColor: '#CCCCCC'
+                        borderColor: COLOR_BORDER
                     }
                 },
                 legend: {
@@ -4079,8 +4085,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 layout: {
                     arcs: {
                         strokeWidth: 24,
@@ -4178,8 +4184,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 600,
                 width: 600, // v3
                 // stripWidth: 120, v3 deprecated
@@ -4221,7 +4227,7 @@ export function useConfig() {
                         show: true,
                         showValue: true,
                         fontSize: FONT._14,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         rounding: 0,
                         offsetY: 0
                     },
@@ -4231,11 +4237,11 @@ export function useConfig() {
                         yLabel: '',
                         yLabelOffsetX: 0,
                         fontSize: FONT._14,
-                        color: COLOR_BLACK
+                        color: COLOR_TEXT_PRIMARY
                     },
                     xAxisLabels: {
                         show: true,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         fontSize: FONT._14,
                         offsetY: 0,
                         rotation: 0, // v3,
@@ -4246,7 +4252,7 @@ export function useConfig() {
                     },
                     yAxisLabels: {
                         show: true,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         fontSize: FONT._14,
                         rounding: 0,
                         offsetX: 0
@@ -4298,8 +4304,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 width: 600,
                 rowHeight: 48, // v3 modified
                 padding: PADDING([12, 24, 12, 12]), // v3 modified
@@ -4367,12 +4373,12 @@ export function useConfig() {
                         xLabel: '', // v3
                         xLabelOffsetY: 0, // v3
                         fontSize: FONT._14, // v3
-                        color: COLOR_BLACK, // v3
+                        color: COLOR_TEXT_PRIMARY, // v3
                     },
                     yAxisLabels: {
                         show: true,
                         fontSize: FONT._14,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         offsetX: 0,
                         bold: true,
                         showProgression: true,
@@ -4382,7 +4388,7 @@ export function useConfig() {
                     xAxisLabels: {
                         show: true,
                         fontSize: FONT._14,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         offsetY: 0,
                         bold: false,
                         rounding: 0,
@@ -4395,7 +4401,7 @@ export function useConfig() {
                     startLabels: {
                         show: true,
                         fontSize: FONT._10,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         offsetY: 0,
                         rounding: 0,
                         useStartColor: true,
@@ -4404,7 +4410,7 @@ export function useConfig() {
                     endLabels: {
                         show: true,
                         fontSize: FONT._10,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         offsetY: 0,
                         rounding: 0,
                         useEndColor: true,
@@ -4462,8 +4468,8 @@ export function useConfig() {
                     speed: 1,
                     acceleration: 1,
                 },
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 bar: {
                     color: COLOR_BLUE,
                     stroke: COLOR_BLUE,
@@ -4488,7 +4494,7 @@ export function useConfig() {
                 legend: {
                     showDefault: true,
                     fontSize: FONT._10,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     bold: false,
                     roundingValue: 0,
                     roundingPercentage: 0,
@@ -4579,21 +4585,21 @@ export function useConfig() {
         },
         title: {
             text: '',
-            color: COLOR_BLACK,
+            color: COLOR_TEXT_PRIMARY,
             fontSize: FONT._20,
             bold: true,
             textAlign: 'center',
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             subtitle: { 
-                color: COLOR_GREY,
+                color: COLOR_TEXT_SECONDARY,
                 text: '', 
                 fontSize: FONT._16, 
                 bold: false 
             },
         },
         thead: {
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             fontSize: FONT._14,
             outline: "none",
             textAlign: POSITION.LEFT,
@@ -4601,15 +4607,15 @@ export function useConfig() {
         },
         tbody: {
             showColorMarker: true,
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             fontSize: FONT._14,
             outline: "none",
             textAlign: POSITION.LEFT,
             bold: false,
             selectedColor: {
                 useSerieColor: true,
-                fallback: COLOR_GREY_LIGHT,
+                fallback: COLOR_GRID,
             }
         },
         userOptions: USER_OPTIONS({
@@ -4624,8 +4630,8 @@ export function useConfig() {
         theme: '',
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             shapeSize: FONT._14,
             heatmapColors: {
                 useIndividualScale: false,
@@ -4640,8 +4646,8 @@ export function useConfig() {
             showAverage: false,
             showMedian: false,
             head: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 values: []
             }
         },
@@ -4683,8 +4689,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 512,
                 width: 512,
                 zoom: {
@@ -4693,11 +4699,11 @@ export function useConfig() {
                 controls: {
                     position: 'bottom',
                     show: true,
-                    backgroundColor: COLOR_GREY_LIGHT,
-                    buttonColor: COLOR_GREY_LIGHT,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_GRID,
+                    buttonColor: COLOR_GRID,
+                    color: COLOR_TEXT_PRIMARY,
                     fontSize: 14,
-                    border: `1px solid ${COLOR_GREY_MID}`,
+                    border: `1px solid ${COLOR_BORDER}`,
                     padding: `0.5rem`,
                     borderRadius: `0.25rem`
                 },
@@ -4707,7 +4713,7 @@ export function useConfig() {
                     bold: false,
                     proximity: 10,
                     packingWeight: 1,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     usePalette: true,
                     hoverOpacity: 0.5,
                     selectedStroke: 'transparent'
@@ -4759,8 +4765,8 @@ export function useConfig() {
         style: {
             fontFamily: 'Arial', // A defined font must be provided as 'inherit' fails with canvas
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 aspectRatio: '12 / 9',
                 stacked: false,
                 stackGap: 20,
@@ -4809,7 +4815,7 @@ export function useConfig() {
                         axisLabels: {
                             show: true,
                             fontSizeRatio: 1,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             offsetX: 0,
                             rounding: 1,
                             prefix: '',
@@ -4822,19 +4828,6 @@ export function useConfig() {
                             hideUnderXLength: 20,
                             position: 'middle' // 'start'
                         },
-                        // Moved to x (at last...)
-                        // timeLabels: {
-                        //     show: true,
-                        //     showMarker: true,
-                        //     fontSizeRatio: 0.8,
-                        //     values: [],
-                        //     datetimeFormatter: AXIS_DATE_FORMATTER,
-                        //     rotation: 0,
-                        //     offsetY: 30,
-                        //     color: COLOR_BLACK,
-                        //     modulo: 12,
-                        //     bold: false,
-                        // }
                     },
                     x: {
                         showAxis: true,
@@ -4855,7 +4848,7 @@ export function useConfig() {
                             datetimeFormatter: AXIS_DATE_FORMATTER,
                             rotation: 0,
                             offsetY: 30,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             modulo: 12,
                             bold: false,
                         }
@@ -4885,7 +4878,7 @@ export function useConfig() {
                     show: true,
                     fontSizeRatio: 1,
                     useSerieColor: true,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     offsetY: -12,
                     formatter: null,
                     bold: true
@@ -4937,10 +4930,10 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
+                backgroundColor: COLOR_BACKGROUND,
                 width: 1000, // v3
                 height: 600, // v3
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 padding: PADDING([12, 12, 12, 12]), // v3 update
                 title: TITLE,
                 tooltip: {
@@ -5027,8 +5020,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 600,
                 width: 1000,
                 padding: PADDING([0, 0, 0, 0]),
@@ -5061,7 +5054,7 @@ export function useConfig() {
                             enable: true, // v3
                             angle: -30 // v3
                         },
-                        axisNamesColor: COLOR_BLACK,
+                        axisNamesColor: COLOR_TEXT_PRIMARY,
                         axisNamesFontSize: FONT._16,
                         axisNamesBold: true,
                         roundings: [],
@@ -5071,7 +5064,7 @@ export function useConfig() {
                         ticks: {
                             show: true,
                             fontSize: FONT._14,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             offsetX: 0,
                             offsetY: 0
@@ -5080,7 +5073,7 @@ export function useConfig() {
                             show: true,
                             fontSize: FONT._14,
                             useSerieColor: true,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             offsetX: 0,
                             offsetY: 0,
                             bold: true
@@ -5113,7 +5106,7 @@ export function useConfig() {
         responsiveProportionalSizing: true,
         style: {
             fontFamily: 'inherit',
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             height: 300,
             width: 300,
             title: TITLE
@@ -5124,7 +5117,7 @@ export function useConfig() {
             cycleSeconds: 5,
             track: {
                 radiusRatio: 1,
-                stroke: COLOR_GREY_LIGHT,
+                stroke: COLOR_GRID,
                 fill: COLOR_WHITE,
                 strokeWidth: 2
             },
@@ -5152,11 +5145,11 @@ export function useConfig() {
             },
             label: {
                 fontSize: FONT._24,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 bold: false
             },
             legend: {
-                backgroundColor: COLOR_WHITE,
+                backgroundColor: COLOR_BACKGROUND,
                 buttons: {
                     start: true,
                     pause: true,
@@ -5210,16 +5203,16 @@ export function useConfig() {
         maxHeight: 2000,
         head: {
             useArrowSlot: false,
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             iconColor: COLOR_BLUE,
             iconSize: 20,
             icon: 'arrowRight',
             padding: '12px 6px'
         },
         body: {
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY
         }
     }
 
@@ -5227,7 +5220,7 @@ export function useConfig() {
         debug: false, // v3
         animationFrames: 60,
         animationValueStart: 0,
-        backgroundColor: COLOR_WHITE,
+        backgroundColor: COLOR_BACKGROUND,
         fontFamily: 'inherit',
         layoutClass: '',
         layoutCss: '',
@@ -5235,7 +5228,7 @@ export function useConfig() {
         suffix: '',
         title: '',
         titleBold: true,
-        titleColor: COLOR_BLACK,
+        titleColor: COLOR_TEXT_PRIMARY,
         titleClass: '',
         titleCss: '',
         titleFontSize: FONT._16,
@@ -5250,8 +5243,8 @@ export function useConfig() {
         analogDigits: {
             show: false,
             height: 40,
-            color: COLOR_BLACK,
-            skeletonColor: COLOR_GREY_LIGHT
+            color: COLOR_TEXT_PRIMARY,
+            skeletonColor: COLOR_GRID
         }
     }
 
@@ -5288,7 +5281,7 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             itemSize: 32,
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             colors: {
                 activeReadonly: [
                     '#e20001',
@@ -5305,11 +5298,11 @@ export function useConfig() {
                     '#059f00'
                 ],
                 inactive: [
-                    COLOR_GREY_LIGHT,
-                    COLOR_GREY_LIGHT,
-                    COLOR_GREY_LIGHT,
-                    COLOR_GREY_LIGHT,
-                    COLOR_GREY_LIGHT
+                    COLOR_GRID,
+                    COLOR_GRID,
+                    COLOR_GRID,
+                    COLOR_GRID,
+                    COLOR_GRID
                 ]
             },
             icons: {
@@ -5339,10 +5332,10 @@ export function useConfig() {
                 show: true,
                 fontSize: FONT._14,
                 offsetY: 0,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 bold: true,
-                backgroundColor: COLOR_WHITE,
-                borderColor: COLOR_GREY_LIGHT,
+                backgroundColor: COLOR_BACKGROUND,
+                borderColor: COLOR_BORDER,
                 borderRadius: 4,
                 boxShadow: '0 6px 12px -6px rgba(0,0,0,0.2)',
                 roundingValue: 0,
@@ -5360,13 +5353,13 @@ export function useConfig() {
             fontFamily: 'inherit',
             animated: true,
             itemSize: 32,
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             star: {
                 activeColor: COLOR_YELLOW,
                 borderColor: COLOR_YELLOW,
                 borderWidth: 3,
                 apexes: 5,
-                inactiveColor: COLOR_GREY_LIGHT,
+                inactiveColor: COLOR_GRID,
                 useGradient: true
             },
             image: {
@@ -5377,7 +5370,7 @@ export function useConfig() {
             title: {
                 textAlign: POSITION.CENTER,
                 fontSize: FONT._20,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 bold: true,
                 text: '',
                 offsetY: 6,
@@ -5403,10 +5396,10 @@ export function useConfig() {
                 show: true,
                 fontSize: FONT._14,
                 offsetY: 0,
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 bold: true,
-                backgroundColor: COLOR_WHITE,
-                borderColor: COLOR_GREY_LIGHT,
+                backgroundColor: COLOR_BACKGROUND,
+                borderColor: COLOR_BORDER,
                 borderRadius: 4,
                 boxShadow: '0 6px 12px -6px rgba(0,0,0,0.2)',
                 roundingValue: 0,
@@ -5418,8 +5411,8 @@ export function useConfig() {
     const vue_ui_annotator = {
         alwaysVisible: false,
         style: {
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             fontFamily: 'inherit',
             showPrint: false,
             showSave: true,
@@ -5428,30 +5421,30 @@ export function useConfig() {
             buttons: {
                 borderRadius: 6,
                 controls: {
-                    backgroundColor: COLOR_WHITE,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_BACKGROUND,
+                    color: COLOR_TEXT_PRIMARY,
                     border: '1px solid #262626',
                     selected: {
                         backgroundColor: COLOR_BLACK,
                         color: COLOR_WHITE_ALMOST,
-                        border: `1px solid ${COLOR_GREY_MID}`
+                        border: `1px solid ${COLOR_BORDER}`
                     }
                 },
                 shapes: {
-                    backgroundColor: COLOR_WHITE,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_BACKGROUND,
+                    color: COLOR_TEXT_PRIMARY,
                     border: '1px solid #262626',
                     selected: {
-                        backgroundColor: COLOR_BLACK,
-                        color: COLOR_WHITE_ALMOST,
-                        border: `1px solid ${COLOR_GREY_MID}`
+                        backgroundColor: COLOR_TEXT_PRIMARY,
+                        color: COLOR_BACKGROUND,
+                        border: `1px solid ${COLOR_BORDER}`
                     }
                 }
             },
             tooltips: {
                 backgroundColor: COLOR_WHITE_ALMOST,
-                color: COLOR_BLACK,
-                border: `1px solid ${COLOR_GREY_MID}`,
+                color: COLOR_TEXT_PRIMARY,
+                border: `1px solid ${COLOR_BORDER}`,
                 borderRadius: 6,
                 boxShadow: '0 6px 12px -6px rgba(0,0,0,0.2)'
             }
@@ -5495,17 +5488,17 @@ export function useConfig() {
         locked: false,
         style: {
             board: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 aspectRatio: '1/1.4141',
                 border: 'none'
             },
             item: {
-                backgroundColor: COLOR_WHITE,
-                borderColor: COLOR_GREY_LIGHT
+                backgroundColor: COLOR_BACKGROUND,
+                borderColor: COLOR_BORDER
             },
             resizeHandles: {
-                backgroundColor: COLOR_BLACK,
+                backgroundColor: COLOR_TEXT_PRIMARY,
             },
         },
         userOptions: {
@@ -5538,93 +5531,93 @@ export function useConfig() {
     const vue_ui_skeleton = {
         type: SHAPE.LINE,
         style: {
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             maxHeight: 500,
             animated: true,
             chord: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             ridgeline: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             circlePack: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             historyPlot: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             bullet: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             flow: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             parallelCoordinatePlot: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             treemap: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             dumbbell: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             stripPlot: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             galaxy: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             bar3d: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             sparkHistogram: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             sparkStackbar: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             sparkbar: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             thermometer: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             relationCircle: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             molecule: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             tiremarks: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             chestnut: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             sparkline: {
-                color: COLOR_GREY_LIGHT,
+                color: COLOR_GRID,
                 strokeWidth: 0.7
             },
             donutEvolution: {
                 axis: {
                     show: true,
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 0.5
                 },
                 donuts: {
                     strokeWidth: 0.5,
-                    color: COLOR_GREY_LIGHT
+                    color: COLOR_GRID
                 }
             },
             line: {
                 axis: {
                     show: true,
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 0.5
                 },
                 path: {
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 1,
                     showPlots: true
                 }
@@ -5632,57 +5625,57 @@ export function useConfig() {
             bar: {
                 axis: {
                     show: true,
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 0.5
                 },
                 borderRadius: 0.5,
-                color: COLOR_GREY_LIGHT,
+                color: COLOR_GRID,
                 barWidth: 9
             },
             donut: {
-                color: COLOR_GREY_LIGHT,
+                color: COLOR_GRID,
                 strokeWidth: 64
             },
             onion: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             gauge: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             quadrant: {
                 grid: {
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 0.5
                 },
                 plots: {
                     radius: 1.5,
-                    color: COLOR_GREY_LIGHT
+                    color: COLOR_GRID
                 }
             },
             radar: {
                 grid: {
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 0.5
                 },
                 shapes: {
-                    color: COLOR_GREY_LIGHT
+                    color: COLOR_GRID
                 }
             },
             waffle: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             table: {
                 th: {
-                    color: COLOR_GREY_LIGHT
+                    color: COLOR_GRID
                 },
                 td: {
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 0.5
                 }
             },
             rating: {
                 useSmiley: false,
-                color: COLOR_GREY_LIGHT,
+                color: COLOR_GRID,
                 filled: true,
                 strokeWidth: 1,
                 maxWidth: 200
@@ -5690,36 +5683,36 @@ export function useConfig() {
             verticalBar: {
                 axis: {
                     show: true,
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 0.5
                 },
                 borderRadius: 0.5,
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             heatmap: {
                 cellsX: 26,
                 cellsY: 7,
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             candlesticks: {
                 axis: {
                     show: true,
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 0.5
                 },
                 candle: {
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     strokeWidth: 1
                 }
             },
             pyramid: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             wheel: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             },
             rings: {
-                color: COLOR_GREY_LIGHT
+                color: COLOR_GRID
             }
         }
     }
@@ -5731,11 +5724,11 @@ export function useConfig() {
         style: {
             title: {
                 ...TITLE,
-                backgroundColor: COLOR_WHITE,
+                backgroundColor: COLOR_BACKGROUND,
             },
             th: {
-                backgroundColor: COLOR_GREY_LIGHT,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_GRID,
+                color: COLOR_TEXT_PRIMARY,
                 outline: `1px solid ${COLOR_WHITE}`,
                 selected: {
                     backgroundColor: COLOR_BLUE,
@@ -5744,8 +5737,8 @@ export function useConfig() {
                 buttons: {
                     filter: {
                         inactive: {
-                            backgroundColor: COLOR_GREY_LIGHT,
-                            color: COLOR_BLACK
+                            backgroundColor: COLOR_GRID,
+                            color: COLOR_TEXT_PRIMARY
                         },
                         active: {
                             backgroundColor: COLOR_BLUE,
@@ -5754,7 +5747,7 @@ export function useConfig() {
                     },
                     cancel: {
                         inactive: {
-                            backgroundColor: COLOR_GREY_LIGHT,
+                            backgroundColor: COLOR_GRID,
                             color: COLOR_BLACK
                         },
                         active: {
@@ -5765,41 +5758,41 @@ export function useConfig() {
                 }
             },
             rows: {
-                outline: `1px solid ${COLOR_WHITE}`,
+                outline: `1px solid ${COLOR_BACKGROUND}`,
                 even: {
                     backgroundColor: '#f3f5f7',
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     selectedCell: {
                         backgroundColor: '#1f77b45b',
-                        color: COLOR_BLACK
+                        color: COLOR_TEXT_PRIMARY
                     },
                     selectedNeighbors: {
                         backgroundColor: '#63dd821e',
-                        color: COLOR_BLACK
+                        color: COLOR_TEXT_PRIMARY
                     }
                 },
                 odd: {
-                    backgroundColor: COLOR_WHITE,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_BACKGROUND,
+                    color: COLOR_TEXT_PRIMARY,
                     selectedCell: {
                         backgroundColor: '#1f77b45b',
-                        color: COLOR_BLACK
+                        color: COLOR_TEXT_PRIMARY
                     },
                     selectedNeighbors: {
                         backgroundColor: '#63dd821e',
-                        color: COLOR_BLACK
+                        color: COLOR_TEXT_PRIMARY
                     }
                 }
             },
             inputs: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
-                border: '1px solid #CCCCCC',
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
+                border: `1px solid ${COLOR_BORDER}`,
                 accentColor: COLOR_BLUE
             },
             dropdowns: {
-                backgroundColor: COLOR_GREY_LIGHT,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_GRID,
+                color: COLOR_TEXT_PRIMARY,
                 icons: {
                     selected: {
                         color: COLOR_GREEN,
@@ -5812,13 +5805,13 @@ export function useConfig() {
                 }
             },
             infoBar: {
-                backgroundColor: COLOR_GREY_LIGHT,
-                color: COLOR_BLACK
+                backgroundColor: COLOR_GRID,
+                color: COLOR_TEXT_PRIMARY
             },
             pagination: {
                 buttons: {
-                    backgroundColor: COLOR_GREY_LIGHT,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_GRID,
+                    color: COLOR_TEXT_PRIMARY,
                     opacityDisabled: 0.5
                 },
                 navigationIndicator: {
@@ -5827,36 +5820,36 @@ export function useConfig() {
             },
             exportMenu: {
                 show: true,
-                backgroundColor: COLOR_GREY_LIGHT,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_GRID,
+                color: COLOR_TEXT_PRIMARY,
                 buttons: {
                     backgroundColor: COLOR_WHITE_ALMOST,
-                    color: COLOR_BLACK
+                    color: COLOR_TEXT_PRIMARY
                 },
                 filename: ''
             },
             closeButtons: {
                 backgroundColor: 'transparent',
-                color: COLOR_BLACK,
+                color: COLOR_TEXT_PRIMARY,
                 borderRadius: '50%'
             },
             chart: {
                 modal: {
-                    backgroundColor: COLOR_GREY_LIGHT,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_GRID,
+                    color: COLOR_TEXT_PRIMARY,
                     buttons: {
                         selected: {
                             backgroundColor: COLOR_BLUE,
                             color: COLOR_WHITE
                         },
                         unselected: {
-                            backgroundColor: COLOR_WHITE,
-                            color: COLOR_BLACK
+                            backgroundColor: COLOR_BACKGROUND,
+                            color: COLOR_TEXT_PRIMARY
                         }
                     }
                 },
                 layout: {
-                    backgroundColor: COLOR_WHITE,
+                    backgroundColor: COLOR_BACKGROUND,
                     axis: {
                         stroke: '#ccd1d4',
                         strokeWidth: 2
@@ -5886,7 +5879,7 @@ export function useConfig() {
                         }
                     },
                     labels: {
-                        color: COLOR_BLACK
+                        color: COLOR_TEXT_PRIMARY
                     },
                     progression: {
                         stroke: COLOR_BLACK,
@@ -5935,10 +5928,10 @@ export function useConfig() {
     const vue_ui_digits = {
         height: '100%',
         width: null,
-        backgroundColor: COLOR_WHITE,
+        backgroundColor: COLOR_BACKGROUND,
         digits: {
-            color: COLOR_BLACK,
-            skeletonColor: COLOR_GREY_LIGHT,
+            color: COLOR_TEXT_PRIMARY,
+            skeletonColor: COLOR_GRID,
             thickness: 1,
         }
     }
@@ -5963,8 +5956,8 @@ export function useConfig() {
             pauseOnHover: true,
         },
         style: {
-            backgroundColor: COLOR_WHITE,
-            color: COLOR_BLACK,
+            backgroundColor: COLOR_BACKGROUND,
+            color: COLOR_TEXT_PRIMARY,
             fontFamily: 'inherit',
         },
         border: {
@@ -5975,8 +5968,8 @@ export function useConfig() {
             text: '',
             padding: PADDING([12, 12, 12, 12]),
             style: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 fontSize: `${FONT._16}px`,
                 fontWeight: 'bold',
                 textAlign: 'left'
@@ -5997,8 +5990,8 @@ export function useConfig() {
                     color: COLOR_BLACK
                 },
                 style: {
-                    backgroundColor: COLOR_WHITE,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_BACKGROUND,
+                    color: COLOR_TEXT_PRIMARY,
                     boxShadow: `0px 6px 12px -6px ${COLOR_BLACK}50`
                 },
                 th: {
@@ -6017,7 +6010,7 @@ export function useConfig() {
             },
         },
         tbody: {
-            backgroundColor: COLOR_WHITE,
+            backgroundColor: COLOR_BACKGROUND,
             tr: {
                 visible: 5,
                 height: 32,
@@ -6026,8 +6019,8 @@ export function useConfig() {
                     color: COLOR_BLACK,
                 },
                 style: {
-                    backgroundColor: COLOR_WHITE,
-                    color: COLOR_BLACK
+                    backgroundColor: COLOR_BACKGROUND,
+                    color: COLOR_TEXT_PRIMARY
                 },
                 td: {
                     alternateColor: true,
@@ -6040,7 +6033,7 @@ export function useConfig() {
                     style: {
                         fontVariantNumeric: 'tabular-nums',
                         textAlign: 'right',
-                        backgroundColor: COLOR_GREY_LIGHT
+                        backgroundColor: COLOR_GRID
                     }
                 }
             }
@@ -6082,8 +6075,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 96,
                 width: 600,
                 padding: PADDING([24, 24, 24, 12]),
@@ -6095,7 +6088,7 @@ export function useConfig() {
                     baseColor: '#9A9A9A', // default if dataset.segments colors are not provided
                     dataLabels: {
                         show: true,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         fontSize: FONT._10,
                         formatter: null,
                         bold: false,
@@ -6113,7 +6106,7 @@ export function useConfig() {
                 target: {
                     show: true, // v3
                     onTop: true,
-                    color: COLOR_BLACK,
+                    color: COLOR_TEXT_PRIMARY,
                     rounded: true,
                     heightRatio: 0.8,
                     stroke: COLOR_WHITE,
@@ -6127,7 +6120,7 @@ export function useConfig() {
                     strokeWidth: 1,
                     label: {
                         show: true,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         fontSize: FONT._14,
                         bold: true,
                         offsetY: 0
@@ -6182,8 +6175,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 width: 600,
                 height: 500,
                 title: TITLE,
@@ -6197,19 +6190,19 @@ export function useConfig() {
                         fontSize: FONT._16,
                         offsetY: 0,
                         adaptColorToBackground: true,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         rounding: 1,
                         bold: true,
                     }
                 },
                 circleLinks: {
                     show: true,
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                     widthRatio: 1,
                 },
                 area: {
                     show: true,
-                    color: COLOR_GREY_LIGHT,
+                    color: COLOR_GRID,
                 },
                 bars: {
                     stroke: COLOR_WHITE,
@@ -6220,7 +6213,7 @@ export function useConfig() {
                     dataLabels: {
                         name: {
                             fontSize: FONT._16,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: true,
                             offsetX: 0,
                             offsetY: 0
@@ -6230,7 +6223,7 @@ export function useConfig() {
                             fontSize: FONT._16,
                             rounding: 0,
                             bold: false,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             prefix: '',
                             suffix: '',
                             offsetX: 0,
@@ -6285,30 +6278,30 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 500,
                 width: 600,
                 padding: PADDING([12, 12, 12, 12]),
                 grid: {
                     xAxis: {
                         show: true,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 1,
                     },
                     horizontalLines: {
                         show: true,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 0.6
                     },
                     yAxis: {
                         show: true,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 1,
                     },
                     verticalLines: {
                         show: true,
-                        stroke: COLOR_GREY_LIGHT,
+                        stroke: COLOR_GRID,
                         strokeWidth: 0.6
                     },
                 },
@@ -6320,7 +6313,7 @@ export function useConfig() {
                         labels: {
                             show: true,
                             fontSize: FONT._16,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             rounding: 1,
                             offsetY: 0,
@@ -6339,7 +6332,7 @@ export function useConfig() {
                             offsetX: 0,
                             offsetY: 0,
                             bold: false,
-                            color: COLOR_BLACK
+                            color: COLOR_TEXT_PRIMARY
                         }
                     },
                     y: {
@@ -6349,7 +6342,7 @@ export function useConfig() {
                         labels: {
                             show: true,
                             fontSize: FONT._16,
-                            color: COLOR_BLACK,
+                            color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             rounding: 1,
                             offsetX: 0,
@@ -6363,7 +6356,7 @@ export function useConfig() {
                             offsetX: 0,
                             offsetY: 0,
                             bold: false,
-                            color: COLOR_BLACK
+                            color: COLOR_TEXT_PRIMARY
                         }
                     }
                 },
@@ -6379,7 +6372,7 @@ export function useConfig() {
                         show: true,
                         startAtZero: false,
                         adaptColorToBackground: true,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         fontSize: FONT._16,
                         bold: false,
                         offsetY: 0,
@@ -6388,7 +6381,7 @@ export function useConfig() {
                     labels: {
                         show: true,
                         fontSize: FONT._10,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                         offsetY: 0,
                         offsetX: 0,
@@ -6447,8 +6440,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 title: TITLE,
                 width: 512,
                 height: 316,
@@ -6511,8 +6504,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 padding: PADDING([12,12,12,12]),
                 dataLabels: {
                     prefix: '',
@@ -6614,18 +6607,18 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 padding: PADDING([12, 0, 0, 12]),
                 title: TITLE,
                 legend: LEGEND,
                 dialog: {
                     show: true,
-                    backgroundColor: COLOR_WHITE,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_BACKGROUND,
+                    color: COLOR_TEXT_PRIMARY,
                     header: {
-                        backgroundColor: COLOR_GREY_LIGHT,
-                        color: COLOR_BLACK
+                        backgroundColor: COLOR_GRID,
+                        color: COLOR_TEXT_PRIMARY
                     },
                     xyChart: {
                         ...vue_ui_xy,
@@ -6691,7 +6684,7 @@ export function useConfig() {
                         fontSize: 12,
                         formatter: null,
                         rounding: 0,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                     },
                     dot: {
                         radius: 4,
@@ -6719,7 +6712,7 @@ export function useConfig() {
                         },
                         values: [],
                         datetimeFormatter: AXIS_DATE_FORMATTER,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         fontSize: 14,
                         bold: false,
                         showOnlyAtModulo: false,
@@ -6732,7 +6725,7 @@ export function useConfig() {
                     labels: {
                         fontSize: 16,
                         bold: false,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         offsetX: 0
                     }
                 }
@@ -6775,8 +6768,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 legend: {
                     ...LEGEND,
                     position: 'bottom'
@@ -6794,7 +6787,7 @@ export function useConfig() {
                         bold: false,
                         curved: false,
                         adaptColorToBackground: true, // Applied if curved
-                        color: COLOR_BLACK, // If curved, applied if !adaptColorToBackground
+                        color: COLOR_TEXT_PRIMARY, // If curved, applied if !adaptColorToBackground
                         offset: 0,
                         showPercentage: true,
                         roundingPercentage: 0,
@@ -6813,7 +6806,7 @@ export function useConfig() {
                         fontSize: 14,
                         bold: false,
                         useSerieColor: false,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         offset: 0,
                         minSeparationDeg: 3,
                         connector: {
@@ -6850,15 +6843,15 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 width: null,
                 height: null,
                 backgroundPattern: {
                     show: false,
                     spacingRatio: 3,
                     dotRadiusRatio: 5,
-                    dotColor: COLOR_GREY_LIGHT,
+                    dotColor: COLOR_GRID,
                     opacity: 1,
                 },
                 layout: {
@@ -6878,16 +6871,16 @@ export function useConfig() {
                     stroke: COLOR_GREY_MID,
                     strokeWidth: 1,
                     borderRadius: 3,
-                    backgroundColor: COLOR_WHITE,
+                    backgroundColor: COLOR_BACKGROUND,
                     labels: {
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         fontSize: FONT._12,
                         bold: false
                     },
                     tooltip: {
                         showOnClick: false,
-                        backgroundColor: COLOR_GREY_LIGHT,
-                        color: COLOR_BLACK,
+                        backgroundColor: COLOR_GRID,
+                        color: COLOR_TEXT_PRIMARY,
                         maxWidth: '300px'
                     },
                     selected: {
@@ -6921,8 +6914,8 @@ export function useConfig() {
                     strokeWidth: 1,
                     tooltip: {
                         maxWidth: '300px',
-                        backgroundColor: COLOR_GREY_LIGHT,
-                        color: COLOR_BLACK,
+                        backgroundColor: COLOR_GRID,
+                        color: COLOR_TEXT_PRIMARY,
                     },
                     selectedEdge: {
                         stroke: null,
@@ -6932,11 +6925,11 @@ export function useConfig() {
                 controls: {
                     position: 'bottom',
                     show: true,
-                    backgroundColor: COLOR_GREY_LIGHT,
-                    buttonColor: COLOR_GREY_LIGHT,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_GRID,
+                    buttonColor: COLOR_GRID,
+                    color: COLOR_TEXT_PRIMARY,
                     fontSize: 14,
-                    border: `1px solid ${COLOR_GREY_MID}`,
+                    border: `1px solid ${COLOR_BORDER}`,
                     padding: `0.5rem`,
                     borderRadius: `0.25rem`
                 },
@@ -6986,15 +6979,15 @@ export function useConfig() {
                     width: null,
                     height: null
                 },
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 territory: {
                     fill: '#F2F3F5',
                     stroke: '#D0D4D8',
                     strokeWidth: 1,
                     hover: {
                         enabledWhenEmpty: false,
-                        fill: COLOR_GREY_LIGHT,
+                        fill: COLOR_GRID,
                         stroke: COLOR_GREY_MID,
                         strokeWidth: 1.5
                     }
@@ -7008,18 +7001,18 @@ export function useConfig() {
                     labels: {
                         show: true,
                         fontSizeRatio: 1,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         offsetY: 0,
                     }
                 },
                 controls: {
                     position: 'bottom',
                     show: true,
-                    backgroundColor: COLOR_GREY_LIGHT,
-                    buttonColor: COLOR_GREY_LIGHT,
-                    color: COLOR_BLACK,
+                    backgroundColor: COLOR_GRID,
+                    buttonColor: COLOR_GRID,
+                    color: COLOR_TEXT_PRIMARY,
                     fontSize: 14,
-                    border: `1px solid ${COLOR_GREY_MID}`,
+                    border: `1px solid ${COLOR_BORDER}`,
                     padding: `0.5rem`,
                     borderRadius: `0.25rem`
                 },
@@ -7077,8 +7070,8 @@ export function useConfig() {
         style: {
             fontFamily: 'inherit',
             chart: {
-                backgroundColor: COLOR_WHITE,
-                color: COLOR_BLACK,
+                backgroundColor: COLOR_BACKGROUND,
+                color: COLOR_TEXT_PRIMARY,
                 height: 500,
                 width: 800,
                 layout: {
@@ -7093,7 +7086,7 @@ export function useConfig() {
                             angle: -30
                         },
                         fontSize: FONT._14,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         bold: false,
                         showOnlyFirstAndLast: false,
                         showOnlyAtModulo: false,
@@ -7122,7 +7115,7 @@ export function useConfig() {
                     },
                     nameLabels: {
                         fontSize: FONT._14,
-                        color: COLOR_BLACK,
+                        color: COLOR_TEXT_PRIMARY,
                         useSerieColor: false,
                         bold: false,
                         offsetX: 0,
