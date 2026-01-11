@@ -1667,19 +1667,37 @@ defineExpose({
             <!-- PLOTS -->
             <template v-if="!FINAL_CONFIG.style.chart.layout.labels.plotLabels.showAsTag">
                 <g v-for="(category, i) in drawableDataset">
-                    <Shape
-                        v-for="plot in category.series"
-                        :color="category.color"
-                        :isSelected="hoveredPlotId && plot.uid === hoveredPlotId"
-                        :plot="plot"
-                        :radius="FINAL_CONFIG.style.chart.layout.plots.radius / (isZoom ? 1.5 : 1)"
-                        :shape="category.shape"
-                        :stroke="FINAL_CONFIG.style.chart.layout.plots.outline ? FINAL_CONFIG.style.chart.layout.plots.outlineColor : 'none'"
-                        :strokeWidth="FINAL_CONFIG.style.chart.layout.plots.outlineWidth"
-                        @mouseenter="useTooltip(category, plot, i)"
-                        @mouseleave="onTrapLeave(plot, i)"
-                        @click="selectPlot(category, plot, i)"
-                    />
+                    <template v-if="$slots.datapoint && !loading">
+                        <foreignObject
+                            v-for="plot in category.series"
+                            :x="plot.x - 1"
+                            :y="plot.y - 1"
+                            width="2"
+                            height="2"
+                            style="overflow: visible"
+                            @mouseenter="useTooltip(category, plot, i)"
+                            @mouseleave="onTrapLeave(plot, i)"
+                            @click="selectPlot(category, plot, i)"
+                        >
+                            <slot name="datapoint" v-bind="{ datapoint: plot }" />
+                        </foreignObject>
+                    </template>
+
+                    <template v-else>
+                        <Shape
+                            v-for="plot in category.series"
+                            :color="category.color"
+                            :isSelected="hoveredPlotId && plot.uid === hoveredPlotId"
+                            :plot="plot"
+                            :radius="FINAL_CONFIG.style.chart.layout.plots.radius / (isZoom ? 1.5 : 1)"
+                            :shape="category.shape"
+                            :stroke="FINAL_CONFIG.style.chart.layout.plots.outline ? FINAL_CONFIG.style.chart.layout.plots.outlineColor : 'none'"
+                            :strokeWidth="FINAL_CONFIG.style.chart.layout.plots.outlineWidth"
+                            @mouseenter="useTooltip(category, plot, i)"
+                            @mouseleave="onTrapLeave(plot, i)"
+                            @click="selectPlot(category, plot, i)"
+                        />
+                    </template>
                 </g>
 
                 <g v-if="mutableConfig.plotLabels.show" style="pointer-events: none;">

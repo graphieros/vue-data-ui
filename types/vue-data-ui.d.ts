@@ -4831,6 +4831,7 @@ declare module "vue-data-ui" {
     };
 
     export type VueUiQuadrantDatasetItem = {
+        [key: string]: any;
         name: string;
         shape?: Shape;
         color?: string;
