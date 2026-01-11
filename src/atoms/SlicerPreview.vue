@@ -184,6 +184,14 @@ const props = defineProps({
     focusRangeRatio: {
         type: Number,
         default: 0.1
+    },
+    minScale: {
+        type: Number,
+        default: null,
+    },
+    maxScale: {
+        type: Number,
+        default: null,
     }
 });
 
@@ -439,8 +447,48 @@ const globalRange = computed(() => {
     return { min: Math.min(...vals), max: Math.max(...vals) };
 });
 
-const allMin = computed(() => globalRange.value.min);
-const allMax = computed(() => globalRange.value.max);
+const parsedMinScale = computed(() => {
+    const n = Number(props.minScale);
+    return Number.isFinite(n) ? n : null;
+});
+
+const parsedMaxScale = computed(() => {
+    const n = Number(props.maxScale);
+    return Number.isFinite(n) ? n : null;
+});
+
+const hasFixedScale = computed(() => {
+    return parsedMinScale.value !== null && parsedMaxScale.value !== null;
+});
+
+const effectiveRange = computed(() => {
+    const { min: computedMin, max: computedMax } = globalRange.value;
+
+    const minOverride = parsedMinScale.value;
+    const maxOverride = parsedMaxScale.value;
+
+    let min;
+    let max;
+
+    if (minOverride !== null && maxOverride !== null) {
+        min = Math.min(minOverride, computedMin);
+        max = Math.max(maxOverride, computedMax);
+    } else {
+        min = minOverride !== null ? minOverride : computedMin;
+        max = maxOverride !== null ? maxOverride : computedMax;
+    }
+
+    if (!Number.isFinite(min)) min = 0;
+    if (!Number.isFinite(max)) max = 1;
+
+    if (min === max) max = min + 1;
+    else if (min > max) [min, max] = [max, min];
+
+    return { min, max };
+});
+
+const allMin = computed(() => effectiveRange.value.min);
+const allMax = computed(() => effectiveRange.value.max);
 
 const scaleMin = computed(() => {
     if (allMin.value < 0 && allMax.value > 0) return allMin.value;
@@ -448,35 +496,42 @@ const scaleMin = computed(() => {
     return 0;
 });
 
-const absMaxMag = computed(() => Math.max(1e-9, Math.max(Math.abs(allMin.value), Math.abs(allMax.value))));
-
-const hasBothSigns = computed(() => allMin.value < 0 && allMax.value > 0);
-
 const mapY = (val) => {
     const H = Math.max(1, svgMinimap.value.height);
-    if (hasBothSigns.value) {
-        const M = absMaxMag.value;
-        const r = Math.max(-1, Math.min(1, val / M));
-        return (1 - (r + 1) / 2) * H;
-    } else {
-        const min = Math.min(0, allMin.value);
-        const max = Math.max(0, allMax.value);
-        return H - ((val - min) / Math.max(1e-9, max - min)) * H;
-    }
+
+    const mapper = makeSmartMapY(
+        allMin.value,
+        allMax.value,
+        H,
+        hasFixedScale.value
+    );
+
+    return mapper(val);
 };
 
 const minimapZero = computed(() => mapY(0));
 
-function makeSmartMapY(min, max, H) {
+function makeSmartMapY(min, max, H, lockToRange = false) {
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
     const EPS = 1e-9;
 
+    const span = Math.max(EPS, max - min);
+
+    // Strictly map to min & max
+    if (lockToRange) {
+        return (val) => {
+            const t = (val - min) / span;
+            return H - t * H;
+        };
+    }
+
+    // Anchored to 0 or symmetric
     if (max <= 0) {
-        const span = Math.max(EPS, 0 - min);
-        return (val) => H - ((val - min) / span) * H;
+        const smartSpan = Math.max(EPS, 0 - min);
+        return (val) => H - ((val - min) / smartSpan) * H;
     } else if (min >= 0) {
-        const span = Math.max(EPS, max - 0);
-        return (val) => H - ((val - 0) / span) * H;
+        const smartSpan = Math.max(EPS, max - 0);
+        return (val) => H - ((val - 0) / smartSpan) * H;
     } else {
         const M = Math.max(EPS, Math.max(Math.abs(min), Math.abs(max)));
         return (val) => {
@@ -503,7 +558,7 @@ function makeMiniChart(ds, smooth = false) {
     }
     const H = Math.max(1, svgMinimap.value.height);
 
-    const mapYSeries = makeSmartMapY(allMin.value, allMax.value, H);
+    const mapYSeries = makeSmartMapY(allMin.value, allMax.value, H, hasFixedScale.value);
 
     const len = ds.length;
     const s = Math.min(Math.max(0, startMini.value), Math.max(0, len - 1));
@@ -513,8 +568,13 @@ function makeMiniChart(ds, smooth = false) {
         const val = dp;
         const valid = Number.isFinite(val);
         const x = unitWidthX.value * i + (props.minimapCompact ? 0 : unitWidthX.value / 2);
-        const y0 = mapYSeries(0);
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
+        // Bar baseline
+        // . smart mode: keep baseline at 0
+        // . fixed scale: baseline must be inside [allMin, allMax] => clamp 0 into the fixed range
+        const baseValue = hasFixedScale.value ? clamp(0, allMin.value, allMax.value) : 0;
+        const y0 = mapYSeries(baseValue);
 
         return {
             x,
