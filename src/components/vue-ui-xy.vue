@@ -579,24 +579,89 @@ const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
+const parsedScaleMin = computed(() => {
+    const raw = FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin;
+    if (raw === null || raw === undefined) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+});
+
+// Baseline for line areas when NOT using individual scale:
+// - default: fill down to 0 (zero.value)
+// - if scaleMin is explicitly set: fill down to the bottom of the chart (forced minimum)
+const globalAreaBaselineY = computed(() => {
+    return parsedScaleMin.value !== null ? drawingArea.value.bottom : zero.value;
+});
+
+const parsedScaleMax = computed(() => {
+    const raw = FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax;
+    if (raw === null || raw === undefined) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+});
+
+const hasUserScale = computed(() => {
+    return parsedScaleMin.value !== null || parsedScaleMax.value !== null;
+});
+
+const dataRange = computed(() => {
+    const series = safeDataset.value
+        .filter(s => !segregatedSeries.value.includes(s.id))
+        .flatMap(d => (Array.isArray(d.series) ? d.series : []))
+        .filter(Number.isFinite);
+
+    if (!series.length) return { min: 0, max: 1 };
+
+    return {
+        min: Math.min(...series),
+        max: Math.max(...series),
+    };
+});
+
+function normalizeRange(minValue, maxValue) {
+    let min = Number.isFinite(minValue) ? minValue : 0;
+    let max = Number.isFinite(maxValue) ? maxValue : 1;
+
+    if (min === max) max = min + 1;
+    else if (min > max) [min, max] = [max, min];
+
+    return { min, max };
+}
+
 const min = computed(() => {
-    if (FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin !== null) {
-        return FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMin
+    const { min: dataMin, max: dataMax } = dataRange.value;
+
+    if (!hasUserScale.value) {
+        const m = dataMin;
+        return m > 0 ? 0 : m;
     }
-    const _min = Math.min(...safeDataset.value.filter(s => !segregatedSeries.value.includes(s.id)).map(datapoint => Math.min(...datapoint.series)));
-    if (_min > 0) return 0;
-    return _min;
+
+    const baseMin = parsedScaleMin.value !== null ? parsedScaleMin.value : (dataMin > 0 ? 0 : dataMin);
+    const baseMax = parsedScaleMax.value !== null ? parsedScaleMax.value : dataMax;
+
+    // Expand to include outliers beyond provided bounds
+    const expandedMin = dataMin < baseMin ? dataMin : baseMin;
+    const expandedMax = dataMax > baseMax ? dataMax : baseMax;
+
+    return normalizeRange(expandedMin, expandedMax).min;
 });
 
 const max = computed(() => {
-    if (FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax) {
-        return FINAL_CONFIG.value.chart.grid.labels.yAxis.scaleMax
+    const { min: dataMin, max: dataMax } = dataRange.value;
+
+    if (!hasUserScale.value) {
+        const m = dataMax;
+        return min.value === m ? m + 1 : m;
     }
-    const m = Math.max(...safeDataset.value.filter(s => !segregatedSeries.value.includes(s.id)).map(datapoint => Math.max(...datapoint.series)));
-    if (min.value === m) {
-        return m + 1
-    }
-    return m;
+
+    const baseMin = parsedScaleMin.value !== null ? parsedScaleMin.value : (dataMin > 0 ? 0 : dataMin);
+    const baseMax = parsedScaleMax.value !== null ? parsedScaleMax.value : dataMax;
+
+    // Expand to include outliers beyond provided bounds
+    const expandedMin = dataMin < baseMin ? dataMin : baseMin;
+    const expandedMax = dataMax > baseMax ? dataMax : baseMax;
+
+    return normalizeRange(expandedMin, expandedMax).max;
 });
 
 const niceScale = computed(() => {
@@ -1840,8 +1905,20 @@ const lineSet = computed(() => {
         scaleGroups.value[datapoint.scaleLabel].autoScaleYLabels = autoScaleYLabels;
         scaleGroups.value[datapoint.scaleLabel].unique = activeSeriesWithStackRatios.value.filter(el => el.scaleLabel === datapoint.scaleLabel).length === 1
 
-        const areaZeroPosition = mutableConfig.value.useIndividualScale ? datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition : zero.value;
-        const adustedAreaZeroPosition = Math.max(Math.max(datapoint.autoScaling ? autoScaleZeroPosition : (scaleYLabels.at(-1) ? scaleYLabels.at(-1).y : 0), drawingArea.value?.top), areaZeroPosition);
+        const areaZeroPosition =
+            mutableConfig.value.useIndividualScale
+                ? (datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition)
+                : globalAreaBaselineY.value;
+
+        const adustedAreaZeroPosition = Math.max(
+            Math.max(
+                datapoint.autoScaling
+                    ? autoScaleZeroPosition
+                    : (scaleYLabels.at(-1) ? scaleYLabels.at(-1).y : 0),
+                drawingArea.value?.top
+            ),
+            areaZeroPosition
+        );
 
         return {
             ...datapoint,
@@ -4251,7 +4328,9 @@ defineExpose({
             :usePreciseLabels="FINAL_CONFIG.chart.grid.labels.xAxisLabels.datetimeFormatter.enable && !FINAL_CONFIG.chart.zoom.useDefaultFormat"
             :valueEnd="slicer.end" 
             :valueStart="slicer.start" 
-            :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles" 
+            :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles"
+            :minScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin"
+            :maxScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax"
             @futureEnd="v => setPrecog('end', v)"
             @futureStart="v => setPrecog('start', v)"
             @reset="refreshSlicer"
