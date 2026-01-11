@@ -351,8 +351,11 @@ const stats = computed(() => {
                 height: 180,
                 layout: {
                     bars: {
-                        gap: 12,
+                        gap: 6,
                         useGradient: false,
+                        fillOpacity: 100,
+                        underlayerColor: '#4A4A4A',
+                        borderRadius: 2,
                         dataLabels: {
                             offsetX: 12,
                             fontSize: 18,
