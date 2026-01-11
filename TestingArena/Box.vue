@@ -206,7 +206,12 @@ onBeforeUnmount(() => {
 
 <template>
     <div id="BOX">
-        <h1 class="gradient-text" style="width:fit-content; font-weight: 900"><slot name="title"/></h1>
+        <h1 class="gradient-text" style="width:fit-content; font-weight: 900">
+            <svg viewBox="0 0 20 20" height="28" width="28" style="margin-right: 0.5rem">
+                <path d="M 4 19 L 16 19 C 18 19 18 17 18 17 L 12 9 L 12 3 C 13 3 13 1 12 1 L 8 1 C 7 1 7 3 8 3 L 8 9 L 2 17 C 2 17 2 19 4 19" stroke="#8A8A8A" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M 5 14 C 8 16 11 12 15 14 L 17.141 16.847 C 17.156 17.64 17.07 18.004 16 18 L 4 18 C 3.25 18.014 2.829 17.748 2.866 16.869 L 5 14" stroke="none" fill="#42d392" stroke-linecap="round" stroke-linejoin="round" style="opacity: 1"/><path d="M 5 14 C 8 16 11 12 15 14" stroke="#acf2d3" stroke-linecap="round" stroke-width="${strokeWidth / 3}"/>
+            </svg>
+            <slot name="title"/>
+        </h1>
         <button class="btn btn-reset" @click="refresh">
             <BaseIcon :size="20" stroke="#ff7f0e" name="restart"/>
             <code style="font-weight: bold;">

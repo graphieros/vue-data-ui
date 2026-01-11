@@ -101,6 +101,11 @@ const filteredComponents = computed(() => {
             <div class="nav-logo">
               <img alt="Vue logo" src="@/assets/logo.png" width="48" />
               <span class="gradient-text" style="font-weight: bolder">Testing arena</span>
+
+              <svg viewBox="0 0 20 20" height="20" width="20" style="position: absolute; bottom: -0.5rem; left: 3rem">
+                <path d="M 4 19 L 16 19 C 18 19 18 17 18 17 L 12 9 L 12 3 C 13 3 13 1 12 1 L 8 1 C 7 1 7 3 8 3 L 8 9 L 2 17 C 2 17 2 19 4 19" stroke="#8A8A8A" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M 5 14 C 8 16 11 12 15 14 L 17.141 16.847 C 17.156 17.64 17.07 18.004 16 18 L 4 18 C 3.25 18.014 2.829 17.748 2.866 16.869 L 5 14" stroke="none" fill="#42d392" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.7"/><path d="M 5 14 C 8 16 11 12 15 14" stroke="#42d392" stroke-linecap="round" stroke-width="${strokeWidth / 3}"/>
+              </svg>
+
             </div>
             <code style="text-align:right; margin-top:-0.7rem;">vue-data-ui {{ CURRENT_PACKAGE.version }}</code>
   
@@ -195,6 +200,7 @@ nav {
   align-items:center;
   justify-content: space-between;
   font-size: 1.5rem;
+  position: relative;
 }
 
 .nav-header {
