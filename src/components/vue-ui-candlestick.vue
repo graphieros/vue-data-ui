@@ -1800,6 +1800,8 @@ defineExpose({
             :valueEnd="slicer.end"
             :valueStart="slicer.start"
             :verticalHandles="FINAL_CONFIG.style.zoom.minimap.verticalHandles"
+            :minScale="FINAL_CONFIG.style.layout.grid.yAxis.scale.min"
+            :maxScale="FINAL_CONFIG.style.layout.grid.yAxis.scale.max"
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
             @trapMouse="selectMinimapIndex"
