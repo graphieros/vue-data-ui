@@ -355,6 +355,23 @@
       "id": "529c7783-2a45-4a08-b26b-0ef8b2d8d0e1",
       "createdAt": 1768065094039,
       "updatedAt": 1768116054495
+    },
+    {
+      "title": "foreignObject datapoint slot",
+      "component": "vue-ui-quadrant.vue",
+      "description": "Add a #datapoint scoped slot exposing the datapoint data inside a foreignObject. This would allow to display rich content (icons, images) instead of default shapes. Beware of browser compatibility, as Safari sucks with foreignObjects.",
+      "priority": 0,
+      "author": "graphieros",
+      "done": true,
+      "exchanges": [],
+      "type": "feature",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "206a2a09-b9df-4666-be92-1dd8e81b38bd",
+      "createdAt": 1768128369314,
+      "updatedAt": 1768149949476
     }
   ]
 }
