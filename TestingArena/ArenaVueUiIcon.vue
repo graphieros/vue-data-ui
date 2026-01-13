@@ -6,7 +6,7 @@ import { VueUiIcon } from "vue-data-ui";
 import { VueUiIcon as VueUiIconTreeshaken } from "vue-data-ui/vue-ui-icon";
 
 const icons = ref([
-    "annotator", "chart3dBar", "chartAgePyramid", "chartBar", "chartCandlestick", "chartChestnut", "chartDonut", "chartDonutEvolution", "chartGauge", "chartHeatmap", "chartLine", "chartMoodRadar", "chartOnion", "chartQuadrant", "chartRadar", "chartRelationCircle", "chartRings", "chartScatter", "chartSparkHistogram", "chartSparkStackbar", "chartTable", "chartThermometer", "chartTiremarks", "chartVerticalBar", "chartWaffle", "chartWheel", "close", "dashboard", "digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9", "excel", "image", "labelClose", "labelOpen", "menu", "moodFlat", "moodHappy", "moodNeutral", "moodSad", "pdf", "screenshot", "skeleton", "smiley", "sort", "spin", "tableClose", "tableOpen", "chartNestedDonuts", "chartSparkbar", "refresh", "circleQuestion", "circleExclamation", "circleCheck", "circleCancel", "moodLaughing", "moodWink", "moodEmbarrassed", "moodSurprised", "exitFullscreen", "fullscreen", "arrowRight", "arrowTop", "arrowBottom", "arrowLeft", "chartCluster", "chartSparkline", "legend", "csv", "chartGalaxy", "kpi", "kpiBox", "tooltip", "vueDataUi", "ratio", "func", "settings", "trendUp", "trendDown", "clipBoard", "zoomPlus", "zoomMinus", "clipboardLine", "clipboardDonut", "clipboardBar", "clipboardVariable", "triangle", "triangleFill", "square", "squareFill", "diamond", "diamondFill", "pentagon", "pentagonFill", "hexagon", "hexagonFill", "circle", "circleFill", "star", "starFace", "starFill", "numbers", "sigma", "mu", "lambda", "copy", "accordion", "cursor", "trend", "chartStripPlot", "chartDumbbell", "copyLeft", "chartWordCloud", "stack", "unstack", "window", "chartFlow", "chartParallelCoordinatePlot", "tooltipDisabled", "pause", "play", "stop", "restart", "lap", "carouselTable", "battery", "chartStackbar", "chartBullet", "trash", "annotatorDisabled", "palette", "boxes", "chartFunnel", "chartHistoryPlot", "chartTableSparkline", "chartCirclePack", "icons", "robot", "hourglass", "computer", "htmlTag", "curlyBrackets", "curlySpread", "world", "eye", "chartRidgeline", "chartChord", "tableDialogOpen", "tableDialogClose", "minimap", "svg", "chartStackline", "zoomLock", "zoomUnlock", "lock", "unlock", "triangleInformation", "triangleExclamation", "direction", "chartDag", "chartGeo", "revert", "lineUp", "histogram", "histogramUp", "histogramDown", "document", "database", "pie", "percentage", "percentageUp", "percentageDown", "aToZ", "zToA", "zeroToNine", "nineToZero", "network", "chip", "chipAi", "chipBinary", "wifi", "key", "binary", "shield", "shieldExclam", "cloud", "cloudRain", "sun", "croissant", "plus", "minus", "person", "people", "blur", "download", "upload", "target", "sqlQuery", "sqlSearch", "gisLayerQuery", "gisLayerSearch", "scada", "apiStream", "wrench", "branches", "fork", "resizeX", "resizeY", "resizeTLBR", "resizeTRBL", "focus", "sql", "monitor", "workstation", "laptop", "folder", "folderFill", "clip", "addColumn", "addRow", "bell", "bellOff", "bellRing", "pin", "unpin", "building", "twig", "check", "doubleCheck", "plug", "unplug", "spinner1", "spinner2", "spinner3", "spinner4", "magnify", "frameLine", "pointer", "monument", "spark", "doubleSpark", "chartBump", "folderOpen", "folderOpenFill", "tag", "lightBulbOn", "lightBulbOff", "knobs", "hierarchy", "hierarchyList", "bucketFill", "bucketEmpty", "bucket", "bucketRecycle", "listType", "calendar", "envelope", "test"
+    "annotator", "chart3dBar", "chartAgePyramid", "chartBar", "chartCandlestick", "chartChestnut", "chartDonut", "chartDonutEvolution", "chartGauge", "chartHeatmap", "chartLine", "chartMoodRadar", "chartOnion", "chartQuadrant", "chartRadar", "chartRelationCircle", "chartRings", "chartScatter", "chartSparkHistogram", "chartSparkStackbar", "chartTable", "chartThermometer", "chartTiremarks", "chartVerticalBar", "chartWaffle", "chartWheel", "close", "dashboard", "digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9", "excel", "image", "labelClose", "labelOpen", "menu", "moodFlat", "moodHappy", "moodNeutral", "moodSad", "pdf", "screenshot", "skeleton", "smiley", "sort", "spin", "tableClose", "tableOpen", "chartNestedDonuts", "chartSparkbar", "refresh", "circleQuestion", "circleExclamation", "circleCheck", "circleCancel", "moodLaughing", "moodWink", "moodEmbarrassed", "moodSurprised", "exitFullscreen", "fullscreen", "arrowRight", "arrowTop", "arrowBottom", "arrowLeft", "chartCluster", "chartSparkline", "legend", "csv", "chartGalaxy", "kpi", "kpiBox", "tooltip", "vueDataUi", "ratio", "func", "settings", "trendUp", "trendDown", "clipBoard", "zoomPlus", "zoomMinus", "clipboardLine", "clipboardDonut", "clipboardBar", "clipboardVariable", "triangle", "triangleFill", "square", "squareFill", "diamond", "diamondFill", "pentagon", "pentagonFill", "hexagon", "hexagonFill", "circle", "circleFill", "star", "starFace", "starFill", "numbers", "sigma", "mu", "lambda", "copy", "accordion", "cursor", "trend", "chartStripPlot", "chartDumbbell", "copyLeft", "chartWordCloud", "stack", "unstack", "window", "chartFlow", "chartParallelCoordinatePlot", "tooltipDisabled", "pause", "play", "stop", "restart", "lap", "carouselTable", "battery", "chartStackbar", "chartBullet", "trash", "annotatorDisabled", "palette", "boxes", "chartFunnel", "chartHistoryPlot", "chartTableSparkline", "chartCirclePack", "icons", "robot", "hourglass", "computer", "htmlTag", "curlyBrackets", "curlySpread", "world", "eye", "chartRidgeline", "chartChord", "tableDialogOpen", "tableDialogClose", "minimap", "svg", "chartStackline", "zoomLock", "zoomUnlock", "lock", "unlock", "triangleInformation", "triangleExclamation", "direction", "chartDag", "chartGeo", "revert", "lineUp", "histogram", "histogramUp", "histogramDown", "document", "database", "pie", "percentage", "percentageUp", "percentageDown", "aToZ", "zToA", "zeroToNine", "nineToZero", "network", "chip", "chipAi", "chipBinary", "wifi", "key", "binary", "shield", "shieldExclam", "cloud", "cloudRain", "sun", "croissant", "plus", "minus", "person", "people", "blur", "download", "upload", "target", "sqlQuery", "sqlSearch", "gisLayerQuery", "gisLayerSearch", "scada", "apiStream", "wrench", "branches", "fork", "resizeX", "resizeY", "resizeTLBR", "resizeTRBL", "focus", "sql", "monitor", "workstation", "laptop", "folder", "folderFill", "clip", "addColumn", "addRow", "bell", "bellOff", "bellRing", "pin", "unpin", "building", "twig", "check", "doubleCheck", "plug", "unplug", "spinner1", "spinner2", "spinner3", "spinner4", "magnify", "frameLine", "pointer", "monument", "spark", "doubleSpark", "chartBump", "folderOpen", "folderOpenFill", "tag", "lightBulbOn", "lightBulbOff", "knobs", "hierarchy", "hierarchyList", "bucketFill", "bucketEmpty", "bucket", "bucketRecycle", "listType", "calendar", "envelope", "test", "ranges", "checkList", "bug", "microscope"
 ]);
 
 const inputValue = ref("");
@@ -132,6 +132,59 @@ function next() {
     inputValue.value = icons.value[nextIndex];
 }
 
+const pathToOffset = ref('');
+const offset = ref({
+    x: 0,
+    y: 0,
+})
+
+function offsetSvgPath(path, n, m) {
+    return path.replace(/(-?\d+(?:\.\d+)?)/g, (match, number, index, full) => {
+        const numbersBefore = full.slice(0, index).match(/-?\d+(?:\.\d+)?/g);
+        const isX = !numbersBefore || numbersBefore.length % 2 === 0;
+        const num = Number(number);
+        return String(isX ? num + n : num + m);
+    });
+}
+
+function convertPath() {
+    pathToOffset.value = offsetSvgPath(pathToOffset.value, offset.value.x, offset.value.y);
+}
+
+const pathToVisualize = ref('');
+function insertTemplate(type="stroke") {
+    pathToVisualize.value += `<path d="" stroke-linecap="round" stroke-linejoin="round" ${type === 'stroke' ? 'stroke="#CCCCCC" stroke-width="1.5" fill="none"' : 'fill="#CCCCCC"'} style="opacity: 1"/>`
+}
+
+const svgPath = computed(() => {
+    const paths = () => {
+        const X = [];
+        const Y = [];
+        for (let i = 1; i < 20; i += 1) {
+            X.push(`<path d="M 0,${i} 20,${i}" stroke-width="${i % 5 === 0 ? '0.15' : '0.05'}" stroke="#3A3A3A"/>`);
+            Y.push(`<path d="M ${i},0 ${i},20" stroke-width="${i % 5 === 0 ? '0.15' : '0.05'}" stroke="#3A3A3A"/>`);
+        }
+        return {
+            X,Y
+        }
+    }
+    return `
+    ${paths().X}
+    ${paths().Y}
+    ${pathToVisualize.value}
+    `
+});
+
+function clearMaker() {
+    pathToVisualize.value = '';
+}
+
+function clearComposer() {
+    pathToOffset.value = '';
+    offset.value.x = 0;
+    offset.value.y = 0;
+}
+
 </script>
 
 <template>
@@ -144,6 +197,44 @@ function next() {
                     <BaseIcon name="refresh" stroke="#CCCCCC"/>
                 </button>
             </div>
+
+            <details>
+                <summary>
+                    Icon maker
+                </summary>
+                <div class="icon-builder">
+                    <label class="icon-path">
+                        Path composer
+                        <textarea v-model="pathToOffset"/>
+                    </label>
+    
+                    <div class="icon-offset">
+                        <label>
+                            X:
+                            <input type="number" v-model="offset.x">
+                        </label>
+                        <label>
+                            Y:
+                            <input type="number" v-model="offset.y">
+                        </label>
+                        <button class="svg-btn" @click="convertPath">OFFSET</button>
+                        <button class="svg-btn" @click="clearComposer">CLEAR</button>
+                    </div>
+    
+                    <label class="icon-path" style="margin-top: 2rem;">
+                        <div style="margin-bottom: 0.25rem;">
+                            Path maker
+                            <button class="svg-btn" style="margin-left: 1rem" @click="insertTemplate('stroke')">Add path template (stroke)</button>
+                            <button class="svg-btn" style="margin-left: 1rem" @click="insertTemplate('fill')">Add path template (fill)</button>
+                            <button class="svg-btn" style="margin-left: 1rem" @click="clearMaker">CLEAR</button>
+                        </div>
+                        <textarea v-model="pathToVisualize"/>
+                    </label>
+                    <div style="text-align:center">Preview</div>
+                    <svg class="visualizer" viewBox="0 0 20 20" width="150" v-html="svgPath"></svg>
+                    <svg class="visualizer" viewBox="0 0 20 20" style="width: 28px; margin-top: 1rem; border: none;" v-html="svgPath"></svg>
+                </div>
+            </details>
 
             <ul v-if="isOpen && filteredOptions.length > 0">
                 <li v-for="(item, index) in filteredOptions" :key="item" @mousedown.prevent="selectOption(item)"
@@ -451,5 +542,65 @@ function next() {
 
     .controls-right {
         right: -3rem;
+    }
+
+    .icon-builder {
+        margin-top: 2rem;
+        display:flex;
+        flex-direction: column;
+        width: calc(600px - 2rem);
+    }
+
+    .icon-offset {
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    textarea {
+        background: #2A2A2A;
+        border-radius: 0.25rem;
+        min-height: 10rem;
+        color: #42d392;
+        padding: 1rem;
+        min-width: calc(600px - 2rem);
+        max-width: calc(600px - 2rem);
+    }
+
+    input[type="number"] {
+        background: #2A2A2A;
+        border-radius: 0.25rem;
+        color: #42d392;
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #6A6A6A;
+    }
+
+    .svg-btn {
+        background-color: #42d392;
+        border: none;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s;
+        cursor: pointer;
+        height: 1.5rem;
+    }
+    .svg-btn:hover {
+        background-color: #62e9ac;
+    }
+
+    .icon-path {
+        margin-top: 1rem
+    }
+
+    .visualizer {
+        border:1px solid #6A6A6A;
+        width: 300px;
+        margin: 0 auto;
+    }
+    details {
+        width: 600px;
+        margin-top: 1rem;
+        background: #2A2A2A;
+        padding: 1rem;
     }
 </style>

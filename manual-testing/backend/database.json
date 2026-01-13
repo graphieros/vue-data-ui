@@ -372,6 +372,23 @@
       "id": "206a2a09-b9df-4666-be92-1dd8e81b38bd",
       "createdAt": 1768128369314,
       "updatedAt": 1768149949476
+    },
+    {
+      "title": "Icon maker",
+      "component": "ArenaVueUiIcon.vue",
+      "description": "Add an icon maker, with preview. Also add a feature to offset a path by x and or y.",
+      "priority": 0,
+      "author": "graphieros",
+      "done": true,
+      "exchanges": [],
+      "type": "dev",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "1d61a77b-5ded-449c-b109-9b75f73a696d",
+      "createdAt": 1768322796718,
+      "updatedAt": 1768324501221
     }
   ]
 }
