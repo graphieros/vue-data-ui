@@ -1046,7 +1046,7 @@ defineExpose({
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
                 <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
-                    <BaseIcon name="excel" :stroke="tableComponent.props.color"/>
+                    <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
                 </button>
             </template>
             <template #content>

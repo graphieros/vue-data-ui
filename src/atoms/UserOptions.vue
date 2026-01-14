@@ -703,31 +703,13 @@ onBeforeUnmount(() => {
                 }`"
         >
             <!-- Action buttons are duplicated in both branches, but we can live with that -->
-            <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
-                <template v-if="$slots.optionTooltip">
-                    <slot name="optionTooltip" />
-                </template>
-                <template v-else>
-                    <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color" style="pointer-events: none;" />
-                    <BaseIcon v-else name="tooltipDisabled" :stroke="color" style="pointer-events: none" />
-                </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.tooltip" :class="{
-                    'button-info-left': position === 'left',
-                    'button-info-right': position === 'right',
-                    'button-info-left-visible': position === 'left' && isInfo.tooltip,
-                    'button-info-right-visible': position === 'right' && isInfo.tooltip,
-                }" :style="{ background: backgroundColor, color: color }">
-                    {{ titles.tooltip }}
-                </div>
-            </button>
-
             <button tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf" @mouseenter="isInfo.pdf = true" @mouseout="isInfo.pdf = false">
                 <template v-if="$slots.optionPdf">
                     <slot name="optionPdf" />
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isPrinting" name="spinner2" isSpin :stroke="color" style="pointer-events: none;" />
-                    <BaseIcon v-else name="pdf" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-if="isPrinting" name="hourglass" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-else name="filePdf" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.pdf" :class="{
                     'button-info-left': position === 'left',
@@ -744,7 +726,7 @@ onBeforeUnmount(() => {
                     <slot name="optionCsv" />
                 </template>
                 <template v-else>
-                    <BaseIcon name="excel" :stroke="color" style="pointer-events: none" />
+                    <BaseIcon name="fileCsv" :stroke="color" style="pointer-events: none" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.csv" :class="{
                     'button-info-left': position === 'left',
@@ -761,8 +743,8 @@ onBeforeUnmount(() => {
                     <slot name="optionImg" />
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isImaging" name="spinner2" isSpin :stroke="color" style="pointer-events: none;" />
-                    <BaseIcon v-else name="image" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-if="isImaging" name="hourglass" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-else name="filePng" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.img" :class="{
                     'button-info-left': position === 'left',
@@ -779,7 +761,7 @@ onBeforeUnmount(() => {
                     <slot name="optionSvg" />
                 </template>
                 <template v-else>
-                    <BaseIcon name="svg" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon name="fileSvg" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.svg" :class="{
                     'button-info-left': position === 'left',
@@ -788,6 +770,24 @@ onBeforeUnmount(() => {
                     'button-info-left-visible': position === 'left' && isInfo.svg,
                 }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.svg }}
+                </div>
+            </button>
+
+            <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
+                <template v-if="$slots.optionTooltip">
+                    <slot name="optionTooltip" />
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-else name="tooltipDisabled" :stroke="color" style="pointer-events: none" />
+                </template>
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.tooltip" :class="{
+                    'button-info-left': position === 'left',
+                    'button-info-right': position === 'right',
+                    'button-info-left-visible': position === 'left' && isInfo.tooltip,
+                    'button-info-right-visible': position === 'right' && isInfo.tooltip,
+                }" :style="{ background: backgroundColor, color: color }">
+                    {{ titles.tooltip }}
                 </div>
             </button>
 
@@ -967,31 +967,13 @@ onBeforeUnmount(() => {
             :style="`background:${backgroundColor}; ${position === 'right' ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px` : `left: ${noOffset ? 0 : 4}px`}`"
         >
             <!-- Action buttons are duplicated in both branches, but we can live with that -->
-            <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
-                <template v-if="$slots.optionTooltip">
-                    <slot name="optionTooltip" />
-                </template>
-                <template v-else>
-                    <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color" style="pointer-events: none;" />
-                    <BaseIcon v-else name="tooltipDisabled" :stroke="color" style="pointer-events: none" />
-                </template>
-                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.tooltip" :class="{
-                    'button-info-left': position === 'left',
-                    'button-info-right': position === 'right',
-                    'button-info-left-visible': position === 'left' && isInfo.tooltip,
-                    'button-info-right-visible': position === 'right' && isInfo.tooltip,
-                }" :style="{ background: backgroundColor, color: color }">
-                    {{ titles.tooltip }}
-                </div>
-            </button>
-
             <button tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf" @mouseenter="isInfo.pdf = true" @mouseout="isInfo.pdf = false">
                 <template v-if="$slots.optionPdf">
                     <slot name="optionPdf" />
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isPrinting" name="spinner2" isSpin :stroke="color" style="pointer-events: none;" />
-                    <BaseIcon v-else name="pdf" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-if="isPrinting" name="hourglass" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-else name="filePdf" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.pdf" :class="{
                     'button-info-left': position === 'left',
@@ -1008,7 +990,7 @@ onBeforeUnmount(() => {
                     <slot name="optionCsv" />
                 </template>
                 <template v-else>
-                    <BaseIcon name="excel" :stroke="color" style="pointer-events: none" />
+                    <BaseIcon name="fileCsv" :stroke="color" style="pointer-events: none" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.csv" :class="{
                     'button-info-left': position === 'left',
@@ -1025,8 +1007,8 @@ onBeforeUnmount(() => {
                     <slot name="optionImg" />
                 </template>
                 <template v-else>
-                    <BaseIcon v-if="isImaging" name="spinner2" isSpin :stroke="color" style="pointer-events: none;" />
-                    <BaseIcon v-else name="image" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-if="isImaging" name="hourglass" isSpin :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-else name="filePng" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.img" :class="{
                     'button-info-left': position === 'left',
@@ -1043,7 +1025,7 @@ onBeforeUnmount(() => {
                     <slot name="optionSvg" />
                 </template>
                 <template v-else>
-                    <BaseIcon name="svg" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon name="fileSvg" :stroke="color" style="pointer-events: none;" />
                 </template>
                 <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.svg" :class="{
                     'button-info-left': position === 'left',
@@ -1052,6 +1034,24 @@ onBeforeUnmount(() => {
                     'button-info-left-visible': position === 'left' && isInfo.svg,
                 }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.svg }}
+                </div>
+            </button>
+
+            <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
+                <template v-if="$slots.optionTooltip">
+                    <slot name="optionTooltip" />
+                </template>
+                <template v-else>
+                    <BaseIcon v-if="isItTooltip" name="tooltip" :stroke="color" style="pointer-events: none;" />
+                    <BaseIcon v-else name="tooltipDisabled" :stroke="color" style="pointer-events: none" />
+                </template>
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.tooltip" :class="{
+                    'button-info-left': position === 'left',
+                    'button-info-right': position === 'right',
+                    'button-info-left-visible': position === 'left' && isInfo.tooltip,
+                    'button-info-right-visible': position === 'right' && isInfo.tooltip,
+                }" :style="{ background: backgroundColor, color: color }">
+                    {{ titles.tooltip }}
                 </div>
             </button>
 

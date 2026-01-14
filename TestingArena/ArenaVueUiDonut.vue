@@ -512,6 +512,12 @@ onMounted(async () => {
                 <template #optionLabels>
                     TOGGLE LABELS
                 </template>
+                <template #optionSvg>
+                    DOWNLOAD SVG
+                </template>
+                <template #optionTooltip>
+                    TOGGLE TOOLTIP
+                </template>
                 <template template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                     <button @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">FULLSCREEN</button>
                 </template>

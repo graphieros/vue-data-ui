@@ -691,7 +691,7 @@ onBeforeUnmount(() => {
                 marginTop: '20px'
             }">
             <slot name="annotator-action-undo" v-bind="{ disabled: !stack.length }">
-                <BaseIcon name="restart" :stroke="color" />
+                <BaseIcon name="refresh" :stroke="color" />
             </slot>
         </button>
 
@@ -701,7 +701,7 @@ onBeforeUnmount(() => {
                 border: `1px solid ${buttonBorderColor}`
             }">
             <slot name="annotator-action-redo" v-bind="{ disabled: !redoStack.length}">
-                <BaseIcon name="restart" :stroke="color" style="transform: scaleX(-1)" />
+                <BaseIcon name="refresh" :stroke="color" style="transform: scaleX(-1)" />
             </slot>
         </button>
 

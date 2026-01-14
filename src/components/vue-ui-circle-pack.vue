@@ -1026,7 +1026,7 @@ defineExpose({
                     class="vue-ui-user-options-button"
                     @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
                 >
-                    <BaseIcon name="excel" :stroke="tableComponent.props.color" />
+                    <BaseIcon name="fileCsv" :stroke="tableComponent.props.color" />
                 </button>
             </template>
             <template #content>
