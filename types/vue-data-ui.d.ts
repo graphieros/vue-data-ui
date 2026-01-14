@@ -1469,6 +1469,7 @@ declare module "vue-data-ui" {
         | "chartWaffle"
         | "chartWheel"
         | "chartWordCloud"
+        | "chartWordCloudZh"
         | "check"
         | "checkList"
         | "chip"
