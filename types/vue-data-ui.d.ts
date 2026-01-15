@@ -1566,6 +1566,7 @@ declare module "vue-data-ui" {
         | "lightBulbOff"
         | "lightBulbOn"
         | "lineUp"
+        | "link"
         | "listType"
         | "lock"
         | "magnify"

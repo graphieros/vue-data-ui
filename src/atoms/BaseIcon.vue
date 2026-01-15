@@ -332,6 +332,7 @@ function getIconPath(name, { stroke, strokeWidth }) {
         filePdf: `<path d="M 18 10 L 18 7 L 13 2 M 13 2 L 13 7 L 18 7 M 13 2 L 2 2 L 2 10" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/><text x="10" y="18.5" fill="${stroke}" text-anchor="middle" font-size="9" font-family="Arial">PDF</text>`,
         fileCsv: `<path d="M 18 10 L 18 7 L 13 2 M 13 2 L 13 7 L 18 7 M 13 2 L 2 2 L 2 10" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/><text x="10" y="18.5" fill="${stroke}" text-anchor="middle" font-size="9" font-family="Arial">CSV</text>`,
         filePng: `<path d="M 18 10 L 18 7 L 13 2 M 13 2 L 13 7 L 18 7 M 13 2 L 2 2 L 2 10" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/><text x="10" y="18.5" fill="${stroke}" text-anchor="middle" font-size="9" font-family="Arial">PNG</text>`,
+        link: `<path d="M 7 13 L 13 7 M 6 9 C 1 14 6 19 11 14 M 9 6 C 14 1 19 6 14 11" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
     };
 
     return map[name] || '';
