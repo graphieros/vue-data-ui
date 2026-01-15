@@ -458,7 +458,7 @@ const stats = computed(() => {
 
 <template>
     <button class="open-btn" @click="openDialog()">
-        <VueUiIcon name="listType" stroke="#8A8A8A"/>
+        <VueUiIcon name="checkList" stroke="#8A8A8A"/>
         <div class="badge" v-if="toBeDone.length">
             {{ toBeDone.length }}
         </div>
@@ -466,7 +466,7 @@ const stats = computed(() => {
 
     <dialog ref="dialog" class="dialog" id="mainDialog">
         <header>
-            <VueUiIcon name="listType" stroke="#6A6A6A"/>
+            <VueUiIcon name="checkList" stroke="#6A6A6A"/>
             Todo list
             <div class="actions">
                 <button @click="openTodoDialog('Create')">

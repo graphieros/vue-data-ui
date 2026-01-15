@@ -81,6 +81,13 @@ function getCustomChecklistDone(item) {
     return done / Object.keys(item.customCheckList).length * 100;
 }
 
+const iconMap = {
+    dev: 'wrench',
+    bug: 'bug',
+    feature: 'lightBulbOn',
+    docs: 'document'
+}
+
 </script>
 
 <template>
@@ -117,7 +124,10 @@ function getCustomChecklistDone(item) {
             <div class="type-badge" :style="{
                 backgroundColor: typeColors[item.type],
                 color: ['feature', 'docs'].includes(item.type) ? '#1A1A1A' : '#FFFFFF'
-            }">{{ item.type.toUpperCase() }}</div>
+            }">
+                <VueUiIcon :name="iconMap[item.type]" :size="16" :stroke="['dev', 'bug'].includes(item.type) ? '#FFFFFF' : '#1A1A1A'"/>
+                {{ item.type.toUpperCase() }}
+            </div>
 
             <div class="item-title">{{ item.title }}</div>
             <div class="item-priority">

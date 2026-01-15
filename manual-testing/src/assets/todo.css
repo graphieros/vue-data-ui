@@ -532,10 +532,15 @@
     }
     .type-badge {
         width: fit-content;
-        padding: 0 0.5rem;
+        padding: 0.25rem 0.5rem;
         border-radius: 1rem;
         font-size: 0.7rem;
         font-weight: bold;
+        display: flex;
+        flex-direction: row;
+        align-items:center;
+        justify-content:center;
+        gap: 0.5rem;
     }
     .card-title {
         color: #CCCCCC;
