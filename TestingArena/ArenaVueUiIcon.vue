@@ -6,7 +6,7 @@ import { VueUiIcon } from "vue-data-ui";
 import { VueUiIcon as VueUiIconTreeshaken } from "vue-data-ui/vue-ui-icon";
 
 const icons = ref([
-    "annotator", "chart3dBar", "chartAgePyramid", "chartBar", "chartCandlestick", "chartChestnut", "chartDonut", "chartDonutEvolution", "chartGauge", "chartHeatmap", "chartLine", "chartMoodRadar", "chartOnion", "chartQuadrant", "chartRadar", "chartRelationCircle", "chartRings", "chartScatter", "chartSparkHistogram", "chartSparkStackbar", "chartTable", "chartThermometer", "chartTiremarks", "chartVerticalBar", "chartWaffle", "chartWheel", "close", "dashboard", "digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9", "excel", "image", "labelClose", "labelOpen", "menu", "moodFlat", "moodHappy", "moodNeutral", "moodSad", "pdf", "screenshot", "skeleton", "smiley", "sort", "spin", "tableClose", "tableOpen", "chartNestedDonuts", "chartSparkbar", "refresh", "circleQuestion", "circleExclamation", "circleCheck", "circleCancel", "moodLaughing", "moodWink", "moodEmbarrassed", "moodSurprised", "exitFullscreen", "fullscreen", "arrowRight", "arrowTop", "arrowBottom", "arrowLeft", "chartCluster", "chartSparkline", "legend", "csv", "chartGalaxy", "kpi", "kpiBox", "tooltip", "vueDataUi", "ratio", "func", "settings", "trendUp", "trendDown", "clipBoard", "zoomPlus", "zoomMinus", "clipboardLine", "clipboardDonut", "clipboardBar", "clipboardVariable", "triangle", "triangleFill", "square", "squareFill", "diamond", "diamondFill", "pentagon", "pentagonFill", "hexagon", "hexagonFill", "circle", "circleFill", "star", "starFace", "starFill", "numbers", "sigma", "mu", "lambda", "copy", "accordion", "cursor", "trend", "chartStripPlot", "chartDumbbell", "copyLeft", "chartWordCloud", "chartWordCloudZh", "stack", "unstack", "window", "chartFlow", "chartParallelCoordinatePlot", "tooltipDisabled", "pause", "play", "stop", "restart", "lap", "carouselTable", "battery", "chartStackbar", "chartBullet", "trash", "annotatorDisabled", "palette", "boxes", "chartFunnel", "chartHistoryPlot", "chartTableSparkline", "chartCirclePack", "icons", "robot", "hourglass", "computer", "htmlTag", "curlyBrackets", "curlySpread", "world", "eye", "chartRidgeline", "chartChord", "tableDialogOpen", "tableDialogClose", "minimap", "svg", "chartStackline", "zoomLock", "zoomUnlock", "lock", "unlock", "triangleInformation", "triangleExclamation", "direction", "chartDag", "chartGeo", "revert", "lineUp", "histogram", "histogramUp", "histogramDown", "document", "database", "pie", "percentage", "percentageUp", "percentageDown", "aToZ", "zToA", "zeroToNine", "nineToZero", "network", "chip", "chipAi", "chipBinary", "wifi", "key", "binary", "shield", "shieldExclam", "cloud", "cloudRain", "sun", "croissant", "plus", "minus", "person", "people", "blur", "download", "upload", "target", "sqlQuery", "sqlSearch", "gisLayerQuery", "gisLayerSearch", "scada", "apiStream", "wrench", "branches", "fork", "resizeX", "resizeY", "resizeTLBR", "resizeTRBL", "focus", "sql", "monitor", "workstation", "laptop", "folder", "folderFill", "clip", "addColumn", "addRow", "bell", "bellOff", "bellRing", "pin", "unpin", "building", "twig", "check", "doubleCheck", "plug", "unplug", "spinner1", "spinner2", "spinner3", "spinner4", "magnify", "frameLine", "pointer", "monument", "spark", "doubleSpark", "chartBump", "folderOpen", "folderOpenFill", "tag", "lightBulbOn", "lightBulbOff", "knobs", "hierarchy", "hierarchyList", "bucketFill", "bucketEmpty", "bucket", "bucketRecycle", "listType", "calendar", "envelope", "test", "sliders", "checkList", "bug", "microscope", "pi", "export", "file", "filePlus", "fileSearch", "recycle", "colorPicker", "text", "fileSvg", "filePdf", "fileCsv", "filePng", "link"
+    "annotator", "chart3dBar", "chartAgePyramid", "chartBar", "chartCandlestick", "chartChestnut", "chartDonut", "chartDonutEvolution", "chartGauge", "chartHeatmap", "chartLine", "chartMoodRadar", "chartOnion", "chartQuadrant", "chartRadar", "chartRelationCircle", "chartRings", "chartScatter", "chartSparkHistogram", "chartSparkStackbar", "chartTable", "chartThermometer", "chartTiremarks", "chartVerticalBar", "chartWaffle", "chartWheel", "close", "dashboard", "digit0", "digit1", "digit2", "digit3", "digit4", "digit5", "digit6", "digit7", "digit8", "digit9", "excel", "image", "labelClose", "labelOpen", "menu", "moodFlat", "moodHappy", "moodNeutral", "moodSad", "pdf", "screenshot", "skeleton", "smiley", "sort", "spin", "tableClose", "tableOpen", "chartNestedDonuts", "chartSparkbar", "refresh", "circleQuestion", "circleExclamation", "circleCheck", "circleCancel", "moodLaughing", "moodWink", "moodEmbarrassed", "moodSurprised", "exitFullscreen", "fullscreen", "arrowRight", "arrowTop", "arrowBottom", "arrowLeft", "chartCluster", "chartSparkline", "legend", "csv", "chartGalaxy", "kpi", "kpiBox", "tooltip", "vueDataUi", "ratio", "func", "settings", "trendUp", "trendDown", "clipBoard", "zoomPlus", "zoomMinus", "clipboardLine", "clipboardDonut", "clipboardBar", "clipboardVariable", "triangle", "triangleFill", "square", "squareFill", "diamond", "diamondFill", "pentagon", "pentagonFill", "hexagon", "hexagonFill", "circle", "circleFill", "star", "starFace", "starFill", "numbers", "sigma", "mu", "lambda", "copy", "accordion", "cursor", "trend", "chartStripPlot", "chartDumbbell", "copyLeft", "chartWordCloud", "chartWordCloudZh", "stack", "unstack", "window", "chartFlow", "chartParallelCoordinatePlot", "tooltipDisabled", "pause", "play", "stop", "restart", "lap", "carouselTable", "battery", "chartStackbar", "chartBullet", "trash", "annotatorDisabled", "palette", "boxes", "chartFunnel", "chartHistoryPlot", "chartTableSparkline", "chartCirclePack", "icons", "robot", "hourglass", "computer", "htmlTag", "curlyBrackets", "curlySpread", "world", "eye", "chartRidgeline", "chartChord", "tableDialogOpen", "tableDialogClose", "minimap", "svg", "chartStackline", "zoomLock", "zoomUnlock", "lock", "unlock", "triangleInformation", "triangleExclamation", "direction", "chartDag", "chartGeo", "revert", "lineUp", "histogram", "histogramUp", "histogramDown", "document", "database", "pie", "percentage", "percentageUp", "percentageDown", "aToZ", "zToA", "zeroToNine", "nineToZero", "network", "chip", "chipAi", "chipBinary", "wifi", "key", "binary", "shield", "shieldExclam", "cloud", "cloudRain", "sun", "croissant", "plus", "minus", "person", "people", "blur", "download", "upload", "target", "sqlQuery", "sqlSearch", "gisLayerQuery", "gisLayerSearch", "scada", "apiStream", "wrench", "branches", "fork", "resize", "resizeX", "resizeY", "resizeTLBR", "resizeTRBL", "focus", "sql", "monitor", "workstation", "laptop", "folder", "folderFill", "clip", "addColumn", "addRow", "bell", "bellOff", "bellRing", "pin", "unpin", "building", "twig", "check", "doubleCheck", "plug", "unplug", "spinner1", "spinner2", "spinner3", "spinner4", "magnify", "frameLine", "pointer", "monument", "spark", "doubleSpark", "chartBump", "folderOpen", "folderOpenFill", "tag", "lightBulbOn", "lightBulbOff", "knobs", "hierarchy", "hierarchyList", "bucketFill", "bucketEmpty", "bucket", "bucketRecycle", "listType", "calendar", "envelope", "test", "sliders", "checkList", "bug", "microscope", "pi", "export", "file", "filePlus", "fileSearch", "recycle", "colorPicker", "text", "fileSvg", "filePdf", "fileCsv", "filePng", "link", "puzzle", "puzzleFill"
 ]);
 
 const inputValue = ref("");
@@ -153,7 +153,7 @@ function convertPath() {
 
 const pathToVisualize = ref('');
 
-function insertTemplate(type="stroke", path) {
+function insertTemplate(type = "stroke", path) {
     pathToVisualize.value += `<path d="${path ?? ''}" stroke-linecap="round" stroke-linejoin="round" ${type === 'stroke' ? 'stroke="#CCCCCC" stroke-width="1.5" fill="none"' : 'fill="#CCCCCC"'} style="opacity: 1"/>`
 }
 
@@ -166,7 +166,7 @@ const svgPath = computed(() => {
             Y.push(`<path d="M ${i},0 ${i},20" stroke-width="${i % 5 === 0 ? '0.15' : '0.05'}" stroke="#3A3A3A"/>`);
         }
         return {
-            X,Y
+            X, Y
         }
     }
     return `
@@ -176,6 +176,293 @@ const svgPath = computed(() => {
     `
 });
 
+function addPath(type = "stroke") {
+    insertTemplate(type, pathToOffset.value);
+}
+
+const exportName = ref('');
+
+const exportCode = computed(() => {
+    return `${exportName.value}: \`${pathToVisualize.value
+            .replace(/stroke="([^"]*)"/g, (_, value) =>
+                value === 'none' ? 'stroke="none"' : 'stroke="${stroke}"'
+            )
+            .replace(/fill="([^"]*)"/g, (_, value) =>
+                value === 'none' ? 'fill="none"' : 'fill="${stroke}"'
+            )
+            .replace(/stroke-width="([^"]*)"/g, (_, value) =>
+                value === 'none' ? 'stroke-width="none"' : 'stroke-width="${strokeWidth}"'
+            )
+        }\`,`
+})
+
+function copyToClipboard(text) {
+    return navigator.clipboard.writeText(text)
+}
+
+/**
+ * Scale + fit an SVG path "d" into a target viewBox.
+ * Supports absolute commands: M, L, H, V, C, S, Q, T, A, Z (and repeated coords).
+ *
+ * Returns: { d, viewBox, bbox, scale, translate }
+ */
+function fitPathToViewBox(
+    d,
+    targetWidth = 20,
+    targetHeight = 20,
+    {
+        padding = 0,
+        preserveAspect = true,
+        offsetX = 0,
+        offsetY = 0,
+    } = {}
+) {
+    const tokens = d
+        .replace(/,/g, " ")
+        .replace(/([a-zA-Z])/g, " $1 ")
+        .trim()
+        .split(/\s+/);
+
+    const isCmd = (t) => /^[a-zA-Z]$/.test(t);
+    const num = (t) => Number(t);
+
+    let i = 0;
+    let cmd = null;
+
+    let x = 0, y = 0;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    const pushPoint = (px, py) => {
+        if (Number.isFinite(px) && Number.isFinite(py)) {
+            minX = Math.min(minX, px);
+            minY = Math.min(minY, py);
+            maxX = Math.max(maxX, px);
+            maxY = Math.max(maxY, py);
+        }
+    };
+
+    const consumePairs = (countPairs, handler) => {
+        for (let k = 0; k < countPairs; k += 1) {
+            const px = num(tokens[i++]);
+            const py = num(tokens[i++]);
+            handler(px, py);
+        }
+    };
+
+    // ---------- PASS 1: bbox ----------
+    while (i < tokens.length) {
+        const t = tokens[i++];
+        if (isCmd(t)) {
+            cmd = t;
+            continue;
+        }
+        i -= 1;
+
+        switch (cmd) {
+            case "M":
+            case "L":
+            case "T":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    x = num(tokens[i++]);
+                    y = num(tokens[i++]);
+                    pushPoint(x, y);
+                }
+                break;
+
+            case "H":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    x = num(tokens[i++]);
+                    pushPoint(x, y);
+                }
+                break;
+
+            case "V":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    y = num(tokens[i++]);
+                    pushPoint(x, y);
+                }
+                break;
+
+            case "C":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    consumePairs(2, pushPoint);
+                    x = num(tokens[i++]);
+                    y = num(tokens[i++]);
+                    pushPoint(x, y);
+                }
+                break;
+
+            case "S":
+            case "Q":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    consumePairs(1, pushPoint);
+                    x = num(tokens[i++]);
+                    y = num(tokens[i++]);
+                    pushPoint(x, y);
+                }
+                break;
+
+            case "A":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    const rx = num(tokens[i++]);
+                    const ry = num(tokens[i++]);
+                    i += 3;
+                    x = num(tokens[i++]);
+                    y = num(tokens[i++]);
+                    pushPoint(x - rx, y - ry);
+                    pushPoint(x + rx, y + ry);
+                    pushPoint(x, y);
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    if (!Number.isFinite(minX)) {
+        throw new Error("Could not compute bbox: path has no points");
+    }
+
+    const bbox = {
+        minX,
+        minY,
+        maxX,
+        maxY,
+        width: maxX - minX,
+        height: maxY - minY,
+    };
+
+    // ---------- SCALE ----------
+    const innerW = Math.max(0, targetWidth - 2 * padding);
+    const innerH = Math.max(0, targetHeight - 2 * padding);
+
+    const sx = innerW / bbox.width;
+    const sy = innerH / bbox.height;
+
+    const scale = preserveAspect ? Math.min(sx, sy) : { sx, sy };
+    const usedSx = preserveAspect ? scale : scale.sx;
+    const usedSy = preserveAspect ? scale : scale.sy;
+
+    const scaledW = bbox.width * usedSx;
+    const scaledH = bbox.height * usedSy;
+
+    const extraX = preserveAspect ? (innerW - scaledW) / 2 : 0;
+    const extraY = preserveAspect ? (innerH - scaledH) / 2 : 0;
+
+    // ---------- TRANSLATE + OFFSETS ----------
+    const tx = padding + extraX - bbox.minX * usedSx + offsetX;
+    const ty = padding + extraY - bbox.minY * usedSy + offsetY;
+
+    const scaleNumber = (v, axis) =>
+        preserveAspect ? v * usedSx : axis === "x" ? v * usedSx : v * usedSy;
+
+    // ---------- PASS 2: rewrite ----------
+    const out = [];
+    i = 0;
+    cmd = null;
+
+    const fmt = (n) => (Math.round(n * 1000) / 1000).toString();
+    const take = () => num(tokens[i++]);
+
+    while (i < tokens.length) {
+        const t = tokens[i++];
+        if (isCmd(t)) {
+            cmd = t;
+            out.push(cmd);
+            continue;
+        }
+        i -= 1;
+
+        switch (cmd) {
+            case "M":
+            case "L":
+            case "T":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    out.push(
+                        fmt(scaleNumber(take(), "x") + tx),
+                        fmt(scaleNumber(take(), "y") + ty)
+                    );
+                }
+                break;
+
+            case "H":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    out.push(fmt(scaleNumber(take(), "x") + tx));
+                }
+                break;
+
+            case "V":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    out.push(fmt(scaleNumber(take(), "y") + ty));
+                }
+                break;
+
+            case "C":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    for (let k = 0; k < 3; k += 1) {
+                        out.push(
+                            fmt(scaleNumber(take(), "x") + tx),
+                            fmt(scaleNumber(take(), "y") + ty)
+                        );
+                    }
+                }
+                break;
+
+            case "S":
+            case "Q":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    for (let k = 0; k < 2; k += 1) {
+                        out.push(
+                            fmt(scaleNumber(take(), "x") + tx),
+                            fmt(scaleNumber(take(), "y") + ty)
+                        );
+                    }
+                }
+                break;
+
+            case "A":
+                while (i < tokens.length && !isCmd(tokens[i])) {
+                    out.push(
+                        fmt(scaleNumber(take(), "x")),
+                        fmt(scaleNumber(take(), "y")),
+                        fmt(take()),
+                        take(),
+                        take(),
+                        fmt(scaleNumber(take(), "x") + tx),
+                        fmt(scaleNumber(take(), "y") + ty)
+                    );
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    return {
+        d: out.join(" ").replace(/\s+/g, " ").trim(),
+        viewBox: `0 0 ${targetWidth} ${targetHeight}`,
+        bbox,
+        scale: preserveAspect ? usedSx : { x: usedSx, y: usedSy },
+        translate: { x: tx, y: ty },
+    };
+}
+
+const fitOptions = ref({
+    offsetX: 0,
+    offsetY: 0,
+    padding: 0
+});
+
+function scalePath(type) {
+    insertTemplate(type, fitPathToViewBox(pathToOffset.value, 20, 20, {
+        padding: fitOptions.value.padding,
+        offsetX: fitOptions.value.offsetX,
+        offsetY: fitOptions.value.offsetY
+    }).d);
+}
+
 function clearMaker() {
     pathToVisualize.value = '';
 }
@@ -184,31 +471,9 @@ function clearComposer() {
     pathToOffset.value = '';
     offset.value.x = 0;
     offset.value.y = 0;
-}
-
-function addPath(type="stroke") {
-    insertTemplate(type, pathToOffset.value);
-}
-
-const exportName = ref('');
-
-const exportCode = computed(() => {
-    return `${exportName.value}: \`${
-        pathToVisualize.value
-        .replace(/stroke="([^"]*)"/g, (_, value) =>
-            value === 'none' ? 'stroke="none"' : 'stroke="${stroke}"'
-        )
-        .replace(/fill="([^"]*)"/g, (_, value) =>
-            value === 'none' ? 'fill="none"' : 'fill="${stroke}"'
-        )
-        .replace(/stroke-width="([^"]*)"/g, (_, value) =>
-            value === 'none' ? 'stroke-width="none"' : 'stroke-width="${strokeWidth}"'
-        )
-    }\`,`
-})
-
-function copyToClipboard(text) {
-    return navigator.clipboard.writeText(text)
+    fitOptions.value.offsetX = 0;
+    fitOptions.value.offsetY = 0;
+    fitOptions.value.padding = 0;
 }
 
 </script>
@@ -225,9 +490,9 @@ function copyToClipboard(text) {
                 <div class="icon-builder">
                     <label class="icon-path">
                         Path composer
-                        <textarea v-model="pathToOffset"/>
+                        <textarea v-model="pathToOffset" />
                     </label>
-    
+
                     <div class="icon-offset">
                         <label>
                             X:
@@ -238,53 +503,86 @@ function copyToClipboard(text) {
                             <input type="number" v-model="offset.y">
                         </label>
                         <button class="svg-btn" @click="convertPath">
-                            <VueUiIcon name="ratio" stroke="#42d392"/>
+                            <VueUiIcon name="ratio" stroke="#42d392" />
                         </button>
                         <button class="svg-btn" @click="addPath('stroke')">
                             <VueUiIcon name="arrowBottom" stroke="#42d392" :stroke-width="2">
                                 <template #exp>
-                                    <VueUiIcon name="square" :size="12" :stroke-width="4"/>
+                                    <VueUiIcon name="square" :size="12" :stroke-width="4" />
                                 </template>
-                            </VueUiIcon>  
+                            </VueUiIcon>
                         </button>
                         <button class="svg-btn" @click="addPath('fill')">
                             <VueUiIcon name="arrowBottom" stroke="#42d392" :stroke-width="2">
                                 <template #exp>
-                                    <VueUiIcon name="squareFill" :size="12" :stroke-width="4"/>
+                                    <VueUiIcon name="squareFill" :size="12" :stroke-width="4" />
                                 </template>
-                            </VueUiIcon>  
+                            </VueUiIcon>
                         </button>
                         <button class="svg-btn" @click="clearComposer">
-                            <VueUiIcon name="close" stroke="#42d392"/>  
+                            <VueUiIcon name="close" stroke="#42d392" />
                         </button>
                     </div>
-    
+
+                    <div class="icon-offset">
+                        <label>
+                            OffsetX:
+                            <input type="number" step="0.5" v-model="fitOptions.offsetX" style="width:4.1rem"/>
+                        </label>
+                        <label>
+                            OffsetY:
+                            <input type="number" step="0.5" v-model="fitOptions.offsetY" style="width:4.1rem"/>
+                        </label>
+                        <label>
+                            Padding:
+                            <input type="number" v-model="fitOptions.padding" style="width:4.1rem"/>
+                        </label>
+                        <button class="svg-btn" @click="scalePath('stroke')">
+                            <VueUiIcon name="arrowBottom" stroke="#42d392" :stroke-width="2">
+                                <template #exp>
+                                    <VueUiIcon name="square" :size="12" :stroke-width="4" />
+                                </template>
+                            </VueUiIcon>
+                        </button>
+                        <button class="svg-btn" @click="scalePath('fill')">
+                            <VueUiIcon name="arrowBottom" stroke="#42d392" :stroke-width="2">
+                                <template #exp>
+                                    <VueUiIcon name="squareFill" :size="12" :stroke-width="4" />
+                                </template>
+                            </VueUiIcon>
+                        </button>
+                        <button class="svg-btn" @click="clearComposer">
+                            <VueUiIcon name="close" stroke="#42d392" />
+                        </button>
+                    </div>
+
                     <div class="btn-actions">
                         Path maker
                         <button class="svg-btn" style="margin-left: 1rem" @click="insertTemplate('stroke')">
                             <VueUiIcon name="square" stroke="#42d392" :stroke-width="2">
                                 <template #exp>
-                                    <VueUiIcon name="plus" :size="20"/>
+                                    <VueUiIcon name="plus" :size="20" />
                                 </template>
                             </VueUiIcon>
                         </button>
                         <button class="svg-btn" style="margin-left: 1rem" @click="insertTemplate('fill')">
                             <VueUiIcon name="squareFill" stroke="#42d392" :stroke-width="2">
                                 <template #exp>
-                                    <VueUiIcon name="plus" :size="20"/>
+                                    <VueUiIcon name="plus" :size="20" />
                                 </template>
                             </VueUiIcon>
                         </button>
                         <button class="svg-btn" style="margin-left: 1rem" @click="clearMaker">
-                            <VueUiIcon name="close" stroke="#42d392"/>    
+                            <VueUiIcon name="close" stroke="#42d392" />
                         </button>
                     </div>
                     <label class="icon-path" style="margin-top: 0.5rem;">
-                        <textarea v-model="pathToVisualize"/>
+                        <textarea v-model="pathToVisualize" />
                     </label>
                     <div style="text-align:center">Preview</div>
                     <svg class="visualizer" viewBox="0 0 20 20" width="150" v-html="svgPath"></svg>
-                    <svg class="visualizer" viewBox="0 0 20 20" style="width: 28px; margin-top: 1rem; border: none;" v-html="svgPath"></svg>
+                    <svg class="visualizer" viewBox="0 0 20 20" style="width: 28px; margin-top: 1rem; border: none;"
+                        v-html="svgPath"></svg>
 
                     <div class="export">
                         Export
@@ -292,18 +590,19 @@ function copyToClipboard(text) {
                             Name:
                             <input type="text" style="margin-left:0.5rem" v-model="exportName">
                             <button class="svg-btn" style="margin-left: 1rem" @click="copyToClipboard(exportCode)">
-                                <VueUiIcon name="copy" stroke="#42d392"/>    
+                                <VueUiIcon name="copy" stroke="#42d392" />
                             </button>
                         </label>
-                        <textarea v-html="exportCode"/>
+                        <textarea v-html="exportCode" />
                     </div>
                 </div>
             </details>
 
             <div style="display: flex; flex-direction:row; align-items:center">
-                <input type="text" :value="inputValue" @input="onInput" @focus="openList" @keydown="onKeyDown" @blur="onBlur" autocomplete="off" placeholder="Search icon..." />
-                <button class="btn-reset" @click="inputValue=''">
-                    <BaseIcon name="refresh" stroke="#CCCCCC"/>
+                <input type="text" :value="inputValue" @input="onInput" @focus="openList" @keydown="onKeyDown"
+                    @blur="onBlur" autocomplete="off" placeholder="Search icon..." />
+                <button class="btn-reset" @click="inputValue = ''">
+                    <BaseIcon name="refresh" stroke="#CCCCCC" />
                 </button>
             </div>
 
@@ -318,33 +617,36 @@ function copyToClipboard(text) {
             <div>
                 <label class="icon-knob">
                     <span>
-                        Adjust stroke-width: <span style="font-variant-numeric: tabular-nums; color: #42d392">{{ iconFocusStrokeWidth }}</span>
+                        Adjust stroke-width: <span style="font-variant-numeric: tabular-nums; color: #42d392">{{
+                            iconFocusStrokeWidth }}</span>
                     </span>
                     <div class="icon-knob-input">
                         <input type="range" min="0.1" max="2" step="0.01" v-model="iconFocusStrokeWidth">
                         <button @click="iconFocusStrokeWidth = 1.5">
-                            <VueUiIcon name="refresh" stroke="#8A8A8A" :size="20"/>
+                            <VueUiIcon name="refresh" stroke="#8A8A8A" :size="20" />
                         </button>
                     </div>
                 </label>
                 <label class="icon-knob-check">
                     Dark mode
-                    <input type="checkbox" v-model="darkMode"/>
+                    <input type="checkbox" v-model="darkMode" />
                 </label>
             </div>
             <div class="icon-focus" :style="{ background: darkMode ? '#1A1A1A' : '#FFFFFF' }">
-                <BaseIcon :name="inputValue" :size="150" :strokeWidth="Number(iconFocusStrokeWidth)" :stroke="darkMode ? '#CCCCCC' :  '#1A1A1A'"/>
-                <div class="mini-icon-focus" :style="{ background: darkMode ? '#1A1A1A' : '#FFFFFF'}">
-                    <BaseIcon :name="inputValue" :strokeWidth="Number(iconFocusStrokeWidth)" :stroke="darkMode ? '#CCCCCC' :  '#1A1A1A'"/>
+                <BaseIcon :name="inputValue" :size="150" :strokeWidth="Number(iconFocusStrokeWidth)"
+                    :stroke="darkMode ? '#CCCCCC' : '#1A1A1A'" />
+                <div class="mini-icon-focus" :style="{ background: darkMode ? '#1A1A1A' : '#FFFFFF' }">
+                    <BaseIcon :name="inputValue" :strokeWidth="Number(iconFocusStrokeWidth)"
+                        :stroke="darkMode ? '#CCCCCC' : '#1A1A1A'" />
                 </div>
                 <div class="controls-left">
                     <button @click="previous">
-                        <VueUiIcon name="arrowLeft" stroke="#8A8A8A"/>
+                        <VueUiIcon name="arrowLeft" stroke="#8A8A8A" />
                     </button>
                 </div>
                 <div class="controls-right">
                     <button @click="next">
-                        <VueUiIcon name="arrowRight" stroke="#8A8A8A"/>
+                        <VueUiIcon name="arrowRight" stroke="#8A8A8A" />
                     </button>
                 </div>
             </div>
@@ -460,230 +762,237 @@ function copyToClipboard(text) {
 </template>
 
 <style scoped>
-    .btn-reset {
-        background-color: #3A3A3A;
-        border: 1px solid #4A4A4A;
-        border-radius: 0 0.25rem 0.25rem 0;
-        height: 2.1rem;
-        width: 2.1rem;
-        display: flex;
-        align-items:center;
-        justify-content:center;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
+.btn-reset {
+    background-color: #3A3A3A;
+    border: 1px solid #4A4A4A;
+    border-radius: 0 0.25rem 0.25rem 0;
+    height: 2.1rem;
+    width: 2.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
 
-    .btn-reset:hover {
-        background-color: #4A4A4A;
-    }
-    
-    input[type="text"] {
-        background: #2A2A2A;
-        border: 1px solid #4A4A4A;
-        padding: 0.5rem;
-        color: #CCCCCC;
-        border-radius: 0.25rem 0 0 0.25rem;
-        z-index: 1;
-    }
-    
-    ul {
-        position: absolute;
-        margin: 4px 0 0;
-        padding: 0;
-        list-style: none;
-        max-height: 240px;
-        min-width: 190px;
-        overflow-y: auto;
-        border: 1px solid #4A4A4A;
-        border-radius: 0.25rem;
-        background-color: #2A2A2A;
-        z-index: 10;
-    }
+.btn-reset:hover {
+    background-color: #4A4A4A;
+}
 
-    li {
-        padding: 6px 10px;
-        cursor: pointer;
-        user-select: none;
-    }
+input[type="text"] {
+    background: #2A2A2A;
+    border: 1px solid #4A4A4A;
+    padding: 0.5rem;
+    color: #CCCCCC;
+    border-radius: 0.25rem 0 0 0.25rem;
+    z-index: 1;
+}
 
-    li:hover,
-    li[aria-selected="true"] {
-        background-color: #3A3A3A;
-    }
+ul {
+    position: absolute;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+    max-height: 240px;
+    min-width: 190px;
+    overflow-y: auto;
+    border: 1px solid #4A4A4A;
+    border-radius: 0.25rem;
+    background-color: #2A2A2A;
+    z-index: 10;
+}
 
-    .icon-focus {
-        border: 1px solid #4A4A4A;
-        width: 200px;
-        height: 200px;
-        border-radius: 1rem;
-        display: flex;
-        align-items:center;
-        justify-content:center;
-        position: relative;
-    }
+li {
+    padding: 6px 10px;
+    cursor: pointer;
+    user-select: none;
+}
 
-    .mini-icon-focus {
-        position: absolute;
-        bottom: -1.5rem;
-        right: -1.5rem;
-        border: 1px solid #4A4A4A;
-        padding: 0.5rem;
-        display: flex;
-        align-items:center;
-        justify-content: center;
-        border-radius: 0.5rem;
-    }
+li:hover,
+li[aria-selected="true"] {
+    background-color: #3A3A3A;
+}
 
-    .icon-knob {
-        display: flex;
-        flex-direction: column;
-        font-size: 0.8rem;
-    }
-    .icon-knob input[type="range"] {
-        accent-color: #42d392;
-    }
-    .icon-knob-input {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem;
-    }
-    .icon-knob-input button {
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content:center;
-        background-color: #1A1A1A;
-        cursor: pointer;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        padding: 0.25rem;
-        border: 1px solid #3A3A3A;
-        transition: background-color 0.2s;
-    }
+.icon-focus {
+    border: 1px solid #4A4A4A;
+    width: 200px;
+    height: 200px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
 
-    .icon-knob-input button:hover {
-        background-color: #2A2A2A;
-    }
+.mini-icon-focus {
+    position: absolute;
+    bottom: -1.5rem;
+    right: -1.5rem;
+    border: 1px solid #4A4A4A;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+}
 
-    .icon-knob-check {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem;
-        align-items:center;
-        font-size: 0.8rem;
-        margin-top: 0.5rem;
-        cursor: pointer;
-        user-select: none;
-    }
-    .icon-knob-check input[type="checkbox"] {
-        accent-color: #42d392;
-    }
+.icon-knob {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+}
 
-    .controls-left button,
-    .controls-right button {
-        border: none;
-        background-color: #1A1A1A;
-        display: flex;
-        align-items:center;
-        justify-content:center;
-        border-radius: 50%;
-        border: 1px solid #2A2A2A;
-        height: 2rem;
-        width: 2rem;
-        transition: background-color 0.2s;
-        cursor: pointer;
-    }
+.icon-knob input[type="range"] {
+    accent-color: #42d392;
+}
 
-    .controls-left button:hover,
-    .controls-right button:hover {
-        background-color: #2A2A2A;
-    }
+.icon-knob-input {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
 
-    .controls-left,
-    .controls-right {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-    }
+.icon-knob-input button {
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1A1A1A;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    padding: 0.25rem;
+    border: 1px solid #3A3A3A;
+    transition: background-color 0.2s;
+}
 
-    .controls-left {
-        left: -3rem;
-    }
+.icon-knob-input button:hover {
+    background-color: #2A2A2A;
+}
 
-    .controls-right {
-        right: -3rem;
-    }
+.icon-knob-check {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
 
-    .icon-builder {
-        margin-top: 2rem;
-        display:flex;
-        flex-direction: column;
-        width: calc(600px - 2rem);
-    }
+.icon-knob-check input[type="checkbox"] {
+    accent-color: #42d392;
+}
 
-    .icon-offset {
-        display: flex;
-        flex-direction: row;
-        gap: 0.5rem;
-        margin-top: 1rem;
-    }
+.controls-left button,
+.controls-right button {
+    border: none;
+    background-color: #1A1A1A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid #2A2A2A;
+    height: 2rem;
+    width: 2rem;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
 
-    textarea {
-        background: #2A2A2A;
-        border-radius: 0.25rem;
-        min-height: 10rem;
-        color: #42d392;
-        padding: 1rem;
-        min-width: calc(600px - 2rem);
-        max-width: calc(600px - 2rem);
-    }
+.controls-left button:hover,
+.controls-right button:hover {
+    background-color: #2A2A2A;
+}
 
-    input[type="number"],
-    input[type="text"] {
-        background: #2A2A2A;
-        border-radius: 0.25rem;
-        color: #42d392;
-        padding: 0.25rem 0.5rem;
-        border: 1px solid #6A6A6A;
-        height: 2rem;
-    }
+.controls-left,
+.controls-right {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
 
-    .btn-actions {
-        display: flex;
-        align-items: center;
-        margin-top: 2rem;
-    }
+.controls-left {
+    left: -3rem;
+}
 
-    .svg-btn {
-        background-color: #3A3A3A;
-        border: none;
-        border-radius: 0.25rem;
-        transition: background-color 0.2s;
-        cursor: pointer;
-        display: flex;
-        align-items:center;
-        justify-content: center;
-        height: 2rem;
-        width: 2rem;
-    }
-    .svg-btn:hover {
-        background-color: #4A4A4A;
-    }
+.controls-right {
+    right: -3rem;
+}
 
-    .visualizer {
-        border:1px solid #6A6A6A;
-        width: 300px;
-        margin: 0 auto;
-    }
-    details {
-        width: 600px;
-        margin: 1rem 0;
-        background: #2A2A2A;
-        padding: 1rem;
-    }
-    .export {
-        display: flex;
-        flex-direction: column;
-    }
+.icon-builder {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    width: calc(600px - 2rem);
+}
+
+.icon-offset {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+textarea {
+    background: #2A2A2A;
+    border-radius: 0.25rem;
+    min-height: 10rem;
+    color: #42d392;
+    padding: 1rem;
+    min-width: calc(600px - 2rem);
+    max-width: calc(600px - 2rem);
+}
+
+input[type="number"],
+input[type="text"] {
+    background: #2A2A2A;
+    border-radius: 0.25rem;
+    color: #42d392;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #6A6A6A;
+    height: 2rem;
+}
+
+.btn-actions {
+    display: flex;
+    align-items: center;
+    margin-top: 2rem;
+}
+
+.svg-btn {
+    background-color: #3A3A3A;
+    border: none;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2rem;
+    width: 2rem;
+}
+
+.svg-btn:hover {
+    background-color: #4A4A4A;
+}
+
+.visualizer {
+    border: 1px solid #6A6A6A;
+    width: 300px;
+    margin: 0 auto;
+}
+
+details {
+    width: 600px;
+    margin: 1rem 0;
+    background: #2A2A2A;
+    padding: 1rem;
+}
+
+.export {
+    display: flex;
+    flex-direction: column;
+}
 </style>
