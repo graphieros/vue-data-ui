@@ -532,25 +532,32 @@ const squarifiedRaw = computed(() => {
         .map(el => Number(el.value) || 0)
         .reduce((a, b) => a + b, 0) || 1;
 
-    const nodes = orderedDataset.value.map(el => {
+    const nodes = orderedDataset.value.map((el) => {
         const parentChildrenTotal = el.children
-        ? el.children.reduce((acc, c) => acc + (Number(c.value) || 0), 0)
-        : el.value;
+            ? el.children.reduce((acc, c) => acc + (Number(c.value) || 0), 0)
+            : el.value;
+
+        // Keep extra attributes but avoid importing tree structure from el
+        // into the layout nodes (children/parentId would break zoom logic otherwise)
+        const { children, parentId, id, value, name, color, ...extra } = el;
+
+        const stableId = el.id || createUid();
 
         return {
-        value: el.value,
-        id: el.id || createUid(),
-        proportion: (Number(el.value) || 0) / levelTotal,
-        children: el.children
-            ? mapChildren(
-                el.children,
-                el.color,
-                el.name,
-                parentChildrenTotal || 1
-            )
-            : undefined,
-        color: el.color,
-        name: el.name,
+            ...extra,
+            id: stableId,
+            name: el.name,
+            value: el.value,
+            color: el.color,
+            proportion: (Number(el.value) || 0) / levelTotal,
+            children: Array.isArray(el.children) && el.children.length
+                ? mapChildren(
+                    el.children,
+                    el.color,
+                    el.name,
+                    parentChildrenTotal || 1
+                )
+                : undefined,
         };
     });
 
@@ -563,10 +570,10 @@ const squarifiedRaw = computed(() => {
         }
 
         const bounds = {
-        x0: svg.value.left,
-        y0: svg.value.top,
-        x1: svg.value.left + svg.value.width,
-        y1: svg.value.top + svg.value.height,
+            x0: svg.value.left,
+            y0: svg.value.top,
+            x1: svg.value.left + svg.value.width,
+            y1: svg.value.top + svg.value.height,
         };
 
         const scaleX = bounds.x1 - bounds.x0;
@@ -1893,9 +1900,8 @@ defineExpose({
                 >
                     <div 
                         :style="{
-                            width: `calc(100% - ${calcFontSize(rect) / 1.5}px)`,
-                            height: `calc(100% - ${calcFontSize(rect) / 1.5}px)`,
-                            padding: `${calcFontSize(rect) / 3}px`,
+                            width: '100%',
+                            height: '100%',
                         }"
                         class="vue-ui-treemap-cell"
                     >
@@ -1903,7 +1909,12 @@ defineExpose({
                             v-if="!loading"
                             name="rect" 
                             v-bind="{ 
-                                rect, 
+                                rect: {
+                                    ...rect,
+                                    height: getHeight(rect),
+                                    width: getWidth(rect),
+                                    isSelected: !selectedRect ? true : selectedRect.id === rect.id
+                                },
                                 shouldShow: rect.proportion > FINAL_CONFIG.style.chart.layout.labels.hideUnderProportion || isZoom, 
                                 fontSize: calcFontSize(rect), 
                                 isZoom, 
