@@ -1606,6 +1606,8 @@ declare module "vue-data-ui" {
         | "plus"
         | "pointer"
         | "printer"
+        | "puzzle"
+        | "puzzleFill"
         | "ratio"
         | "recycle"
         | "refresh"
