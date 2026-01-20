@@ -1523,6 +1523,7 @@ declare module "vue-data-ui" {
         | "excel"
         | "exitFullscreen"
         | "export"
+        | "externalLink"
         | "eye"
         | "file"
         | "fileCsv"
