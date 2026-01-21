@@ -2,7 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from "vue";
 import BaseIcon from "./BaseIcon.vue";
 import ColorPicker from "./ColorPicker.vue";
-import { dataLabel, lightenHexColor } from "../lib";
+import { dataLabel, lightenHexColor, XMLNS, createUid } from "../lib";
 
 const props = defineProps({
     svgRef: {
@@ -37,9 +37,12 @@ const isDrawing = ref(false);
 const currentPath = ref("");
 const G = ref(null);
 const currentDrawingPath = ref(null);
+const currentLine = ref(null);
 const startPoint = ref(null);
+const endPoint = ref(null);
+const arrowMarkerId = ref(`arrow-${createUid()}`);
+const ARROW_DEFS_ID = ref(`arrow-def-${createUid()}`);
 
-const mode = ref('draw'); // or 'text'
 const isEditingText = ref(false);
 const editingTextNode = ref(null); 
 const editingTextAnchor = ref({ x: 0, y: 0 });
@@ -48,7 +51,23 @@ const editingCaret = ref({ row: 0, col: 0 });
 const fontSize = ref(16);
 const editingTextRegistered = ref(false);
 
+const modes = ['arrow', 'text', 'line', 'draw'];
+const modeIndex = ref(0);
+const mode = computed(() => modes[modeIndex.value]);
+
+const iconMap = {
+    arrow: 'plotArrow',
+    text: 'text',
+    line: 'plotLine',
+    draw: 'annotator',
+}
+
 const cursorDraw = ref(`url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAABg2lDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TpSIVh2YQcchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQrPKNKtnAtB020wn4lIuvyqFXhGGiAhCiMnMMpKZxSx8x9c9Any9i/Es/3N/jgG1YDEgIBHPMcO0iTeIZzZtg/M+scjKskp8Tjxu0gWJH7muePzGueSywDNFM5ueJxaJpVIXK13MyqZGPE0cVTWd8oWcxyrnLc5atc7a9+QvDBf0lQzXaY4ggSUkkYIEBXVUUIWNGK06KRbStB/38Q+7/hS5FHJVwMixgBo0yK4f/A9+d2sVpya9pHAc6H1xnI9RILQLtBqO833sOK0TIPgMXOkdf60JzH6S3uho0SNgcBu4uO5oyh5wuQMMPRmyKbtSkKZQLALvZ/RNeSByC/Sveb2193H6AGSpq+Ub4OAQGCtR9rrPu/u6e/v3TLu/H5C7crM1WjgWAAAABmJLR0QAqwB5AHWF+8OUAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5gwUExIUagzGcQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAABfSURBVBjTldAxDoNQDIPhL0+q1L33P1AvAhN7xfK6WAgoLfSfrNiykpQtE+7RLzx2vgF9D3o8lWDmn1QVVMP0LZQGmNtqp1/cmou0XHdG/+sYeGZwFBqPCub8rkcvvAGvsi1VYarR8wAAAABJRU5ErkJggg==') 5 5, auto`);
+
+function switchMode() {
+    if (modeIndex.value + 1 >= modes.length) modeIndex.value = 0;
+    else modeIndex.value += 1;
+}
 
 function startSvgTextEditing(event) {
     if (!G.value) return;
@@ -87,7 +106,6 @@ function startSvgTextEditing(event) {
     updateSvgTextDisplay();
     drawSvgCaret();
 }
-
 
 function handleSvgTextKeydown(e) {
     if (!isEditingText.value) return;
@@ -351,8 +369,15 @@ function toSvgPoint(event) {
     if (!svg) return { x: 0, y: 0 };
 
     const point = svg.createSVGPoint();
-    point.x = event.clientX;
-    point.y = event.clientY;
+
+    const isTouch = !!event.touches?.length || !!event.changedTouches?.length;
+    const touch = isTouch ? (event.touches?.[0] || event.changedTouches?.[0]) : null;
+
+    const clientX = touch ? touch.clientX : event.clientX;
+    const clientY = touch ? touch.clientY : event.clientY;
+
+    point.x = clientX;
+    point.y = clientY;
 
     const matrix = svg.getScreenCTM()?.inverse();
     return matrix ? point.matrixTransform(matrix) : { x: 0, y: 0 };
@@ -466,13 +491,14 @@ function optimizeSvgPath(path) {
 }
 
 function startDrawing(event) {
+    if (event.cancelable) event.preventDefault();
     if (mode.value !== 'draw') return;
     if (!props.active || !G.value) return;
     isDrawing.value = true;
     const { x, y } = toSvgPoint(event);
     startPoint.value = { x, y };
     currentPath.value = `M ${x} ${y}`;
-    currentDrawingPath.value = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    currentDrawingPath.value = document.createElementNS(XMLNS, "path");
     currentDrawingPath.value.setAttribute("stroke", currentColor.value);
     currentDrawingPath.value.setAttribute("stroke-width", strokeWidth.value * props.scale);
     currentDrawingPath.value.setAttribute("fill", "none");
@@ -483,10 +509,92 @@ function startDrawing(event) {
 }
 
 function draw(event) {
+    if (event.cancelable) event.preventDefault();
     if (!isDrawing.value || !G.value || !currentDrawingPath.value) return;
     const { x, y } = toSvgPoint(event);
     currentPath.value += ` ${x} ${y}`;
     currentDrawingPath.value.setAttribute("d", currentPath.value);
+}
+
+function useArrowMarker() {
+    const svg = props.svgRef;
+    if (!svg) return;
+
+    let defs = svg.querySelector(`defs#${ARROW_DEFS_ID.value}`);
+    if (!defs) {
+        defs = document.createElementNS(XMLNS, "defs");
+        defs.setAttribute("id", ARROW_DEFS_ID.value);
+        svg.appendChild(defs);
+    }
+
+    if (defs.querySelector(`#${arrowMarkerId.value}`)) return;
+
+    const size = 6;
+
+    const marker = document.createElementNS(XMLNS, "marker");
+    marker.setAttribute("id", arrowMarkerId.value);
+    marker.setAttribute("markerUnits", "strokeWidth");
+    marker.setAttribute("markerWidth", String(size));
+    marker.setAttribute("markerHeight", String(size));
+    marker.setAttribute("refX", String(size - 2));
+    marker.setAttribute("refY", String(size / 2));
+    marker.setAttribute("orient", "auto");
+    marker.setAttribute("viewBox", `0 0 ${size} ${size}`);
+
+    const path = document.createElementNS(XMLNS, "path");
+    path.setAttribute("d", `M 0 0 L ${size} ${size / 2} L 0 ${size} z`);
+    path.setAttribute("fill", "context-stroke");
+    path.setAttribute("stroke", "none");
+
+    marker.appendChild(path);
+    defs.appendChild(marker);
+}
+
+function startLine(event) {
+    if (event.cancelable) event.preventDefault();
+    if (!['line', 'arrow'].includes(mode.value)) return;
+    if (!props.active || !G.value) return;
+
+    mode.value === 'arrow' && useArrowMarker();
+
+    isDrawing.value = true;
+    const { x, y } = toSvgPoint(event);
+    startPoint.value = { x, y };
+    currentLine.value = document.createElementNS(XMLNS, 'line');
+    currentLine.value.setAttribute("stroke", currentColor.value);
+    currentLine.value.setAttribute("stroke-width", strokeWidth.value * props.scale);
+    currentLine.value.setAttribute("stroke-linecap", "round");
+    currentLine.value.setAttribute("class", "vue-data-ui-doodle");
+    currentLine.value.setAttribute('x1', x);
+    currentLine.value.setAttribute('y1', y);
+    currentLine.value.setAttribute('x2', x);
+    currentLine.value.setAttribute('y2', y);
+
+    if (mode.value === "arrow") {
+        currentLine.value.setAttribute("marker-end", `url(#${arrowMarkerId.value})`);
+    }
+
+    G.value.appendChild(currentLine.value);
+}
+
+function drawLine(event) {
+    if (event.cancelable) event.preventDefault();
+    if (!['line', 'arrow'].includes(mode.value) || !isDrawing.value || !G.value || !currentLine.value) return;
+    const { x, y } = toSvgPoint(event);
+    currentLine.value.setAttribute('x2', x);
+    currentLine.value.setAttribute('y2', y);
+}
+
+function endLine(event) {
+    if (isDrawing.value && G.value && currentLine.value) {
+        const { x, y } = toSvgPoint(event);
+        currentLine.value.setAttribute('x2', x);
+        currentLine.value.setAttribute('y2', y);
+        stack.value.push(currentLine.value);
+        redoStack.value = [];
+        currentLine.value = '';
+    }
+    isDrawing.value = false;
 }
 
 function stopDrawing(event) {
@@ -563,17 +671,30 @@ watch(mode, () => {
 
 function enableDrawing() {
     if (!props.svgRef || !props.active) return;
-    if (mode.value === 'draw') {
+
+    if (mode.value === "draw") {
         props.svgRef.addEventListener("mousedown", startDrawing);
         props.svgRef.addEventListener("mousemove", draw);
         props.svgRef.addEventListener("mouseup", stopDrawing);
         props.svgRef.addEventListener("mouseleave", stopDrawing);
+
         props.svgRef.addEventListener("touchstart", startDrawing, { passive: false });
         props.svgRef.addEventListener("touchmove", draw, { passive: false });
         props.svgRef.addEventListener("touchend", stopDrawing);
-    } else if (mode.value === 'text') {
+        props.svgRef.addEventListener("touchcancel", stopDrawing);
+    } else if (["line", "arrow"].includes(mode.value)) {
+        props.svgRef.addEventListener("mousedown", startLine);
+        props.svgRef.addEventListener("mousemove", drawLine);
+        props.svgRef.addEventListener("mouseup", endLine);
+        props.svgRef.addEventListener("touchstart", startLine, { passive: false });
+        props.svgRef.addEventListener("touchmove", drawLine, { passive: false });
+        props.svgRef.addEventListener("touchend", endLine);
+        props.svgRef.addEventListener("touchcancel", endLine);
+    } else if (mode.value === "text") {
         props.svgRef.addEventListener("mousedown", startSvgTextEditing);
+        props.svgRef.addEventListener("touchstart", startSvgTextEditing, { passive: false });
     }
+
     if (G.value) {
         G.value.style.pointerEvents = "auto";
     }
@@ -581,6 +702,8 @@ function enableDrawing() {
 
 function disableDrawing() {
     if (!props.svgRef) return;
+
+    // draw
     props.svgRef.removeEventListener("mousedown", startDrawing);
     props.svgRef.removeEventListener("mousemove", draw);
     props.svgRef.removeEventListener("mouseup", stopDrawing);
@@ -588,7 +711,20 @@ function disableDrawing() {
     props.svgRef.removeEventListener("touchstart", startDrawing);
     props.svgRef.removeEventListener("touchmove", draw);
     props.svgRef.removeEventListener("touchend", stopDrawing);
+    props.svgRef.removeEventListener("touchcancel", stopDrawing);
+
+    // line / arrow
+    props.svgRef.removeEventListener("mousedown", startLine);
+    props.svgRef.removeEventListener("mousemove", drawLine);
+    props.svgRef.removeEventListener("mouseup", endLine);
+    props.svgRef.removeEventListener("touchstart", startLine);
+    props.svgRef.removeEventListener("touchmove", drawLine);
+    props.svgRef.removeEventListener("touchend", endLine);
+    props.svgRef.removeEventListener("touchcancel", endLine);
+
+    // text
     props.svgRef.removeEventListener("mousedown", startSvgTextEditing);
+    props.svgRef.removeEventListener("touchstart", startSvgTextEditing);
 
     if (G.value) {
         G.value.style.pointerEvents = "none";
@@ -608,6 +744,20 @@ watch(() => props.active, () => {
         addInteractionMask();
     });
 });
+
+watch(
+    () => props.active,
+    (active) => {
+        if (!props.svgRef) return;
+
+        if (active) {
+            props.svgRef.style.touchAction = "none";
+        } else {
+            props.svgRef.style.touchAction = "";
+        }
+    },
+    { immediate: true }
+);
 
 onMounted(() => {
     nextTick(() => {
@@ -657,14 +807,14 @@ onBeforeUnmount(() => {
             data-cy="pen-and-paper-toggle-text"
             class="vue-ui-pen-and-paper-action"
             :class="{ 'vue-ui-pen-and-paper-action-active': mode === 'text' }"
-            @click="mode = (mode === 'text' ? 'draw' : 'text')"
+            @click="switchMode()"
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
             }"
         >
             <slot name="annotator-action-draw" v-bind="{ mode }">
-                <BaseIcon :name="mode === 'draw' ? 'annotator' : 'text'" :stroke="color" />
+                <BaseIcon :name="iconMap[mode]" :stroke="color" />
             </slot>    
             <div :style="{
                 position: 'absolute',
@@ -676,7 +826,7 @@ onBeforeUnmount(() => {
                 fontVariantNumeric: 'tabular-nums'
             }">
                 {{ dataLabel({
-                    v: mode === 'draw' ? strokeWidth : fontSize,
+                    v: mode === 'text' ? fontSize : strokeWidth,
                     s: 'px',
                     r: 1
                 }) }}
@@ -717,20 +867,8 @@ onBeforeUnmount(() => {
         </button>
 
         <input
-            v-if="mode === 'draw'" 
-            ref="range" 
-            type="range" 
-            class="vertical-range" 
-            :min="0.5" 
-            :max="12" 
-            :step="0.1" 
-            v-model="strokeWidth"
-            :style="{ accentColor: color }" 
-        />
-
-        <input
-            data-cy="pen-and-paper-font-size"
             v-if="mode === 'text'" 
+            data-cy="pen-and-paper-font-size"
             ref="range" 
             type="range" 
             class="vertical-range" 
@@ -738,6 +876,18 @@ onBeforeUnmount(() => {
             :max="48" 
             :step="0.1" 
             v-model="fontSize"
+            :style="{ accentColor: color }" 
+        />
+
+        <input
+            v-else 
+            ref="range" 
+            type="range" 
+            class="vertical-range" 
+            :min="0.5" 
+            :max="12" 
+            :step="0.1" 
+            v-model="strokeWidth"
             :style="{ accentColor: color }" 
         />
     </div>
@@ -781,6 +931,11 @@ input[type="range"].vertical-range {
     top: 50%;
     transform: translateY(-50%) rotate(180deg);
     left: 36px;
+}
+
+.vue-ui-pen-and-paper[data-mode="line"],
+.vue-ui-pen-and-paper[data-mode="arrow"] {
+    cursor: crosshair;
 }
 </style>
 

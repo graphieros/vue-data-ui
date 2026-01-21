@@ -24,7 +24,19 @@ describe('<PenAndPaper />', () => {
         cy.get('.vue-ui-pen-and-paper-actions').should('be.visible');
     });
 
+    it('draws straight lines', () => {
+        cy.get('[data-cy="pen-and-paper"]').as('svg')
+            .trigger('mousedown', { clientX: 100, clientY: 100, force: true })
+            .trigger('mousemove', { clientX: 200, clientY: 200, force: true })
+            .trigger('mouseup', { force: true }); 
+
+        cy.get('.vue-ui-pen-and-paper-path').should('exist').and('be.visible');
+    })
+
     it('draws lines', () => {
+        cy.get('[data-cy="pen-and-paper-toggle-text"]').click({ force: true });
+        cy.get('[data-cy="pen-and-paper-toggle-text"]').click({ force: true });
+        cy.get('[data-cy="pen-and-paper-toggle-text"]').click({ force: true });
         cy.get('[data-cy="pen-and-paper"]').as('svg')
             .trigger('mousedown', { clientX: 100, clientY: 100, force: true })
             .trigger('mousemove', { clientX: 200, clientY: 200, force: true })

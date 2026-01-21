@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, computed, nextTick } from "vue";
-import { dataLabel, XMLNS } from "../lib";
+import { dataLabel, createUid, XMLNS } from "../lib";
 import BaseIcon from "./BaseIcon.vue";
 import { lightenHexColor } from "../lib";
 import ColorPicker from "./ColorPicker.vue";
@@ -33,7 +33,6 @@ const viewBox = ref("0 0 0 0");
 const currentColor = ref(props.color)
 const strokeWidth = ref(1);
 
-const mode = ref('draw'); // or 'text'
 const G = ref(null)
 const isEditingText = ref(false);
 const editingTextNode = ref(null); 
@@ -42,6 +41,28 @@ const editingTextContent = ref(['']);
 const editingCaret = ref({ row: 0, col: 0 });
 const fontSize = ref(16);
 let _id = 1;
+
+const modes = ['arrow', 'text', 'line', 'draw'];
+const modeIndex = ref(0);
+const mode = computed(() => modes[modeIndex.value]);
+
+const currentLine = ref(null);
+const startPoint = ref(null);
+const endPoint = ref(null);
+const arrowMarkerId = ref(`arrow-${createUid()}`);
+const ARROW_DEFS_ID = ref(`arrow-def-${createUid()}`);
+
+const iconMap = {
+    arrow: 'plotArrow',
+    text: 'text',
+    line: 'plotLine',
+    draw: 'annotator',
+}
+
+function switchMode() {
+    if (modeIndex.value + 1 >= modes.length) modeIndex.value = 0;
+    else modeIndex.value += 1;
+}
 
 function nextId() {
     return _id ++;
@@ -52,11 +73,13 @@ function toSvgPoint(event) {
     if (!svg) return { x: 0, y: 0 };
 
     const point = svg.createSVGPoint();
-    let clientX = event.clientX, clientY = event.clientY;
-    if (event.touches && event.touches.length) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
-    }
+
+    const isTouch = !!event.touches?.length || !!event.changedTouches?.length;
+    const touch = isTouch ? (event.touches?.[0] || event.changedTouches?.[0]) : null;
+
+    const clientX = touch ? touch.clientX : event.clientX;
+    const clientY = touch ? touch.clientY : event.clientY;
+
     point.x = clientX;
     point.y = clientY;
 
@@ -344,10 +367,14 @@ watch(
 );
 
 watch(mode, (v) => {
-    if (v === 'text') {
-        svgElement.value?.addEventListener('mousedown', startSvgTextEditing);
-    } else {
-        svgElement.value?.removeEventListener('mousedown', startSvgTextEditing);
+    if (!svgElement.value) return;
+
+    svgElement.value.removeEventListener("mousedown", startSvgTextEditing);
+    svgElement.value.removeEventListener("touchstart", startSvgTextEditing);
+
+    if (v === "text") {
+        svgElement.value.addEventListener("mousedown", startSvgTextEditing);
+        svgElement.value.addEventListener("touchstart", startSvgTextEditing, { passive: false });
     }
 });
 
@@ -355,7 +382,20 @@ const isDrawing = ref(false);
 const currentPath = ref("");
 const svgElement = ref(null);
 
+const isLineDrawing = ref(false);
+const currentLineStart = ref(null);
+
+watch(
+    () => props.active,
+    (active) => {
+        if (!svgElement.value) return;
+        svgElement.value.style.touchAction = active ? "none" : "";
+    },
+    { immediate: true }
+);
+
 function startDrawing(event) {
+    if (event.cancelable) event.preventDefault();
     if (mode.value !== 'draw') return;
     if (!svgElement.value) return;
     isDrawing.value = true;
@@ -364,9 +404,113 @@ function startDrawing(event) {
 }
 
 function draw(event) {
+    if (event.cancelable) event.preventDefault();
+    if (mode.value !== "draw") return;
     if (!isDrawing.value || !svgElement.value) return;
     const { x, y } = getRelativePosition(event);
     currentPath.value += ` ${x} ${y}`;
+}
+
+function useArrowMarker() {
+    const svg = svgElement.value;
+    if (!svg) return;
+
+    let defs = svg.querySelector(`defs#${ARROW_DEFS_ID.value}`);
+    if (!defs) {
+        defs = document.createElementNS(XMLNS, "defs");
+        defs.setAttribute("id", ARROW_DEFS_ID.value);
+        svg.appendChild(defs);
+    }
+
+    if (defs.querySelector(`#${arrowMarkerId.value}`)) return;
+
+    const size = 6;
+
+    const marker = document.createElementNS(XMLNS, "marker");
+    marker.setAttribute("id", arrowMarkerId.value);
+    marker.setAttribute("markerUnits", "strokeWidth");
+    marker.setAttribute("markerWidth", String(size));
+    marker.setAttribute("markerHeight", String(size));
+    marker.setAttribute("refX", String(size - 2));
+    marker.setAttribute("refY", String(size / 2));
+    marker.setAttribute("orient", "auto");
+    marker.setAttribute("viewBox", `0 0 ${size} ${size}`);
+
+    const path = document.createElementNS(XMLNS, "path");
+    path.setAttribute("d", `M 0 0 L ${size} ${size / 2} L 0 ${size} z`);
+    path.setAttribute("fill", "context-stroke");
+    path.setAttribute("stroke", "none");
+
+    marker.appendChild(path);
+    defs.appendChild(marker);
+}
+
+function startLine(event) {
+    if (event.cancelable) event.preventDefault();
+    if (!["line", "arrow"].includes(mode.value)) return;
+    if (!svgElement.value || !G.value) return;
+
+    if (mode.value === "arrow") useArrowMarker();
+
+    isLineDrawing.value = true;
+    const { x, y } = getRelativePosition(event);
+    currentLineStart.value = { x, y };
+
+    currentLine.value = document.createElementNS(XMLNS, "line");
+    currentLine.value.setAttribute("x1", x);
+    currentLine.value.setAttribute("y1", y);
+    currentLine.value.setAttribute("x2", x);
+    currentLine.value.setAttribute("y2", y);
+    currentLine.value.setAttribute("stroke", currentColor.value);
+    currentLine.value.setAttribute("stroke-width", strokeWidth.value);
+    currentLine.value.setAttribute("stroke-linecap", "round");
+    currentLine.value.setAttribute("class", "vue-data-ui-doodle");
+
+    if (mode.value === "arrow") {
+        currentLine.value.setAttribute("marker-end", `url(#${arrowMarkerId.value})`);
+    }
+
+    G.value.appendChild(currentLine.value);
+}
+
+function drawLine(event) {
+    if (event.cancelable) event.preventDefault();
+    if (!["line", "arrow"].includes(mode.value)) return;
+    if (!isLineDrawing.value || !currentLine.value) return;
+
+    const { x, y } = getRelativePosition(event);
+    currentLine.value.setAttribute("x2", x);
+    currentLine.value.setAttribute("y2", y);
+}
+
+function endLine(event) {
+    if (event?.cancelable) event.preventDefault();
+    if (!isLineDrawing.value || !currentLine.value) return;
+
+    const { x, y } = getRelativePosition(event);
+    currentLine.value.setAttribute("x2", x);
+    currentLine.value.setAttribute("y2", y);
+
+    stack.value.push({
+        id: nextId(),
+        type: mode.value, // 'line' or 'arrow'
+        x1: parseFloat(currentLine.value.getAttribute("x1")),
+        y1: parseFloat(currentLine.value.getAttribute("y1")),
+        x2: x,
+        y2: y,
+        strokeWidth: strokeWidth.value,
+        color: currentColor.value
+    });
+
+    redoStack.value = [];
+
+    if (G.value.contains(currentLine.value)) {
+        G.value.removeChild(currentLine.value);
+    }
+
+    currentLine.value = null;
+    currentLineStart.value = null;
+    isLineDrawing.value = false;
 }
 
 function smoothPath(path) {
@@ -476,7 +620,9 @@ function optimizeSvgPath(path) {
     return optimizedPath;
 }
 
-function stopDrawing() {
+function stopDrawing(event) {
+    if (event?.cancelable) event.preventDefault();
+    if (mode.value !== "draw") return;
     if (isDrawing.value) {
         stack.value.push({
             id: nextId(),
@@ -494,15 +640,12 @@ function getRelativePosition(event) {
     if (!svgElement.value) return { x: 0, y: 0 };
 
     const svgRect = svgElement.value.getBoundingClientRect();
-    let clientX, clientY;
 
-    if (event.touches && event.touches.length) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
-    } else {
-        clientX = event.clientX;
-        clientY = event.clientY;
-    }
+    const isTouch = !!event.touches?.length || !!event.changedTouches?.length;
+    const touch = isTouch ? (event.touches?.[0] || event.changedTouches?.[0]) : null;
+
+    const clientX = touch ? touch.clientX : event.clientX;
+    const clientY = touch ? touch.clientY : event.clientY;
 
     return {
         x: clientX - svgRect.left,
@@ -570,13 +713,13 @@ const range = ref(null);
             data-cy="pen-and-paper-toggle-text"
             class="vue-ui-pen-and-paper-action"
             :class="{ 'vue-ui-pen-and-paper-action-active': mode === 'text' }"
-            @click="mode = (mode === 'text' ? 'draw' : 'text')"
+            @click="switchMode()"
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
             }"
             >
-            <BaseIcon :name="mode === 'draw' ? 'annotator' : 'text'" :stroke="color" />
+            <BaseIcon :name="iconMap[mode]" :stroke="color" />
             <div :style="{
                 position: 'absolute',
                 bottom: '-20px',
@@ -586,7 +729,7 @@ const range = ref(null);
                 fontSize: '12px'
             }">
                 {{ dataLabel({
-                    v: mode === 'draw' ? strokeWidth : fontSize,
+                    v: mode === 'text' ? fontSize : strokeWidth,
                     s: 'px',
                     r: 1
                 }) }}
@@ -607,7 +750,7 @@ const range = ref(null);
             }"
             @click="deleteLastDraw"
         >
-            <BaseIcon name="restart" :stroke="color"/>
+            <BaseIcon name="refresh" :stroke="color"/>
         </button>
         <button
             data-cy="pen-and-paper-redo"
@@ -621,7 +764,7 @@ const range = ref(null);
             }"
             @click="redoLastDraw"
         >
-            <BaseIcon name="restart" :stroke="color" style="transform: scaleX(-1)"/>
+            <BaseIcon name="refresh" :stroke="color" style="transform: scaleX(-1)"/>
         </button>
         <button
             data-cy="pen-and-paper-reset"
@@ -675,13 +818,14 @@ const range = ref(null);
             'vue-ui-pen-and-paper': true,
             inactive: !active,
         }"
-        @mousedown="startDrawing"
-        @mousemove="draw"
-        @mouseup="stopDrawing"
-        @mouseleave="stopDrawing"
-        @touchstart.prevent="startDrawing"
-        @touchmove.prevent="draw"
-        @touchend="stopDrawing"
+        @mousedown="mode === 'draw' ? startDrawing($event) : (mode === 'line' || mode === 'arrow') ? startLine($event) : null"
+        @mousemove="mode === 'draw' ? draw($event) : (mode === 'line' || mode === 'arrow') ? drawLine($event) : null"
+        @mouseup="mode === 'draw' ? stopDrawing($event) : (mode === 'line' || mode === 'arrow') ? endLine($event) : null"
+        @mouseleave="mode === 'draw' ? stopDrawing($event) : (mode === 'line' || mode === 'arrow') ? endLine($event) : null"
+        @touchstart.prevent="mode === 'draw' ? startDrawing($event) : (mode === 'line' || mode === 'arrow') ? startLine($event) : null"
+        @touchmove.prevent="mode === 'draw' ? draw($event) : (mode === 'line' || mode === 'arrow') ? drawLine($event) : null"
+        @touchend="mode === 'draw' ? stopDrawing($event) : (mode === 'line' || mode === 'arrow') ? endLine($event) : null"
+        @touchcancel="mode === 'draw' ? stopDrawing($event) : (mode === 'line' || mode === 'arrow') ? endLine($event) : null"
     >
         <g ref="G">
             <template v-for="item in stack" :key="item.id">
@@ -690,20 +834,46 @@ const range = ref(null);
                         :cy="item.path.replace('M', '').split(' ')[1]"
                         :r="item.strokeWidth / 2"
                         :fill="item.color"/>
+
+                <line
+                    v-else-if="item.type === 'line'"
+                    class="vue-ui-pen-and-paper-path"
+                    :x1="item.x1"
+                    :y1="item.y1"
+                    :x2="item.x2"
+                    :y2="item.y2"
+                    :stroke="item.color"
+                    :stroke-width="item.strokeWidth"
+                />
+
+                <line
+                    v-else-if="item.type === 'arrow'"
+                    class="vue-ui-pen-and-paper-path"
+                    :x1="item.x1"
+                    :y1="item.y1"
+                    :x2="item.x2"
+                    :y2="item.y2"
+                    :stroke="item.color"
+                    :stroke-width="item.strokeWidth"
+                    :marker-end="`url(#${arrowMarkerId})`"
+                />
+
                 <path v-else-if="item.path"
-                        class="vue-ui-pen-and-paper-path"
-                        :d="item.path"
-                        :stroke="item.color"
-                        :stroke-width="item.strokeWidth"
-                        fill="none" />
+                    class="vue-ui-pen-and-paper-path"
+                    :d="item.path"
+                    :stroke="item.color"
+                    :stroke-width="item.strokeWidth"
+                    fill="none" 
+                />
+
                 <text v-else-if="item.type === 'text'"
-                        :x="item.x"
-                        :y="item.y"
-                        :fill="item.color"
-                        :font-size="item.fontSize"
-                        font-family="sans-serif"
-                        dominant-baseline="hanging"
-                        class="vue-ui-pen-and-paper-text"
+                    :x="item.x"
+                    :y="item.y"
+                    :fill="item.color"
+                    :font-size="item.fontSize"
+                    font-family="sans-serif"
+                    dominant-baseline="hanging"
+                    class="vue-ui-pen-and-paper-text"
                 >
                     <tspan
                     v-for="(line, idx) in item.lines"
@@ -781,4 +951,8 @@ input[type="range"].vertical-range {
     left: 36px;
 }
 
+.vue-ui-pen-and-paper[data-mode="line"],
+.vue-ui-pen-and-paper[data-mode="arrow"] {
+    cursor: crosshair;
+}
 </style>
