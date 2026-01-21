@@ -1604,6 +1604,8 @@ declare module "vue-data-ui" {
         | "pi"
         | "pie"
         | "play"
+        | "plotArrow"
+        | "plotLine"
         | "plug"
         | "plus"
         | "pointer"
