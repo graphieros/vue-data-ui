@@ -389,6 +389,23 @@
       "id": "1d61a77b-5ded-449c-b109-9b75f73a696d",
       "createdAt": 1768322796718,
       "updatedAt": 1768324501221
+    },
+    {
+      "title": "Annotator straight lines",
+      "component": "PenAndPaper.vue",
+      "description": "Add a 'straight line' mode, click drag and release to set 2 coordinates for a line. An option to use an arrow at the release point could be nice. Either a new button, or the existing text/freehand is used to toggle between the 3 states.",
+      "priority": 0,
+      "author": "graphieros",
+      "done": true,
+      "exchanges": [],
+      "type": "feature",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "ccc95bca-2f75-4051-b996-433cbc3bc8f1",
+      "createdAt": 1768934624356,
+      "updatedAt": 1768977507024
     }
   ]
 }
