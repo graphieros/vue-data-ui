@@ -761,13 +761,17 @@ const stats = computed(() => {
 
     <dialog ref="chooseChecklistDialog" class="checklist-dialog">
         <div style="display:flex; align-items:center;justify-content:center;flex-direction:column; gap: 1rem; align-items:center;">
-            <span style="color: #CCCCCC;">Add a checklist</span>
+            <span style="color: #CCCCCC; text-align:left; width: 100%; font-size:1.2rem">Add a checklist</span>
             <div class="checklist-dialog-content">
-                <button class="action-cancel" @click="closeCheckListDialog">Cancel</button>
-                <button class="action-green" @click="chooseChecklistType('components')">
-                    Components
+                <button class="action-cancel flex-row gap-1" @click="closeCheckListDialog">
+                    <VueUiIcon name="close" :size="20" stroke="#CCCCCC"/>
+                    Cancel
                 </button>
-                <button class="action-blue" @click="chooseChecklistType('custom')">
+                <button class="action-green flex-row gap-1" @click="chooseChecklistType('components')">
+                    <VueUiIcon name="boxes" :size="20" stroke="#1A1A1A"/>Components
+                </button>
+                <button class="action-blue flex-row gap-1" @click="chooseChecklistType('custom')">
+                    <VueUiIcon name="checkList" :size="20" stroke="#FFFFFF"/>
                     Custom
                 </button>
             </div>

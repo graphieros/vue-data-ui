@@ -99,7 +99,7 @@ const iconMap = {
         <div v-for="item in items" class="card">
             <div class="item-actions">
                 <button @click="emit('openConfirmDialog', item)" class="btn-red">
-                    <VueUiIcon name="trash" :size="20" stroke="#ec9393"/>
+                    <VueUiIcon name="trash"  :size="20" stroke="#ec9393"/>
                 </button>
                 <button @click="emit('editTodo', item)">
                     <VueUiIcon name="annotator" :size="20" stroke="#CCCCCC"/>

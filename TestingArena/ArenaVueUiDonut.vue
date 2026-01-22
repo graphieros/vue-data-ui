@@ -326,6 +326,17 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            // events: {
+            //     datapointEnter: (v) => {
+            //         console.log('ON_DATAPOINT_ENTER', v);
+            //     },
+            //     datapointLeave: (v) => {
+            //         console.log('ON_DATAPOINT_LEAVE', v);
+            //     },
+            //     datapointClick: (v) => {
+            //         console.log('ON_DATAPOINT_CLICK', v);
+            //     },
+            // },
             style: {
                 ...c.style,
                 chart: {

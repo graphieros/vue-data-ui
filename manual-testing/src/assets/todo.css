@@ -677,3 +677,10 @@
         background: #2A2A2A;
         color: #CCCCCC;
     }
+
+    .flex-row {
+        display: flex;
+        align-items:center;
+    }
+
+    .gap-1 { gap: 0.25rem; }

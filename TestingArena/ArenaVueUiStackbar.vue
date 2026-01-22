@@ -238,7 +238,7 @@ const model = createModel([
     TEXT("style.chart.bars.dataLabels.prefix", { def: "" }),
     TEXT("style.chart.bars.dataLabels.suffix", { def: "" }),
     NUMBER("style.chart.bars.dataLabels.hideUnderValue", { def: null, min: 0, max: 100 }),
-    NUMBER("style.chart.bars.dataLabels.hideUnderPercentage", { def: 10, min: 0, max: 100 }),
+    NUMBER("style.chart.bars.dataLabels.hideUnderPercentage", { def: null, min: 0, max: 100 }),
 
     SELECT("style.chart.grid.scale.ticks", [2, 5, 10, 20], { def: 10 }),
     NUMBER("style.chart.grid.scale.scaleMin", { def: null, min: -1000, max: 1000 }),

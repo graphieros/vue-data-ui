@@ -406,6 +406,36 @@
       "id": "ccc95bca-2f75-4051-b996-433cbc3bc8f1",
       "createdAt": 1768934624356,
       "updatedAt": 1768977507024
+    },
+    {
+      "title": "Remove overrides",
+      "component": "Any",
+      "description": "Remove useless overrides in prepareConfig functions for config attributes with null defaults",
+      "priority": 0,
+      "author": "graphieros",
+      "done": true,
+      "exchanges": [],
+      "type": "feature",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": true,
+      "customCheckList": {
+        "vue-ui-donut": true,
+        "vue-ui-candlestick": true,
+        "vue-ui-donut-evolution": true,
+        "vue-ui-heatmap": true,
+        "vue-ui-history-plot": true,
+        "vue-ui-nested-donuts": true,
+        "vue-ui-quick-chart": true,
+        "vue-ui-sparkline": true,
+        "vue-ui-stackbar": true,
+        "vue-ui-world": true,
+        "vue-ui-xy-canvas": true,
+        "vue-ui-xy": true
+      },
+      "id": "78527b31-adba-4bfc-9d90-5d685d98e260",
+      "createdAt": 1769019497584,
+      "updatedAt": 1769065184645
     }
   ]
 }
