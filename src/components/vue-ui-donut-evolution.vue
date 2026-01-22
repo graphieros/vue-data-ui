@@ -382,22 +382,6 @@ function prepareConfig() {
         finalConfig = mergedConfig;
     }
 
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.startIndex')) {
-        finalConfig.style.chart.zoom.startIndex = props.config.style.chart.zoom.startIndex;
-    } else {
-        finalConfig.style.chart.zoom.startIndex = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.endIndex')) {
-        finalConfig.style.chart.zoom.endIndex = props.config.style.chart.zoom.endIndex;
-    } else {
-        finalConfig.style.chart.zoom.endIndex = null;
-    }
-
-    // ----------------------------------------------------------------------------
-
     return finalConfig;
 }
 

@@ -146,22 +146,6 @@ function prepareConfig() {
         finalConfig = mergedConfig;
     }
 
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'style.scaleMin')) {
-        finalConfig.style.scaleMin = props.config.style.scaleMin;
-    } else {
-        finalConfig.style.scaleMin = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.scaleMax')) {
-        finalConfig.style.scaleMax = props.config.style.scaleMax;
-    } else {
-        finalConfig.style.scaleMax = null;
-    }
-
-    // ----------------------------------------------------------------------------
-
     return finalConfig;
 }
 

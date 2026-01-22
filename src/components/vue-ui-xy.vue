@@ -216,36 +216,6 @@ function prepareConfig() {
         }
     }
 
-    if (props.config && hasDeepProperty(props.config, 'chart.grid.labels.yAxis.scaleMin')) {
-        mergedConfig.chart.grid.labels.yAxis.scaleMin = props.config.chart.grid.labels.yAxis.scaleMin;
-    } else {
-        mergedConfig.chart.grid.labels.yAxis.scaleMin = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'chart.grid.labels.yAxis.scaleMax')) {
-        mergedConfig.chart.grid.labels.yAxis.scaleMax = props.config.chart.grid.labels.yAxis.scaleMax;
-    } else {
-        mergedConfig.chart.grid.labels.yAxis.scaleMax = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'chart.zoom.startIndex')) {
-        mergedConfig.chart.zoom.startIndex = props.config.chart.zoom.startIndex;
-    } else {
-        mergedConfig.chart.zoom.startIndex = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'chart.zoom.endIndex')) {
-        mergedConfig.chart.zoom.endIndex = props.config.chart.zoom.endIndex;
-    } else {
-        mergedConfig.chart.zoom.endIndex = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'chart.grid.labels.yAxis.groupColor')) {
-        mergedConfig.chart.grid.labels.yAxis.groupColor = props.config.chart.grid.labels.yAxis.groupColor;
-    } else {
-        mergedConfig.chart.grid.labels.yAxis.groupColor = null;
-    }
-
     if (props.config && hasDeepProperty(props.config, 'chart.annotations') && Array.isArray(props.config.chart.annotations) && props.config.chart.annotations.length) {
         mergedConfig.chart.annotations = props.config.chart.annotations.map(annotation => {
             return useNestedProp({
@@ -264,32 +234,6 @@ function prepareConfig() {
                 console.warn('Vue Data UI - VueUiXy - config.chart.grid.position was overriden to `middle` because your dataset contains a bar')
             }
         }
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'chart.grid.labels.yAxis.serieNameFormatter')) {
-        mergedConfig.chart.grid.labels.yAxis.serieNameFormatter = props.config.chart.grid.labels.yAxis.serieNameFormatter;
-    } else {
-        mergedConfig.chart.grid.labels.yAxis.serieNameFormatter = null;
-    }
-
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'events.datapointEnter')) {
-        mergedConfig.events.datapointEnter = props.config.events.datapointEnter;
-    } else {
-        mergedConfig.events.datapointEnter = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'events.datapointLeave')) {
-        mergedConfig.events.datapointLeave = props.config.events.datapointLeave;
-    } else {
-        mergedConfig.events.datapointLeave = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'events.datapointClick')) {
-        mergedConfig.events.datapointClick = props.config.events.datapointClick;
-    } else {
-        mergedConfig.events.datapointClick = null;
     }
 
     // Merging highlight area(s) incomplete user configs

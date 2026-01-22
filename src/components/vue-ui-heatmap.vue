@@ -214,16 +214,6 @@ function prepareConfig() {
         finalConfig = mergedConfig;
     }
 
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'style.layout.dataLabels.xAxis.showOnlyAtModulo')) {
-        finalConfig.style.layout.dataLabels.xAxis.showOnlyAtModulo = props.config.style.layout.dataLabels.xAxis.showOnlyAtModulo;
-    } else {
-        finalConfig.style.layout.dataLabels.xAxis.showOnlyAtModulo = null;
-    }
-
-    // ----------------------------------------------------------------------------
-
     return finalConfig;
 }
 

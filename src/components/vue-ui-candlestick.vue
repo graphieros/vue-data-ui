@@ -228,34 +228,6 @@ function prepareConfig() {
         finalConfig = mergedConfig;
     }
 
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'style.zoom.startIndex')) {
-        finalConfig.style.zoom.startIndex = props.config.style.zoom.startIndex;
-    } else {
-        finalConfig.style.zoom.startIndex = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.zoom.endIndex')) {
-        finalConfig.style.zoom.endIndex = props.config.style.zoom.endIndex;
-    } else {
-        finalConfig.style.zoom.endIndex = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.layout.grid.yAxis.scale.min')) {
-        finalConfig.style.layout.grid.yAxis.scale.min = props.config.style.layout.grid.yAxis.scale.min;
-    } else {
-        finalConfig.style.layout.grid.yAxis.scale.min = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.layout.grid.yAxis.scale.max')) {
-        finalConfig.style.layout.grid.yAxis.scale.max = props.config.style.layout.grid.yAxis.scale.max;
-    } else {
-        finalConfig.style.layout.grid.yAxis.scale.max = null;
-    }
-
-    // ----------------------------------------------------------------------------
-
     return finalConfig;
 }
 

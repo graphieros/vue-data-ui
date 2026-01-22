@@ -191,21 +191,6 @@ function prepareConfig() {
         finalConfig = mergedConfig;
     }
 
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'zoomStartIndex')) {
-        finalConfig.zoomStartIndex = props.config.zoomStartIndex;
-    } else {
-        finalConfig.zoomStartIndex = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'zoomEndIndex')) {
-        finalConfig.zoomEndIndex = props.config.zoomEndIndex;
-    } else {
-        finalConfig.zoomEndIndex = null;
-    }
-
-    // ----------------------------------------------------------------------------
     return finalConfig;
 }
 

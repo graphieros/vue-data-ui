@@ -352,28 +352,6 @@ function prepareConfig() {
         }
     }
 
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'events.datapointEnter')) {
-        finalConfig.events.datapointEnter = props.config.events.datapointEnter;
-    } else {
-        finalConfig.events.datapointEnter = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'events.datapointLeave')) {
-        finalConfig.events.datapointLeave = props.config.events.datapointLeave;
-    } else {
-        finalConfig.events.datapointLeave = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'events.datapointClick')) {
-        finalConfig.events.datapointClick = props.config.events.datapointClick;
-    } else {
-        finalConfig.events.datapointClick = null;
-    }
-
-    // ----------------------------------------------------------------------------
-
     return finalConfig;
 }
 

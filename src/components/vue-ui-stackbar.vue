@@ -261,55 +261,15 @@ function prepareConfig() {
         finalConfig = mergedConfig;
     }
 
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.grid.scale.scaleMin')) {
-        finalConfig.style.chart.grid.scale.scaleMin = props.config.style.chart.grid.scale.scaleMin;
-    } else {
-        finalConfig.style.chart.grid.scale.scaleMin = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.grid.scale.scaleMax')) {
-        finalConfig.style.chart.grid.scale.scaleMax = props.config.style.chart.grid.scale.scaleMax;
-    } else {
-        finalConfig.style.chart.grid.scale.scaleMax = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.startIndex')) {
-        finalConfig.style.chart.zoom.startIndex = props.config.style.chart.zoom.startIndex;
-    } else {
-        finalConfig.style.chart.zoom.startIndex = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.endIndex')) {
-        finalConfig.style.chart.zoom.endIndex = props.config.style.chart.zoom.endIndex;
-    } else {
-        finalConfig.style.chart.zoom.endIndex = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.bars.dataLabels.hideUnderValue')) {
-        finalConfig.style.chart.bars.dataLabels.hideUnderValue = props.config.style.chart.bars.dataLabels.hideUnderValue;
-    } else {
-        finalConfig.style.chart.bars.dataLabels.hideUnderValue = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.bars.dataLabels.hideUnderPercentage')) {
-        finalConfig.style.chart.bars.dataLabels.hideUnderPercentage = props.config.style.chart.bars.dataLabels.hideUnderPercentage;
-    } else {
-        finalConfig.style.chart.bars.dataLabels.hideUnderPercentage = null;
-    }
-
-    // ----------------------------------------------------------------------------
-
     return finalConfig;
 }
 
 const canHideSmallValues = computed(() => {
-    return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderValue !== null
+    return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderValue != null
 });
 
 const canHideSmallPercentages = computed(() => {
-    return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderPercentage !== null
+    return FINAL_CONFIG.value.style.chart.bars.dataLabels.hideUnderPercentage != null
 })
 
 watch(() => props.config, (_newCfg) => {

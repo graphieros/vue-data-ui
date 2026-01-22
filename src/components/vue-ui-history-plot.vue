@@ -290,33 +290,6 @@ function prepareConfig() {
         finalConfig = mergedConfig;
     }
 
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.axes.x.scaleMin')) {
-        finalConfig.style.chart.axes.x.scaleMin = props.config.style.chart.axes.x.scaleMin;
-    } else {
-        finalConfig.style.chart.axes.x.scaleMin = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.axes.x.scaleMax')) {
-        finalConfig.style.chart.axes.x.scaleMax = props.config.style.chart.axes.x.scaleMax;
-    } else {
-        finalConfig.style.chart.axes.x.scaleMax = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.axes.y.scaleMin')) {
-        finalConfig.style.chart.axes.y.scaleMin = props.config.style.chart.axes.y.scaleMin;
-    } else {
-        finalConfig.style.chart.axes.y.scaleMin = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.axes.y.scaleMax')) {
-        finalConfig.style.chart.axes.y.scaleMax = props.config.style.chart.axes.y.scaleMax;
-    } else {
-        finalConfig.style.chart.axes.y.scaleMax = null;
-    }
-
-    // ----------------------------------------------------------------------------
     return finalConfig;
 }
 
@@ -554,18 +527,18 @@ const minY = computed(() => {
 });
 
 const scales = computed(() => {
-
     const x = calculateNiceScale(
-            FINAL_CONFIG.value.style.chart.axes.x.scaleMin === null ? minX.value : FINAL_CONFIG.value.style.chart.axes.x.scaleMin,
-            FINAL_CONFIG.value.style.chart.axes.x.scaleMax === null ? maxX.value : FINAL_CONFIG.value.style.chart.axes.x.scaleMax,
-            FINAL_CONFIG.value.style.chart.axes.x.ticks
-        );
+        FINAL_CONFIG.value.style.chart.axes.x.scaleMin ?? minX.value,
+        FINAL_CONFIG.value.style.chart.axes.x.scaleMax ?? maxX.value,
+        FINAL_CONFIG.value.style.chart.axes.x.ticks
+    );
 
     const y = calculateNiceScale(
-            FINAL_CONFIG.value.style.chart.axes.y.scaleMin === null ? minY.value : FINAL_CONFIG.value.style.chart.axes.y.scaleMin,
-            FINAL_CONFIG.value.style.chart.axes.y.scaleMax === null ? maxY.value : FINAL_CONFIG.value.style.chart.axes.y.scaleMax,
-            FINAL_CONFIG.value.style.chart.axes.y.ticks
-        );
+        FINAL_CONFIG.value.style.chart.axes.y.scaleMin ?? minY.value,
+        FINAL_CONFIG.value.style.chart.axes.y.scaleMax ?? maxY.value,
+        FINAL_CONFIG.value.style.chart.axes.y.ticks
+    );
+    
     return {
         x,
         y,

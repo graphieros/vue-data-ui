@@ -193,6 +193,14 @@ const { loading, FINAL_DATASET } = useLoading({
                     },
                     paddingProportions: {
                         left: 0.05
+                    },
+                    scale: {
+                        max: null,
+                        min: null,
+                    },
+                    zoom: {
+                        endIndex: null,
+                        startIndex: null,
                     }
                 }
             }
@@ -243,32 +251,6 @@ function prepareConfig() {
         }
     } else {
         finalConfig = mergedConfig;
-    }
-
-    // ------------------------------ OVERRIDES -----------------------------------
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.scale.min')) {
-        finalConfig.style.chart.scale.min = props.config.style.chart.scale.min;
-    } else {
-        finalConfig.style.chart.scale.min = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.scale.max')) {
-        finalConfig.style.chart.scale.max = props.config.style.chart.scale.max;
-    } else {
-        finalConfig.style.chart.scale.max = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.startIndex')) {
-        finalConfig.style.chart.zoom.startIndex = props.config.style.chart.zoom.startIndex;
-    } else {
-        finalConfig.style.chart.zoom.startIndex = null;
-    }
-
-    if (props.config && hasDeepProperty(props.config, 'style.chart.zoom.endIndex')) {
-        finalConfig.style.chart.zoom.endIndex = props.config.style.chart.zoom.endIndex;
-    } else {
-        finalConfig.style.chart.zoom.endIndex = null;
     }
 
     // -------------------------- TIME LABELS CONFIG FIX --------------------------
