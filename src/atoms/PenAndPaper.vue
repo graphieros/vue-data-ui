@@ -657,16 +657,11 @@ function reset() {
 }
 
 
-watch(mode, () => {
+watch(mode, (newMode) => {
     if (!props.active) return;
     disableDrawing();
     enableDrawing();
-
-    if (mode.value === 'text') {
-        G.value.style.cursor = 'text';
-    } else {
-        G.value.style.cursor = cursorDraw.value;
-    }
+    setCursorStyle();
 });
 
 function enableDrawing() {
@@ -759,13 +754,24 @@ watch(
     { immediate: true }
 );
 
+function setCursorStyle() {
+    if (!G.value) return;
+    if (mode.value === 'text') {
+        G.value.style.cursor = 'text';
+    } else if (['line', 'arrow'].includes(mode.value)) {
+        G.value.style.cursor = 'crosshair';
+    } else {
+        G.value.style.cursor = cursorDraw.value;
+    }
+}
+
 onMounted(() => {
     nextTick(() => {
         if (props.svgRef) {
             G.value = document.createElementNS("http://www.w3.org/2000/svg", "g");
             G.value.setAttribute("class", "vue-data-ui-doodles");
-            G.value.style.cursor = cursorDraw.value;
             props.svgRef.appendChild(G.value);
+            setCursorStyle();
             disableDrawing();
         }
     });
@@ -931,11 +937,6 @@ input[type="range"].vertical-range {
     top: 50%;
     transform: translateY(-50%) rotate(180deg);
     left: 36px;
-}
-
-.vue-ui-pen-and-paper[data-mode="line"],
-.vue-ui-pen-and-paper[data-mode="arrow"] {
-    cursor: crosshair;
 }
 </style>
 
