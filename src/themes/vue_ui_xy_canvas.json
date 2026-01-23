@@ -46,7 +46,11 @@
                 "legend": {
                     "show": false,
                     "backgroundColor": "#1A1A1A",
-                    "color": "#CCCCCC"
+                    "color": "#CCCCCC",
+                    "selectAllToggle": {
+                        "backgroundColor": "#3A3A3A",
+                        "color": "#CCCCCC"
+                    }
                 },
                 "title": {
                     "color": "#CCCCCC",
@@ -123,7 +127,11 @@
                 },
                 "legend": {
                     "backgroundColor": "#1A1A1A",
-                    "color": "#CCCCCC"
+                    "color": "#CCCCCC",
+                    "selectAllToggle": {
+                        "backgroundColor": "#3A3A3A",
+                        "color": "#CCCCCC"
+                    }
                 },
                 "title": {
                     "color": "#CCCCCC",
@@ -190,7 +198,11 @@
                 },
                 "legend": {
                     "backgroundColor": "#FFF8E1",
-                    "color": "#424242"
+                    "color": "#424242",
+                    "selectAllToggle": {
+                        "backgroundColor": "#5D4037",
+                        "color": "#FFF8E1"
+                    }
                 },
                 "title": {
                     "color": "#424242",
@@ -257,7 +269,11 @@
                 },
                 "legend": {
                     "backgroundColor": "#1E1E1E",
-                    "color": "#BDBDBD"
+                    "color": "#BDBDBD",
+                    "selectAllToggle": {
+                        "backgroundColor": "#3A3A3A",
+                        "color": "#BDBDBD"
+                    }
                 },
                 "title": {
                     "color": "#FFF8E1",
@@ -324,7 +340,11 @@
                 },
                 "legend": {
                     "backgroundColor": "#1A1A1A",
-                    "color": "#99AA99"
+                    "color": "#99AA99",
+                    "selectAllToggle": {
+                        "backgroundColor": "#3A3A3A",
+                        "color": "#99AA99"
+                    }
                 },
                 "title": {
                     "color": "#66CC66",
@@ -391,7 +411,11 @@
                 },
                 "legend": {
                     "backgroundColor": "#fbfafa",
-                    "color": "#99AA99"
+                    "color": "#99AA99",
+                    "selectAllToggle": {
+                        "backgroundColor": "#E0CFC3",
+                        "color": "#8F837A"
+                    }
                 },
                 "title": {
                     "color": "#8A9892",
@@ -457,7 +481,11 @@
                 },
                 "legend": {
                     "backgroundColor": "#f6f6fb",
-                    "color": "#61747E"
+                    "color": "#61747E",
+                    "selectAllToggle": {
+                        "backgroundColor": "#50606C",
+                        "color": "#f6f6fb"
+                    }
                 },
                 "title": {
                     "color": "#50606C",
