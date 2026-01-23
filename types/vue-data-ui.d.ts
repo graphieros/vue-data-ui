@@ -281,11 +281,18 @@ declare module "vue-data-ui" {
         left?: number;
     };
 
+    export type ChartLegendToggle = {
+        show?: boolean;
+        backgroundColor?: string;
+        color?: string;
+    }
+
     export type ChartBaseLegend = {
         color?: string;
         show?: boolean;
         fontSize?: number;
         bold?: boolean;
+        selectAllToggle?: ChartLegendToggle;
     };
 
     export type ChartFrame = {
@@ -3804,6 +3811,7 @@ declare module "vue-data-ui" {
                 show?: boolean;
                 fontSize?: number;
                 position?: 'bottom' | 'top';
+                selectAllToggle?: ChartLegendToggle;
             };
             title?: {
                 show?: boolean;
@@ -6615,6 +6623,9 @@ declare module "vue-data-ui" {
         legendIcon?: VueUiIconName;
         legendIconSize?: number;
         legendPosition?: 'bottom' | 'top';
+        showLegendSelectAllToggle?: boolean;
+        legendSelectAllToggleBackgroundColor?: string;
+        legendSelectAllToggleColor?: string;
         lineAnimated?: boolean;
         lineSmooth?: boolean;
         lineStrokeWidth?: number;

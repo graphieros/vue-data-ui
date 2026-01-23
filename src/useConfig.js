@@ -89,7 +89,12 @@ export function useConfig(options = {}) {
         bold: false,
         backgroundColor: COLOR_BACKGROUND,
         color: COLOR_TEXT_PRIMARY,
-        fontSize: FONT._14
+        fontSize: FONT._14,
+        selectAllToggle: {
+            show: false,
+            backgroundColor: COLOR_BORDER,
+            color: COLOR_TEXT_PRIMARY
+        }
     }
 
     const TOOLTIP = {
@@ -872,6 +877,11 @@ export function useConfig(options = {}) {
                 show: true,
                 fontSize: FONT._14,
                 position: 'bottom', // bottom | top
+                selectAllToggle: {
+                    show: false,
+                    backgroundColor: COLOR_BORDER,
+                    color: COLOR_TEXT_PRIMARY
+                }
             },
             title: {
                 ...TITLE,
@@ -3188,6 +3198,9 @@ export function useConfig(options = {}) {
         legendIcon: 'circleFill',
         legendIconSize: FONT._12,
         legendPosition: 'bottom',
+        showLegendSelectAllToggle: false,
+        legendSelectAllToggleBackgroundColor: COLOR_BORDER,
+        legendSelectAllToggleColor: COLOR_TEXT_PRIMARY,
         lineAnimated: true,
         lineSmooth: true,
         lineStrokeWidth: 2,
