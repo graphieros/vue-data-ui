@@ -271,6 +271,46 @@ It is recommended to set the show legend config attribute to false, to hide the 
 </VueUiDonut>
 ```
 
+## Legend toggle
+
+An opt-in config option displays a toggle button to hide/show all series, when the number of series > 2.
+This attribute can be found in the `legend.selectAllToggle` config section:
+
+```js
+legend: {
+  selectAllToggle: {
+    show: false,
+    backgroundColor: '#E1E5E8',
+    color: '#2D353C'
+  }
+}
+```
+
+This legend toggle option is available for the following components:
+
+- VueUiDonut
+- VueUiDonutEvolution
+- VueUiGalaxy
+- VueUiHistoryPlot
+- VueUiHorizontalBar
+- VueUiNestedDonuts
+- VueUiOnion
+- VueUiParallelCoordinatePlot
+- VueUiQuadrant
+- VueUiQuickChart
+- VueUiRadar
+- VueUiRidgeline
+- VueUiRings
+- VueUiRings
+- VueUiScatter
+- VueUiStackbar
+- VueUiStackline
+- VueUiTreemap
+- VueUiWaffle
+- VueUiWorld
+- VueUiXy
+- VueUiXyCanvas
+
 ## Tooltip #tooltip-before & #tooltip-after slots
 
 Customize tooltip contents with #tooltip-before and #tooltip-after slots, to include an image, another chart or any other rich content into your tooltips.
