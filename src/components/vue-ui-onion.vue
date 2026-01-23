@@ -46,6 +46,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_onion.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -520,6 +521,16 @@ function peelOnion(radius, percentage) {
 }
 
 const emit = defineEmits(['selectLegend']);
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach(l => {
+            segregated.value.push(l.id);
+        });
+    }
+}
 
 function segregate(id) {
     if(segregated.value.includes(id)) {
@@ -1183,6 +1194,17 @@ defineExpose({
                         <div data-cy-legend-item @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
                             {{ legend.display }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
                 <slot v-else name="legend" v-bind:legend="legendSet"></slot>

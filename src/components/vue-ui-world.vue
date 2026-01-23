@@ -37,6 +37,7 @@ import img from '../img.js';
 import geo from "../geoProjections";
 import Shape from '../atoms/Shape.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
+import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 
 const Title = defineAsyncComponent(() => import('../atoms/Title.vue'));
 const Legend = defineAsyncComponent(() => import('../atoms/Legend.vue'));
@@ -636,6 +637,16 @@ function generateCsv(callback=null) {
 
 const segregated = ref([]);
 
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach(l => {
+            segregated.value.push(l.name);
+        });
+    }
+}
+
 function segregate(name) {
     if (segregated.value.includes(name)) {
         segregated.value = segregated.value.filter(el => el !== name);
@@ -1007,6 +1018,17 @@ defineExpose({
                             @click="legend.segregate()">
                             {{ legend.name }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
                 <slot name="legend" v-bind:legend="legendSet" />

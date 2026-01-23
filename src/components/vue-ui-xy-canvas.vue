@@ -63,6 +63,7 @@ import BaseIcon from "../atoms/BaseIcon.vue";
 import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import SlicerPreview from "../atoms/SlicerPreview.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -327,9 +328,11 @@ const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette)
 });
 
+const allSegregated = computed(() => segregated.value.length === dsCopy.value.length);
+
 const maxSeries = computed(() => {
     if(!dsCopy.value) return 0
-    return Math.max(...dsCopy.value.filter((ds, i) => !segregated.value.includes(ds.absoluteIndex)).map(ds => ds.series.length))
+    return Math.max(...dsCopy.value.filter((ds, i) => allSegregated.value ? true : !segregated.value.includes(ds.absoluteIndex)).map(ds => ds.series.length))
 });
 
 function selectMinimapIndex(i) {
@@ -1640,7 +1643,7 @@ function getYandValueAtIndex(datapoint) {
 }
 
 function handleMousemove(e) {
-    if (!isDataset.value || !canvas.value) return;
+    if (!isDataset.value || !canvas.value || allSegregated.value) return;
 
     const { left, top } = canvas.value.getBoundingClientRect();
     const mouseX = e.clientX - left;
@@ -1834,6 +1837,18 @@ onBeforeUnmount(() => {
         responsiveObserver.value.disconnect();
     }
 });
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach((_, i) => {
+            segregated.value.push(i);
+        });
+    }
+    datasetHasChanged.value = true;
+    debounceCanvasResize();
+}
 
 function segregate(index) {
     emit('selectLegend', formattedDataset.value.find(el => el.absoluteIndex === index));
@@ -2296,6 +2311,17 @@ defineExpose({
                         <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
                             {{ legend.name }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
         

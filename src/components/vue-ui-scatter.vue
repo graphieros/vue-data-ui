@@ -50,6 +50,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import img from "../img";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -837,6 +838,16 @@ function onTrapLeave(datapoint, seriesIndex) {
 function onTrapClick(datapoint, seriesIndex) {
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex })
+    }
+}
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        datasetWithId.value.forEach(l => {
+            segregated.value.push(l.id);
+        });
     }
 }
 
@@ -2025,6 +2036,17 @@ defineExpose({
                         <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                             {{ legend.name }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="datasetWithId.length > 2 && FINAL_CONFIG.style.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
                 <slot v-else name="legend" v-bind:legend="datasetWithId"></slot>

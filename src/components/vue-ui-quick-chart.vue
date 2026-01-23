@@ -52,6 +52,7 @@ import img from "../img";
 import Slicer from "../atoms/Slicer.vue";
 import themes from "../themes/vue_ui_quick_chart.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
@@ -366,6 +367,26 @@ function getBlurFilter(id) {
         return `url(#blur_${uid.value})`;
     } else {
         return '';
+    }
+}
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        if (chartType.value === detector.chartType.DONUT) {
+            donut.value.legend.forEach(l => {
+                segregated.value.push(l.id)
+            });
+        } else if (chartType.value === detector.chartType.LINE) {
+            line.value.legend.forEach(l => {
+                segregated.value.push(l.id);
+            });
+        } else if (chartType.value === detector.chartType.BAR) {
+            bar.value.legend.forEach(l => {
+                segregated.value.push(l.id);
+            });
+        }
     }
 }
 
@@ -1019,9 +1040,9 @@ const bar = computed(() => {
     }
 
     const extremes = {
-        max: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)) < 0 ? 0 : Math.max(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)),
-        min: Math.min(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)),
-        maxSeries: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).map(d => d.values.length))
+        max: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)) < 0 ? 0 : Math.max(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)) ?? 1,
+        min: Math.min(...ds.filter(d => !segregated.value.includes(d.id)).flatMap(d => d.values)) ?? 0,
+        maxSeries: Math.max(...ds.filter(d => !segregated.value.includes(d.id)).map(d => d.values.length)) ?? 0
     }
 
     const scale = extremes.min === extremes.max ? calculateNiceScale(extremes.min, extremes.min + 1, FINAL_CONFIG.value.xyScaleSegments) : calculateNiceScale(extremes.min < 0 ? extremes.min : 0, extremes.max, FINAL_CONFIG.value.xyScaleSegments)
@@ -1311,7 +1332,7 @@ const allMinimaps = computed(() => {
             }
         })
     } else if (chartType.value === detector.chartType.BAR) {
-        return bar.value.absoluteDataset.map(ds => {
+        return bar.value.legend.map(ds => {
             const _min = Math.min(...ds.absoluteValues.map(v => v ?? 0))
             return {
                 ...ds,
@@ -1321,7 +1342,7 @@ const allMinimaps = computed(() => {
             }
         })
     }
-})
+});
 
 const timeLabels = computed(() => {
     return useTimeLabels({
@@ -2004,6 +2025,7 @@ defineExpose({
                             stroke-linecap="round"
                         />
                     </template>
+                    <template v-if="segregated.length < bar.legend.length">
                         <line
                             data-cy="grid-vertical-line-bar"
                             v-for="(_, i) in bar.extremes.maxSeries + 1"
@@ -2015,6 +2037,7 @@ defineExpose({
                             :stroke-width="FINAL_CONFIG.xyGridStrokeWidth"
                             stroke-linecap="round"
                         />
+                    </template>
                 </g>
                 <g class="line-axis" v-if="FINAL_CONFIG.xyShowAxis">
                     <line
@@ -2180,7 +2203,7 @@ defineExpose({
                         </text>
                     </template>
                 </g>
-                <g class="tooltip-traps" v-if="userHovers">
+                <g class="tooltip-traps" v-if="userHovers && segregated.length < bar.legend.length">
                     <rect 
                         data-cy="tooltip-trap-bar"
                         v-for="(_, i) in bar.extremes.maxSeries"
@@ -2307,6 +2330,15 @@ defineExpose({
                 class="vue-ui-quick-chart-legend" 
                 :style="`background:transparent;color:${FINAL_CONFIG.color}`"
             >
+                <BaseLegendToggle 
+                    v-if="(donut?.legend?.length > 2 || line?.legend?.length > 2 || bar?.legend?.length > 2) && FINAL_CONFIG.showLegendSelectAllToggle && !loading"
+                    :backgroundColor="FINAL_CONFIG.legendSelectAllToggleBackgroundColor"
+                    :color="FINAL_CONFIG.legendSelectAllToggleColor"
+                    :fontSize="FINAL_CONFIG.legendFontSize"
+                    :checked="segregated.length > 0"
+                    @toggle="toggleLegend"
+                />
+
                 <template v-if="chartType === detector.chartType.DONUT">
                     <div 
                         class="vue-ui-quick-chart-legend-item" 

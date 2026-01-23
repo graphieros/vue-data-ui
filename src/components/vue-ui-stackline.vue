@@ -64,6 +64,7 @@ import Legend from "../atoms/Legend.vue";
 import locales from '../locales/locales.json';
 import BaseScanner from "../atoms/BaseScanner.vue";
 import SlicerPreview from "../atoms/SlicerPreview.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -590,7 +591,8 @@ const standaloneDatasetOnly = computed(() =>
 );
 
 const maxSeries = computed(() => {
-    return Math.max(...unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)).map(ds => ds.series.length))
+    const v = Math.max(...unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)).map(ds => ds.series.length));
+    return isFinite(v) ? v : Math.max(...unmutableDataset.value.map(ds => ds.series.length));
 });
 
 function selectMinimapIndex(i) {
@@ -672,12 +674,16 @@ const datasetTotals = computed(() => {
     ).slice(slicer.value.start, slicer.value.end);
 });
 
+const allSegregated = computed(() => segregated.value.length === unmutableDataset.value.length);
+
 const datasetTotalsMinimap = computed(() => {
     if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
 
-    if (stackedDataset.value.length) {
+    const d = unmutableDataset.value.filter(ds => allSegregated.value ? true : !segregated.value.includes(ds.id) && !ds.standalone)
+
+    if (d.length) {
         return sumSeries(
-            stackedDataset.value.map(ds => ({
+            d.map(ds => ({
                 ...ds,
                 series: (ds.series || []).map(v => v ?? 0)
             }))
@@ -701,7 +707,9 @@ const datasetTotalsMinimap = computed(() => {
 const allMinimaps = computed(() => {
     if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
 
-    const stacked = stackedDataset.value;
+    const d = unmutableDataset.value.filter(ds => allSegregated.value ? true : !segregated.value.includes(ds.id) && !ds.standalone);
+
+    const stacked = d;
     const standalone = standaloneDatasetOnly.value;
 
     const merged = stacked.length
@@ -1627,6 +1635,7 @@ const tooltipContent = computed(() => {
 });
 
 function toggleTooltipVisibility(show, selectedIndex = null) {
+    if (allSegregated.value) return;
     isTooltip.value = show;
 
     const datapoint = formattedDataset.value.map(s => {
@@ -1669,6 +1678,16 @@ function selectTimeLabel(label, relativeIndex) {
         absoluteIndex: label.absoluteIndex,
         label: label.text
     });
+}
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach(l => {
+            segregated.value.push(l.id);
+        });
+    }
 }
 
 function segregate(item) {
@@ -2924,6 +2943,17 @@ defineExpose({
                             {{ legend.name }}
                         </div>
                     </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
+                    </template>
                 </Legend>
         
                 <slot v-else name="legend" v-bind:legend="legendSet" />
@@ -2973,7 +3003,7 @@ defineExpose({
         <!-- SLICER PREVIEW -->
         <SlicerPreview
             ref="chartSlicer"
-            v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 6 && isDataset && slicerReady"
+            v-if="FINAL_CONFIG.style.chart.zoom.show && isDataset && slicerReady && maxSeries > 6"
             :allMinimaps="allMinimaps"
             :background="FINAL_CONFIG.style.chart.zoom.color"
             :borderColor="FINAL_CONFIG.style.chart.backgroundColor"

@@ -52,6 +52,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_waffle.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -537,102 +538,192 @@ const positions = computed(() => {
 
 const segregated = ref([]);
 const isAnimating = ref(false);
-const rafUp = ref(null);
-const rafDown = ref(null);
 
-function segregate(uid) {
-    if (allDatapointsAreEmpty.value) return; // No point in segregating anything in this case
+const animationFrameUpBySeriesId = ref(Object.create(null));
+const animationFrameDownBySeriesId = ref(Object.create(null));
+const activeAnimationCount = ref(0);
+
+function setSeriesValuesById(seriesId, nextValue) {
+    datasetCopy.value = datasetCopy.value.map((dataSeries) => {
+        if (dataSeries.uid === seriesId) {
+            return {
+                ...dataSeries,
+                values: [nextValue]
+            };
+        }
+        return dataSeries;
+    });
+}
+
+function getSeriesSumById(seriesId, sourceDataset) {
+    const series = sourceDataset.find((item) => item.uid === seriesId);
+    if (!series) return 0;
+    return (series.values || []).reduce((a, b) => a + b, 0);
+}
+
+function cancelAnimationBySeriesId(seriesId) {
+    if (animationFrameUpBySeriesId.value[seriesId]) {
+        cancelAnimationFrame(animationFrameUpBySeriesId.value[seriesId]);
+        delete animationFrameUpBySeriesId.value[seriesId];
+    }
+    if (animationFrameDownBySeriesId.value[seriesId]) {
+        cancelAnimationFrame(animationFrameDownBySeriesId.value[seriesId]);
+        delete animationFrameDownBySeriesId.value[seriesId];
+    }
+}
+
+function animateSeriesValue({
+    seriesId,
+    fromValue,
+    toValue,
+    mode
+}) {
+    cancelAnimationBySeriesId(seriesId);
+
+    activeAnimationCount.value += 1;
+    isAnimating.value = true;
+
+    let currentValue = fromValue;
+
+    return new Promise((resolve) => {
+        function onFrame() {
+            const isIncreasing = mode === "increase";
+
+            if (isIncreasing) {
+                if (currentValue >= toValue) {
+                    setSeriesValuesById(seriesId, toValue);
+                    activeAnimationCount.value -= 1;
+                    if (activeAnimationCount.value <= 0) isAnimating.value = false;
+                    delete animationFrameUpBySeriesId.value[seriesId];
+                    resolve();
+                    return;
+                }
+
+                currentValue += (toValue * 0.025);
+                if (currentValue > toValue) currentValue = toValue;
+                setSeriesValuesById(seriesId, currentValue);
+                animationFrameUpBySeriesId.value[seriesId] = requestAnimationFrame(onFrame);
+            } else {
+                if (currentValue <= fromValue / 100) {
+                    setSeriesValuesById(seriesId, 0);
+                    activeAnimationCount.value -= 1;
+                    if (activeAnimationCount.value <= 0) isAnimating.value = false;
+                    delete animationFrameDownBySeriesId.value[seriesId];
+                    resolve();
+                    return;
+                }
+
+                currentValue /= 1.15;
+                setSeriesValuesById(seriesId, currentValue);
+                animationFrameDownBySeriesId.value[seriesId] = requestAnimationFrame(onFrame);
+            }
+        }
+
+        onFrame();
+    });
+}
+
+function toggleLegend() {
+    datasetCopy.value = datasetCopyReference.value;
+
+    const hasAnySegregated = segregated.value.length > 0;
+
     if (!FINAL_CONFIG.value.useAnimation) {
-        if(segregated.value.includes(uid)) {
-            segregated.value = segregated.value.filter(s => s !== uid);
-        } else if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
-            segregated.value.push(uid);
+        if (hasAnySegregated) {
+            segregated.value = [];
+        } else {
+            segregated.value = legendSet.value.map((legendItem) => legendItem.uid);
         }
-        return
+        return;
     }
 
-    const target = datasetCopyReference.value.find(el => el.uid === uid).values.reduce((a, b) => a + b, 0);
-    const source = datasetCopy.value.find(el => el.uid === uid).values.reduce((a, b) => a + b, 0);
-    let initVal = source;
+    if (hasAnySegregated) {
+        const seriesIdsToRestore = [...segregated.value];
 
-    if (source === 0 && target === 0) return; // Nothing to segregate
+        seriesIdsToRestore.forEach((seriesId) => {
+            segregate(seriesId, true);
+        });
+    } else {
+        const seriesIdsToHide = legendSet.value.map((legendItem) => legendItem.uid);
 
-    if(segregated.value.includes(uid)) {
-        segregated.value = segregated.value.filter(s => s !== uid);
-        const targetVal = target;
-        function animUp() {
-            if(initVal > targetVal) {
-                cancelAnimationFrame(rafUp.value);
-                datasetCopy.value = datasetCopy.value.map((ds, i) => {
-                    if (ds.uid === uid) {
-                        return {
-                            ...ds,
-                            values: [targetVal]
-                        }
-                    } else {
-                        return ds;
-                    }
-                });
-                isAnimating.value = false;
-            } else {
-                isAnimating.value = true;
-                initVal += (targetVal * 0.025)
-                datasetCopy.value = datasetCopy.value.map((ds, i) => {
-                    if (ds.uid === uid) {
-                        return {
-                            ...ds,
-                            values: [initVal]
-                        }
-                    } else {
-                        return ds;
-                    }
-                })
-                rafUp.value = requestAnimationFrame(animUp);
-            }
-        }
-        animUp()
-    } else if(segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1) {
-        function animDown() {
-            if(initVal < source / 100) {
-                cancelAnimationFrame(rafDown.value)
-                segregated.value.push(uid);
-                datasetCopy.value = datasetCopy.value.map((ds, i) => {
-                    if (ds.uid === uid) {
-                        return {
-                            ...ds,
-                            values: [0]
-                        }
-                    } else {
-                        return ds;
-                    }
-                });
-                isAnimating.value = false;
-            } else {
-                isAnimating.value = true;
-                initVal /= 1.15;
-                datasetCopy.value = datasetCopy.value.map(ds => {
-                    if (ds.uid === uid) {
-                        return {
-                            ...ds,
-                            values: [initVal]
-                        }
-                    } else {
-                        return ds;
-                    }
-                })
-                rafDown.value = requestAnimationFrame(animDown);
-            }
-        }
-        animDown();
+        seriesIdsToHide.forEach((seriesId) => {
+            segregate(seriesId, true);
+        });
     }
-    emit('selectLegend', waffleSet.value.map(w => {
-        return {
-            name: w.name,
-            color: w.color,
-            value: w.value,
-            proportion: (w.proportion / (Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2)))
+}
+
+function segregate(seriesId, allowHideAll = false) {
+    if (allDatapointsAreEmpty.value && !allowHideAll) return;
+
+    const canHideMore =
+        allowHideAll ||
+        (segregated.value.length < legendSet.value.length - 1 && legendSet.value.length > 1);
+
+    if (!FINAL_CONFIG.value.useAnimation) {
+        if (segregated.value.includes(seriesId)) {
+            segregated.value = segregated.value.filter((item) => item !== seriesId);
+        } else if (canHideMore) {
+            segregated.value.push(seriesId);
         }
-    }));
+        return;
+    }
+
+    const targetValue = getSeriesSumById(seriesId, datasetCopyReference.value);
+    const sourceValue = getSeriesSumById(seriesId, datasetCopy.value);
+
+    if (sourceValue === 0 && targetValue === 0) return;
+
+    if (segregated.value.includes(seriesId)) {
+        segregated.value = segregated.value.filter((item) => item !== seriesId);
+
+        animateSeriesValue({
+            seriesId,
+            fromValue: sourceValue,
+            toValue: targetValue,
+            mode: "increase"
+        }).then(() => {
+            emit(
+                "selectLegend",
+                waffleSet.value.map((waffleItem) => ({
+                    name: waffleItem.name,
+                    color: waffleItem.color,
+                    value: waffleItem.value,
+                    proportion:
+                        waffleItem.proportion /
+                        (Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2))
+                }))
+            );
+        });
+
+        return;
+    }
+
+    if (!canHideMore) return;
+
+    animateSeriesValue({
+        seriesId,
+        fromValue: sourceValue,
+        toValue: 0,
+        mode: "decrease"
+    }).then(() => {
+        if (!segregated.value.includes(seriesId)) {
+            segregated.value.push(seriesId);
+        }
+
+        setSeriesValuesById(seriesId, 0);
+
+        emit(
+            "selectLegend",
+            waffleSet.value.map((waffleItem) => ({
+                name: waffleItem.name,
+                color: waffleItem.color,
+                value: waffleItem.value,
+                proportion:
+                    waffleItem.proportion /
+                    (Math.pow(FINAL_CONFIG.value.style.chart.layout.grid.size, 2))
+            }))
+        );
+    });
 }
 
 function validSeriesToToggle(name) {
@@ -1401,6 +1492,17 @@ defineExpose({
                         <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
                             {{ legend.display }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
         

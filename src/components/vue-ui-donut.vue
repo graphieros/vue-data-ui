@@ -41,6 +41,7 @@ import {
     XMLNS,
     treeShake,
     findArcMidpoint,
+    forceValidValue,
 } from '../lib';
 import{
     buildValuePercentageLabel,
@@ -63,6 +64,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_donut.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -644,6 +646,16 @@ function animateValue({ from, to, duration, onUpdate, onDone, easing = easeOutCu
         }
     }
     requestAnimationFrame(step);
+}
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach((_,i) => {
+            segregated.value.push(i);
+        });
+    }
 }
 
 function segregate(index) {
@@ -1965,10 +1977,10 @@ defineExpose({
                             :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.bold ? 'bold' : ''}`">
                             {{ isAnimating || isFirstLoad ? '--' : applyDataLabel(
                                 FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.formatter,
-                                average,
+                                forceValidValue(average),
                                 dataLabel({
                                     p: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.prefix,
-                                    v: average,
+                                    v: forceValidValue(average),
                                     s: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.suffix,
                                     r: FINAL_CONFIG.style.chart.layout.labels.hollow.average.value.rounding
                                 }))
@@ -2262,6 +2274,17 @@ defineExpose({
                             @click="legend.segregate()">
                             {{ legend.display }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
                 <slot name="legend" v-bind:legend="legendSet" />

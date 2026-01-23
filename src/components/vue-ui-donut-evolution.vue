@@ -29,7 +29,6 @@ import {
     downloadCsv,
     error,
     getMissingDatasetAttributes,
-    hasDeepProperty,
     makeDonut,
     objectIsEmpty, 
     palette,
@@ -59,6 +58,7 @@ import themes from "../themes/vue_ui_donut_evolution.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -563,7 +563,7 @@ const mutableDataset = computed(() => {
 });
 
 const maxLength = computed(() => {
-    return Math.max(...mutableDataset.value.map(ds => ds.length))
+    return Math.max(...convertedDataset.value.map(ds => ds.length))
 });
 
 const timeLabels = computed(() => {
@@ -785,6 +785,16 @@ const legendConfig = computed(() => {
         fontWeight: FINAL_CONFIG.value.style.chart.legend.bold ? 'bold' : ''
     }
 });
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach(l => {
+            segregated.value.push(l.uid);
+        });
+    }
+}
 
 function segregate(id) {
     if(segregated.value.includes(id)) {
@@ -1553,6 +1563,17 @@ defineExpose({
                         <div data-cy="legend-item" @click="segregate(legend.uid)" :style="`opacity:${segregated.includes(legend.uid) ? 0.5 : 1}`">
                             {{ legend.display }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle 
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
         

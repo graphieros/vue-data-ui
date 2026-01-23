@@ -61,6 +61,7 @@ import locales from '../locales/locales.json';
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
 import SlicerPreview from "../atoms/SlicerPreview.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -644,7 +645,8 @@ const unmutableDataset = computed(() => {
 });
 
 const maxSeries = computed(() => {
-    return Math.max(...unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)).map(ds => ds.series.length))
+    const v = Math.max(...unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id)).map(ds => ds.series.length));
+    return isFinite(v) ? v : Math.max(...unmutableDataset.value.map(ds => ds.series.length));
 });
 
 
@@ -722,6 +724,8 @@ const datasetTotals = computed(() => {
     return sumSeries(unmutableDataset.value.filter(ds => !segregated.value.includes(ds.id))).slice(slicer.value.start, slicer.value.end);
 });
 
+const allSegregated = computed(() => segregated.value.length === unmutableDataset.value.length);
+
 const datasetTotalsMinimap = computed(() => {
     if (!FINAL_CONFIG.value.style.chart.zoom.minimap.show) return [];
     return sumSeries(unmutableDataset.value.map(ds => {
@@ -729,7 +733,7 @@ const datasetTotalsMinimap = computed(() => {
             ...ds,
             series: ds.series.map(d => d ?? 0)
         }
-    }).filter(ds => !segregated.value.includes(ds.id)))
+    }).filter(ds => allSegregated.value ? true : !segregated.value.includes(ds.id))) // Keep all when all seriess are segregated to avoid minimap overflowing to infinity
 });
 
 const allMinimaps = computed(() => {
@@ -895,7 +899,7 @@ const formattedDataset = computed(() => {
     const HORIZONTAL_ZERO_POSITION = yLabels.value[0] ? yLabels.value[0].horizontal_zero : drawingArea.value.left;
 
     let posPrefixMini = Array(datasetTotalsMinimap.value.length).fill(0);
-let negPrefixMini = Array(datasetTotalsMinimap.value.length).fill(0);
+    let negPrefixMini = Array(datasetTotalsMinimap.value.length).fill(0);
 
     return unmutableDataset.value
         .filter(ds => !segregated.value.includes(ds.id))
@@ -925,27 +929,27 @@ let negPrefixMini = Array(datasetTotalsMinimap.value.length).fill(0);
             const preminMini = valsMini.length ? Math.min(...valsMini) : 0;
 
             function makeMiniScale({ minimapH }) {
-            const EPS = 1e-9;
-            const hasPos = premaxMini > 0;
-            const hasNeg = preminMini < 0;
+                const EPS = 1e-9;
+                const hasPos = premaxMini > 0;
+                const hasNeg = preminMini < 0;
 
-            if (hasPos && hasNeg) {
-                const M = Math.max(premaxMini, Math.abs(preminMini)) || EPS;
-                return {
-                    pxPerUnit: (minimapH / 2) / M,
-                    zero: minimapH / 2
-                };
-            }
+                if (hasPos && hasNeg) {
+                    const M = Math.max(premaxMini, Math.abs(preminMini)) || EPS;
+                    return {
+                        pxPerUnit: (minimapH / 2) / M,
+                        zero: minimapH / 2
+                    };
+                }
 
-            if (hasPos) {
-                const span = Math.max(EPS, premaxMini);
-                return {
-                    pxPerUnit: minimapH / span,
-                    zero: minimapH
-                };
-            }
+                if (hasPos) {
+                    const span = Math.max(EPS, premaxMini);
+                    return {
+                        pxPerUnit: minimapH / span,
+                        zero: minimapH
+                    };
+                }
 
-            const span = Math.max(EPS, Math.abs(preminMini));
+                const span = Math.max(EPS, Math.abs(preminMini));
                 return {
                     pxPerUnit: minimapH / span,
                     zero: 0
@@ -996,7 +1000,7 @@ let negPrefixMini = Array(datasetTotalsMinimap.value.length).fill(0);
                     const v = Number(raw) || 0;
                     return v >= 0
                     ? zero - (posOffsetMini[i] + v) * pxPerUnit
-                    : zero +  negOffsetMini[i]       * pxPerUnit;
+                    : zero +  negOffsetMini[i] * pxPerUnit;
                 });
             };
 
@@ -1181,6 +1185,7 @@ watch(() => props.selectedXIndex, (v) => {
 }, { immediate: true })
 
 function useTooltip(seriesIndex) {
+    if (allSegregated.value) return;
     trapIndex.value = seriesIndex;
     isTooltip.value = true;
 
@@ -1386,6 +1391,16 @@ const dataTable = computed(() => {
 
     return { head, body: body.slice(0, slicer.value.end - slicer.value.start), config, colNames }
 });
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach(l => {
+            segregated.value.push(l.id);
+        });
+    }
+}
 
 function segregate(item) {
     if (segregated.value.includes(item.id)) {
@@ -2459,12 +2474,13 @@ defineExpose({
 
         <SlicerPreview 
             ref="chartSlicer"
-            v-if="FINAL_CONFIG.style.chart.zoom.show && maxSeries > 6 && isDataset && slicerReady"
+            v-if="FINAL_CONFIG.style.chart.zoom.show && isDataset && slicerReady && maxSeries > 6"
             :allMinimaps="allMinimaps"
             :background="FINAL_CONFIG.style.chart.zoom.color"
             :borderColor="FINAL_CONFIG.style.chart.backgroundColor"
             :customFormat="FINAL_CONFIG.style.chart.zoom.customFormat"
             :cutNullValues="false"
+            :forceZeroCenter="true"
             :enableRangeHandles="FINAL_CONFIG.style.chart.zoom.enableRangeHandles"
             :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
             :end="slicer.end"
@@ -2589,6 +2605,17 @@ defineExpose({
                         <div @click="legend.segregate()" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
                             {{ legend.name }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
         

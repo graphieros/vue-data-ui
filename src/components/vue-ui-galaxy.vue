@@ -42,10 +42,11 @@ import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import img from "../img";
-import themes from "../themes/vue_ui_galaxy.json";
-import BaseScanner from "../atoms/BaseScanner.vue";
 import Title from "../atoms/Title.vue";
 import Legend from "../atoms/Legend.vue";
+import themes from "../themes/vue_ui_galaxy.json";
+import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -276,6 +277,16 @@ const svg = computed(() => ({
 const emit = defineEmits(['selectLegend', 'selectDatapoint']);
 
 const segregated = ref([]);
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach(l => {
+            segregated.value.push(l.id);
+        });
+    }
+}
 
 function segregate(datapoint) {
     if(segregated.value.includes(datapoint.id)) {
@@ -993,6 +1004,17 @@ defineExpose({
                         <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
                             {{ legend.display }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
                 

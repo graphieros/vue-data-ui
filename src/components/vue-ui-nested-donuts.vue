@@ -35,7 +35,6 @@ import {
     XMLNS,
     checkNaN,
     treeShake,
-    hasDeepProperty,
 } from "../lib";
 import{
     buildValuePercentageLabel,
@@ -55,6 +54,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_nested_donuts.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -654,6 +654,16 @@ watch(
     () => md.value,
     (val) => (mutableDataset.value = val)
 );
+
+function toggleLegend(legendSet) {
+    const ids = legendSet.map(item => item.id);
+    if (legendSet.some(l => segregated.value.includes(l.id))) {
+        const removeIds = new Set(ids);
+        segregated.value = segregated.value.filter(id => !removeIds.has(id));
+    } else {
+        segregated.value.push(...ids);
+    }
+}
 
 function segregateDonut(item) {
     emit("selectLegend", item);
@@ -1852,6 +1862,18 @@ defineExpose({
                             :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`">
                             {{ legend.display }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            :key="`toggle-${i}`"
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="legendSet.some(l => segregated.includes(l.id))"
+                            @toggle="toggleLegend(legendSet)"
+                        />
                     </template>
                 </Legend>
             </div>

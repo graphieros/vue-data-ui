@@ -7,7 +7,6 @@ import {
     watch,
     useSlots,
     defineAsyncComponent,
-    shallowRef,
     nextTick,
     toRefs,
 } from "vue";
@@ -18,7 +17,6 @@ import {
     convertCustomPalette,
     createCsvContent,
     createTSpansFromLineBreaksOnX,
-    createTSpansFromLineBreaksOnY,
     createUid,
     dataLabel,
     downloadCsv,
@@ -46,28 +44,21 @@ import { useThemeCheck } from "../useThemeCheck.js";
 import { useTableResponsive } from "../useTableResponsive";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
+import img from "../img.js";
+import Shape from "../atoms/Shape.vue";
+import Title from "../atoms/Title.vue";
 import themes from "../themes/vue_ui_horizontal_bar.json";
 import Legend from "../atoms/Legend.vue";
 import Accordion from "./vue-ui-accordion.vue";
-import Title from "../atoms/Title.vue";
-import Shape from "../atoms/Shape.vue";
-import img from "../img.js";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import("../atoms/Tooltip.vue"));
 const BaseIcon = defineAsyncComponent(() => import("../atoms/BaseIcon.vue"));
-const PenAndPaper = defineAsyncComponent(() =>
-    import("../atoms/PenAndPaper.vue")
-);
-const UserOptions = defineAsyncComponent(() =>
-    import("../atoms/UserOptions.vue")
-);
-const PackageVersion = defineAsyncComponent(() =>
-    import("../atoms/PackageVersion.vue")
-);
-const BaseDraggableDialog = defineAsyncComponent(() =>
-    import("../atoms/BaseDraggableDialog.vue")
-);
+const PenAndPaper = defineAsyncComponent(() => import("../atoms/PenAndPaper.vue"));
+const UserOptions = defineAsyncComponent(() => import("../atoms/UserOptions.vue"));
+const PackageVersion = defineAsyncComponent(() => import("../atoms/PackageVersion.vue"));
+const BaseDraggableDialog = defineAsyncComponent(() => import("../atoms/BaseDraggableDialog.vue"));
 
 const { vue_ui_vertical_bar: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -680,6 +671,17 @@ const drawingArea = computed(() => {
         fullHeight: svg.value.padding.top + svg.value.padding.bottom + svg.value.height,
     };
 });
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        immutableDataset.value.forEach(s => {
+            segregated.value.push(s.id);
+        });
+    }
+    updateDataLabelOverflow();
+}
 
 async function segregate(id) {
     if (segregated.value.includes(id)) {
@@ -1374,6 +1376,17 @@ defineExpose({
                         }}
                     </div>
                 </template>
+
+                <template #legendToggle>
+                    <BaseLegendToggle
+                        v-if="immutableDataset.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                        :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                        :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                        :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                        :checked="segregated.length > 0"
+                        @toggle="toggleLegend"
+                    />
+                </template>
             </Legend>
         </div>
 
@@ -1706,6 +1719,17 @@ defineExpose({
                         )
                         }}
                     </div>
+                </template>
+
+                <template #legendToggle>
+                    <BaseLegendToggle
+                        v-if="immutableDataset.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                        :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                        :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                        :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                        :checked="segregated.length > 0"
+                        @toggle="toggleLegend"
+                    />
                 </template>
             </Legend>
         </div>

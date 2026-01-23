@@ -205,8 +205,8 @@ const computedDataset = computed(() => {
 });
 
 function addOrdersAttribute(dataset) {
-    const combinedValues = (dataset[0].values || []).map((_, index) =>
-        dataset.map((series) => (series.values[index] || []))
+    const combinedValues = (dataset[0]?.values || []).map((_, index) =>
+        dataset.map((series) => (series?.values[index] || []))
     );
 
     const orders = combinedValues.map((values) =>

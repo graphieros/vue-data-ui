@@ -52,6 +52,7 @@ import Title from "../atoms/Title.vue";
 import Shape from "../atoms/Shape.vue";
 import img from "../img";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const VueUiXy = defineAsyncComponent(() => import('./vue-ui-xy.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -453,6 +454,16 @@ watch(
 const overlapRatio = computed(() => {
     return FINAL_CONFIG.value.style.chart.areas.height / FINAL_CONFIG.value.style.chart.areas.rowHeight;
 });
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach(l => {
+            segregated.value.push(l.id);
+        });
+    }
+}
 
 function segregate(slug) {
     if (segregated.value.includes(slug)) {
@@ -1441,6 +1452,17 @@ defineExpose({
                         @click="legend.segregate()">
                         {{ legend.name }}
                     </div>
+                </template>
+
+                <template #legendToggle>
+                    <BaseLegendToggle
+                        v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                        :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                        :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                        :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                        :checked="segregated.length > 0"
+                        @toggle="toggleLegend"
+                    />
                 </template>
             </Legend>
             <slot name="legend" v-bind:legend="legendSet" />

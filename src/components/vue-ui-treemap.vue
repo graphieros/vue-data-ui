@@ -51,6 +51,7 @@ import Legend from "../atoms/Legend.vue";
 import BaseIcon from '../atoms/BaseIcon.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import { useSvgExport } from '../useSvgExport';
+import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
@@ -975,6 +976,18 @@ const legendConfig = computed(() => {
     }
 });
 
+const allSegregated = computed(() => segregated.value.length === legendSet.value.length);
+
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        legendSet.value.forEach(l => {
+            segregated.value.push(l.id);
+        });
+    }
+}
+
 function segregate(rect) {
     selectedRect.value = null;
     if(segregated.value.includes(rect.id)) {
@@ -1031,6 +1044,8 @@ function onTrapLeave({ datapoint, seriesIndex }) {
 const dataTooltipSlot = ref(null);
 
 function useTooltip({ datapoint, seriesIndex }) {
+    if (allSegregated.value) return;
+
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
     }
@@ -1329,10 +1344,10 @@ function buildTreemapText({ rect, seriesIndex, isTitle = false }) {
     const valueText = showValue
         ? applyDataLabel(
             FINAL_CONFIG.value.style.chart.layout.labels.formatter,
-            rect.value,
+            rect.value ?? 0,
             dataLabel({
                 p: FINAL_CONFIG.value.style.chart.layout.labels.prefix,
-                v: rect.value,
+                v: rect.value ?? 0,
                 s: FINAL_CONFIG.value.style.chart.layout.labels.suffix,
                 r: FINAL_CONFIG.value.style.chart.layout.labels.rounding
             }),
@@ -1833,14 +1848,14 @@ defineExpose({
                     :y="parent.y0"
                     :height="getHeight(parent)"
                     :width="getWidth(parent)"
-                    :fill="FINAL_CONFIG.style.chart.layout.rects.group.useSeriesBackgroundColor ? lightenHexColor(parent.color, FINAL_CONFIG.style.chart.layout.rects.group.backgroundLighterRatio) : FINAL_CONFIG.style.chart.backgroundColor"
+                    :fill="FINAL_CONFIG.style.chart.layout.rects.group.useSeriesBackgroundColor ? lightenHexColor(parent.color ?? FINAL_CONFIG.style.chart.backgroundColor, FINAL_CONFIG.style.chart.layout.rects.group.backgroundLighterRatio) : FINAL_CONFIG.style.chart.backgroundColor"
                     :rx="0"
                     :stroke="FINAL_CONFIG.style.chart.layout.rects.group.stroke"
                     :stroke-width="FINAL_CONFIG.style.chart.layout.rects.group.strokeWidth"
                     class="vue-data-ui-cursor-default vue-ui-treemap-rect"
                 />
                 <foreignObject
-                    v-if="$slots['group-label']"
+                    v-if="$slots['group-label'] && !allSegregated"
                     :width="getWidth(parent)"
                     :height="getHeight(parent)"
                     :x="parent.x0"
@@ -1849,7 +1864,7 @@ defineExpose({
                     <slot name="group-label" v-bind="{ group: parent }"/>
                 </foreignObject>
 
-                <g v-else-if="!loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels"
+                <g v-else-if="!loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && !allSegregated"
                     style="pointer-events: none"
                     v-html="buildTreemapText({ rect: parent, seriesIndex: 0, isTitle: true })"
                     class="vue-data-ui-cursor-default"
@@ -1863,7 +1878,7 @@ defineExpose({
                     :y="rect.y0" 
                     :height="getHeight(rect)" 
                     :width="getWidth(rect)" 
-                    :fill="isSafari ? rect.color : FINAL_CONFIG.style.chart.layout.rects.gradient.show ? `url(#tgrad_${rect.id})` : rect.color"
+                    :fill="isSafari ? rect.color ?? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.rects.gradient.show ? allSegregated ? FINAL_CONFIG.style.chart.backgroundColor :  `url(#tgrad_${rect.id})` : rect.color ?? FINAL_CONFIG.style.chart.backgroundColor"
                     :rx="getSafeRadius(rect)"
                     :stroke="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.stroke : FINAL_CONFIG.style.chart.layout.rects.stroke"
                     :stroke-width="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.strokeWidth : FINAL_CONFIG.style.chart.layout.rects.strokeWidth"
@@ -1885,7 +1900,7 @@ defineExpose({
                 <!-- DEFAULT DATALABELS-->
                 <g 
                     :style="`pointer-events:none; opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
-                    v-if="!$slots.rect && !loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels" 
+                    v-if="!$slots.rect && !loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && !allSegregated" 
                     v-html="buildTreemapText({ rect, seriesIndex: i })" 
 
                 />
@@ -1948,6 +1963,17 @@ defineExpose({
                         <div :data-cy="`legend-item-${index}`" @click="segregate(legend)" :style="`opacity:${segregated.includes(legend.id) ? 0.5 : 1}`" v-if="!loading">
                             {{ legend.display }}
                         </div>
+                    </template>
+
+                    <template #legendToggle>
+                        <BaseLegendToggle
+                            v-if="legendSet.length > 2 && FINAL_CONFIG.style.chart.legend.selectAllToggle.show && !loading"
+                            :backgroundColor="FINAL_CONFIG.style.chart.legend.selectAllToggle.backgroundColor"
+                            :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
+                            :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
+                            :checked="segregated.length > 0"
+                            @toggle="toggleLegend"
+                        />
                     </template>
                 </Legend>
                 <slot v-else name="legend" v-bind:legend="legendSet" />

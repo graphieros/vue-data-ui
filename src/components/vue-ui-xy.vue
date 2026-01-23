@@ -74,6 +74,7 @@ import BaseScanner from '../atoms/BaseScanner.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
 import locales from '../locales/locales.json';
 import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
+import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 
 const props = defineProps({
     config: {
@@ -662,7 +663,9 @@ const relativeDataset = computed(() => {
             absoluteValues: datapoint.series,
         }
     }).filter(s => !segregatedSeries.value.includes(s.id));
-})
+});
+
+const allSegregated = computed(() => segregatedSeries.value.length === absoluteDataset.value.length);
 
 function getScaleLabelX() {
     let base = 0;
@@ -1235,6 +1238,16 @@ async function getImage({ scale = 2 } = {}) {
         width,
         height,
         aspectRatio
+    }
+}
+
+function toggleLegend() {
+    if (segregatedSeries.value.length) {
+        segregatedSeries.value = [];
+    } else {
+        absoluteDataset.value.forEach(s => {
+            segregatedSeries.value.push(s.id);
+        });
     }
 }
 
@@ -2405,6 +2418,7 @@ function generateCsv(callback = null) {
 }
 
 function toggleTooltipVisibility(show, selectedIndex = null) {
+    if (allSegregated.value) return;
     isTooltip.value = show;
 
     const datapoint = relativeDataset.value.map(s => {
@@ -4300,6 +4314,15 @@ defineExpose({
                     fontSize: `var(--legend-font-size, ${(FINAL_CONFIG.chart.legend.fontSize ?? 14)}px)`
                 }"
             >
+                <BaseLegendToggle
+                    v-if="FINAL_CONFIG.chart.legend.selectAllToggle.show && absoluteDataset.length > 2 && !loading"
+                    :backgroundColor="FINAL_CONFIG.chart.legend.selectAllToggle.backgroundColor"
+                    :color="FINAL_CONFIG.chart.legend.selectAllToggle.color"
+                    :fontSize="FINAL_CONFIG.chart.legend.fontSize"
+                    :checked="segregatedSeries.length > 0"
+                    @toggle="toggleLegend"
+                />
+
                 <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`"
                     :key="`div_legend_item_${i}`" @click="segregate(legendItem)"
                     :class="{ 'vue-ui-xy-legend-item-alone': absoluteDataset.length === 1 , 'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated': segregatedSeries.includes(legendItem.id) }">
