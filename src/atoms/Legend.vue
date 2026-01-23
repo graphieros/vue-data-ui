@@ -42,6 +42,10 @@ function handleClick(legend, i) {
         fontSize: `var(--legend-font-size, ${(config.fontSize ?? 14)}px)`
     }">
         <slot name="legendTitle" :titleSet="legendSet" />
+
+        <!-- For BaseLegendToggle -->
+        <slot name="legendToggle"/>
+        
         <div v-for="(legend, i) in legendSet" :key="`legend_${i}`"
             :class="{ 'vue-data-ui-legend-item': true, 'active': clickable }">
             <svg
