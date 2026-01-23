@@ -50,6 +50,15 @@ onMounted(() => {
                     { x: 12, y: 2.5, label: 'T4'},
                 ],
             },
+            {
+                name: 'Series 3',
+                values: [
+                    { x: 18, y: 3, label: 'T1'},
+                    { x: 12, y: 8, label: 'T2'},
+                    { x: 25, y: 2, label: 'T3'},
+                    { x: 42, y: 7, label: 'T4'},
+                ],
+            },
         ]
     }, 2000)
 })
@@ -119,6 +128,7 @@ const model = createModel([
     CHECKBOX("style.chart.axes.y.name.bold", { def: false }),
 
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     RANGE("style.chart.plots.radius", { def: 16, min: 8, max: 42 }),
     COLOR("style.chart.plots.stroke", { def: "#FFFFFF" }),

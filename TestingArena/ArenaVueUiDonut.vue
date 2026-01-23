@@ -232,8 +232,9 @@ const model = createModel([
     CHECKBOX('style.chart.legend.showValueFirst', { def: false }),
     CHECKBOX('style.chart.legend.usePercentageParens', { def: false }),
     CHECKBOX('style.chart.legend.useValueParens', { def: true }),
-
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
+
     TEXT("style.chart.title.text", { def: "Title", label: "textContent", category: "title" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A", label: "textColor", category: "title" }),
     NUMBER("style.chart.title.fontSize", { def: 20, min: 6, max: 48, label: "fontSize", category: "title" }),

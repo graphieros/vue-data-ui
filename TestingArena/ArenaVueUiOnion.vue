@@ -149,6 +149,7 @@ const model = createModel([
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
     CHECKBOX("style.chart.legend.showValue", { def: true }),
     CHECKBOX("style.chart.legend.showPercentage", { def: true }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     CHECKBOX("style.chart.tooltip.show", { def: true }),
     COLOR("style.chart.tooltip.backgroundColor", { def: "#FFFFFF" }),

@@ -43,10 +43,20 @@ onMounted(() => {
     setTimeout(() => {
         dataset.value = [
             {
-                name: 'Serie 3',
+                name: 'Serie 1',
                 shape: 'hexagon',
                 series: makeDs(10, 10)
-            }
+            },
+            {
+                name: 'Serie 2',
+                shape: 'circle',
+                series: makeDs(10, 10)
+            },
+            {
+                name: 'Serie 3',
+                shape: 'square',
+                series: makeDs(10, 10)
+            },
         ]
     }, 2000)
 
@@ -225,6 +235,7 @@ const model = createModel([
     COLOR("style.chart.legend.color", { def: "#1A1A1A" }),
     RANGE("style.chart.legend.fontSize", { def: 14, min: 8, max: 48 }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     CHECKBOX("table.show", { def: false }),
     CHECKBOX("table.useDialog", { def: true }),

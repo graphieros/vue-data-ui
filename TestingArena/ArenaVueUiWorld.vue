@@ -30,7 +30,7 @@ onMounted(() => {
         dataset.value = {
   AFG: { value: 20, category: 'CAT1', color: 'red' },     // Afghanistan
   ALB: { value: 18, category: 'CAT2', color: 'blue' },     // Albania
-  DZA: { value: 225 },    // Algeria
+  DZA: { value: 225, category: 'CAT3', color: 'green' },    // Algeria
   AND: { value: 3 },      // Andorra
   AGO: { value: 74 },     // Angola
   ATG: { value: 2 },      // Antigua and Barbuda
@@ -261,6 +261,7 @@ const model = createModel([
     CHECKBOX("style.chart.tooltip.showMinimap", { def: true }),
 
     SELECT("style.chart.legend.position", ["top","bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     CHECKBOX("table.show", { def: false }),
     CHECKBOX("table.useDialog", { def: true })

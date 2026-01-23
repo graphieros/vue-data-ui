@@ -98,6 +98,7 @@ const model = createModel([
     CHECKBOX("style.chart.legend.showValue", { def: true }),
     CHECKBOX("style.chart.legend.showPercentage", { def: true }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     TEXT("style.chart.title.text", { def: "Lorem ipsum dolor sit amet" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A" }),

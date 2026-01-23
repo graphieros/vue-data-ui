@@ -203,6 +203,7 @@ const model = createModel([
     TEXT("legendIcon", { def: "starFill" }),
     NUMBER("legendIconSize", { def: 12, min: 8, max: 48 }),
     SELECT("legendPosition", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('showLegendSelectAllToggle', { def: true }),
 
     CHECKBOX("lineSmooth", { def: true }),
     CHECKBOX("lineAnimated", { def: false }),
@@ -266,6 +267,7 @@ const model = createModel([
     RANGE("zoomMinimap.selectionRadius", { def: 2, min: 0, max: 24 }),
     COLOR("zoomMinimap.indicatorColor", { def: "#1A1A1A" }),
     CHECKBOX("zoomMinimap.verticalHandles", { def: false }),
+    CHECKBOX('zoomMinimap.merged', { def: false }),
 
     NUMBER("zoomStartIndex", { def: null, min: 0, max: 100 }),
     NUMBER("zoomEndIndex", { def: null, min: 0, max: 100 }),

@@ -39,6 +39,10 @@ onMounted(() => {
                 name: "Serie 2",
                 values: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50 ]
             },
+            {
+                name: "Serie 3",
+                values: [50, 50, 50, 50, 50, 50, 50, 50, 50, 50 ]
+            },
         ]
     }, 2000)
 })
@@ -152,6 +156,7 @@ const model = createModel([
     CHECKBOX("style.chart.legend.showValue", { def: true }),
     CHECKBOX("style.chart.legend.showPercentage", { def: false }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     NUMBER("table.responsiveBreakpoint", { def: 400, min: 300, max: 800 }),
     TEXT("table.columnNames.period", { def: "Period" }),

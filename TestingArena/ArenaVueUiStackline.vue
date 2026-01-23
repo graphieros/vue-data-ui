@@ -160,6 +160,7 @@ const model = createModel([
     COLOR("style.chart.legend.color", { def: "#1A1A1A" }),
     NUMBER("style.chart.legend.fontSize", { def: 14, min: 8, max: 42 }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     CHECKBOX("style.chart.zoom.show", { def: true }),
     COLOR("style.chart.zoom.color", { def: "#CCCCCC" }),

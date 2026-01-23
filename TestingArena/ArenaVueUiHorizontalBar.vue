@@ -202,6 +202,7 @@ const model = createModel([
     NUMBER("style.chart.legend.roundingPercentage", { def: 0, min: 0, max: 6 }),
     TEXT("style.chart.legend.prefix", { def: "P" }),
     TEXT("style.chart.legend.suffix", { def: "S" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     CHECKBOX("style.chart.tooltip.show", { def: true }),
     COLOR("style.chart.tooltip.backgroundColor", { def: "#FFFFFF" }),

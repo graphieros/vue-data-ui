@@ -189,6 +189,7 @@ const model = createModel([
     CHECKBOX('style.chart.legend.showValueFirst', { def: false }),
     CHECKBOX('style.chart.legend.usePercentageParens', { def: false }),
     CHECKBOX('style.chart.legend.useValueParens', { def: true }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true })
 ]);
 
 const testCustomTooltip = ref(false);

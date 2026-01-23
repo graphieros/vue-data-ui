@@ -189,6 +189,7 @@ const model = createModel([
     NUMBER("style.chart.legend.fontSize", { def: 16, min: 8, max: 42 }),
     CHECKBOX("style.chart.legend.bold", { def: false }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     TEXT("style.chart.title.text", { def: "Lorem ipsum placer" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A" }),

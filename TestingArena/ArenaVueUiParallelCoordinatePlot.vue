@@ -66,6 +66,23 @@ onMounted(() => {
                     },
                 ]
             },
+            {
+                name: "Series 3",
+                series: [
+                    {
+                        name: 'Item 3.1',
+                        values: [1300, 130, 13, 1.3]
+                    },
+                    {
+                        name: 'Item 3.2',
+                        values: [1500, 150, 15, 1.5]
+                    },
+                    {
+                        name: 'Item 3.3',
+                        values: [1800, 180, 18, 1.8]
+                    },
+                ]
+            },
         ]
     }, 2000)
 })
@@ -162,6 +179,7 @@ const model = createModel([
     NUMBER("style.chart.legend.fontSize", { def: 16, min: 8, max: 42 }),
     CHECKBOX("style.chart.legend.bold", { def: false }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     CHECKBOX("style.chart.tooltip.show", { def: true }),
     COLOR("style.chart.tooltip.color", { def: "#1A1A1A" }),

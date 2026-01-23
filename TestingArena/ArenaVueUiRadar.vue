@@ -199,6 +199,7 @@ const model = createModel([
     RANGE("style.chart.legend.fontSize", { def: 14, min: 8, max: 48 }),
     RANGE("style.chart.legend.roundingPercentage", { def: 2, min: 0, max: 12 }),
     SELECT("style.chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
 
     CHECKBOX("table.show", { def: false }),
     CHECKBOX("table.useDialog", { def: true }),

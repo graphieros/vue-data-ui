@@ -66,9 +66,9 @@ const dataset = ref(undefined);
 onMounted(() => {
     setTimeout(() => {
         dataset.value = [
-            { name: 'Moscow', datapoints: [{ color: '#ff3700', name: 'Average Monthly Temperature (°C)', values: [-7, -6, 0, 8, 15, 18, 20, 18, 13, 7, 1, -4] }] },       // Mean ≈ 7°C
-            { name: 'Chicago', datapoints: [{ color: '#6376DD', name: 'Average Monthly Temperature (°C)', values: [-4, -2, 3, 10, 16, 22, 24, 23, 19, 12, 5, -1] }] }, // Mean ≈ 10°C
-            { name: 'Toronto', datapoints: [{ name: 'Average Monthly Temperature (°C)', values: [-3, -2, 2, 9, 15, 20, 22, 21, 17, 10, 4, -1] }] }, // Mean ≈ 9°C
+            { name: 'Moscow', datapoints: [{ color: '#ff3700', name: 'Series A', values: [-7, -6, 0, 8, 15, 18, 20, 18, 13, 7, 1, -4] }] },       // Mean ≈ 7°C
+            { name: 'Chicago', datapoints: [{ color: '#6376DD', name: 'Series B', values: [-4, -2, 3, 10, 16, 22, 24, 23, 19, 12, 5, -1] }] }, // Mean ≈ 10°C
+            { name: 'Toronto', datapoints: [{ color: '#AADDAA', name: 'Series C', values: [-3, -2, 2, 9, 15, 20, 22, 21, 17, 10, 4, -1] }] }, // Mean ≈ 9°C
             { name: 'Berlin', datapoints: [{ name: 'Average Monthly Temperature (°C)', values: [0, 2, 6, 12, 16, 19, 21, 21, 17, 12, 7, 3] }] },     // Mean ≈ 12°C
             { name: 'Beijing', datapoints: [{ name: 'Average Monthly Temperature (°C)', values: [-3, 0, 6, 14, 20, 24, 26, 25, 20, 13, 5, -1] }] },  // Mean ≈ 12°C
             { name: 'London', datapoints: [{ name: 'Average Monthly Temperature (°C)', values: [5, 6, 8, 11, 15, 18, 20, 20, 17, 13, 9, 6] }] },     // Mean ≈ 13°C
@@ -154,7 +154,9 @@ const model = createModel([
     COLOR("style.chart.yAxis.labels.color", { def: "#1A1A1A" }),
     NUMBER("style.chart.yAxis.labels.offsetX", { def: 0, min: -100, max: 100 }),
     CHECKBOX("table.show", { def: false }),
-    CHECKBOX("table.useDialog", { def: true })
+    CHECKBOX("table.useDialog", { def: true }),
+
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true })
 ]);
 
 

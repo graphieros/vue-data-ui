@@ -66,6 +66,11 @@ onMounted(() => {
                 values: scat1.value,
                 shape: "star",
             },
+            {
+                name: "Cluster 3",
+                values: scat1.value,
+                shape: "square",
+            },
         ]
     }, 0)
 })
@@ -248,6 +253,7 @@ const model = createModel([
     CHECKBOX("style.legend.bold", { def: false }),
     NUMBER("style.legend.roundingValue", { def: 0, min: 0, max: 6 }),
     SELECT("style.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('style.legend.selectAllToggle.show', { def: true }),
 
     CHECKBOX("style.tooltip.show", { def: true }),
     COLOR("style.tooltip.backgroundColor", { def: "#FFFFFF" }),

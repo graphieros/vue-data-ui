@@ -158,6 +158,9 @@ const model = createModel([
     CHECKBOX('style.chart.legend.showValueFirst', { def: true }),
     CHECKBOX('style.chart.legend.usePercentageParens', { def: true }),
     CHECKBOX('style.chart.legend.useValueParens', { def: false }),
+    CHECKBOX('style.chart.legend.selectAllToggle.show', { def: true }),
+    COLOR('style.chart.legend.selectAllToggle.backgroundColor', { def: '#FF0000' }),
+    COLOR('style.chart.legend.selectAllToggle.color', { def: '#FFFFFF' }),
 
     TEXT("style.chart.title.text", { def: "Lorem ipsum dolor sit amet" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A" }),

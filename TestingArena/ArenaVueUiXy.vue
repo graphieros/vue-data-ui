@@ -801,6 +801,9 @@ const model = createModel([
     COLOR("chart.legend.color", { def: "#1A1A1A" }),
     NUMBER("chart.legend.fontSize", { def: 16, min: 10, max: 36 }),
     SELECT("chart.legend.position", ["top", "bottom"], { def: "bottom" }),
+    CHECKBOX('chart.legend.selectAllToggle.show', { def: true }),
+    COLOR('chart.legend.selectAllToggle.backgroundColor', {def: '#FF0000'}),
+    COLOR('chart.legend.selectAllToggle.color', {def: '#FFFFFF'}),
 
     CHECKBOX("chart.title.show", { def: true }),
     TEXT("chart.title.text", { def: "Title" }),
