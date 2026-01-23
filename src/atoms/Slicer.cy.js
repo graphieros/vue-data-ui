@@ -65,6 +65,9 @@ describe("<Slicer />", () => {
                     slicerStep,
                     slicer,
                     minimap: ds,
+                    allMinimaps: [
+                        { id: "mm", series: ds, isVisible: true, color: "#2D353C", type: "line", smooth: false },
+                        ],
                     events,
                     onFutureStart,
                     onFutureEnd,
@@ -89,6 +92,7 @@ describe("<Slicer />", () => {
                 :inputColor="FINAL_CONFIG.style.chart.zoom.color"
                 :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"
                 :minimap="minimap"
+                :allMinimaps="allMinimaps"
                 :max="maxLength"
                 :min="0"
                 :valueStart="slicer.start"

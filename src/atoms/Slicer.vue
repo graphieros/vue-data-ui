@@ -162,7 +162,7 @@ const props = defineProps({
 const zoomWrapper = ref(null);
 const startValue = ref(props.min);
 const endValue = ref(props.max);
-const hasMinimap = computed(() => !!props.minimap.length);
+const hasMinimap = computed(() => !!props.allMinimaps.length);
 const uid = ref(createUid());
 const useMini = computed(() => hasMinimap.value && props.minimapCompact);
 
@@ -1256,6 +1256,8 @@ const selectionIndicator = computed(() => {
                         <!-- TOOLTIP TRAPS -->
                         <rect 
                             v-for="(trap, i) in availableTraps"
+                            :key="`trap-${i}`"
+                            data-cy="slicer-trap"
                             :y="0"
                             :height="Math.max(svgMinimap.height, 0)"
                             fill="transparent"
@@ -1263,7 +1265,9 @@ const selectionIndicator = computed(() => {
                             :x="unitWidthX * i - (minimapCompact ? unitWidthX / 2 : 0)"
                             :width="unitWidthX < 0 ? 0 : unitWidthX"
                             :style="{
-                                cursor: trap >= startMini && trap < endMini && enableSelectionDrag ? isMouseDown ? 'grabbing' : 'grab' : 'default'
+                                cursor: trap >= startMini && trap < endMini && enableSelectionDrag
+                                ? isMouseDown ? 'grabbing' : 'grab'
+                                : 'default'
                             }"
                             @mousedown="isMouseDown = true"
                             @mouseup="isMouseDown = false"

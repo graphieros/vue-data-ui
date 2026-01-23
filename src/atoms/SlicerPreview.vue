@@ -192,13 +192,18 @@ const props = defineProps({
     maxScale: {
         type: Number,
         default: null,
+    },
+    // Used to center zero line in VueUiStackBar (non distributed mode)
+    forceZeroCenter: {
+        type: Boolean,
+        default: false,
     }
 });
 
 const zoomWrapper = ref(null);
 const startValue = ref(props.min);
 const endValue = ref(props.max);
-const hasMinimap = computed(() => !!props.minimap.length);
+const hasMinimap = computed(() => !!props.allMinimaps.length);
 const uid = ref(createUid());
 const isRanging = ref(false);
 const useMini = computed(() => hasMinimap.value && props.minimapCompact);
@@ -404,7 +409,6 @@ const maxSeries = computed(() => {
 })
 
 const unitWidthX = computed(() => {
-    if (!props.minimap.length) return 0;
     const denom = Math.max(1, maxSeries.value - (props.minimapCompact ? 1 : 0));
     return svgMinimap.value.width / denom;
 });
@@ -448,11 +452,13 @@ const globalRange = computed(() => {
 });
 
 const parsedMinScale = computed(() => {
+    if (props.minScale == null && props.forceZeroCenter) return null;
     const n = Number(props.minScale);
     return Number.isFinite(n) ? n : null;
 });
 
 const parsedMaxScale = computed(() => {
+    if (props.maxScale == null && props.forceZeroCenter) return null;
     const n = Number(props.maxScale);
     return Number.isFinite(n) ? n : null;
 });
@@ -498,7 +504,6 @@ const scaleMin = computed(() => {
 
 const mapY = (val) => {
     const H = Math.max(1, svgMinimap.value.height);
-
     const mapper = makeSmartMapY(
         allMin.value,
         allMax.value,
