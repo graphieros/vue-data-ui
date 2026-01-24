@@ -5857,6 +5857,20 @@ declare module "vue-data-ui" {
                 color?: string;
                 strokeWidth?: number;
                 smooth?: boolean;
+                pulse?: {
+                    show?: boolean;
+                    color?: string;
+                    radius?: number
+                    durationMs?: number;
+                    easeing?: 'ease-in-out' | 'ease' | 'ease-in' | 'ease-out' | 'linear' | 'cubic-bezizer';
+                    cubicBezier: [number, number, number, number];
+                    trail?: {
+                        show?: boolean;
+                        length?: number;
+                        opacity?: number;
+                        strokeWidth?: number;
+                    };
+                };
             };
             bar?: {
                 borderRadius?: number;

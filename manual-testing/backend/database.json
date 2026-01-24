@@ -500,7 +500,7 @@
       "description": "Optional pulse config, along the path. Configurable (color, duration, size)",
       "priority": 2,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "feature",
       "withComponentCheckList": false,
@@ -509,7 +509,7 @@
       "customCheckList": {},
       "id": "73cfb4ef-cdc9-4f12-b513-68d61ab9b51f",
       "createdAt": 1769258902001,
-      "updatedAt": 1769258902001
+      "updatedAt": 1769271441343
     }
   ]
 }

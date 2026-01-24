@@ -114,6 +114,11 @@ const model = createModel([
     NUMBER("style.scaleMin", { def: null, min: -1000, max: 1000 }),
     NUMBER("style.scaleMax", { def: null, min: -1000, max: 1000 }),
 
+    CHECKBOX('style.line.pulse.show', { def: true }),
+    COLOR('style.line.pulse.color', { def: '#FF0000'}),
+    NUMBER('style.line.pulse.trail.length', { def: 12 }),
+    NUMBER('style.line.pulse.durationMs', { def: 10000 }),
+
     NUMBER("style.padding.top", { def: 12, min: 0, max: 100 }),
     NUMBER("style.padding.right", { def: 12, min: 0, max: 100 }),
     NUMBER("style.padding.bottom", { def: 3, min: 0, max: 100 }),

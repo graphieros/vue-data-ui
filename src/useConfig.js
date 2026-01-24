@@ -2770,7 +2770,21 @@ export function useConfig(options = {}) {
             line: {
                 color: COLOR_BLUE,
                 strokeWidth: 3,
-                smooth: false
+                smooth: false,
+                pulse: {
+                    show: false,
+                    color: COLOR_WHITE,
+                    durationMs: 4000,
+                    easing: 'ease-in-out',
+                    radius: 4,
+                    cubicBezier: [0.45, 0.45, 0.55, 0.55],
+                    trail: {
+                        show: true,
+                        length: 6,
+                        opacity: 0.75,
+                        strokeWidth: 3
+                    }
+                },
             },
             bar: {
                 borderRadius: 3,

@@ -12,7 +12,6 @@ import {
     fib,
     forceValidValue,
     getMissingDatasetAttributes,
-    hasDeepProperty,
     largestTriangleThreeBucketsArrayObjects,
     objectIsEmpty,
     setOpacity,
@@ -103,7 +102,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading(({
                 scaleMin: 0,
                 scaleMax: null,
                 animation: { show: false },
-                line: { color: '#AAAAAA' },
+                line: { color: '#AAAAAA', pulse: { show: false } },
                 bar: { color: '#AAAAAA' },
                 area: { color: '#CACACA' },
                 zeroLine: { color: '#6A6A6A' },
@@ -148,6 +147,81 @@ function prepareConfig() {
 
     return finalConfig;
 }
+
+const pulse = computed(() => FINAL_CONFIG.value?.style?.line.pulse || {});
+const pulsePathId = computed(() => `sparkline_line_path_${uid.value}`);
+const pulseDur = computed(() => `${Math.max(200, Number(pulse.value.durationMs) || 4000) / 1000}s`);
+const pulsePathLength = ref(0);
+const pulseBegin = computed(() => pulse.value?.begin || '0s');
+const pulseKeyPoints = ref('0;1');
+
+const pulseTrailOffset = computed(() => {
+    // distance (in px along the path) to push the dash segment behind the head
+    // include a bit of extra so the round cap does not overlap the dot
+    const extra = Math.max(2, (pulseTrail.value.width || 0) * 0.75);
+    return (pulseTrail.value.lengthPx || 0) + extra;
+});
+
+function updatePulsePathLength() {
+    const el = svgRef.value?.querySelector?.(`#${pulsePathId.value}`);
+    if (el && typeof el.getTotalLength === "function") {
+        const len = el.getTotalLength();
+        pulsePathLength.value = Number.isFinite(len) ? len : 0;
+    } else {
+        pulsePathLength.value = 0;
+    }
+}
+
+const pulseMotion = computed(() => {
+    const easing = pulse.value?.easing || 'ease-in-out';
+
+    const presets = {
+        ease: [0.25, 0.1, 0.25, 1],
+        'ease-in': [0.42, 0, 1, 1],
+        'ease-out': [0, 0, 0.58, 1],
+        'ease-in-out': [0.42, 0, 0.58, 1],
+    };
+
+    if (easing === 'linear') {
+        return {
+            calcMode: 'linear',
+            keySplines: null,
+            keyTimes: '0;1',
+        };
+    }
+
+    if (easing === 'steps') {
+        return {
+            calcMode: 'discrete',
+            keySplines: null,
+            keyTimes: '0;1',
+        };
+    }
+
+    const bez = easing === 'cubic-bezier'
+        ? (Array.isArray(pulse.value?.cubicBezier) && pulse.value.cubicBezier.length === 4 ? pulse.value.cubicBezier : [0.4, 0, 0.2, 1])
+        : (presets[easing] || presets['ease-in-out']);
+
+    return {
+        calcMode: 'spline',
+        keySplines: bez.join(' '),
+        keyTimes: '0;1',
+    };
+});
+
+const pulseTrail = computed(() => {
+    const t = pulse.value?.trail || {};
+    const base = FINAL_CONFIG.value.style.line.strokeWidth || 1;
+
+    return {
+        show: t.show !== false,
+        lengthPx: Math.max(8, Number(t.length) || 32),
+        width: Math.max(1, Number(t.strokeWidth) || (base * 2.2)),
+        opacity: Math.min(1, Math.max(0, Number(t.opacity) ?? 0.6)),
+        fadeIn: 0.5 ,
+        fadeOut: 0.2,
+    };
+});
 
 const downsampled = computed(() => {
     return largestTriangleThreeBucketsArrayObjects({
@@ -529,6 +603,20 @@ function selectDatapoint(datapoint, index) {
     }
     emits('selectDatapoint', { datapoint, index })
 }
+
+watch(
+    () => [mutableDataset.value.length, svg.value.width, svg.value.height, FINAL_CONFIG.value?.style?.line?.smooth],
+    async () => {
+        await nextTick();
+        updatePulsePathLength();
+    },
+    { immediate: true }
+);
+
+onMounted(async () => {
+    await nextTick();
+    updatePulsePathLength();
+});
 </script>
 
 <template>
@@ -594,7 +682,16 @@ function selectDatapoint(datapoint, index) {
                     <stop offset="0%" :stop-color="shiftHue(FINAL_CONFIG.style.bar.color, 0.05)"/>
                     <stop offset="100%" :stop-color="FINAL_CONFIG.style.bar.color"/>
                 </linearGradient>
+
+                <filter :id="`sparkline_pulse_glow_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="5" result="blur" />
+                    <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
             </defs>
+
 
             <!-- AREA -->
             <g v-if="FINAL_CONFIG.style.area.show && !isBar && mutableDataset[0] && mutableDataset.length > 1">
@@ -616,9 +713,132 @@ function selectDatapoint(datapoint, index) {
                 />
             </g>
 
-            <path data-cy="sparkline-smooth-path" v-if="FINAL_CONFIG.style.line.smooth && !isBar" :d="`M ${createSmoothPath(mutableDataset) || '0,0'}`" :stroke="FINAL_CONFIG.style.line.color" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
+            <path 
+                data-cy="sparkline-smooth-path" 
+                v-if="FINAL_CONFIG.style.line.smooth && !isBar"
+                :id="pulsePathId"
+                :d="`M ${createSmoothPath(mutableDataset) || '0,0'}`" 
+                :stroke="FINAL_CONFIG.style.line.color" fill="none" 
+                :stroke-width="FINAL_CONFIG.style.line.strokeWidth" 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+            />
 
-            <path data-cy="sparkline-straight-line" v-if="!FINAL_CONFIG.style.line.smooth && !isBar" :d="`M ${createStraightPath(mutableDataset) || '0,0'}`" :stroke="FINAL_CONFIG.style.line.color" fill="none" :stroke-width="FINAL_CONFIG.style.line.strokeWidth" stroke-linecap="round" stroke-linejoin="round"/>
+            <path 
+                data-cy="sparkline-straight-line" 
+                v-if="!FINAL_CONFIG.style.line.smooth && !isBar"
+                :id="pulsePathId"
+                :d="`M ${createStraightPath(mutableDataset) || '0,0'}`" 
+                :stroke="FINAL_CONFIG.style.line.color" 
+                fill="none" 
+                :stroke-width="FINAL_CONFIG.style.line.strokeWidth" 
+                stroke-linecap="round" stroke-linejoin="round"
+            />
+
+            <g v-if="pulse.show && pulseTrail.show && !isBar && mutableDataset.length > 1 && pulsePathLength > 0" style="pointer-events:none">
+                <path
+                    :d="(FINAL_CONFIG.style.line.smooth
+                    ? `M ${createSmoothPath(mutableDataset) || '0,0'}`
+                    : `M ${createStraightPath(mutableDataset) || '0,0'}`
+                    )"
+                    :stroke="pulse.color"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    :stroke-width="pulseTrail.width"
+                    opacity="0"
+                    :stroke-dasharray="`${pulseTrail.lengthPx} ${Math.max(1, pulsePathLength - pulseTrail.lengthPx)}`"
+                >
+                    <!-- move the visible segment along the full path continuously -->
+                    <animate
+                        attributeName="stroke-dashoffset"
+                        :begin="pulseBegin"
+                        :dur="pulseDur"
+                        repeatCount="indefinite"
+                        :calcMode="pulseMotion.calcMode"
+                        :keySplines="pulseMotion.keySplines || undefined"
+                        :keyTimes="pulseMotion.keyTimes || undefined"
+                        :from="pulsePathLength + pulseTrailOffset"
+                        :to="pulseTrailOffset"
+                    />
+
+                    <!-- fade in/out so it does not pop at loop boundary -->
+                    <animate
+                        attributeName="opacity"
+                        :begin="pulseBegin"
+                        :values="`0;${pulseTrail.opacity};${pulseTrail.opacity};0`"
+                        :keyTimes="`0;${pulseTrail.fadeIn};${1 - pulseTrail.fadeOut};1`"
+                        :dur="pulseDur"
+                        repeatCount="indefinite"
+                    />
+                </path>
+            </g>
+
+
+            <g v-if="pulse.show && !isBar && mutableDataset.length > 1" style="pointer-events:none">
+                <!-- moving dot -->
+                <circle
+                    :r="pulse.radius"
+                    :fill="pulse.color"
+                    :filter="`url(#sparkline_pulse_glow_${uid})`"
+                    opacity="0"
+                >
+                    <animateMotion
+                        id="sparkline_pulse_motion"
+                        :begin="pulseBegin"
+                        :dur="pulseDur"
+                        repeatCount="indefinite"
+                        :calcMode="pulseMotion.calcMode"
+                        :keySplines="pulseMotion.keySplines || undefined"
+                        :keyTimes="pulseMotion.keyTimes || undefined"
+                        keyPoints="0;1"
+                        keyPointsKeyTimes="0;1"
+                        :keyPoints="pulseKeyPoints"
+                        rotate="auto"
+                    >
+                        <mpath :href="`#${pulsePathId}`" />
+                    </animateMotion>
+
+                    <animate
+                        attributeName="opacity"
+                        values="0;1;1;0"
+                        keyTimes="0;0.1;0.9;1"
+                        :dur="pulseDur"
+                        repeatCount="indefinite"
+                    />
+                </circle>
+
+                <!-- pulsing halo -->
+                <circle
+                    :r="Math.max(pulse.radius * 1.3)"
+                    :fill="pulse.color"
+                    opacity="0"
+                >
+                    <animateMotion
+                        :begin="pulseBegin"
+                        :dur="pulseDur"
+                        repeatCount="indefinite"
+                        :calcMode="pulseMotion.calcMode"
+                        :keySplines="pulseMotion.keySplines || undefined"
+                        :keyTimes="pulseMotion.keyTimes || undefined"
+                        :keyPoints="pulseKeyPoints"
+                        keyPointsKeyTimes="0;1"
+                        rotate="auto"
+                    >
+                        <mpath :href="`#${pulsePathId}`" />
+                    </animateMotion>
+
+                    <animate
+                        attributeName="opacity"
+                        values="0;0.35;0.35;0"
+                        keyTimes="0;0.15;0.85;1"
+                        :dur="pulseDur"
+                        repeatCount="indefinite"
+                    />
+
+         
+                </circle>
+            </g>
             
             <g v-for="(plot, i) in mutableDataset">
                 <rect
