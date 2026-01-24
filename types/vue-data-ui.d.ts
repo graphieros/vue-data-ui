@@ -5859,6 +5859,7 @@ declare module "vue-data-ui" {
                 smooth?: boolean;
                 pulse?: {
                     show?: boolean;
+                    loop?: boolean;
                     color?: string;
                     radius?: number
                     durationMs?: number;

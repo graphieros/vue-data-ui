@@ -118,6 +118,7 @@ const model = createModel([
     COLOR('style.line.pulse.color', { def: '#FF0000'}),
     NUMBER('style.line.pulse.trail.length', { def: 12 }),
     NUMBER('style.line.pulse.durationMs', { def: 10000 }),
+    CHECKBOX('style.line.pulse.loop', { def: false }),
 
     NUMBER("style.padding.top", { def: 12, min: 0, max: 100 }),
     NUMBER("style.padding.right", { def: 12, min: 0, max: 100 }),

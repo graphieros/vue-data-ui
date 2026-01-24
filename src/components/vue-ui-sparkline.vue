@@ -157,6 +157,14 @@ const pulsePathLength = ref(0);
 const pulseBegin = computed(() => pulse.value?.begin || '0s');
 const pulseKeyPoints = ref('0;1');
 
+const pulseRepeatCount = computed(() => {
+    return pulse.value?.loop === false ? '1' : 'indefinite';
+});
+
+const pulseFillMode = computed(() => {
+    return pulse.value?.loop === false ? 'freeze' : undefined;
+});
+
 const pulseTrailOffset = computed(() => {
     // distance (in px along the path) to push the dash segment behind the head
     // include a bit of extra so the round cap does not overlap the dot
@@ -756,7 +764,8 @@ onMounted(async () => {
                         attributeName="stroke-dashoffset"
                         :begin="pulseBegin"
                         :dur="pulseDur"
-                        repeatCount="indefinite"
+                        :repeatCount="pulseRepeatCount"
+                        :fill="pulseFillMode"
                         :calcMode="pulseMotion.calcMode"
                         :keySplines="pulseMotion.keySplines || undefined"
                         :keyTimes="pulseMotion.keyTimes || undefined"
@@ -768,10 +777,11 @@ onMounted(async () => {
                     <animate
                         attributeName="opacity"
                         :begin="pulseBegin"
+                        :dur="pulseDur"
+                        :repeatCount="pulseRepeatCount"
+                        :fill="pulseFillMode"
                         :values="`0;${pulseTrail.opacity};${pulseTrail.opacity};0`"
                         :keyTimes="`0;${pulseTrail.fadeIn};${1 - pulseTrail.fadeOut};1`"
-                        :dur="pulseDur"
-                        repeatCount="indefinite"
                     />
                 </path>
             </g>
@@ -786,15 +796,13 @@ onMounted(async () => {
                     opacity="0"
                 >
                     <animateMotion
-                        id="sparkline_pulse_motion"
                         :begin="pulseBegin"
                         :dur="pulseDur"
-                        repeatCount="indefinite"
+                        :repeatCount="pulseRepeatCount"
+                        :fill="pulseFillMode"
                         :calcMode="pulseMotion.calcMode"
                         :keySplines="pulseMotion.keySplines || undefined"
                         :keyTimes="pulseMotion.keyTimes || undefined"
-                        keyPoints="0;1"
-                        keyPointsKeyTimes="0;1"
                         :keyPoints="pulseKeyPoints"
                         rotate="auto"
                     >
@@ -803,10 +811,11 @@ onMounted(async () => {
 
                     <animate
                         attributeName="opacity"
+                        :dur="pulseDur"
+                        :repeatCount="pulseRepeatCount"
+                        :fill="pulseFillMode"
                         values="0;1;1;0"
                         keyTimes="0;0.1;0.9;1"
-                        :dur="pulseDur"
-                        repeatCount="indefinite"
                     />
                 </circle>
 
@@ -819,7 +828,7 @@ onMounted(async () => {
                     <animateMotion
                         :begin="pulseBegin"
                         :dur="pulseDur"
-                        repeatCount="indefinite"
+                        :repeatCount="pulseRepeatCount"
                         :calcMode="pulseMotion.calcMode"
                         :keySplines="pulseMotion.keySplines || undefined"
                         :keyTimes="pulseMotion.keyTimes || undefined"
@@ -835,10 +844,8 @@ onMounted(async () => {
                         values="0;0.35;0.35;0"
                         keyTimes="0;0.15;0.85;1"
                         :dur="pulseDur"
-                        repeatCount="indefinite"
+                        :repeatCount="pulseRepeatCount"
                     />
-
-         
                 </circle>
             </g>
             
