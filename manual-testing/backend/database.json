@@ -443,7 +443,7 @@
       "description": "Add an optional toggle in the legend to un|select series.",
       "priority": 0,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "feature",
       "withComponentCheckList": false,
@@ -470,11 +470,12 @@
         "vue-ui-treemap": true,
         "vue-ui-waffle": true,
         "vue-ui-world": true,
-        "vue-ui-xy-canvas": true
+        "vue-ui-xy-canvas": true,
+        "vue-ui-sparkstackbar": true
       },
       "id": "b6517f42-f509-4753-a733-75da4efe30d8",
       "createdAt": 1769100362708,
-      "updatedAt": 1769184662229
+      "updatedAt": 1769235461769
     },
     {
       "title": "VueUiRings examples",
