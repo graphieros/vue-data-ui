@@ -29,12 +29,14 @@ import { useTimeLabels } from "../useTimeLabels";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes/vue_ui_sparkline.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const SparkTooltip = defineAsyncComponent(() => import('../atoms/SparkTooltip.vue'));
 
 const { vue_ui_sparkline: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -735,7 +737,7 @@ onMounted(async () => {
                 stroke-linecap="round" stroke-linejoin="round"
             />
 
-            <g v-if="pulse.show && pulseTrail.show && !isBar && mutableDataset.length > 1 && pulsePathLength > 0" style="pointer-events:none">
+            <g v-if="pulse.show && pulseTrail.show && !isBar && mutableDataset.length > 1 && pulsePathLength > 0 && !prefersReducedMotion" style="pointer-events:none">
                 <path
                     :d="(FINAL_CONFIG.style.line.smooth
                     ? `M ${createSmoothPath(mutableDataset) || '0,0'}`
@@ -775,7 +777,7 @@ onMounted(async () => {
             </g>
 
 
-            <g v-if="pulse.show && !isBar && mutableDataset.length > 1" style="pointer-events:none">
+            <g v-if="pulse.show && !isBar && mutableDataset.length > 1 &&!prefersReducedMotion" style="pointer-events:none">
                 <!-- moving dot -->
                 <circle
                     :r="pulse.radius"
