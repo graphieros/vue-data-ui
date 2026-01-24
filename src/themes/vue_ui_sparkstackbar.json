@@ -25,6 +25,10 @@
                 },
                 "percentage": {
                     "color": "#CCCCCC"
+                },
+                "selectAllToggle": {
+                    "backgroundColor": "#3A3A3A",
+                    "color": "#CCCCCC"
                 }
             },
             "title": {
@@ -57,6 +61,10 @@
                     "color": "#CCCCCC"
                 },
                 "percentage": {
+                    "color": "#CCCCCC"
+                },
+                "selectAllToggle": {
+                    "backgroundColor": "#3A3A3A",
                     "color": "#CCCCCC"
                 }
             },
@@ -91,6 +99,10 @@
                 },
                 "percentage": {
                     "color": "#424242"
+                },
+                "selectAllToggle": {
+                    "backgroundColor": "#5D4037",
+                    "color": "#FFF8E1"
                 }
             },
             "title": {
@@ -123,6 +135,10 @@
                     "color": "#BDBDBD"
                 },
                 "percentage": {
+                    "color": "#BDBDBD"
+                },
+                "selectAllToggle": {
+                    "backgroundColor": "#3A3A3A",
                     "color": "#BDBDBD"
                 }
             },
@@ -157,6 +173,10 @@
                 },
                 "percentage": {
                     "color": "#99CC99"
+                },
+                "selectAllToggle": {
+                    "backgroundColor": "#3A3A3A",
+                    "color": "#99AA99"
                 }
             },
             "title": {
@@ -189,6 +209,10 @@
                 },
                 "percentage": {
                     "color": "#8A9892"
+                },
+                "selectAllToggle": {
+                    "backgroundColor": "#E0CFC3",
+                    "color": "#8F837A"
                 }
             },
             "title": {
@@ -220,6 +244,10 @@
                 },
                 "percentage": {
                     "color": "#61747E"
+                },
+                "selectAllToggle": {
+                    "backgroundColor": "#50606C",
+                    "color": "#f6f6fb"
                 }
             },
             "title": {
