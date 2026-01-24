@@ -2362,6 +2362,11 @@ declare module "vue-data-ui" {
                     bold?: boolean;
                     rounding?: number;
                 };
+                selectAllToggle?: {
+                    show?: boolean;
+                    backgroundColor?: string;
+                    color?: string;
+                };
             };
             title?: {
                 textAlign?: TextAlign;

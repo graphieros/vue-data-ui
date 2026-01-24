@@ -1,5 +1,13 @@
 <script setup>
-import { ref, computed, onMounted, watch, useSlots, defineAsyncComponent, toRefs } from "vue";
+import { 
+    computed, 
+    defineAsyncComponent, 
+    onMounted, 
+    ref, 
+    toRefs,
+    useSlots, 
+    watch, 
+} from "vue";
 import {
     applyDataLabel,
     convertColorToHex, 
@@ -24,6 +32,7 @@ import { useThemeCheck } from "../useThemeCheck";
 import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes/vue_ui_sparkstackbar.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -261,6 +270,15 @@ const mutableDataset = computed(() => {
     return absoluteDataset.value.filter((_ds, i) => !segregated.value.includes(i))
 });
 
+function toggleLegend() {
+    if (segregated.value.length) {
+        segregated.value = [];
+    } else {
+        absoluteDataset.value.forEach((_,i) => {
+            segregated.value.push(i);
+        });
+    }
+}
 
 function segregate(index) {
     if(segregated.value.includes(index)) {
@@ -509,6 +527,14 @@ defineExpose({
             :style="`background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.legend.margin};justify-content:${FINAL_CONFIG.style.legend.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" 
             class="vue-ui-sparkstackbar-legend"
         >
+            <BaseLegendToggle
+                v-if="FINAL_CONFIG.style.legend.selectAllToggle.show && absoluteDataset.length > 2 && !loading"
+                :backgroundColor="FINAL_CONFIG.style.legend.selectAllToggle.backgroundColor"
+                :color="FINAL_CONFIG.style.legend.selectAllToggle.color"
+                :fontSize="FINAL_CONFIG.style.legend.fontSize"
+                :checked="segregated.length > 0"
+                @toggle="toggleLegend"
+            />
             <div
                 data-cy="legend-item"
                 v-for=" (rect, i) in absoluteDataset" 
@@ -610,6 +636,7 @@ defineExpose({
 
 .vue-ui-sparkstackbar-legend {
     display: flex;
+    align-items:center;
     flex-wrap: wrap;
     column-gap: 12px;
     width: calc(100% - 12px);

@@ -102,6 +102,8 @@ const model = createModel([
     CHECKBOX("style.legend.percentage.bold", { def: true }),
     COLOR("style.legend.percentage.color", { def: "#1A1A1A" }),
     NUMBER("style.legend.percentage.rounding", { def: 2, min: 0, max: 12 }),
+    CHECKBOX('style.legend.selectAllToggle.show', { def: true }),
+
     SELECT("style.title.textAlign", ["left", "center", "right"], { def: "left" }),
     TEXT("style.title.text", { def: "Lorem ipsum dolor sic amet" }),
     COLOR("style.title.color", { def: "#1A1A1A" }),

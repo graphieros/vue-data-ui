@@ -303,6 +303,7 @@ This legend toggle option is available for the following components:
 - VueUiRings
 - VueUiRings
 - VueUiScatter
+- VueUiSparkStackbar
 - VueUiStackbar
 - VueUiStackline
 - VueUiTreemap

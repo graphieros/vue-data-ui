@@ -2948,6 +2948,11 @@ export function useConfig(options = {}) {
                     bold: true,
                     color: COLOR_TEXT_PRIMARY,
                     rounding: 1
+                },
+                selectAllToggle: {
+                    show: false,
+                    backgroundColor: COLOR_BORDER,
+                    color: COLOR_TEXT_PRIMARY
                 }
             },
             title: {
