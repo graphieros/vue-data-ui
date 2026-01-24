@@ -211,7 +211,7 @@ const iconMap = {
                         </label>
                     </div>
                     <div class="components-checklist-actions">
-                        <input ref="inputAddCustom" type="text" v-model="temporaryCustomChecklistItem">
+                        <input ref="inputAddCustom" type="text" v-model="temporaryCustomChecklistItem" @keydown.enter="addCustomCheckListItem(item)">
                         <button @click="addCustomCheckListItem(item)" class="action-green btn-plus" :disabled="!temporaryCustomChecklistItem">
                             <VueUiIcon name="plus" stroke="#1A1A1A"/>
                         </button>

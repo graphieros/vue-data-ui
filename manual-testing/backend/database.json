@@ -483,7 +483,7 @@
       "description": "Add examples for VueUiRings (basic layout, layout with data labels)",
       "priority": 0,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "docs",
       "withComponentCheckList": false,
@@ -492,7 +492,24 @@
       "customCheckList": {},
       "id": "19aaae9b-d741-4d08-af19-150451f3a00e",
       "createdAt": 1769158957994,
-      "updatedAt": 1769158957994
+      "updatedAt": 1769247029944
+    },
+    {
+      "title": "Sparkline pulse",
+      "component": "vue-ui-sparkline",
+      "description": "Optional pulse config, along the path. Configurable (color, duration, size)",
+      "priority": 2,
+      "author": "graphieros",
+      "done": false,
+      "exchanges": [],
+      "type": "feature",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "73cfb4ef-cdc9-4f12-b513-68d61ab9b51f",
+      "createdAt": 1769258902001,
+      "updatedAt": 1769258902001
     }
   ]
 }

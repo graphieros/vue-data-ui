@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import useCrud from "../composables/useCrud";
 import { createUid, treeShake } from "../../../src/lib";
-import { VueUiDonut, VueUiHorizontalBar, VueUiIcon } from "vue-data-ui";
+import { VueUiDonut, VueUiHorizontalBar, VueUiIcon, VueUiXy } from "vue-data-ui";
 import PendingTodoList from "./PendingTodoList.vue";
 import DoneTodoList from "./DoneTodoList.vue";
 import { components } from '../../../cypress/fixtures/vdui-components';
@@ -203,7 +203,7 @@ async function toggleChecklist(item) {
     } else {
         item.checkList = components.toSorted((a, b) => a.name.localeCompare(b.name)).reduce((acc, { name }) => {
             acc[name] = false;
-        return acc;
+            return acc;
         }, {});
     }
     await updateThisTodo(item);
@@ -307,6 +307,80 @@ function barHasDs(d) {
     return d.map(_ => _.value).reduce((a, b) => a + b, 0) > 0
 }
 
+function lineHasDs(d) {
+    return d.flatMap(_ => _.series).reduce((a, b) => a + b, 0) > 0
+}
+
+function getUniqueCreatedDays(items) {
+    if (!items.length) {
+        return []
+    }
+
+    const daysSet = new Set()
+    let minDate = null
+    let maxDate = null
+
+    for (const item of items) {
+        const date = new Date(item.createdAt)
+        const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+        daysSet.add(day.getTime())
+
+        if (!minDate || day < minDate) {
+            minDate = day
+        }
+        if (!maxDate || day > maxDate) {
+            maxDate = day
+        }
+    }
+
+    const result = []
+    const cursor = new Date(minDate)
+
+    while (cursor <= maxDate) {
+        result.push(cursor.toISOString().slice(0, 10))
+        cursor.setDate(cursor.getDate() + 1)
+    }
+
+    return result
+}
+
+function getItemCountPerDay(items) {
+    if (!items.length) {
+        return []
+    }
+
+    const countsByDay = new Map()
+    let minDate = null
+    let maxDate = null
+
+    for (const item of items) {
+        const date = new Date(item.createdAt)
+        const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+        const time = day.getTime()
+
+        countsByDay.set(time, (countsByDay.get(time) || 0) + 1)
+
+        if (!minDate || day < minDate) {
+            minDate = day
+        }
+        if (!maxDate || day > maxDate) {
+            maxDate = day
+        }
+    }
+
+    const result = []
+    const cursor = new Date(minDate)
+
+    while (cursor <= maxDate) {
+        const time = cursor.getTime()
+        result.push(countsByDay.has(time) ? countsByDay.get(time) : null)
+        cursor.setDate(cursor.getDate() + 1)
+    }
+
+    return result
+}
+
 const currentTab = ref(0);
 
 const stats = computed(() => {
@@ -326,12 +400,17 @@ const stats = computed(() => {
                 height: 330,
                 layout: {
                     curvedMarkers: true,
-                    donut:{
+                    donut: {
                         radiusRatio: 0.3,
                     }
                 },
                 legend: {
                     backgroundColor: '#4A4A4A',
+                    selectAllToggle: {
+                        show: true,
+                        backgroundColor: '#6A6A6A',
+                        color: '#CCCCCC'
+                    }
                 },
                 tooltip: {
                     teleportTo: '#mainDialog',
@@ -379,7 +458,54 @@ const stats = computed(() => {
         }
     }
 
+    const configXy = {
+        theme: 'dark',
+        chart: {
+            backgroundColor: '#4A4A4A',
+        }
+    }
+
     return {
+        evolution: {
+            open: null,
+            done: {
+                dataset: [
+                    {
+                        name: 'Created',
+                        series: getItemCountPerDay(done.value),
+                        type: 'line',
+                        smooth: true,
+                        color: '#42d392',
+                        useArea: true
+                    }
+                ],
+                config: {
+                    theme: 'dark',
+                    useCssAnimation: false,
+                    chart: {
+                        backgroundColor: '#4A4A4A',
+                        height: 400,
+                        padding: {
+                            left: 24
+                        },
+                        grid: {
+                            labels: {
+                                xAxisLabels: {
+                                    values: getUniqueCreatedDays(done.value),
+                                    showOnlyAtModulo: 7,
+                                },
+                                yAxis: {
+                                    commonScaleSteps: 5
+                                }
+                            }
+                        },
+                        tooltip: {
+                            teleportTo: '#mainDialog',
+                        }
+                    }
+                }
+            },
+        },
         type: {
             open: {
                 dataset: ['bug', 'feature', 'dev', 'docs'].map(key => {
@@ -458,7 +584,7 @@ const stats = computed(() => {
 
 <template>
     <button class="open-btn" @click="openDialog()">
-        <VueUiIcon name="checkList" stroke="#8A8A8A"/>
+        <VueUiIcon name="checkList" stroke="#8A8A8A" />
         <div class="badge" v-if="toBeDone.length">
             {{ toBeDone.length }}
         </div>
@@ -466,17 +592,17 @@ const stats = computed(() => {
 
     <dialog ref="dialog" class="dialog" id="mainDialog">
         <header>
-            <VueUiIcon name="checkList" stroke="#6A6A6A"/>
+            <VueUiIcon name="checkList" stroke="#6A6A6A" />
             Todo list
             <div class="actions">
                 <button @click="openTodoDialog('Create')">
-                    <VueUiIcon name="plus" stroke="#2A2A2A"/>
+                    <VueUiIcon name="plus" stroke="#2A2A2A" />
                 </button>
             </div>
         </header>
         <button class="btn-close" @click="closeDialog()">
-            <VueUiIcon name="blur" stroke="#42d392"/>
-            <VueUiIcon name="close" stroke="#5f8aee" style="position: absolute;"/>
+            <VueUiIcon name="blur" stroke="#42d392" />
+            <VueUiIcon name="close" stroke="#5f8aee" style="position: absolute;" />
         </button>
         <div class="filters">
             <label>
@@ -505,16 +631,16 @@ const stats = computed(() => {
             </label>
             <label class="search-input-wrapper">
                 Component
-                <VueUiIcon name="magnify" class="search-icon" :size="15" stroke="#9A9A9A"/>
+                <VueUiIcon name="magnify" class="search-icon" :size="15" stroke="#9A9A9A" />
                 <input v-model="filters.component" class="search-input" placeholder="...">
             </label>
             <label class="search-input-wrapper">
                 Description
-                <VueUiIcon name="magnify" class="search-icon" :size="15" stroke="#9A9A9A"/>
+                <VueUiIcon name="magnify" class="search-icon" :size="15" stroke="#9A9A9A" />
                 <input v-model="filters.description" class="search-input" placeholder="...">
             </label>
             <button class="reset" @click="resetFilter(null, true)" :disabled="noFilters">
-                <VueUiIcon name="revert" stroke="#e76969"/>
+                <VueUiIcon name="revert" stroke="#e76969" />
             </button>
         </div>
         <div class="tabs">
@@ -548,30 +674,15 @@ const stats = computed(() => {
         </div>
         <div class="dialog-content-wrapper">
             <!-- PENDING -->
-            <PendingTodoList 
-                v-if="currentTab === 0"
-                :items="filtered._todo"
-                :priority="priority"
-                :typeColors="typeColors"
-                @openConfirmDialog="openConfirmDialog"
-                @editTodo="editTodo"
-                @openExchangeDialog="openExchangeDialog"
-                @markDone="markDone"
-                @deleteExchange="deleteExchange"
-                @toggleChecklist="chooseChecklist"
-                @updateTodo="updateThisTodo"
-                @updateCustomCheckList="updateCustomCheckList"
-            />
+            <PendingTodoList v-if="currentTab === 0" :items="filtered._todo" :priority="priority"
+                :typeColors="typeColors" @openConfirmDialog="openConfirmDialog" @editTodo="editTodo"
+                @openExchangeDialog="openExchangeDialog" @markDone="markDone" @deleteExchange="deleteExchange"
+                @toggleChecklist="chooseChecklist" @updateTodo="updateThisTodo"
+                @updateCustomCheckList="updateCustomCheckList" />
 
             <!-- DONE -->
-            <DoneTodoList
-                v-if="currentTab === 1"
-                :items="filtered._done"
-                :typeColors="typeColors"
-                :priorityColors="priorityColors"
-                @openConfirmDialog="openConfirmDialog"
-                @reopenTodo="reopenTodo"
-            />
+            <DoneTodoList v-if="currentTab === 1" :items="filtered._done" :typeColors="typeColors"
+                :priorityColors="priorityColors" @openConfirmDialog="openConfirmDialog" @reopenTodo="reopenTodo" />
 
             <!-- STATS -->
             <div v-if="currentTab === 2" class="card-container stats" id="stats">
@@ -580,52 +691,38 @@ const stats = computed(() => {
                     <span>No data yet</span>
                 </div>
                 <template v-else>
+                    <div class="card stat-2" v-if="lineHasDs(stats.evolution.done.dataset)">
+                        <div class="card-title">Evolution - Done</div>
+                        <VueUiXy :dataset="stats.evolution.done.dataset" :config="stats.evolution.done.config" />
+                    </div>
                     <div class="card stat" v-if="donutHasDs(stats.priority.open.dataset)">
                         <div class="card-title">Priority - Open</div>
-                        <VueUiDonut
-                            :dataset="stats.priority.open.dataset"
-                            :config="stats.priority.open.config"
-                        />
+                        <VueUiDonut :dataset="stats.priority.open.dataset" :config="stats.priority.open.config" />
                     </div>
                     <div class="card stat" v-if="barHasDs(stats.type.open.dataset)">
                         <div class="card-title">Type - Open</div>
                         <div class="card-flex">
-                            <VueUiHorizontalBar
-                                :dataset="stats.type.open.dataset"
-                                :config="stats.type.open.config"
-                            />
+                            <VueUiHorizontalBar :dataset="stats.type.open.dataset" :config="stats.type.open.config" />
                         </div>
                     </div>
                     <div class="card stat" v-if="donutHasDs(stats.priority.done.dataset)">
                         <div class="card-title">Priority - Closed</div>
-                        <VueUiDonut
-                            :dataset="stats.priority.done.dataset"
-                            :config="stats.priority.done.config"
-                        />
+                        <VueUiDonut :dataset="stats.priority.done.dataset" :config="stats.priority.done.config" />
                     </div>
 
                     <div class="card stat" v-if="barHasDs(stats.type.done.dataset)">
                         <div class="card-title">Type - Closed</div>
                         <div class="card-flex">
-                            <VueUiHorizontalBar
-                                :dataset="stats.type.done.dataset"
-                                :config="stats.type.done.config"
-                            />
+                            <VueUiHorizontalBar :dataset="stats.type.done.dataset" :config="stats.type.done.config" />
                         </div>
                     </div>
                     <div class="card stat" v-if="donutHasDs(stats.author.open.dataset)">
                         <div class="card-title">Authors - Open</div>
-                        <VueUiDonut
-                            :dataset="stats.author.open.dataset"
-                            :config="stats.author.open.config"
-                        />
+                        <VueUiDonut :dataset="stats.author.open.dataset" :config="stats.author.open.config" />
                     </div>
                     <div class="card stat" v-if="donutHasDs(stats.author.done.dataset)">
                         <div class="card-title">Authors - Closed</div>
-                        <VueUiDonut
-                            :dataset="stats.author.done.dataset"
-                            :config="stats.author.done.config"
-                        />
+                        <VueUiDonut :dataset="stats.author.done.dataset" :config="stats.author.done.config" />
                     </div>
                 </template>
             </div>
@@ -661,31 +758,34 @@ const stats = computed(() => {
 
             <label class="todo-label-inline">
                 <div class="todo-label">
-                    <VueUiIcon name="person" :size="18" :stroke="!pendingTodo.author ? '#e76969' : '#42d392'"/>
-                    Author <span v-if="!pendingTodo.author" class="required">*</span><VueUiIcon v-else name="check" stroke="#42d392" :size="12"/>
+                    <VueUiIcon name="person" :size="18" :stroke="!pendingTodo.author ? '#e76969' : '#42d392'" />
+                    Author <span v-if="!pendingTodo.author" class="required">*</span>
+                    <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
                 </div>
                 <input type="text" v-model="pendingTodo.author" :class="{ error: !pendingTodo.author }" />
             </label>
             <label>
                 <div class="todo-label">
-                    <VueUiIcon name="clipBoard" :size="18" :stroke="!pendingTodo.title ? '#e76969' : '#42d392'"/>
-                    Title <span v-if="!pendingTodo.title" class="required">*</span><VueUiIcon v-else name="check" stroke="#42d392" :size="12"/>
+                    <VueUiIcon name="clipBoard" :size="18" :stroke="!pendingTodo.title ? '#e76969' : '#42d392'" />
+                    Title <span v-if="!pendingTodo.title" class="required">*</span>
+                    <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
                 </div>
-                <textarea v-model="pendingTodo.title" :class="{ error: !pendingTodo.title }"/>
+                <textarea v-model="pendingTodo.title" :class="{ error: !pendingTodo.title }" />
             </label>
             <label>
                 <div class="todo-label">
-                    <VueUiIcon name="boxes" :size="18" stroke="#42d392"/>
+                    <VueUiIcon name="boxes" :size="18" stroke="#42d392" />
                     Component
                 </div>
                 <textarea v-model="pendingTodo.component" />
             </label>
             <label>
                 <div class="todo-label">
-                    <VueUiIcon name="annotator" :size="18" :stroke="!pendingTodo.description ? '#e76969' : '#42d392'"/>
-                    Description <span v-if="!pendingTodo.description" class="required">*</span><VueUiIcon v-else name="check" stroke="#42d392" :size="12"/>
+                    <VueUiIcon name="annotator" :size="18" :stroke="!pendingTodo.description ? '#e76969' : '#42d392'" />
+                    Description <span v-if="!pendingTodo.description" class="required">*</span>
+                    <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
                 </div>
-                <textarea v-model="pendingTodo.description" :class="{ error: !pendingTodo.description }"/>
+                <textarea v-model="pendingTodo.description" :class="{ error: !pendingTodo.description }" />
             </label>
             <label>
                 Priority
@@ -709,39 +809,44 @@ const stats = computed(() => {
             <button @click="cancelTodo()" class="todo-dialog-action-close">
                 CANCEL
             </button>
-            <button v-if="mode === 'Create'" :class="{ 'todo-dialog-action-add': true, error: hasErrors }" @click="addTodo" :disabled="hasErrors">
+            <button v-if="mode === 'Create'" :class="{ 'todo-dialog-action-add': true, error: hasErrors }"
+                @click="addTodo" :disabled="hasErrors">
                 ADD TODO
             </button>
-            <button v-if="mode === 'Edit'" :class="{ 'todo-dialog-action-add': true, error: hasErrors }" @click="updateTodo" :disabled="hasErrors">
+            <button v-if="mode === 'Edit'" :class="{ 'todo-dialog-action-add': true, error: hasErrors }"
+                @click="updateTodo" :disabled="hasErrors">
                 UPDATE TODO
             </button>
         </div>
     </dialog>
 
-    <dialog ref="exchangeDialog"  class="exchange-dialog">
+    <dialog ref="exchangeDialog" class="exchange-dialog">
         <header>Add comment</header>
 
         <label class="todo-label-inline">
             <div class="todo-label">
-                <VueUiIcon name="person" :size="18" :stroke="!pendingExchange.author ? '#e76969' : '#42d392'"/>
-                Author <span v-if="!pendingExchange.author" class="required">*</span><VueUiIcon v-else name="check" stroke="#42d392" :size="12"/>
+                <VueUiIcon name="person" :size="18" :stroke="!pendingExchange.author ? '#e76969' : '#42d392'" />
+                Author <span v-if="!pendingExchange.author" class="required">*</span>
+                <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
             </div>
             <input type="text" v-model="pendingExchange.author" :class="{ error: !pendingExchange.author }" />
         </label>
 
         <label>
             <div class="todo-label">
-                <VueUiIcon name="tooltip" :size="18" :stroke="!pendingExchange.comment ? '#e76969' : '#42d392'"/>
-                Comment <span v-if="!pendingExchange.comment" class="required">*</span><VueUiIcon v-else name="check" stroke="#42d392" :size="12"/>
+                <VueUiIcon name="tooltip" :size="18" :stroke="!pendingExchange.comment ? '#e76969' : '#42d392'" />
+                Comment <span v-if="!pendingExchange.comment" class="required">*</span>
+                <VueUiIcon v-else name="check" stroke="#42d392" :size="12" />
             </div>
-            <textarea v-model="pendingExchange.comment" :class="{ error: !pendingExchange.comment }"/>
+            <textarea v-model="pendingExchange.comment" :class="{ error: !pendingExchange.comment }" />
         </label>
 
         <div class="todo-dialog-actions">
             <button @click="closeExchangeDialog()" class="todo-dialog-action-close">
                 CANCEL
             </button>
-            <button @click="addExchange()" :class="{ 'todo-dialog-action-add': true, error: hasExchangeErrors }" :disabled="hasExchangeErrors">
+            <button @click="addExchange()" :class="{ 'todo-dialog-action-add': true, error: hasExchangeErrors }"
+                :disabled="hasExchangeErrors">
                 ADD COMMENT
             </button>
         </div>
@@ -751,27 +856,28 @@ const stats = computed(() => {
         Delete <span style="color: #CCCCCC; font-weight: bold; color: #e76969;">{{ pendingTodo.title }}</span> ?
         <div class="cancel-wrapper">
             <button @click="closeConfirmDialog()" class="btn-red">
-                <VueUiIcon name="close" stroke="#e76969" :size="36"/>
+                <VueUiIcon name="close" stroke="#e76969" :size="36" />
             </button>
             <button @click="deleteTodo(pendingTodo.id)" class="btn-green">
-                <VueUiIcon name="check" stroke="#42d392" :size="36"/>
+                <VueUiIcon name="check" stroke="#42d392" :size="36" />
             </button>
         </div>
     </dialog>
 
     <dialog ref="chooseChecklistDialog" class="checklist-dialog">
-        <div style="display:flex; align-items:center;justify-content:center;flex-direction:column; gap: 1rem; align-items:center;">
+        <div
+            style="display:flex; align-items:center;justify-content:center;flex-direction:column; gap: 1rem; align-items:center;">
             <span style="color: #CCCCCC; text-align:left; width: 100%; font-size:1.2rem">Add a checklist</span>
             <div class="checklist-dialog-content">
                 <button class="action-cancel flex-row gap-1" @click="closeCheckListDialog">
-                    <VueUiIcon name="close" :size="20" stroke="#CCCCCC"/>
+                    <VueUiIcon name="close" :size="20" stroke="#CCCCCC" />
                     Cancel
                 </button>
                 <button class="action-green flex-row gap-1" @click="chooseChecklistType('components')">
-                    <VueUiIcon name="boxes" :size="20" stroke="#1A1A1A"/>Components
+                    <VueUiIcon name="boxes" :size="20" stroke="#1A1A1A" />Components
                 </button>
                 <button class="action-blue flex-row gap-1" @click="chooseChecklistType('custom')">
-                    <VueUiIcon name="checkList" :size="20" stroke="#FFFFFF"/>
+                    <VueUiIcon name="checkList" :size="20" stroke="#FFFFFF" />
                     Custom
                 </button>
             </div>
