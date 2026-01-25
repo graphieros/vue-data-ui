@@ -311,7 +311,14 @@ function lineHasDs(d) {
     return d.flatMap(_ => _.series).reduce((a, b) => a + b, 0) > 0
 }
 
-function getUniqueCreatedDays(items) {
+function formatLocalDateYYYYMMDD(date) {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+}
+
+function getUniqueCreatedDays(items, created = false) {
     if (!items.length) {
         return []
     }
@@ -321,7 +328,7 @@ function getUniqueCreatedDays(items) {
     let maxDate = null
 
     for (const item of items) {
-        const date = new Date(item.createdAt)
+        const date = new Date(created ? item.createdAt : item.updatedAt)
         const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 
         daysSet.add(day.getTime())
@@ -338,14 +345,14 @@ function getUniqueCreatedDays(items) {
     const cursor = new Date(minDate)
 
     while (cursor <= maxDate) {
-        result.push(cursor.toISOString().slice(0, 10))
+        result.push(formatLocalDateYYYYMMDD(cursor))
         cursor.setDate(cursor.getDate() + 1)
     }
 
     return result
 }
 
-function getItemCountPerDay(items) {
+function getItemCountPerDay(items, created = false) {
     if (!items.length) {
         return []
     }
@@ -355,7 +362,7 @@ function getItemCountPerDay(items) {
     let maxDate = null
 
     for (const item of items) {
-        const date = new Date(item.createdAt)
+        const date = new Date(created ? item.createdAt : item.updatedAt)
         const day = new Date(date.getFullYear(), date.getMonth(), date.getDate())
         const time = day.getTime()
 
@@ -471,27 +478,43 @@ const stats = computed(() => {
             done: {
                 dataset: [
                     {
-                        name: 'Created',
-                        series: getItemCountPerDay(done.value),
+                        name: 'Closed',
+                        series: getItemCountPerDay(done.value, false),
                         type: 'line',
                         smooth: true,
                         color: '#42d392',
                         useArea: true
-                    }
+                    },
                 ],
                 config: {
                     theme: 'dark',
                     useCssAnimation: false,
+                    table: {
+                        th: {
+                            backgroundColor: '#4A4A4A',
+                        },
+                        td: {
+                            backgroundColor: '#4A4A4A',
+                        }
+                    },
                     chart: {
+                        userOptions: {
+                            buttons: {
+                                pdf: false,
+                                labels: false,
+                                fullscreen: false,
+                                tooltip: false
+                            }
+                        },
                         backgroundColor: '#4A4A4A',
-                        height: 400,
+                        height: 350,
                         padding: {
                             left: 24
                         },
                         grid: {
                             labels: {
                                 xAxisLabels: {
-                                    values: getUniqueCreatedDays(done.value),
+                                    values: getUniqueCreatedDays(done.value, false),
                                     showOnlyAtModulo: 7,
                                 },
                                 yAxis: {
@@ -501,6 +524,11 @@ const stats = computed(() => {
                         },
                         tooltip: {
                             teleportTo: '#mainDialog',
+                        },
+                        zoom: {
+                            minimap: {
+                                show: true
+                            }
                         }
                     }
                 }
@@ -692,7 +720,7 @@ const stats = computed(() => {
                 </div>
                 <template v-else>
                     <div class="card stat-2" v-if="lineHasDs(stats.evolution.done.dataset)">
-                        <div class="card-title">Evolution - Done</div>
+                        <div class="card-title">Evolution - Closed</div>
                         <VueUiXy :dataset="stats.evolution.done.dataset" :config="stats.evolution.done.config" />
                     </div>
                     <div class="card stat" v-if="donutHasDs(stats.priority.open.dataset)">
