@@ -225,10 +225,10 @@ const pulseTrail = computed(() => {
 
     return {
         show: t.show !== false,
-        lengthPx: Math.max(8, Number(t.length) || 32),
+        lengthPx: t.length,
         width: Math.max(1, Number(t.strokeWidth) || (base * 2.2)),
         opacity: Math.min(1, Math.max(0, Number(t.opacity) ?? 0.6)),
-        fadeIn: 0.5 ,
+        fadeIn: 0.5,
         fadeOut: 0.2,
     };
 });
