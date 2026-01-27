@@ -426,6 +426,7 @@ declare module "vue-data-ui" {
         enableSelectionDrag?: boolean;
         focusOnDrag?: boolean;
         focusRangeRatio?: number;
+        maxWidth?: number | null;
     };
 
     export type Theme =
@@ -6715,6 +6716,7 @@ declare module "vue-data-ui" {
         zoomCompact?: boolean;
         zoomFocusOnDrag?: boolean;
         zoomFocusRangeRatio?: number;
+        zoomMaxWidth?: number | null;
         userOptionsPosition?: "right" | "left";
         userOptionsButtons?: {
             tooltip?: boolean;
@@ -7298,7 +7300,7 @@ declare module "vue-data-ui" {
                 color?: string;
                 height?: number;
                 width?: number;
-                zoom?: Omit<ChartZoom, "fontSize">;
+                zoom?: Omit<ChartZoom, "fontSize" | "maxWidth">;
                 controls?: ChartZoomControls;
                 words?: {
                     maxFontSize?: number;

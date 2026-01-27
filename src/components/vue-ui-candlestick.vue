@@ -1774,6 +1774,7 @@ defineExpose({
             :verticalHandles="FINAL_CONFIG.style.zoom.minimap.verticalHandles"
             :minScale="FINAL_CONFIG.style.layout.grid.yAxis.scale.min"
             :maxScale="FINAL_CONFIG.style.layout.grid.yAxis.scale.max"
+            :maxWidth="FINAL_CONFIG.style.zoom.maxWidth"
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
             @trapMouse="selectMinimapIndex"

@@ -1539,6 +1539,7 @@ defineExpose({
                 :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
                 :focusOnDrag="FINAL_CONFIG.style.chart.zoom.focusOnDrag"
                 :focusRangeRatio="FINAL_CONFIG.style.chart.zoom.focusRangeRatio"
+                :maxWidth="FINAL_CONFIG.style.chart.zoom.maxWidth"
                 @reset="refreshSlicer"
             >
                 <template #reset-action="{ reset }">

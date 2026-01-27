@@ -2311,6 +2311,7 @@ defineExpose({
                 :minimapFrameColor="FINAL_CONFIG.zoomMinimap.frameColor"
                 :focusOnDrag="FINAL_CONFIG.zoomFocusOnDrag"
                 :focusRangeRatio="FINAL_CONFIG.zoomFocusRangeRatio"
+                :maxWidth="FINAL_CONFIG.zoomMaxWidth"
                 @reset="refreshSlicer"
                 @trapMouse="setCommonSelectedIndex"
             >

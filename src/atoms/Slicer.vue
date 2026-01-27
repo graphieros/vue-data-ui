@@ -156,6 +156,10 @@ const props = defineProps({
     focusRangeRatio: {
         type: Number,
         default: 0.1
+    },
+    maxWidth: {
+        type: Number,
+        default: null
     }
 });
 
@@ -927,6 +931,10 @@ const selectionIndicator = computed(() => {
         @mousedown="startDragging"
         @touchstart="startDragging"
         @touchend="showTooltip = false"
+        :style="{
+            maxWidth: maxWidth ? maxWidth + 'px' : undefined,
+            margin: maxWidth ? '0 auto' : undefined
+        }"
     >
         <div 
             class="vue-data-ui-slicer-labels" 

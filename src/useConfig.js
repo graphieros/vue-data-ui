@@ -264,6 +264,7 @@ export function useConfig(options = {}) {
         enableSelectionDrag: true,
         focusOnDrag: false,
         focusRangeRatio: 0.2,
+        maxWidth: null,
     }
 
     const MINIMAP_BASE = {
@@ -3323,6 +3324,7 @@ export function useConfig(options = {}) {
         zoomEnableSelectionDrag: true,
         zoomFocusOnDrag: false,
         zoomFocusRangeRatio: 0.2,
+        zoomMaxWidth: null
     }
 
     const vue_ui_age_pyramid = {

@@ -197,6 +197,10 @@ const props = defineProps({
     forceZeroCenter: {
         type: Boolean,
         default: false,
+    },
+    maxWidth: {
+        type: Number,
+        default: null
     }
 });
 
@@ -1107,6 +1111,10 @@ defineExpose({
         ref="zoomWrapper"
         @mousedown="startDragging" 
         @touchstart="startDragging"
+        :style="{
+            maxWidth: maxWidth ? maxWidth + 'px' : undefined,
+            margin: maxWidth ? '0 auto' : undefined
+        }"
     >
         <div 
             class="vue-data-ui-slicer-labels" 

@@ -4289,6 +4289,7 @@ defineExpose({
             :verticalHandles="FINAL_CONFIG.chart.zoom.minimap.verticalHandles"
             :minScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin"
             :maxScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax"
+            :maxWidth="FINAL_CONFIG.chart.zoom.maxWidth"
             @futureEnd="v => setPrecog('end', v)"
             @futureStart="v => setPrecog('start', v)"
             @reset="refreshSlicer"
