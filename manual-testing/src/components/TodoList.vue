@@ -381,7 +381,7 @@ function getItemCountPerDay(items, created = false) {
 
     while (cursor <= maxDate) {
         const time = cursor.getTime()
-        result.push(countsByDay.has(time) ? countsByDay.get(time) : null)
+        result.push(countsByDay.has(time) ? countsByDay.get(time) : 0)
         cursor.setDate(cursor.getDate() + 1)
     }
 
@@ -421,7 +421,7 @@ const stats = computed(() => {
                 },
                 tooltip: {
                     teleportTo: '#mainDialog',
-                    backgroundColor: '#3A3A3A'
+                    backgroundOpacity: 0
                 },
                 useGradient: false,
             }
@@ -459,16 +459,9 @@ const stats = computed(() => {
                 },
                 tooltip: {
                     teleportTo: '#mainDialog',
-                    backgroundColor: '#3A3A3A'
+                    backgroundOpacity: 0
                 },
             }
-        }
-    }
-
-    const configXy = {
-        theme: 'dark',
-        chart: {
-            backgroundColor: '#4A4A4A',
         }
     }
 
@@ -503,7 +496,8 @@ const stats = computed(() => {
                                 pdf: false,
                                 labels: false,
                                 fullscreen: false,
-                                tooltip: false
+                                tooltip: false,
+                                table: false
                             }
                         },
                         backgroundColor: '#4A4A4A',
@@ -513,6 +507,10 @@ const stats = computed(() => {
                         },
                         grid: {
                             labels: {
+                                axis: {
+                                    yLabel: 'Item count',
+                                    fontSize: 20
+                                },
                                 xAxisLabels: {
                                     values: getUniqueCreatedDays(done.value, false),
                                     showOnlyAtModulo: 7,
@@ -522,8 +520,12 @@ const stats = computed(() => {
                                 }
                             }
                         },
+                        legend: {
+                            show: false,
+                        },
                         tooltip: {
                             teleportTo: '#mainDialog',
+                            backgroundOpacity: 0
                         },
                         zoom: {
                             minimap: {
