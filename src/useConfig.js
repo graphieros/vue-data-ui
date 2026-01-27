@@ -2773,6 +2773,7 @@ export function useConfig(options = {}) {
                 smooth: false,
                 pulse: {
                     show: false,
+                    loop: true,
                     color: COLOR_WHITE,
                     durationMs: 4000,
                     easing: 'ease-in-out',
