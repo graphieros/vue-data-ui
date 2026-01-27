@@ -199,6 +199,7 @@ const model = createModel([
     NUMBER("style.layout.candle.widthRatio", { def: 0.5, min: 0.1, max: 1, step: 0.1 }),
 
     CHECKBOX("style.zoom.show", { def: true }),
+    RANGE('style.zoom.maxWidth', { def: null, min: 100, max: 1000 }),
     COLOR("style.zoom.color", { def: "#CCCCCC" }),
     COLOR("style.zoom.highlightColor", { def: "#4A4A4A" }),
     NUMBER("style.zoom.fontSize", { def: 14, min: 8, max: 42 }),

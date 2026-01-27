@@ -254,6 +254,7 @@ const model = createModel([
     TEXT("yAxisLabel", { def: "Lorem ipsum Y axis labellum" }),
 
     CHECKBOX("zoomXy", { def: true }),
+    RANGE('zoomMaxWidth', { def: null, min: 100, max: 1000 }),
     COLOR("zoomColor", { def: "#CCCCCC" }),
     COLOR("zoomHighlightColor", { def: "#1A1A1A" }),
     NUMBER("zoomFontSize", { def: 14, min: 8, max: 48 }),

@@ -683,6 +683,7 @@ const model = createModel([
     RANGE("chart.width", { def: 1000, min: 300, max: 2000 }),
 
     CHECKBOX("chart.zoom.show", { def: true }),
+    RANGE('chart.zoom.maxWidth', { def: null, min: 100, max: 800 }),
     COLOR("chart.zoom.color", { def: "#CCCCCC" }),
     COLOR("chart.zoom.highlightColor", { def: "#4A4A4A" }),
     NUMBER("chart.zoom.fontSize", { def: 14, min: 8, max: 42 }),
