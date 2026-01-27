@@ -510,6 +510,31 @@
       "id": "73cfb4ef-cdc9-4f12-b513-68d61ab9b51f",
       "createdAt": 1769258902001,
       "updatedAt": 1769271441343
+    },
+    {
+      "title": "zoom max width",
+      "component": "Slicer.vue, SlicerPreview.vue",
+      "description": "Add prop (controlled by parent config under zoom.maxWidth) and set margin: 0 auto on zoom container. Should be null by default to keep current behavior intact.",
+      "priority": 0,
+      "author": "graphieros",
+      "done": true,
+      "exchanges": [],
+      "type": "feature",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": true,
+      "customCheckList": {
+        "vue-ui-xy.vue": true,
+        "vue-ui-xy-canvas.vue": true,
+        "vue-ui-donut-evolution.vue": true,
+        "vue-ui-quick-chart.vue": true,
+        "vue-ui-candlestick.vue": true,
+        "vue-ui-stackline.vue": true,
+        "vue-ui-stackbar.vue": true
+      },
+      "id": "77718438-e0c6-40c9-af91-6ac3a470e7b4",
+      "createdAt": 1769515698809,
+      "updatedAt": 1769546402958
     }
   ]
 }
