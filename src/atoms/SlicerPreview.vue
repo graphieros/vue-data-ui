@@ -1024,14 +1024,16 @@ const labels = computed(() => {
             absoluteIndex: startValue.value,
             seriesIndex: startValue.value,
             datapoint: props.selectedSeries,
-            timeLabel: props.preciseLabels[startValue.value]
+            timeLabel: props.preciseLabels[startValue.value],
+            side: 'left'
         });
         
         const customRight = props.customFormat({
             absoluteIndex: endValue.value - 1,
             seriesIndex: -1,
             datapoint: props.selectedSeries,
-            timeLabel: props.preciseLabels[endValue.value - 1]
+            timeLabel: props.preciseLabels[endValue.value - 1],
+            side: 'right'
         });
 
         if (typeof customLeft === 'string' && typeof customRight === 'string') {
