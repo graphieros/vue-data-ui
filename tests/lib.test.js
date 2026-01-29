@@ -26,10 +26,14 @@ import {
     checkFormatter,
     checkNaN,
     checkObj,
+    clampToByte,
+    clampToUnitInterval,
     closestDecimal,
     convertColorToHex,
     convertCustomPalette,
     convertNameColorToHex,
+    convertOklabToSrgb,
+    convertOklchToRgb,
     createArc,
     createAreaWithCuts,
     createHalfCircleArc,
@@ -78,19 +82,24 @@ import {
     makePath,
     matrixTimes,
     niceNum,
+    normalizeHueDegrees,
+    normalizeOklchChroma,
+    normalizeOklchLightness,
     objectIsEmpty,
     observeClassPresenceIn,
+    parseCssAlpha,
     placeHTMLElementAtSVGCoordinates,
     rotateMatrix,
     sanitizeArray,
     setOpacity,
     setOpacityIfWithinBBox,
     shiftHue,
+    srgbEncodeFromLinear,
     sumByAttribute,
     sumSeries,
     translateSize,
     treeShake,
-    wrapText
+    wrapText,
 } from "../src/lib";
 
 describe("calcTrend", () => {
@@ -388,6 +397,23 @@ describe("adaptColorToBackground", () => {
 });
 
 describe("convertColorToHex", () => {
+    test('returns HEX color format from OKLCH', () => {
+        expect(convertColorToHex("oklch(0.628 0.2577 29.23)")).toBe("#ff0000ff");
+        expect(convertColorToHex("oklch(0.8664 0.294827 142.4953)")).toBe("#00ff00ff");
+        expect(convertColorToHex("oklch(0.452 0.313214 264.052)")).toBe("#0000ffff");
+        expect(convertColorToHex("oklch(0 0 0)")).toBe("#000000ff");
+        expect(convertColorToHex("oklch(1 0 0)")).toBe("#ffffffff");
+
+        expect(convertColorToHex("oklch(0.238 0.0379 249.68 / 25.1%)")).toBe("#10203040");
+
+        expect(convertColorToHex("oklch(0.628 0.2577 29.23 / 6.27%)")).toBe("#ff000010");
+        expect(convertColorToHex("oklch(0.8664 0.294827 142.4953 / 6.27%)")).toBe("#00ff0010");
+        expect(convertColorToHex("oklch(0.452 0.313214 264.052 / 6.27%)")).toBe("#0000ff10");
+        expect(convertColorToHex("oklch(0 0 0 / 6.27%)")).toBe("#00000010");
+        expect(convertColorToHex("oklch(1 0 0 / 6.27%)")).toBe("#ffffff10");
+    });
+
+    
     test("returns HEX color format from RGB", () => {
         expect(convertColorToHex("rgb(255,0,0)")).toBe("#ff0000ff");
         expect(convertColorToHex("rgb(0,255,0)")).toBe("#00ff00ff");
@@ -4273,3 +4299,169 @@ describe('getLineCountFromString', () => {
         expect(getLineCountFromString('A\nB\nC')).toBe(3);
     });
 })
+
+describe('OKLCH utilities', () => {
+    test('clampToUnitInterval clamps to [0..1] and returns 0 for non-finite', () => {
+        expect(clampToUnitInterval(NaN)).toBe(0);
+        expect(clampToUnitInterval(Infinity)).toBe(0);
+        expect(clampToUnitInterval(-Infinity)).toBe(0);
+
+        expect(clampToUnitInterval(-0.1)).toBe(0);
+        expect(clampToUnitInterval(0)).toBe(0);
+        expect(clampToUnitInterval(0.5)).toBe(0.5);
+        expect(clampToUnitInterval(1)).toBe(1);
+        expect(clampToUnitInterval(1.1)).toBe(1);
+    });
+
+    test('clampToByte clamps to [0..255], rounds, and returns 0 for non-finite', () => {
+        expect(clampToByte(NaN)).toBe(0);
+        expect(clampToByte(Infinity)).toBe(0);
+        expect(clampToByte(-Infinity)).toBe(0);
+
+        expect(clampToByte(-10)).toBe(0);
+        expect(clampToByte(0)).toBe(0);
+        expect(clampToByte(0.49)).toBe(0);
+        expect(clampToByte(0.5)).toBe(1);
+        expect(clampToByte(12.2)).toBe(12);
+        expect(clampToByte(12.5)).toBe(13);
+        expect(clampToByte(255)).toBe(255);
+        expect(clampToByte(300)).toBe(255);
+    });
+
+    test('srgbEncodeFromLinear follows the piecewise sRGB transfer function', () => {
+        // At 0
+        expect(srgbEncodeFromLinear(0)).toBe(0);
+
+        // Below threshold: linear segment
+        const below = 0.003;
+        expect(srgbEncodeFromLinear(below)).toBeCloseTo(12.92 * below, 12);
+
+        // Exactly at threshold: still linear branch
+        const t = 0.0031308;
+        expect(srgbEncodeFromLinear(t)).toBeCloseTo(12.92 * t, 12);
+
+        // Above threshold: gamma curve branch
+        const above = 0.01;
+        const expected = 1.055 * Math.pow(above, 1 / 2.4) - 0.055;
+        expect(srgbEncodeFromLinear(above)).toBeCloseTo(expected, 12);
+    });
+
+    test('convertOklabToSrgb returns byte RGB values in [0..255]', () => {
+        const rgb = convertOklabToSrgb(0.7, 0.1, 0.05);
+
+        expect(Array.isArray(rgb)).toBe(true);
+        expect(rgb).toHaveLength(3);
+
+        for (const channel of rgb) {
+            expect(Number.isInteger(channel)).toBe(true);
+            expect(channel).toBeGreaterThanOrEqual(0);
+            expect(channel).toBeLessThanOrEqual(255);
+        }
+    });
+
+    test('convertOklchToRgb normalizes hue degrees (hue wrap equivalence)', () => {
+        const rgbA = convertOklchToRgb(0.75, 0.12, 10);
+        const rgbB = convertOklchToRgb(0.75, 0.12, 370);
+        const rgbC = convertOklchToRgb(0.75, 0.12, -350);
+
+        expect(rgbA).toEqual(rgbB);
+        expect(rgbA).toEqual(rgbC);
+    });
+
+    test('convertOklchToRgb matches convertOklabToSrgb for equivalent a/b derived from hue', () => {
+        const lightness = 0.62;
+        const chroma = 0.18;
+        const hueDegrees = 166.95;
+        const hueRadians = (((hueDegrees % 360) + 360) % 360) * (Math.PI / 180);
+
+        const labA = chroma * Math.cos(hueRadians);
+        const labB = chroma * Math.sin(hueRadians);
+
+        const rgbFromOklch = convertOklchToRgb(lightness, chroma, hueDegrees);
+        const rgbFromOklab = convertOklabToSrgb(lightness, labA, labB);
+
+        expect(rgbFromOklch).toEqual(rgbFromOklab);
+    });
+
+    test('parseCssAlpha returns 1 when undefined', () => {
+        expect(parseCssAlpha(undefined)).toBe(1);
+    });
+
+    test('parseCssAlpha parses percent strings and clamps to [0..1]', () => {
+        expect(parseCssAlpha('0%')).toBe(0);
+        expect(parseCssAlpha('50%')).toBe(0.5);
+        expect(parseCssAlpha('100%')).toBe(1);
+        expect(parseCssAlpha('120%')).toBe(1);
+        expect(parseCssAlpha('-10%')).toBe(0);
+    });
+
+    test('parseCssAlpha parses numbers/strings and clamps to [0..1]', () => {
+        expect(parseCssAlpha(0)).toBe(0);
+        expect(parseCssAlpha(0.25)).toBe(0.25);
+        expect(parseCssAlpha(1)).toBe(1);
+        expect(parseCssAlpha(2)).toBe(1);
+        expect(parseCssAlpha(-1)).toBe(0);
+        expect(parseCssAlpha('0.3')).toBe(0.3);
+        expect(parseCssAlpha('2')).toBe(1);
+        expect(parseCssAlpha('-0.5')).toBe(0);
+    });
+
+    test('parseCssAlpha returns null for truly unparseable values', () => {
+        expect(parseCssAlpha('abc')).toBeNull();
+        expect(parseCssAlpha('NaN')).toBeNull();
+        expect(parseCssAlpha('%')).toBeNull();
+        expect(parseCssAlpha('%%')).toBeNull();
+    });
+
+    test('parseCssAlpha percent parsing only applies when string ends with %', () => {
+        expect(parseCssAlpha('10%%')).toBe(0.1)   // percent branch
+        expect(parseCssAlpha('10%foo')).toBe(1)   // numeric branch → clamped
+    })
+
+    test('normalizeOklchLightness parses, accepts 0..1, converts 0..100 to unit interval, and clamps', () => {
+        expect(normalizeOklchLightness(0)).toBe(0);
+        expect(normalizeOklchLightness(0.75)).toBe(0.75);
+        expect(normalizeOklchLightness(1)).toBe(1);
+
+        expect(normalizeOklchLightness(50)).toBe(0.5);
+        expect(normalizeOklchLightness(100)).toBe(1)
+        expect(normalizeOklchLightness(120)).toBe(1.2 > 1 ? 1 : 1.2); // after /100 => 1.2 then clamped to 1
+        expect(normalizeOklchLightness(120)).toBe(1);
+
+        expect(normalizeOklchLightness(-10)).toBe(0);
+    })
+
+    test('normalizeOklchLightness returns null for non-finite', () => {
+        expect(normalizeOklchLightness('abc')).toBeNull();
+        expect(normalizeOklchLightness(NaN)).toBeNull();
+        expect(normalizeOklchLightness(Infinity)).toBeNull();
+    });
+
+    test('normalizeOklchChroma parses, accepts >= 0, converts >1 as percent, and does not clamp upper bound', () => {
+        expect(normalizeOklchChroma(0)).toBe(0);
+        expect(normalizeOklchChroma(0.2)).toBe(0.2);
+        expect(normalizeOklchChroma(-1)).toBe(0);
+
+        expect(normalizeOklchChroma(10)).toBe(0.1);
+        expect(normalizeOklchChroma(150)).toBe(1.5);
+
+        expect(normalizeOklchChroma('0.42')).toBe(0.42);
+    });
+
+    test('normalizeOklchChroma returns null for non-finite', () => {
+        expect(normalizeOklchChroma('abc')).toBeNull();
+        expect(normalizeOklchChroma(NaN)).toBeNull();
+        expect(normalizeOklchChroma(Infinity)).toBeNull();
+    });
+
+    test('normalizeHueDegrees returns numeric hue or null for non-finite', () => {
+        expect(normalizeHueDegrees(0)).toBe(0);
+        expect(normalizeHueDegrees(180)).toBe(180);
+        expect(normalizeHueDegrees(-45)).toBe(-45);
+        expect(normalizeHueDegrees('270')).toBe(270);
+
+        expect(normalizeHueDegrees('abc')).toBeNull();
+        expect(normalizeHueDegrees(NaN)).toBeNull();
+        expect(normalizeHueDegrees(Infinity)).toBeNull();
+    });
+});

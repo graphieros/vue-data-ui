@@ -460,14 +460,21 @@ export const themePalettes = {
 
 export const opacity = ["00", "03", "05", "08", "0A", "0D", "0F", "12", "14", "17", "1A", "1C", "1F", "21", "24", "26", "29", "2B", "2E", "30", "33", "36", "38", "3B", "3D", "40", "42", "45", "47", "4A", "4D", "4F", "52", "54", "57", "59", "5C", "5E", "61", "63", "66", "69", "6B", "6E", "70", "73", "75", "78", "7A", "7D", "80", "82", "85", "87", "8A", "8C", "8F", "91", "94", "96", "99", "9C", "9E", "A1", "A3", "A6", "A8", "AB", "AD", "B0", "B3", "B5", "B8", "BA", "BD", "BF", "C2", "C4", "C7", "C9", "CC", "CF", "D1", "D4", "D6", "D9", "DB", "DE", "E0", "E3", "E6", "E8", "EB", "ED", "F0", "F2", "F5", "F7", "FA", "FC", "FF"];
 
-
 export function convertColorToHex(color) {
     const hexRegex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i;
     const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])([a-f\d])?$/i;
     const rgbRegex = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/i;
-    const hslRegex = /^hsla?\((\d+),\s*([\d.]+)%,\s*([\d.]+)%(?:,\s*([\d.]+))?\)$/i;
+    const hslRegex =
+        /^hsla?\((\d+),\s*([\d.]+)%,\s*([\d.]+)%(?:,\s*([\d.]+))?\)$/i;
+    const oklchRegex =
+        /^oklch\(\s*([\d.]+)%?\s*[, ]\s*([\d.]+)%?\s*[, ]\s*([\d.]+)(?:deg)?\s*(?:\/\s*([\d.]+%?)\s*)?\)$/i;
+    const lchRegex = /^lch\(/i;
 
-    if (color === undefined || color === null || (typeof color === 'number' && isNaN(color))) {
+    if (
+        color === undefined ||
+        color === null ||
+        (typeof color === "number" && isNaN(color))
+    ) {
         return null;
     }
 
@@ -475,56 +482,176 @@ export function convertColorToHex(color) {
 
     color = convertNameColorToHex(color);
 
-
     if (Array.isArray(color)) {
         const [r, g, b, a = 1] = color;
         color = `rgba(${r},${g},${b},${a})`;
-    } else if (typeof color === 'object') {
-        if (Number.isFinite(color.r) && Number.isFinite(color.g) && Number.isFinite(color.b)) {
+    } else if (typeof color === "object") {
+        if (
+            Number.isFinite(color.r) &&
+            Number.isFinite(color.g) &&
+            Number.isFinite(color.b)
+        ) {
             const a = Number.isFinite(color.a) ? color.a : 1;
             color = `rgba(${color.r},${color.g},${color.b},${a})`;
         } else {
             return null;
         }
-    } else if (typeof color === 'number') {
-        const n = color >>> 0; // uint32
-        const hex = n.toString(16).padStart(n <= 0xFFFFFF ? 6 : 8, '0');
-        return `#${hex.length === 6 ? hex + 'ff' : hex}`;
-    } else if (typeof color !== 'string') {
+    } else if (typeof color === "number") {
+        const n = color >>> 0;
+        const hex = n.toString(16).padStart(n <= 0xffffff ? 6 : 8, "0");
+        return `#${hex.length === 6 ? hex + "ff" : hex}`;
+    } else if (typeof color !== "string") {
         return null;
     }
 
     color = color.trim();
 
-    if (color.toLowerCase() === 'transparent') {
-        return '#FFFFFF00';
+    if (lchRegex.test(color)) {
+        console.warn(
+            "[convertColorToHex] lch() colors are not supported. Use oklch() instead.",
+        );
+        return null;
+    }
+
+    if (color.toLowerCase() === "transparent") {
+        return "#FFFFFF00";
     }
 
     color = color.replace(shorthandRegex, (_, r, g, b, a) => {
-        return `#${r}${r}${g}${g}${b}${b}${a ? a + a : ''}`;
+        return `#${r}${r}${g}${g}${b}${b}${a ? a + a : ""}`;
     });
 
     let match;
-    let alpha = 1;
 
     if ((match = color.match(hexRegex))) {
         const [, r, g, b, a] = match;
-        alpha = a ? parseInt(a, 16) / 255 : 1;
-        return `#${r}${g}${b}${decimalToHex(Math.round(alpha * 255))}`;
-    } else if ((match = color.match(rgbRegex))) {
+        const alpha = a ? parseInt(a, 16) / 255 : 1;
+        return `#${r}${g}${b}${decimalToHex(Math.round(clampToUnitInterval(alpha) * 255))}`;
+    }
+
+    if ((match = color.match(rgbRegex))) {
         const [, r, g, b, a] = match;
-        alpha = a ? parseFloat(a) : 1;
-        return `#${decimalToHex(r)}${decimalToHex(g)}${decimalToHex(b)}${decimalToHex(Math.round(alpha * 255))}`;
-    } else if ((match = color.match(hslRegex))) {
+        const alpha = a ? parseFloat(a) : 1;
+        return `#${decimalToHex(r)}${decimalToHex(g)}${decimalToHex(b)}${decimalToHex(Math.round(clampToUnitInterval(alpha) * 255))}`;
+    }
+
+    if ((match = color.match(hslRegex))) {
         const [, h, s, l, a] = match;
-        alpha = a ? parseFloat(a) : 1;
+        const alpha = a ? parseFloat(a) : 1;
         const [rr, gg, bb] = hslToRgba(Number(h), Number(s), Number(l));
-        return `#${decimalToHex(rr)}${decimalToHex(gg)}${decimalToHex(bb)}${decimalToHex(Math.round(alpha * 255))}`;
+        return `#${decimalToHex(rr)}${decimalToHex(gg)}${decimalToHex(bb)}${decimalToHex(Math.round(clampToUnitInterval(alpha) * 255))}`;
+    }
+
+    if ((match = color.match(oklchRegex))) {
+        const [, lightnessRaw, chromaRaw, hueRaw, alphaRaw] = match;
+
+        const lightness = normalizeOklchLightness(lightnessRaw);
+        if (lightness === null) return null;
+
+        const chroma = normalizeOklchChroma(chromaRaw);
+        if (chroma === null) return null;
+
+        const hueDegrees = normalizeHueDegrees(hueRaw);
+        if (hueDegrees === null) return null;
+
+        const alpha = parseCssAlpha(alphaRaw);
+        if (alpha === null) return null;
+
+        const [rr, gg, bb] = convertOklchToRgb(lightness, chroma, hueDegrees);
+        return `#${decimalToHex(rr)}${decimalToHex(gg)}${decimalToHex(bb)}${decimalToHex(Math.round(clampToUnitInterval(alpha) * 255))}`;
     }
 
     return null;
 }
 
+// OKLCH utility
+export function clampToUnitInterval(value) {
+    if (!Number.isFinite(value)) return 0;
+    return value < 0 ? 0 : value > 1 ? 1 : value;
+}
+
+// OKLCH utility
+export function clampToByte(value) {
+    if (!Number.isFinite(value)) return 0;
+    if (value < 0) return 0;
+    if (value > 255) return 255;
+    return Math.round(value);
+}
+
+// OKLCH utility
+export function srgbEncodeFromLinear(linear) {
+    return linear <= 0.0031308
+        ? 12.92 * linear
+        : 1.055 * Math.pow(linear, 1 / 2.4) - 0.055;
+}
+
+// OKLCH --> sRGB (D65) conversion
+// // Steps: OKLCH --> OKLab --> LMS' --> linear sRGB --> gamma sRGB
+export function convertOklchToRgb(lightness, chroma, hueDegrees) {
+    const hueRadians = (((hueDegrees % 360) + 360) % 360) * (Math.PI / 180);
+    const labA = chroma * Math.cos(hueRadians);
+    const labB = chroma * Math.sin(hueRadians);
+    return convertOklabToSrgb(lightness, labA, labB);
+}
+
+// OKLCH utility
+export function convertOklabToSrgb(lightness, labA, labB) {
+    const lPrime = lightness + 0.3963377774 * labA + 0.2158037573 * labB;
+    const mPrime = lightness - 0.1055613458 * labA - 0.0638541728 * labB;
+    const sPrime = lightness - 0.0894841775 * labA - 1.291485548 * labB;
+    const lCube = lPrime * lPrime * lPrime;
+    const mCube = mPrime * mPrime * mPrime;
+    const sCube = sPrime * sPrime * sPrime;
+    let redLinear =
+        +4.0767416621 * lCube - 3.3077115913 * mCube + 0.2309699292 * sCube;
+    let greenLinear =
+        -1.2684380046 * lCube + 2.6097574011 * mCube - 0.3413193965 * sCube;
+    let blueLinear =
+        -0.0041960863 * lCube - 0.7034186147 * mCube + 1.707614701 * sCube;
+    redLinear = clampToUnitInterval(redLinear);
+    greenLinear = clampToUnitInterval(greenLinear);
+    blueLinear = clampToUnitInterval(blueLinear);
+    const red = srgbEncodeFromLinear(redLinear) * 255;
+    const green = srgbEncodeFromLinear(greenLinear) * 255;
+    const blue = srgbEncodeFromLinear(blueLinear) * 255;
+    return [clampToByte(red), clampToByte(green), clampToByte(blue)];
+}
+
+// OKLCH utility
+export function parseCssAlpha(alphaRaw) {
+    if (alphaRaw === undefined) return 1;
+    if (typeof alphaRaw === "string" && alphaRaw.endsWith("%")) {
+        const percent = parseFloat(alphaRaw);
+        if (!Number.isFinite(percent)) return null;
+        return clampToUnitInterval(percent / 100);
+    }
+    const value = parseFloat(alphaRaw);
+    if (!Number.isFinite(value)) return null;
+    return clampToUnitInterval(value);
+}
+
+// OKLCH utility
+export function normalizeOklchLightness(lightnessRaw) {
+    let lightness = Number(lightnessRaw);
+    if (!Number.isFinite(lightness)) return null;
+    if (lightness > 1) lightness = lightness / 100;
+    return clampToUnitInterval(lightness);
+}
+
+// OKLCH utility
+export function normalizeOklchChroma(chromaRaw) {
+    let chroma = Number(chromaRaw);
+    if (!Number.isFinite(chroma)) return null;
+    if (chroma > 1) chroma = chroma / 100;
+    return chroma < 0 ? 0 : chroma;
+}
+
+// OKLCH utility
+export function normalizeHueDegrees(hueRaw) {
+    const hue = Number(hueRaw);
+    if (!Number.isFinite(hue)) return null;
+    return hue;
+}
 
 export function decimalToHex(decimal) {
     const hex = Number(decimal).toString(16);
@@ -786,48 +913,160 @@ export function degreesToRadians(degrees) {
     return (degrees * Math.PI) / 180;
 }
 
-export function adaptColorToBackground(bgColor) {
-    if (bgColor) {
-        let color = bgColor;
-        let alpha = 1;
 
-        if (color.startsWith('rgba')) {
-            const rgba = color.match(/rgba?\((\d+), (\d+), (\d+), ([\d.]+)\)/);
-            if (rgba) {
-                const [, r, g, b, a] = rgba;
-                alpha = parseFloat(a);
-                color = `#${parseInt(r).toString(16).padStart(2, '0')}${parseInt(g).toString(16).padStart(2, '0')}${parseInt(b).toString(16).padStart(2, '0')}`;
-            }
-        }
+function clampNumber(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
 
-        if (color.charAt(0) !== "#") {
-            color = this.rgbToHex(bgColor);
-        }
+function parseRgbOrRgba(input) {
+    const match = input
+        .trim()
+        .match(/^rgba?\(\s*([+\-]?\d+)\s*,\s*([+\-]?\d+)\s*,\s*([+\-]?\d+)\s*(?:,\s*([+\-]?[\d.]+)\s*)?\)$/i);
 
-        color = color.substring(1, 7);
-        let r = parseInt(color.substring(0, 2), 16);
-        let g = parseInt(color.substring(2, 4), 16);
-        let b = parseInt(color.substring(4, 6), 16);
+    if (!match) return null;
 
-        let uiColors = [r / 255, g / 255, b / 255];
+    const red = clampNumber(Number.parseInt(match[1], 10), 0, 255);
+    const green = clampNumber(Number.parseInt(match[2], 10), 0, 255);
+    const blue = clampNumber(Number.parseInt(match[3], 10), 0, 255);
+    const alpha = match[4] === undefined ? 1 : clampNumber(Number.parseFloat(match[4]), 0, 1);
 
-        let c = uiColors.map((col) => {
-            if (col <= 0.03928) {
-                return col / 12.92;
-            }
-            return Math.pow((col + 0.055) / 1.055, 2.4);
-        });
-
-        let L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-
-        if (alpha < 1) {
-            const blendedLuminance = alpha * L + (1 - alpha) * 1;
-            return blendedLuminance > 0.3 ? "#000000" : "#FFFFFF";
-        } else {
-            return L > 0.3 ? "#000000" : "#FFFFFF";
-        }
+    return { red, green, blue, alpha };
     }
-    return "#000000";
+
+    function parseHex(input) {
+    const value = input.trim();
+    if (!value.startsWith("#")) return null;
+
+    const hex = value.slice(1);
+
+    // #RGB, #RRGGBB
+    if (hex.length === 3) {
+        const red = Number.parseInt(hex[0] + hex[0], 16);
+        const green = Number.parseInt(hex[1] + hex[1], 16);
+        const blue = Number.parseInt(hex[2] + hex[2], 16);
+        return { red, green, blue, alpha: 1 };
+    }
+
+    if (hex.length === 6) {
+        const red = Number.parseInt(hex.slice(0, 2), 16);
+        const green = Number.parseInt(hex.slice(2, 4), 16);
+        const blue = Number.parseInt(hex.slice(4, 6), 16);
+        return { red, green, blue, alpha: 1 };
+    }
+
+    return null;
+}
+
+function parseOklch(input) {
+    const match = input
+        .trim()
+        .match(
+        /^oklch\(\s*([+\-]?[\d.]+%?)\s+([+\-]?[\d.]+)\s+([+\-]?[\d.]+)(?:\s*\/\s*([+\-]?[\d.]+%?))?\s*\)$/i
+        );
+
+    if (!match) return null;
+
+    const lightnessRaw = match[1];
+    const chromaRaw = match[2];
+    const hueRaw = match[3];
+    const alphaRaw = match[4];
+
+    const lightness = lightnessRaw.endsWith("%")
+        ? clampNumber(Number.parseFloat(lightnessRaw) / 100, 0, 1)
+        : clampNumber(Number.parseFloat(lightnessRaw), 0, 1);
+
+    const chroma = Math.max(0, Number.parseFloat(chromaRaw));
+    const hueDegrees = Number.parseFloat(hueRaw);
+
+    const alpha = alphaRaw
+        ? alphaRaw.endsWith("%")
+        ? clampNumber(Number.parseFloat(alphaRaw) / 100, 0, 1)
+        : clampNumber(Number.parseFloat(alphaRaw), 0, 1)
+        : 1;
+
+    // OKLCH -> OKLab
+    const hueRadians = (hueDegrees * Math.PI) / 180;
+    const labA = chroma * Math.cos(hueRadians);
+    const labB = chroma * Math.sin(hueRadians);
+
+    // OKLab -> linear sRGB (Björn Ottosson)
+    const l_ = lightness + 0.3963377774 * labA + 0.2158037573 * labB;
+    const m_ = lightness - 0.1055613458 * labA - 0.0638541728 * labB;
+    const s_ = lightness - 0.0894841775 * labA - 1.2914855480 * labB;
+
+    const l = l_ * l_ * l_;
+    const m = m_ * m_ * m_;
+    const s = s_ * s_ * s_;
+
+    let redLinear = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+    let greenLinear = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+    let blueLinear = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+
+    redLinear = clampNumber(redLinear, 0, 1);
+    greenLinear = clampNumber(greenLinear, 0, 1);
+    blueLinear = clampNumber(blueLinear, 0, 1);
+
+    const toSrgb8Bit = (linear) => {
+        const srgb =
+        linear <= 0.0031308 ? 12.92 * linear : 1.055 * Math.pow(linear, 1 / 2.4) - 0.055;
+        return clampNumber(Math.round(srgb * 255), 0, 255);
+    };
+
+    return {
+        red: toSrgb8Bit(redLinear),
+        green: toSrgb8Bit(greenLinear),
+        blue: toSrgb8Bit(blueLinear),
+        alpha,
+    };
+}
+
+function computeRelativeLuminance(red8Bit, green8Bit, blue8Bit) {
+    const red = red8Bit / 255;
+    const green = green8Bit / 255;
+    const blue = blue8Bit / 255;
+
+    const linearize = (channel) => {
+        if (channel <= 0.03928) return channel / 12.92;
+        return Math.pow((channel + 0.055) / 1.055, 2.4);
+    };
+
+    const redLinear = linearize(red);
+    const greenLinear = linearize(green);
+    const blueLinear = linearize(blue);
+
+    return 0.2126 * redLinear + 0.7152 * greenLinear + 0.0722 * blueLinear;
+}
+
+/**
+ * Returns black or white text color depending on the provided background color.
+ * Supports: hex (#RGB, #RRGGBB), rgb(), rgba(), and oklch(... / alpha).
+ *
+ * For semi-transparent colors, this assumes the background behind is white (same behavior as your original code).
+ */
+export function adaptColorToBackground(backgroundColor) {
+    if (!backgroundColor) return "#000000";
+
+    const rgbOrRgba = parseRgbOrRgba(backgroundColor);
+    const hex = parseHex(backgroundColor);
+    const oklch = parseOklch(backgroundColor);
+
+    const parsed =
+        rgbOrRgba ??
+        hex ??
+        oklch;
+
+    if (!parsed) {
+        // Unknown format: default behavior
+        return "#000000";
+    }
+
+    const relativeLuminance = computeRelativeLuminance(parsed.red, parsed.green, parsed.blue);
+
+    // If transparent, blend luminance over white (same logic as original)
+    const blendedLuminance =
+        parsed.alpha < 1 ? parsed.alpha * relativeLuminance + (1 - parsed.alpha) * 1 : relativeLuminance;
+
+    return blendedLuminance > 0.3 ? "#000000" : "#FFFFFF";
 }
 
 function isPlainObject(x) {
@@ -3534,10 +3773,14 @@ const lib = {
     checkFormatter,
     checkNaN,
     checkObj,
+    clampToByte,
+    clampToUnitInterval,
     closestDecimal,
     convertColorToHex,
     convertConfigColors,
     convertCustomPalette,
+    convertOklabToSrgb,
+    convertOklchToRgb,
     createAreaWithCuts,
     createCsvContent,
     createHalfCircleArc,
@@ -3597,11 +3840,15 @@ const lib = {
     makePath,
     matrixTimes,
     mergePointsByProximity,
+    normalizeHueDegrees,
+    normalizeOklchChroma,
+    normalizeOklchLightness,
     objectIsEmpty,
     observeClassPresenceIn,
     opacity,
     palette,
     parens,
+    parseCssAlpha,
     placeHTMLElementAtSVGCoordinates,
     placeXYTag,
     rotateMatrix,
@@ -3610,6 +3857,7 @@ const lib = {
     setOpacityIfWithinBBox,
     shiftHue,
     slugify,
+    srgbEncodeFromLinear,
     sumByAttribute,
     sumSeries,
     themePalettes,
@@ -3617,7 +3865,7 @@ const lib = {
     treeShake,
     triggerEvent,
     triggerResize,
-    wrapText
+    wrapText,
 };
 export default lib;
 
