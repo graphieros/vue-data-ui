@@ -7,7 +7,7 @@
 
 # vue-data-ui
 
-[![npm](https://img.shields.io/npm/v/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
+[![Open on npmx.dev](https://npmx.dev/api/registry/badge/vue-data-ui)](https://npmx.dev/vue-data-ui)
 [![Static Badge](https://img.shields.io/badge/components-67-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
