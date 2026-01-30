@@ -30,6 +30,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes/vue_ui_sparkline.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 import { usePrefersReducedMotion } from "../usePrefersMotion";
+import SparklinePulse from "../atoms/SparklinePulse.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const SparkTooltip = defineAsyncComponent(() => import('../atoms/SparkTooltip.vue'));
@@ -81,8 +82,31 @@ const source = ref(null);
 const FINAL_CONFIG = ref(prepareConfig());
 
 function makeSkeletonDs(n) {
+    if (props.config?.skeletonDataset && Array.isArray(props.config.skeletonDataset)) {
+        return props.config.skeletonDataset.map((value) => ({ period: '-', value}))
+    }
     return fib(n).map(value => ({ period: '-', value }));
 }
+
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            style: {
+                backgroundColor: '#99999930',
+                scaleMin: 0,
+                scaleMax: null,
+                animation: { show: false },
+                line: { color: '#AAAAAA', pulse: { show: false } },
+                bar: { color: '#AAAAAA' },
+                area: { color: '#CACACA' },
+                zeroLine: { color: '#6A6A6A' },
+                dataLabel: { show: false },
+                tooltip: { show: false },
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
 
 // v3 - Skeleton loader management
 const { loading, FINAL_DATASET, manualLoading } = useLoading(({
@@ -98,20 +122,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading(({
     skeletonDataset: makeSkeletonDs(12),
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            style: {
-                backgroundColor: '#99999930',
-                scaleMin: 0,
-                scaleMax: null,
-                animation: { show: false },
-                line: { color: '#AAAAAA', pulse: { show: false } },
-                bar: { color: '#AAAAAA' },
-                area: { color: '#CACACA' },
-                zeroLine: { color: '#6A6A6A' },
-                dataLabel: { show: false },
-                tooltip: { show: false },
-            }
-        }
+        userConfig: skeletonConfig.value
     })
 }))
 
@@ -151,7 +162,6 @@ function prepareConfig() {
 }
 
 const pulse = computed(() => FINAL_CONFIG.value?.style?.line.pulse || {});
-const pulsePathId = computed(() => `sparkline_line_path_${uid.value}`);
 const pulseDur = computed(() => `${Math.max(200, Number(pulse.value.durationMs) || 4000) / 1000}s`);
 const pulsePathLength = ref(0);
 const pulseBegin = computed(() => pulse.value?.begin || '0s');
@@ -172,14 +182,47 @@ const pulseTrailOffset = computed(() => {
     return (pulseTrail.value.lengthPx || 0) + extra;
 });
 
+const pulseEnabled = computed(() => {
+  return (
+    !!pulse.value?.show &&
+    !!pulseTrail.value?.show &&
+    !isBar.value &&
+    !prefersReducedMotion.value &&
+    !loading.value &&
+    (mutableDataset.value?.length || 0) > 1
+  );
+});
+
 function updatePulsePathLength() {
-    const el = svgRef.value?.querySelector?.(`#${pulsePathId.value}`);
+    if (!pulseEnabled.value) {
+        pulsePathLength.value = 0;
+        return;
+    }
+
+    const svgEl = svgRef.value;
+    if (!svgEl) return;
+
+    const selector = `#${pulsePathId.value}`;
+
+    const el = svgEl.querySelector?.(selector);
     if (el && typeof el.getTotalLength === "function") {
         const len = el.getTotalLength();
-        pulsePathLength.value = Number.isFinite(len) ? len : 0;
-    } else {
-        pulsePathLength.value = 0;
+        if (Number.isFinite(len) && len > 0) {
+            pulsePathLength.value = len;
+        }
+        return;
     }
+
+    // Path not in DOM yet (id just changed / conditional path swap / hydration).
+    requestAnimationFrame(() => {
+        const el2 = svgEl.querySelector?.(selector);
+        if (el2 && typeof el2.getTotalLength === "function") {
+        const len2 = el2.getTotalLength();
+        if (Number.isFinite(len2) && len2 > 0) {
+            pulsePathLength.value = len2;
+        }
+        }
+    });
 }
 
 const pulseMotion = computed(() => {
@@ -368,6 +411,41 @@ onMounted(() => {
 onBeforeUnmount(() => {
     stopAnimation();
 });
+
+const pulseInstanceKey = ref(0);
+
+watch(
+    () => loading.value,
+    async (isLoading) => {
+        if (isLoading) return;
+        await nextTick();
+        pulseInstanceKey.value += 1;
+    }
+);
+
+watch(
+    () => isAnimating.value,
+    async (animating) => {
+        if (animating) return;
+        if (loading.value) return;
+        await nextTick();
+        pulseInstanceKey.value += 1;
+    }
+);
+
+const pulsePathId = computed(() => {
+    return `sparkline_line_path_${uid.value}`;
+});
+
+const pulseMounted = ref(true);
+
+async function restartPulse() {
+    pulseMounted.value = false;
+    await nextTick();
+    pulseMounted.value = true;
+    await nextTick();
+    updatePulsePathLength();
+}
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
@@ -615,7 +693,14 @@ function selectDatapoint(datapoint, index) {
 }
 
 watch(
-    () => [mutableDataset.value.length, svg.value.width, svg.value.height, FINAL_CONFIG.value?.style?.line?.smooth],
+    () => [
+        pulseEnabled.value,
+        pulsePathId.value,
+        mutableDataset.value.length,
+        svg.value.width,
+        svg.value.height,
+        FINAL_CONFIG.value?.style?.line?.smooth,
+    ],
     async () => {
         await nextTick();
         updatePulsePathLength();
@@ -627,6 +712,24 @@ onMounted(async () => {
     await nextTick();
     updatePulsePathLength();
 });
+
+watch(
+    () => loading.value,
+    async (isLoading) => {
+        if (isLoading) return;
+        await restartPulse();
+    }
+);
+
+watch(
+    () => isAnimating.value,
+    async (animating) => {
+        if (animating) return;
+        if (loading.value) return;
+        await restartPulse();
+    }
+);
+
 </script>
 
 <template>
@@ -706,24 +809,33 @@ onMounted(async () => {
             <!-- AREA -->
             <g v-if="FINAL_CONFIG.style.area.show && !isBar && mutableDataset[0] && mutableDataset.length > 1">
                 <path
+                    class="vue-ui-sparkline-area"
                     data-cy="sparkline-smooth-area"
                     v-if="FINAL_CONFIG.style.line.smooth"
                     :d="`M ${mutableDataset[0].x},${drawingArea.bottom} ${createSmoothPath(mutableDataset)} L ${mutableDataset.at(-1).x},${drawingArea.bottom} Z`"
                     :fill="FINAL_CONFIG.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.area.color, FINAL_CONFIG.style.area.opacity)"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    :style="{
+                        transition: loading ? undefined : 'all 0.2s'
+                    }"
                 />
                 <path
+                    class="vue-ui-sparkline-area"
                     data-cy="sparkline-angle-area"
                     v-else
                     :d="`M${area}Z`" 
                     :fill="FINAL_CONFIG.style.area.useGradient ? `url(#sparkline_gradient_${uid})` : setOpacity(FINAL_CONFIG.style.area.color, FINAL_CONFIG.style.area.opacity)"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    :style="{
+                        transition: loading ? undefined : 'all 0.2s'
+                    }"
                 />
             </g>
 
-            <path 
+            <path
+                class="vue-ui-sparkline-path"
                 data-cy="sparkline-smooth-path" 
                 v-if="FINAL_CONFIG.style.line.smooth && !isBar"
                 :id="pulsePathId"
@@ -732,9 +844,13 @@ onMounted(async () => {
                 :stroke-width="FINAL_CONFIG.style.line.strokeWidth" 
                 stroke-linecap="round" 
                 stroke-linejoin="round"
+                :style="{
+                    transition: loading ? undefined : 'all 0.2s'
+                }"
             />
 
-            <path 
+            <path
+                class="vue-ui-sparkline-path"
                 data-cy="sparkline-straight-line" 
                 v-if="!FINAL_CONFIG.style.line.smooth && !isBar"
                 :id="pulsePathId"
@@ -743,111 +859,34 @@ onMounted(async () => {
                 fill="none" 
                 :stroke-width="FINAL_CONFIG.style.line.strokeWidth" 
                 stroke-linecap="round" stroke-linejoin="round"
+                :style="{
+                    transition: loading ? undefined : 'all 0.2s'
+                }"
             />
 
-            <g v-if="pulse.show && pulseTrail.show && !isBar && mutableDataset.length > 1 && pulsePathLength > 0 && !prefersReducedMotion" style="pointer-events:none">
-                <path
-                    :d="(FINAL_CONFIG.style.line.smooth
-                    ? `M ${createSmoothPath(mutableDataset) || '0,0'}`
-                    : `M ${createStraightPath(mutableDataset) || '0,0'}`
-                    )"
-                    :stroke="pulse.color"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    :stroke-width="pulseTrail.width"
-                    opacity="0"
-                    :stroke-dasharray="`${pulseTrail.lengthPx} ${Math.max(1, pulsePathLength - pulseTrail.lengthPx)}`"
-                >
-                    <!-- move the visible segment along the full path continuously -->
-                    <animate
-                        attributeName="stroke-dashoffset"
-                        :begin="pulseBegin"
-                        :dur="pulseDur"
-                        :repeatCount="pulseRepeatCount"
-                        :fill="pulseFillMode"
-                        :calcMode="pulseMotion.calcMode"
-                        :keySplines="pulseMotion.keySplines || undefined"
-                        :keyTimes="pulseMotion.keyTimes || undefined"
-                        :from="pulsePathLength + pulseTrailOffset"
-                        :to="pulseTrailOffset"
-                    />
-
-                    <!-- fade in/out so it does not pop at loop boundary -->
-                    <animate
-                        attributeName="opacity"
-                        :begin="pulseBegin"
-                        :dur="pulseDur"
-                        :repeatCount="pulseRepeatCount"
-                        :fill="pulseFillMode"
-                        :values="`0;${pulseTrail.opacity};${pulseTrail.opacity};0`"
-                        :keyTimes="`0;${pulseTrail.fadeIn};${1 - pulseTrail.fadeOut};1`"
-                    />
-                </path>
-            </g>
-
-
-            <g v-if="pulse.show && !isBar && mutableDataset.length > 1 &&!prefersReducedMotion" style="pointer-events:none">
-                <!-- moving dot -->
-                <circle
-                    :r="pulse.radius"
-                    :fill="pulse.color"
-                    :filter="`url(#sparkline_pulse_glow_${uid})`"
-                    opacity="0"
-                >
-                    <animateMotion
-                        :begin="pulseBegin"
-                        :dur="pulseDur"
-                        :repeatCount="pulseRepeatCount"
-                        :fill="pulseFillMode"
-                        :calcMode="pulseMotion.calcMode"
-                        :keySplines="pulseMotion.keySplines || undefined"
-                        :keyTimes="pulseMotion.keyTimes || undefined"
-                        :keyPoints="pulseKeyPoints"
-                        rotate="auto"
-                    >
-                        <mpath :href="`#${pulsePathId}`" />
-                    </animateMotion>
-
-                    <animate
-                        attributeName="opacity"
-                        :dur="pulseDur"
-                        :repeatCount="pulseRepeatCount"
-                        :fill="pulseFillMode"
-                        values="0;1;1;0"
-                        keyTimes="0;0.1;0.9;1"
-                    />
-                </circle>
-
-                <!-- pulsing halo -->
-                <circle
-                    :r="Math.max(pulse.radius * 1.3)"
-                    :fill="pulse.color"
-                    opacity="0"
-                >
-                    <animateMotion
-                        :begin="pulseBegin"
-                        :dur="pulseDur"
-                        :repeatCount="pulseRepeatCount"
-                        :calcMode="pulseMotion.calcMode"
-                        :keySplines="pulseMotion.keySplines || undefined"
-                        :keyTimes="pulseMotion.keyTimes || undefined"
-                        :keyPoints="pulseKeyPoints"
-                        keyPointsKeyTimes="0;1"
-                        rotate="auto"
-                    >
-                        <mpath :href="`#${pulsePathId}`" />
-                    </animateMotion>
-
-                    <animate
-                        attributeName="opacity"
-                        values="0;0.35;0.35;0"
-                        keyTimes="0;0.15;0.85;1"
-                        :dur="pulseDur"
-                        :repeatCount="pulseRepeatCount"
-                    />
-                </circle>
-            </g>
+            <SparklinePulse
+                v-if="pulseMounted && pulseEnabled && pulsePathLength > 0"
+                :uid="uid"
+                :svgRef="svgRef"
+                :pulsePathId="pulsePathId"
+                :pulsePathLength="pulsePathLength"
+                :pulseDur="pulseDur"
+                :pulseBegin="pulseBegin"
+                :pulseRepeatCount="pulseRepeatCount"
+                :pulseFillMode="pulseFillMode"
+                :pulseKeyPoints="pulseKeyPoints"
+                :pulseMotion="pulseMotion"
+                :pulse="pulse"
+                :pulseTrail="pulseTrail"
+                :pulseTrailOffset="pulseTrailOffset"
+                :lineSmooth="FINAL_CONFIG.style.line.smooth"
+                :mutableDataset="mutableDataset"
+                :createSmoothPath="createSmoothPath"
+                :createStraightPath="createStraightPath"
+                :prefersReducedMotion="prefersReducedMotion"
+                :loading="loading"
+                :isBar="isBar"
+            />
             
             <g v-for="(plot, i) in mutableDataset">
                 <rect
@@ -977,9 +1016,11 @@ onMounted(async () => {
         <div v-if="$slots.source" ref="source" dir="auto">
             <slot name="source" />
         </div>
-        
+
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading"/>
+        <slot name="skeleton">
+            <BaseScanner v-if="loading"/>
+        </slot>
     </div>
 </template>
 
