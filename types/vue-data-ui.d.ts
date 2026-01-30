@@ -5831,6 +5831,8 @@ declare module "vue-data-ui" {
         theme?: Theme;
         type?: "line" | "bar";
         responsive?: boolean;
+        skeletonConfig?: Omit<VueUiSparklineConfig, 'skeletonConfig' | 'skeletonDataset'> | null;
+        skeletonDataset?: nummber[] | null;
         events?: { // v3
             datapointEnter?: VueUiSparklineEvent; // v3
             datapointLeave?: VueUiSparklineEvent; // v3
