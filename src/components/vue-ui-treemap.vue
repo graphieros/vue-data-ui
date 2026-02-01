@@ -120,29 +120,9 @@ const rootTextCache = ref(new Map());
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        {
-            name: '_',
-            value: 53,
-            color: '#CACACA90',
-            children: [
-                { name: '_', value: 21 },
-                { name: '_', value: 13 },
-                { name: '_', value: 8 },
-                { name: '_', value: 5 },
-                { name: '_', value: 3 },
-                { name: '_', value: 2 },
-                { name: '_', value: 1 },
-            ]
-        }
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             style: {
                 chart: {
@@ -160,9 +140,36 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
     })
-})
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '_',
+            value: 53,
+            color: '#CACACA90',
+            children: [
+                { name: '_', value: 21 },
+                { name: '_', value: 13 },
+                { name: '_', value: 8 },
+                { name: '_', value: 5 },
+                { name: '_', value: 3 },
+                { name: '_', value: 2 },
+                { name: '_', value: 1 },
+            ]
+        }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
+    })
+});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -2052,7 +2059,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

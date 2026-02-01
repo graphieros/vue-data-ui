@@ -9,7 +9,8 @@ import {
     useSlots,
     defineAsyncComponent,
     shallowRef,
-    toRefs
+    toRefs,
+    watchEffect
 } from "vue";
 import {
     applyDataLabel,
@@ -44,6 +45,7 @@ import {
     rect,
     text,
 } from "../canvas-lib";
+import { useLocale } from "../useLocale";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
@@ -56,7 +58,6 @@ import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import img from "../img";
 import themes from "../themes/vue_ui_xy_canvas.json";
-import locales from '../locales/locales.json';
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import BaseIcon from "../atoms/BaseIcon.vue";
@@ -141,28 +142,9 @@ const FINAL_CONFIG = ref(prepareConfig());
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        {
-            name: '',
-            series: [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 134],
-            type: 'line',
-            smooth: true,
-            color: '#BABABA'
-        },
-        {
-            name: '',
-            series: [0, 0.5, 1, 1.5, 2.5, 4, 6.5, 10.5, 17, 27.5, 44.5, 67],
-            type: 'bar',
-            color: '#AAAAAA'
-        },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             table: { show: false },
             style: {
@@ -205,7 +187,33 @@ const { loading, FINAL_DATASET } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '',
+            series: [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 134],
+            type: 'line',
+            smooth: true,
+            color: '#BABABA'
+        },
+        {
+            name: '',
+            series: [0, 0.5, 1, 1.5, 2.5, 4, 6.5, 10.5, 17, 27.5, 44.5, 67],
+            type: 'bar',
+            color: '#AAAAAA'
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -340,19 +348,107 @@ function selectMinimapIndex(i) {
     draw()
 }
 
+const measuredBottomExtraPixels = ref(0);
+const bottomMeasureAnimationFrameId = ref(0);
+
+function computeTimeLabelsBottomExtraPixels() {
+    if (!ctx.value) return 0;
+    if (!FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show) return 0;
+
+    const values = timeLabels.value || [];
+    const start = slicer.value.start ?? 0;
+    const end = slicer.value.end ?? 0;
+
+    const windowLen = Math.max(0, end - start);
+    if (!windowLen) return 0;
+
+    const fontSize = Math.round(
+        (w.value / 40) * FINAL_CONFIG.value.style.chart.grid.x.timeLabels.fontSizeRatio
+    );
+
+    const font = `${FINAL_CONFIG.value.style.chart.grid.x.timeLabels.bold ? 'bold ' : ''}${fontSize}px ${FINAL_CONFIG.value.style.fontFamily}`;
+    ctx.value.save();
+    ctx.value.font = font;
+
+    let maxTextWidth = 0;
+    for (let i = start; i < end; i += 1) {
+        const label = values[i]?.text ?? `${i + 1}`;
+        const metrics = ctx.value.measureText(String(label));
+        if (metrics.width > maxTextWidth) maxTextWidth = metrics.width;
+    }
+
+    ctx.value.restore();
+
+    const rotationDeg = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation || 0;
+    const rotationRad = (rotationDeg * Math.PI) / 180;
+
+    // Approximate unrotated text height (canvas does not give reliable height)
+    const baseTextHeight = fontSize;
+
+    // Rotated bounding-box height approximation:
+    // height' = |sin| * width + |cos| * height
+    const rotatedTextHeight =
+        Math.abs(Math.sin(rotationRad)) * maxTextWidth +
+        Math.abs(Math.cos(rotationRad)) * baseTextHeight;
+
+    // In drawTimeLabels(), labels are drawn at:
+    // y = drawingArea.bottom + (w / offsetY)
+    const offsetY = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.offsetY || 1;
+    const baselineShift = w.value / offsetY;
+
+    // Small safety padding to avoid clipping
+    return Math.max(0, baselineShift + rotatedTextHeight + 4);
+}
+
+function measureBottomExtraNow() {
+    measuredBottomExtraPixels.value = computeTimeLabelsBottomExtraPixels();
+}
+
+function scheduleMeasureBottomExtra() {
+    if (bottomMeasureAnimationFrameId.value) {
+        cancelAnimationFrame(bottomMeasureAnimationFrameId.value);
+    }
+
+    // Two RAFs ensures canvas size + fonts + state are stable before measuring
+    bottomMeasureAnimationFrameId.value = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            measureBottomExtraNow();
+        });
+    });
+}
+
+onBeforeUnmount(() => {
+    if (bottomMeasureAnimationFrameId.value) {
+        cancelAnimationFrame(bottomMeasureAnimationFrameId.value);
+    }
+});
+
 const drawingArea = computed(() => {
-    const width = w.value - (w.value * (FINAL_CONFIG.value.style.chart.paddingProportions.left + FINAL_CONFIG.value.style.chart.paddingProportions.right))
+    const width =
+        w.value -
+        (w.value *
+            (FINAL_CONFIG.value.style.chart.paddingProportions.left +
+                FINAL_CONFIG.value.style.chart.paddingProportions.right));
+
+    const baseTop = h.value * FINAL_CONFIG.value.style.chart.paddingProportions.top;
+    const baseBottom = h.value * FINAL_CONFIG.value.style.chart.paddingProportions.bottom;
+
+    const extraBottom = measuredBottomExtraPixels.value;
+
+    const bottom = h.value - baseBottom - extraBottom;
+    const height = h.value - (baseTop + baseBottom) - extraBottom;
+
     return {
         canvasWidth: w.value,
         canvasHeight: h.value,
         left: w.value * FINAL_CONFIG.value.style.chart.paddingProportions.left,
-        top: h.value * FINAL_CONFIG.value.style.chart.paddingProportions.top,
+        top: baseTop,
         right: w.value - (w.value * FINAL_CONFIG.value.style.chart.paddingProportions.right),
-        bottom: h.value - (h.value * FINAL_CONFIG.value.style.chart.paddingProportions.bottom),
+        bottom,
         width,
-        height: h.value - (h.value * (FINAL_CONFIG.value.style.chart.paddingProportions.top + FINAL_CONFIG.value.style.chart.paddingProportions.bottom)),
+        height,
         slot: width / (slicer.value.end - slicer.value.start)
-    }
+    };
 });
 
 function proportionToMax(p, m) {
@@ -1181,14 +1277,71 @@ function drawDataLabels(ds) {
     }
 }
 
-const timeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
-        maxDatapoints: maxSeries.value,
-        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
-        start: 0,
-        end: maxSeries.value
-    });
+const timeLabels = ref([]);
+
+let timeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
+            maxDatapoints: maxSeries.value,
+            formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
+            start: 0,
+            end: maxSeries.value
+        });
+
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
+});
+
+watchEffect(() => {
+    // Track all reactive inputs that influence time label geometry
+    const show = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show;
+    const rotation = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation;
+    const offsetY = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.offsetY;
+    const fontSizeRatio = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.fontSizeRatio;
+    const bold = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.bold;
+
+    const start = slicer.value.start;
+    const end = slicer.value.end;
+
+    const width = w.value;
+    const height = h.value;
+
+    // Trigger when async labels resolve / locale formatting changes
+    const labelTexts = (timeLabels.value || []).map(l => l?.text ?? '').join('|');
+
+    void show;
+    void rotation;
+    void offsetY;
+    void fontSizeRatio;
+    void bold;
+    void start;
+    void end;
+    void width;
+    void height;
+    void labelTexts;
+
+    scheduleMeasureBottomExtra();
+}, { flush: 'post' });
+
+const localeData = ref({ months: [], shortMonths: [], days: [], shortDays: [] });
+
+let localeRequestId = 0;
+watchEffect(() => {
+    const requestId = ++localeRequestId;
+    const xl = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter;
+
+    (async () => {
+        const resolved = await useLocale(xl.locale).catch(() => useLocale("en"));
+        if (requestId === localeRequestId) {
+            localeData.value = resolved.data;
+        }
+    })();
 });
 
 const preciseTimeFormatter = computed(() => {
@@ -1196,16 +1349,16 @@ const preciseTimeFormatter = computed(() => {
 
     const dt = useDateTime({
         useUTC: xl.useUTC,
-        locale: locales[xl.locale] || { months:[], shortMonths:[], days:[], shortDays:[] },
+        locale: localeData.value,
         januaryAsYear: xl.januaryAsYear
     });
 
     return (absIndex, fmt) => {
-        const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values
-        const ts = values?.[absIndex]
-        if (ts == null) return ''
-        return dt.formatDate(new Date(ts), fmt)
-    }
+        const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values;
+        const ts = values?.[absIndex];
+        if (ts == null) return "";
+        return dt.formatDate(new Date(ts), fmt);
+    };
 });
 
 const preciseAllTimeLabels = computed(() => {
@@ -1815,7 +1968,7 @@ function prepareChart() {
 
     if (resizeObserver.value) resizeObserver.value.disconnect();
 
-    resizeObserver.value = new ResizeObserver((entries) => {
+    resizeObserver.value = new ResizeObserver(async (entries) => {
         for (const entry of entries) {
             if (entry.contentBoxSize && container.value) {
                 datasetHasChanged.value = true;
@@ -2208,7 +2361,9 @@ defineExpose({
             />
 
             <!-- v3 Skeleton loader -->
-            <BaseScanner v-if="loading" />
+            <slot name="skeleton">
+                <BaseScanner v-if="loading" />
+            </slot>
             
             <!-- TOOLTIP -->
             <Tooltip
@@ -2259,8 +2414,8 @@ defineExpose({
                 :immediate="!FINAL_CONFIG.style.chart.zoom.preview.enable"
                 :inputColor="FINAL_CONFIG.style.chart.zoom.color"
                 :isPreview="isPrecog"
-                :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[slicer.start].text : ''"
-                :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels[slicer.end-1].text : ''"
+                :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[slicer.start]?.text : ''"
+                :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels[slicer.end-1]?.text : ''"
                 :max="maxSeries"
                 :min="0"
                 :minimap="minimap"
@@ -2273,7 +2428,7 @@ defineExpose({
                 :minimapSelectedColorOpacity="FINAL_CONFIG.style.chart.zoom.minimap.selectedColorOpacity"
                 :minimapSelectedIndex="tooltipIndex"
                 :minimapSelectionRadius="FINAL_CONFIG.style.chart.zoom.minimap.selectionRadius"
-                :preciseLabels="preciseAllTimeLabels.length ? preciseAllTimeLabels : timeLabels"
+                :preciseLabels="preciseAllTimeLabels?.length ? preciseAllTimeLabels : timeLabels"
                 :refreshEndPoint="FINAL_CONFIG.style.chart.zoom.endIndex !== null ? FINAL_CONFIG.style.chart.zoom.endIndex + 1 : maxSeries"
                 :refreshStartPoint="FINAL_CONFIG.style.chart.zoom.startIndex !== null ? FINAL_CONFIG.style.chart.zoom.startIndex : 0"
                 :selectColor="FINAL_CONFIG.style.chart.zoom.highlightColor"

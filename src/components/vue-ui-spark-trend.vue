@@ -64,14 +64,9 @@ const uid = ref(createUid());
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             style: {
                 animation: { show: false },
                 backgroundColor: '#99999930',
@@ -81,7 +76,19 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                 },
                 dataLabel: { show: false, useColorTrend: false, color: '#6A6A6A' },
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -529,7 +536,9 @@ const { fitText } = useFitSvgText({
         </div>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

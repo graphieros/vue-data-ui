@@ -71,14 +71,9 @@ const observedEl = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: { percentage: 50 },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             style: {
                 chart: {
@@ -93,7 +88,19 @@ const { loading, FINAL_DATASET } = useLoading({
                     },
                 },
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? { percentage: 50 },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -619,7 +626,9 @@ defineExpose({
         </div>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

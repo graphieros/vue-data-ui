@@ -208,35 +208,9 @@ function prepareChart() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await setupSlicer();
-        });
-    },
-    skeletonDataset: [
-        {
-            name: '',
-            values: [1, 2, 3, 5, 8, 13],
-            color: '#AAAAAA'
-        },
-        {
-            name: '',
-            values: [1, 2, 3, 5, 8, 13],
-            color: '#BABABA'
-        },
-        {
-            name: '',
-            values: [1, 2, 3, 5, 8, 13],
-            color: '#CACACA'
-        },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             useCssAnimation: false,
             table: { show: false },
             userOptions: { show: false },
@@ -277,7 +251,40 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await setupSlicer();
+        });
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '',
+            values: [1, 2, 3, 5, 8, 13],
+            color: '#AAAAAA'
+        },
+        {
+            name: '',
+            values: [1, 2, 3, 5, 8, 13],
+            color: '#BABABA'
+        },
+        {
+            name: '',
+            values: [1, 2, 3, 5, 8, 13],
+            color: '#CACACA'
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -566,14 +573,26 @@ const maxLength = computed(() => {
     return Math.max(...convertedDataset.value.map(ds => ds.length))
 });
 
-const timeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.values,
-        maxDatapoints: maxLength.value,
-        formatter: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.datetimeFormatter,
-        start: slicer.value.start,
-        end: slicer.value.end
-    });
+const timeLabels = ref([]);
+let timeLabelsRequestId = 0;
+
+
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.values,
+            maxDatapoints: maxLength.value,
+            formatter: FINAL_CONFIG.value.style.chart.layout.grid.xAxis.dataLabels.datetimeFormatter,
+            start: slicer.value.start,
+            end: slicer.value.end
+        });
+
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
 });
 
 const slit = computed(() => {

@@ -36,6 +36,7 @@ import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { usePrinter } from "../usePrinter";
+import { useSvgExport } from "../useSvgExport";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useThemeCheck } from "../useThemeCheck";
@@ -47,7 +48,6 @@ import themes from "../themes/vue_ui_bump.json";
 import Title from "../atoms/Title.vue";
 import BaseScanner from "../atoms/BaseScanner.vue";
 import BaseDraggableDialog from "../atoms/BaseDraggableDialog.vue";
-import { useSvgExport } from "../useSvgExport";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -105,18 +105,9 @@ const selectedSeries = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        { name: '————', values: [1, 1, 1, 2, 2, 2, 3, 3, 2, 2], color: '#4A4A4A'},
-        { name: '————', values: [2, 2, 2, 1, 3, 3, 2, 2, 3, 3], color: '#6A6A6A'},
-        { name: '————', values: [3, 3, 3, 3, 1, 1, 1, 1, 1, 1], color: '#8A8A8A'},
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false, },
             style: {
                 chart: {
@@ -139,7 +130,23 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        { name: '————', values: [1, 1, 1, 2, 2, 2, 3, 3, 2, 2], color: '#4A4A4A'},
+        { name: '————', values: [2, 2, 2, 1, 3, 3, 2, 2, 3, 3], color: '#6A6A6A'},
+        { name: '————', values: [3, 3, 3, 3, 1, 1, 1, 1, 1, 1], color: '#8A8A8A'},
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -410,6 +417,7 @@ const updateHeight = throttle((h) => {
     labelsXHeight.value = h;
 }, 100);
 
+
 watchEffect((onInvalidate) => {
     const el = timeLabelsEls.value;
     if (!el) return
@@ -426,11 +434,40 @@ onBeforeUnmount(() => {
 });
 
 const offsetY = computed(() => {
-    let tlH = 0;
-    if (timeLabelsEls.value) {
-        tlH = labelsXHeight.value;
-    }
-    return tlH;
+    const timeLabelsConfig = FINAL_CONFIG.value.style.chart.layout.timeLabels;
+
+    if (!timeLabelsConfig.show) return 0;
+
+    const fontSize = timeLabelsConfig.fontSize;
+    const rotationDegrees = timeLabelsConfig.rotation;
+    const rotationRadians = (Math.PI / 180) * rotationDegrees;
+
+    const labels = displayedTimeLabels.value || [];
+
+    if (!labels.length) return 0;
+
+    const maxLines = labels.reduce((maxValue, label) => {
+        const lineCount = String(label?.text ?? "").split("\n").length;
+        return Math.max(maxValue, lineCount);
+    }, 1);
+
+    const maxCharactersPerLine = labels.reduce((maxValue, label) => {
+        const lines = String(label?.text ?? "").split("\n");
+        const longestLine = lines.reduce((maxLineValue, line) => Math.max(maxLineValue, line.length), 0);
+        return Math.max(maxValue, longestLine);
+    }, 0);
+
+    const lineHeight = fontSize * 1.3;
+    const textBlockHeight = maxLines * lineHeight;
+    const textBlockWidth = maxCharactersPerLine * fontSize * (maxCharactersPerLine === 1 ? 1 : 0.6);
+
+    const verticalProjection =
+        Math.abs(Math.sin(rotationRadians)) * textBlockWidth +
+        Math.abs(Math.cos(rotationRadians)) * textBlockHeight;
+
+    const safetyMargin = fontSize * 0.3;
+
+    return Math.max(0, verticalProjection + Math.abs(timeLabelsConfig.offsetY) + safetyMargin);
 });
 
 const drawingArea = computed(() => {
@@ -615,14 +652,37 @@ function getValueRect(label) {
     }
 }
 
-const timeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.chart.layout.timeLabels.values,
-        maxDatapoints: maxLen.value,
-        formatter: FINAL_CONFIG.value.style.chart.layout.timeLabels.datetimeFormatter,
-        start: 0,
-        end: maxLen.value
-    })
+const timeLabels = ref([]);
+let timeLabelsRequestId = 0;
+
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    const cfg = FINAL_CONFIG.value.style.chart.layout.timeLabels;
+    const values = cfg.values;
+    const formatter = cfg.datetimeFormatter;
+    const end = maxLen.value;
+
+    // Keep the shape stable when there is no data
+    if (!end || !Array.isArray(values) || values.length === 0) {
+        timeLabels.value = [];
+        return;
+    }
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values,
+            maxDatapoints: end,
+            formatter,
+            start: 0,
+            end
+        });
+
+        // Prevent out-of-order async updates
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
 });
 
 const modulo = computed(() => {
@@ -1324,7 +1384,9 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

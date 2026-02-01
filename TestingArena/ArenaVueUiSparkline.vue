@@ -214,12 +214,12 @@ const config = computed(() => {
                 },
                 datetimeFormatter: {
                     enable: true,
-                    locale: 'en',
+                    locale: 'zh-CN',
                     useUTC: false,
                     januaryAsYear: true,
                     options: { 
                         year: 'yyyy',
-                        month: `MMM`,
+                        month: `MMMM`,
                         day: 'dd MMM',
                         hour: 'HH:mm',
                         minute: 'HH:mm:ss',
@@ -275,6 +275,20 @@ const step = ref(0)
 
         <template #local>
             <LocalVueUiSparkline :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
+
+                <template #before="{ selected, latest, sum, average, median, trend }">
+                    <div style="color: white;height: 180px;font-size:11px">
+                        #BEFORE
+                        <ul>
+                            <li>Latest: {{ latest }}</li>
+                            <li>Sum: {{ sum }}</li>
+                            <li>Average: {{ average }}</li>
+                            <li>Median: {{ median }}</li>
+                            <li>Trend: {{ trend }}</li>
+                            <li>Selected: {{ selected }}</li>
+                        </ul>
+                    </div>
+                </template>
 
                 <template #tooltip="{ absoluteValue }">
                     {{ absoluteValue }}

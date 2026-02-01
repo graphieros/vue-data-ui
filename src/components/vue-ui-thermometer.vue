@@ -83,14 +83,9 @@ const baseWidth = ref(FINAL_CONFIG.value.style.chart.thermometer.width);
 const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
 const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: { value: 0, from: -100, to: 100, steps: 20, colors: { from: '#A1A1A1', to: '#CACACA' } },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             style: {
                 chart: {
@@ -101,7 +96,19 @@ const { loading, FINAL_DATASET } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? { value: 0, from: -100, to: 100, steps: 20, colors: { from: '#A1A1A1', to: '#CACACA' } },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -727,7 +734,9 @@ defineExpose({
         </div>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

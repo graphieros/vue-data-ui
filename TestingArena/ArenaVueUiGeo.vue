@@ -137,6 +137,13 @@ const config = computed(() => {
 
     return {
         ...c,
+        skeletonConfig: {
+            style: {
+                chart: {
+                    backgroundColor: '#FF0000'
+                }
+            }
+        },
         map: {
             geoJson: FRANCE,
         },

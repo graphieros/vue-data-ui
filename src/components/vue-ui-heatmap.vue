@@ -10,6 +10,7 @@ import {
     shallowRef, 
     toRefs,
     watch,
+    watchEffect,
 } from "vue";
 import { 
     adaptColorToBackground, 
@@ -22,7 +23,6 @@ import {
     error,
     functionReturnsString,
     getMissingDatasetAttributes,
-    hasDeepProperty,
     interpolateColorHex,
     isFunction,
     objectIsEmpty,
@@ -134,23 +134,9 @@ function makeSkeletonDataset() {
     return a;
 }
 
-// v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            if(heatmapChart.value) {
-                triggerResize(heatmapChart.value, { delta: 0.1, delay: 250 });
-            }
-        })
-    },
-    skeletonDataset: makeSkeletonDataset(),
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             table: { show: false },
             userOptions: { show: false },
             style: {
@@ -171,7 +157,28 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 },
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+            if(heatmapChart.value) {
+                triggerResize(heatmapChart.value, { delta: 0.1, delay: 250 });
+            }
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? makeSkeletonDataset(),
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -431,26 +438,50 @@ const average = computed(() => {
     return sum / allValues.length;
 });
 
-const yAxisTimeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.layout.dataLabels.yAxis.values.length ? FINAL_CONFIG.value.style.layout.dataLabels.yAxis.values : FINAL_DATASET.value.map(ds => ds.name),
-        maxDatapoints: FINAL_DATASET.value.length,
-        formatter: FINAL_CONFIG.value.style.layout.dataLabels.yAxis.datetimeFormatter,
-        start: 0,
-        end: FINAL_DATASET.value.length
-    });
+const yAxisTimeLabels = ref([]);
+const xAxisTimeLabels = ref([]);
+
+let yAxisLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++yAxisLabelsRequestId;
+
+    (async () => {
+        const cfg = FINAL_CONFIG.value.style.layout.dataLabels.yAxis;
+
+        const labels = await useTimeLabels({
+            values: cfg.values.length ? cfg.values : FINAL_DATASET.value.map(ds => ds.name),
+            maxDatapoints: FINAL_DATASET.value.length,
+            formatter: cfg.datetimeFormatter,
+            start: 0,
+            end: FINAL_DATASET.value.length
+        });
+
+        if (requestId === yAxisLabelsRequestId) {
+            yAxisTimeLabels.value = labels;
+        }
+    })();
 });
 
-const xAxisTimeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.layout.dataLabels.xAxis.values,
-        maxDatapoints: maxX.value,
-        formatter: FINAL_CONFIG.value.style.layout.dataLabels.xAxis.datetimeFormatter,
-        start: 0,
-        end: maxX.value
-    });
-});
+let xAxisLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++xAxisLabelsRequestId;
 
+    (async () => {
+        const cfg = FINAL_CONFIG.value.style.layout.dataLabels.xAxis;
+
+        const labels = await useTimeLabels({
+            values: cfg.values,
+            maxDatapoints: maxX.value,
+            formatter: cfg.datetimeFormatter,
+            start: 0,
+            end: maxX.value
+        });
+
+        if (requestId === xAxisLabelsRequestId) {
+            xAxisTimeLabels.value = labels;
+        }
+    })();
+});
 const dataLabels = computed(() => {
     const yLabels = yAxisTimeLabels.value.map(y => y.text);
     const xLabels = xAxisTimeLabels.value.map(x => x.text);
@@ -1429,7 +1460,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading"/>
+        <slot name="skeleton">
+            <BaseScanner v-if="loading"/>
+        </slot>
     </div> 
 </template>
 

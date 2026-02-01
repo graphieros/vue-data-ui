@@ -76,11 +76,28 @@ const titleStep = ref(0);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            customPalette: new Array(7).fill('#CACACA'),
+            style: {
+                backgroundColor: '#99999930',
+                labels: { color: '#6A6A6A' },
+                circle: { stroke: '#6A6A6A' },
+                plot: { color: '#6A6A6A', useSerieColor: true },
+                links: { maxWidth: 2 }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    skeletonDataset: [
+    skeletonDataset: props.config?.skeletonDataset ?? [
         { id: 'A', label: '_', relations: ['B', 'C', 'D', 'E', 'F', 'G'] },
         { id: 'B', label: '_', relations: ['A'] },
         { id: 'C', label: '_', relations: ['A'] },
@@ -91,17 +108,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            userOptions: { show: false },
-            customPalette: new Array(7).fill('#CACACA'),
-            style: {
-                backgroundColor: '#99999930',
-                labels: { color: '#6A6A6A' },
-                circle: { stroke: '#6A6A6A' },
-                plot: { color: '#6A6A6A', useSerieColor: true },
-                links: { maxWidth: 2 }
-            }
-        }
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -946,7 +953,9 @@ defineExpose({
         </div>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

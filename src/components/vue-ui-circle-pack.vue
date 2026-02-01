@@ -95,21 +95,9 @@ const selectedDatapoint = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        { name: '_', value: 13, color: '#F2F2F2' },
-        { name: '_', value: 8, color: '#DBDBDB' },
-        { name: '_', value: 5, color: '#ADADAD' },
-        { name: '_', value: 3, color: '#969696' },
-        { name: '_', value: 2, color: '#808080' },
-        { name: '_', value: 1, color: '#696969' },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             table: { show: false },
             style: {
@@ -124,7 +112,26 @@ const { loading, FINAL_DATASET } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        { name: '_', value: 13, color: '#F2F2F2' },
+        { name: '_', value: 8, color: '#DBDBDB' },
+        { name: '_', value: 5, color: '#ADADAD' },
+        { name: '_', value: 3, color: '#969696' },
+        { name: '_', value: 2, color: '#808080' },
+        { name: '_', value: 1, color: '#696969' },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -1051,7 +1058,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

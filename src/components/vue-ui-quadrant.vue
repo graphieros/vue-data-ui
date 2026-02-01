@@ -102,41 +102,9 @@ const userOptionsRef = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        })
-    },
-    skeletonDataset: [
-        {
-            name: '_',
-            shape: 'circle',
-            color: '#CACACA',
-            series: [
-                { name: "_", x: -6, y: -4 },
-                { name: "_", x: -5,  y: -2 },
-                { name: "_", x: -4,  y: -1 },
-                { name: "_", x: -3,  y: -0.5 },
-                { name: "_", x: -2,  y: -0.25 },
-                { name: "_", x: -1,  y: -0.135 },
-                { name: "_", x: 0,   y: 0 },
-                { name: "_", x: 1,   y: 0.135 },
-                { name: "_", x: 2,   y: 0.25 },
-                { name: "_", x: 3,   y: 0.5 },
-                { name: "_", x: 4,   y: 1 },
-                { name: "_", x: 5,   y: 2 },
-                { name: "_", x: 6,  y: 4 },
-            ]
-        }
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return {
+        defaultConfig: {
             userOptions: { show: false, },
             table: { show: false },
             style: {
@@ -170,7 +138,46 @@ const { loading, FINAL_DATASET } = useLoading({
                     },
                 }
             }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    }
+})
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '_',
+            shape: 'circle',
+            color: '#CACACA',
+            series: [
+                { name: "_", x: -6, y: -4 },
+                { name: "_", x: -5,  y: -2 },
+                { name: "_", x: -4,  y: -1 },
+                { name: "_", x: -3,  y: -0.5 },
+                { name: "_", x: -2,  y: -0.25 },
+                { name: "_", x: -1,  y: -0.135 },
+                { name: "_", x: 0,   y: 0 },
+                { name: "_", x: 1,   y: 0.135 },
+                { name: "_", x: 2,   y: 0.25 },
+                { name: "_", x: 3,   y: 0.5 },
+                { name: "_", x: 4,   y: 1 },
+                { name: "_", x: 5,   y: 2 },
+                { name: "_", x: 6,  y: 4 },
+            ]
         }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -1985,7 +1992,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

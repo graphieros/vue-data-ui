@@ -763,7 +763,7 @@ const model = createModel([
     NUMBER("chart.grid.labels.xAxisLabels.yOffset", { def: 24, min: -100, max: 100 }),
     RANGE("chart.grid.labels.xAxisLabels.rotation", { def: 0, min: -360, max: 360 }),
     CHECKBOX("chart.grid.labels.xAxisLabels.autoRotate.enable", { def: true }),
-    NUMBER("chart.grid.labels.xAxisLabels.autoRotate.angle", { def: -90, min: -90, max: 90 }),
+    NUMBER("chart.grid.labels.xAxisLabels.autoRotate.angle", { def: -30, min: -90, max: 90 }),
 
     NUMBER("chart.grid.labels.axis.xLabelOffsetY", { def: 0, min: -100, max: 100 }),
     NUMBER("chart.grid.labels.axis.yLabelOffsetX", { def: 0, min: -100, max: 100 }),
@@ -1003,6 +1003,19 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            // skeletonDataset: [
+            //     {
+            //         name: '_',
+            //         series: [1, 2, 3, 2, 1, 2, 3],
+            //         type: 'line',
+            //         smooth: true
+            //     }
+            // ],
+            // skeletonConfig: {
+            //     chart: {
+            //         backgroundColor: '#FF0000'
+            //     }
+            // },
             events: {
                 datapointEnter: ({ datapoint, seriesIndex }) => {
                     console.log('enter event', { datapoint, seriesIndex })
@@ -1185,12 +1198,12 @@ const config = computed(() => {
                             // rotation: -30,
                             datetimeFormatter: {
                                 enable: true,
-                                locale: 'fr',
+                                locale: 'it',
                                 useUTC: false,
                                 januaryAsYear: true,
                                 options: { 
                                     year: 'yyyy',
-                                    month: `MMM`,
+                                    month: `MMMM`,
                                     day: 'dd MMM',
                                     hour: 'HH:mm',
                                     minute: 'HH:mm:ss',

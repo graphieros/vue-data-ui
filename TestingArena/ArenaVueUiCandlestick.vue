@@ -288,6 +288,11 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            // skeletonConfig: {
+            //     style: {
+            //         backgroundColor: '#FF0000'
+            //     }
+            // },
             // events: {
             //     datapointEnter: ({ datapoint, seriesIndex }) => {
             //         console.log('enter event', { datapoint, seriesIndex })
@@ -326,7 +331,18 @@ const config = computed(() => {
                                 showOnlyAtModulo: true,
                                 modulo: 12,
                                 datetimeFormatter: {
-                                    enable: true
+                                    enable: true,
+                                    locale: 'zh-CN',
+                                    useUTC: false,
+                                    januaryAsYear: true,
+                                    options: { 
+                                        year: 'yyyy',
+                                        month: `MMMM`,
+                                        day: 'dd MMM',
+                                        hour: 'HH:mm',
+                                        minute: 'HH:mm:ss',
+                                        second: 'HH:mm:ss'
+                                    }
                                 }
                             }
                         },

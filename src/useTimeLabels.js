@@ -1,5 +1,5 @@
 import { useDateTime } from "./useDateTime";
-import locales from "./locales/locales.json";
+import { useLocale } from "./useLocale";
 
 const SECONDS_IN_DAY = 24 * 60 * 60;
 
@@ -10,7 +10,7 @@ const SECONDS_IN_DAY = 24 * 60 * 60;
  * @param {number} start  // start index (provided by Slicer)
  * @param {number} end    // end index (provided by Slicer)
  */
-export function useTimeLabels({
+export async function useTimeLabels({
     values,
     maxDatapoints,
     formatter: xl,
@@ -33,11 +33,19 @@ export function useTimeLabels({
     const window = formattedValues.slice(sliceStart, sliceEnd);
     if (window.length === 0) return [];
     const minX = window[0], maxX = window[window.length - 1];
+
+    let localeData;
+    try {
+        ({ data: localeData } = await useLocale(xl.locale));
+    } catch (e) {
+        ({ data: localeData } = await useLocale("en"));
+    }
+
     const dt = useDateTime({
         useUTC: xl.useUTC,
         min: minX,
         max: maxX,
-        locale: locales[xl.locale],
+        locale: localeData,
         januaryAsYear: xl.januaryAsYear,
     });
 

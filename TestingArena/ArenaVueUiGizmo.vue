@@ -47,6 +47,9 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        // skeletonConfig: {
+        //     stroke: '#FF0000'
+        // },
         formatter: ({value}) => {
             return `f | ${value}`
         } 

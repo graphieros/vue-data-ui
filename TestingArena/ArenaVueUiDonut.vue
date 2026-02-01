@@ -338,6 +338,17 @@ const config = computed(() => {
             //         console.log('ON_DATAPOINT_CLICK', v);
             //     },
             // },
+            skeletonDataset: [
+                { name: '_', values: [1]},
+                { name: '_', values: [1]},
+            ],
+            skeletonConfig: {
+                style: {
+                    chart: {
+                        backgroundColor: '#FF0000'
+                    }
+                }
+            },
             style: {
                 ...c.style,
                 chart: {

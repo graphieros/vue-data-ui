@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch, defineAsyncComponent, shallowRef, onBeforeUnmount, toRefs, nextTick } from "vue";
+import { ref, computed, onMounted, watch, defineAsyncComponent, shallowRef, onBeforeUnmount, toRefs, nextTick, watchEffect } from "vue";
 import {
     applyDataLabel,
     calcLinearProgression,
@@ -574,14 +574,25 @@ function ratioToMax(v) {
 
 const len = computed(() => (downsampled.value.length - 1) || 1);
 
-const timeLabels = computed(() => {
-    return useTimeLabels({
-        values: downsampled.value.map(d => d.period),
-        maxDatapoints: downsampled.value.length,
-        formatter: FINAL_CONFIG.value.style.dataLabel.datetimeFormatter,
-        start: 0,
-        end: downsampled.value.length
-    })
+const timeLabels = ref([]);
+
+let timeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: downsampled.value.map(d => d.period),
+            maxDatapoints: downsampled.value.length,
+            formatter: FINAL_CONFIG.value.style.dataLabel.datetimeFormatter,
+            start: 0,
+            end: downsampled.value.length
+        });
+
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
 });
 
 const mutableDataset = computed(() => {

@@ -178,6 +178,13 @@ const config = computed(() => {
 
     return {
         ...c,
+        skeletonConfig: {
+            style: {
+                chart: {
+                    backgroundColor: '#FF0000'
+                }
+            }
+        }
         // loading: true
     }
 });

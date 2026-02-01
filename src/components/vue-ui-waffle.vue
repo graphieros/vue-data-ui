@@ -83,8 +83,13 @@ const props = defineProps({
 
 const slots = useSlots();
 
-const isDataset = computed(() => {
-    return !!props.dataset && props.dataset.length
+const isDataset = computed({
+    get() {
+        return !!props.dataset && props.dataset.length;
+    },
+    set(bool) {
+        return bool;
+    }
 });
 
 const uid = ref(createUid());
@@ -106,36 +111,9 @@ const userOptionsRef = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-// v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            datasetCopy.value = prepareDataset();
-        })
-    },
-    skeletonDataset: [
-        {
-            name: '',
-            values: [1],
-            color: '#AAAAAA',
-        },
-        {
-            name: '',
-            values: [1],
-            color: '#BABABA',
-        },
-        {
-            name: '',
-            values: [1],
-            color: '#CACACA',
-        },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             useCustomCells: false,
             userOptions: { show: false },
             table: { show: false },
@@ -157,7 +135,41 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            datasetCopy.value = prepareDataset();
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '',
+            values: [1],
+            color: '#AAAAAA',
+        },
+        {
+            name: '',
+            values: [1],
+            color: '#BABABA',
+        },
+        {
+            name: '',
+            values: [1],
+            color: '#CACACA',
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -1581,7 +1593,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading"/>
+        <slot name="skeleton">
+            <BaseScanner v-if="loading"/>
+        </slot>
     </div>
 </template>
 

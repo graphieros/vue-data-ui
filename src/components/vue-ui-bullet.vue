@@ -247,11 +247,34 @@ function prepareConfig() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    segments: {
+                        dataLabels: { show: false },
+                        ticks: {
+                            stroke: '#8A8A8A',
+                        }
+                    },
+                    valueBar: {
+                        label: { show: false }
+                    }
+                }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    skeletonDataset: {
+    skeletonDataset: props.config?.skeletonDataset ?? {
         value: 100,
         target: 100,
         segments: [
@@ -277,23 +300,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     },
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            userOptions: { show: false },
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    segments: {
-                        dataLabels: { show: false },
-                        ticks: {
-                            stroke: '#8A8A8A',
-                        }
-                    },
-                    valueBar: {
-                        label: { show: false }
-                    }
-                }
-            }
-        }
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -853,7 +860,9 @@ defineExpose({
         </div>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

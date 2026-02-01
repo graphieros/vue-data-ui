@@ -55,22 +55,29 @@ function prepareChart() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            stroke: '#6A6A6A80',
+            color: '#6A6A6A',
+            gradientColor: '#CACACA',
+            textColor: 'transparent'
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
     dsIsNumber: true,
-    skeletonDataset: 50,
+    skeletonDataset: props.config?.skeletonDataset ?? 50,
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            stroke: '#6A6A6A80',
-            color: '#6A6A6A',
-            gradientColor: '#CACACA',
-            textColor: 'transparent'
-        }
+        userConfig: skeletonConfig.value
     })
-})
+});
 
 function prepareConfig() {
     return useNestedProp({
@@ -239,7 +246,9 @@ const gaugeBody = computed(() => {
         </svg>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

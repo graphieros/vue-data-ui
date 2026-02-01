@@ -61,11 +61,23 @@ const observedEl = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            style: {
+                animation: { show: false },
+                backgroundColor: '#99999930',
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    skeletonDataset: [
+    skeletonDataset: props.config?.skeletonDataset ?? [
         { value: 1, intensity: 0.2, color: '#CACACA' },
         { value: 2, intensity: 0.3, color: '#CACACA' },
         { value: 3, intensity: 0.5, color: '#CACACA' },
@@ -82,12 +94,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            style: {
-                animation: { show: false },
-                backgroundColor: '#99999930',
-            }
-        }
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -502,7 +509,9 @@ watch([WIDTH, HEIGHT, () => FINAL_DATASET.value], async() => {
         </div>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

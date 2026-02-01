@@ -86,25 +86,9 @@ const titleStep = ref(0);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-        })
-    },
-    skeletonDataset: {
-        value: 0,
-        series: [
-            { from: -1, to: 0, name: '_', color: '#A1A1A1' },
-            { from: 0, to: 1, name: '__', color: '#CACACA'},
-        ]
-    },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             style: {
                 chart: {
@@ -129,7 +113,30 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? {
+        value: 0,
+        series: [
+            { from: -1, to: 0, name: '_', color: '#A1A1A1' },
+            { from: 0, to: 1, name: '__', color: '#CACACA'},
+        ]
+    },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -1058,7 +1065,9 @@ defineExpose({
         </div>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

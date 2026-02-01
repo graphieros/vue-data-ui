@@ -98,29 +98,9 @@ const userOptionsRef = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        })
-    },
-    skeletonDataset: {
-        matrix: [
-            [ 12000, 6000, 9000, 3000],
-            [ 2000, 10000, 2000, 6001], 
-            [ 8000, 1600, 8000, 8001], 
-            [ 1000, 1000, 1000, 7001]  
-        ],
-        labels: [],
-        colors: ['#DBDBDB', '#C4C4C4', '#ADADAD', '#969696']
-    },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             useCssAnimation: false,
             userOptions: { show: false },
             table: { show: false },
@@ -145,7 +125,34 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? {
+        matrix: [
+            [ 12000, 6000, 9000, 3000],
+            [ 2000, 10000, 2000, 6001], 
+            [ 8000, 1600, 8000, 8001], 
+            [ 1000, 1000, 1000, 7001]  
+        ],
+        labels: [],
+        colors: ['#DBDBDB', '#C4C4C4', '#ADADAD', '#969696']
+    },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -1559,7 +1566,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

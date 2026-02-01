@@ -29,7 +29,6 @@ import {
     easeOutCubic,
     error,
     getMissingDatasetAttributes,
-    hasDeepProperty,
     isFunction,
     makeDonut,
     objectIsEmpty,
@@ -359,31 +358,9 @@ function prepareConfig() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-// v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        {
-            name: '',
-            values: [3],
-            color: '#BABABA',
-        },
-        {
-            name: '',
-            values: [2],
-            color: '#AAAAAA',
-        },
-        {
-            name: '',
-            values: [1],
-            color: '#CACACA',
-        },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             useCssAnimation: false,
             table: { show: false },
             startAnimation: {
@@ -416,7 +393,36 @@ const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '',
+            values: [3],
+            color: '#BABABA',
+        },
+        {
+            name: '',
+            values: [2],
+            color: '#AAAAAA',
+        },
+        {
+            name: '',
+            values: [1],
+            color: '#CACACA',
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -2384,7 +2390,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading"/>
+        <slot name="skeleton">
+            <BaseScanner v-if="loading"/>
+        </slot>
     </div>
 </template>
 

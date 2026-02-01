@@ -114,6 +114,36 @@ function toggleFullscreen(state) {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            useCssAnimation: false,
+            userOptions: { show: false, },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    legend: {
+                        show: true,
+                        backgroundColor: 'transparent'
+                    },
+                    yAxis: {
+                        stroke: '#6A6A6A',
+                        labels: {
+                            showAxisNames: false,
+                            axisNames: [],
+                            ticks: {
+                                color: '#6A6A6A',
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
@@ -124,7 +154,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
             mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
         })
     },
-    skeletonDataset: [
+    skeletonDataset: props.config?.skeletonDataset ?? [
         {
             name: '',
             shape: 'circle',
@@ -161,30 +191,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            useCssAnimation: false,
-            userOptions: { show: false, },
-            table: { show: false },
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    legend: {
-                        show: true,
-                        backgroundColor: 'transparent'
-                    },
-                    yAxis: {
-                        stroke: '#6A6A6A',
-                        labels: {
-                            showAxisNames: false,
-                            axisNames: [],
-                            ticks: {
-                                color: '#6A6A6A',
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -1388,7 +1395,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

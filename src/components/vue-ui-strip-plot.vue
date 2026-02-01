@@ -112,11 +112,53 @@ const scaleLabels = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    padding: {
+                        top: 24,
+                        left: 24,
+                        right: 24,
+                        bottom: 24
+                    },
+                    grid: {
+                        stroke: '#6A6A6A',
+                        horizontalGrid: {
+                            stroke: '#6A6A6A'
+                        },
+                        verticalGrid: {
+                            stroke: '#6A6A6A'
+                        }
+                    },
+                    plots: {
+                        stroke: '#6A6A6A',
+                    },
+                    labels: {
+                        bestPlotLabel: { show: false },
+                        axis: {
+                            xLabel: '',
+                            yLabel: ''
+                        },
+                        xAxisLabels: { show: false },
+                        yAxisLabels: { show: false }
+                    }
+                }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    skeletonDataset: [
+    skeletonDataset: props.config?.skeletonDataset ?? [
         {
             name: '_',
             color: '#DBDBDB',
@@ -165,44 +207,9 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            userOptions: { show: false },
-            table: { show: false },
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    padding: {
-                        top: 24,
-                        left: 24,
-                        right: 24,
-                        bottom: 24
-                    },
-                    grid: {
-                        stroke: '#6A6A6A',
-                        horizontalGrid: {
-                            stroke: '#6A6A6A'
-                        },
-                        verticalGrid: {
-                            stroke: '#6A6A6A'
-                        }
-                    },
-                    plots: {
-                        stroke: '#6A6A6A',
-                    },
-                    labels: {
-                        bestPlotLabel: { show: false },
-                        axis: {
-                            xLabel: '',
-                            yLabel: ''
-                        },
-                        xAxisLabels: { show: false },
-                        yAxisLabels: { show: false }
-                    }
-                }
-            }
-        }
+        userConfig: skeletonConfig.value
     })
-})
+});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -1313,7 +1320,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

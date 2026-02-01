@@ -57,6 +57,7 @@ import {
     treeShake,
 } from '../lib';
 import { throttle } from '../canvas-lib.js';
+import { useLocale } from '../useLocale.js';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter.js';
 import { useLoading } from '../useLoading.js';
@@ -72,7 +73,6 @@ import themes from "../themes/vue_ui_xy.json";
 import Shape from '../atoms/Shape.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
 import SlicerPreview from '../atoms/SlicerPreview.vue'; // v3
-import locales from '../locales/locales.json';
 import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 
@@ -324,35 +324,9 @@ function seedMutableFromConfig() {
 
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
-// v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await setupSlicer();
-            mutableConfig.value.showTable = FINAL_CONFIG.value.showTable;
-        })
-    },
-    skeletonDataset: [
-        {
-            name: '',
-            series: [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 134],
-            type: 'line',
-            smooth: true,
-            color: '#BABABA'
-        },
-        {
-            name: '',
-            series: [0, 0.5, 1, 1.5, 2.5, 4, 6.5, 10.5, 17, 27.5, 44.5, 67],
-            type: 'bar',
-            color: '#CACACA'
-        },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             useCssAnimation: false,
             showTable: false,
             chart: {
@@ -405,7 +379,44 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                 },
                 labels: { show: false }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const skeletonDataset = computed(() => {
+    return props.config?.skeletonDataset ?? [
+        {
+            name: '',
+            series: [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 134],
+            type: 'line',
+            smooth: true,
+            color: '#BABABA'
+        },
+        {
+            name: '',
+            series: [0, 0.5, 1, 1.5, 2.5, 4, 6.5, 10.5, 17, 27.5, 44.5, 67],
+            type: 'bar',
+            color: '#CACACA'
+        },
+    ]
+})
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await setupSlicer();
+            mutableConfig.value.showTable = FINAL_CONFIG.value.showTable;
+        })
+    },
+    skeletonDataset: skeletonDataset.value,
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -687,37 +698,39 @@ function getScaleLabelX() {
 
 
 const timeLabelsHeight = ref(0);
+const timeLabelsBBoxX = ref(0);
 
-const updateHeight = throttle((h) => {
-    timeLabelsHeight.value = h
-}, 100)
+function measureTimeLabelsBox() {
+    const el = timeLabelsEls.value;
 
-// Track time label height to update drawing area when they rotate
-watchEffect((onInvalidate) => {
-    const el = timeLabelsEls.value
-    if (!el) return
+    if (!el) {
+        timeLabelsHeight.value = 0;
+        timeLabelsBBoxX.value = 0;
+        return;
+    }
 
-    const observer = new ResizeObserver(entries => {
-        updateHeight(entries[0].contentRect.height)
-    })
-    observer.observe(el)
-    onInvalidate(() => observer.disconnect())
-})
-
-onBeforeUnmount(() => {
-    timeLabelsHeight.value = 0
-})
+    try {
+        const bbox = el.getBBox();
+        timeLabelsHeight.value = bbox?.height ?? 0;
+        timeLabelsBBoxX.value = bbox?.x ?? 0;
+    } catch {
+        timeLabelsHeight.value = 0;
+        timeLabelsBBoxX.value = 0;
+    }
+}
 
 const timeLabelsY = computed(() => {
-    let h = 0;
-        if (xAxisLabel.value) {
-            h = xAxisLabel.value.getBBox().height;
+    let axisLabelHeight = 0;
+
+    if (xAxisLabel.value) {
+        try {
+            axisLabelHeight = xAxisLabel.value.getBBox().height || 0;
+        } catch {
+            axisLabelHeight = 0;
         }
-        let tlH = 0;
-        if (timeLabelsEls.value) {
-            tlH = timeLabelsHeight.value;
-        }
-        return h + tlH + fontSizes.value.xAxis;
+    }
+
+    return axisLabelHeight + timeLabelsHeight.value + fontSizes.value.xAxis;
 });
 
 const useProgression = computed(() => {
@@ -744,9 +757,8 @@ const drawingArea = computed(() => {
     const progressionLabelOffsetX = useProgression.value ? 24 : 6;
 
     if (timeLabelsEls.value) {
-        const x = timeLabelsEls.value.getBBox().x
-        if (x < 0) {
-            _scaleLabelX += Math.abs(x)
+        if (timeLabelsBBoxX.value < 0) {
+            _scaleLabelX += Math.abs(timeLabelsBBoxX.value);
         }
     }
 
@@ -846,29 +858,64 @@ function toggleAnnotator() {
     isAnnotator.value = !isAnnotator.value;
 }
 
-const timeLabels = computed(() => {
-    const _max = Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold }).length));
+const timeLabels = ref([]);
+const allTimeLabels = ref([]);
 
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values,
-        maxDatapoints: _max,
-        formatter: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter,
-        start: slicer.value.start,
-        end: slicer.value.end
-    });
+let timeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    (async () => {
+        const maxDatapoints = Math.max(
+            ...FINAL_DATASET.value.map(datapoint =>
+                largestTriangleThreeBucketsArray({
+                    data: datapoint.series,
+                    threshold: FINAL_CONFIG.value.downsample.threshold
+                }).length
+            )
+        );
+
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values,
+            maxDatapoints,
+            formatter: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter,
+            start: slicer.value.start,
+            end: slicer.value.end
+        });
+
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
 });
 
-const allTimeLabels = computed(() => {
-    const _max = Math.max(...FINAL_DATASET.value.map(datapoint => largestTriangleThreeBucketsArray({ data: datapoint.series, threshold: FINAL_CONFIG.value.downsample.threshold }).length));
+let allTimeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++allTimeLabelsRequestId;
 
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values,
-        maxDatapoints: _max,
-        formatter: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter,
-        start: 0,
-        end: maxX.value
-    });
-})
+    (async () => {
+        const maxDatapoints = Math.max(
+            ...FINAL_DATASET.value.map(datapoint =>
+                largestTriangleThreeBucketsArray({
+                    data: datapoint.series,
+                    threshold: FINAL_CONFIG.value.downsample.threshold
+                }).length
+            )
+        );
+
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values,
+            maxDatapoints,
+            formatter: FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter,
+            start: 0,
+            end: maxX.value
+        });
+
+        if (requestId === allTimeLabelsRequestId) {
+            allTimeLabels.value = labels;
+        }
+    })();
+});
 
 const modulo = computed(() => {
     const m = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.modulo;
@@ -896,6 +943,40 @@ const displayedTimeLabels = computed(() => {
         sel,
         maxS
     );
+});
+
+const displayedTimeLabelsKey = computed(() => {
+    return (displayedTimeLabels.value || []).map(l => l?.text ?? "").join("|");
+});
+
+onMounted(() => {
+    // First measurement after initial paint
+    requestAnimationFrame(() => {
+        measureTimeLabelsBox();
+    });
+
+    // Re-measure when async labels arrive or layout inputs change
+    watch(
+        [
+            () => displayedTimeLabelsKey.value,
+            () => FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.rotation,
+            () => fontSizes.value.xAxis,
+            () => width.value,
+            () => height.value
+        ],
+        async () => {
+            await nextTick();
+            requestAnimationFrame(() => {
+                measureTimeLabelsBox();
+            });
+        },
+        { flush: "post" }
+    );
+});
+
+onBeforeUnmount(() => {
+    timeLabelsHeight.value = 0;
+    timeLabelsBBoxX.value = 0;
 });
 
 function selectTimeLabel(label, relativeIndex) {
@@ -2182,21 +2263,36 @@ const dataTooltipSlot = computed(() => {
     }
 });
 
-const preciseTimeFormatter = computed(() => {
-    const xl = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter
+const localeData = ref({ months: [], shortMonths: [], days: [], shortDays: [] });
 
-    const dt = useDateTime({
-        useUTC: xl.useUTC,
-        locale: locales[xl.locale] || { months:[], shortMonths:[], days:[], shortDays:[] },
-        januaryAsYear: xl.januaryAsYear
+let localeRequestId = 0;
+watchEffect(() => {
+    const requestId = ++localeRequestId;
+    const dateTimeFormatter = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter;
+
+    (async () => {
+        const resolved = await useLocale(dateTimeFormatter.locale).catch(() => useLocale("en"));
+        if (requestId === localeRequestId) {
+            localeData.value = resolved.data;
+        }
+    })();
+});
+
+const preciseTimeFormatter = computed(() => {
+    const dateTimeFormatter = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.datetimeFormatter;
+
+    const dateTime = useDateTime({
+        useUTC: dateTimeFormatter.useUTC,
+        locale: localeData.value,
+        januaryAsYear: dateTimeFormatter.januaryAsYear
     });
 
-    return (absIndex, fmt) => {
-        const values = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values
-        const ts = values?.[absIndex]
-        if (ts == null) return ''
-        return dt.formatDate(new Date(ts), fmt)
-    }
+    return (absoluteIndex, format) => {
+        const values = FINAL_CONFIG.value.chart.grid.labels.xAxisLabels.values;
+        const timestamp = values?.[absoluteIndex];
+        if (timestamp == null) return "";
+        return dateTime.formatDate(new Date(timestamp), format);
+    };
 });
 
 const preciseAllTimeLabels = computed(() => {
@@ -4458,7 +4554,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

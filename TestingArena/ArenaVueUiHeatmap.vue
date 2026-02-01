@@ -238,6 +238,11 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            // skeletonConfig: {
+            //     style: {
+            //         backgroundColor: '#FF0000'
+            //     }
+            // },
             // events: {
             //     datapointEnter: ({ datapoint, seriesIndex }) => {
             //         console.log('enter event', { datapoint, seriesIndex });
@@ -296,7 +301,18 @@ const config = computed(() => {
                                 1756764000000
                             ],
                             datetimeFormatter: {
-                                enable: true
+                                enable: true,
+                                locale: 'zh-CN',
+                                useUTC: false,
+                                januaryAsYear: true,
+                                options: { 
+                                    year: 'yyyy',
+                                    month: `MMMM`,
+                                    day: 'dd MMM',
+                                    hour: 'HH:mm',
+                                    minute: 'HH:mm:ss',
+                                    second: 'HH:mm:ss'
+                                }
                             }
                         },
                         yAxis: {
@@ -310,7 +326,18 @@ const config = computed(() => {
                                 1755122400000
                             ],
                             datetimeFormatter: {
-                                enable: true
+                                enable: true,
+                                locale: 'zh-CN',
+                                useUTC: false,
+                                januaryAsYear: true,
+                                options: { 
+                                    year: 'yyyy',
+                                    month: `MMMM`,
+                                    day: 'dd MMM',
+                                    hour: 'HH:mm',
+                                    minute: 'HH:mm:ss',
+                                    second: 'HH:mm:ss'
+                                }
                             }
                         }
                     }

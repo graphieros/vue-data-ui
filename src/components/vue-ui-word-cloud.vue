@@ -96,6 +96,30 @@ const zoomControls = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            useCssAnimation: false,
+            animationDelayMs: 0,
+            nodeCategories: {},
+            nodeCategoryColors: {},
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    words: {
+                        color: '#6A6A6A',
+                        usePalette: false,
+                        selectedStroke: '#CCCCCC'
+                    }
+                }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
@@ -107,7 +131,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
             mutableConfig.value.showZoom = FINAL_CONFIG.value.style.chart.zoom.show;
         })
     },
-    skeletonDataset: [
+    skeletonDataset: props.config?.skeletonDataset ?? [
         { name: "Lorem", value: 6 },
         { name: "ipsum",value: 3 },
         { name: "dolor",value: 1 },
@@ -159,24 +183,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            userOptions: { show: false },
-            table: { show: false },
-            useCssAnimation: false,
-            animationDelayMs: 0,
-            nodeCategories: {},
-            nodeCategoryColors: {},
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    words: {
-                        color: '#6A6A6A',
-                        usePalette: false,
-                        selectedStroke: '#CCCCCC'
-                    }
-                }
-            }
-        }
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -1033,7 +1040,9 @@ function useTooltip(word, index) {
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

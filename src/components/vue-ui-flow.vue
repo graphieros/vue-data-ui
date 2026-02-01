@@ -104,21 +104,9 @@ function toggleFullscreen(state) {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        ['A', 'B', 2, '#CACACA'],
-        ['B', 'C', 1, '#CACACA'],
-        ['C', 'D', 0.5, '#CACACA'],
-        ['E', 'F', 1, '#AAAAAA'],
-        ['F', 'G', 0.5, '#AAAAAA'],
-        ['G', 'H', 0.25, '#AAAAAA']
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             nodeCategories: {
                 B: 'A',
@@ -146,7 +134,26 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        ['A', 'B', 2, '#CACACA'],
+        ['B', 'C', 1, '#CACACA'],
+        ['C', 'D', 0.5, '#CACACA'],
+        ['E', 'F', 1, '#AAAAAA'],
+        ['F', 'G', 0.5, '#AAAAAA'],
+        ['G', 'H', 0.25, '#AAAAAA']
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -1461,7 +1468,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading"/>
+        <slot name="skeleton">
+            <BaseScanner v-if="loading"/>
+        </slot>
     </div>
 </template>
 

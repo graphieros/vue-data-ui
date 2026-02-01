@@ -35,6 +35,18 @@ const {
 //     },
 // ]);
 
+function generateDayTimestamps(length) {
+    const result = [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < length; i += 1) {
+        result.push(new Date(start.getTime() + i * 24 * 60 * 60 * 1000).getTime());
+    }
+
+    return result;
+}
+
 function makeDs(n) {
     const arr = [];
     for(let i = 0; i < n; i += 1) {
@@ -322,6 +334,13 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        // skeletonConfig: {
+        //     style: {
+        //         chart: {
+        //             backgroundColor: '#FF0000'
+        //         }
+        //     }
+        // },
         // events: {
         //     datapointEnter: ({ datapoint, seriesIndex }) => {
         //         console.log('enter event', { datapoint, seriesIndex })
@@ -366,12 +385,23 @@ const config = computed(() => {
                         ...c.style.chart.grid.x,
                         timeLabels: {
                             ...c.style.chart.grid.x.timeLabels,
-                            values: ['T1', 'T2', 'T3', 'T4'],
+                            values: generateDayTimestamps(100),
                             // values: new Array(6).fill(0).map((d, i) => {
                             //     return `Some long name\nfor dataset of index ${i}` 
                             // }),
                             datetimeFormatter: {
-                                enable: false
+                                enable: true,
+                                locale: 'it',
+                                useUTC: false,
+                                januaryAsYear: true,
+                                options: { 
+                                    year: 'yyyy',
+                                    month: `MMMM`,
+                                    day: 'dd MMM',
+                                    hour: 'HH:mm',
+                                    minute: 'HH:mm:ss',
+                                    second: 'HH:mm:ss'
+                                }
                             }
                             // values: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG']
                         }

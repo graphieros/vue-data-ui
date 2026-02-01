@@ -25,6 +25,18 @@ const {
     createModel
 } = useConfigurationControls(DEFAULT_CONFIG);
 
+function generateDayTimestamps(length) {
+    const result = [];
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < length; i += 1) {
+        result.push(new Date(start.getTime() + i * 24 * 60 * 60 * 1000).getTime());
+    }
+
+    return result;
+}
+
 const crazyDs = [];
 const crazyDs2 = [];
 const crazyDs3 = []
@@ -292,6 +304,13 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        // skeletonConfig: {
+        //     style: {
+        //         chart: {
+        //             backgroundColor: '#FF0000'
+        //         }
+        //     }
+        // },
         theme: currentTheme.value,
         style: {
             ...c.style,
@@ -327,9 +346,20 @@ const config = computed(() => {
                         ...c.style.chart.grid.x,
                         timeLabels: {
                             ...c.style.chart.grid.x.timeLabels,
-                            values: [],
+                            values: generateDayTimestamps(1000),
                             datetimeFormatter: {
                                 enable: true,
+                                locale: 'ar',
+                                useUTC: false,
+                                januaryAsYear: true,
+                                options: { 
+                                    year: 'yyyy',
+                                    month: `MMMM dd`,
+                                    day: 'dd MMM',
+                                    hour: 'HH:mm',
+                                    minute: 'HH:mm:ss',
+                                    second: 'HH:mm:ss'
+                                }
                             }
                         }
                     },

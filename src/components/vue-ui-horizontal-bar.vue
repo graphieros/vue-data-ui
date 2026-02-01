@@ -125,23 +125,12 @@ const skeletonSet = computed(() => {
         { name: "", value: 2, color: "#d9d9d9" },
         { name: "", value: 1, color: "#d9d9d9" },
     ];
-    return base;
+    return props.config?.skeletonDataset ?? base;
 });
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-            prepareChart();
-        });
-    },
-    skeletonDataset: skeletonSet.value,
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             useCssAnimation: false,
             userOptions: { show: false },
             table: { show: false },
@@ -169,8 +158,26 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     },
                     title: { color: "#1A1A1A", subtitle: { color: "#5A5A5A" } },
                 },
-            },
+            }
         },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+            prepareChart();
+        });
+    },
+    skeletonDataset: skeletonSet.value,
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     }),
 });
 
@@ -1998,7 +2005,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

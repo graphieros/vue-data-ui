@@ -151,20 +151,9 @@ function mockData(n = 100, r = 0.8, opts = {}) {
     return Xout.map((vx, i) => ({ x: vx, y: Yout[i] }));
 }
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        {
-            name: '',
-            color: '#999999',
-            values: mockData(100, 0.5, { seed: 42 })
-        }
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false, },
             table: { show: false },
             useCssAnimation: false,
@@ -193,9 +182,27 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     backgroundColor: 'transparent'
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
     })
-})
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '',
+            color: '#999999',
+            values: mockData(100, 0.5, { seed: 42 })
+        }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
+    })
+});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
@@ -2137,7 +2144,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 
