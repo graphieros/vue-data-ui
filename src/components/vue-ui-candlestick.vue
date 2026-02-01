@@ -21,7 +21,6 @@ import {
     downloadCsv,
     error,
     functionReturnsString,
-    hasDeepProperty,
     isFunction,
     objectIsEmpty,
     setOpacity,
@@ -32,6 +31,7 @@ import {
 } from "../lib";
 import { throttle } from "../canvas-lib";
 import { useConfig } from "../useConfig";
+import { useLocale } from "../useLocale.js";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from '../useLoading.js';
 import { useDateTime } from "../useDateTime.js";
@@ -46,7 +46,6 @@ import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_candlestick.json";
-import locales from '../locales/locales.json';
 import BaseScanner from "../atoms/BaseScanner.vue";
 import SlicerPreview from "../atoms/SlicerPreview.vue"; // Must be ready in responsive mode
 
@@ -111,33 +110,9 @@ const selectedMinimapIndex = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-// v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await setupSlicer();
-        })
-    },
-    skeletonDataset: [
-        [1704067200000, 10, 20, 2, 10, 30],
-        [1706745600000, 10, 30, 5, 20, 50],
-        [1709251200000, 20, 50, 10, 30, 80],
-        [1711929600000, 30, 80, 20, 50, 130],
-        [1714521600000, 50, 130, 30, 100, 210],
-        [1717200000000, 80, 210, 50, 150, 340],
-        [1719792000000, 130, 340, 80, 280, 550],
-        [1722470400000, 210, 550, 130, 450, 890],
-        [1725148800000, 340, 890, 210, 750, 1440],
-        [1727740800000, 550, 1440, 340, 1230, 2330],
-        [1730419200000, 890, 2330, 550, 1950, 3770],
-        [1733011200000, 1440, 3770, 890, 3200, 5100],
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             useCssAnimation: false,
             userOptions: { show: false },
             table: { show: false },
@@ -180,7 +155,38 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     endIndex: null
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await setupSlicer();
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        [1704067200000, 10, 20, 2, 10, 30],
+        [1706745600000, 10, 30, 5, 20, 50],
+        [1709251200000, 20, 50, 10, 30, 80],
+        [1711929600000, 30, 80, 20, 50, 130],
+        [1714521600000, 50, 130, 30, 100, 210],
+        [1717200000000, 80, 210, 50, 150, 340],
+        [1719792000000, 130, 340, 80, 280, 550],
+        [1722470400000, 210, 550, 130, 450, 890],
+        [1725148800000, 340, 890, 210, 750, 1440],
+        [1727740800000, 550, 1440, 340, 1230, 2330],
+        [1730419200000, 890, 2330, 550, 1950, 3770],
+        [1733011200000, 1440, 3770, 890, 3200, 5100],
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -720,24 +726,45 @@ const xLabels = computed(() => {
     return datasetBreakdown.value.map(ds => ds.period)
 });
 
-const timeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_DATASET.value.map(ds => ds[0]),
-        maxDatapoints: FINAL_DATASET.value.length,
-        formatter: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter,
-        start: slicer.value.start,
-        end: slicer.value.end
-    })
+const timeLabels = ref([]);
+const allTimeLabels = ref([]);
+let timeLabelsRequestId = 0;
+
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_DATASET.value.map(ds => ds[0]),
+            maxDatapoints: FINAL_DATASET.value.length,
+            formatter: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter,
+            start: slicer.value.start,
+            end: slicer.value.end
+        });
+
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
 });
 
-const allTimeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_DATASET.value.map(ds => ds[0]),
-        maxDatapoints: FINAL_DATASET.value.length,
-        formatter: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter,
-        start: 0,
-        end: len.value
-    })
+let allTimeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++allTimeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_DATASET.value.map(ds => ds[0]),
+            maxDatapoints: FINAL_DATASET.value.length,
+            formatter: FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter,
+            start: 0,
+            end: len.value
+        });
+
+        if (requestId === allTimeLabelsRequestId) {
+            allTimeLabels.value = labels;
+        }
+    })();
 });
 
 const modulo = computed(() => {
@@ -746,21 +773,36 @@ const modulo = computed(() => {
     return Math.min(m, [...new Set(timeLabels.value.map(t => t.text))].length);
 });
 
+const localeData = ref({ months: [], shortMonths: [], days: [], shortDays: [] });
+
+let localeRequestId = 0;
+watchEffect(() => {
+    const requestId = ++localeRequestId;
+    const xl = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter;
+
+    (async () => {
+        const resolved = await useLocale(xl.locale).catch(() => useLocale("en"));
+        if (requestId === localeRequestId) {
+            localeData.value = resolved.data;
+        }
+    })();
+});
+
 const preciseTimeFormatter = computed(() => {
-    const xl = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter
+    const xl = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter;
 
     const dt = useDateTime({
         useUTC: xl.useUTC,
-        locale: locales[xl.locale] || { months:[], shortMonths:[], days:[], shortDays:[] },
+        locale: localeData.value,
         januaryAsYear: xl.januaryAsYear
     });
 
     return (absIndex, fmt) => {
-        const values = FINAL_DATASET.value.map(ds => ds[0])
-        const ts = values?.[absIndex]
-        if (ts == null) return ''
-        return dt.formatDate(new Date(ts), fmt)
-    }
+        const values = FINAL_DATASET.value.map(ds => ds[0]);
+        const ts = values?.[absIndex];
+        if (ts == null) return '';
+        return dt.formatDate(new Date(ts), fmt);
+    };
 });
 
 const preciseAllTimeLabelsTooltip = computed(() => {
@@ -1883,7 +1925,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

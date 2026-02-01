@@ -165,6 +165,13 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            // skeletonConfig: {
+            //     style: {
+            //         chart: {
+            //             backgroundColor: '#FF0000'
+            //         }
+            //     }
+            // },
             events: {
                 datapointEnter: ({ datapoint, seriesIndex }) => {
                     console.log('enter event', { datapoint, seriesIndex });

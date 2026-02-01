@@ -125,6 +125,13 @@ const config = computed(() => {
     return {
         theme: currentTheme.value,
         ...c,
+        // skeletonConfig: {
+        //     style: {
+        //         chart: {
+        //             backgroundColor: '#FF0000'
+        //         }
+        //     }
+        // },
         style: {
             ...c.style,
             chart: {

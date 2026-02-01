@@ -164,6 +164,13 @@ const config = computed(() => {
     return treeShake({
         defaultConfig: c,
         userConfig: {
+            // skeletonConfig: {
+            //     style: {
+            //         chart: {
+            //             backgroundColor: '#FF0000'
+            //         }
+            //     }
+            // },
             events: {
                 datapointEnter: ({ datapoint, seriesIndex }) => {
                     console.log('EVENT ENTER', { datapoint, seriesIndex });

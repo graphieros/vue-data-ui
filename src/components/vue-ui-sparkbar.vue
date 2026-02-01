@@ -62,18 +62,9 @@ const uid = ref(createUid());
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        { name: '_', value: 21, target: 25, color: '#808080' },
-        { name: '_', value: 13, target: 25, color: '#ADADAD' },
-        { name: '_', value: 8, target: 25, color: '#DBDBDB' },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             style: {
                 backgroundColor: '#99999930',
                 animation: { show: false },
@@ -88,7 +79,23 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        { name: '_', value: 21, target: 25, color: '#808080' },
+        { name: '_', value: 13, target: 25, color: '#ADADAD' },
+        { name: '_', value: 8, target: 25, color: '#DBDBDB' },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 

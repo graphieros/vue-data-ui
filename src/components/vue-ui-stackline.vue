@@ -44,6 +44,7 @@ import {
     XMLNS 
 } from "../lib";
 import { throttle } from "../canvas-lib";
+import { useLocale } from "../useLocale";
 import { useConfig } from "../useConfig";
 import { useDateTime } from "../useDateTime";
 import { useLoading } from "../useLoading";
@@ -61,7 +62,6 @@ import Shape from "../atoms/Shape.vue";
 import Title from "../atoms/Title.vue";
 import themes from "../themes/vue_ui_stackline.json";
 import Legend from "../atoms/Legend.vue";
-import locales from '../locales/locales.json';
 import BaseScanner from "../atoms/BaseScanner.vue";
 import SlicerPreview from "../atoms/SlicerPreview.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
@@ -153,30 +153,9 @@ onMounted(() => {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await setupSlicer();
-        })
-    },
-    skeletonDataset: [
-        {
-            name: '',
-            series: [3, 2, 1, 5, 13, 21, 8, 89, 34, 55],
-            color: '#8A8A8A'
-        },
-        {
-            name: '',
-            series: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89],
-            color: '#CACACA' 
-        }
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             useCssAnimation: false,
             table: { show: false },
@@ -224,7 +203,35 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await setupSlicer();
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '',
+            series: [3, 2, 1, 5, 13, 21, 8, 89, 34, 55],
+            color: '#8A8A8A'
+        },
+        {
+            name: '',
+            series: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89],
+            color: '#CACACA' 
         }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -461,39 +468,63 @@ function getOffsetX() {
     return base + yAxisLabelW + (yAxisLabelW ? 24 : 0);
 }
 
-const labelsXHeight = ref(0);
 const offsetRight = ref(0);
+const measuredTimeLabelsHeight = ref(0);
 
-const updateHeight = throttle((h) => {
-    labelsXHeight.value = h;
-}, 100);
+const timeLabelsHeightAnimationFrameId = ref(0);
 
-watchEffect((onInvalidate) => {
-    const el = timeLabelsEls.value;
-    if (!el) return
+function measureTimeLabelsHeightNow() {
+    const labelGroupElement = timeLabelsEls.value;
 
-    const observer = new ResizeObserver(entries => {
-        updateHeight(entries[0].contentRect.height)
-    })
-    observer.observe(el)
-    onInvalidate(() => observer.disconnect())
-});
+    if (!labelGroupElement) {
+        measuredTimeLabelsHeight.value = 0;
+        return;
+    }
+
+    try {
+        const box = labelGroupElement.getBBox();
+        measuredTimeLabelsHeight.value = Number.isFinite(box?.height) ? box.height : 0;
+    } catch (_) {
+        measuredTimeLabelsHeight.value = 0;
+    }
+}
+
+function scheduleMeasureTimeLabelsHeight() {
+    if (timeLabelsHeightAnimationFrameId.value) {
+        cancelAnimationFrame(timeLabelsHeightAnimationFrameId.value);
+    }
+
+    timeLabelsHeightAnimationFrameId.value = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            measureTimeLabelsHeightNow();
+        });
+    });
+}
 
 onBeforeUnmount(() => {
-    labelsXHeight.value = 0;
+    if (timeLabelsHeightAnimationFrameId.value) {
+        cancelAnimationFrame(timeLabelsHeightAnimationFrameId.value);
+    }
+    measuredTimeLabelsHeight.value = 0;
     offsetRight.value = 0;
 });
 
 const offsetY = computed(() => {
-    let h = 0;
-        if (xAxisLabel.value) {
-            h = xAxisLabel.value.getBBox().height;
+    let xAxisLabelHeight = 0;
+
+    if (xAxisLabel.value) {
+        try {
+            xAxisLabelHeight = xAxisLabel.value.getBBox().height;
+        } catch (_) {
+            xAxisLabelHeight = 0;
         }
-        let tlH = 0;
-        if (timeLabelsEls.value) {
-            tlH = labelsXHeight.value;
-        }
-        return h + tlH;
+    }
+
+    const timeLabelsHeight = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show
+        ? measuredTimeLabelsHeight.value
+        : 0;
+
+    return xAxisLabelHeight + timeLabelsHeight;
 });
 
 const drawingArea = computed(() => {
@@ -879,24 +910,45 @@ const yLabels = computed(() => {
     });
 });
 
-const timeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
-        maxDatapoints: maxSeries.value,
-        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
-        start: slicer.value.start,
-        end: slicer.value.end
-    })
+const timeLabels = ref([]);
+const allTimeLabels = ref([]);
+
+let timeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
+            maxDatapoints: maxSeries.value,
+            formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
+            start: slicer.value.start,
+            end: slicer.value.end
+        });
+
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
 });
 
-const allTimeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
-        maxDatapoints: maxSeries.value,
-        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
-        start: 0,
-        end: maxSeries.value
-    })
+let allTimeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++allTimeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
+            maxDatapoints: maxSeries.value,
+            formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
+            start: 0,
+            end: maxSeries.value
+        });
+
+        if (requestId === allTimeLabelsRequestId) {
+            allTimeLabels.value = labels;
+        }
+    })();
 });
 
 const modulo = computed(() => {
@@ -927,22 +979,65 @@ const displayedTimeLabels = computed(() => {
     );
 });
 
+watchEffect(() => {
+    const timeLabelsAreShown = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show;
+    const timeLabelsFontSize = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.fontSize;
+    const timeLabelsRotation = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation;
+    const timeLabelsOffsetY = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.offsetY;
+
+    const renderedTimeLabelTexts = (displayedTimeLabels.value || [])
+        .map(label => label?.text ?? '')
+        .join('|');
+
+    const chartWidth = defaultSizes.value.width;
+    const chartHeight = defaultSizes.value.height;
+
+    const timeLabelsGroupElement = timeLabelsEls.value;
+    const xAxisLabelElement = xAxisLabel.value;
+
+    void timeLabelsAreShown;
+    void timeLabelsFontSize;
+    void timeLabelsRotation;
+    void timeLabelsOffsetY;
+    void renderedTimeLabelTexts;
+    void chartWidth;
+    void chartHeight;
+    void timeLabelsGroupElement;
+    void xAxisLabelElement;
+
+    scheduleMeasureTimeLabelsHeight();
+}, { flush: 'post' });
+
+const localeData = ref({ months: [], shortMonths: [], days: [], shortDays: [] });
+
+let localeRequestId = 0;
+watchEffect(() => {
+    const requestId = ++localeRequestId;
+    const xl = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter;
+
+    (async () => {
+        const resolved = await useLocale(xl.locale).catch(() => useLocale("en"));
+        if (requestId === localeRequestId) {
+            localeData.value = resolved.data;
+        }
+    })();
+});
+
 const preciseTimeFormatter = computed(() => {
-    const xl = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter
+    const xl = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter;
 
     const dt = useDateTime({
         useUTC: xl.useUTC,
-        locale: locales[xl.locale] || { months:[], shortMonths:[], days:[], shortDays:[] },
+        locale: localeData.value,
         januaryAsYear: xl.januaryAsYear
     });
 
     return (absIndex, fmt) => {
-        const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values
-        const ts = values?.[absIndex]
-        if (ts == null) return ''
-        const res = dt.formatDate(new Date(ts), fmt)
-        return dt.formatDate(new Date(ts), fmt)
-    }
+        const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values;
+        const ts = values?.[absIndex];
+        if (ts == null) return "";
+        return dt.formatDate(new Date(ts), fmt);
+    };
 });
 
 const preciseAllTimeLabels = computed(() => {
@@ -3018,8 +3113,8 @@ defineExpose({
             :immediate="!FINAL_CONFIG.style.chart.zoom.preview.enable"
             :inputColor="FINAL_CONFIG.style.chart.zoom.color"
             :isPreview="isPrecog"
-            :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[0].text : ''"
-            :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels.at(-1).text : ''"
+            :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? (timeLabels?.[0]?.text ?? '') : ''"
+            :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? (timeLabels?.at(-1)?.text ?? '') : ''"
             :max="Math.max(...dataset.map(ds => ds.series.length))"
             :min="0"
             :minimap="datasetTotalsMinimap"
@@ -3098,7 +3193,9 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

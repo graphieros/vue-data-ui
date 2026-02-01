@@ -144,11 +144,53 @@ function prepareConfig() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            table: { show: false, },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    areas: {
+                        maxPoint: {
+                            show: false,
+                        },
+                        opacity: 0.9,
+                        stroke: {
+                            useSerieColor: true,
+                        },
+                    },
+                    legend: {
+                        backgroundColor: 'transparent'
+                    },
+                    padding: {
+                        right: -24,
+                        left: 0
+                    },
+                    xAxis: {
+                        labels: {
+                            values: []
+                        }
+                    },
+                    yAxis: {
+                        labels: {
+                            fontSize: 0,
+                        }
+                    },
+                    zeroLine: { show: false }
+                }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
 const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    skeletonDataset: [
+    skeletonDataset: props.config?.skeletonDataset ?? [
         {
             name: "_",
             datapoints: [
@@ -242,42 +284,7 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            userOptions: { show: false },
-            table: { show: false, },
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    areas: {
-                        maxPoint: {
-                            show: false,
-                        },
-                        opacity: 0.9,
-                        stroke: {
-                            useSerieColor: true,
-                        },
-                    },
-                    legend: {
-                        backgroundColor: 'transparent'
-                    },
-                    padding: {
-                        right: -24,
-                        left: 0
-                    },
-                    xAxis: {
-                        labels: {
-                            values: []
-                        }
-                    },
-                    yAxis: {
-                        labels: {
-                            fontSize: 0,
-                        }
-                    },
-                    zeroLine: { show: false }
-                }
-            }
-        }
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -574,15 +581,26 @@ const maxDpLen = computed(() => {
     return Math.max(...formattedDataset.value.flatMap(el => el.datapoints.map(dp => dp.values.length)));
 })
 
-const timeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.chart.xAxis.labels.values,
-        maxDatapoints: maxDpLen.value,
-        formatter: FINAL_CONFIG.value.style.chart.xAxis.labels.datetimeFormatter,
-        start: 0,
-        end: FINAL_CONFIG.value.style.chart.xAxis.labels.values.length
-    })
-})
+const timeLabels = ref([]);
+
+let timeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.style.chart.xAxis.labels.values,
+            maxDatapoints: maxDpLen.value,
+            formatter: FINAL_CONFIG.value.style.chart.xAxis.labels.datetimeFormatter,
+            start: 0,
+            end: FINAL_CONFIG.value.style.chart.xAxis.labels.values.length
+        });
+
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
+});
 
 const xAxisTrapsAndLabels = computed(() => {
     const maxLabelLen = Math.max(...formattedDataset.value.map(el => el.labelLen));
@@ -596,7 +614,7 @@ const xAxisTrapsAndLabels = computed(() => {
             selectorX: startX + (slotSize * i),
             x: startX + (slotSize * i) - slotSize / 2,
             y: drawingArea.value.top,
-            label: FINAL_CONFIG.value.style.chart.xAxis.labels.values[i] ? timeLabels.value[i].text : '',
+            label: FINAL_CONFIG.value.style.chart.xAxis.labels.values[i] ? (timeLabels.value[i]?.text ?? '') : '',
             index: i,
             width: slotSize,
             height: baseHeight.value
@@ -1537,7 +1555,9 @@ defineExpose({
         </BaseDraggableDialog>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

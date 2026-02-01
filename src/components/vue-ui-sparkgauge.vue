@@ -51,19 +51,9 @@ const uid = ref(createUid());
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: {
-        value: 0,
-        min: -1,
-        max: 1,
-        title: ''
-    },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             style: {
                 animation: { show: false },
                 background: '#99999930',
@@ -77,10 +67,27 @@ const { loading, FINAL_DATASET } = useLoading({
                 gutter: {
                     color: '#6A6A6A80'
                 }
-            },
-        }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
     })
-})
+});
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? {
+        value: 0,
+        min: -1,
+        max: 1,
+        title: ''
+    },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
+    })
+});
 
 const { svgRef } = useChartAccessibility({ config: { text: props.dataset?.title || '' } });
 
@@ -339,7 +346,9 @@ const trackColor = computed(() => {
     </div>
 
     <!-- v3 Skeleton loader -->
-    <BaseScanner v-if="loading" />
+    <slot name="skeleton">
+        <BaseScanner v-if="loading" />
+    </slot>
 </div>
 </template>
 

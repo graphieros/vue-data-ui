@@ -70,18 +70,9 @@ const tooltipContent = ref('');
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        { name: '_', value: 8, color: '#808080' },
-        { name: '_', value: 5, color: '#ADADAD' },
-        { name: '_', value: 3, color: '#DBDBDB' },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             style: {
                 backgroundColor: '#99999930',
                 animation: { show: false },
@@ -90,9 +81,25 @@ const { loading, FINAL_DATASET } = useLoading({
                     backgroundColor: 'transparent'
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
     })
-})
+});
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        { name: '_', value: 8, color: '#808080' },
+        { name: '_', value: 5, color: '#ADADAD' },
+        { name: '_', value: 3, color: '#DBDBDB' },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
+    })
+});
 
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
 
@@ -625,7 +632,9 @@ defineExpose({
         </div>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

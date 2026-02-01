@@ -100,24 +100,9 @@ const isDataset = computed(() => {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
-        });
-    },
-    skeletonDataset: [
-        { name: '_', values: [21], color: '#DBDBDB'},
-        { name: '_', values: [13], color: '#C4C4C4'},
-        { name: '_', values: [8], color: '#ADADAD'},
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             table: { show: false },
             useCssAnimation: false,
@@ -129,7 +114,29 @@ const { loading, FINAL_DATASET } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+            mutableConfig.value.showTable = FINAL_CONFIG.value.table.show;
+        });
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        { name: '_', values: [21], color: '#DBDBDB'},
+        { name: '_', values: [13], color: '#C4C4C4'},
+        { name: '_', values: [8], color: '#ADADAD'},
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -1093,7 +1100,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

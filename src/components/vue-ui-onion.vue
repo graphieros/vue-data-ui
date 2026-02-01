@@ -99,25 +99,9 @@ const tableUnit = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            anim()
-        })
-    },
-    skeletonDataset: [
-        { name: "_", percentage: 50, value: 1, color: '#DBDBDB'},
-        { name: "_", percentage: 50, value: 1, color: '#C4C4C4'},
-        { name: "_", percentage: 50, value: 1, color: '#ADADAD'},
-        { name: "_", percentage: 50, value: 1, color: '#969696'},
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonDataset = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             table: { show: false },
             style: {
@@ -134,7 +118,30 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+            anim()
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        { name: "_", percentage: 50, value: 1, color: '#DBDBDB'},
+        { name: "_", percentage: 50, value: 1, color: '#C4C4C4'},
+        { name: "_", percentage: 50, value: 1, color: '#ADADAD'},
+        { name: "_", percentage: 50, value: 1, color: '#969696'},
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonDataset.value
     })
 });
 
@@ -1282,7 +1289,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

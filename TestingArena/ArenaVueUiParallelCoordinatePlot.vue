@@ -204,6 +204,13 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        // skeletonConfig: {
+        //     style: {
+        //         chart: {
+        //             backgroundColor: '#FF0000'
+        //         }
+        //     }
+        // },
         events: {
             datapointEnter: ({ datapoint, seriesIndex }) => {
                 console.log('enter event', { datapoint, seriesIndex })

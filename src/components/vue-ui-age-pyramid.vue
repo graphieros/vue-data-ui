@@ -91,25 +91,9 @@ const userOptionsRef = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        ['_', 9, 2, 2],
-        ['_', 8, 3, 3],
-        ['_', 7, 5, 5],
-        ['_', 6, 8, 8],
-        ['_', 5, 13, 13],
-        ['_', 4, 21, 21],
-        ['_', 3, 34, 34],
-        ['_', 2, 55, 55],
-        ['_', 1, 89, 89],
-        ['_', 0, 144, 144],
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false, },
             table: { show: false },
             translations: {
@@ -138,7 +122,30 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        ['_', 9, 2, 2],
+        ['_', 8, 3, 3],
+        ['_', 7, 5, 5],
+        ['_', 6, 8, 8],
+        ['_', 5, 13, 13],
+        ['_', 4, 21, 21],
+        ['_', 3, 34, 34],
+        ['_', 2, 55, 55],
+        ['_', 1, 89, 89],
+        ['_', 0, 144, 144],
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -1177,7 +1184,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

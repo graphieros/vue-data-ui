@@ -141,19 +141,9 @@ const loaderDs = {
     ]
 }
 
-const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async() => {
-            await triggerAnim();
-        });
-    },
-    skeletonDataset: [loaderDs, loaderDs],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             useCssAnimation: false,
             table: { show: false },
             startAnimation: { show: false },
@@ -175,9 +165,26 @@ const { loading, FINAL_DATASET, manualLoading, skeletonDataset } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
     })
 })
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async() => {
+            await triggerAnim();
+        });
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [loaderDs, loaderDs],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
+    })
+});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } =
     useUserOptionState({ config: FINAL_CONFIG.value });
@@ -1924,7 +1931,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading"/>
+        <slot name="skeleton">
+            <BaseScanner v-if="loading"/>
+        </slot>
     </div>
 </template>
 

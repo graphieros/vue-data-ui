@@ -108,20 +108,9 @@ const areSeriesNamesColliding = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        { name: '_', start: 21, end: 34 },
-        { name: '_', start: 13, end: 21 },
-        { name: '_', start: 8, end: 13 },
-        { name: '_', start: 5, end: 8 },
-        { name: '_', start: 3, end: 5 },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             table: { show: false },
             useAnimation: false,
@@ -159,7 +148,25 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        { name: '_', start: 21, end: 34 },
+        { name: '_', start: 13, end: 21 },
+        { name: '_', start: 8, end: 13 },
+        { name: '_', start: 5, end: 8 },
+        { name: '_', start: 3, end: 5 },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -1509,7 +1516,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

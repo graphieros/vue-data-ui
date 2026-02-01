@@ -264,6 +264,13 @@ const config = computed(() => {
     } else {
         return {
             ...c,
+            // skeletonConfig: {
+            //     style: {
+            //         chart: {
+            //             backgroundColor: '#FF0000'
+            //         }
+            //     }
+            // },
             events: {
                 datapointClick: (c) => {
                     console.log({c})

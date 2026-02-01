@@ -94,6 +94,30 @@ const userOptionsRef = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            customPalette: ['#808080', '#ADADAD', '#DBDBDB'],
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    color: '#6A6A6A',
+                    bar: {
+                        color: '#ADADAD',
+                        stroke: '#6A6A6A'
+                    },
+                    box: {
+                        stroke: '#6A6A6A'
+                    }
+                }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    });
+});
+
 const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
@@ -104,7 +128,7 @@ const { loading, FINAL_DATASET } = useLoading({
             animateOnLoad();
         })
     },
-    skeletonDataset: {
+    skeletonDataset: props.config?.skeletonDataset ?? {
         series: [
             { 
                 name: '_', 
@@ -134,24 +158,7 @@ const { loading, FINAL_DATASET } = useLoading({
     },
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            customPalette: ['#808080', '#ADADAD', '#DBDBDB'],
-            userOptions: { show: false },
-            table: { show: false },
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    color: '#6A6A6A',
-                    bar: {
-                        color: '#ADADAD',
-                        stroke: '#6A6A6A'
-                    },
-                    box: {
-                        stroke: '#6A6A6A'
-                    }
-                }
-            }
-        }
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -1414,7 +1421,9 @@ defineExpose({
     
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

@@ -26,7 +26,6 @@ import {
     downloadCsv,
     error, 
     getMissingDatasetAttributes, 
-    hasDeepProperty, 
     isFunction, 
     lightenHexColor,
     objectIsEmpty, 
@@ -296,25 +295,9 @@ function prepareConfig() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: [
-        {
-            name: '',
-            color: '#CACACA',
-            values: [
-                { label: '', x: 1, y: 9},
-                { label: '', x: 4, y: 1},
-                { label: '', x: 7, y: 9},
-                { label: '', x: 9, y: 4},
-            ]
-        }
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             table: { show: false },
             style: {
@@ -362,9 +345,32 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
     })
-})
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '',
+            color: '#CACACA',
+            values: [
+                { label: '', x: 1, y: 9},
+                { label: '', x: 4, y: 1},
+                { label: '', x: 7, y: 9},
+                { label: '', x: 9, y: 4},
+            ]
+        }
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
+    })
+});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -1616,7 +1622,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

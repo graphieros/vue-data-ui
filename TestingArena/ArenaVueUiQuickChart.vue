@@ -298,6 +298,9 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        // skeletonConfig: {
+        //     backgroundColor: '#FF0000'
+        // },
         events: {
             datapointEnter: ({ datapoint, seriesIndex }) => {
                 console.log('enter event', { datapoint, seriesIndex });
@@ -320,7 +323,18 @@ const config = computed(() => {
         //     return `Some long label\nfor index ${i}`
         // }),
         datetimeFormatter: {
-            enable: false
+            enable: true,
+            locale: 'zh-CN',
+            useUTC: false,
+            januaryAsYear: true,
+            options: { 
+                year: 'yyyy',
+                month: `MMMM`,
+                day: 'dd MMM',
+                hour: 'HH:mm',
+                minute: 'HH:mm:ss',
+                second: 'HH:mm:ss'
+            }
         }
     }
 })

@@ -81,11 +81,42 @@ const userOptionsRef = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            table: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    layout: {
+                        grandTotal: { show: false },
+                        roots: {
+                            stroke: '#6A6A6A',
+                            labels: { show: false }
+                        },
+                        verticalSeparator: { stroke: 'transparent' },
+                        branches: {
+                            stroke: '#6A6A6A',
+                            underlayerColor: '#6A6A6A90',
+                            labels: { 
+                                show: false,
+                                dataLabels: { show: false }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
 const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    skeletonDataset: [
+    skeletonDataset: props.config?.skeletonDataset ?? [
         {
             name: '_',
             color: '#969696',
@@ -165,31 +196,7 @@ const { loading, FINAL_DATASET } = useLoading({
     ],
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-            userOptions: { show: false },
-            table: { show: false },
-            style: {
-                chart: {
-                    backgroundColor: '#99999930',
-                    layout: {
-                        grandTotal: { show: false },
-                        roots: {
-                            stroke: '#6A6A6A',
-                            labels: { show: false }
-                        },
-                        verticalSeparator: { stroke: 'transparent' },
-                        branches: {
-                            stroke: '#6A6A6A',
-                            underlayerColor: '#6A6A6A90',
-                            labels: { 
-                                show: false,
-                                dataLabels: { show: false }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -1719,7 +1726,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>  
 </template>
 

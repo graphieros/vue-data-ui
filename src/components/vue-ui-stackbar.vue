@@ -32,7 +32,6 @@ import {
     forceValidValue, 
     functionReturnsString, 
     getMissingDatasetAttributes, 
-    hasDeepProperty, 
     isFunction, 
     lightenHexColor, 
     objectIsEmpty, 
@@ -42,6 +41,7 @@ import {
     treeShake, 
 } from "../lib";
 import { throttle } from "../canvas-lib";
+import { useLocale } from "../useLocale.js";
 import { usePrinter } from "../usePrinter";
 import { useLoading } from "../useLoading.js";
 import { useDateTime } from "../useDateTime.js";
@@ -57,7 +57,6 @@ import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import themes from "../themes/vue_ui_stackbar.json";
-import locales from '../locales/locales.json';
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
 import SlicerPreview from "../atoms/SlicerPreview.vue";
@@ -143,30 +142,9 @@ onMounted(() => {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await setupSlicer();
-        })
-    },
-    skeletonDataset: [
-        {
-            name: '',
-            series: [2, 3, 5, 8, 13, 21],
-            color: '#BABABA'
-        },
-        {
-            name: '',
-            series: [1, 2, 3, 5, 8, 13],
-            color: '#CACACA'
-        },
-    ],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             useCssAnimation: false,
             table: { show: false },
@@ -214,7 +192,35 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await setupSlicer();
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [
+        {
+            name: '',
+            series: [2, 3, 5, 8, 13, 21],
+            color: '#BABABA'
+        },
+        {
+            name: '',
+            series: [1, 2, 3, 5, 8, 13],
+            color: '#CACACA'
+        },
+    ],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 });
 
@@ -458,21 +464,6 @@ function getOffsetX() {
 const labelsXHeight = ref(0);
 const offsetRight = ref(0);
 
-const updateHeight = throttle((h) => {
-    labelsXHeight.value = h;
-}, 100);
-
-watchEffect((onInvalidate) => {
-    const el = FINAL_CONFIG.value.orientation === 'vertical' ? timeLabelsEls.value : scaleLabels.value;
-    if (!el) return
-
-    const observer = new ResizeObserver(entries => {
-        updateHeight(entries[0].contentRect.height)
-    })
-    observer.observe(el)
-    onInvalidate(() => observer.disconnect())
-});
-
 const updateOffsetRight = throttle((w) => {
     offsetRight.value = w + FINAL_CONFIG.value.style.chart.bars.totalValues.fontSize
 }, 100);
@@ -531,23 +522,63 @@ onBeforeUnmount(() => {
     offsetRight.value = 0;
 });
 
+const measuredLabelsHeight = ref(0);
+
+const labelsHeightRaf = ref(0);
+
+function measureLabelsHeightNow() {
+    // What contributes to Y offset depends on orientation
+    const el =
+        FINAL_CONFIG.value.orientation === 'vertical'
+            ? timeLabelsEls.value
+            : scaleLabels.value;
+
+    if (!el) {
+        measuredLabelsHeight.value = 0;
+        return;
+    }
+
+    try {
+        // SVG group bbox is the most reliable "rendered height"
+        const box = el.getBBox();
+        measuredLabelsHeight.value = Number.isFinite(box?.height) ? box.height : 0;
+    } catch (_) {
+        measuredLabelsHeight.value = 0;
+    }
+}
+
+function scheduleMeasureLabelsHeight() {
+    if (labelsHeightRaf.value) cancelAnimationFrame(labelsHeightRaf.value);
+
+    // Two RAFs to wait for SVG layout/font metrics
+    labelsHeightRaf.value = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            measureLabelsHeightNow();
+        });
+    });
+}
+
+onBeforeUnmount(() => {
+    if (labelsHeightRaf.value) cancelAnimationFrame(labelsHeightRaf.value);
+});
+
 const offsetY = computed(() => {
     let h = 0;
-        if (xAxisLabel.value) {
+
+    if (xAxisLabel.value) {
+        try {
             h = xAxisLabel.value.getBBox().height;
+        } catch (_) {
+            h = 0;
         }
-        let tlH = 0;
-        if (FINAL_CONFIG.value.orientation === 'vertical') {
-            if (timeLabelsEls.value) {
-                tlH = labelsXHeight.value;
-            }
-        }
-        if (FINAL_CONFIG.value.orientation === 'horizontal') {
-            if (scaleLabels.value) {
-                tlH = labelsXHeight.value;
-            }
-        }
-        return h + tlH;
+    }
+
+    const tlH =
+        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show
+            ? measuredLabelsHeight.value
+            : 0;
+
+    return h + tlH;
 });
 
 const drawingArea = computed(() => {
@@ -794,24 +825,45 @@ const yLabels = computed(() => {
     });
 });
 
-const timeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
-        maxDatapoints: maxSeries.value,
-        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
-        start: slicer.value.start,
-        end: slicer.value.end
-    })
+const timeLabels = ref([]);
+const allTimeLabels = ref([]);
+
+let timeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
+            maxDatapoints: maxSeries.value,
+            formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
+            start: slicer.value.start,
+            end: slicer.value.end
+        });
+
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
 });
 
-const allTimeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
-        maxDatapoints: maxSeries.value,
-        formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
-        start: 0,
-        end: maxSeries.value
-    })
+let allTimeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++allTimeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values,
+            maxDatapoints: maxSeries.value,
+            formatter: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter,
+            start: 0,
+            end: maxSeries.value
+        });
+
+        if (requestId === allTimeLabelsRequestId) {
+            allTimeLabels.value = labels;
+        }
+    })();
 });
 
 const modulo = computed(() => {
@@ -842,22 +894,74 @@ const displayedTimeLabels = computed(() => {
     );
 });
 
+watchEffect(() => {
+    const orientation = FINAL_CONFIG.value.orientation;
+
+    // Things that affect label rendering/height
+    const tlShown = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.show;
+    const tlFontSize = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.fontSize;
+    const tlRotation = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.rotation;
+    const tlOffsetY = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.offsetY;
+
+    // Triggers when async time labels resolve + when slicer/collision changes visible labels
+    const visibleTimeLabels = displayedTimeLabels.value?.map(l => l?.text ?? '').join('|') || '';
+    const scaleTicks = yLabels.value?.map(l => l?.value ?? '').join('|') || '';
+
+    // Triggers on resize
+    const w = defaultSizes.value.width;
+    const h = defaultSizes.value.height;
+
+    // Ensure refs are tracked so we measure when they appear
+    const tlEl = timeLabelsEls.value;
+    const scEl = scaleLabels.value;
+    const xAxisEl = xAxisLabel.value;
+
+    void orientation;
+    void tlShown;
+    void tlFontSize;
+    void tlRotation;
+    void tlOffsetY;
+    void visibleTimeLabels;
+    void scaleTicks;
+    void w;
+    void h;
+    void tlEl;
+    void scEl;
+    void xAxisEl;
+
+    scheduleMeasureLabelsHeight();
+}, { flush: 'post' });
+
+const localeData = ref({ months: [], shortMonths: [], days: [], shortDays: [] });
+
+let localeRequestId = 0;
+watchEffect(() => {
+    const requestId = ++localeRequestId;
+    const xl = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter;
+
+    (async () => {
+        const resolved = await useLocale(xl.locale).catch(() => useLocale("en"));
+        if (requestId === localeRequestId) {
+            localeData.value = resolved.data;
+        }
+    })();
+});
+
 const preciseTimeFormatter = computed(() => {
-    const xl = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter
+    const xl = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.datetimeFormatter;
 
     const dt = useDateTime({
         useUTC: xl.useUTC,
-        locale: locales[xl.locale] || { months:[], shortMonths:[], days:[], shortDays:[] },
+        locale: localeData.value,
         januaryAsYear: xl.januaryAsYear
     });
 
     return (absIndex, fmt) => {
-        const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values
-        const ts = values?.[absIndex]
-        if (ts == null) return ''
-        const res = dt.formatDate(new Date(ts), fmt)
-        return dt.formatDate(new Date(ts), fmt)
-    }
+        const values = FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values;
+        const ts = values?.[absIndex];
+        if (ts == null) return "";
+        return dt.formatDate(new Date(ts), fmt);
+    };
 });
 
 const preciseAllTimeLabels = computed(() => {
@@ -2490,8 +2594,8 @@ defineExpose({
             :immediate="!FINAL_CONFIG.style.chart.zoom.preview.enable"
             :inputColor="FINAL_CONFIG.style.chart.zoom.color"
             :isPreview="isPrecog"
-            :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? timeLabels[0].text : ''"
-            :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? timeLabels.at(-1).text : ''"
+            :labelLeft="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.start] ? (timeLabels?.[0]?.text ?? '') : ''"
+            :labelRight="FINAL_CONFIG.style.chart.grid.x.timeLabels.values[slicer.end-1] ? (timeLabels?.at(-1)?.text ?? '') : ''"
             :max="Math.max(...dataset.map(ds => ds.series.length))"
             :min="0"
             :minimap="datasetTotalsMinimap"
@@ -2669,7 +2773,9 @@ defineExpose({
         </component>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

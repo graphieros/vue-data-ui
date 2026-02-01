@@ -105,27 +105,9 @@ const donutStroke = ref('#FFFFFF');
 const FINAL_CONFIG = ref(prepareConfig());
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
-// v3 - Skeleton loader management
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    callback: () => {
-        Promise.resolve().then(async () => {
-            await nextTick();
-            if (chartType.value === detector.chartType.LINE && FINAL_CONFIG.value.lineAnimated && !loading.value) {
-                animateLineNow({
-                    pathDuration: 1000,
-                    pointDuration: 1200,
-                    labelDuration: 1200,
-                });
-            }
-        })
-    },
-    skeletonDataset: [1, 2, 3, 5, 8, 13, 21, 34, 55, 89],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        dafaultConfig: {
             backgroundColor: '#99999930',
             customPalette: ['#BABABA'],
             showDataLabels: false,
@@ -143,7 +125,32 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
             zoomXy: false,
             zoomStartIndex: null,
             zoomEndIndex: null
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+// v3 - Skeleton loader management
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    callback: () => {
+        Promise.resolve().then(async () => {
+            await nextTick();
+            if (chartType.value === detector.chartType.LINE && FINAL_CONFIG.value.lineAnimated && !loading.value) {
+                animateLineNow({
+                    pathDuration: 1000,
+                    pointDuration: 1200,
+                    labelDuration: 1200,
+                });
+            }
+        })
+    },
+    skeletonDataset: props.config?.skeletonDataset ?? [1, 2, 3, 5, 8, 13, 21, 34, 55, 89],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -1344,14 +1351,25 @@ const allMinimaps = computed(() => {
     }
 });
 
-const timeLabels = computed(() => {
-    return useTimeLabels({
-        values: FINAL_CONFIG.value.xyPeriods,
-        maxDatapoints: formattedDataset.value.maxSeriesLength,
-        formatter: FINAL_CONFIG.value.datetimeFormatter,
-        start: slicer.value.start,
-        end: slicer.value.end
-    })
+const timeLabels = ref([]);
+
+let timeLabelsRequestId = 0;
+watchEffect(() => {
+    const requestId = ++timeLabelsRequestId;
+
+    (async () => {
+        const labels = await useTimeLabels({
+            values: FINAL_CONFIG.value.xyPeriods,
+            maxDatapoints: formattedDataset.value.maxSeriesLength,
+            formatter: FINAL_CONFIG.value.datetimeFormatter,
+            start: slicer.value.start,
+            end: slicer.value.end
+        });
+
+        if (requestId === timeLabelsRequestId) {
+            timeLabels.value = labels;
+        }
+    })();
 });
 
 const modulo = computed(() => {
@@ -2281,8 +2299,8 @@ defineExpose({
                 :borderColor="FINAL_CONFIG.backgroundColor"
                 :fontSize="FINAL_CONFIG.zoomFontSize"
                 :useResetSlot="FINAL_CONFIG.zoomUseResetSlot"
-                :labelLeft="FINAL_CONFIG.xyPeriods[slicer.start] ? timeLabels[0].text : ''"
-                :labelRight="FINAL_CONFIG.xyPeriods[slicer.end-1] ? timeLabels.at(-1).text : ''"
+                :labelLeft="FINAL_CONFIG.xyPeriods[slicer.start] ? timeLabels[0] ? timeLabels[0].text : '' : ''"
+                :labelRight="FINAL_CONFIG.xyPeriods[slicer.end-1] ? timeLabels?.length ? timeLabels.at(-1).text : '' : ''"
                 :textColor="FINAL_CONFIG.color"
                 :inputColor="FINAL_CONFIG.zoomColor"
                 :selectColor="FINAL_CONFIG.zoomHighlightColor"
@@ -2462,7 +2480,9 @@ defineExpose({
         </Tooltip>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading"/>
+        <slot name="skeleton">
+            <BaseScanner v-if="loading"/>
+        </slot>
     </div>
     <div v-else class="vue-ui-quick-chart-not-processable">
         <BaseIcon name="circleCancel" stroke="red"/>

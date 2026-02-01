@@ -74,35 +74,42 @@ const titleStep = ref(0);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
+            userOptions: { show: false },
+            style: {
+                chart: {
+                    backgroundColor: '#99999930',
+                    animation: { use: false },
+                    layout: {
+                        wheel: {
+                            ticks: {
+                                activeColor: '#6A6A6A80',
+                                inactiveColor: '#CACACA80',
+                            }
+                        },
+                        innerCircle: {
+                            stroke: '#CACACA80'
+                        },
+                    }
+                }
+            }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
 const { loading, FINAL_DATASET } = useLoading({
     ...toRefs(props),
     FINAL_CONFIG,
     prepareConfig,
-    skeletonDataset: { percentage: 50 },
+    skeletonDataset: props.config?.skeletonDataset ?? { percentage: 50 },
     skeletonConfig: treeShake({
         defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
-        userOptions: { show: false },
-        style: {
-            chart: {
-                backgroundColor: '#99999930',
-                animation: { use: false },
-                layout: {
-                    wheel: {
-                        ticks: {
-                            activeColor: '#6A6A6A80',
-                            inactiveColor: '#CACACA80',
-                        }
-                    },
-                    innerCircle: {
-                        stroke: '#CACACA80'
-                    },
-                }
-            }
-        }
-    }
+        userConfig: skeletonConfig.value
     })
-})
+});
 
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
@@ -954,7 +961,9 @@ defineExpose({
         </div>
 
         <!-- v3 Skeleton loader -->
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 

@@ -102,24 +102,9 @@ const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.char
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const direction = ref(FINAL_CONFIG.value.style.chart.layout.rankDirection);
 
-const { loading, FINAL_DATASET, manualLoading } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    skeletonDataset: {
-        nodes: [
-            { id: 'A', label: '' },
-            { id: 'B', label: '' },
-            { id: 'C', label: '' },
-        ],
-        edges: [
-            { from: 'A', to: 'B' },
-            { from: 'A', to: 'C' },
-        ]
-    },
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             userOptions: { show: false },
             style: {
                 chart: {
@@ -137,7 +122,29 @@ const { loading, FINAL_DATASET, manualLoading } = useLoading({
                     }
                 }
             }
-        }
+        },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+})
+
+const { loading, FINAL_DATASET, manualLoading } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    skeletonDataset: props.config?.skeletonDataset ?? {
+        nodes: [
+            { id: 'A', label: '' },
+            { id: 'B', label: '' },
+            { id: 'C', label: '' },
+        ],
+        edges: [
+            { from: 'A', to: 'B' },
+            { from: 'A', to: 'C' },
+        ]
+    },
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     })
 })
 
@@ -1490,7 +1497,9 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <BaseScanner v-if="loading"/>
+        <slot name="skeleton">
+            <BaseScanner v-if="loading"/>
+        </slot>
     </div>
 </template>
 

@@ -81,6 +81,11 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        skeletonConfig: {
+            style: {
+                background: '#FF0000'
+            }
+        },
         style: {
             ...c.style,
             dataLabel: {

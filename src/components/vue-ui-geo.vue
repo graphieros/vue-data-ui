@@ -121,15 +121,9 @@ const { svgRef } = useChartAccessibility({
     config: FINAL_CONFIG.value.style.chart.title,
 });
 
-const { loading, FINAL_DATASET } = useLoading({
-    ...toRefs(props),
-    FINAL_CONFIG,
-    prepareConfig,
-    allowEmptyDataset: true,
-    skeletonDataset: [],
-    skeletonConfig: treeShake({
-        defaultConfig: FINAL_CONFIG.value,
-        userConfig: {
+const skeletonConfig = computed(() => {
+    return treeShake({
+        defaultConfig: {
             map: {
                 geoJson: {
                     type: "FeatureCollection",
@@ -213,6 +207,19 @@ const { loading, FINAL_DATASET } = useLoading({
                 },
             },
         },
+        userConfig: FINAL_CONFIG.value.skeletonConfig ?? {}
+    })
+});
+
+const { loading, FINAL_DATASET } = useLoading({
+    ...toRefs(props),
+    FINAL_CONFIG,
+    prepareConfig,
+    allowEmptyDataset: true,
+    skeletonDataset: props.config?.skeletonDataset ?? [],
+    skeletonConfig: treeShake({
+        defaultConfig: FINAL_CONFIG.value,
+        userConfig: skeletonConfig.value
     }),
 });
 
@@ -2054,7 +2061,9 @@ defineExpose({
             <slot name="source" />
         </div>
 
-        <BaseScanner v-if="loading" />
+        <slot name="skeleton">
+            <BaseScanner v-if="loading" />
+        </slot>
     </div>
 </template>
 
