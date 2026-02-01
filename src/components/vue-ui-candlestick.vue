@@ -1098,7 +1098,9 @@ function generateCsv(callback=null) {
 
 const dataTable = computed(() => {
     const body = drawableDataset.value.map((ds, i) => {
-        const timeLabel = !FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable ? ds.period : timeLabels.value[i].text;
+        const timeLabel = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable
+            ? (timeLabels.value?.[i]?.text ?? '')
+            : ds.period;
 
         const label_open = dataLabel({
             p: FINAL_CONFIG.value.table.td.prefix,
@@ -1629,7 +1631,7 @@ defineExpose({
                         :fill="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.color"
                         :font-weight="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
                     >
-                        {{ timeLabel.text }}
+                        {{ timeLabel?.text ?? '' }}
                     </text>
                 </g>
             </g>
