@@ -2089,7 +2089,20 @@ const dataTable = computed(() => {
             return ds.series[i] ?? 0
         }).reduce((a,b ) => a + b, 0);
 
-        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[i].text : i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.rounding))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)));
+        body.push(
+            [
+                FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values
+                .slice(slicer.value.start, slicer.value.end)[i]
+                ? (timeLabels?.value?.slice(slicer.value.start, slicer.value.end)?.[i]?.text ?? i + 1)
+                : i + 1
+            ]
+                .concat(
+                formattedDataset.value.map(ds =>
+                    (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.rounding)
+                )
+                )
+                .concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.rounding))
+        );
     }
 
     const config = {
