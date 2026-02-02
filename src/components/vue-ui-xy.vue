@@ -7,6 +7,7 @@ import {
     onBeforeUnmount, 
     onMounted, 
     ref, 
+    shallowRef, 
     toRefs, 
     useSlots, 
     watch, 
@@ -66,6 +67,7 @@ import { useSvgExport } from '../useSvgExport.js';
 import { useNestedProp } from '../useNestedProp';
 import { useThemeCheck } from '../useThemeCheck.js';
 import { useTimeLabels } from '../useTimeLabels.js';
+import { useStableElementSize } from '../useStableElementSize.js';
 import { useTimeLabelCollision } from '../useTimeLabelCollider.js';
 import img from '../img.js';
 import Title from '../atoms/Title.vue';
@@ -157,6 +159,115 @@ const tableUnit = ref(null);
 
 const selectedSerieIndex = ref(null);
 
+/**
+ * Reference to the chart’s parent element.
+ *
+ * We intentionally observe the PARENT rather than the chart itself because
+ * the chart’s final layout depends on external constraints:
+ * - flex/grid resolution
+ * - font loading
+ * - surrounding DOM (titles, legends, slots, teleports)
+ *
+ * Observing the parent ensures we only proceed once the container that
+ * defines available space has fully settled.
+ */
+const parentElement = shallowRef(null);
+
+/**
+ * Indicates whether the parent layout has been confirmed stable.
+ *
+ * This is not used for measurements directly, but as a semantic signal
+ * to block rendering transitions / animations until layout is safe.
+ */
+const parentLayoutIsStable = ref(false);
+
+/**
+ * Monotonic counter used to force reactive recomputation.
+ *
+ * Computeds such as `drawingArea` explicitly depend on this value
+ * so they only finalize AFTER a stable layout pass has completed.
+ *
+ * This avoids race conditions where the computed runs too early
+ * and caches incorrect geometry.
+ */
+const parentLayoutStableRunSequence = ref(0);
+
+/**
+ * Sequence guard used to cancel outdated async layout passes.
+ *
+ * Multiple stability passes may be triggered in quick succession
+ * (mount, resize, config change). This ensures that only the
+ * most recent pass is allowed to commit results.
+ */
+const pendingParentLayoutSequence = ref(0);
+
+
+/**
+ * Stable-size observer bound to the parent element.
+ *
+ * This does NOT react to every resize immediately.
+ * Instead, it waits until the parent size remains unchanged
+ * across several animation frames before declaring it “stable”.
+ *
+ * Once stability is confirmed, it triggers a controlled layout pass.
+ */
+const stableParentSize = useStableElementSize({
+    elementRef: parentElement,
+    minimumWidth: 2,
+    minimumHeight: 2,
+    stableFramesRequired: 2,
+    once: false,
+    onSizeAccepted: () => {
+        runParentStableLayoutPass();
+    },
+});
+
+/**
+ * Updates the reference to the parent element.
+ *
+ * This is necessary because the chart may be:
+ * - re-parented (fullscreen, teleport)
+ * - conditionally mounted
+ * - wrapped by dynamic layout containers
+ *
+ * Re-resolving the parent ensures we always observe the
+ * correct layout authority.
+ */
+function setParentElementReference() {
+    parentElement.value = chart.value?.parentNode ?? null;
+}
+
+function nextPaintFrame() {
+    return new Promise(resolve => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+        });
+    });
+}
+
+/**
+ * Executes a stable layout pass.
+ * Ensure that any geometry depending on label
+ * footprint or container size is computed ONLY after:
+ *   - Vue has flushed DOM updates
+ *   - The parent size is stable
+ *   - The browser has painted at least twice
+ */
+async function runParentStableLayoutPass() {
+    const currentSequence = ++pendingParentLayoutSequence.value;
+
+    parentLayoutIsStable.value = false;
+
+    await nextTick();
+    await nextPaintFrame();
+    await nextPaintFrame();
+
+    if (currentSequence !== pendingParentLayoutSequence.value) return;
+
+    parentLayoutStableRunSequence.value += 1;
+    parentLayoutIsStable.value = true;
+}
+
 const svg = computed(() => {
     return {
         height: height.value,
@@ -195,6 +306,9 @@ onMounted(() => {
             }
         })
     }
+    setParentElementReference();
+    stableParentSize.start();
+    runParentStableLayoutPass();
 });
 
 function prepareConfig() {
@@ -738,6 +852,8 @@ const useProgression = computed(() => {
 });
 
 const drawingArea = computed(() => {
+    void parentLayoutStableRunSequence.value;
+    
     let _scaleLabelX = 0;
     const individualOffsetX = 36;
 
@@ -977,6 +1093,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
     timeLabelsHeight.value = 0;
     timeLabelsBBoxX.value = 0;
+    stableParentSize.stop();
 });
 
 function selectTimeLabel(label, relativeIndex) {
@@ -2757,6 +2874,8 @@ function prepareChart() {
                     width.value = entry.contentBoxSize[0].inlineSize;
                     viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
                     convertSizes();
+                    setParentElementReference();
+                    runParentStableLayoutPass();
                 })
             }
         })
@@ -2777,6 +2896,8 @@ function prepareChart() {
         plotRadii.value.line = FINAL_CONFIG.value.line.radius;
         viewBox.value = `0 0 ${width.value} ${height.value}`;
     }
+    setParentElementReference();
+    runParentStableLayoutPass();
 }
 
 function setClientPosition(e) {
@@ -2952,6 +3073,8 @@ watch(() => props.dataset, (_) => {
 
     slicerStep.value += 1;
     segregateStep.value += 1;
+    setParentElementReference();
+    runParentStableLayoutPass();
     normalizeSlicerWindow();
 
 }, { deep: true });
@@ -2966,7 +3089,8 @@ watch(() => props.config, (_) => {
 
     // Reset mutable config
     seedMutableFromConfig()
-
+    setParentElementReference();
+    runParentStableLayoutPass();
     normalizeSlicerWindow();
 }, { deep: true });
 

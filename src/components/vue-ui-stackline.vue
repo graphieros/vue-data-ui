@@ -54,6 +54,7 @@ import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useTimeLabels } from "../useTimeLabels";
 import { useThemeCheck } from "../useThemeCheck";
+import { useStableElementSize } from "../useStableElementSize";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import { useUserOptionState } from "../useUserOptionState";
@@ -139,6 +140,50 @@ const scaleLabels = ref(null);
 const timeLabelsEls = ref(null);
 const sumTop = ref(null);
 
+const parentElement = shallowRef(null);
+const parentLayoutIsStable = ref(false);
+const parentLayoutStableRunSequence = ref(0);
+const pendingParentLayoutSequence = ref(0);
+
+const stableParentSize = useStableElementSize({
+    elementRef: parentElement,
+    minimumWidth: 2,
+    minimumHeight: 2,
+    stableFramesRequired: 2,
+    once: false,
+    onSizeAccepted: () => {
+        runParentStableLayoutPass();
+    },
+});
+
+function setParentElementReference() {
+    parentElement.value = stacklineChart.value?.parentNode ?? null;
+}
+
+function nextPaintFrame() {
+    return new Promise(resolve => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(resolve);
+        });
+    });
+}
+
+
+async function runParentStableLayoutPass() {
+    const currentSequence = ++pendingParentLayoutSequence.value;
+
+    parentLayoutIsStable.value = false;
+
+    await nextTick();
+    await nextPaintFrame();
+    await nextPaintFrame();
+
+    if (currentSequence !== pendingParentLayoutSequence.value) return;
+
+    parentLayoutStableRunSequence.value += 1;
+    parentLayoutIsStable.value = true;
+}
+
 const selectedMinimapIndex = ref(null);
 
 const isAnnotator = ref(false);
@@ -147,8 +192,12 @@ function toggleAnnotator() {
 }
 
 onMounted(() => {
+    setParentElementReference();
+    stableParentSize.start();
+
     readyTeleport.value = true;
     prepareChart();
+    runParentStableLayoutPass();
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
@@ -313,6 +362,9 @@ watch(() => props.config, (_newCfg) => {
         left: FINAL_CONFIG.value.style.chart.padding.left / FINAL_CONFIG.value.style.chart.width,
     }
 
+    setParentElementReference();
+    runParentStableLayoutPass();
+
     normalizeSlicerWindow();
 }, { deep: true });
 
@@ -321,6 +373,8 @@ watch(() => props.dataset, (_) => {
         manualLoading.value = false;
     }
     refreshSlicer();
+    setParentElementReference();
+    runParentStableLayoutPass();
 }, { deep: true })
 
 const mutableConfig = ref({
@@ -443,6 +497,8 @@ function prepareChart() {
 }
 
 onBeforeUnmount(() => {
+    stableParentSize.stop();
+
     if (resizeObserver.value) {
         if (observedEl.value) {
             resizeObserver.value.unobserve(observedEl.value);
@@ -528,6 +584,8 @@ const offsetY = computed(() => {
 });
 
 const drawingArea = computed(() => {
+    void parentLayoutStableRunSequence.value;
+
     const { height: H, width: W } = defaultSizes.value;
     const { right: PR } = defaultSizes.value.paddingRatio;
 
