@@ -880,7 +880,7 @@ onBeforeUnmount(() => {
             class="vertical-range" 
             :min="3" 
             :max="48" 
-            :step="0.1" 
+            :step="1" 
             v-model="fontSize"
             :style="{ accentColor: color }" 
         />
