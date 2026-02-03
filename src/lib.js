@@ -933,13 +933,12 @@ function parseRgbOrRgba(input) {
     return { red, green, blue, alpha };
     }
 
-    function parseHex(input) {
+function parseHex(input) {
     const value = input.trim();
     if (!value.startsWith("#")) return null;
 
     const hex = value.slice(1);
 
-    // #RGB, #RRGGBB
     if (hex.length === 3) {
         const red = Number.parseInt(hex[0] + hex[0], 16);
         const green = Number.parseInt(hex[1] + hex[1], 16);
@@ -954,6 +953,13 @@ function parseRgbOrRgba(input) {
         return { red, green, blue, alpha: 1 };
     }
 
+    if (hex.length === 8) {
+        const red = Number.parseInt(hex.slice(0, 2), 16);
+        const green = Number.parseInt(hex.slice(2, 4), 16);
+        const blue = Number.parseInt(hex.slice(4, 6), 16);
+        const alpha = Number.parseInt(hex.slice(6, 8), 16) / 255;
+        return { red, green, blue, alpha };
+    }
     return null;
 }
 
@@ -1044,6 +1050,7 @@ function computeRelativeLuminance(red8Bit, green8Bit, blue8Bit) {
  * For semi-transparent colors, this assumes the background behind is white (same behavior as your original code).
  */
 export function adaptColorToBackground(backgroundColor) {
+    console.log(backgroundColor)
     if (!backgroundColor) return "#000000";
 
     const rgbOrRgba = parseRgbOrRgba(backgroundColor);
