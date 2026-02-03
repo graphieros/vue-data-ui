@@ -832,7 +832,7 @@ onBeforeUnmount(() => {
                 fontVariantNumeric: 'tabular-nums'
             }">
                 {{ dataLabel({
-                    v: mode === 'text' ? fontSize : strokeWidth,
+                    v: mode === 'text' ? Math.round(fontSize) : Math.round(strokeWidth),
                     s: 'px',
                     r: 1
                 }) }}
