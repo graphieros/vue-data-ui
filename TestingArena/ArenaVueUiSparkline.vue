@@ -115,10 +115,13 @@ const model = createModel([
     NUMBER("style.scaleMax", { def: null, min: -1000, max: 1000 }),
 
     CHECKBOX('style.line.pulse.show', { def: true }),
+    CHECKBOX('style.line.pulse.radius', { def: 2 }),
     COLOR('style.line.pulse.color', { def: '#FF0000'}),
-    NUMBER('style.line.pulse.trail.length', { def: 12 }),
     NUMBER('style.line.pulse.durationMs', { def: 10000 }),
-    CHECKBOX('style.line.pulse.loop', { def: false }),
+    CHECKBOX('style.line.pulse.loop', { def: true }),
+    CHECKBOX('style.line.pulse.trail.show', { def: true }),
+    NUMBER('style.line.pulse.trail.length', {def: 20}),
+    NUMBER('style.line.pulse.trail.opacity', { def: 0.75 }),
 
     NUMBER("style.padding.top", { def: 12, min: 0, max: 100 }),
     NUMBER("style.padding.right", { def: 12, min: 0, max: 100 }),
