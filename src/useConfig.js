@@ -2812,13 +2812,12 @@ export function useConfig(options = {}) {
                     color: COLOR_WHITE,
                     durationMs: 4000,
                     easing: 'ease-in-out',
-                    radius: 4,
+                    radius: 2,
                     cubicBezier: [0.45, 0.45, 0.55, 0.55],
                     trail: {
-                        show: true,
+                        show: false,
                         length: 6,
                         opacity: 0.75,
-                        strokeWidth: 3
                     }
                 },
             },

@@ -5933,7 +5933,6 @@ declare module "vue-data-ui" {
                         show?: boolean;
                         length?: number;
                         opacity?: number;
-                        strokeWidth?: number;
                     };
                 };
             };
