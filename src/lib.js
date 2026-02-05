@@ -1050,9 +1050,7 @@ function computeRelativeLuminance(red8Bit, green8Bit, blue8Bit) {
  * For semi-transparent colors, this assumes the background behind is white (same behavior as your original code).
  */
 export function adaptColorToBackground(backgroundColor) {
-    console.log(backgroundColor)
     if (!backgroundColor) return "#000000";
-
     const rgbOrRgba = parseRgbOrRgba(backgroundColor);
     const hex = parseHex(backgroundColor);
     const oklch = parseOklch(backgroundColor);
