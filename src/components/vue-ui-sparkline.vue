@@ -164,7 +164,7 @@ function prepareConfig() {
 const pulse = computed(() => FINAL_CONFIG.value?.style?.line.pulse || {});
 const pulseDur = computed(() => `${Math.max(200, Number(pulse.value.durationMs) || 4000) / 1000}s`);
 const pulsePathLength = ref(0);
-const pulseBegin = computed(() => pulse.value?.begin || '0s');
+const pulseBegin = computed(() => pulse.value?.begin || '0ms');
 const pulseKeyPoints = ref('0;1');
 
 const pulseRepeatCount = computed(() => {
@@ -175,22 +175,19 @@ const pulseFillMode = computed(() => {
     return pulse.value?.loop === false ? 'freeze' : undefined;
 });
 
-const pulseTrailOffset = computed(() => {
-    // distance (in px along the path) to push the dash segment behind the head
-    // include a bit of extra so the round cap does not overlap the dot
-    const extra = Math.max(2, (pulseTrail.value.width || 0) * 0.75);
-    return (pulseTrail.value.lengthPx || 0) + extra;
+const pulseTrailLength = computed(() => {
+    if (!pulse.value.trail.show) return 1;
+    return pulseTrail.value.lengthPx || 1;
 });
 
 const pulseEnabled = computed(() => {
-  return (
-    !!pulse.value?.show &&
-    !!pulseTrail.value?.show &&
-    !isBar.value &&
-    !prefersReducedMotion.value &&
-    !loading.value &&
-    (mutableDataset.value?.length || 0) > 1
-  );
+    return (
+        !!pulse.value?.show &&
+        !isBar.value &&
+        !prefersReducedMotion.value &&
+        !loading.value &&
+        (mutableDataset.value?.length || 0) > 1
+    );
 });
 
 function updatePulsePathLength() {
@@ -807,8 +804,15 @@ watch(
                     <stop offset="100%" :stop-color="FINAL_CONFIG.style.bar.color"/>
                 </linearGradient>
 
-                <filter :id="`sparkline_pulse_glow_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="5" result="blur" />
+                <filter
+                    :id="`sparkline_pulse_glow_${uid}`"
+                    filterUnits="userSpaceOnUse"
+                    x="-50"
+                    y="-50"
+                    width="100"
+                    height="100"
+                    >
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
                     <feMerge>
                         <feMergeNode in="blur" />
                         <feMergeNode in="SourceGraphic" />
@@ -876,7 +880,7 @@ watch(
             />
 
             <SparklinePulse
-                v-if="pulseMounted && pulseEnabled && pulsePathLength > 0"
+                v-if="pulseMounted && pulseEnabled"
                 :uid="uid"
                 :svgRef="svgRef"
                 :pulsePathId="pulsePathId"
@@ -889,11 +893,7 @@ watch(
                 :pulseMotion="pulseMotion"
                 :pulse="pulse"
                 :pulseTrail="pulseTrail"
-                :pulseTrailOffset="pulseTrailOffset"
-                :lineSmooth="FINAL_CONFIG.style.line.smooth"
-                :mutableDataset="mutableDataset"
-                :createSmoothPath="createSmoothPath"
-                :createStraightPath="createStraightPath"
+                :pulseTrailLength="pulseTrailLength"
                 :prefersReducedMotion="prefersReducedMotion"
                 :loading="loading"
                 :isBar="isBar"
