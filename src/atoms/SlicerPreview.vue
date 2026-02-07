@@ -563,6 +563,7 @@ function makeMiniChart(ds, smooth = false) {
             hasSelection: false,
             fullMarkers: [],
             selectionMarkers: [],
+            dashed: false
         };
     }
     const H = Math.max(1, svgMinimap.value.height);
@@ -646,6 +647,7 @@ const allMinimapLines = computed(() => {
             ...line,
             isVisible: ds.isVisible,
             type: ds.type || 'line',
+            dashed: ds.dashed ?? false
         };
     });
 });
@@ -1218,6 +1220,7 @@ defineExpose({
                                         fill="none"
                                         :stroke="dp.color"
                                         style="opacity: 0.6"
+                                        :stroke-dasharray="dp.dashed ? '2 4' : 0"
                                     />
                                     
                                     <circle
@@ -1359,6 +1362,7 @@ defineExpose({
                                         stroke-width="2"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
+                                        :stroke-dasharray="dp.dashed ? '2 4' : 0"
                                     />
                                 </g>
                                 <g v-for="dp in allMinimapLines.filter(d => d.type === 'plot')" :key="String(dp.key)">
@@ -1467,6 +1471,7 @@ defineExpose({
                                         stroke-width="2"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
+                                        :stroke-dasharray="dp.dashed ? '2 4' : 0"
                                     />
     
                                     <circle
