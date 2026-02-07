@@ -106,7 +106,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
-const emit = defineEmits(['selectTimeLabel', 'selectX', 'selectLegend']);
+const emit = defineEmits(['selectTimeLabel', 'selectX', 'selectLegend', 'zoomStart', 'zoomEnd', 'zoomReset']);
 const SLOTS = useSlots();
 const instance = getCurrentInstance();
 
@@ -1171,6 +1171,16 @@ function validSlicerEnd(v) {
 const isSettingUp = ref(false);
 const slicerReady = ref(false);
 
+const absoluteSlicerStartIndex = ref(0);
+const absoluteSlicerEndIndex = ref(0);
+
+function isObjectivelyDifferentIndex(a, b) {
+    const na = Number(a);
+    const nb = Number(b);
+    if (!Number.isFinite(na) || !Number.isFinite(nb)) return false;
+    return !Object.is(na, nb);
+}
+
 function setupSlicer() {
     if (isSettingUp.value) return;
     isSettingUp.value = true;
@@ -1178,18 +1188,24 @@ function setupSlicer() {
         const { startIndex, endIndex } = FINAL_CONFIG.value.chart.zoom;
         const max = Math.max(...FINAL_DATASET.value.map(dp => lttb(dp.series).length));
 
+        // Absolute bounds are always the full-range indices
+        absoluteSlicerStartIndex.value = 0;
+        absoluteSlicerEndIndex.value = max;
+
         const start = startIndex != null ? startIndex : 0;
-        const end   = endIndex   != null ? Math.min(validSlicerEnd(endIndex + 1), max) : max;
+        const end = endIndex != null ? Math.min(validSlicerEnd(endIndex + 1), max) : max;
 
         suppressChild.value = true;
         slicer.value.start = start;
-        slicer.value.end   = end;
+        slicer.value.end = end;
         slicerPrecog.value.start = start;
-        slicerPrecog.value.end   = end;
+        slicerPrecog.value.end = end;
         normalizeSlicerWindow();
         slicerReady.value = true;
     } finally {
-        queueMicrotask(() => { suppressChild.value = false; });
+        queueMicrotask(() => {
+            suppressChild.value = false;
+        });
         isSettingUp.value = false;
     }
 }
@@ -1198,16 +1214,34 @@ const suppressChild = ref(false);
 
 function onSlicerStart(v) {
     if (isSettingUp.value || suppressChild.value) return;
-    if (v === slicer.value.start) return;
-    slicer.value.start = v;
-    slicerPrecog.value.start = v;
+
+    const nextStart = Number(v);
+
+    emit('zoomStart', {
+        index: nextStart,
+        isZoom: isObjectivelyDifferentIndex(nextStart, absoluteSlicerStartIndex.value),
+    });
+
+    if (!Number.isFinite(nextStart)) return;
+    if (nextStart === slicer.value.start) return;
+
+    slicer.value.start = nextStart;
+    slicerPrecog.value.start = nextStart;
     normalizeSlicerWindow();
 }
 
 function onSlicerEnd(v) {
     if (isSettingUp.value || suppressChild.value) return;
+
     const end = validSlicerEnd(v);
+
+    emit('zoomEnd', {
+        index: end,
+        isZoom: isObjectivelyDifferentIndex(end, absoluteSlicerEndIndex.value),
+    });
+
     if (end === slicer.value.end) return;
+
     slicer.value.end = end;
     slicerPrecog.value.end = end;
     normalizeSlicerWindow();
@@ -1215,6 +1249,7 @@ function onSlicerEnd(v) {
 
 async function refreshSlicer() {
     await setupSlicer();
+    emit('zoomReset')
 }
 
 function canShowValue(v) {

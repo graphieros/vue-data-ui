@@ -186,7 +186,10 @@ const emit = defineEmits([
     'onNodeClick',
     'onMidpointEnter',
     'onMidpointLeave',
-    'focusLocation'
+    'focusLocation',
+    'zoomStart',
+    'zoomEnd',
+    'zoomReset'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -416,7 +419,10 @@ const getEventHandlers = () => {
         'zoomIn',
         'zoomOut',
         'switchOrientation',
-        'focusLocation'
+        'focusLocation',
+        'zoomStart',
+        'zoomEnd',
+        'zoomReset'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -500,7 +506,7 @@ defineExpose({
     zoomIn,
     zoomOut,
     switchOrientation,
-    focusLocation
+    focusLocation,
 });
 
 const notSupported = computed(() => {
