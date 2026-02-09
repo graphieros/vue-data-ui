@@ -197,15 +197,24 @@ function generateCsv() {
 
 async function generateImage() {
     if (props.callbacks.img) {
-        const { imageUri, base64 } = await img({
-            domElement: props.chartElement,
-            base64: true,
-            img: true,
-            scale: props.printScale,
-        });
-        props.callbacks.img({ domElement: props.chartElement, imageUri, base64 });
+        emit("generateImage", { stage: "start" });
+
+        try {
+            const { imageUri, base64 } = await img({
+                domElement: props.chartElement,
+                base64: true,
+                img: true,
+                scale: props.printScale,
+            });
+
+            await Promise.resolve(
+                props.callbacks.img({ domElement: props.chartElement, imageUri, base64 })
+            );
+        } finally {
+            emit("generateImage", { stage: "end" });
+        }
     } else {
-        emit('generateImage');
+        emit("generateImage");
     }
 }
 
