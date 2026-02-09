@@ -156,6 +156,8 @@ const tagRefs = ref({});
 const textMeasurer = ref(null);
 const readyTeleport = ref(false);
 const tableUnit = ref(null);
+const isCallbackImaging = ref(false);
+const isCallbackSvg = ref(false);
 
 const selectedSerieIndex = ref(null);
 
@@ -3230,13 +3232,34 @@ const { exportSvg, getSvg } = useSvgExport({
 })
 
 async function generateSvg({ isCb }) {
-    if (isCb) {
-        const { blob, url, text, dataUrl } = await getSvg();
-        FINAL_CONFIG.value.chart.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+    isCallbackSvg.value = true;
 
-    } else {
-        exportSvg();
+    await nextTick();
+
+    try {
+        if (isCb) {
+            const { blob, url, text, dataUrl } = await getSvg();
+            await Promise.resolve(FINAL_CONFIG.value.chart.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+        } else {
+            await Promise.resolve(exportSvg());
+        }
+    } finally {
+        isCallbackSvg.value = false;
     }
+}
+
+function onGenerateImage(payload) {
+    if (payload?.stage === "start") {
+        isCallbackImaging.value = true;
+        return;
+    }
+
+    if (payload?.stage === "end") {
+        isCallbackImaging.value = false;
+        return;
+    }
+
+    generateImage();
 }
 
 defineExpose({
@@ -3323,7 +3346,7 @@ defineExpose({
             :callbacks="FINAL_CONFIG.chart.userOptions.callbacks"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :printScale="FINAL_CONFIG.chart.userOptions.print.scale" @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf" @generateCsv="generateCsv" @generateImage="generateImage"
+            @generatePdf="generatePdf" @generateCsv="generateCsv" @generateImage="onGenerateImage"
             @generateSvg="generateSvg"
             @toggleTable="toggleTable" @toggleLabels="toggleLabels" @toggleStack="toggleStack"
             @toggleTooltip="toggleTooltip" @toggleAnnotator="toggleAnnotator" :style="{
@@ -4316,6 +4339,8 @@ defineExpose({
 
                 <slot name="svg" :svg="{
                     ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
                     data: [...lineSet, ...barSet, ...plotSet],
                     drawingArea
                 }" />
@@ -4323,7 +4348,7 @@ defineExpose({
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }" />
         </div>
 
         <!-- LINE: TAGS FOLLOWING VALUE -->

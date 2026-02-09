@@ -101,6 +101,8 @@ const selectedMarginalX = ref(null);
 const selectedMarginalY = ref(null);
 const tableUnit = ref(null);
 const userOptionsRef = ref(null);
+const isCallbackImaging = ref(false);
+const isCallbackSvg = ref(false);
 
 const xAxisLabelLeft = ref(null);
 const xAxisLabelRight = ref(null);
@@ -1282,13 +1284,34 @@ const { exportSvg, getSvg } = useSvgExport({
 });
 
 async function generateSvg({ isCb }) {
-    if (isCb) {
-        const { blob, url, text, dataUrl } = await getSvg();
-        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+    isCallbackSvg.value = true;
 
-    } else {
-        exportSvg();
+    await nextTick();
+
+    try {
+        if (isCb) {
+            const { blob, url, text, dataUrl } = await getSvg();
+            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+        } else {
+            await Promise.resolve(exportSvg());
+        }
+    } finally {
+        isCallbackSvg.value = false;
     }
+}
+
+function onGenerateImage(payload) {
+    if (payload?.stage === "start") {
+        isCallbackImaging.value = true;
+        return;
+    }
+
+    if (payload?.stage === "end") {
+        isCallbackImaging.value = false;
+        return;
+    }
+
+    generateImage();
 }
 
 defineExpose({
@@ -1394,7 +1417,7 @@ defineExpose({
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
-            @generateImage="generateImage"
+            @generateImage="onGenerateImage"
             @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
@@ -2019,12 +2042,14 @@ defineExpose({
                     ...drawingArea,
                     zero
                 },
-                data: mutableDataset
+                data: mutableDataset,
+                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                isPrintingSvg: isCallbackSvg,
             }"/>
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
         </div>
 
         <div :id="`legend-bottom-${uid}`" />

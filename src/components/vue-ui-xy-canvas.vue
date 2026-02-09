@@ -126,6 +126,7 @@ const isSettingUp = ref(false);
 const slicerReady = ref(false);
 const suppressChild = ref(false);
 const selectedMinimapIndex = ref(null);
+const isCallbackImaging = ref(false);
 
 const isDataset = computed(() => Array.isArray(FINAL_DATASET.value) && FINAL_DATASET.value.length > 0);
 
@@ -2252,6 +2253,20 @@ function closeTable() {
     }
 }
 
+function onGenerateImage(payload) {
+    if (payload?.stage === "start") {
+        isCallbackImaging.value = true;
+        return;
+    }
+
+    if (payload?.stage === "end") {
+        isCallbackImaging.value = false;
+        return;
+    }
+
+    generateImage();
+}
+
 defineExpose({
     getData,
     getImage,
@@ -2321,7 +2336,7 @@ defineExpose({
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
-            @generateImage="generateImage"
+            @generateImage="onGenerateImage"
             @toggleTable="toggleTable"
             @toggleLabels="toggleLabels"
             @toggleStack="toggleStack"
@@ -2499,7 +2514,7 @@ defineExpose({
         </Teleport>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging }"/>
         </div>
 
         <div v-if="$slots.source" ref="source" dir="auto">

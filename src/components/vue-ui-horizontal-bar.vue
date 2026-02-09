@@ -111,6 +111,8 @@ const isSortNeutral = ref(false);
 const dataLabelOverflow = ref(0);
 const dataLabelOverflowLeft = ref(0);
 const dataLabels = ref(null);
+const isCallbackImaging = ref(false);
+const isCallbackSvg = ref(false);
 
 const emit = defineEmits(["selectLegend"]);
 
@@ -1213,16 +1215,38 @@ const { exportSvg, getSvg } = useSvgExport({
 });
 
 async function generateSvg({ isCb }) {
-    if (isCb) {
-        const { blob, url, text, dataUrl } = await getSvg();
-        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl });
-    } else {
-        exportSvg();
+    isCallbackSvg.value = true;
+
+    await nextTick();
+
+    try {
+        if (isCb) {
+            const { blob, url, text, dataUrl } = await getSvg();
+            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+        } else {
+            await Promise.resolve(exportSvg());
+        }
+    } finally {
+        isCallbackSvg.value = false;
     }
 }
 
+function onGenerateImage(payload) {
+    if (payload?.stage === "start") {
+        isCallbackImaging.value = true;
+        return;
+    }
+
+    if (payload?.stage === "end") {
+        isCallbackImaging.value = false;
+        return;
+    }
+
+    generateImage();
+}
+
 function autoSize() {
-    console.warn('[autoSize]: this legacy method can be safely removed as it ha no impact.')
+    console.warn('[autoSize]: this legacy method can be safely removed as it has no impact.')
 }
 
 defineExpose({
@@ -1308,7 +1332,7 @@ defineExpose({
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks" :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog" @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf"
-            @generateCsv="generateCsv" @generateImage="generateImage" @generateSvg="generateSvg"
+            @generateCsv="generateCsv" @generateImage="onGenerateImage" @generateSvg="generateSvg"
             @toggleTable="toggleTable" @toggleSort="toggleSort" @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator" :style="{
                 visibility: keepUserOptionState
@@ -1689,12 +1713,16 @@ defineExpose({
                 " @click="selectDatapoint({ datapoint: serie, seriesIndex: i })" />
                 </g>
 
-                <slot name="svg" :svg="svg" />
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }" />
             </g>
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }" />
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }" />
         </div>
 
         <!-- LEGEND AS DIV : BOTTOM -->

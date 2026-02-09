@@ -50,6 +50,7 @@ const step = ref(0);
 const sparkStep = ref(0);
 const TD = ref(null);
 const slots = useSlots();
+const isCallbackImaging = ref(false);
 
 onMounted(() => {
     if (slots['chart-background']) {
@@ -488,6 +489,20 @@ const sortStates = computed({
     }
 });
 
+function onGenerateImage(payload) {
+    if (payload?.stage === "start") {
+        isCallbackImaging.value = true;
+        return;
+    }
+
+    if (payload?.stage === "end") {
+        isCallbackImaging.value = false;
+        return;
+    }
+
+    generateImage();
+}
+
 defineExpose({
     generatePdf,
     generateImage,
@@ -669,7 +684,7 @@ defineExpose({
                                 :printScale="FINAL_CONFIG.userOptions.print.scale"
                                 @toggleFullscreen="toggleFullscreen"
                                 @generatePdf="generatePdf"
-                                @generateImage="generateImage"
+                                @generateImage="onGenerateImage"
                                 @generateCsv="generateCsv"
                                 :style="{
                                     visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'

@@ -73,6 +73,8 @@ const titleStep = ref(0);
 const step = ref(0);
 const userHovers = ref(false);
 const isDataset = ref(false);
+const isCallbackImaging = ref(false);
+const isCallbackSvg = ref(false);
 
 const resizeObserver = ref(null);
 const observedEl = ref(null);
@@ -233,15 +235,22 @@ const { exportSvg, getSvg } = useSvgExport({
     legend: undefined,
     legendItems: undefined,
     backgroundColor: svgBg
-})
+});
 
 async function generateSvg({ isCb }) {
-    if (isCb) {
-        const { blob, url, text, dataUrl } = await getSvg();
-        FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl })
+    isCallbackSvg.value = true;
 
-    } else {
-        exportSvg();
+    await nextTick();
+
+    try {
+        if (isCb) {
+            const { blob, url, text, dataUrl } = await getSvg();
+            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+        } else {
+            await Promise.resolve(exportSvg());
+        }
+    } finally {
+        isCallbackSvg.value = false;
     }
 }
 
@@ -1056,6 +1065,20 @@ function getData() {
     return layoutData.value;
 }
 
+function onGenerateImage(payload) {
+    if (payload?.stage === "start") {
+        isCallbackImaging.value = true;
+        return;
+    }
+
+    if (payload?.stage === "end") {
+        isCallbackImaging.value = false;
+        return;
+    }
+
+    generateImage();
+}
+
 defineExpose({
     getData,
     getImage,
@@ -1145,7 +1168,7 @@ defineExpose({
             :isZoom="panZoomActive"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
-            @generateImage="generateImage"
+            @generateImage="onGenerateImage"
             @generateSvg="generateSvg"
             @toggleAnnotator="toggleAnnotator"
             @toggleZoom="toggleZoom"
@@ -1422,12 +1445,14 @@ defineExpose({
             <slot name="svg" :svg="{ 
                 drawingArea: panZoomViewBox,
                 data: layoutData,
-                orientation: direction
+                orientation: direction,
+                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                isPrintingSvg: isCallbackSvg,
             }"/>
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
         </div>
 
         <!-- Midpoint tooltip -->

@@ -2,6 +2,7 @@
 import { 
     computed, 
     defineAsyncComponent, 
+    nextTick,
     onBeforeUnmount, 
     onMounted, 
     ref, 
@@ -68,6 +69,8 @@ const step = ref(0);
 const resizeObserver = ref(null);
 const observedEl = ref(null);
 const readyTeleport = ref(false);
+const isCallbackImaging = ref(false);
+const isCallbackSvg = ref(false);
 
 const isDataset = computed({
     get: () => {
@@ -550,12 +553,35 @@ const { exportSvg, getSvg } = useSvgExport({
     backgroundColor: svgBg
 });
 
-function generateSvg({ isCb }) {
-    if (isCb) {
-        FINAL_CONFIG.value.userOptions.callbacks.svg(getSvg());
-    } else {
-        exportSvg();
+async function generateSvg({ isCb }) {
+    isCallbackSvg.value = true;
+
+    await nextTick();
+
+    try {
+        if (isCb) {
+            const { blob, url, text, dataUrl } = await getSvg();
+            await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.svg({ blob, url, text, dataUrl }));
+        } else {
+            await Promise.resolve(exportSvg());
+        }
+    } finally {
+        isCallbackSvg.value = false;
     }
+}
+
+function onGenerateImage(payload) {
+    if (payload?.stage === "start") {
+        isCallbackImaging.value = true;
+        return;
+    }
+
+    if (payload?.stage === "end") {
+        isCallbackImaging.value = false;
+        return;
+    }
+
+    generateImage();
 }
 
 defineExpose({
@@ -659,7 +685,7 @@ defineExpose({
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
-            @generateImage="generateImage"
+            @generateImage="onGenerateImage"
             @generateSvg="generateSvg"
             @toggleAnnotator="toggleAnnotator"
             :style="{
@@ -826,11 +852,15 @@ defineExpose({
                     />
                 </g>
             </g>
-            <slot name="svg" :svg="svg"/>
+            <slot name="svg" :svg="{
+                ...svg,
+                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                isPrintingSvg: isCallbackSvg,
+            }"/>
         </svg>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
-            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging }"/>
+            <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
         </div>
 
         <div :id="`legend-bottom-${uid}`" />
