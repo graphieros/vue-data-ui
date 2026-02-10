@@ -106,6 +106,7 @@ const model = createModel([
     CHECKBOX("responsive", { def: false }),
     CHECKBOX("useCssAnimation", { def: false }),
 
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("userOptions.show", { def: true }),
     CHECKBOX("userOptions.showOnChartHover", { def: true }),
     CHECKBOX("userOptions.keepStateOnChartLeave", { def: true }),

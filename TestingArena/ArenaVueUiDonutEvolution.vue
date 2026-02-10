@@ -64,6 +64,8 @@ const monthValues = computed(() => {
 const model = createModel([
     CHECKBOX("loading", { def: false }),
     CHECKBOX("debug", { def: true }),
+
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("userOptions.show", { def: true }),
     CHECKBOX("userOptions.buttons.pdf", { def: true }),
     CHECKBOX("userOptions.buttons.csv", { def: true }),

@@ -77,6 +77,7 @@ const model = createModel([
     CHECKBOX('debug', { def: true }),
     SELECT('projection', ['aitoff', 'azimuthalEquidistant', 'bonne', 'equirectangular', 'gallPeters', 'globe', 'hammer', 'mercator', 'mollweide', 'robinson', 'sinusoidal', 'vanDerGrinten', 'winkelTripel'], { def: 'equirectangular' }),
 
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX('userOptions.buttons.pdf', { def: true }),
     CHECKBOX('userOptions.buttons.img', { def: true }),
     CHECKBOX('userOptions.buttons.svg', { def: true }),

@@ -140,6 +140,8 @@ const model = createModel([
     NUMBER("loadAnimation.durationMs", { def: 1000, min: 0, max: 5000, step: 500 }),
     NUMBER("loadAnimation.staggerMs", { def: 50, min: 0, max: 1000, step: 25 }),
     CHECKBOX("responsive", { def: false }),
+
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("userOptions.show", { def: true, label: "showUserOptions", category: "general" }),
     CHECKBOX("userOptions.buttons.pdf", { def: true }),
     CHECKBOX("userOptions.buttons.img", { def: true }),

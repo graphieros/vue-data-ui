@@ -85,6 +85,8 @@ const model = createModel([
     CHECKBOX('loading', { def: false }),
     CHECKBOX('debug', { def: true }),
     CHECKBOX('responsive', { def: false }),
+
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX('userOptions.buttons.pdf', { def: true }),
     CHECKBOX('userOptions.buttons.img', { def: true }),
     CHECKBOX('userOptions.buttons.svg', { def: true }),

@@ -93,6 +93,8 @@ onMounted(() => {
 const model = createModel([
     CHECKBOX("debug", { def: true }),
     CHECKBOX("loading", { def: false }),
+
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("userOptions.show", { def: true }),
     COLOR("style.chart.backgroundColor", { def: "#FFFFDD" }),
     NUMBER("style.chart.width", { def: 512, min: 0, max: 1000 }),

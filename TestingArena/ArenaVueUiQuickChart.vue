@@ -160,6 +160,7 @@ const selectedSerie = ref('shortObject');
 
 const model = createModel([
     CHECKBOX("debug", { def: true }),
+    CHECKBOX('useCursorPointer', { def: false }),
     CHECKBOX("loading", { def: false }),
     COLOR("backgroundColor", { def: "#FFFFFF" }),
     CHECKBOX("responsive", { def: false }),

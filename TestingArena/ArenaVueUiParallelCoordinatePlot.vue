@@ -100,6 +100,7 @@ const model = createModel([
 
     CHECKBOX("responsive", { def: false }),
 
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     NUMBER("userOptions.print.scale", { def: 2, min: 1, max: 5 }),
     CHECKBOX("userOptions.print.allowTaint", { def: true }),
     CHECKBOX("userOptions.print.useCORS", { def: true }),

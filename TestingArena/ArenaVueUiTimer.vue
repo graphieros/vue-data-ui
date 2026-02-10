@@ -26,6 +26,7 @@ const {
 const model = createModel([
     CHECKBOX("responsive", { def: false }),
     CHECKBOX("responsiveProportionalSizing", { def: false }),
+    CHECKBOX('useCursorPointer', { def: false }),
 
     SELECT("type", ["stopwatch"], { def: "stopwatch" }),
 

@@ -130,6 +130,8 @@ const dataset = ref([
 const model = createModel([
     CHECKBOX("loading", { def: false }),
     CHECKBOX("debug", { def: false }),
+
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     SELECT("userOptions.position", ["left", "right"], { def: "right" }),
     SELECT("orientation", ["vertical", "horizontal"], { def: "vertical" }),
     CHECKBOX("responsive", { def: false }),

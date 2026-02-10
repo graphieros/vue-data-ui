@@ -66,6 +66,7 @@ const model = createModel([
     CHECKBOX("userOptions.loading", { def: false }),
     CHECKBOX("userOptions.show", { def: true }),
 
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("userOptions.buttons.pdf", { def: true }),
     CHECKBOX("userOptions.buttons.img", { def: true }),
     CHECKBOX("userOptions.buttons.fullscreen", { def: true }),

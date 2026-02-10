@@ -236,6 +236,8 @@ onMounted(() => {
 const model = createModel([
     CHECKBOX("debug", { def: true }),
     CHECKBOX("loading", { def: false }),
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
+
     SELECT("projection", ["mercator","equirectangular","mollweide","robinson","winkelTripel","aitoff","hammer","bonne","sinusoidal","vanDerGrinten","gallPeters","globe","azimuthalEquidistant"], { def: "globe" }),
 
     COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),

@@ -43,6 +43,8 @@ const model = createModel([
     CHECKBOX("debug", { def: true }),
     CHECKBOX("loading", { def: false }),
     CHECKBOX("responsive", { def: false }),
+
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("userOptions.show", { def: true }),
     CHECKBOX("strictPixelPadding", { def: true }),
     CHECKBOX("userOptions.buttons.tooltip", { def: true }),

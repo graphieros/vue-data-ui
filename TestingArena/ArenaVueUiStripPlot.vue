@@ -125,6 +125,8 @@ const model = createModel([
     CHECKBOX("responsiveProportionalSizing", { def: false }),
 
     CHECKBOX("useCssAnimation", { def: true }),
+
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("userOptions.show", { def: true }),
     CHECKBOX("userOptions.buttons.pdf", { def: true }),
     CHECKBOX("userOptions.buttons.csv", { def: true }),

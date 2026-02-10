@@ -160,6 +160,8 @@ onMounted(() => {
 const model = createModel([
     CHECKBOX("debug", { def: true }),
     CHECKBOX("loading", { def: false }),
+
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("userOptions.show", { def: true }),
     CHECKBOX("userOptions.buttons.pdf", { def: true }),
     CHECKBOX("userOptions.buttons.csv", { def: true }),

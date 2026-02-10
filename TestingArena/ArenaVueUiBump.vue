@@ -95,6 +95,7 @@ const model = createModel([
     SELECT('theme', ['', 'zen', 'hack', 'concrete'], { def: '' }),
     CHECKBOX('useCssAnimation', { def: true }),
 
+    CHECKBOX('userOptions.useCursorPointer', { def:  false }),
     COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
     COLOR("style.chart.color", { def: "#1A1A1A" }),
     NUMBER("style.chart.height", { def: 500, min: 200, max: 1000 }),

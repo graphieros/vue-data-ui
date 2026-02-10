@@ -128,6 +128,8 @@ const model = createModel([
     CHECKBOX("loading", { def: false }),
     CHECKBOX("usePerformanceMode", { def: true }),
     CHECKBOX("responsive", { def: false }),
+
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("userOptions.show", { def: true }),
     CHECKBOX("userOptions.buttons.pdf", { def: true }),
     CHECKBOX("userOptions.buttons.img", { def: true }),

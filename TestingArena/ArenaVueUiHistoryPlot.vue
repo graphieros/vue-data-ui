@@ -69,6 +69,7 @@ const model = createModel([
     CHECKBOX("responsive", { def: false }),
     CHECKBOX("responsiveProportionalSizing", { def: false }),
 
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("useCssAnimation", { def: true }),
     TEXT("style.fontFamily", { def: "inherit" }),
     COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),

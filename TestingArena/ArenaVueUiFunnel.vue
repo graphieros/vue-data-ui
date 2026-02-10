@@ -53,6 +53,7 @@ const model = createModel([
     CHECKBOX("responsive", { def: false }),
     CHECKBOX("responsiveProportionalSizing", { def: false }),
 
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
     CHECKBOX("useCssAnimation", { def: true }),
     COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
     COLOR("style.chart.color", { def: "#1A1A1A" }),

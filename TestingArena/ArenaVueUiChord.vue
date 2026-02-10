@@ -76,6 +76,8 @@ const model = createModel([
     CHECKBOX("enableRotation", { def: true }),
     NUMBER("initialRotation", { def: 0, min: 0, max: 360 }),
     CHECKBOX("useCssAnimation", { def: true }),
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
+
     TEXT("style.chart.title.text", { def: "Title", label: "textContent", category: "title" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A", label: "textColor", category: "title" }),
     NUMBER("style.chart.title.fontSize", { def: 20, min: 6, max: 48, label: "fontSize", category: "title" }),

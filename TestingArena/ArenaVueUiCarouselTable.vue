@@ -34,6 +34,8 @@ const model = createModel([
     RANGE("animation.speedMs", { def: 1000, min: 200, max: 2000 }),
     CHECKBOX("animation.pauseOnHover", { def: true }),
 
+    CHECKBOX('userOptions.useCursorPointer', { def: false }),
+
     NUMBER("border.size", { def: 0, min: 0, max: 12 }),
     COLOR("border.color", { def: "#1A1A1A" }),
 
