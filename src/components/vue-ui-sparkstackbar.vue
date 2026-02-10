@@ -70,6 +70,8 @@ const tooltipContent = ref('');
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -540,12 +542,13 @@ defineExpose({
                 :color="FINAL_CONFIG.style.legend.selectAllToggle.color"
                 :fontSize="FINAL_CONFIG.style.legend.fontSize"
                 :checked="segregated.length > 0"
+                :isCursorPointer="isCursorPointer"
                 @toggle="toggleLegend"
             />
             <div
                 data-cy="legend-item"
                 v-for=" (rect, i) in absoluteDataset" 
-                :style="`font-size:${FINAL_CONFIG.style.legend.fontSize}px;`" 
+                :style="`font-size:${FINAL_CONFIG.style.legend.fontSize}px;cursor:${isCursorPointer ? 'pointer' : 'default'}`" 
                 :class="{'vue-ui-sparkstackbar-legend-item': true, 'vue-ui-sparkstackbar-legend-item-unselected': segregated.includes(i)}" 
                 @click="segregate(i); selectDatapoint(rect, i, true)"
 
@@ -652,7 +655,6 @@ defineExpose({
     padding: 0 6px;
 }
 .vue-ui-sparkstackbar-legend-item {
-    cursor: pointer;
     transition: opacity 0.2s ease-in-out;
 }
 .vue-ui-sparkstackbar-legend-item-unselected {

@@ -141,6 +141,8 @@ onMounted(() => {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
 
 const skeletonConfig = computed(() => {
@@ -2216,7 +2218,8 @@ const tableComponent = computed(() => {
             headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
             isFullscreen: isFullscreen.value,
             fullscreenParent: xy.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+            forcedWidth: Math.min(800, window.innerWidth * 0.8),
+            isCursorPointer: isCursorPointer.value
         } : {
             hideDetails: true,
             config: {
@@ -2333,6 +2336,7 @@ defineExpose({
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -2423,7 +2427,6 @@ defineExpose({
                 </template>
             </Tooltip>
         </div>
-    
 
             <SlicerPreview
                 ref="chartSlicer"
@@ -2489,7 +2492,12 @@ defineExpose({
         <!-- LEGEND -->
         <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">        
             <div ref="chartLegend">
-                <Legend v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" :legendSet="legendSet" :config="legendConfig" :key="`legend_${legendStep}`"
+                <Legend 
+                    v-if="FINAL_CONFIG.style.chart.legend.show && isDataset" 
+                    :legendSet="legendSet" 
+                    :config="legendConfig" 
+                    :key="`legend_${legendStep}`"
+                    :isCursorPointer="isCursorPointer"
                     @clickMarker="({ i }) => segregate(i)">
                     <template #item="{ legend, index }">
                         <div data-cy="legend-item" @click="legend.segregate()" :style="`opacity:${segregated.includes(index) ? 0.5 : 1}`">
@@ -2504,6 +2512,7 @@ defineExpose({
                             :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
                             :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
                             :checked="segregated.length > 0"
+                            :isCursorPointer="isCursorPointer"
                             @toggle="toggleLegend"
                         />
                     </template>
@@ -2532,7 +2541,12 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                <button 
+                    tabindex="0" 
+                    class="vue-ui-user-options-button" 
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                >
                     <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
                 </button>
             </template>
@@ -2545,6 +2559,7 @@ defineExpose({
                     :config="dataTable.config"
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                    :isCursorPointer="isCursorPointer"
                     @close="closeTable"
                 >
                     <template #th="{ th }">
@@ -2563,6 +2578,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         />
     </div>

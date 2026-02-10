@@ -21,6 +21,10 @@ const props = defineProps({
     isFullscreen: {
         type: Boolean,
         default: false,
+    },
+    isCursorPointer: {
+        type: Boolean,
+        default: false,
     }
 });
 
@@ -45,6 +49,7 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
         @click="emit('zoomOut')" 
         class="vue-data-ui-zoom-controls-button"
         data-cy-zoom-out
+        :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
     >
         <BaseIcon 
             name="zoomMinus" 
@@ -60,7 +65,8 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
             color: config.style.chart.controls.color,
             width: config.style.chart.controls.fontSize * 4 + 'px',
             borderRadius: config.style.chart.controls.borderRadius,
-            fontSize: config.style.chart.controls.fontSize + 'px'
+            fontSize: config.style.chart.controls.fontSize + 'px',
+            cursor: isCursorPointer ? 'pointer' : 'default'
         }"
     >
         {{ Math.round(scale * 100) }}%
@@ -69,6 +75,9 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
         @click="emit('zoomIn')" 
         class="vue-data-ui-zoom-controls-button"
         data-cy-zoom-in
+        :style="{
+            cursor: isCursorPointer ? 'pointer' : 'default'
+        }"
     >
         <BaseIcon 
             name="zoomPlus" 
@@ -80,6 +89,9 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
         :disabled="scale === 1"
         @click="emit('resetZoom')" 
         class="vue-data-ui-zoom-controls-button"
+        :style="{
+            cursor: isCursorPointer ? 'pointer' : 'default'
+        }"
     >
         <BaseIcon 
             name="revert" 
@@ -91,6 +103,9 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
         v-if="withDirection" 
         @click="emit('switchDirection')" 
         class="vue-data-ui-zoom-controls-button"
+        :style="{
+            cursor: isCursorPointer ? 'pointer' : 'default'
+        }"
     >
         <BaseIcon 
             name="direction" 
@@ -121,7 +136,6 @@ const emit = defineEmits(['zoomIn', 'zoomOut', 'resetZoom', 'switchDirection']);
     justify-content:center;
     padding: 0.25rem;
     border: none;
-    cursor: pointer;
     transition: all 0.2s ease-in-out;
     background-color: var(--vue-data-ui-zoom-control-button-color, transparent);
 }

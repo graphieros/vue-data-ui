@@ -213,6 +213,8 @@ const FINAL_CONFIG = computed({
     }
 });
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.chart.title });
 
@@ -585,6 +587,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -656,6 +659,7 @@ defineExpose({
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
+            :isCursorPointer="isCursorPointer"
             @toggleAnnotator="toggleAnnotator"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"

@@ -67,6 +67,8 @@ const FINAL_CONFIG = computed({
     }
 });
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
@@ -579,6 +581,9 @@ defineExpose({
                                     <button 
                                         class="vue-ui-table-sparkline-sorting-button vue-ui-table-sparkline-sorting-button-down"
                                         @click="orderDatasetByIndex({type: 'name'}, null, -1)"
+                                        :style="{
+                                            cursor: isCursorPointer ? 'pointer' : 'default'
+                                        }"
                                     >
                                         <BaseIcon 
                                             :size="12" 
@@ -592,6 +597,9 @@ defineExpose({
                                     <button 
                                         class="vue-ui-table-sparkline-sorting-button vue-ui-table-sparkline-sorting-button-up"
                                         @click="orderDatasetByIndex({type: 'name'}, null, 1)"
+                                        :style="{
+                                            cursor: isCursorPointer ? 'pointer' : 'default'
+                                        }"
                                     >
                                         <BaseIcon 
                                             :size="12" 
@@ -637,6 +645,9 @@ defineExpose({
                                     <button 
                                         class="vue-ui-table-sparkline-sorting-button vue-ui-table-sparkline-sorting-button-down"
                                         @click="() => orderDatasetByIndex(th, i, -1)"
+                                        :style="{
+                                            cursor: isCursorPointer ? 'pointer' : 'default'
+                                        }"
                                     >
                                         <BaseIcon 
                                             :size="12" 
@@ -651,6 +662,9 @@ defineExpose({
                                     <button 
                                         class="vue-ui-table-sparkline-sorting-button vue-ui-table-sparkline-sorting-button-up"
                                         @click="() => orderDatasetByIndex(th, i, 1)"
+                                        :style="{
+                                            cursor: isCursorPointer ? 'pointer' : 'default'
+                                        }"
                                     >
                                         <BaseIcon 
                                             :size="12" 
@@ -682,6 +696,7 @@ defineExpose({
                                 :position="FINAL_CONFIG.userOptions.position"
                                 :callbacks="FINAL_CONFIG.userOptions.callbacks"
                                 :printScale="FINAL_CONFIG.userOptions.print.scale"
+                                :isCursorPointer="isCursorPointer"
                                 @toggleFullscreen="toggleFullscreen"
                                 @generatePdf="generatePdf"
                                 @generateImage="onGenerateImage"
@@ -958,7 +973,6 @@ td {
 }
 
 .vue-ui-table-sparkline-sorting-button {
-    cursor: pointer;
     border: none;
     background: transparent;
     display: flex;

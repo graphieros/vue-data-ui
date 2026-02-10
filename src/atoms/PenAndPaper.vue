@@ -24,6 +24,10 @@ const props = defineProps({
     scale: {
         type: Number,
         default: 1
+    },
+    isCursorPointer: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -790,18 +794,23 @@ onBeforeUnmount(() => {
     <div v-if="active" data-dom-to-png-ignore class="vue-ui-pen-and-paper-actions" :style="{ backgroundColor: backgroundColor }">
         <button class="vue-ui-pen-and-paper-action" @click="emit('close')" :style="{
             backgroundColor: backgroundColor,
-            border: `1px solid ${buttonBorderColor}`
+            border: `1px solid ${buttonBorderColor}`,
+            cursor: isCursorPointer ? 'pointer' : 'default'
         }">
             <slot name="annotator-action-close">
                 <BaseIcon name="close" :stroke="color" />
             </slot>
         </button>
 
-        <button class="vue-ui-pen-and-paper-action" style="padding: 0 !important">
+        <button 
+            class="vue-ui-pen-and-paper-action" 
+            :style="`padding: 0 !important; cursor: ${isCursorPointer ? 'pointer': 'default'}`"
+        >
             <ColorPicker 
                 v-model:value="currentColor" 
                 :backgroundColor="backgroundColor"
                 :buttonBorderColor="buttonBorderColor"
+                :isCursorPointer="isCursorPointer"
             >
                 <template #annotator-action-color="{ color }">
                     <slot name="annotator-action-color" v-bind="{ color }"/>
@@ -817,6 +826,7 @@ onBeforeUnmount(() => {
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
+                cursor: isCursorPointer ? 'pointer' : 'default'
             }"
         >
             <slot name="annotator-action-draw" v-bind="{ mode }">
@@ -844,7 +854,8 @@ onBeforeUnmount(() => {
             :disabled="!stack.length" @click="deleteLastDraw" :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
-                marginTop: '20px'
+                marginTop: '20px',
+                cursor: isCursorPointer ? 'pointer' : 'default'
             }">
             <slot name="annotator-action-undo" v-bind="{ disabled: !stack.length }">
                 <BaseIcon name="refresh" :stroke="color" />
@@ -854,7 +865,8 @@ onBeforeUnmount(() => {
         <button class="vue-ui-pen-and-paper-action"
             :class="{ 'vue-ui-pen-and-paper-action-disabled': !redoStack.length }" @click="redoLastDraw" :style="{
                 backgroundColor: backgroundColor,
-                border: `1px solid ${buttonBorderColor}`
+                border: `1px solid ${buttonBorderColor}`,
+                cursor: isCursorPointer ? 'pointer' : 'default'
             }">
             <slot name="annotator-action-redo" v-bind="{ disabled: !redoStack.length}">
                 <BaseIcon name="refresh" :stroke="color" style="transform: scaleX(-1)" />
@@ -864,7 +876,8 @@ onBeforeUnmount(() => {
         <button class="vue-ui-pen-and-paper-action" :class="{ 'vue-ui-pen-and-paper-action-disabled': !stack.length }"
             @click="reset" :style="{
                 backgroundColor: backgroundColor,
-                border: `1px solid ${buttonBorderColor}`
+                border: `1px solid ${buttonBorderColor}`,
+                cursor: isCursorPointer ? 'pointer' : 'default'
             }"
         >
             <slot name="annotator-action-delete" v-bind="{ disabled: !stack.length }">
@@ -918,7 +931,6 @@ onBeforeUnmount(() => {
     width: 32px;
     padding: 2px;
     transition: all 0.2s ease-in-out;
-    cursor: pointer;
     position: relative;
 }
 
@@ -928,7 +940,7 @@ onBeforeUnmount(() => {
 
 .vue-ui-pen-and-paper-action-disabled {
     opacity: 0.5;
-    cursor: not-allowed;
+    cursor: not-allowed !important;
 }
 
 input[type="range"].vertical-range {

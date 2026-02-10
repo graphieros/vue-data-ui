@@ -118,6 +118,8 @@ const emit = defineEmits(["selectLegend"]);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonSet = computed(() => {
     const base = [
         { name: "", value: 6, color: "#d9d9d9" },
@@ -1136,6 +1138,7 @@ const tableComponent = computed(() => {
                 isFullscreen: isFullscreen.value,
                 fullscreenParent: verticalBarChart.value,
                 forcedWidth: Math.min(800, window.innerWidth * 0.8),
+                isCursorPointer: isCursorPointer.value
             }
             : {
                 hideDetails: true,
@@ -1275,9 +1278,15 @@ defineExpose({
         }`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};height:100%`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
-        <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator" :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
-            :active="isAnnotator" @close="toggleAnnotator">
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator" 
+            :svgRef="svgRef"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator"
+            :isCursorPointer="isCursorPointer" 
+            @close="toggleAnnotator"
+        >
             <template #annotator-action-close>
                 <slot name="annotator-action-close" />
             </template>
@@ -1316,25 +1325,43 @@ defineExpose({
         </div>
 
         <!-- OPTIONS -->
-        <UserOptions ref="userOptionsRef" :key="`user_options_${step}`" v-if="
-            FINAL_CONFIG.userOptions.show &&
-            isDataset &&
-            (keepUserOptionState ? true : userOptionsVisible)
-        " :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
-            :isImaging="isImaging" :isPrinting="isPrinting" :uid="uid" :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip &&
-                FINAL_CONFIG.style.chart.tooltip.show
-                " :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" :hasImg="FINAL_CONFIG.userOptions.buttons.img"
-            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg" :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
-            :hasTable="FINAL_CONFIG.userOptions.buttons.table" :hasSort="FINAL_CONFIG.userOptions.buttons.sort"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" :isFullscreen="isFullscreen"
-            :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
-            :chartElement="verticalBarChart" :position="FINAL_CONFIG.userOptions.position"
-            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
-            :callbacks="FINAL_CONFIG.userOptions.callbacks" :printScale="FINAL_CONFIG.userOptions.print.scale"
-            :tableDialog="FINAL_CONFIG.table.useDialog" @toggleFullscreen="toggleFullscreen" @generatePdf="generatePdf"
-            @generateCsv="generateCsv" @generateImage="onGenerateImage" @generateSvg="generateSvg"
-            @toggleTable="toggleTable" @toggleSort="toggleSort" @toggleTooltip="toggleTooltip"
-            @toggleAnnotator="toggleAnnotator" :style="{
+        <UserOptions 
+            ref="userOptionsRef" 
+            v-if="FINAL_CONFIG.userOptions.show && isDataset && (keepUserOptionState ? true : userOptionsVisible)" :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :color="FINAL_CONFIG.style.chart.color"
+            :key="`user_options_${step}`" 
+            :isImaging="isImaging" 
+            :isPrinting="isPrinting" 
+            :uid="uid" 
+            :hasTooltip="FINAL_CONFIG.userOptions.buttons.tooltip && FINAL_CONFIG.style.chart.tooltip.show" 
+            :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" 
+            :hasImg="FINAL_CONFIG.userOptions.buttons.img"
+            :hasSvg="FINAL_CONFIG.userOptions.buttons.svg" 
+            :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
+            :hasTable="FINAL_CONFIG.userOptions.buttons.table" 
+            :hasSort="FINAL_CONFIG.userOptions.buttons.sort"
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :isFullscreen="isFullscreen"
+            :isTooltip="mutableConfig.showTooltip" 
+            :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :chartElement="verticalBarChart" 
+            :position="FINAL_CONFIG.userOptions.position"
+            :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" 
+            :isAnnotation="isAnnotator"
+            :callbacks="FINAL_CONFIG.userOptions.callbacks" 
+            :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :tableDialog="FINAL_CONFIG.table.useDialog"
+            :isCursorPointer="isCursorPointer"
+            @toggleFullscreen="toggleFullscreen" 
+            @generatePdf="generatePdf"
+            @generateCsv="generateCsv" 
+            @generateImage="onGenerateImage" 
+            @generateSvg="generateSvg"
+            @toggleTable="toggleTable" 
+            @toggleSort="toggleSort" 
+            @toggleTooltip="toggleTooltip"
+            @toggleAnnotator="toggleAnnotator" 
+            :style="{
                 visibility: keepUserOptionState
                     ? userOptionsVisible
                         ? 'visible'
@@ -1730,8 +1757,13 @@ defineExpose({
             FINAL_CONFIG.style.chart.legend.show &&
             FINAL_CONFIG.style.chart.legend.position === 'bottom'
         ">
-            <Legend :key="`legend_bottom_${legendStep}`" :legendSet="immutableDataset" :config="legendConfig"
-                @clickMarker="({ legend }) => segregate(legend.id)">
+            <Legend 
+                :key="`legend_bottom_${legendStep}`" 
+                :legendSet="immutableDataset" 
+                :config="legendConfig"
+                :isCursorPointer="isCursorPointer"
+                @clickMarker="({ legend }) => segregate(legend.id)"
+            >
                 <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
                     <Shape :shape="legend.shape" :radius="30" stroke="none" :plot="{ x: 30, y: 30 }"
                         :fill="`url(#pattern_${uid}_${index})`" />
@@ -1763,6 +1795,7 @@ defineExpose({
                         :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
                         :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
                         :checked="segregated.length > 0"
+                        :isCursorPointer="isCursorPointer"
                         @toggle="toggleLegend"
                     />
                 </template>
@@ -1809,8 +1842,12 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button"
-                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                <button 
+                    tabindex="0" 
+                    class="vue-ui-user-options-button"
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                >
                     <BaseIcon name="fileCsv" :stroke="tableComponent.props.color" />
                 </button>
             </template>
@@ -1821,7 +1858,7 @@ defineExpose({
                     }`">
                     <div :style="`width:100%;padding-top: 36px;position:relative`">
                         <div v-if="!FINAL_CONFIG.table.useDialog" data-cy="data-table-close" role="button" tabindex="0"
-                            :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`"
+                            :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${FINAL_CONFIG.table.th.backgroundColor};`"
                             @click="closeTable" @keypress.enter="closeTable">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div>

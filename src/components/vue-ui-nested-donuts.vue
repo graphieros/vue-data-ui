@@ -122,6 +122,8 @@ function toggleFullscreen(state) {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const loaderDs = {
     name: '',
     series: [
@@ -1363,7 +1365,8 @@ const tableComponent = computed(() => {
             headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
             isFullscreen: isFullscreen.value,
             fullscreenParent: nestedDonutsChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+            forcedWidth: Math.min(800, window.innerWidth * 0.8),
+            isCursorPointer: isCursorPointer.value
         } : {
             hideDetails: true,
             config: {
@@ -1471,9 +1474,14 @@ defineExpose({
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`nested_donuts_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)">
-        <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator" :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
-            :active="isAnnotator" @close="toggleAnnotator"
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator" 
+            :svgRef="svgRef"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :color="FINAL_CONFIG.style.chart.color"
+            :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
+            @close="toggleAnnotator"
         >
             <template #annotator-action-close>
                 <slot name="annotator-action-close"/>
@@ -1541,6 +1549,7 @@ defineExpose({
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen" 
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv"
@@ -1884,8 +1893,14 @@ defineExpose({
         <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
             <div ref="chartLegend" v-if="FINAL_CONFIG.style.chart.legend.show"
                 :class="{ 'vue-ui-nested-donuts-legend': legendSets.length > 1 }">
-                <Legend v-for="(legendSet, i) in legendSets" :key="`legend_${i}_${legendStep}`" :legendSet="legendSet"
-                    :config="legendConfig" @clickMarker="({ legend }) => segregateDonut(legend)">
+                <Legend 
+                    v-for="(legendSet, i) in legendSets" 
+                    :key="`legend_${i}_${legendStep}`" 
+                    :legendSet="legendSet"
+                    :config="legendConfig"
+                    :isCursorPointer="isCursorPointer"
+                    @clickMarker="({ legend }) => segregateDonut(legend)"
+                >
                     <template #legendTitle="{ titleSet }">
                         <div class="vue-ui-nested-donuts-legend-title" v-if="titleSet[0] && titleSet[0].arcOf">
                             {{ titleSet[0].arcOf }}
@@ -1906,6 +1921,7 @@ defineExpose({
                             :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
                             :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
                             :checked="legendSet.some(l => segregated.includes(l.id))"
+                            :isCursorPointer="isCursorPointer"
                             @toggle="toggleLegend(legendSet)"
                         />
                     </template>
@@ -1932,7 +1948,12 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                <button 
+                    tabindex="0" 
+                    class="vue-ui-user-options-button" 
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                >
                     <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
                 </button>
             </template>
@@ -1945,6 +1966,7 @@ defineExpose({
                     :config="dataTable.config" 
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                    :isCursorPointer="isCursorPointer"
                     @close="closeTable"
                 >
                     <template #th="{ th }">

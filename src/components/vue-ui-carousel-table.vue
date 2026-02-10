@@ -83,6 +83,8 @@ const FINAL_CONFIG = computed({
     }
 });
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const { userOptionsVisible, setUserOptionsVisibility, keepUserOptionState } = useUserOptionState({ config: FINAL_CONFIG.value });
 
 function prepareConfig() {
@@ -325,7 +327,7 @@ watch(
         });
         resumeAnimation();
     }
-    );
+);
 
 const breakpoint = computed(() => FINAL_CONFIG.value.responsiveBreakpoint);
 
@@ -561,6 +563,7 @@ defineExpose({
             :offsetX="12"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :isCursorPointer="isCursorPointer"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
             @generateImage="generateImage"

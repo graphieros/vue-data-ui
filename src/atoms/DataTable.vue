@@ -14,7 +14,8 @@ const props = defineProps({
     body: Array,
     title: String,
     config: Object,
-    withCloseButton: { type: Boolean, default: true }
+    withCloseButton: { type: Boolean, default: true },
+    isCursorPointer: { type: Boolean, default: false }
 });
 
 const { backgroundColor:thbg, color:thc, outline:tho } = props.config.th;
@@ -51,7 +52,7 @@ const emit = defineEmits(['close'])
             'vue-ui-responsive': isResponsive
         }"
     >
-        <div v-if="withCloseButton" data-cy="data-table-close" data-dom-to-png-ignore role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${thbg};`" @click="emit('close')" @keypress.enter="emit('close')">
+        <div v-if="withCloseButton" data-cy="data-table-close" data-dom-to-png-ignore role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; right:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${thbg};`" @click="emit('close')" @keypress.enter="emit('close')">
             <BaseIcon name="close" :stroke="thc" :stroke-width="2" />
         </div>
         <table data-cy="vue-data-ui-table-data" class="vue-ui-data-table">

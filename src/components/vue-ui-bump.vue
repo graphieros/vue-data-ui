@@ -108,6 +108,8 @@ const selectedSeries = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -819,7 +821,8 @@ const tableComponent = computed(() => {
             headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
             isFullscreen: isFullscreen.value,
             fullscreenParent: bumpChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+            forcedWidth: Math.min(800, window.innerWidth * 0.8),
+            isCursorPointer: isCursorPointer.value
         } : {
             hideDetails: true,
             config: {
@@ -981,6 +984,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1056,6 +1060,7 @@ defineExpose({
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -1381,7 +1386,12 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                <button 
+                    tabindex="0" 
+                    class="vue-ui-user-options-button" 
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                >
                     <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
                 </button>
             </template>
@@ -1393,6 +1403,7 @@ defineExpose({
                     :config="dataTable.config"
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                    :isCursorPointer="isCursorPointer"
                     @close="closeTable"
                 >
                     <template #th="{ th }">

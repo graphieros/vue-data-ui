@@ -6,6 +6,7 @@ const props = defineProps({
     color: { type: String, default: '#2D353C' },
     fontSize: { type: Number, default: 14 },
     checked: { type: Boolean },
+    isCursorPointer: { type: Boolean }
 });
 
 const emit = defineEmits(['toggle']);
@@ -13,7 +14,7 @@ const emit = defineEmits(['toggle']);
 </script>
 
 <template>
-    <div class="vue-ui-legend-toggle-wrapper" data-dom-to-png-ignore>
+    <div :class="{ 'vue-ui-legend-toggle-wrapper': isCursorPointer }" data-dom-to-png-ignore>
         <div
             class="vue-ui-legend-toggle"
             role="button" 

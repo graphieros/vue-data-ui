@@ -46,6 +46,8 @@ onMounted(prepareChart);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
+
 function prepareConfig() {
     return useNestedProp({
         userConfig: props.config,
@@ -247,6 +249,7 @@ defineExpose({
                 :hoveredValue="hoveredValue"
                 :getActiveColor="getActiveColor"
                 :calcShapeFill="calcShapeFill"
+                :isCursorPointer="isCursorPointer"
                 @mouseenter="hoveredValue = i"
                 @mouseleave="hoveredValue = null"
                 @rate="rate(i + 1)"

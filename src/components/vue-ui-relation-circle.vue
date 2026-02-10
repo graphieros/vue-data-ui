@@ -79,6 +79,8 @@ const isCallbackSvg = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -662,6 +664,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.backgroundColor"
             :color="FINAL_CONFIG.style.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -729,6 +732,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="onGenerateImage"
@@ -922,7 +926,7 @@ defineExpose({
                     class="vue-ui-relation-circle-legend" 
                     transform-origin="start"
                     :font-weight="selectedPlot.id === plot.id ? '900' : '400'"
-                    :style="`font-family:${FINAL_CONFIG.style.fontFamily};${getTextOpacity(plot)}`"
+                    :style="`font-family:${FINAL_CONFIG.style.fontFamily};${getTextOpacity(plot)};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
                     :font-size="labelFontSize"
                     :fill="FINAL_CONFIG.style.labels.color"
                     :text-decoration="i === hoverIndex ? 'underline' : undefined"
@@ -955,12 +959,12 @@ defineExpose({
                 :cx="plot.x" 
                 :cy="plot.y" 
                 :key="`plot_${i}`" 
-                :style="`${getCircleOpacity(plot)}; transition: r 0.2s ease-in-out;`"
+                :style="`${getCircleOpacity(plot)}; transition: r 0.2s ease-in-out; cursor:${isCursorPointer ? 'pointer' : 'default'}`"
                 class="vue-ui-relation-circle-plot" 
                 :fill="FINAL_CONFIG.style.plot.useSerieColor ? plot.color : FINAL_CONFIG.style.plot.color" 
                 :stroke="FINAL_CONFIG.style.backgroundColor"
                 stroke-width="1"
-                :r="plotRadius * (i === hoverIndex ? 2 : 1)" 
+                :r="plotRadius * (i === hoverIndex ? 2 : 1)"
                 @click="onTrapClick(plot, i)" 
                 @mouseenter="onTrapEnter(plot, i)"
                 @mouseleave="onTrapLeave(plot,i)"
@@ -996,9 +1000,6 @@ defineExpose({
 svg.relation-circle{
     background: transparent;
     overflow: visible;
-}
-.vue-ui-relation-circle-plot, .vue-ui-relation-circle-legend {
-    cursor: pointer;
 }
 path.vue-ui-relation-circle-selected,
 line.vue-ui-relation-circle-selected {

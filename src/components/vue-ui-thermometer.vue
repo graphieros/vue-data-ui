@@ -86,6 +86,8 @@ const baseWidth = ref(FINAL_CONFIG.value.style.chart.thermometer.width);
 const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
 const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -442,6 +444,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -511,6 +514,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="onGenerateImage"

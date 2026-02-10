@@ -338,6 +338,7 @@ function getIconPath(name, { stroke, strokeWidth }) {
         externalLink: `<path d="M 19 1 L 10 10 M 15 1 L 19 1 L 19 5 M 10 3 L 5 3 C 4 3 3 4 3 5 L 3 15 C 3 16 4 17 5 17 L 15 17 C 16 17 17 16 17 15 L 17 10" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
         plotLine: `<path d="M 4 14 A 1 1 0 0 0 4 18 A 1 1 0 0 0 4 14 M 16 2 A 1 1 0 0 0 16 6 A 1 1 0 0 0 16 2 M 14.586 5.414 L 5.42 14.592" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
         plotArrow: `<path d="M 4 14 A 1 1 0 0 0 4 18 A 1 1 0 0 0 4 14 M 17 3 L 5.42 14.592 M 13 3 L 17 3 L 17 7" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
+        acessibility: `<path d="M 10 1 A 1 1 0 0 0 10 5 A 1 1 0 0 0 10 1 M 10 7 L 4 4 A 1 1 0 0 0 3 6 L 8 9 L 8 11 L 4 17 A 1 1 0 0 0 6 18 L 10 13 L 14 18 A 1 1 0 0 0 16 17 L 12 11 L 12 9 L 17 6 A 1 1 0 0 0 16 4 L 10 7" stroke-linecap="round" stroke-linejoin="round" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" style="opacity: 1"/>`,
     };
 
     return map[name] || '';

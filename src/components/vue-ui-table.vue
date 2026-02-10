@@ -2,8 +2,10 @@
     <div class="vue-data-ui-component vue-ui-table-main" :style="`font-family: ${FINAL_CONFIG.fontFamily}`">
         <div class="vue-ui-table-export-hub" 
             :style="{ top: exportButtonTop + 'px' }" v-if="FINAL_CONFIG.style.exportMenu.show">
-            <button @click="isExportRequest = !isExportRequest" v-html="icons.export"
-                :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color}`" />
+            <button 
+                @click="isExportRequest = !isExportRequest" 
+                v-html="icons.export"
+                :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`" />
             <div class="vue-ui-table-export-hub-dropdown" :data-is-open="isExportRequest || 'false'"
                 :style="`background:${FINAL_CONFIG.style.exportMenu.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.color}`">
                 <b class="vue-ui-table-export-hub-title">
@@ -20,7 +22,7 @@
                             ({{ bodyCopy.length }})
                         </div>
                         <button id="exportAll" @click="createXls('all')"
-                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color}`">
+                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`">
                             <div v-html="icons.fileDownload" />
                             <span>{{ FINAL_CONFIG.translations.exportAllButton }}</span>
                         </button>
@@ -30,7 +32,7 @@
                             {{ FINAL_CONFIG.translations.exportPageLabel }}
                         </div>
                         <button id="exportPage" @click="createXls('page')"
-                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color}`">
+                            :style="`background:${FINAL_CONFIG.style.exportMenu.buttons.backgroundColor};color:${FINAL_CONFIG.style.exportMenu.buttons.color};cursor:${isCursorPointer ? 'pointer' : 'default'}`">
                             <div v-html="icons.fileDownload" />
                             <span>{{ FINAL_CONFIG.translations.exportPageButton }}</span>
                         </button>
@@ -42,7 +44,7 @@
                             </span>
                             <input name="filename" ref="filenameInputRef" @keydown.space.stop pattern=".*" class="vue-ui-table-dialog-input" type="text" v-model="filename"/>
                         </label>
-                        <button v-if="!!filename" class="vue-ui-table-dialog-field-button" @click="filename = ''">
+                        <button v-if="!!filename" class="vue-ui-table-dialog-field-button" @click="filename = ''" :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.style.exportMenu.color" :size="18"/>
                         </button>
                     </div>
@@ -182,7 +184,7 @@
                                             <div class="date-wrapper--button">
                                                 <button v-if="th.isSort" @click="sortTh(i, $event)"
                                                     :class="{ 'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i]) }"
-                                                    :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`">
+                                                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`">
                                                     <span v-if="sorts[i] === constants.ASC"
                                                         v-html="[constants.DATE].includes(th.type) ? icons.sort09 : icons.sortAZ" />
                                                     <span v-else-if="sorts[i] === constants.DESC"
@@ -193,6 +195,7 @@
                                                     @click="resetDates(i); resetFilter(i, th, $event)"
                                                     :disabled="!filteredDatesIndexes[i] && isResetDisabled(i, th)"
                                                     class="th-reset"
+                                                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                                                 >
                                                     ✖
                                                 </button>
@@ -208,7 +211,7 @@
                                     <button v-if="!hasNaN[i] && th.isSort && th.type !== constants.DATE"
                                         @click="sortTh(i, $event)"
                                         :class="{ 'th-button-active': [constants.DESC, constants.ASC].includes(sorts[i]) }"
-                                        :style="`background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`">
+                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${[constants.DESC, constants.ASC].includes(sorts[i]) ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`">
                                         <span v-if="sorts[i] === constants.ASC"
                                             v-html="[constants.NUMERIC].includes(th.type) ? icons.sort09 : icons.sortZA" />
                                         <span v-else-if="sorts[i] === constants.DESC"
@@ -220,7 +223,7 @@
                                     <button v-if="th.isMultiselect" @click="toggleMultiselect(i, th, $event)"
                                         v-html="icons.filter"
                                         :class="{ 'th-button-active': multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length }"
-                                        :style="`background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`" />
+                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${multiselects[i] && multiselects[i].length !== getDropdownOptions(i).length ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`" />
 
                                     <!-- SHOW CHART -->
                                     <button 
@@ -228,7 +231,7 @@
                                         @click="showChart = !showChart" 
                                         v-html="icons.chart"
                                         :class="{ 'th-button-active': showChart }"
-                                        :style="`background:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`" />
+                                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor};color:${showChart ? '' : FINAL_CONFIG.style.th.buttons.filter.inactive.color}`" />
 
                                     <div v-if="th.rangeFilter && rangeFilters[i] && !hasNaN[i]" class="th-range-filter">
                                         <label :for="`rangeMin${i}`"><span style="color:grey">ᒥ</span> min <span
@@ -251,6 +254,7 @@
                                         @click="resetFilter(i, th, $event)"
                                         :disabled="isResetDisabled(i, th)" 
                                         class="th-reset"
+                                        :style="{ cursor: isCursorPointer ? 'pointer' : 'default'}"
                                     >
                                         ✖
                                     </button>
@@ -260,7 +264,7 @@
                                         :id="`th_dropdown_${i}`"
                                         :style="`background:${FINAL_CONFIG.style.dropdowns.backgroundColor};color:${FINAL_CONFIG.style.dropdowns.color}`">
                                         <button class="close-dropdown" @click="toggleMultiselect(i, th, $event)"
-                                            :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color}`">
+                                            :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color}`">
                                             ✖
                                         </button>
                                         <span class="th-option" v-for="(option, j) in getDropdownOptions(i)"
@@ -298,6 +302,7 @@
                             <div v-if="!hasNaN[i]"
                                 v-html="tableHead[i].type === constants.NUMERIC ? icons.chevronDown : ''"
                                 :class="{ 'col-selector': tableHead[i].type === constants.NUMERIC }" tabindex="0"
+                                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                                 @click.stop="selectColumn(i)" @keyup.enter="selectColumn(i)" />
                         </th>
                     </tr>
@@ -452,7 +457,7 @@
                     </span>
                 </span>
                 <button @click="resetSelection" class="td-selector-info-reset"
-                    :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
                     ✖
                 </button>
             </template>
@@ -484,15 +489,15 @@
             <!-- PREVIOUS PAGE -->
             <button class="vue-ui-table-navigation" @click.stop="navigate('previous')" v-html="icons.chevronLeft"
                 :disabled="currentPage === 0"
-                :style="`background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`" />
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`" />
             <template v-if="pages.length > 3">
                 <!-- FIRST PAGE -->
                 <button class="vue-ui-table-navigation" @click.stop="navigate(1)" :disabled="currentPage === 0"
-                    :style="`background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`">
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === 0 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`">
                     1
                 </button>
                 <!-- PAGE SCROLLER -->
-                <div v-if="pages.length > 10" class="vue-ui-table-page-scroller-wrapper">
+                <div v-if="pages.length > 10" class="vue-ui-table-page-scroller-wrapper" :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }">
                     <label for="pageScroller" style="font-size: 14px">
                         {{ FINAL_CONFIG.translations.page }}
                         {{ currentPage + 1 }} / {{ pages.length }}
@@ -508,7 +513,7 @@
                 <!-- LAST PAGE -->
                 <button class="vue-ui-table-navigation" @click.stop="navigate(pages.length)"
                     :disabled="currentPage === pages.length - 1"
-                    :style="`background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`">
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`">
                     {{ pages.length }}
                 </button>
             </template>
@@ -519,7 +524,7 @@
             <!-- NEXT PAGE -->
             <button class="vue-ui-table-navigation" @click.stop="navigate('next')" v-html="icons.chevronRight"
                 :disabled="currentPage === pages.length - 1"
-                :style="`background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`" />
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.pagination.buttons.backgroundColor};color:${FINAL_CONFIG.style.pagination.buttons.color};opacity:${currentPage === pages.length - 1 ? FINAL_CONFIG.style.pagination.buttons.opacityDisabled : 1}`" />
         </div>
 
         <!-- CHART MODAL -->
@@ -528,23 +533,23 @@
             <div class="vue-ui-modal-drag-handle" @mousedown="dragMouseDown">
                 <!-- Your modal title or drag icon here -->
                 <span v-html="icons.grip"/>
-                <button class="close-chart-modal" @click="showChart = false">✖</button>
+                <button class="close-chart-modal" :style="{ cursor: isCursorPointer ? 'pointer' : 'default'}" @click="showChart = false">✖</button>
             </div>
             <button style="z-index: 1" class="close-chart-modal" @click="showChart = false"
-                :style="`background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
                 ✖
             </button>
 
             <div class="chart-modal-options">
                 <button v-if="availableDonutCategories.length" @click="showDonutOptions = true" v-html="icons.donut"
                     :class="{ 'is-active-chart': chart.type === constants.DONUT || showDonutOptions }"
-                    :style="`background:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
                 <button @click="chart.type = constants.LINE; showDonutOptions = false" v-html="icons.chart"
                     :class="{ 'is-active-chart': chart.type === constants.LINE && !showDonutOptions }"
-                    :style="`background:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
                 <button @click="chart.type = constants.BAR; showDonutOptions = false" v-html="icons.bar"
                     :class="{ 'is-active-chart': chart.type === constants.BAR && !showDonutOptions }"
-                    :style="`background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
             </div>
 
             <div style="width:100%; height: fit-content" ref="chartModal">
@@ -570,7 +575,7 @@
                         </div>
                         <button class="vue-ui-table-generate-donut" :disabled="!selectedDonutCategory"
                             @click="applyDonutOption"
-                            :style="`background:${FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.buttons.selected.color}`">
+                            :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.buttons.selected.color}`">
                             <div style="margin-bottom: -3px" v-html="icons.donut" />
                             {{ FINAL_CONFIG.translations.makeDonut }}
                         </button>
@@ -864,6 +869,9 @@ export default {
         }
     },
     computed: {
+        isCursorPointer() {
+            return this.FINAL_CONFIG.useCursorPointer;
+        },
         colorCancelInactive() {
             return this.FINAL_CONFIG.style.th.buttons.cancel.inactive.backgroundColor;
         },
@@ -2004,7 +2012,6 @@ export default {
 
 .vue-ui-table-main button {
     align-items: center;
-    cursor: pointer;
     display: flex;
     justify-content: center;
     width: 32px;
@@ -2091,7 +2098,6 @@ button.th-reset:not(:disabled) {
 
 .vue-ui-table-main .th-option {
     border-radius: 6px;
-    cursor: pointer;
     padding: 2px 6px;
     text-align: left;
     user-select: none;
@@ -2195,10 +2201,6 @@ button.th-reset:not(:disabled) {
     }
 }
 
-.vue-ui-table-main td.td-numeric {
-    cursor: pointer;
-}
-
 .vue-ui-table-main .td-selector-info {
     align-items: center;
     border-radius: 0 0 6px 6px;
@@ -2275,7 +2277,6 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main input.vue-ui-table-page-scroller {
-    cursor: pointer;
     height: 24px;
     padding: 0;
 }
@@ -2319,7 +2320,6 @@ button.th-reset:not(:disabled) {
 
 .vue-ui-table-main .col-selector {
     align-items: center;
-    cursor: pointer;
     display: flex;
     height: 100%;
     justify-content: center;

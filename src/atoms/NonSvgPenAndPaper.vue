@@ -20,6 +20,10 @@ const props = defineProps({
     active: {
         type: Boolean,
         default: false,
+    },
+    isCursorPointer: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -690,7 +694,8 @@ const range = ref(null);
             class="vue-ui-pen-and-paper-action"
             :style="{
                 backgroundColor: backgroundColor,
-                border: `1px solid ${buttonBorderColor}`
+                border: `1px solid ${buttonBorderColor}`,
+                cursor: isCursorPointer ? 'pointer' : 'default'
             }"
             @click="emit('close')"
         >
@@ -701,7 +706,10 @@ const range = ref(null);
             :class="{
                 'vue-ui-pen-and-paper-action': true, 
             }"
-            style="padding: 0 !important"
+            :style="{
+                padding: '0 !important',
+                cursor: isCursorPointer ? 'pointer' : 'default'
+            }"
             >
             <ColorPicker 
                 v-model:value="currentColor" 
@@ -717,6 +725,7 @@ const range = ref(null);
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
+                cursor: isCursorPointer ? 'pointer' : 'default'
             }"
             >
             <BaseIcon :name="iconMap[mode]" :stroke="color" />
@@ -746,7 +755,8 @@ const range = ref(null);
             :style="{
                 backgroundColor: backgroundColor,
                 border: `1px solid ${buttonBorderColor}`,
-                marginTop: '20px'
+                marginTop: '20px',
+                cursor: isCursorPointer ? 'pointer' : 'default'
             }"
             @click="deleteLastDraw"
         >
@@ -760,7 +770,8 @@ const range = ref(null);
             }"
             :style="{
                 backgroundColor: backgroundColor,
-                border: `1px solid ${buttonBorderColor}`
+                border: `1px solid ${buttonBorderColor}`,
+                cursor: isCursorPointer ? 'pointer' : 'default'
             }"
             @click="redoLastDraw"
         >
@@ -775,7 +786,8 @@ const range = ref(null);
             class="vue-ui-pen-and-paper-action"
             :style="{
                 backgroundColor: backgroundColor,
-                border: `1px solid ${buttonBorderColor}`
+                border: `1px solid ${buttonBorderColor}`,
+                cursor: isCursorPointer ? 'pointer' : 'default'
             }"
             @click="reset"
         >
@@ -928,7 +940,6 @@ const range = ref(null);
     width: 32px;
     padding: 2px;
     transition: all 0.2s ease-in-out;
-    cursor: pointer;
     position: relative;
 }
 .vue-ui-pen-and-paper-action:hover {

@@ -88,6 +88,8 @@ const isCallbackSvg = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -712,7 +714,9 @@ defineExpose({
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
             :color="FINAL_CONFIG.style.chart.color"
-            :active="isAnnotator" @close="toggleAnnotator"
+            :active="isAnnotator" 
+            :isCursorPointer="isCursorPointer"
+            @close="toggleAnnotator"
         >
             <template #annotator-action-close>
                 <slot name="annotator-action-close"/>
@@ -778,6 +782,7 @@ defineExpose({
             :position="FINAL_CONFIG.userOptions.position" 
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :isAnnotation="isAnnotator" 
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen" 
             @generatePdf="generatePdf"
             @generateImage="onGenerateImage" 
@@ -1118,34 +1123,5 @@ defineExpose({
     justify-content: center;
     text-align: center;
     width: 100%;
-}
-
-.vue-ui-gauge-legend {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
-    column-gap: 18px;
-}
-
-.vue-ui-gauge-legend-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    height: 24px;
-}
-
-.vue-ui-gauge-tooltip {
-    border: 1px solid #e1e5e8;
-    border-radius: 4px;
-    box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.2);
-    max-width: 300px;
-    position: fixed;
-    padding: 12px;
-    z-index: 1;
 }
 </style>

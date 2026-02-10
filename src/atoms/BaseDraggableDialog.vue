@@ -11,7 +11,8 @@ const props = defineProps({
     fullscreenParent: { type: HTMLElement },
     isFullscreen: { type: Boolean, default: false },
     withPadding: { type: Boolean, default: false },
-    forcedWidth: { type: Number, default: 400 }
+    forcedWidth: { type: Number, default: 400 },
+    isCursorPointer: { type: Boolean, default: false }
 });
 
 const emit = defineEmits(["close"]);
@@ -320,6 +321,7 @@ function trapFocus(event) {
                         type="button"
                         aria-label="Close dialog"
                         @click="close"
+                        :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
                     >
                         <BaseIcon name="close" :stroke="headerColor" />
                     </button>
@@ -389,7 +391,6 @@ function trapFocus(event) {
 .close {
     background: none;
     border: none;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -464,7 +465,6 @@ function trapFocus(event) {
     align-items:center;
     justify-content: center;
     white-space: nowrap;
-    cursor: pointer;
     position: relative;
 }
 .vue-ui-user-options-button:hover {

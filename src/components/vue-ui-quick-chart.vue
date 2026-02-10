@@ -104,6 +104,7 @@ const yAxisLabel = ref(null);
 const donutStroke = ref('#FFFFFF');
 const FINAL_CONFIG = ref(prepareConfig());
 const debug = computed(() => !!FINAL_CONFIG.value.debug);
+const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -1503,6 +1504,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.backgroundColor"
             :color="FINAL_CONFIG.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1556,6 +1558,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptionsCallbacks"
             :printScale="FINAL_CONFIG.userOptionsPrint.scale"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="generateImage"
@@ -2355,6 +2358,7 @@ defineExpose({
                     :color="FINAL_CONFIG.legendSelectAllToggleColor"
                     :fontSize="FINAL_CONFIG.legendFontSize"
                     :checked="segregated.length > 0"
+                    :isCursorPointer="isCursorPointer"
                     @toggle="toggleLegend"
                 />
 
@@ -2363,7 +2367,7 @@ defineExpose({
                         class="vue-ui-quick-chart-legend-item" 
                         v-for="(legendItem, i) in donut.legend" 
                         @click="segregateDonut(legendItem, donut.dataset); emit('selectLegend', legendItem)"
-                        :style="`cursor: ${donut.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
+                        :style="`cursor: ${donut.legend.length > 1 && isCursorPointer ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                     >
                         <template v-if="FINAL_CONFIG.useCustomLegend">
                             <slot name="legend" v-bind="{ legend: legendItem }"/>
@@ -2410,7 +2414,7 @@ defineExpose({
                         class="vue-ui-quick-chart-legend-item" 
                         v-for="(legendItem, i) in line.legend"
                         @click="segregate(legendItem.id, line.legend.length - 1); emit('selectLegend', legendItem)"
-                        :style="`cursor: ${line.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
+                        :style="`cursor: ${line.legend.length > 1 && isCursorPointer ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                     >
                         <template v-if="FINAL_CONFIG.useCustomLegend">
                             <slot name="legend" v-bind="{ legend: legendItem }"/>
@@ -2429,7 +2433,7 @@ defineExpose({
                         class="vue-ui-quick-chart-legend-item" 
                         v-for="(legendItem, i) in bar.legend"
                         @click="segregate(legendItem.id, bar.legend.length - 1); emit('selectLegend', legendItem)"
-                        :style="`cursor: ${bar.legend.length > 1 ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
+                        :style="`cursor: ${bar.legend.length > 1 && isCursorPointer ? 'pointer' : 'default'}; opacity:${segregated.includes(legendItem.id) ? '0.5' : '1'}`"
                     >
                         <template v-if="FINAL_CONFIG.useCustomLegend">
                             <slot name="legend" v-bind="{ legend: legendItem }"/>

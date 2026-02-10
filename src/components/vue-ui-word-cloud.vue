@@ -97,6 +97,7 @@ const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -617,7 +618,8 @@ const tableComponent = computed(() => {
             headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
             isFullscreen: isFullscreen.value,
             fullscreenParent: wordCloudChart.value,
-            forcedWidth: Math.min(500, window.innerWidth * 0.8)
+            forcedWidth: Math.min(500, window.innerWidth * 0.8),
+            isCursorPointer: isCursorPointer.value
         } : {
             hideDetails: true,
             config: {
@@ -788,6 +790,7 @@ function useTooltip(word, index) {
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -851,6 +854,7 @@ function useTooltip(word, index) {
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
             :isZoom="mutableConfig.showZoom"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv" 
@@ -899,6 +903,7 @@ function useTooltip(word, index) {
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
+            :isCursorPointer="isCursorPointer"
             @zoomIn="zoomIn"
             @zoomOut="zoomOut"
             @resetZoom="resetZoom(true)"
@@ -993,6 +998,7 @@ function useTooltip(word, index) {
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
+            :isCursorPointer="isCursorPointer"
             @zoomIn="zoomIn"
             @zoomOut="zoomOut"
             @resetZoom="resetZoom(true)"
@@ -1042,7 +1048,12 @@ function useTooltip(word, index) {
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                <button 
+                    tabindex="0" 
+                    class="vue-ui-user-options-button" 
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                >
                     <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
                 </button>
             </template>
@@ -1055,6 +1066,7 @@ function useTooltip(word, index) {
                     :config="dataTable.config"
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                    :isCursorPointer="isCursorPointer"
                     @close="closeTable">
                     <template #th="{ th }">
                         <div v-html="th" style="display:flex;align-items:center"></div>
@@ -1127,27 +1139,6 @@ text.animated {
     position: absolute;
     bottom: 12px;
     right: 0;
-}
-
-.vue-data-ui-refresh-button {
-    outline: none;
-    border: none;
-    background: transparent;
-    height: 36px;
-    width: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: transform 0.2s ease-in-out;
-    transform-origin: center;
-    &:focus {
-        outline: 1px solid v-bind(slicerColor);
-    }
-    &:hover {
-        transform: rotate(-90deg)
-    }
 }
 
 .wc-finalized text {

@@ -54,6 +54,8 @@ const FINAL_CONFIG = computed({
     }
 });
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
+
 function prepareConfig() {
     return useNestedProp({
         userConfig: props.config,
@@ -333,7 +335,7 @@ defineExpose({
                         :viewBox="`0 0 100 100`"
                         :height="FINAL_CONFIG.style.itemSize"
                         class="vue-ui-rating-unit"
-                        :style="`position:absolute;top:0;left:0;${isReadonly ? '' : 'cursor:pointer'}`"
+                        :style="`position:absolute;top:0;left:0;${isReadonly ? '' : isCursorPointer ?  'cursor:pointer' : ''}`"
                     >
                         <rect
                             :data-cy="`rating-active-trap-${i}`"
@@ -428,9 +430,6 @@ defineExpose({
     align-items:center;
     gap: 1px;
     width: 100%;
-}
-.vue-ui-mouse-trap {
-    cursor: pointer;
 }
 .vue-ui-mouse-trap:focus:not(:focus-visible) {
     outline: none;

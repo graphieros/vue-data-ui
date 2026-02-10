@@ -25,6 +25,10 @@ const props = defineProps({
         type: Boolean, 
         default: false
     },
+    isCursorPointer: {
+        type: Boolean,
+        default: false
+    }
 });
 
 const emit = defineEmits(["update:value"]);
@@ -41,7 +45,7 @@ const colorPickerStyle = computed(() => ({
     backgroundColor: props.value,
     width: "100%",
     height: "100%",
-    cursor: "pointer",
+    cursor: props.isCursorPointer ? 'pointer' : 'default',
 }));
 
 const iconColor = computed(() => adaptColorToBackground(props.value));
@@ -192,13 +196,13 @@ const palette = ref([
                 data-cy="color-picker-option" 
                 class="vue-ui-color-picker-option"
                 type="button" 
-                :style="{ backgroundColor: c, outline: `1px solid ${buttonBorderColor}` }"
+                :style="{ backgroundColor: c, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'pointer' : 'default' }"
                 @click="() => setColor(c)" 
             />
             <button 
                 class="vue-ui-color-picker-option" 
                 type="button"
-                :style="{ backgroundColor: value, outline: `1px solid ${buttonBorderColor}` }"
+                :style="{ backgroundColor: value, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'pointer' : 'default' }"
                 @click.stop="triggerColorPicker" 
                 @mousedown.stop 
                 @touchstart.stop
@@ -239,13 +243,13 @@ const palette = ref([
                     data-cy="color-picker-option" 
                     class="vue-ui-color-picker-option"
                     type="button" 
-                    :style="{ backgroundColor: c, outline: `1px solid ${buttonBorderColor}` }"
+                    :style="{ backgroundColor: c, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'pointer' : 'default' }"
                     @click="() => setColor(c)" 
                 />
                 <button 
                     class="vue-ui-color-picker-option" 
                     type="button"
-                    :style="{ backgroundColor: value, outline: `1px solid ${buttonBorderColor}` }"
+                    :style="{ backgroundColor: value, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'cursor' : 'default' }"
                     @click.stop="triggerColorPicker" 
                     @mousedown.stop 
                     @touchstart.stop
@@ -296,7 +300,6 @@ const palette = ref([
 }
 
 .vue-ui-color-picker-option {
-    cursor: pointer;
     align-items: center;
     border-radius: 0px;
     display: flex;

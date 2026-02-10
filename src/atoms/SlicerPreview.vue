@@ -201,6 +201,10 @@ const props = defineProps({
     maxWidth: {
         type: Number,
         default: null
+    },
+    isCursorPointer: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -1136,7 +1140,8 @@ defineExpose({
                     class="vue-data-ui-refresh-button" 
                     :style="{
                         top: hasMinimap ? '36px' : '-16px',
-                        pointerEvents: 'all !important'
+                        pointerEvents: 'all !important',
+                        cursor: isCursorPointer ? 'pointer' : 'default'
                     }" 
                     @click="reset"
                 >
@@ -1846,7 +1851,6 @@ input[type="range"]::-ms-thumb {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    cursor: pointer;
     transition: transform 0.2s ease-in-out !important;
     transform-origin: center;
 

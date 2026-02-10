@@ -111,6 +111,8 @@ const FINAL_CONFIG = computed({
     }
 });
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
+
 const { svgRef } = useChartAccessibility({ config: FINAL_CONFIG.value.style.title });
 
 function prepareConfig() {
@@ -385,7 +387,7 @@ defineExpose({
                     class="vue-ui-timer-button" 
                     :style="{ 
                         opacity: isRunning ? 0.2 : 1, 
-                        cursor: isRunning ? 'default' : 'pointer' 
+                        cursor: isRunning ? 'default' : isCursorPointer ?  'pointer' : 'default'
                     }"
                 >
                     <BaseIcon name="play" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
@@ -398,7 +400,7 @@ defineExpose({
                     class="vue-ui-timer-button" 
                     :style="{
                         opacity: isRunning ? 1 : 0.2,
-                        cursor: isRunning ? 'pointer' : 'default'
+                        cursor: isRunning ? isCursorPointer ? 'pointer' : 'default' :'default'
                     }"
                     >
                     <BaseIcon name="pause" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
@@ -411,7 +413,7 @@ defineExpose({
                     class="vue-ui-timer-button" 
                     :style="{ 
                         opacity: isRunning ? 1 : 0.2, 
-                        cursor: isRunning ? 'pointer' : 'default' 
+                        cursor: isRunning ? isCursorPointer ? 'pointer' : 'default' : 'default' 
                     }"
                 >
                     <BaseIcon name="stop" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
@@ -424,7 +426,7 @@ defineExpose({
                     class="vue-ui-timer-button" 
                     :style="{ 
                         opacity: isRunning ? 1 : 0.2, 
-                        cursor: isRunning ? 'pointer' : 'default' 
+                        cursor: isRunning ? isCursorPointer ? 'pointer' : 'default' : 'default' 
                     }">
                     <BaseIcon name="restart" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
                 </button>
@@ -436,7 +438,7 @@ defineExpose({
                     class="vue-ui-timer-button" 
                     :style="{ 
                         opacity: isRunning && !isPaused ? 1 : 0.2, 
-                        cursor: isRunning && !isPaused ? 'pointer' : 'default' 
+                        cursor: isRunning && !isPaused ? isCursorPointer ? 'pointer' : 'default' : 'default' 
                     }">
                     <BaseIcon name="lap" :stroke="FINAL_CONFIG.stopwatch.legend.buttons.iconColor"/>
                 </button>

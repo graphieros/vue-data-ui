@@ -106,6 +106,8 @@ const isCallbackSvg = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -629,7 +631,8 @@ const tableComponent = computed(() => {
             headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
             isFullscreen: isFullscreen.value,
             fullscreenParent: moleculeChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+            forcedWidth: Math.min(800, window.innerWidth * 0.8),
+            isCursorPointer: isCursorPointer.value
         } : {
             hideDetails: true,
             config: {
@@ -732,13 +735,13 @@ defineExpose({
         @mouseleave="hoveredNode = null; hoveredUid = null; setUserOptionsVisibility(false)"
         @mouseenter="() => setUserOptionsVisibility(true)"
     >
-
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator && !!svgRef"
             :svgRef="svgRef"
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -812,6 +815,7 @@ defineExpose({
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
             :isZoom="mutableConfig.showZoom"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -937,7 +941,8 @@ defineExpose({
                     role="button" 
                     class="vue-data-ui-refresh-button"
                     :style="{
-                        background: FINAL_CONFIG.style.chart.backgroundColor
+                        background: FINAL_CONFIG.style.chart.backgroundColor,
+                        cursor: isCursorPointer ? 'pointer' : 'default'
                     }"
                     @click="resetZoom(true)">
                     <BaseIcon name="refresh" :stroke="FINAL_CONFIG.style.chart.color" />
@@ -989,7 +994,12 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                <button 
+                    tabindex="0" 
+                    class="vue-ui-user-options-button" 
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                >
                     <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
                 </button>
             </template>
@@ -1002,6 +1012,7 @@ defineExpose({
                     :config="dataTable.config"
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                    :isCursorPointer="isCursorPointer"
                     @close="closeTable"
                 >
                     <template #th="{ th }">
@@ -1054,7 +1065,6 @@ defineExpose({
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    cursor: pointer;
     transition: transform 0.2s ease-in-out;
     transform-origin: center;
     &:focus {

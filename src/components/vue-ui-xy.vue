@@ -412,6 +412,8 @@ const isDataset = computed({
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.chart.userOptions.useCursorPointer);
+
 const mutableConfig = ref({
     dataLabels: { show: true },
     showTooltip: true,
@@ -3286,9 +3288,15 @@ defineExpose({
         ref="chart"
         :style="`background:${FINAL_CONFIG.chart.backgroundColor}; color:${FINAL_CONFIG.chart.color};width:100%;font-family:${FINAL_CONFIG.chart.fontFamily};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)" @click="onSvgClick">
-        <PenAndPaper v-if="FINAL_CONFIG.chart.userOptions.buttons.annotator && svgRef" :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.chart.backgroundColor" :color="FINAL_CONFIG.chart.color"
-            :active="isAnnotator" @close="toggleAnnotator">
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.chart.userOptions.buttons.annotator && svgRef" 
+            :svgRef="svgRef"
+            :backgroundColor="FINAL_CONFIG.chart.backgroundColor" 
+            :color="FINAL_CONFIG.chart.color"
+            :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
+            @close="toggleAnnotator"
+        >
             <template #annotator-action-close>
                 <slot name="annotator-action-close"/>
             </template>
@@ -3330,26 +3338,43 @@ defineExpose({
 
         <UserOptions ref="userOptionsRef" :key="`user_options_${step}`"
             v-if="FINAL_CONFIG.chart.userOptions.show && (keepUserOptionState ? true : userOptionsVisible)"
-            :backgroundColor="FINAL_CONFIG.chart.backgroundColor" :color="FINAL_CONFIG.chart.color"
-            :isPrinting="isPrinting" :isImaging="isImaging" :uid="uniqueId"
+            :backgroundColor="FINAL_CONFIG.chart.backgroundColor" 
+            :color="FINAL_CONFIG.chart.color"
+            :isPrinting="isPrinting" 
+            :isImaging="isImaging" 
+            :uid="uniqueId"
             :hasTooltip="FINAL_CONFIG.chart.userOptions.buttons.tooltip && FINAL_CONFIG.chart.tooltip.show"
-            :hasPdf="FINAL_CONFIG.chart.userOptions.buttons.pdf" :hasXls="FINAL_CONFIG.chart.userOptions.buttons.csv"
+            :hasPdf="FINAL_CONFIG.chart.userOptions.buttons.pdf" 
+            :hasXls="FINAL_CONFIG.chart.userOptions.buttons.csv"
             :hasImg="FINAL_CONFIG.chart.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.chart.userOptions.buttons.svg"
             :hasLabel="FINAL_CONFIG.chart.userOptions.buttons.labels"
             :hasTable="FINAL_CONFIG.chart.userOptions.buttons.table"
             :hasStack="dataset.length > 1 && FINAL_CONFIG.chart.userOptions.buttons.stack"
-            :hasFullscreen="FINAL_CONFIG.chart.userOptions.buttons.fullscreen" :isStacked="mutableConfig.isStacked"
-            :isFullscreen="isFullscreen" :chartElement="$refs.chart" :position="FINAL_CONFIG.chart.userOptions.position"
-            :isTooltip="mutableConfig.showTooltip" :titles="{ ...FINAL_CONFIG.chart.userOptions.buttonTitles }"
-            :hasAnnotator="FINAL_CONFIG.chart.userOptions.buttons.annotator" :isAnnotation="isAnnotator"
+            :hasFullscreen="FINAL_CONFIG.chart.userOptions.buttons.fullscreen" 
+            :isStacked="mutableConfig.isStacked"
+            :isFullscreen="isFullscreen" 
+            :chartElement="$refs.chart" 
+            :position="FINAL_CONFIG.chart.userOptions.position"
+            :isTooltip="mutableConfig.showTooltip" 
+            :titles="{ ...FINAL_CONFIG.chart.userOptions.buttonTitles }"
+            :hasAnnotator="FINAL_CONFIG.chart.userOptions.buttons.annotator" 
+            :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.chart.userOptions.callbacks"
             :tableDialog="FINAL_CONFIG.table.useDialog"
-            :printScale="FINAL_CONFIG.chart.userOptions.print.scale" @toggleFullscreen="toggleFullscreen"
-            @generatePdf="generatePdf" @generateCsv="generateCsv" @generateImage="onGenerateImage"
+            :printScale="FINAL_CONFIG.chart.userOptions.print.scale"
+            :isCursorPointer="isCursorPointer"
+            @toggleFullscreen="toggleFullscreen"
+            @generatePdf="generatePdf" 
+            @generateCsv="generateCsv" 
+            @generateImage="onGenerateImage"
             @generateSvg="generateSvg"
-            @toggleTable="toggleTable" @toggleLabels="toggleLabels" @toggleStack="toggleStack"
-            @toggleTooltip="toggleTooltip" @toggleAnnotator="toggleAnnotator" :style="{
+            @toggleTable="toggleTable" 
+            @toggleLabels="toggleLabels" 
+            @toggleStack="toggleStack"
+            @toggleTooltip="toggleTooltip" 
+            @toggleAnnotator="toggleAnnotator" 
+            :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }">
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
@@ -4248,7 +4273,7 @@ defineExpose({
                                         :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
                                         :transform="`translate(${drawingArea?.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                         :style="{
-                                            cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
+                                            cursor: usesSelectTimeLabelEvent() && isCursorPointer ? 'pointer' : 'default'
                                         }" @click="() => selectTimeLabel(label, i)">
                                         {{ label.text || "" }}
                                     </text>
@@ -4261,7 +4286,7 @@ defineExpose({
                                         :fill="FINAL_CONFIG.chart.grid.labels.xAxisLabels.color"
                                         :transform="`translate(${drawingArea?.left + (drawingArea.width / maxSeries) * i + (drawingArea.width / maxSeries / 2)}, ${drawingArea?.bottom + fontSizes.xAxis * 1.5}), rotate(${FINAL_CONFIG.chart.grid.labels.xAxisLabels.rotation})`"
                                         :style="{
-                                            cursor: usesSelectTimeLabelEvent() ? 'pointer' : 'default'
+                                            cursor: usesSelectTimeLabelEvent() && isCursorPointer ? 'pointer' : 'default'
                                         }" v-html="createTSpansFromLineBreaksOnX({
                                             content: String(label.text),
                                             fontSize: fontSizes.xAxis,
@@ -4570,6 +4595,7 @@ defineExpose({
             :minScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin"
             :maxScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax"
             :maxWidth="FINAL_CONFIG.chart.zoom.maxWidth"
+            :isCursorPointer="isCursorPointer"
             @futureEnd="v => setPrecog('end', v)"
             @futureStart="v => setPrecog('start', v)"
             @reset="refreshSlicer"
@@ -4604,9 +4630,20 @@ defineExpose({
                     @toggle="toggleLegend"
                 />
 
-                <div v-for="(legendItem, i) in absoluteDataset" :data-cy="`xy-div-legend-item-${i}`"
-                    :key="`div_legend_item_${i}`" @click="segregate(legendItem)"
-                    :class="{ 'vue-ui-xy-legend-item-alone': absoluteDataset.length === 1 , 'vue-ui-xy-legend-item': true, 'vue-ui-xy-legend-item-segregated': segregatedSeries.includes(legendItem.id) }">
+                <div 
+                    v-for="(legendItem, i) in absoluteDataset" 
+                    :data-cy="`xy-div-legend-item-${i}`"
+                    :key="`div_legend_item_${i}`" 
+                    @click="segregate(legendItem)"
+                    :class="{ 
+                        'vue-ui-xy-legend-item-alone': absoluteDataset.length === 1 , 
+                        'vue-ui-xy-legend-item': true, 
+                        'vue-ui-xy-legend-item-segregated': segregatedSeries.includes(legendItem.id) 
+                    }"
+                    :style="{
+                        cursor: isCursorPointer ? 'pointer' : 'default'
+                    }"
+                >
                     <svg v-if="icons[legendItem.type] === 'line'" viewBox="0 0 20 12" height="1em" width="1.43em">
                         <rect x="0" y="7.5" rx="1.5" :stroke="FINAL_CONFIG.chart.backgroundColor" :stroke-width="0.5"
                             height="3" width="20" :fill="legendItem.color" />
@@ -4704,7 +4741,12 @@ defineExpose({
                     <div style="display: flex; flex-direction:row; gap: 6px; align-items:center; padding-left: 6px"
                         data-dom-to-png-ignore>
                         <input type="checkbox" v-model="showSparklineTable">
-                        <div @click="showSparklineTable = !showSparklineTable" style="cursor: pointer">
+                        <div 
+                            @click="showSparklineTable = !showSparklineTable" 
+                            :style="{
+                                cursor: isCursorPointer ? 'pointer' : 'default'
+                            }"
+                        >
                             <BaseIcon name="chartLine" :size="20" :stroke="FINAL_CONFIG.chart.color" />
                         </div>
                     </div>
@@ -4795,7 +4837,6 @@ rect {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 5px;
-    cursor: pointer;
 }
 
 .vue-ui-xy-legend-item-alone {

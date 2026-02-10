@@ -116,6 +116,8 @@ function prepareConfig() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const { userOptionsVisible, keepUserOptionState } = useUserOptionState({
     config: FINAL_CONFIG.value,
 });
@@ -1798,6 +1800,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1847,6 +1850,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="onGenerateImage"
@@ -1894,6 +1898,7 @@ defineExpose({
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
+            :isCursorPointer="isCursorPointer"
             @zoomIn="zoomIn"
             @zoomOut="zoomOut"
             @resetZoom="hardResetZoom"
@@ -1988,7 +1993,7 @@ defineExpose({
                         <circle
                             :class="{
                                 'vue-ui-geo-point': true,
-                                'vue-ui-geo-point-with-event': hasPointClickEvent,
+                                'vue-ui-geo-point-with-event': hasPointClickEvent && isCursorPointer,
                             }"
                             :cx="point.x"
                             :cy="point.y"
@@ -2049,6 +2054,7 @@ defineExpose({
             :config="FINAL_CONFIG"
             :scale="scale"
             :isFullscreen="isFullscreen"
+            :isCursorPointer="isCursorPointer"
             @zoomIn="zoomIn"
             @zoomOut="zoomOut"
             @resetZoom="hardResetZoom"

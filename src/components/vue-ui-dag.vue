@@ -80,6 +80,9 @@ const resizeObserver = ref(null);
 const observedEl = ref(null);
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const WIDTH = ref(FINAL_CONFIG.value.style.chart.width);
 const HEIGHT = ref(FINAL_CONFIG.value.style.chart.height);
 
@@ -1117,6 +1120,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1166,6 +1170,7 @@ defineExpose({
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
             :isZoom="panZoomActive"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="onGenerateImage"
@@ -1350,7 +1355,7 @@ defineExpose({
                             data-cy-node
                             v-bind="setNode(node)"
                             :style="{
-                                cursor: FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick ? 'pointer' : 'default',
+                                cursor: FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && isCursorPointer ? 'pointer' : 'default',
                                 transition: 'stroke 0.2s ease-in-out, stroke-width 0.2s ease-in-out, fill 0.2s ease-in-out'
                             }"
                         />                        

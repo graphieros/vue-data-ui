@@ -210,6 +210,8 @@ function prepareChart() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -1015,7 +1017,8 @@ const tableComponent = computed(() => {
             headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
             isFullscreen: isFullscreen.value,
             fullscreenParent: donutEvolutionChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+            forcedWidth: Math.min(800, window.innerWidth * 0.8),
+            isCursorPointer: isCursorPointer.value
         } : {
             hideDetails: true,
             config: {
@@ -1126,6 +1129,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1198,6 +1202,7 @@ defineExpose({
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -1529,7 +1534,7 @@ defineExpose({
                 :width="slit"
                 :height="svg.height"
                 :fill="[hoveredIndex, fixedDatapointIndex].includes(datapoint.index) ? `url(#hover_${uid})` : 'transparent'"
-                :class="{'donut-hover': datapoint.subtotal && [hoveredIndex, fixedDatapointIndex].includes(datapoint.index)}"
+                :class="{'donut-hover': isCursorPointer && datapoint.subtotal && [hoveredIndex, fixedDatapointIndex].includes(datapoint.index)}"
                 :style="{
                     pointerEvents: 'none'
                 }"
@@ -1546,7 +1551,7 @@ defineExpose({
                 @mouseenter="enter(datapoint)"
                 @mouseleave="leave(datapoint)"
                 @click="fixDatapoint(datapoint, i)"
-                :class="{'donut-hover': hoveredIndex === datapoint.index && datapoint.subtotal}"
+                :class="{'donut-hover': isCursorPointer && hoveredIndex === datapoint.index && datapoint.subtotal}"
             />
             <slot name="svg" :svg="{
                 ...svg,
@@ -1585,6 +1590,7 @@ defineExpose({
                 :enableSelectionDrag="FINAL_CONFIG.style.chart.zoom.enableSelectionDrag"
                 :focusOnDrag="FINAL_CONFIG.style.chart.zoom.focusOnDrag"
                 :focusRangeRatio="FINAL_CONFIG.style.chart.zoom.focusRangeRatio"
+                :isCursorPointer="isCursorPointer"
                 :maxWidth="FINAL_CONFIG.style.chart.zoom.maxWidth"
                 @reset="refreshSlicer"
             >
@@ -1643,7 +1649,12 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                <button 
+                    tabindex="0" 
+                    class="vue-ui-user-options-button" 
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    :style="{ cursor: isCursorPointer ? 'cursor' : 'default' }"
+                >
                     <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
                 </button>
             </template>
@@ -1656,6 +1667,7 @@ defineExpose({
                     :config="table.config" 
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                    :isCursorPointer="isCursorPointer"
                     @close="closeTable"
                 >
                     <template #th="{th}">

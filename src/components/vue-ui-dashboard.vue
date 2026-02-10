@@ -72,6 +72,7 @@ const builtInComponents = {
     VueUiWorld : defineAsyncComponent(() => import('../components/vue-ui-world.vue')),
     VueUiChord: defineAsyncComponent(() => import('../components/vue-ui-chord.vue')),
     VueUiRidgeline: defineAsyncComponent(() => import('../components/vue-ui-ridgeline.vue')),
+    VueUiDag: defineAsyncComponent(() => import('../components/vue-ui-dag.vue')),
 };
 
 const { vue_ui_dashboard: DEFAULT_CONFIG } = useConfig();
@@ -91,6 +92,8 @@ const FINAL_CONFIG = computed(() => {
         defaultConfig: DEFAULT_CONFIG
     });
 });
+
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
 
 const uid = ref(createUid());
 
@@ -516,6 +519,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.board.backgroundColor" 
             :active="isAnnotator" 
             :svgRef="svgRef"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
             :style="{
                 zIndex: resolvedItems.length + 1
@@ -563,6 +567,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
+            :isCursorPointer="isCursorPointer"
             @generatePdf="generatePdf" 
             @generateImage="generateImage"
             @toggleAnnotator="toggleAnnotator"
@@ -660,30 +665,6 @@ defineExpose({
     bottom: -5px;
     right: -5px;
     cursor: se-resize;
-}
-
-.vue-ui-dashboard-button {
-    all: unset;
-    padding: 3px;
-    border-radius: 3px;
-    height: auto;
-    border: 1px solid transparent;
-    background: inherit;
-    display: flex;
-    align-items:center;
-    justify-content: center;
-    width: fit-content;
-    white-space: nowrap;
-    cursor: pointer;
-    position: relative;
-    opacity: 0.9;
-    transition: opacity 0.2s ease-in-out;
-}
-.vue-ui-dashboard-button:hover {
-    opacity: 1;
-}
-.vue-ui-dashboard-button:focus-visible {
-    outline: 1px solid #CCCCCC;
 }
 
 .vue-ui-dashboard-print-icon {

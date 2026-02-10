@@ -146,6 +146,8 @@ function prepareConfig() {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -842,7 +844,11 @@ function createXyDatasetForDialog(ds) {
             tooltip: {
                 ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.tooltip,
                 showTimeLabel: FINAL_CONFIG.value.style.chart.xAxis.labels.values.length > 0 // Overriding
-            }
+            },
+            userOptions: {
+                ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.userOptions,
+                useCursorPointer: FINAL_CONFIG.value.userOptions.useCursorPointer, // Overriding
+            },
         }
     })
 
@@ -997,7 +1003,8 @@ const tableComponent = computed(() => {
             headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
             isFullscreen: isFullscreen.value,
             fullscreenParent: ridgelineChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+            forcedWidth: Math.min(800, window.innerWidth * 0.8),
+            isCursorPointer: isCursorPointer.value
         } : {
             hideDetails: true,
             config: {
@@ -1106,9 +1113,13 @@ defineExpose({
             height: FINAL_CONFIG.responsive ? '100%' : undefined
         }" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
 
-        <!-- PEN AND PAPER -->
-        <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef" :color="FINAL_CONFIG.style.chart.color"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :active="isAnnotator" :svgRef="svgRef"
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef" 
+            :color="FINAL_CONFIG.style.chart.color"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :active="isAnnotator" 
+            :svgRef="svgRef"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -1181,6 +1192,7 @@ defineExpose({
             :isAnnotation="isAnnotator"
             :tableDialog="FINAL_CONFIG.table.useDialog"
             :style="{ visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible' }" 
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen" 
             @generatePdf="generatePdf" 
             @generateCsv="generateCsv"
@@ -1322,7 +1334,7 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.chart.yAxis.labels.fontSize"
                     :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.bold ? 'bold' : 'normal'"
                     :fill="FINAL_CONFIG.style.chart.yAxis.labels.color" :style="{
-                        cursor: FINAL_CONFIG.style.chart.dialog.show ? 'pointer' : 'default'
+                        cursor: FINAL_CONFIG.style.chart.dialog.show && isCursorPointer ? 'pointer' : 'default'
                     }"
                     :text-decoration="FINAL_CONFIG.style.chart.dialog.show && (selectedYAxisLabelIndex === i || (!!selectedDatapoint && ds.uid === selectedDatapoint.uid)) ? 'underline' : ''"
                     @mouseenter="setYAxisLabelHoverIndex(i)" @mouseleave="resetYAxisLabelIndex"
@@ -1485,8 +1497,14 @@ defineExpose({
         </div>
 
         <div ref="chartLegend">
-            <Legend v-if="FINAL_CONFIG.style.chart.legend.show" :key="`legend_${legendStep}`" :legendSet="legendSet"
-                :config="legendConfig" @clickMarker="({ legend }) => segregate(legend.id)">
+            <Legend 
+                v-if="FINAL_CONFIG.style.chart.legend.show" 
+                :key="`legend_${legendStep}`" 
+                :legendSet="legendSet"
+                :config="legendConfig"
+                :isCursorPointer="isCursorPointer"
+                @clickMarker="({ legend }) => segregate(legend.id)"
+            >
                 <template #legend-pattern="{ legend, index }" v-if="$slots.pattern">
                     <Shape :shape="legend.shape" :radius="30" stroke="none" :plot="{ x: 30, y: 30 }"
                         :fill="`url(#pattern_${uid}_${index})`" />
@@ -1506,6 +1524,7 @@ defineExpose({
                         :color="FINAL_CONFIG.style.chart.legend.selectAllToggle.color"
                         :fontSize="FINAL_CONFIG.style.chart.legend.fontSize"
                         :checked="segregated.length > 0"
+                        :isCursorPointer="isCursorPointer"
                         @toggle="toggleLegend"
                     />
                 </template>
@@ -1528,7 +1547,12 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                <button 
+                    tabindex="0" 
+                    class="vue-ui-user-options-button" 
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                >
                     <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
                 </button>
             </template>
@@ -1541,6 +1565,7 @@ defineExpose({
                     :config="dataTable.config"
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                    :isCursorPointer="isCursorPointer"
                     @close="closeTable">
                     <template #th="{ th }">
                         <div v-html="th" />
@@ -1571,6 +1596,7 @@ defineExpose({
             :headerColor="FINAL_CONFIG.style.chart.dialog.header.color"
             :isFullscreen="isFullscreen"
             :fullscreenParent="ridgelineChart"
+            :isCursorPointer="isCursorPointer"
             withPadding
         >
             <template #title>

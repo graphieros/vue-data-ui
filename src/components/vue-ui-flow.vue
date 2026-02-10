@@ -106,6 +106,8 @@ function toggleFullscreen(state) {
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -1009,7 +1011,8 @@ const tableComponent = computed(() => {
             headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
             isFullscreen: isFullscreen.value,
             fullscreenParent: flowChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+            forcedWidth: Math.min(800, window.innerWidth * 0.8),
+            isCursorPointer: isCursorPointer.value
         } : {
             hideDetails: true,
             config: {
@@ -1128,9 +1131,13 @@ defineExpose({
         }`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`flow_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)">
-        <PenAndPaper v-if="FINAL_CONFIG.userOptions.buttons.annotator" :svgRef="svgRef"
-            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" :color="FINAL_CONFIG.style.chart.color"
+        <PenAndPaper 
+            v-if="FINAL_CONFIG.userOptions.buttons.annotator" 
+            :svgRef="svgRef"
+            :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor" 
+            :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator" @close="toggleAnnotator"
+            :isCursorPointer="isCursorPointer"
         >
             <template #annotator-action-close>
                 <slot name="annotator-action-close"/>
@@ -1197,6 +1204,7 @@ defineExpose({
             :hasTooltip="FINAL_CONFIG.style.chart.tooltip.show && FINAL_CONFIG.userOptions.buttons.tooltip" 
             :isTooltip="mutableConfig.showTooltip"
             :tableDialog="FINAL_CONFIG.table.useDialog"
+            :isCursorPointer="isCursorPointer"
             @toggleTooltip="toggleTooltip" 
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf" 
@@ -1411,8 +1419,11 @@ defineExpose({
         <!-- LEGEND -->
         <Teleport v-if="readyTeleport" :to="FINAL_CONFIG.style.chart.legend.position === 'top' ? `#legend-top-${uid}` : `#legend-bottom-${uid}`">
             <div ref="chartLegend">
-                <Legend v-if="FINAL_CONFIG.style.chart.legend.show && legendSetFiltered.length"
-                    :legendSet="legendSetFiltered" :config="legendConfig"
+                <Legend 
+                    v-if="FINAL_CONFIG.style.chart.legend.show && legendSetFiltered.length"
+                    :legendSet="legendSetFiltered" 
+                    :config="legendConfig"
+                    :isCursorPointer="isCursorPointer"
                     @clickMarker="(payload) => drillCategory(payload)">
                     <template #item="{ legend, index }">
                         <div @click="legend.segregate()" :style="`opacity:${segregated.length ? segregated.includes(index) ? 1 : 0.5 : 1}`" v-if="!loading">
@@ -1470,7 +1481,12 @@ defineExpose({
                 {{ tableComponent.title }}
             </template>
             <template #actions v-if="FINAL_CONFIG.table.useDialog">
-                <button tabindex="0" class="vue-ui-user-options-button" @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)">
+                <button 
+                    tabindex="0" 
+                    class="vue-ui-user-options-button" 
+                    @click="generateCsv(FINAL_CONFIG.userOptions.callbacks.csv)"
+                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                >
                     <BaseIcon name="fileCsv" :stroke="tableComponent.props.color"/>
                 </button>
             </template>
@@ -1482,6 +1498,7 @@ defineExpose({
                     :config="dataTable.config" 
                     :title="FINAL_CONFIG.table.useDialog ? '' : tableComponent.title"
                     :withCloseButton="!FINAL_CONFIG.table.useDialog"
+                    :isCursorPointer="isCursorPointer"
                     @close="closeTable"
                 >
                     <template #th="{ th }">

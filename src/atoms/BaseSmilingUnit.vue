@@ -9,7 +9,8 @@ const props = defineProps({
     calcShapeFill: { type: Function },
     isReadonly: { type: Boolean },
     hasBreakdown: { type: Boolean },
-    hoveredValue: { type: Number }
+    hoveredValue: { type: Number },
+    isCursorPointer: { type: Boolean }
 });
 
 const emit = defineEmits(['rate', 'mouseenter', 'mouseleave',])
@@ -22,7 +23,7 @@ const emit = defineEmits(['rate', 'mouseenter', 'mouseleave',])
         tabindex="0" 
         :class="{ 'vue-ui-smiley-rated' : !config.readonly && currentRating === unit }"
         :style="{
-            cursor: config.readonly ? 'default' : 'pointer',
+            cursor: config.readonly ? 'default' : props.isCursorPointer ?  'pointer' : 'default',
             height: config.style.itemSize + 'px',
             aspectRatio: '1/1',
             position: 'relative'

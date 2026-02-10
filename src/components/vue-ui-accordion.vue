@@ -29,6 +29,8 @@ const FINAL_CONFIG = computed(() => {
     });
 });
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
+
 const isOpen = ref(FINAL_CONFIG.value.open);
 
 const uid = ref(createUid())
@@ -60,7 +62,7 @@ const maxHeight = computed(() => {
 <template>
     <div class="vue-data-ui-component">
         <details :id="`details_${uid}`" ref="details" @toggle="toggleDetails" data-cy="accordion-summary">
-            <summary :class="{ 'vue-ui-accordion-headless': hideDetails }">
+            <summary :class="{ 'vue-ui-accordion-headless': hideDetails }" :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }">
                 <div class="vue-ui-accordion-head" :style="`background:${FINAL_CONFIG.head.backgroundColor};padding:${FINAL_CONFIG.head.padding}; ${hideDetails ? 'height: 0px !important; padding: 0 !important;' : ''}`">
                     <div class="vue-ui-accordion-arrow" v-if="!hideDetails">
                         <slot name="arrow" v-if="FINAL_CONFIG.head.useArrowSlot" v-bind="{ backgroundColor: FINAL_CONFIG.head.backgroundColor, color: FINAL_CONFIG.head.color, iconColor: FINAL_CONFIG.head.iconColor, isOpen }" />
@@ -79,7 +81,6 @@ const maxHeight = computed(() => {
 <style scoped>
 summary {
     user-select: none;
-    cursor: pointer;
 }
 
 details {

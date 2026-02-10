@@ -150,6 +150,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    isCursorPointer: {
+        type: Boolean,
+        default: false
+    }
 });
 
 const emit = defineEmits([
@@ -682,13 +686,14 @@ onBeforeUnmount(() => {
         <div
             ref="triggerRef"
             tabindex="0"
+            role="button"
             :title="isOpen ? titles.close || '' : titles.open || ''"
             data-cy="user-options-summary"
             :style="`width:32px; position: absolute; top: 0;${
                 position === 'right'
                     ? `right: ${offsetX ? offsetX : noOffset ? 0 : 4}px`
                     : `left: ${noOffset ? 0 : 4}px`
-            }; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:pointer; background:transparent`"
+            }; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px;  cursor:${isCursorPointer ? 'pointer' : 'default'}; background:transparent`"
             @pointerdown.stop.prevent="toggleFromPointer"
             @keydown.enter.stop.prevent="toggle"
         >
@@ -712,7 +717,17 @@ onBeforeUnmount(() => {
                 }`"
         >
             <!-- Action buttons are duplicated in both branches, but we can live with that -->
-            <button tabindex="0" v-if="hasPdf" data-cy="user-options-pdf" class="vue-ui-user-options-button" @click="generatePdf" @mouseenter="isInfo.pdf = true" @mouseout="isInfo.pdf = false">
+            <!-- PDF -->
+            <button 
+                tabindex="0" 
+                v-if="hasPdf" 
+                data-cy="user-options-pdf" 
+                class="vue-ui-user-options-button" 
+                @click="generatePdf" 
+                @mouseenter="isInfo.pdf = true" 
+                @mouseout="isInfo.pdf = false"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionPdf">
                     <slot name="optionPdf" />
                 </template>
@@ -730,7 +745,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasXls" data-cy="user-options-xls" class="vue-ui-user-options-button" @click="generateCsv" @mouseenter="isInfo.csv = true" @mouseout="isInfo.csv = false">
+            <!-- CSV -->
+            <button 
+                tabindex="0" 
+                v-if="hasXls" 
+                data-cy="user-options-xls" 
+                class="vue-ui-user-options-button" 
+                @click="generateCsv" 
+                @mouseenter="isInfo.csv = true" 
+                @mouseout="isInfo.csv = false"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionCsv">
                     <slot name="optionCsv" />
                 </template>
@@ -747,7 +772,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasImg" data-cy="user-options-img" class="vue-ui-user-options-button" @click="generateImage" @mouseenter="isInfo.img = true" @mouseout="isInfo.img = false">
+            <!-- PNG -->
+            <button 
+                tabindex="0" 
+                v-if="hasImg" 
+                data-cy="user-options-img" 
+                class="vue-ui-user-options-button" 
+                @click="generateImage" 
+                @mouseenter="isInfo.img = true" 
+                @mouseout="isInfo.img = false"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionImg">
                     <slot name="optionImg" />
                 </template>
@@ -765,7 +800,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasSvg" data-cy="user-options-svg" class="vue-ui-user-options-button" @click="generateSvg" @mouseenter="isInfo.svg = true" @mouseout="isInfo.svg = false">
+            <!-- SVG -->
+            <button 
+                tabindex="0" 
+                v-if="hasSvg" 
+                data-cy="user-options-svg" 
+                class="vue-ui-user-options-button" 
+                @click="generateSvg" 
+                @mouseenter="isInfo.svg = true" 
+                @mouseout="isInfo.svg = false"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionSvg">
                     <slot name="optionSvg" />
                 </template>
@@ -782,7 +827,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasTooltip" data-cy="user-options-tooltip" class="vue-ui-user-options-button" @click="toggleTooltip" @mouseenter="isInfo.tooltip = true" @mouseout="isInfo.tooltip = false">
+            <!-- TOOLTIP -->
+            <button 
+                tabindex="0" 
+                v-if="hasTooltip" 
+                data-cy="user-options-tooltip" 
+                class="vue-ui-user-options-button" 
+                @click="toggleTooltip" 
+                @mouseenter="isInfo.tooltip = true" 
+                @mouseout="isInfo.tooltip = false"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionTooltip">
                     <slot name="optionTooltip" />
                 </template>
@@ -800,7 +855,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasTable" data-cy="user-options-table" class="vue-ui-user-options-button" @click="toggleTable" @mouseenter="isInfo.table = true" @mouseout="isInfo.table = false">
+            <!-- TABLE -->
+            <button 
+                tabindex="0" 
+                v-if="hasTable" 
+                data-cy="user-options-table" 
+                class="vue-ui-user-options-button" 
+                @click="toggleTable" 
+                @mouseenter="isInfo.table = true" 
+                @mouseout="isInfo.table = false"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionTable">
                     <slot name="optionTable" />
                 </template>
@@ -818,7 +883,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasLabel" data-cy="user-options-label" class="vue-ui-user-options-button" @click="toggleLabels" @mouseenter="isInfo.labels = true" @mouseout="isInfo.labels = false">
+            <!-- LABELS -->
+            <button 
+                tabindex="0" 
+                v-if="hasLabel" 
+                data-cy="user-options-label" 
+                class="vue-ui-user-options-button" 
+                @click="toggleLabels" 
+                @mouseenter="isInfo.labels = true" 
+                @mouseout="isInfo.labels = false"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionLabels">
                     <slot name="optionLabels" />
                 </template>
@@ -835,7 +910,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasSort" data-cy="user-options-sort" class="vue-ui-user-options-button" @click="toggleSort" @mouseenter="isInfo.sort = true" @mouseout="isInfo.sort = false">
+            <!-- SORT -->
+            <button 
+                tabindex="0" 
+                v-if="hasSort" 
+                data-cy="user-options-sort" 
+                class="vue-ui-user-options-button" 
+                @click="toggleSort" 
+                @mouseenter="isInfo.sort = true" 
+                @mouseout="isInfo.sort = false"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionSort">
                     <slot name="optionSort" />
                 </template>
@@ -852,7 +937,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasStack" data-cy="user-options-stack" class="vue-ui-user-options-button" @click="toggleStack" @mouseenter="isInfo.stack = true" @mouseout="isInfo.stack = false">
+            <!-- STACK -->
+            <button 
+                tabindex="0" 
+                v-if="hasStack" 
+                data-cy="user-options-stack" 
+                class="vue-ui-user-options-button" 
+                @click="toggleStack" 
+                @mouseenter="isInfo.stack = true" 
+                @mouseout="isInfo.stack = false"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionStack">
                     <slot name="optionStack" v-bind="{ isStack: isItStacked }" />
                 </template>
@@ -870,7 +965,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasFullscreen" data-cy="user-options-fullscreen" class="vue-ui-user-options-button" @mouseenter="isInfo.fullscreen = true" @mouseout="isInfo.fullscreen = false" @click="toggleFullscreen(isFullscreen ? 'out' : 'in')">
+            <!-- FULLSCREEN -->
+            <button 
+                tabindex="0" 
+                v-if="hasFullscreen" 
+                data-cy="user-options-fullscreen" 
+                class="vue-ui-user-options-button" 
+                @mouseenter="isInfo.fullscreen = true" 
+                @mouseout="isInfo.fullscreen = false" 
+                @click="toggleFullscreen(isFullscreen ? 'out' : 'in')"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionFullscreen">
                     <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }" />
                 </template>
@@ -888,7 +993,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasZoom" data-cy="user-options-fullscreen" class="vue-ui-user-options-button" @mouseenter="isInfo.zoom = true" @mouseout="isInfo.zoom = false" @click="toggleZoom()">
+            <!-- ZOOM -->
+            <button 
+                tabindex="0" 
+                v-if="hasZoom" 
+                data-cy="user-options-fullscreen" 
+                class="vue-ui-user-options-button" 
+                @mouseenter="isInfo.zoom = true" 
+                @mouseout="isInfo.zoom = false" 
+                @click="toggleZoom()"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionZoom">
                     <slot name="optionZoom" v-bind="{ toggleZoom, isZoomLocked: !isZoom }" />
                 </template>
@@ -906,7 +1021,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasAnimation" data-cy="user-options-anim" class="vue-ui-user-options-button" @mouseenter="isInfo.animation = true" @mouseout="isInfo.animation = false" @click="toggleAnimation">
+            <!-- ANIMATION -->
+            <button 
+                tabindex="0" 
+                v-if="hasAnimation" 
+                data-cy="user-options-anim" 
+                class="vue-ui-user-options-button" 
+                @mouseenter="isInfo.animation = true" 
+                @mouseout="isInfo.animation = false" 
+                @click="toggleAnimation"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionAnimation">
                     <slot name="optionAnimation" v-bind="{ toggleAnimation, isAnimated }" />
                 </template>
@@ -924,7 +1049,17 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <button tabindex="0" v-if="hasAnnotator" data-cy="user-options-annotator" class="vue-ui-user-options-button" @mouseenter="isInfo.annotator = true" @mouseout="isInfo.annotator = false" @click="toggleAnnotator">
+            <!-- ANNOTATOR -->
+            <button 
+                tabindex="0" 
+                v-if="hasAnnotator" 
+                data-cy="user-options-annotator" 
+                class="vue-ui-user-options-button" 
+                @mouseenter="isInfo.annotator = true" 
+                @mouseout="isInfo.annotator = false" 
+                @click="toggleAnnotator"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
                 <template v-if="$slots.optionAnnotator">
                     <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
                 </template>
@@ -1272,7 +1407,6 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: center;
     white-space: nowrap;
-    cursor: pointer;
     position: relative;
     overflow: visible;
 }

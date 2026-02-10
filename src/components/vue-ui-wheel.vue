@@ -76,6 +76,7 @@ const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -696,6 +697,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -763,6 +765,7 @@ defineExpose({
             :chartElement="wheelChart"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateImage="onGenerateImage"

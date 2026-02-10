@@ -4,6 +4,7 @@
       <Accordion
         :config="{
           maxHeight: 1000,
+          useCursorPointer: isCursorPointer,
           head: {
             backgroundColor: FINAL_CONFIG.style.backgroundColor,
             color: FINAL_CONFIG.style.color,
@@ -40,7 +41,8 @@
                   background: isMoveMode ? FINAL_CONFIG.style.buttons.controls.selected.backgroundColor :FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: isMoveMode ? FINAL_CONFIG.style.buttons.controls.selected.border :FINAL_CONFIG.style.buttons.controls.border,
                   color: isMoveMode ? FINAL_CONFIG.style.buttons.controls.selected.color :FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{
                 'button-tool': true,
@@ -86,7 +88,8 @@
                   background: isResizeMode ? FINAL_CONFIG.style.buttons.controls.selected.backgroundColor :FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: isResizeMode ? FINAL_CONFIG.style.buttons.controls.selected.border :FINAL_CONFIG.style.buttons.controls.border,
                   color: isResizeMode ? FINAL_CONFIG.style.buttons.controls.selected.color :FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{
                 'button-tool': true,
@@ -132,7 +135,8 @@
                   background: isDeleteMode ? FINAL_CONFIG.style.buttons.controls.selected.backgroundColor :FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: isDeleteMode ? FINAL_CONFIG.style.buttons.controls.selected.border :FINAL_CONFIG.style.buttons.controls.border,
                   color: isDeleteMode ? FINAL_CONFIG.style.buttons.controls.selected.color :FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{
                 'button-tool': true,
@@ -177,7 +181,8 @@
                   background: isSelectMode ? FINAL_CONFIG.style.buttons.controls.selected.backgroundColor :FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: isSelectMode ? FINAL_CONFIG.style.buttons.controls.selected.border :FINAL_CONFIG.style.buttons.controls.border,
                   color: isSelectMode ? FINAL_CONFIG.style.buttons.controls.selected.color :FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{
                 'button-tool': true,
@@ -223,7 +228,8 @@
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
                   color: FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{ 'button-tool': true, tooltip: true }"
               @click="
@@ -263,7 +269,8 @@
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
                   color: FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{ 'button-tool': true, tooltip: true }"
               @click="
@@ -303,7 +310,8 @@
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
                   color: FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{ 'button-tool': true, tooltip: true }"
               @click="
@@ -345,7 +353,8 @@
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
                   color: FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{ 'button-tool': true, 'button-tool--one-shot': true, tooltip: true }"
               @click="
@@ -389,7 +398,8 @@
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
                   color: FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{ 'button-tool': true, 'button-tool--one-shot': true, tooltip: true }"
               @click="
@@ -434,7 +444,8 @@
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
                   color: FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{ 'button-tool': true, tooltip: true }"
               @click="print"
@@ -464,7 +475,8 @@
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
                   color: FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{ 'button-tool': true, tooltip: true }"
               @click="generateImage"
@@ -494,7 +506,8 @@
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
                   color: FINAL_CONFIG.style.buttons.controls.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               :class="{ 'button-tool': true, tooltip: true }"
               @click="save"
@@ -531,7 +544,8 @@
                   background: activeShape === 'circle' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: activeShape === 'circle' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: activeShape === 'circle' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               @click="
                 setShapeTo('circle');
@@ -600,7 +614,8 @@
                   background: activeShape === 'rect' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: activeShape === 'rect' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: activeShape === 'rect' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               @click="
                 setShapeTo('rect');
@@ -671,7 +686,8 @@
                   background: activeShape === 'arrow' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: activeShape === 'arrow' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: activeShape === 'arrow' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               @click="
                 setShapeTo('arrow');
@@ -724,7 +740,8 @@
                   background: activeShape === 'line' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: activeShape === 'line' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: activeShape === 'line' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               @click="
                 setShapeTo('line');
@@ -838,7 +855,8 @@
                   background: isTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: isTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: isTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
               @click="
                 deleteEmptyTextElement();
@@ -909,7 +927,8 @@
                   background: textAlign === 'start' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: textAlign === 'start' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: textAlign === 'start' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
                 @click="
                   isDeleteMode = false;
@@ -958,7 +977,8 @@
                   background: textAlign === 'middle' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: textAlign === 'middle' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: textAlign === 'middle' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
                 :disabled="isBulletTextMode"
                 @click="
@@ -1008,7 +1028,8 @@
                   background: textAlign === 'end' ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: textAlign === 'end' ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: textAlign === 'end' ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
                 :disabled="isBulletTextMode"
                 @click="
@@ -1058,7 +1079,8 @@
                   background: isBulletTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: isBulletTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: isBulletTextMode ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
                 @click="
                   isDeleteMode = false;
@@ -1112,7 +1134,8 @@
                   background: isBold ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: isBold ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: isBold ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
                 @click="
                   isDeleteMode = false;
@@ -1160,7 +1183,8 @@
                   background: isItalic ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: isItalic ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: isItalic ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
                 @click="
                   isDeleteMode = false;
@@ -1209,7 +1233,8 @@
                   background: isUnderline ? FINAL_CONFIG.style.buttons.shapes.selected.backgroundColor :FINAL_CONFIG.style.buttons.shapes.backgroundColor,
                   border: isUnderline ? FINAL_CONFIG.style.buttons.shapes.selected.border :FINAL_CONFIG.style.buttons.shapes.border,
                   color: isUnderline ? FINAL_CONFIG.style.buttons.shapes.selected.color :FINAL_CONFIG.style.buttons.shapes.color,
-                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`
+                  borderRadius: `${FINAL_CONFIG.style.buttons.borderRadius}px`,
+                  cursor: isCursorPointer ? 'pointer' : 'default'
               }"
                 @click="
                   isDeleteMode = false;
@@ -1273,6 +1298,7 @@
                 v-model:value="selectedColor"
                 :backgroundColor="FINAL_CONFIG.style.backgroundColor"
                 :buttonBorderColor="FINAL_CONFIG.style.color"
+                :isCursorPointer="isCursorPointer"
                 teleported
               />  
             </button>
@@ -1555,6 +1581,9 @@ export default {
         });
 
         return this.convertConfigColors(reconcilied);
+    },
+    isCursorPointer() {
+      return this.FINAL_CONFIG.useCursorPointer;
     },
     tooltipStyleObject() {
       const s = this.FINAL_CONFIG.style.tooltips;
@@ -3576,7 +3605,6 @@ export default {
 
 .vue-ui-annotator button.button-tool {
   align-items: center;
-  cursor: pointer !important;
   display: flex;
   height: 28px;
   justify-content: center;
@@ -3615,7 +3643,6 @@ export default {
 }
 .vue-ui-annotator summary {
   user-select: none;
-  cursor: pointer;
 }
 .vue-ui-annotator .animated-circle-print {
   stroke-linecap: round !important;

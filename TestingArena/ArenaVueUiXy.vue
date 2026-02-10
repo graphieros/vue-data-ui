@@ -658,6 +658,7 @@ function toggleProps() {
 const model = createModel([
     CHECKBOX("debug", { def: true }),
     CHECKBOX("autoSize", { def: false }),
+    CHECKBOX('chart.userOptions.useCursorPointer', { def: false }),
 
     CHECKBOX("responsive", { def: false }),
     CHECKBOX("responsiveProportionalSizing", { def: false }),

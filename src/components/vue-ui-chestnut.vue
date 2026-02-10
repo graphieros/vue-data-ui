@@ -83,6 +83,8 @@ const isCallbackSvg = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
+const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
+
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
@@ -704,7 +706,8 @@ const tableComponent = computed(() => {
             headerBg: FINAL_CONFIG.value.table.th.backgroundColor,
             isFullscreen: isFullscreen.value,
             fullscreenParent: chestnutChart.value,
-            forcedWidth: Math.min(800, window.innerWidth * 0.8)
+            forcedWidth: Math.min(800, window.innerWidth * 0.8),
+            isCursorPointer: isCursorPointer.value
         } : {
             hideDetails: true,
             config: {
@@ -854,6 +857,7 @@ defineExpose({
             :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
             :color="FINAL_CONFIG.style.chart.color"
             :active="isAnnotator"
+            :isCursorPointer="isCursorPointer"
             @close="toggleAnnotator"
         >
             <template #annotator-action-close>
@@ -908,6 +912,7 @@ defineExpose({
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :tableDialog="FINAL_CONFIG.table.useDialog"
+            :isCursorPointer="isCursorPointer"
             @toggleFullscreen="toggleFullscreen"
             @generatePdf="generatePdf"
             @generateCsv="generateCsv"
@@ -1107,7 +1112,7 @@ defineExpose({
                 :r="root.r" 
                 :fill="FINAL_CONFIG.style.chart.layout.roots.underlayerColor"
                 stroke="none"
-                :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
             />
             <circle 
                 v-for="(root, i) in roots" 
@@ -1118,7 +1123,7 @@ defineExpose({
                 :fill="FINAL_CONFIG.style.chart.layout.roots.useGradient ? `url(#root_gradient_${uid}_${root.rootIndex})` : root.color"
                 :stroke="FINAL_CONFIG.style.chart.layout.roots.stroke" 
                 :stroke-width="FINAL_CONFIG.style.chart.layout.roots.strokeWidth"
-                :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
                 @click="pickRoot(root)"
             />
             <g v-if="FINAL_CONFIG.style.chart.layout.roots.labels.show">
@@ -1131,7 +1136,7 @@ defineExpose({
                     :font-size="FINAL_CONFIG.style.chart.layout.roots.labels.fontSize"
                     :fill="FINAL_CONFIG.style.chart.layout.roots.labels.adaptColorToBackground ? adaptColorToBackground(root.color) : FINAL_CONFIG.style.chart.layout.roots.labels.color"
                     font-weight="bold"
-                    :style="`cursor:pointer; opacity:${isFocused(root) ? 1 : 0.05}`"
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
                     @click="pickRoot(root)"
                 >
                     {{ applyDataLabel(
@@ -1190,7 +1195,7 @@ defineExpose({
                 :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
                 :stroke="FINAL_CONFIG.style.chart.layout.branches.stroke"
                 :stroke-width="FINAL_CONFIG.style.chart.layout.branches.strokeWidth"
-                :style="`cursor:pointer; opacity:${isFocused(branch) ? 1 : 0.05}`"
+                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
                 @click="pickBranch(branch)"
             />
             <g v-if="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.show">
@@ -1204,7 +1209,7 @@ defineExpose({
                         :fill="adaptColorToBackground(branch.color)"
                         :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
                         font-weight="bold"
-                        :style="`cursor:pointer; opacity:${isFocused(branch) ? 1 : 0.05}`"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
                         @click="pickBranch(branch)"
                     >
                         {{ applyDataLabel(
@@ -1251,7 +1256,7 @@ defineExpose({
                     :cy="branch.y1 + svg.branchSize / 2"
                     :r="svg.branchSize / 2 + 2"
                     @click="pickNut(branch)"
-                    :style="`cursor:pointer;opacity:${isFocused(branch) ? 1 : 0.1}`"
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};opacity:${isFocused(branch) ? 1 : 0.1}`"
                 />
             </g>
 
@@ -1638,7 +1643,7 @@ defineExpose({
             <template #content>
                 <div ref="tableContainer" class="vue-ui-chestnut-table" :style="`${FINAL_CONFIG.table.useDialog ? '' : 'max-height: 300px;margin-top:24px'}`">
                     <div :style="`${FINAL_CONFIG.table.useDialog ? '' : 'padding-top:36px;'}position: relative`">
-                        <div v-if="!FINAL_CONFIG.table.useDialog" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:pointer; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="closeTable" @keypress.enter="closeTable">
+                        <div v-if="!FINAL_CONFIG.table.useDialog" role="button" tabindex="0" :style="`width:32px; position: absolute; top: 0; left:4px; padding: 0 0px; display: flex; align-items:center;justify-content:center;height: 36px; width: 32px; cursor:${isCursorPointer ? 'pointer' : 'default'}; background:${FINAL_CONFIG.table.th.backgroundColor};`" @click="closeTable" @keypress.enter="closeTable">
                             <BaseIcon name="close" :stroke="FINAL_CONFIG.table.th.color" :stroke-width="2" />
                         </div>        
                         <div style="width: 100%" :class="{'vue-ui-responsive': isResponsive}">
@@ -1768,41 +1773,6 @@ defineExpose({
 .vue-ui-chestnut {
     user-select: none;
     position: relative;
-}
-.vue-ui-chestnut .vue-ui-chestnut-label {
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    height:100%;
-    justify-content: center;
-    text-align:center;
-    width:100%;
-}
-.vue-ui-chestnut-legend {
-    height: 100%;
-    width:100%;
-    display: flex;
-    align-items:center;
-    flex-wrap: wrap;
-    justify-content:center;
-    column-gap: 18px;
-}
-.vue-ui-chestnut-legend-item {
-    display: flex;
-    align-items:center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    height: 24px;
-}
-.vue-ui-chestnut-tooltip {
-    border: 1px solid #e1e5e8;
-    border-radius: 4px;
-    box-shadow: 0 6px 12px -6px rgba(0,0,0,0.2);
-    max-width: 300px;
-    position: fixed;
-    padding:12px;
-    z-index:1;
 }
 
 .vue-ui-chestnut-animated {

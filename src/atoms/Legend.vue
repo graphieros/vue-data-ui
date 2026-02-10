@@ -22,6 +22,10 @@ const props = defineProps({
     clickable: {
         type: Boolean,
         default: true
+    },
+    isCursorPointer: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -47,7 +51,7 @@ function handleClick(legend, i) {
         <slot name="legendToggle"/>
         
         <div v-for="(legend, i) in legendSet" :key="`legend_${i}`"
-            :class="{ 'vue-data-ui-legend-item': true, 'active': clickable }">
+            :class="{ 'vue-data-ui-legend-item': true, 'active': clickable && isCursorPointer }">
             <svg
                 data-cy="legend-marker"
                 v-if="legend.shape" 
