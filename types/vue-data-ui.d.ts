@@ -2345,6 +2345,7 @@ declare module "vue-data-ui" {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiSparkStackbarDatasetItem[]>;
         debug?: boolean; // v3
         loading?: boolean; // v3
+        useCursorPointer?: boolean;
         events?: {
             datapointEnter?: VueUiSparkStackbarEvent; // v3
             datapointLeave?: VueUiSparkStackbarEvent; // v3
@@ -2629,6 +2630,7 @@ declare module "vue-data-ui" {
 
     export type VueUiAnnotatorConfig = {
         alwaysVisible?: boolean;
+        useCursorPointer?: boolean;
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -2732,6 +2734,7 @@ declare module "vue-data-ui" {
             showOnChartHover?: boolean;
             keepStateOnChartLeave?: boolean;
             position?: 'right' | 'left';
+            useCursorPointer?: boolean;
             buttons?: {
                 pdf?: boolean;
                 img?: boolean;
@@ -6033,6 +6036,7 @@ declare module "vue-data-ui" {
         fontFamily?: string;
         maxHeight?: number;
         rowsPerPage?: number;
+        useCursorPointer?: boolean;
         style?: {
             title?: ChartTitle & { backgroundColor?: string };
             th?: ChartTableCell & {
@@ -6254,6 +6258,7 @@ declare module "vue-data-ui" {
         readonly?: boolean;
         from?: number;
         to?: number;
+        useCursorPointer?: boolean;
         style?: {
             fontFamily?: string;
             animated?: boolean;
@@ -6314,6 +6319,7 @@ declare module "vue-data-ui" {
 
     export type VueUiSmileyConfig = {
         readonly?: boolean;
+        useCursorPointer?: boolean;
         style?: {
             fontFamily?: string;
             itemSize?: number;
@@ -6645,6 +6651,7 @@ declare module "vue-data-ui" {
     export type VueUiAccordionConfig = {
         open?: boolean;
         maxHeight: number;
+        useCursorPointer?: boolean;
         head?: {
             useArrowSlot?: boolean;
             backgroundColor?: string;
@@ -6737,6 +6744,7 @@ declare module "vue-data-ui" {
         tooltipSmoothSnapThreshold?: number;
         tooltipBackdropFilter?: boolean;
         useCustomLegend?: boolean;
+        useCursorPointer?: boolean;
         valuePrefix?: string;
         valueSuffix?: string;
         width?: number | null;
@@ -8068,6 +8076,7 @@ declare module "vue-data-ui" {
         type?: "stopwatch";
         responsive?: boolean;
         responsiveProportionalSizing?: boolean;
+        useCursorPointer?: boolean;
         style?: {
             backgroundColor?: string;
             fontFamily?: string;

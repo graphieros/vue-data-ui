@@ -145,6 +145,7 @@ export function useConfig(options = {}) {
         annotator = false,
         svg = false,
         zoom = false,
+        altCopy = false
     }) => {
 
         const buttonTitles = {
@@ -162,7 +163,8 @@ export function useConfig(options = {}) {
             animation: "Toggle animation",
             annotator: "Toggle annotator",
             svg: "Download SVG",
-            zoom: "Toggle zoom lock"
+            zoom: "Toggle zoom lock",
+            altCopy: "Copy alt text"
         }
 
         if (!tooltip) delete buttonTitles.tooltip
@@ -178,6 +180,7 @@ export function useConfig(options = {}) {
         if (!annotator) delete buttonTitles.annotator
         if (!svg) delete buttonTitles.svg
         if (!zoom) delete buttonTitles.zoom
+        if (!altCopy) delete buttonTitles.altCopy
 
         return {
             show: true,
@@ -198,6 +201,7 @@ export function useConfig(options = {}) {
                 annotator,
                 svg,
                 zoom,
+                altCopy
             },
             callbacks: {
                 animation: null,
@@ -212,14 +216,16 @@ export function useConfig(options = {}) {
                 table: null,
                 tooltip: null,
                 svg: null,
-                zoom: null
+                zoom: null,
+                altCopy: null,
             },
             buttonTitles,
             print: {
                 scale: 2,
                 orientation: 'auto', // 'auto' | 'l' | 'p'
                 overflowTolerance: 0.2,
-            }
+            },
+            useCursorPointer: false
         }
     }
 
@@ -914,7 +920,7 @@ export function useConfig(options = {}) {
                 fullscreen: true,
                 stack: true,
                 annotator: true,
-                svg: true
+                svg: true,
             })
         },
         bar: {
@@ -2957,6 +2963,7 @@ export function useConfig(options = {}) {
         skeletonConfig: null,
         debug: false, // v3
         loading: false, // v3
+        useCursorPointer: false,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -3278,6 +3285,7 @@ export function useConfig(options = {}) {
         userOptionsPosition: 'right',
         showUserOptionsOnChartHover: false,
         keepUserOptionsStateOnChartLeave: true,
+        useCursorPointer: false,
         userOptionsButtons: {
             tooltip: true,
             pdf: true,
@@ -5216,6 +5224,7 @@ export function useConfig(options = {}) {
         type: 'stopwatch',
         responsive: false,
         responsiveProportionalSizing: true,
+        useCursorPointer: false,
         style: {
             fontFamily: 'inherit',
             backgroundColor: COLOR_BACKGROUND,
@@ -5313,6 +5322,7 @@ export function useConfig(options = {}) {
     const vue_ui_accordion = {
         open: false,
         maxHeight: 2000,
+        useCursorPointer: false,
         head: {
             useArrowSlot: false,
             backgroundColor: COLOR_BACKGROUND,
@@ -5390,6 +5400,7 @@ export function useConfig(options = {}) {
 
     const vue_ui_smiley = {
         readonly: false,
+        useCursorPointer: false,
         style: {
             fontFamily: 'inherit',
             itemSize: 32,
@@ -5461,6 +5472,7 @@ export function useConfig(options = {}) {
         readonly: false,
         from: 1,
         to: 5,
+        useCursorPointer: false,
         style: {
             fontFamily: 'inherit',
             animated: true,
@@ -5522,6 +5534,7 @@ export function useConfig(options = {}) {
 
     const vue_ui_annotator = {
         alwaysVisible: false,
+        useCursorPointer: false,
         style: {
             backgroundColor: COLOR_BACKGROUND,
             color: COLOR_TEXT_PRIMARY,
@@ -5615,6 +5628,7 @@ export function useConfig(options = {}) {
         },
         userOptions: {
             show: true,
+            useCursorPointer: false,
             showOnChartHover: false,
             keepStateOnChartLeave: true,
             position: 'right',
@@ -5833,6 +5847,7 @@ export function useConfig(options = {}) {
         fontFamily: "inherit",
         maxHeight: 500,
         rowsPerPage: 25,
+        useCursorPointer: false,
         style: {
             title: {
                 ...TITLE,
