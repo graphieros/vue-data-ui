@@ -33,9 +33,11 @@ import {
     createSmoothAreaSegments,
     createSmoothPath,
     createSmoothPathWithCuts,
+    createSmoothPathWithCutsSegments,
     createStar,
     createStraightPath,
     createStraightPathWithCuts,
+    createStraightPathWithCutsSegments,
     createTSpans,
     createTSpansFromLineBreaksOnX,
     createUid,
@@ -2048,6 +2050,8 @@ const lineSet = computed(() => {
             }
         });
 
+        const hasDashedSegments = datapoint.dashIndices && Array.isArray(datapoint.dashIndices) && (datapoint?.dashIndices?.length > 0);
+
         const curve = FINAL_CONFIG.value.line.cutNullValues
             ? createSmoothPathWithCuts(plots)
             : createSmoothPath(plots.filter(p => p.value !== null));
@@ -2063,6 +2067,9 @@ const lineSet = computed(() => {
         const autoScaleStraight = FINAL_CONFIG.value.line.cutNullValues
             ? createStraightPathWithCuts(autoScalePlots)
             : createStraightPath(autoScalePlots.filter(p => p.value !== null));
+
+        const dashedStraight = hasDashedSegments ? createStraightPathWithCutsSegments(FINAL_CONFIG.value.line.cutNullValues ? plots : plots.filter(p => p.value !== null), datapoint.dashIndices.map(_ => _ - slicer.value.start)) : [];
+        const dashedSmooth = hasDashedSegments ? createSmoothPathWithCutsSegments(FINAL_CONFIG.value.line.cutNullValues ? plots : plots.filter(p => p.value !== null), datapoint.dashIndices.map(_ => _ - slicer.value.start)) : [];
 
         const scaleYLabels = individualScale.ticks.map(t => {
             return {
@@ -2125,6 +2132,9 @@ const lineSet = computed(() => {
             zeroPosition: datapoint.autoScaling ? autoScaleZeroPosition : zeroPosition,
             curve: datapoint.autoScaling ? autoScaleCurve : curve,
             plots: datapoint.autoScaling ? autoScalePlots : plots,
+            dashedStraight,
+            dashedSmooth,
+            hasDashedSegments,
             area: !datapoint.useArea
                 ? ''
                 : mutableConfig.value.useIndividualScale
@@ -3841,10 +3851,39 @@ defineExpose({
                         </g>
 
                         <path data-cy="datapoint-line-smooth"
-                            v-if="serie.smooth && serie.plots.length > 1 && !!serie.curve" :d="`M${serie.curve}`"
+                            v-if="!serie.hasDashedSegments && serie.smooth && serie.plots.length > 1 && !!serie.curve" :d="`M${serie.curve}`"
                             :stroke="serie.color" :stroke-width="FINAL_CONFIG.line.strokeWidth"
                             :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none"
                             stroke-linecap="round" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"/>
+
+                        <template v-else-if="serie.hasDashedSegments">
+                            <template v-if="serie.smooth">
+                                <path 
+                                    v-for="seg in serie.dashedSmooth"
+                                    :key="seg.path"
+                                    fill="none"
+                                    stroke-linecap="round" 
+                                    stroke-linejoin="round"
+                                    :d="`M ${seg.path}`"
+                                    :stroke="serie.color"
+                                    :stroke-width="FINAL_CONFIG.line.strokeWidth"
+                                    :stroke-dasharray="seg.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
+                                />
+                            </template>
+                            <template v-else>                            
+                                <path 
+                                    v-for="seg in serie.dashedStraight"
+                                    :key="seg.path"
+                                    fill="none"
+                                    stroke-linecap="round" 
+                                    stroke-linejoin="round"
+                                    :d="`M ${seg.path}`"
+                                    :stroke="serie.color"
+                                    :stroke-width="FINAL_CONFIG.line.strokeWidth"
+                                    :stroke-dasharray="seg.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
+                                />
+                            </template>
+                        </template>
 
                         <path data-cy="datapoint-line-straight" v-else-if="serie.plots.length > 1 && !!serie.straight"
                             :d="`M${serie.straight}`" :stroke="serie.color"

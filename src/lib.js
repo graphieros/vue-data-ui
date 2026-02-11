@@ -2847,7 +2847,7 @@ export function createStraightPathWithCuts(points) {
 
     for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        if (!isValid(p)) {
+        if (!isValidPoint(p)) {
             continue;
         }
 
@@ -2858,12 +2858,113 @@ export function createStraightPathWithCuts(points) {
             sawFirst = true;
         } else {
             const prev = points[i - 1];
-            const cmd = isValid(prev) ? 'L' : 'M';
+            const cmd = isValidPoint(prev) ? 'L' : 'M';
             d += `${cmd}${coord}`;
         }
         d += ' ';
     }
     return d.trim();
+}
+
+function normalizeIndex(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return null;
+    return Math.trunc(n);
+}
+
+function coordOf(p) {
+    return `${checkNaN(p.x)},${checkNaN(p.y)}`;
+}
+
+export function createStraightPathWithCutsSegments(points, dashedIndices = []) {
+    const pts = Array.isArray(points) ? points : [];
+    const count = pts.length;
+
+    // Dashed segment starts (segment s is between points[s] -> points[s+1])
+    const dashedSegmentStarts = new Set();
+    const maxPointIndex = count - 1;
+
+    for (const raw of Array.isArray(dashedIndices) ? dashedIndices : []) {
+        const i = normalizeIndex(raw);
+        if (i === null) continue;
+
+        if (i > 0) dashedSegmentStarts.add(i - 1);
+        if (i < maxPointIndex) dashedSegmentStarts.add(i);
+    }
+
+    const result = [];
+
+    let currentCoords = [];
+    let currentDashed = false;
+    let hasActiveSegment = false;
+
+    const flush = () => {
+        if (currentCoords.length >= 2) {
+        result.push({
+            path: currentCoords
+            .map((c, idx) => (idx === 0 ? c : `L${c}`))
+            .join(" "),
+            dashed: currentDashed,
+        });
+        }
+        currentCoords = [];
+        hasActiveSegment = false;
+    };
+
+    for (let i = 0; i < count; i += 1) {
+        const p = pts[i];
+
+        if (!isValidPoint(p)) {
+            // Cut: end any current segment group
+            flush();
+            continue;
+        }
+
+        const c = coordOf(p);
+
+        if (!hasActiveSegment) {
+            // Start a new potential group at this valid point
+            currentCoords = [c];
+            hasActiveSegment = true;
+            continue;
+        }
+
+        // We have a previous valid point in currentCoords, but we must ensure the previous index is i-1
+        // because cuts skip invalid points and we must not connect across them.
+        const prevPoint = pts[i - 1];
+            if (!isValidPoint(prevPoint)) {
+            // This is the first valid point after a cut; restart group
+            flush();
+            currentCoords = [c];
+            hasActiveSegment = true;
+            continue;
+        }
+
+        // Segment start is i-1 (prev -> current)
+        const segDashed = dashedSegmentStarts.has(i - 1);
+
+        if (currentCoords.length === 1) {
+            // First segment determines initial dashed flag for this group
+            currentDashed = segDashed;
+            currentCoords.push(c);
+            continue;
+        }
+
+        if (segDashed !== currentDashed) {
+            // dashed state changed: close previous group at prev point, start new from prev point
+            const prevCoord = coordOf(prevPoint);
+
+            flush();
+            currentDashed = segDashed;
+            currentCoords = [prevCoord, c];
+            hasActiveSegment = true;
+        } else {
+            currentCoords.push(c);
+        }
+    }
+
+    flush();
+    return result;
 }
 
 export function createSmoothPathWithCuts(points) {
@@ -2908,6 +3009,179 @@ export function createSmoothPathWithCuts(points) {
         }
     }
     return fullPath.trim();
+}
+
+function isValidPoint(p) {
+    return (
+        p != null &&
+        p.value != null &&
+        Number.isFinite(p.x) &&
+        Number.isFinite(p.y)
+    );
+}
+
+// dashedIndices contains POINT indices.
+// If point i is dashed => segments (i-1 -> i) and (i -> i+1) are dashed when possible.
+function buildDashedSegmentStarts(pointsLength, dashedIndices) {
+    const maxPointIndex = pointsLength - 1;
+    const set = new Set();
+
+    const arr = Array.isArray(dashedIndices) ? dashedIndices : [];
+    for (const raw of arr) {
+        const i = normalizeIndex(raw);
+        if (i === null) continue;
+
+        if (i > 0) set.add(i - 1);
+        if (i < maxPointIndex) set.add(i);
+    }
+
+    return set;
+}
+
+// Returns arrays of global indices for each valid segment.
+function getValidSegmentsIndices(points) {
+    const segments = [];
+    let current = [];
+
+    for (let i = 0; i < points.length; i += 1) {
+        const p = points[i];
+        if (!isValidPoint(p)) {
+        if (current.length > 1) segments.push(current);
+        current = [];
+        } else {
+        current.push(i);
+        }
+    }
+
+    if (current.length > 1) segments.push(current);
+    return segments;
+}
+
+function computeCubicCommandsForSegment(points, segmentIndices) {
+  // segmentIndices are global point indices, all valid, length >= 2
+  const seg = segmentIndices.map((idx) => points[idx]);
+  const n = seg.length - 1;
+
+  const dx = [];
+  const dy = [];
+  const slopes = [];
+  const tangents = [];
+
+  for (let i = 0; i < n; i += 1) {
+    dx[i] = seg[i + 1].x - seg[i].x;
+    dy[i] = seg[i + 1].y - seg[i].y;
+    slopes[i] = dy[i] / dx[i];
+  }
+
+  tangents[0] = slopes[0];
+  tangents[n] = slopes[n - 1];
+
+  for (let i = 1; i < n; i += 1) {
+    if (slopes[i - 1] * slopes[i] <= 0) {
+      tangents[i] = 0;
+    } else {
+      tangents[i] =
+        (2 * slopes[i - 1] * slopes[i]) / (slopes[i - 1] + slopes[i]);
+    }
+  }
+
+  // One "C..." command per edge i (from seg[i] to seg[i+1])
+  const commands = new Array(n);
+
+  for (let i = 0; i < n; i += 1) {
+    const x1 = seg[i].x;
+    const y1 = seg[i].y;
+    const x2 = seg[i + 1].x;
+    const y2 = seg[i + 1].y;
+
+    const m1 = tangents[i];
+    const m2 = tangents[i + 1];
+
+    const controlX1 = x1 + (x2 - x1) / 3;
+    const controlY1 = y1 + (m1 * (x2 - x1)) / 3;
+    const controlX2 = x2 - (x2 - x1) / 3;
+    const controlY2 = y2 - (m2 * (x2 - x1)) / 3;
+
+    commands[i] =
+      `C${checkNaN(controlX1)},${checkNaN(controlY1)} ` +
+      `${checkNaN(controlX2)},${checkNaN(controlY2)} ` +
+      `${checkNaN(x2)},${checkNaN(y2)}`;
+  }
+
+  return {
+    startCoord: coordOf(seg[0]),
+    commands,
+  };
+}
+
+function groupEdgeRunsByFlag(flags) {
+  // flags length = number of edges in the segment
+  const runs = [];
+  if (!flags.length) return runs;
+
+  let start = 0;
+  let current = flags[0];
+
+  for (let i = 1; i < flags.length; i += 1) {
+    if (flags[i] !== current) {
+      runs.push({ startEdge: start, endEdge: i - 1, dashed: current });
+      start = i;
+      current = flags[i];
+    }
+  }
+
+  runs.push({ startEdge: start, endEdge: flags.length - 1, dashed: current });
+  return runs;
+}
+
+/**
+ * Returns array of objects: { path: string (no leading M), dashed: boolean }
+ * The curve pieces match the original spline exactly because control points are computed once.
+ */
+export function createSmoothPathWithCutsSegments(points, dashedIndices = []) {
+  const pts = Array.isArray(points) ? points : [];
+  if (pts.length < 2) return [];
+
+  const dashedSegmentStarts = buildDashedSegmentStarts(pts.length, dashedIndices);
+  const validSegments = getValidSegmentsIndices(pts);
+  if (!validSegments.length) return [];
+
+  const result = [];
+
+  for (const segmentIndices of validSegments) {
+    // Precompute the exact original cubic commands for this valid segment
+    const { startCoord, commands } = computeCubicCommandsForSegment(
+      pts,
+      segmentIndices
+    );
+
+    // Determine dashed flag per edge (edge i corresponds to global segment start = segmentIndices[i])
+    const edgeFlags = new Array(commands.length);
+    for (let i = 0; i < commands.length; i += 1) {
+      const globalStart = segmentIndices[i];
+      edgeFlags[i] = dashedSegmentStarts.has(globalStart);
+    }
+
+    const runs = groupEdgeRunsByFlag(edgeFlags);
+
+    for (const run of runs) {
+      // Build a piece starting at the run's first point, then append the already-computed C commands
+      const runStartPointIndex = run.startEdge; // local point index in this segment
+      const pieceStartCoord =
+        runStartPointIndex === 0
+          ? startCoord
+          : coordOf(pts[segmentIndices[runStartPointIndex]]);
+
+      const pieceCommands = commands.slice(run.startEdge, run.endEdge + 1);
+
+      // No leading "M": first is just "x,y", then "C..."
+      const path = `${pieceStartCoord} ${pieceCommands.join(" ")}`.trim();
+
+      result.push({ path, dashed: run.dashed });
+    }
+  }
+
+  return result;
 }
 
 export function createSmoothAreaSegments(points, zero, cut = false, close = true) {
@@ -3871,6 +4145,8 @@ const lib = {
     triggerEvent,
     triggerResize,
     wrapText,
+    createStraightPathWithCutsSegments,
+    createSmoothPathWithCutsSegments
 };
 export default lib;
 
