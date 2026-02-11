@@ -413,33 +413,34 @@ onMounted(() => {
     {
         name: "Serie A",
         series: createDs(35),
-        type: "plot",
+        type: "line",
         dataLabels: false,
-        smooth: true,
+        smooth: false,
         useArea: true,
         useProgression: true,
         // freestyle:
         marks: [10, 20],
         annotated: true,
+        // dashIndices: [34]
     },
-    {
-        name: "Serie B",
-        series: createDs(35),
-        type: "line",
-        dataLabels: false,
-        smooth: true,
-        useArea: true,
-        useProgression: true
-    },
-    {
-        name: "Serie C",
-        series: createDs(35),
-        type: "bar",
-        dataLabels: true,
-        smooth: true,
-        useArea: true,
-        useProgression: true
-    },
+    // {
+    //     name: "Serie B",
+    //     series: createDs(35),
+    //     type: "line",
+    //     dataLabels: false,
+    //     smooth: true,
+    //     useArea: true,
+    //     useProgression: true
+    // },
+    // {
+    //     name: "Serie C",
+    //     series: createDs(35),
+    //     type: "bar",
+    //     dataLabels: true,
+    //     smooth: true,
+    //     useArea: true,
+    //     useProgression: true
+    // },
     // {
     //     name: "Serie B",
     //     series: createDs(35),
