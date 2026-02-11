@@ -3236,6 +3236,7 @@ defineExpose({
             :verticalHandles="FINAL_CONFIG.style.chart.zoom.minimap.verticalHandles"
             :maxWidth="FINAL_CONFIG.style.chart.zoom.maxWidth"
             :isCursorPointer="isCursorPointer"
+            :additionalMinimapHeight="FINAL_CONFIG.style.chart.zoom.minimap.additionalHeight"
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
             @trapMouse="selectMinimapIndex"

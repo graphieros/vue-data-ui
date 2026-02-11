@@ -2474,6 +2474,7 @@ defineExpose({
                 :valueStart="slicer.start"
                 :verticalHandles="FINAL_CONFIG.style.chart.zoom.minimap.verticalHandles" 
                 :maxWidth="FINAL_CONFIG.style.chart.zoom.maxWidth"
+                :additionalMinimapHeight="FINAL_CONFIG.style.chart.zoom.minimap.additionalHeight"
                 @futureEnd="v => setPrecog('end', v)"
                 @futureStart="v => setPrecog('start', v)"
                 @reset="refreshSlicer"

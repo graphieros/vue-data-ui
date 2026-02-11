@@ -205,6 +205,10 @@ const props = defineProps({
     isCursorPointer: {
         type: Boolean,
         default: false
+    },
+    additionalMinimapHeight: {
+        type: Number,
+        default: 0
     }
 });
 
@@ -306,17 +310,17 @@ const overflowsRight = computed(() => {
 
 const highlightStyle = computed(() => {
     const centerAdjust = overflowsRight.value
-        ? `calc(${centerPercent.value}% - ${mergeTooltip.value.width}px - 2px)`
+        ? `calc(${centerPercent.value}% - ${mergeTooltip.value.width}px)`
         : overflowsLeft.value
         ? `calc(${centerPercent.value}% - 8px)`
-        : `calc(${centerPercent.value}% - ${mergeTooltip.value.width / 2}px - 4px)`;
+        : `calc(${centerPercent.value}% - ${mergeTooltip.value.width / 2}px)`;
 
     return {
         left: `${startPercent.value}%`,
         width: `${Math.max(0, endPercent.value - startPercent.value)}%`,
         background: props.selectColor,
-        tooltipLeft: `calc(${startPercent.value}% - ${overflowsLeft.value ? 9 : tooltipLeftWidth.value / 2 + 3.5}px)`,
-        tooltipRight: `calc(${endPercent.value}% - ${overflowsRight.value ? tooltipRightWidth.value - 9 : tooltipRightWidth.value / 2 - 3.5}px)`,
+        tooltipLeft: `calc(${startPercent.value}% - ${overflowsLeft.value ? 9 : tooltipLeftWidth.value / 2}px)`,
+        tooltipRight: `calc(${endPercent.value}% - ${overflowsRight.value ? tooltipRightWidth.value - 9 : tooltipRightWidth.value / 2}px)`,
         tooltipCenter: centerAdjust,
         arrowLeft: !overflowsLeft.value,
         arrowRight: !overflowsRight.value
@@ -384,7 +388,7 @@ onMounted(() => {
 
             if (W !== svgMinimap.value.width || H !== svgMinimap.value.height) {
                 svgMinimap.value.width  = W;
-                svgMinimap.value.height = H;
+                svgMinimap.value.height = H + props.additionalMinimapHeight;
             }
         }, 0);
 
@@ -413,8 +417,17 @@ const startMini = computed(() => absToMiniStart(startValue.value));
 const endMini = computed(() => absToMiniEnd(endValue.value));
 
 const maxSeries = computed(() => {
-    return Math.max(...props.allMinimaps.map(d => d.series.length))
-})
+    return Math.max(...props.allMinimaps.map(d => d.series.length));
+});
+const compactThumbWidth = computed(() => {
+    return hasMinimap.value && props.minimapCompact ? 40 : 0;
+});
+
+const thumbInset = computed(() => compactThumbWidth.value / 2);
+
+const innerMinimapWidth = computed(() => {
+    return Math.max(1, svgMinimap.value.width - thumbInset.value * 2);
+});
 
 const unitWidthX = computed(() => {
     const denom = Math.max(1, maxSeries.value - (props.minimapCompact ? 1 : 0));
@@ -659,6 +672,7 @@ const allMinimapLines = computed(() => {
 const selectionRectCoordinates = computed(() => {
     const s = startMini.value;
     const e = Math.max(s + 1, endMini.value);
+
     return {
         x: unitWidthX.value * s + (props.minimapCompact ? 0 : unitWidthX.value / 2),
         width: unitWidthX.value * (e - s) - unitWidthX.value,
@@ -1086,23 +1100,26 @@ onBeforeUnmount(() => {
 });
 
 const selectionIndicator = computed(() => {
-    if (!availableTraps.value.length) return null
+    if (!availableTraps.value.length) return null;
+
     if (selectedTrap.value >= startMini.value && selectedTrap.value < endMini.value) {
         const i = selectedTrap.value;
+        const x = unitWidthX.value * i + (props.minimapCompact ? 0 : unitWidthX.value / 2);
+
         return {
-            x1: unitWidthX.value * i + (props.minimapCompact ? 0: unitWidthX.value / 2),
-            x2: unitWidthX.value * i + (props.minimapCompact ? 0: unitWidthX.value / 2),
+            x1: x,
+            x2: x,
             y1: 0,
             y2: Math.max(svgMinimap.value.height, 0),
             stroke: props.minimapIndicatorColor,
             ['stroke-linecap']: 'round',
             ['stroke-dasharray']: 2,
             ['stroke-width']: 1,
-        }
-    } else {
-        return null
+        };
     }
-})
+
+    return null;
+});
 
 defineExpose({
     setStartValue,
@@ -1113,8 +1130,9 @@ defineExpose({
 <template>
     <div 
         data-cy="slicer" 
+        :data-minimap="hasMinimap"
         data-dom-to-png-ignore 
-        style="padding: 0 24px;" 
+        style="padding: 0 48px;" 
         class="vue-data-ui-zoom" 
         ref="zoomWrapper"
         @mousedown="startDragging" 
@@ -1156,6 +1174,10 @@ defineExpose({
             ref="minimapWrapper" 
             style="z-index: 0" @mouseenter="showTooltip = true"
             @mouseleave="showTooltip = false"
+            :style="hasMinimap ? {
+                '--minimap-unit-px': unitWidthX + 'px',
+                '--minimap-offset-px': (minimapCompact ? 0 : (unitWidthX / 2)) + 'px'
+            } : undefined"
         >
             <template v-if="hasMinimap">
                 <div class="minimap" style="width: 100%" data-cy="minimap">
@@ -1402,23 +1424,48 @@ defineExpose({
                         <rect
                             class="vue-ui-zoom-compact-minimap-handle"
                             v-if="hasMinimap && minimapCompact"
-                            :x="selectionRectCoordinates.x - 8"
+                            :x="selectionRectCoordinates.x - 40"
                             :y="0"
-                            :width="8"
+                            :width="40"
                             :height="svgMinimap.height"
                             :fill="borderColor"
+                            stroke="none"
+                            style="opacity: 0.7"
+                            :rx="3"
+                        />
+                        <rect
+                            class="vue-ui-zoom-compact-minimap-handle"
+                            v-if="hasMinimap && minimapCompact"
+                            :x="selectionRectCoordinates.x - 40"
+                            :y="0"
+                            :width="40"
+                            :height="svgMinimap.height"
+                            fill="none"
                             :stroke="textColor"
                             :rx="3"
                         />
 
+                        <!-- RIGHT handle (shifted outward to the right) -->
                         <rect
                             class="vue-ui-zoom-compact-minimap-handle"
                             v-if="hasMinimap && minimapCompact"
                             :x="selectionRectCoordinates.x + selectionRectCoordinates.width"
                             :y="0"
-                            :width="8"
+                            :width="40"
                             :height="svgMinimap.height"
                             :fill="borderColor"
+                            stroke="none"
+                            style="opacity: 0.7"
+                            :rx="3"
+                        />
+                        <rect
+                            class="vue-ui-zoom-compact-minimap-handle"
+                            v-if="hasMinimap && minimapCompact"
+                            :x="selectionRectCoordinates.x + selectionRectCoordinates.width"
+                            :y="0"
+                            :width="40"
+                            :height="svgMinimap.height"
+                            fill="none"
                             :stroke="textColor"
                             :rx="3"
                         />
@@ -1544,7 +1591,7 @@ defineExpose({
                         <!-- TOOLTIP TRAPS -->
                         <rect 
                             v-for="(trap, i) in availableTraps" 
-                            :x="unitWidthX * i - (minimapCompact ? unitWidthX / 2 : 0)" 
+                            :x="unitWidthX * i - (minimapCompact ? unitWidthX / 2 : 0)"
                             :y="0"
                             :height="Math.max(svgMinimap.height, 0)" 
                             :width="unitWidthX < 0 ? 0 : unitWidthX"
@@ -1578,6 +1625,7 @@ defineExpose({
                 />
 
             <input
+                aria-label="range-handle-left"
                 v-if="enableRangeHandles"
                 data-cy="slicer-handle-left"
                 ref="rangeStart"
@@ -1600,6 +1648,7 @@ defineExpose({
             />
 
             <input
+                aria-label="range-handle-right"
                 v-if="enableRangeHandles"
                 data-cy="slicer-handle-right"
                 ref="rangeEnd"
@@ -2029,4 +2078,49 @@ input[type="range"].range-invisible::-ms-thumb {
     pointer-events: none;
     transition: opacity 0.15s ease-in-out;
 }
+
+[data-minimap="true"] {
+    --compact-thumb-width: 40px;
+    --compact-thumb-inset: calc(var(--compact-thumb-width) / 2);
+
+    /* Keep the general range aligned to the component width */
+    input[type="range"] {
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    input[type="range"].range-invisible.range-left {
+        left: -40px !important;
+    }
+
+    input[type="range"].range-invisible.range-right {
+        left: 0px !important;
+    }
+
+    input[type="range"].range-invisible {
+        left: calc(-1 * var(--compact-thumb-inset)) !important;
+        right: auto !important;
+        width: calc(100% + var(--compact-thumb-width)) !important;
+        transform: none !important;
+        box-sizing: border-box;
+    }
+
+    /* Thumb hit area sizing (minimap only) */
+    input[type="range"].range-invisible::-webkit-slider-thumb {
+        width: var(--compact-thumb-width) !important;
+    }
+    input[type="range"].range-invisible::-moz-range-thumb {
+        width: var(--compact-thumb-width) !important;
+    }
+
+    input[type="range"].range-minimap::-webkit-slider-thumb {
+        width: var(--compact-thumb-width) !important;
+    }
+    input[type="range"].range-minimap::-moz-range-thumb {
+        width: var(--compact-thumb-width) !important;
+    }
+}
+
 </style>

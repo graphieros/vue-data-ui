@@ -4634,6 +4634,7 @@ defineExpose({
             :minScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMin"
             :maxScale="FINAL_CONFIG.chart.grid.labels.yAxis.scaleMax"
             :maxWidth="FINAL_CONFIG.chart.zoom.maxWidth"
+            :additionalMinimapHeight="FINAL_CONFIG.chart.zoom.minimap.additionalHeight"
             :isCursorPointer="isCursorPointer"
             @futureEnd="v => setPrecog('end', v)"
             @futureStart="v => setPrecog('start', v)"
