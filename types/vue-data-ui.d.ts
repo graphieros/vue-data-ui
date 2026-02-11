@@ -414,6 +414,7 @@ declare module "vue-data-ui" {
         compact?: boolean;
         merged?: boolean;
         frameColor?: string;
+        additionalHeight?: number;
     };
 
     export type ChartZoom = {

@@ -280,7 +280,8 @@ export function useConfig(options = {}) {
         indicatorColor: COLOR_BLACK,
         verticalHandles: false,
         compact: true,
-        frameColor: COLOR_GREY
+        frameColor: COLOR_GREY,
+        additionalHeight: 0
     }
 
     const MINIMAP = {
