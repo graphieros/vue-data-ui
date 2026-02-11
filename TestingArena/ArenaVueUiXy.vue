@@ -696,6 +696,7 @@ const model = createModel([
     NUMBER("chart.zoom.focusRangeRatio", { def: 0.2, min: 0.1, max: 0.9 }),
 
     CHECKBOX("chart.zoom.minimap.show", { def: true }),
+    NUMBER('chart.zoom.minimap.additionalHeight', { def: 0, min: 0, max: 24}),
     CHECKBOX("chart.zoom.minimap.smooth", { def: false }),
     COLOR("chart.zoom.minimap.selectedColor", { def: "#1f77b4" }),
     RANGE("chart.zoom.minimap.selectedColorOpacity", { def: 0.2, min: 0, max: 1, step: 0.01 }),
