@@ -140,6 +140,14 @@ const configTheme = computed(() => ({ theme: currentTheme.value }));
 const config = computed(() => {
     return {
         ...convertArrayToObject(model.value),
+        userOptions: {
+            buttons: {
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: console.log
+            }
+        },
         // formatter: ({value, config }) => {
         //     // console.log(config)
         //     return `f | ${value}`

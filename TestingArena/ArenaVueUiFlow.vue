@@ -227,6 +227,16 @@ const config = computed(() => {
     return {
         theme: currentTheme.value,
         ...c,
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                ...c.userOptions.buttons,
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: console.log
+            }
+        },
         // skeletonConfig: {
         //     style: {
         //         chart: {

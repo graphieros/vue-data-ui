@@ -180,6 +180,16 @@ const config = computed(() => {
 
     return {
         ...c,
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                ...c.userOptions.buttons,
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: console.log
+            }
+        },
         skeletonConfig: {
             style: {
                 chart: {

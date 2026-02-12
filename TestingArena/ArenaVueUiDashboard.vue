@@ -44,6 +44,14 @@ const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        userOptions: {
+          buttons: {
+            altCopy: true,
+          },
+          callbacks: {
+            altCopy: console.log
+          }
+        },
         formatter: ({value}) => {
             return `f | ${value}`
         } 

@@ -158,6 +158,18 @@ const config = computed(() => {
         //         }
         //     }
         // },
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                ...c.userOptions.buttons,
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: ({ dataset: dst, config: cfg }) => {
+                    console.log({ dst, cfg });
+                }
+            }
+        },
         theme: currentTheme.value,
     }
 })

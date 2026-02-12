@@ -189,6 +189,16 @@ const config = computed(() => {
         //         }
         //     }
         // },
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                ...c.userOptions.buttons,
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: console.log
+            }
+        },
         style: {
             ...c.style,
             chart: {

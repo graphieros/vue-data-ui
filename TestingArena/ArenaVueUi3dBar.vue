@@ -209,6 +209,18 @@ const config = computed(() => {
         //         }
         //     }
         // },
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                ...c.userOptions.buttons,
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: ({ dataset: dst, config: cfg }) => {
+                    console.log({ dst, cfg });
+                }
+            }
+        },
         events: {
             datapointEnter: ({ datapoint, seriesIndex }) => {
                 console.log('enter event', { datapoint, seriesIndex });
@@ -221,7 +233,6 @@ const config = computed(() => {
             }
         },
         style: {
-            ...c.style,
             chart: {
                 ...c.style.chart,
                 dataLabel: {

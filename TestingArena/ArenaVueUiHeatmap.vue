@@ -256,6 +256,16 @@ const config = computed(() => {
             //         console.log('click event', { datapoint, seriesIndex });
             //     }
             // },
+            userOptions: {
+                ...c.userOptions,
+                buttons: {
+                    ...c.userOptions.buttons,
+                    altCopy: true
+                },
+                callbacks: {
+                    altCopy: console.log
+                }
+            },
             theme: currentTheme.value,
             style: {
                 ...c.style,

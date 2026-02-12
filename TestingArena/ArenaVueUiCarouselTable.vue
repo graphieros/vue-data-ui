@@ -127,7 +127,17 @@ const model = createModel([
 const config = computed(() => {
     const c = convertArrayToObject(model.value);
     return {
-        ...c
+        ...c,
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                ...c.userOptions.buttons,
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: console.log
+            }
+        }
     }
 })
 

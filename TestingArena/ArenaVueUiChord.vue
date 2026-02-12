@@ -142,6 +142,16 @@ const config = computed(()=> {
     const c = convertArrayToObject(model.value);
     return {
         ...c,
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                ...c.userOptions.buttons,
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: console.log
+            }
+        },
         skeletonConfig: {
             style: {
                 chart: {

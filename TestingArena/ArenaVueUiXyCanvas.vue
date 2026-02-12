@@ -312,6 +312,15 @@ const config = computed(() => {
         //         }
         //     }
         // },
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: console.log
+            }
+        },
         theme: currentTheme.value,
         style: {
             ...c.style,

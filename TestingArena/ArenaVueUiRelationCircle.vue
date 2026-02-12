@@ -160,6 +160,16 @@ const config = computed(() => {
         //         backgroundColor: '#FF0000'
         //     }
         // },
+        userOptions: {
+            ...c.userOptions,
+            buttons: {
+                ...c.userOptions.buttons,
+                altCopy: true
+            },
+            callbacks: {
+                altCopy: console.log
+            }
+        },
         events: {
             datapointEnter: ({ datapoint, seriesIndex }) => {
                 console.log('enter event', { datapoint, seriesIndex });

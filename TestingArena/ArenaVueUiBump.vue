@@ -172,6 +172,14 @@ const config = computed(() => {
             //         }
             //     }
             // },
+            userOptions: {
+                buttons: {
+                    altCopy: true
+                },
+                callbacks: {
+                    altCopy: console.log
+                }
+            },
             events: {
                 datapointEnter: ({ datapoint, seriesIndex }) => {
                     console.log('EVENT ENTER', { datapoint, seriesIndex });

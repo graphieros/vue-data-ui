@@ -302,6 +302,12 @@ const config = computed(() => {
         // skeletonConfig: {
         //     backgroundColor: '#FF0000'
         // },
+        userOptionsButtons: {
+            altCopy: true
+        },
+        userOptionsCallbacks: {
+            altCopy: console.log
+        },
         events: {
             datapointEnter: ({ datapoint, seriesIndex }) => {
                 console.log('enter event', { datapoint, seriesIndex });
