@@ -673,6 +673,8 @@ const model = createModel([
     CHECKBOX("chart.userOptions.buttons.labels", { def: true }),
     CHECKBOX("chart.userOptions.buttons.fullscreen", { def: true }),
     CHECKBOX("chart.userOptions.buttons.stack", { def: true }),
+    CHECKBOX('chart.userOptions.buttons.altCopy', { def: true }),
+
     SELECT("chart.userOptions.position", ["left", "right"], { def: "right" }),
     CHECKBOX("chart.userOptions.showOnChartHover", { def: true }),
     CHECKBOX("chart.userOptions.keepStateOnChartLeave", { def: true }),
@@ -1126,17 +1128,20 @@ const config = computed(() => {
                 },
                 userOptions: {
                     ...c.chart.userOptions,
-                    // callbacks: {
-                    //     img: ({ domElement, imageUri, base64}) => {
-                    //         console.log(imageUri)
-                    //     },
-                    //     csv: (xls) => {
-                    //         console.log(xls)
-                    //     },
-                    //     pdf: ({ domElement, imageUri, base64}) => {
-                    //         console.log(imageUri)
-                    //     }
-                    // },
+                    callbacks: {
+                        img: ({ domElement, imageUri, base64}) => {
+                            console.log(imageUri)
+                        },
+                        csv: (xls) => {
+                            console.log(xls)
+                        },
+                        pdf: ({ domElement, imageUri, base64}) => {
+                            console.log(imageUri)
+                        },
+                        altCopy: ({ dataset:dst, config: cfg }) => {
+                            console.log({ dst, cfg });
+                        }
+                    },
                     print: {
                         ...c.chart.userOptions.print,
                         // onclone: (doc) => {
