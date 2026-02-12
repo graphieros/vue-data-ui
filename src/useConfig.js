@@ -180,7 +180,6 @@ export function useConfig(options = {}) {
         if (!annotator) delete buttonTitles.annotator
         if (!svg) delete buttonTitles.svg
         if (!zoom) delete buttonTitles.zoom
-        if (!altCopy) delete buttonTitles.altCopy
 
         return {
             show: true,
@@ -3293,7 +3292,8 @@ export function useConfig(options = {}) {
             img: true,
             fullscreen: true,
             annotator: true,
-            svg: true
+            svg: true,
+            altCopy: false,
         },
         userOptionsButtonTitles: {
             open: 'Open options',
@@ -3303,7 +3303,8 @@ export function useConfig(options = {}) {
             img: 'Download PNG',
             fullscreen: 'Toggle fullscreen',
             annotator: 'Toggle annotator',
-            svg: 'Download SVG'
+            svg: 'Download SVG',
+            altCopy: 'Copy alt text'
         },
         userOptionsPrint: {
             overflowTolerance: 0.2,
@@ -5637,16 +5638,19 @@ export function useConfig(options = {}) {
                 pdf: true,
                 img: true,
                 annotator: true,
+                altCopy: false
             },
             callbacks: {
                 pdf: null,
                 img: null,
                 annotator: null,
+                altCopy: null
             },
             buttonTitles: {
                 pdf: 'Download PDF',
                 img: 'Download PNG',
-                annotator: 'Toggle annotator'
+                annotator: 'Toggle annotator',
+                altCopy: 'Copy alt text'
             },
             print: {
                 scale: 2,

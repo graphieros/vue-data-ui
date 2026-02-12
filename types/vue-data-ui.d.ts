@@ -1419,6 +1419,7 @@ declare module "vue-data-ui" {
     >;
 
     export type VueUiIconName =
+        | "accessibility"
         | "addColumn"
         | "addRow"
         | "aToZ"
@@ -6798,6 +6799,7 @@ declare module "vue-data-ui" {
             fullscreen?: boolean;
             annotator?: boolean;
             svg?: boolean;
+            altCopy?: boolean;
         };
         userOptionsButtonTitles?: {
             open?: string;
@@ -6807,7 +6809,8 @@ declare module "vue-data-ui" {
             img?: string;
             fullscreen?: string;
             annotator?: string;
-            svg?: strng
+            svg?: string;
+            altCopy?: string;
         };
         userOptionsPrint?: {
             scale?: number;
