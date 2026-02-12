@@ -153,6 +153,10 @@ const props = defineProps({
     isCursorPointer: {
         type: Boolean,
         default: false
+    },
+    hasAltCopy: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -170,6 +174,7 @@ const emit = defineEmits([
     'toggleAnnotator',
     'generateSvg',
     'toggleZoom',
+    'copyAlt'
 ]);
 
 const rootRef = ref(null);
@@ -295,6 +300,10 @@ function toggleSort() {
     }
 }
 
+function copyAlt() {
+    emit('copyAlt')
+}
+
 const isItStacked = ref(props.isStacked);
 function toggleStack() {
     if (props.callbacks.stack) {
@@ -362,6 +371,7 @@ const isInfo = ref({
     annotator: false,
     svg: false,
     zoom: false,
+    altCopy: false
 });
 
 const preventClose = ref(true);
@@ -1076,6 +1086,33 @@ onBeforeUnmount(() => {
                     {{ titles.annotator }}
                 </div>
             </button>
+
+            <!-- ALT COPY -->
+            <button
+                tabindex="0"
+                v-if="hasAltCopy"
+                data-cy="user-options-alt-copy"
+                class="vue-ui-user-options-button"
+                @mouseenter="isInfo.altCopy = true"
+                @mouseout="isInfo.altCopy = false"
+                @click="copyAlt"
+                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+            >
+                <template v-if="$slots.optionAltCopy">
+                    <slot name="optionAltCopy" v-bind="{ copyAlt }"/>
+                </template>
+                <template v-else>
+                    <BaseIcon name="accessibility" :stroke="color" style="pointer-events: none;"/>
+                </template>
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.altCopy" :class="{
+                    'button-info-left': position === 'left',
+                    'button-info-right': position === 'right',
+                    'button-info-right-visible': position === 'right' && isInfo.altCopy,
+                    'button-info-left-visible': position === 'left' && isInfo.altCopy,
+                }" :style="{ background: backgroundColor, color: color }">
+                    {{ titles.altCopy }}
+                </div>
+            </button>
         </div>
     </div>
 
@@ -1338,6 +1375,23 @@ onBeforeUnmount(() => {
                     'button-info-left-visible': position === 'left' && isInfo.annotator,
                 }" :style="{ background: backgroundColor, color: color }">
                     {{ titles.annotator }}
+                </div>
+            </button>
+
+            <button tabindex="0" v-if="hasAltCopy" data-cy="user-options-alt-copy" class="vue-ui-user-options-button" @mouseenter="isInfo.altCopy = true" @mouseout="isInfo.altCopy = false" @click="toggleAnnotator">
+                <template v-if="$slots.optionAltCopy">
+                    <slot name="optionAltCopy" v-bind="{ copyAlt }" />
+                </template>
+                <template v-else>
+                    <BaseIcon name="accessibility" :stroke="color" style="pointer-events:none;" />
+                </template>
+                <div data-cy="uo-tooltip" dir="auto" v-if="isDesktop && titles.altCopy" :class="{
+                    'button-info-left': position === 'left',
+                    'button-info-right': position === 'right',
+                    'button-info-right-visible': position === 'right' && isInfo.altCopy,
+                    'button-info-left-visible': position === 'left' && isInfo.altCopy,
+                }" :style="{ background: backgroundColor, color: color }">
+                    {{ titles.altCopy }}
                 </div>
             </button>
         </div>
