@@ -2123,4 +2123,10 @@ input[type="range"].range-invisible::-ms-thumb {
     }
 }
 
+ /* Lighthouse fix */
+input[type="range"].range-handle {
+    height: 48px;
+    top: -14px;
+}
+
 </style>
