@@ -371,7 +371,7 @@ const chartRadius = computed(() => {
   return Math.min(svg.value.height, svg.value.width);
 })
 
-const emit = defineEmits(['selectLegend']);
+const emit = defineEmits(['selectLegend', 'copyAlt']);
 
 const segregated = ref([]);
 
@@ -905,6 +905,21 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: convertedDataset.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: convertedDataset.value
+    }));
+}
+
 defineExpose({
     getData,
     getImage,
@@ -918,7 +933,8 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
-    toggleLabels
+    toggleLabels,
+    copyAlt
 });
 
 </script>
@@ -1011,6 +1027,7 @@ defineExpose({
         :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
         :hasTable="FINAL_CONFIG.userOptions.buttons.table"
         :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+        :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
         :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
         :isTooltip="mutableConfig.showTooltip"
         :isFullscreen="isFullscreen"
@@ -1032,6 +1049,7 @@ defineExpose({
         @toggleTooltip="toggleTooltip"
         @toggleAnnotator="toggleAnnotator"
         @toggleLabels="toggleLabels"
+        @copyAlt="copyAlt"
         :style="{
             visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
         }"

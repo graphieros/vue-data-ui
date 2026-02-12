@@ -586,7 +586,7 @@ const donutThickness = computed(() => {
     return Math.max(adjusted, 12 * (1 + baseRatio));
 });
 
-const emit = defineEmits(['selectLegend', 'selectDatapoint'])
+const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 
 const immutableSet = computed(() => {
     return FINAL_DATASET.value
@@ -1565,6 +1565,21 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: mutableSet.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: mutableSet.value
+    }));
+}
+
 defineExpose({
     autoSize,
     getData,
@@ -1580,6 +1595,7 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
+    copyAlt
 });
 
 </script>
@@ -1659,7 +1675,8 @@ defineExpose({
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" 
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="donutChart" 
             :position="FINAL_CONFIG.userOptions.position" 
@@ -1680,6 +1697,7 @@ defineExpose({
             @toggleLabels="toggleLabels"
             @toggleTooltip="toggleTooltip" 
             @toggleAnnotator="toggleAnnotator" 
+            @copyAlt="copyAlt"
             :style="{ visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible' }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">

@@ -31,7 +31,9 @@ const props = defineProps({
             return {}
         }
     }
-})
+});
+
+const emit = defineEmits(['copyAlt']);
 
 const uid = ref(createUid());
 const isFullscreen = ref(false);
@@ -400,6 +402,21 @@ function generateCsv(callback=null) {
     });
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: props.dataset
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: props.dataset
+    }));
+}
+
 defineExpose({
     pauseAnimation,
     resumeAnimation,
@@ -407,6 +424,7 @@ defineExpose({
     generateCsv,
     generatePdf,
     generateImage,
+    copyAlt
 });
 
 </script>
@@ -555,6 +573,7 @@ defineExpose({
             :hasAnimation="FINAL_CONFIG.userOptions.buttons.animation"
             :isAnimation="!mutableConfig.showAnimation"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="chartContainer"
             :position="FINAL_CONFIG.userOptions.position"
@@ -569,6 +588,7 @@ defineExpose({
             @generateImage="generateImage"
             @toggleAnimation="toggleAnimation"
             @toggleFullscreen="toggleFullscreen"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"

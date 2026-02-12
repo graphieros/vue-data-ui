@@ -108,7 +108,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
-const emit = defineEmits(['selectTimeLabel', 'selectX', 'selectLegend', 'zoomStart', 'zoomEnd', 'zoomReset']);
+const emit = defineEmits(['selectTimeLabel', 'selectX', 'selectLegend', 'zoomStart', 'zoomEnd', 'zoomReset', 'copyAlt']);
 const SLOTS = useSlots();
 const instance = getCurrentInstance();
 
@@ -1636,8 +1636,19 @@ const activeSeriesWithStackRatios = computed(() => {
     return assignStackRatios(absoluteDataset.value.filter(ds => !segregatedSeries.value.includes(ds.id)));
 });
 
+function groupBy(array, getKey) {
+    const result = Object.create(null);
+    for (let index = 0; index < array.length; index += 1) {
+        const item = array[index];
+        const key = String(getKey(item));
+        if (!result[key]) result[key] = [];
+        result[key].push(item);
+    }
+    return result;
+}
+
 const scaleGroups = computed(() => {
-    const grouped = Object.groupBy(activeSeriesWithStackRatios.value, item => item.scaleLabel);
+    const grouped = groupBy(activeSeriesWithStackRatios.value, item => item.scaleLabel);
     const result = {};
     for (const [group, items] of Object.entries(grouped)) {
         const allValues = items.flatMap(item => item.absoluteValues);
@@ -2920,7 +2931,7 @@ function prepareChart() {
                         - noTitleHeight
                         - additionalPad;
 
-                    width.value = entry.contentBoxSize[0].inlineSize;
+                    width.value = entry.contentBoxSize[0].inlineSize ?? entry.contentRect.width;
                     viewBox.value = `0 0 ${width.value < 0 ? 10 : width.value} ${height.value < 0 ? 10 : height.value}`;
                     convertSizes();
                     setParentElementReference();
@@ -3274,6 +3285,29 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: {
+            lines: lineSet.value,
+            bars: barSet.value,
+            plots: plotSet.value,
+        }
+    })
+    if (!FINAL_CONFIG.value.chart.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.chart.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: {
+            lines: lineSet.value,
+            bars: barSet.value,
+            plots: plotSet.value,
+        }
+    }));
+}
+
 defineExpose({
     getData,
     getImage,
@@ -3288,7 +3322,8 @@ defineExpose({
     toggleLabels,
     toggleTooltip,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    copyAlt
 });
 </script>
 
@@ -3362,6 +3397,7 @@ defineExpose({
             :hasTable="FINAL_CONFIG.chart.userOptions.buttons.table"
             :hasStack="dataset.length > 1 && FINAL_CONFIG.chart.userOptions.buttons.stack"
             :hasFullscreen="FINAL_CONFIG.chart.userOptions.buttons.fullscreen" 
+            :hasAltCopy="FINAL_CONFIG.chart.userOptions.buttons.altCopy"
             :isStacked="mutableConfig.isStacked"
             :isFullscreen="isFullscreen" 
             :chartElement="$refs.chart" 
@@ -3384,6 +3420,7 @@ defineExpose({
             @toggleStack="toggleStack"
             @toggleTooltip="toggleTooltip" 
             @toggleAnnotator="toggleAnnotator" 
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }">

@@ -73,7 +73,7 @@ const props = defineProps({
     },
 });
 
-const emits = defineEmits(['selectDatapoint'])
+const emits = defineEmits(['selectDatapoint', 'copyAlt'])
 
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
@@ -815,6 +815,18 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emits('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: FINAL_DATASET.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ config: FINAL_CONFIG.value, dataset: FINAL_DATASET.value}));
+}
+
 defineExpose({
     getImage,
     generateCsv,
@@ -824,7 +836,8 @@ defineExpose({
     getData,
     toggleTable,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    copyAlt
 });
 </script>
 
@@ -891,6 +904,7 @@ defineExpose({
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="bar3dChart"
             :position="FINAL_CONFIG.userOptions.position"
@@ -907,6 +921,7 @@ defineExpose({
             @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleAnnotator="toggleAnnotator"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"

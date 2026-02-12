@@ -62,6 +62,8 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['copyAlt']);
+
 const uid = ref(createUid());
 const thermoChart = ref(null);
 const step = ref(0);
@@ -236,7 +238,7 @@ function generateColorRange(startColor, endColor, steps) {
     const start = parseColor(startColor);
     const end = parseColor(endColor);
 
-    for (let i = 0; i < steps; i++) {
+    for (let i = 0; i < steps; i += 1) {
         const redValue = interpolate(start.red, end.red, i, steps);
         const greenValue = interpolate(start.green, end.green, i, steps);
         const blueValue = interpolate(start.blue, end.blue, i, steps);
@@ -425,13 +427,29 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: FINAL_DATASET.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: FINAL_DATASET.value
+    }));
+}
+
 defineExpose({
     getImage,
     generatePdf,
     generateImage,
     generateSvg,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    copyAlt
 })
 
 </script>
@@ -505,6 +523,7 @@ defineExpose({
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :hasXls="false"
             :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
@@ -520,6 +539,7 @@ defineExpose({
             @generateImage="onGenerateImage"
             @generateSvg="generateSvg"
             @toggleAnnotator="toggleAnnotator"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"

@@ -69,7 +69,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['selectDatapoint']);
+const emit = defineEmits(['selectDatapoint', 'copyAlt']);
 
 const { vue_ui_circle_pack: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
@@ -693,6 +693,21 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: formattedDataset.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: formattedDataset.value
+    }));
+}
+
 defineExpose({
     getData,
     getImage,
@@ -702,7 +717,8 @@ defineExpose({
     generateSvg,
     toggleTable,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    copyAlt
 });
 
 </script>
@@ -793,6 +809,7 @@ defineExpose({
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :chartElement="circlePackChart"
             :position="FINAL_CONFIG.userOptions.position"
@@ -811,6 +828,7 @@ defineExpose({
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            @copyAlt="copyAlt"
             :style="{ visibility: keepUserOptionState ? (userOptionsVisible ? 'visible' : 'hidden') : 'visible' }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">

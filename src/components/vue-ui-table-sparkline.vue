@@ -45,6 +45,8 @@ const props = defineProps({
     },
 });
 
+const emit = defineEmits(['copyAlt']);
+
 const uid = ref(createUid());
 const step = ref(0);
 const sparkStep = ref(0);
@@ -505,11 +507,27 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: computedDataset.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: computedDataset.value
+    }));
+}
+
 defineExpose({
     generatePdf,
     generateImage,
     generateCsv,
-    restoreOrder
+    restoreOrder,
+    copyAlt
 })
 
 </script>
@@ -690,6 +708,7 @@ defineExpose({
                                 :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
                                 :hasImg="FINAL_CONFIG.userOptions.buttons.img"
                                 :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+                                :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
                                 :isFullscreen="isFullscreen"
                                 :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
                                 :chartElement="tableContainer"
@@ -701,6 +720,7 @@ defineExpose({
                                 @generatePdf="generatePdf"
                                 @generateImage="onGenerateImage"
                                 @generateCsv="generateCsv"
+                                @copyAlt="copyAlt"
                                 :style="{
                                     visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
                                 }"

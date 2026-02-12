@@ -70,7 +70,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['selectNode']);
+const emit = defineEmits(['selectNode', 'copyAlt']);
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -709,6 +709,21 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: convertedDataset.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: convertedDataset.value
+    }));
+}
+
 defineExpose({
     getData,
     getImage,
@@ -721,7 +736,8 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
-    toggleZoom
+    toggleZoom,
+    copyAlt
 });
 
 </script>
@@ -804,6 +820,7 @@ defineExpose({
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isTooltip="mutableConfig.showTooltip"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="moleculeChart"
@@ -826,6 +843,7 @@ defineExpose({
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
             @toggleZoom="toggleZoom"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"

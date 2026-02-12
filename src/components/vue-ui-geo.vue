@@ -58,6 +58,8 @@ const props = defineProps({
     },
 });
 
+const emit = defineEmits(['copyAlt']);
+
 const { vue_ui_geo: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
 
@@ -1739,6 +1741,21 @@ onBeforeUnmount(() => {
     teardownResponsive();
 });
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: FINAL_DATASET.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: FINAL_DATASET.value
+    }));
+}
+
 defineExpose({
     getImage,
     generatePdf,
@@ -1751,6 +1768,7 @@ defineExpose({
     zoomOut,
     resetZoom,
     focusLocation,
+    copyAlt
 });
 </script>
 
@@ -1839,6 +1857,7 @@ defineExpose({
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator"
             :hasZoom="FINAL_CONFIG.userOptions.buttons.zoom"
             :isZoom="panZoomActive"
@@ -1858,6 +1877,7 @@ defineExpose({
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
             @toggleZoom="toggleZoom"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? (userOptionsVisible ? 'visible' : 'hidden') : 'visible',
             }"

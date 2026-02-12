@@ -285,7 +285,7 @@ const svg = computed(() => ({
 }));
 
 
-const emit = defineEmits(['selectLegend', 'selectDatapoint']);
+const emit = defineEmits(['selectLegend', 'selectDatapoint', 'copyAlt']);
 
 const segregated = ref([]);
 
@@ -791,6 +791,21 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: immutableSet.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: immutableSet.value
+    }));
+}
+
 defineExpose({
     getData,
     getImage,
@@ -803,7 +818,8 @@ defineExpose({
     toggleTable,
     toggleTooltip,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    copyAlt
 });
 
 </script>
@@ -881,6 +897,7 @@ defineExpose({
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
@@ -900,6 +917,7 @@ defineExpose({
             @toggleTable="toggleTable"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"

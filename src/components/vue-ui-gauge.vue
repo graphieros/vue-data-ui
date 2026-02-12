@@ -70,6 +70,8 @@ const props = defineProps({
     }
 });
 
+const emit = defineEmits(['copyAlt']);
+
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length > 0 && props.dataset.series && props.dataset.series.length;
 });
@@ -692,13 +694,29 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: mutableDataset.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: mutableDataset.value
+    }));
+}
+
 defineExpose({
     getImage,
     generatePdf,
     generateImage,
     generateSvg,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    copyAlt
 });
 
 </script>
@@ -773,7 +791,8 @@ defineExpose({
             :hasPdf="FINAL_CONFIG.userOptions.buttons.pdf" 
             :hasImg="FINAL_CONFIG.userOptions.buttons.img"
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }" 
             :chartElement="gaugeChart" 
@@ -788,6 +807,7 @@ defineExpose({
             @generateImage="onGenerateImage" 
             @generateSvg="generateSvg"
             @toggleAnnotator="toggleAnnotator" 
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"

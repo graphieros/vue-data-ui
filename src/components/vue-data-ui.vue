@@ -189,7 +189,8 @@ const emit = defineEmits([
     'focusLocation',
     'zoomStart',
     'zoomEnd',
-    'zoomReset'
+    'zoomReset',
+    'copyAlt'
 ]);
 
 const isError = computed(() => !components[props.component]);
@@ -245,6 +246,7 @@ const zoomIn = ref(() => null);
 const zoomOut = ref(() => null);
 const switchOrientation = ref(() => null);
 const focusLocation = ref(() => null);
+const copyAlt = ref(() => null);
 
 onMounted(() => {
     if (isError.value) {
@@ -374,6 +376,9 @@ watch(currentComponentRef, async (newRef) => {
         if (newRef.focusLocation) {
             focusLocation.value = newRef.focusLocation;
         }
+        if (newRef.copyAlt) {
+            copyAlt.value = newRef.copyAlt
+        }
     }
 })
 
@@ -422,7 +427,8 @@ const getEventHandlers = () => {
         'focusLocation',
         'zoomStart',
         'zoomEnd',
-        'zoomReset'
+        'zoomReset',
+        'copyAlt'
     ];
     const handlers = {};
     eventNames.forEach(event => {
@@ -507,6 +513,7 @@ defineExpose({
     zoomOut,
     switchOrientation,
     focusLocation,
+    copyAlt
 });
 
 const notSupported = computed(() => {

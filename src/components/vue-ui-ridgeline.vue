@@ -88,7 +88,7 @@ const isDataset = computed({
     set(v) { return v; }
 });
 
-const emit = defineEmits(['selectLegend', 'selectDatapoint', 'selectX'])
+const emit = defineEmits(['selectLegend', 'selectDatapoint', 'selectX', 'copyAlt'])
 
 const ridgelineChart = ref(null);
 const chartTitle = ref(null);
@@ -847,6 +847,14 @@ function createXyDatasetForDialog(ds) {
             },
             userOptions: {
                 ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.userOptions,
+                buttons: {
+                    ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.userOptions.buttons,
+                    altCopy: FINAL_CONFIG.value.userOptions.buttons.altCopy
+                },
+                callbacks: {
+                    ...FINAL_CONFIG.value.style.chart.dialog.xyChart.chart.userOptions.callbacks,
+                    altCopy: () => {}
+                },
                 useCursorPointer: FINAL_CONFIG.value.userOptions.useCursorPointer, // Overriding
             },
         }
@@ -1087,6 +1095,27 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+function copyAltXy(d) {
+    copyAlt('xy-zoom', d.dataset, d.config);
+}
+
+async function copyAlt(src = 'main-chart', ds = null, cfg = null){
+    emit('copyAlt', {
+        source: src,
+        config: src === 'main-chart' ? FINAL_CONFIG.value : xyConfig.value,
+        dataset: src === 'main-chart' ? drawableDataset.value : xyDataset.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        source: src,
+        config: src === 'main-chart' ? FINAL_CONFIG.value : xyConfig.value,
+        dataset: src === 'main-chart' ? drawableDataset.value : xyDataset.value
+    }));
+}
+
 defineExpose({
     getData,
     getImage,
@@ -1098,7 +1127,8 @@ defineExpose({
     showSeries,
     toggleAnnotator,
     toggleTable,
-    toggleFullscreen
+    toggleFullscreen,
+    copyAlt
 });
 
 </script>
@@ -1181,7 +1211,8 @@ defineExpose({
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv" 
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasLabel="false" 
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :printScale="FINAL_CONFIG.userOptions.print.scale"
             :chartElement="ridgelineChart" 
@@ -1200,6 +1231,7 @@ defineExpose({
             @generateSvg="generateSvg"
             @toggleTable="toggleTable" 
             @toggleAnnotator="toggleAnnotator"
+            @copyAlt="copyAlt"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">
                 <slot name="menuIcon" v-bind="{ isOpen, color }" />
@@ -1603,7 +1635,7 @@ defineExpose({
                 {{ selectedDatapoint.name }}
             </template>
             <template #content>
-                <VueUiXy v-if="selectedDatapoint" :config="xyConfig" :dataset="xyDataset" />
+                <VueUiXy v-if="selectedDatapoint" :config="xyConfig" :dataset="xyDataset" @copyAlt="copyAltXy"/>
             </template>
         </BaseDraggableDialog>
 

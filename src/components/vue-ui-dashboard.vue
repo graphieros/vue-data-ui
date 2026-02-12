@@ -272,7 +272,7 @@ function onMouseMove(event) {
     }
 };
 
-const emit = defineEmits(["change"]);
+const emit = defineEmits(["change", "copyAlt"]);
 
 watch(items, (change) => {
     if(change && !isDragOrResize.value) {
@@ -400,10 +400,26 @@ function hideOptions() {
     setUserOptionsVisibility(false);
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: resolvedItems.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: resolvedItems.value
+    }));
+}
+
 defineExpose({
     generatePdf,
     getItemsPositions,
-    toggleLock
+    toggleLock,
+    copyAlt
 })
 </script>
 
@@ -561,6 +577,7 @@ defineExpose({
             :hasTable="false"
             :hasLabel="false"
             :hasFullscreen="false"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :chartElement="dashboardContainer"
             :callbacks="FINAL_CONFIG.userOptions.callbacks"
             :hasAnnotator="FINAL_CONFIG.userOptions.buttons.annotator" 
@@ -571,6 +588,7 @@ defineExpose({
             @generatePdf="generatePdf" 
             @generateImage="generateImage"
             @toggleAnnotator="toggleAnnotator"
+            @copyAlt="copyAlt"
             :style="{ visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible', zIndex: resolvedItems.length + 1 }"
         >
             <template #menuIcon="{ isOpen, color }" v-if="$slots.menuIcon">

@@ -65,6 +65,8 @@ const props = defineProps({
     },
 });
 
+const emit = defineEmits(['copyAlt']);
+
 const uid = ref(createUid());
 const moodRadarChart = ref(null);
 const selectedKey = ref(null);
@@ -626,6 +628,21 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: convertedDataset.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: convertedDataset.value
+    }));
+}
+
 defineExpose({
     getData,
     getImage,
@@ -635,7 +652,8 @@ defineExpose({
     generateSvg,
     toggleTable,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    copyAlt
 });
 
 </script>
@@ -711,6 +729,7 @@ defineExpose({
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="moodRadarChart"
@@ -728,6 +747,7 @@ defineExpose({
             @generateSvg="generateSvg"
             @toggleTable="toggleTable"
             @toggleAnnotator="toggleAnnotator"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"

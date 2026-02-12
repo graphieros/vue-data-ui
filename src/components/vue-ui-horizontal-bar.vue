@@ -114,7 +114,7 @@ const dataLabels = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
 
-const emit = defineEmits(["selectLegend"]);
+const emit = defineEmits(["selectLegend", "copyAlt"]);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -1252,6 +1252,21 @@ function autoSize() {
     console.warn('[autoSize]: this legacy method can be safely removed as it has no impact.')
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: mutableDataset.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: mutableDataset.value
+    }));
+}
+
 defineExpose({
     autoSize,
     getData,
@@ -1267,6 +1282,7 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
+    copyAlt
 });
 </script>
 
@@ -1340,7 +1356,8 @@ defineExpose({
             :hasXls="FINAL_CONFIG.userOptions.buttons.csv"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table" 
             :hasSort="FINAL_CONFIG.userOptions.buttons.sort"
-            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen" 
+            :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip" 
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
@@ -1361,6 +1378,7 @@ defineExpose({
             @toggleSort="toggleSort" 
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator" 
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState
                     ? userOptionsVisible

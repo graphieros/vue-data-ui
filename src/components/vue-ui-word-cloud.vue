@@ -71,6 +71,8 @@ const props = defineProps({
     },
 });
 
+const emit = defineEmits(['copyAlt']);
+
 const isDataset = computed({
     get() {
         return !!props.dataset && props.dataset.length
@@ -704,21 +706,6 @@ function zoomOut() {
     zoomByFactor(1 / 1.5, true);
 }
 
-defineExpose({
-    getData,
-    getImage,
-    generateCsv,
-    generatePdf,
-    generateImage,
-    generateSvg,
-    resetZoom,
-    toggleTable,
-    toggleTooltip,
-    toggleAnnotator,
-    toggleFullscreen,
-    toggleZoom
-});
-
 const selectedWord = ref(null);
 const useCustomFormat = ref(false);
 const tooltipContent = ref('');
@@ -772,6 +759,37 @@ function useTooltip(word, index) {
 
     isTooltip.value = true;
 }
+
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: positionedWords.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: positionedWords.value
+    }));
+}
+
+defineExpose({
+    getData,
+    getImage,
+    generateCsv,
+    generatePdf,
+    generateImage,
+    generateSvg,
+    resetZoom,
+    toggleTable,
+    toggleTooltip,
+    toggleAnnotator,
+    toggleFullscreen,
+    toggleZoom,
+    copyAlt
+});
 
 </script>
 
@@ -841,6 +859,7 @@ function useTooltip(word, index) {
             :hasSvg="FINAL_CONFIG.userOptions.buttons.svg"
             :hasTable="FINAL_CONFIG.userOptions.buttons.table" 
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :isFullscreen="isFullscreen"
             :titles="{ ...FINAL_CONFIG.userOptions.buttonTitles }"
             :chartElement="wordCloudChart" 
@@ -864,6 +883,7 @@ function useTooltip(word, index) {
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
             @toggleZoom="toggleZoom"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"

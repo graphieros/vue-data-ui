@@ -130,7 +130,7 @@ const isCallbackImaging = ref(false);
 
 const isDataset = computed(() => Array.isArray(FINAL_DATASET.value) && FINAL_DATASET.value.length > 0);
 
-const emit = defineEmits(['selectLegend', 'selectX']);
+const emit = defineEmits(['selectLegend', 'selectX', 'copyAlt']);
 const slots = useSlots();
 
 onMounted(() => {
@@ -2270,6 +2270,21 @@ function onGenerateImage(payload) {
     generateImage();
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: formattedDataset.value
+    })
+    if (!FINAL_CONFIG.value.userOptions.callbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: formattedDataset.value
+    }));
+}
+
 defineExpose({
     getData,
     getImage,
@@ -2283,7 +2298,8 @@ defineExpose({
     toggleStack,
     toggleTooltip,
     toggleAnnotator,
-    toggleFullscreen
+    toggleFullscreen,
+    copyAlt
 });
 
 </script>
@@ -2324,6 +2340,7 @@ defineExpose({
             :hasLabel="FINAL_CONFIG.userOptions.buttons.labels"
             :hasStack="dataset.length > 1 && FINAL_CONFIG.userOptions.buttons.stack"
             :hasFullscreen="FINAL_CONFIG.userOptions.buttons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptions.buttons.altCopy"
             :hasTable="(slicer.end - slicer.start <= 730) && FINAL_CONFIG.userOptions.buttons.table"
             :isFullscreen="isFullscreen"
             :isTooltip="mutableConfig.showTooltip"
@@ -2346,6 +2363,7 @@ defineExpose({
             @toggleStack="toggleStack"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"

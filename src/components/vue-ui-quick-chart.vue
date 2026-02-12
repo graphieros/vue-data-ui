@@ -27,7 +27,6 @@ import {
     dataLabel,
     error,
     functionReturnsString,
-    hasDeepProperty,
     isFunction,
     makeDonut, 
     palette,
@@ -234,7 +233,7 @@ const customPalette = computed(() => {
     return convertCustomPalette(FINAL_CONFIG.value.customPalette);
 });
 
-const emit = defineEmits(['selectDatapoint', 'selectLegend'])
+const emit = defineEmits(['selectDatapoint', 'selectLegend', 'copyAlt'])
 
 const fd = computed(() => {
     const f = detector.detectChart({ debug: debug.value, dataset: sanitizeArray(FINAL_DATASET.value, [
@@ -1477,6 +1476,29 @@ async function generateSvg({ isCb }) {
     }
 }
 
+async function copyAlt(){
+    emit('copyAlt', {
+        config: FINAL_CONFIG.value,
+        dataset: {
+            line: line.value,
+            bar: bar.value,
+            donut: donut.value
+        }
+    })
+    if (!FINAL_CONFIG.value.userOptionsCallbacks.altCopy) {
+        console.warn('Vue Data UI - A callback must be set for `altCopy` in userOptions.');
+        return
+    }
+    await Promise.resolve(FINAL_CONFIG.value.userOptionsCallbacks.altCopy({ 
+        config: FINAL_CONFIG.value, 
+        dataset: {
+            line: line.value,
+            bar: bar.value,
+            donut: donut.value
+        }
+    }));
+}
+
 defineExpose({
     getImage,
     generatePdf,
@@ -1485,6 +1507,7 @@ defineExpose({
     toggleTooltip,
     toggleAnnotator,
     toggleFullscreen,
+    copyAlt
 })
 
 </script>
@@ -1548,6 +1571,7 @@ defineExpose({
             :hasImg="FINAL_CONFIG.userOptionsButtons.img"
             :hasSvg="FINAL_CONFIG.userOptionsButtons.svg"
             :hasFullscreen="FINAL_CONFIG.userOptionsButtons.fullscreen"
+            :hasAltCopy="FINAL_CONFIG.userOptionsButtons.altCopy"
             :hasXls="false"
             :isTooltip="mutableConfig.showTooltip"
             :isFullscreen="isFullscreen"
@@ -1565,6 +1589,7 @@ defineExpose({
             @generateSvg="generateSvg"
             @toggleTooltip="toggleTooltip"
             @toggleAnnotator="toggleAnnotator"
+            @copyAlt="copyAlt"
             :style="{
                 visibility: keepUserOptionState ? userOptionsVisible ? 'visible' : 'hidden' : 'visible'
             }"
