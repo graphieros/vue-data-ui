@@ -614,6 +614,9 @@ defineExpose({
             <template v-if="$slots.optionFullscreen" template #optionFullscreen="{ toggleFullscreen, isFullscreen }">
                 <slot name="optionFullscreen" v-bind="{ toggleFullscreen, isFullscreen }"/>
             </template>
+            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            </template>
         </UserOptions>
 
         <div v-if="$slots.source" ref="source" dir="auto">

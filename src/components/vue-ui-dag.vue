@@ -1220,6 +1220,9 @@ defineExpose({
             <template v-if="$slots.optionZoom" #optionZoom="{ toggleZoom, isZoomLocked }">
                 <slot name="optionZoom" v-bind="{ toggleZoom , isZoomLocked }"/>
             </template>
+            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            </template>
         </UserOptions>
 
         <!-- TITLE -->

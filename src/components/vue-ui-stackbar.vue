@@ -2081,6 +2081,9 @@ defineExpose({
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
+            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            </template>
         </UserOptions>
 
         <svg
@@ -2719,6 +2722,12 @@ defineExpose({
             :maxWidth="FINAL_CONFIG.style.chart.zoom.maxWidth"
             :isCursorPointer="isCursorPointer"
             :additionalMinimapHeight="FINAL_CONFIG.style.chart.zoom.minimap.additionalHeight"
+            :handleType="FINAL_CONFIG.style.chart.zoom.minimap.handleType"
+            :handleIconColor="FINAL_CONFIG.style.chart.zoom.minimap.handleIconColor"
+            :handleBorderWidth="FINAL_CONFIG.style.chart.zoom.minimap.handleBorderWidth"
+            :handleBorderColor="FINAL_CONFIG.style.chart.zoom.minimap.handleBorderColor"
+            :handleFill="FINAL_CONFIG.style.chart.zoom.minimap.handleFill"
+            :handleWidth="FINAL_CONFIG.style.chart.zoom.minimap.handleWidth"
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
             @trapMouse="selectMinimapIndex"

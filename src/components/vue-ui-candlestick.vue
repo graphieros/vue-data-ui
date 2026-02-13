@@ -1500,6 +1500,9 @@ defineExpose({
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
+            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            </template>
         </UserOptions>
         
         <!-- CHART -->
@@ -1868,6 +1871,12 @@ defineExpose({
             :maxScale="FINAL_CONFIG.style.layout.grid.yAxis.scale.max"
             :maxWidth="FINAL_CONFIG.style.zoom.maxWidth"
             :additionalMinimapHeight="FINAL_CONFIG.style.zoom.minimap.additionalHeight"
+            :handleType="FINAL_CONFIG.style.zoom.minimap.handleType"
+            :handleIconColor="FINAL_CONFIG.style.zoom.minimap.handleIconColor"
+            :handleBorderWidth="FINAL_CONFIG.style.zoom.minimap.handleBorderWidth"
+            :handleBorderColor="FINAL_CONFIG.style.zoom.minimap.handleBorderColor"
+            :handleFill="FINAL_CONFIG.style.zoom.minimap.handleFill"
+            :handleWidth="FINAL_CONFIG.style.zoom.minimap.handleWidth"
             @update:end="onSlicerEnd"
             @update:start="onSlicerStart"
             @trapMouse="selectMinimapIndex"

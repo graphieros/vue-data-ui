@@ -2398,6 +2398,9 @@ defineExpose({
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
+            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            </template>
         </UserOptions>
 
         <div class="vue-ui-xy-canvas" :style="`position: relative; aspect-ratio: ${aspectRatio}`"
@@ -2493,6 +2496,12 @@ defineExpose({
                 :verticalHandles="FINAL_CONFIG.style.chart.zoom.minimap.verticalHandles" 
                 :maxWidth="FINAL_CONFIG.style.chart.zoom.maxWidth"
                 :additionalMinimapHeight="FINAL_CONFIG.style.chart.zoom.minimap.additionalHeight"
+                :handleType="FINAL_CONFIG.style.chart.zoom.minimap.handleType"
+                :handleIconColor="FINAL_CONFIG.style.chart.zoom.minimap.handleIconColor"
+                :handleBorderWidth="FINAL_CONFIG.style.chart.zoom.minimap.handleBorderWidth"
+                :handleBorderColor="FINAL_CONFIG.style.chart.zoom.minimap.handleBorderColor"
+                :handleFill="FINAL_CONFIG.style.chart.zoom.minimap.handleFill"
+                :handleWidth="FINAL_CONFIG.style.chart.zoom.minimap.handleWidth"
                 @futureEnd="v => setPrecog('end', v)"
                 @futureStart="v => setPrecog('start', v)"
                 @reset="refreshSlicer"

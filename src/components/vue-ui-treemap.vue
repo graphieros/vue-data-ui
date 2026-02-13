@@ -1824,6 +1824,9 @@ defineExpose({
             <template v-if="$slots.optionAnnotator" #optionAnnotator="{ toggleAnnotator, isAnnotator }">
                 <slot name="optionAnnotator" v-bind="{ toggleAnnotator, isAnnotator }" />
             </template>
+            <template v-if="$slots.optionAltCopy" #optionAltCopy="{ altCopy: c }">
+                <slot name="optionAltCopy" v-bind="{ altCopy: c }"/>
+            </template>
         </UserOptions>
 
         <nav class="vue-ui-treemap-breadcrumbs" v-if="breadcrumbs.length > 1" data-dom-to-png-ignore ref="breadcrumbsNav">
