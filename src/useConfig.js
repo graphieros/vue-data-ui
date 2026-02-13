@@ -280,7 +280,13 @@ export function useConfig(options = {}) {
         verticalHandles: false,
         compact: true,
         frameColor: COLOR_GREY,
-        additionalHeight: 0
+        additionalHeight: 0,
+        handleIconColor: null,
+        handleBorderWidth: 1,
+        handleBorderColor: null,
+        handleFill: null,
+        handleWidth: 20,
+        handleType: 'grab', // 'empty' | 'chevron' | 'grab' | 'arrow'
     }
 
     const MINIMAP = {

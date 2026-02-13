@@ -415,6 +415,12 @@ declare module "vue-data-ui" {
         merged?: boolean;
         frameColor?: string;
         additionalHeight?: number;
+        handleIconColor?: string | null;
+        handleBorderWidth?: number;
+        handleBorderColor?: string | null;
+        handleFill?: string | null;
+        handleWidth?: number;
+        handleType?: '' | 'empty' | 'chevron' | 'grab' | 'arrow';
     };
 
     export type ChartZoom = {
