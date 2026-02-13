@@ -209,6 +209,30 @@ const props = defineProps({
     additionalMinimapHeight: {
         type: Number,
         default: 0
+    },
+    handleType: {
+        type: String,
+        default: ''
+    },
+    handleWidth: {
+        type: Number,
+        default: 20
+    },
+    handleBorderWidth: {
+        type: Number,
+        default: 1
+    },
+    handleIconColor: {
+        type: String,
+        default: null
+    },
+    handleBorderColor: {
+        type: String,
+        default: null
+    },
+    handleFill: {
+        type: String,
+        default: null
     }
 });
 
@@ -1424,26 +1448,52 @@ defineExpose({
                         <rect
                             class="vue-ui-zoom-compact-minimap-handle"
                             v-if="hasMinimap && minimapCompact"
-                            :x="selectionRectCoordinates.x - 40"
+                            :x="selectionRectCoordinates.x - Math.min(40, Math.max(20, handleWidth))"
                             :y="0"
-                            :width="40"
+                            :width="Math.min(40, Math.max(20, handleWidth))"
                             :height="svgMinimap.height"
-                            :fill="borderColor"
-                            stroke="none"
-                            style="opacity: 0.7"
+                            :fill="handleFill || borderColor"
+                            :stroke="handleBorderColor || textColor"
+                            :stroke-width="handleBorderWidth"
                             :rx="3"
                         />
-                        <rect
-                            class="vue-ui-zoom-compact-minimap-handle"
-                            v-if="hasMinimap && minimapCompact"
-                            :x="selectionRectCoordinates.x - 40"
+
+                        <svg
+                            v-if="handleType && handleType !== 'empty'"
+                            :x="selectionRectCoordinates.x - Math.min(40, Math.max(20, handleWidth))"
                             :y="0"
-                            :width="40"
+                            :width="Math.min(40, Math.max(20, handleWidth))"
                             :height="svgMinimap.height"
-                            fill="none"
-                            :stroke="textColor"
-                            :rx="3"
-                        />
+                            viewBox="0 0 20 20"
+                        >
+                            <path
+                                v-if="handleType === 'arrow'"
+                                d="M 7 7 L 3 10 L 7 13 L 7 7 M 13 7 L 17 10 L 13 13 L 13 7"
+                                :fill="borderColor"
+                                :stroke="handleIconColor || textColor"
+                                :stroke-width="0.618"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
+
+                            <path 
+                                v-else-if="handleType === 'chevron'"
+                                d="M 6 7 L 4 10 L 6 13 M 14 7 L 16 10 L 14 13"
+                                fill="none"
+                                :stroke="handleIconColor || textColor"
+                                :stroke-width="0.618"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
+
+                            <path 
+                                v-else-if="handleType === 'grab'"
+                                d="M 8 5 A 1 1 0 0 0 8 7 A 1 1 0 0 0 8 5 M 8 9 A 1 1 0 0 0 8 11 A 1 1 0 0 0 8 9 M 8 13 A 1 1 0 0 0 8 15 A 1 1 0 0 0 8 13 M 12 5 A 1 1 0 0 0 12 7 A 1 1 0 0 0 12 5 M 12 9 A 1 1 0 0 0 12 11 A 1 1 0 0 0 12 9 M 12 13 A 1 1 0 0 0 12 15 A 1 1 0 0 0 12 13"
+                                :fill="handleIconColor || textColor"
+                                stroke="none"
+                                opacity="0.6"
+                            />
+                        </svg>
 
                         <!-- RIGHT handle (shifted outward to the right) -->
                         <rect
@@ -1451,24 +1501,50 @@ defineExpose({
                             v-if="hasMinimap && minimapCompact"
                             :x="selectionRectCoordinates.x + selectionRectCoordinates.width"
                             :y="0"
-                            :width="40"
+                            :width="Math.min(40, Math.max(20, handleWidth))"
                             :height="svgMinimap.height"
-                            :fill="borderColor"
-                            stroke="none"
-                            style="opacity: 0.7"
+                            :fill="handleFill || borderColor"
+                            :stroke="handleBorderColor || textColor"
+                            :stroke-width="handleBorderWidth"
                             :rx="3"
                         />
-                        <rect
-                            class="vue-ui-zoom-compact-minimap-handle"
-                            v-if="hasMinimap && minimapCompact"
+
+                        <svg
+                            v-if="handleType && handleType !== 'empty'"
                             :x="selectionRectCoordinates.x + selectionRectCoordinates.width"
                             :y="0"
-                            :width="40"
+                            :width="Math.min(40, Math.max(20, handleWidth))"
                             :height="svgMinimap.height"
-                            fill="none"
-                            :stroke="textColor"
-                            :rx="3"
-                        />
+                            viewBox="0 0 20 20"
+                        >
+                            <path
+                                v-if="handleType === 'arrow'"
+                                d="M 7 7 L 3 10 L 7 13 L 7 7 M 13 7 L 17 10 L 13 13 L 13 7"
+                                :fill="borderColor"
+                                :stroke="handleIconColor || textColor"
+                                :stroke-width="0.618"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
+
+                            <path 
+                                v-else-if="handleType === 'chevron'"
+                                d="M 6 7 L 4 10 L 6 13 M 14 7 L 16 10 L 14 13"
+                                fill="none"
+                                :stroke="handleIconColor || textColor"
+                                :stroke-width="0.618"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
+
+                            <path 
+                                v-else-if="handleType === 'grab'"
+                                d="M 8 5 A 1 1 0 0 0 8 7 A 1 1 0 0 0 8 5 M 8 9 A 1 1 0 0 0 8 11 A 1 1 0 0 0 8 9 M 8 13 A 1 1 0 0 0 8 15 A 1 1 0 0 0 8 13 M 12 5 A 1 1 0 0 0 12 7 A 1 1 0 0 0 12 5 M 12 9 A 1 1 0 0 0 12 11 A 1 1 0 0 0 12 9 M 12 13 A 1 1 0 0 0 12 15 A 1 1 0 0 0 12 13"
+                                :fill="handleIconColor || textColor"
+                                stroke="none"
+                                opacity="0.6"
+                            />
+                        </svg>
 
                         <!-- SELECTION INDICATOR -->
                         <template v-if="selectedTrap !== null && !isMouseDown">
