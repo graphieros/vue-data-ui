@@ -699,6 +699,13 @@ const model = createModel([
 
     CHECKBOX("chart.zoom.minimap.show", { def: true }),
     NUMBER('chart.zoom.minimap.additionalHeight', { def: 0, min: 0, max: 24}),
+    SELECT('chart.zoom.minimap.handleType', ['empty', 'chevron', 'grab', 'arrow'], { def: 'grab' }),
+    COLOR('chart.zoom.minimap.handleIconColor', { def: null}),
+    NUMBER('chart.zoom.minimap.handleBorderWidth', { def: 1, min: 0, max: 6 }),
+    COLOR('chart.zoom.minimap.handleBorderColor', { def: null }),
+    COLOR('chart.zoom.minimap.handleFill', { def: null }),
+    NUMBER('chart.zoom.minimap.handleWidth', { def: 20, min: 20, max: 40}),
+
     CHECKBOX("chart.zoom.minimap.smooth", { def: false }),
     COLOR("chart.zoom.minimap.selectedColor", { def: "#1f77b4" }),
     RANGE("chart.zoom.minimap.selectedColorOpacity", { def: 0.2, min: 0, max: 1, step: 0.01 }),
