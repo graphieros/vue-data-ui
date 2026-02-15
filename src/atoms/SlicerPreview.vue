@@ -1992,7 +1992,6 @@ input[type="range"]::-ms-thumb {
     display: flex;
     flex-direction: row;
     align-items: center;
-    // padding: 0 24px;
     height: 40px;
 }
 
