@@ -164,6 +164,34 @@ const props = defineProps({
     isCursorPointer: {
         type: Boolean,
         default: false
+    },
+    additionalMinimapHeight: {
+        type: Number,
+        default: 0
+    },
+    handleType: {
+        type: String,
+        default: ''
+    },
+    handleWidth: {
+        type: Number,
+        default: 20
+    },
+    handleBorderWidth: {
+        type: Number,
+        default: 1
+    },
+    handleIconColor: {
+        type: String,
+        default: null
+    },
+    handleBorderColor: {
+        type: String,
+        default: null
+    },
+    handleFill: {
+        type: String,
+        default: null
     }
 });
 
@@ -233,17 +261,17 @@ const overflowsRight = computed(() => {
 
 const highlightStyle = computed(() => {
     const centerAdjust = overflowsRight.value
-        ? `calc(${centerPercent.value}% - ${mergeTooltip.value.width}px - 2px)`
+        ? `calc(${centerPercent.value}% - ${mergeTooltip.value.width}px)`
         : overflowsLeft.value
         ? `calc(${centerPercent.value}% - 8px)`
-        : `calc(${centerPercent.value}% - ${mergeTooltip.value.width / 2}px - 4px)`;
+        : `calc(${centerPercent.value}% - ${mergeTooltip.value.width / 2}px)`;
 
     return {
         left: `${startPercent.value}%`,
         width: `${Math.max(0, endPercent.value - startPercent.value)}%`,
         background: props.selectColor,
-        tooltipLeft: `calc(${startPercent.value}% - ${overflowsLeft.value ? 9 : tooltipLeftWidth.value / 2 + 3.5}px)`,
-        tooltipRight: `calc(${endPercent.value}% - ${overflowsRight.value ? tooltipRightWidth.value - 9 : tooltipRightWidth.value / 2 - 3.5}px)`,
+        tooltipLeft: `calc(${startPercent.value}% - ${overflowsLeft.value ? 9 : tooltipLeftWidth.value / 2}px)`,
+        tooltipRight: `calc(${endPercent.value}% - ${overflowsRight.value ? tooltipRightWidth.value - 9 : tooltipRightWidth.value / 2}px)`,
         tooltipCenter: centerAdjust,
         arrowLeft: !overflowsLeft.value,
         arrowRight: !overflowsRight.value
@@ -927,9 +955,10 @@ const selectionIndicator = computed(() => {
 
 <template>
     <div 
+        :data-minimap="hasMinimap"
         data-cy="slicer" 
         data-dom-to-png-ignore
-        style="padding: 0 24px" 
+        style="padding: 0 48px" 
         class="vue-data-ui-zoom"
         ref="zoomWrapper"
         @mousedown="startDragging"
@@ -973,6 +1002,10 @@ const selectionIndicator = computed(() => {
             style="z-index: 0" 
             @mouseenter="showTooltip = true" 
             @mouseleave="showTooltip = false"
+            :style="hasMinimap ? {
+                '--minimap-unit-px': unitWidthX + 'px',
+                '--minimap-offset-px': (minimapCompact ? 0 : (unitWidthX / 2)) + 'px'
+            } : undefined"
         >
             <template v-if="hasMinimap">
                 <div 
@@ -1158,26 +1191,103 @@ const selectionIndicator = computed(() => {
                         <rect
                             class="vue-ui-zoom-compact-minimap-handle"
                             v-if="hasMinimap && minimapCompact"
-                            :x="selectionRectCoordinates.x - 8"
+                            :x="selectionRectCoordinates.x - Math.min(40, Math.max(20, handleWidth))"
                             :y="0"
-                            :width="8"
+                            :width="Math.min(40, Math.max(20, handleWidth))"
                             :height="svgMinimap.height"
-                            :fill="borderColor"
-                            :stroke="textColor"
+                            :fill="handleFill || borderColor"
+                            :stroke="handleBorderColor || textColor"
+                            :stroke-width="handleBorderWidth"
                             :rx="3"
                         />
 
+                        <svg
+                            v-if="handleType && handleType !== 'empty'"
+                            :x="selectionRectCoordinates.x - Math.min(40, Math.max(20, handleWidth))"
+                            :y="0"
+                            :width="Math.min(40, Math.max(20, handleWidth))"
+                            :height="svgMinimap.height"
+                            viewBox="0 0 20 20"
+                        >
+                            <path
+                                v-if="handleType === 'arrow'"
+                                d="M 7 7 L 3 10 L 7 13 L 7 7 M 13 7 L 17 10 L 13 13 L 13 7"
+                                :fill="borderColor"
+                                :stroke="handleIconColor || textColor"
+                                :stroke-width="0.618"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
+
+                            <path 
+                                v-else-if="handleType === 'chevron'"
+                                d="M 6 7 L 4 10 L 6 13 M 14 7 L 16 10 L 14 13"
+                                fill="none"
+                                :stroke="handleIconColor || textColor"
+                                :stroke-width="0.618"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
+
+                            <path 
+                                v-else-if="handleType === 'grab'"
+                                d="M 8 5 A 1 1 0 0 0 8 7 A 1 1 0 0 0 8 5 M 8 9 A 1 1 0 0 0 8 11 A 1 1 0 0 0 8 9 M 8 13 A 1 1 0 0 0 8 15 A 1 1 0 0 0 8 13 M 12 5 A 1 1 0 0 0 12 7 A 1 1 0 0 0 12 5 M 12 9 A 1 1 0 0 0 12 11 A 1 1 0 0 0 12 9 M 12 13 A 1 1 0 0 0 12 15 A 1 1 0 0 0 12 13"
+                                :fill="handleIconColor || textColor"
+                                stroke="none"
+                                opacity="0.6"
+                            />
+                        </svg>
+
+                        <!-- RIGHT handle (shifted outward to the right) -->
                         <rect
                             class="vue-ui-zoom-compact-minimap-handle"
                             v-if="hasMinimap && minimapCompact"
                             :x="selectionRectCoordinates.x + selectionRectCoordinates.width"
                             :y="0"
-                            :width="8"
+                            :width="Math.min(40, Math.max(20, handleWidth))"
                             :height="svgMinimap.height"
-                            :fill="borderColor"
-                            :stroke="textColor"
+                            :fill="handleFill || borderColor"
+                            :stroke="handleBorderColor || textColor"
+                            :stroke-width="handleBorderWidth"
                             :rx="3"
                         />
+
+                        <svg
+                            v-if="handleType && handleType !== 'empty'"
+                            :x="selectionRectCoordinates.x + selectionRectCoordinates.width"
+                            :y="0"
+                            :width="Math.min(40, Math.max(20, handleWidth))"
+                            :height="svgMinimap.height"
+                            viewBox="0 0 20 20"
+                        >
+                            <path
+                                v-if="handleType === 'arrow'"
+                                d="M 7 7 L 3 10 L 7 13 L 7 7 M 13 7 L 17 10 L 13 13 L 13 7"
+                                :fill="borderColor"
+                                :stroke="handleIconColor || textColor"
+                                :stroke-width="0.618"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
+
+                            <path 
+                                v-else-if="handleType === 'chevron'"
+                                d="M 6 7 L 4 10 L 6 13 M 14 7 L 16 10 L 14 13"
+                                fill="none"
+                                :stroke="handleIconColor || textColor"
+                                :stroke-width="0.618"
+                                stroke-linejoin="round"
+                                stroke-linecap="round"
+                            />
+
+                            <path 
+                                v-else-if="handleType === 'grab'"
+                                d="M 8 5 A 1 1 0 0 0 8 7 A 1 1 0 0 0 8 5 M 8 9 A 1 1 0 0 0 8 11 A 1 1 0 0 0 8 9 M 8 13 A 1 1 0 0 0 8 15 A 1 1 0 0 0 8 13 M 12 5 A 1 1 0 0 0 12 7 A 1 1 0 0 0 12 5 M 12 9 A 1 1 0 0 0 12 11 A 1 1 0 0 0 12 9 M 12 13 A 1 1 0 0 0 12 15 A 1 1 0 0 0 12 13"
+                                :fill="handleIconColor || textColor"
+                                stroke="none"
+                                opacity="0.6"
+                            />
+                        </svg>
 
 
                         <!-- MERGED (circles) -->
@@ -1587,7 +1697,6 @@ input[type="range"]::-ms-thumb {
     display: flex;
     flex-direction: row;
     align-items: center;
-    // padding: 0 24px;
     height: 40px;
 }
 
@@ -1747,5 +1856,55 @@ input[type="range"].range-invisible::-ms-thumb {
     opacity: 1;
     pointer-events: none;
     transition: opacity 0.15s ease-in-out;
+}
+
+[data-minimap="true"] {
+    --compact-thumb-width: 40px;
+    --compact-thumb-inset: calc(var(--compact-thumb-width) / 2);
+
+    /* Keep the general range aligned to the component width */
+    input[type="range"] {
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    input[type="range"].range-invisible.range-left {
+        left: -40px !important;
+    }
+
+    input[type="range"].range-invisible.range-right {
+        left: 0px !important;
+    }
+
+    input[type="range"].range-invisible {
+        left: calc(-1 * var(--compact-thumb-inset)) !important;
+        right: auto !important;
+        width: calc(100% + var(--compact-thumb-width)) !important;
+        transform: none !important;
+        box-sizing: border-box;
+    }
+
+    /* Thumb hit area sizing (minimap only) */
+    input[type="range"].range-invisible::-webkit-slider-thumb {
+        width: var(--compact-thumb-width) !important;
+    }
+    input[type="range"].range-invisible::-moz-range-thumb {
+        width: var(--compact-thumb-width) !important;
+    }
+
+    input[type="range"].range-minimap::-webkit-slider-thumb {
+        width: var(--compact-thumb-width) !important;
+    }
+    input[type="range"].range-minimap::-moz-range-thumb {
+        width: var(--compact-thumb-width) !important;
+    }
+}
+
+ /* Lighthouse fix */
+input[type="range"].range-handle {
+    height: 48px;
+    top: -14px;
 }
 </style>
