@@ -107,7 +107,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.4",
-    "cypress": "^15.8.1",
+    "cypress": "^15.10.0",
     "remove-attr": "^0.0.13",
     "sass": "^1.57.1",
     "simple-git": "^3.24.0",
