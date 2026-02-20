@@ -114,6 +114,11 @@ const model = createModel([
     NUMBER("style.scaleMin", { def: null, min: -1000, max: 1000 }),
     NUMBER("style.scaleMax", { def: null, min: -1000, max: 1000 }),
 
+    CHECKBOX('gradientPath.show', { def: false }),
+    COLOR('gradientPath.colors.high', { def: '#34eb96'}),
+    COLOR('gradientPath.colors.low', { def: '#eb4034'}),
+    NUMBER('gradientPath.segments', { def: 256, min: 4, max: 256, step: 4}),
+
     CHECKBOX('style.line.pulse.show', { def: true }),
     CHECKBOX('style.line.pulse.radius', { def: 2 }),
     COLOR('style.line.pulse.color', { def: '#FF0000'}),
