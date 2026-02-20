@@ -27,10 +27,11 @@ import { useResponsive } from "../useResponsive";
 import { useThemeCheck } from "../useThemeCheck";
 import { useTimeLabels } from "../useTimeLabels";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 import themes from "../themes/vue_ui_sparkline.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
-import { usePrefersReducedMotion } from "../usePrefersMotion";
 import SparklinePulse from "../atoms/SparklinePulse.vue";
+import SparklineGradientPath from "../atoms/SparklineGradientPath.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const SparkTooltip = defineAsyncComponent(() => import('../atoms/SparkTooltip.vue'));
@@ -91,6 +92,7 @@ function makeSkeletonDs(n) {
 const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
+            gradientPath: { show: false },
             style: {
                 backgroundColor: '#99999930',
                 scaleMin: 0,
@@ -336,7 +338,9 @@ const animationKey = computed(() => {
     const ds = downsampled.value || [];
     const sig = ds.map(d => `${d.period}::${Number.isFinite(d.value) ? d.value : 0}`).join("|");
     const cfg = FINAL_CONFIG.value?.style?.animation || {};
-    return `${sig}#${!!cfg.show}#${cfg.animationFrames || 0}`;
+    const gradientPathEnabled = !!FINAL_CONFIG.value?.gradientPath?.show;
+
+    return `${sig}#${!!cfg.show}#${cfg.animationFrames || 0}#${gradientPathEnabled}`;
 });
 
 function stopAnimation() {
@@ -353,6 +357,7 @@ function animateSL() {
     const cfg = FINAL_CONFIG.value?.style?.animation || {};
     const ds = downsampled.value || [];
     const key = animationKey.value;
+    const gradientPathEnabled = !!FINAL_CONFIG.value.gradientPath.show;
 
     if (key && key === lastAnimationKey.value && (isAnimating.value || safeDatasetCopy.value.length === ds.length)) {
         return;
@@ -360,7 +365,7 @@ function animateSL() {
 
     stopAnimation();
 
-    if (!cfg.show || loading.value || ds.length <= 1) {
+    if (gradientPathEnabled || !cfg.show || loading.value || ds.length <= 1) {
         safeDatasetCopy.value = ds;
         lastAnimationKey.value = key;
         return;
@@ -376,20 +381,19 @@ function animateSL() {
 
     const tick = () => {
         if (key !== animationKey.value) {
-
-        stopAnimation();
-        return;
+            stopAnimation();
+            return;
         }
         if (i < ds.length) {
-        safeDatasetCopy.value.push(ds[i]);
-        const t = setTimeout(() => {
-            rafId.value = requestAnimationFrame(tick);
-        }, delay);
-        timeoutIds.value.push(t);
-        i += 1;
+            safeDatasetCopy.value.push(ds[i]);
+            const t = setTimeout(() => {
+                rafId.value = requestAnimationFrame(tick);
+            }, delay);
+            timeoutIds.value.push(t);
+            i += 1;
         } else {
-        safeDatasetCopy.value = ds;
-        stopAnimation();
+            safeDatasetCopy.value = ds;
+            stopAnimation();
         }
     };
 
@@ -700,6 +704,14 @@ function selectDatapoint(datapoint, index) {
     emits('selectDatapoint', { datapoint, index })
 }
 
+const gradientSvgPathData = computed(() => {
+    if (isBar.value || !FINAL_CONFIG.value.gradientPath.show) return "";
+    const pathData = FINAL_CONFIG.value.style.line.smooth
+        ? createSmoothPath(mutableDataset.value)
+        : createStraightPath(mutableDataset.value);
+    return `M ${pathData || "0,0"}`;
+});
+
 watch(
     () => [
         pulseEnabled.value,
@@ -855,7 +867,8 @@ watch(
                 v-if="FINAL_CONFIG.style.line.smooth && !isBar"
                 :id="pulsePathId"
                 :d="`M ${createSmoothPath(mutableDataset) || '0,0'}`" 
-                :stroke="FINAL_CONFIG.style.line.color" fill="none" 
+                :stroke="FINAL_CONFIG.style.line.color" 
+                fill="none" 
                 :stroke-width="FINAL_CONFIG.style.line.strokeWidth" 
                 stroke-linecap="round" 
                 stroke-linejoin="round"
@@ -877,6 +890,16 @@ watch(
                 :style="{
                     transition: loading ? undefined : 'all 0.2s'
                 }"
+            />
+
+            <SparklineGradientPath
+                v-if="gradientSvgPathData"
+                :svgPathData="gradientSvgPathData"
+                :enabled="FINAL_CONFIG.gradientPath.show && !isBar"
+                :strokeWidth="FINAL_CONFIG.style.line.strokeWidth"
+                :highColor="FINAL_CONFIG.gradientPath.colors.high"
+                :lowColor="FINAL_CONFIG.gradientPath.colors.low"
+                :segments="FINAL_CONFIG.gradientPath.segments"
             />
 
             <SparklinePulse
