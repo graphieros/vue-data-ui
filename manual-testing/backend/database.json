@@ -974,6 +974,23 @@
       "id": "741ecd80-fe86-4532-9361-a22d2969121e",
       "createdAt": 1770904531442,
       "updatedAt": 1770910157841
+    },
+    {
+      "title": "Add path gradient option",
+      "component": "VueUiXy",
+      "description": "Add temperature options (at datapoint level, useTemperature with color array to enable). Creates a linear gradient (vertical) which defines color stops to use on the path stroke.",
+      "priority": 1,
+      "author": "graphieros",
+      "done": true,
+      "exchanges": [],
+      "type": "feature",
+      "withComponentCheckList": false,
+      "checkList": {},
+      "withCustomCheckList": false,
+      "customCheckList": {},
+      "id": "7512f7b1-d453-40e1-9eb7-eb99fb4c3647",
+      "createdAt": 1771600690852,
+      "updatedAt": 1771605663209
     }
   ]
 }
