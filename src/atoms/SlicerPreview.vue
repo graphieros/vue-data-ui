@@ -24,6 +24,10 @@ import { useResponsive } from '../useResponsive';
 import BaseIcon from './BaseIcon.vue';
 
 const props = defineProps({
+    uuid: {
+        type: String,
+        default: ''
+    },
     immediate: {
         type: Boolean,
         default: true
@@ -686,6 +690,7 @@ const allMinimapLines = computed(() => {
             key: typeof k === 'object' ? JSON.stringify(k) : String(k),
             color: ds?.color,
             ...line,
+            temperatureColors: ds?.temperatureColors ?? null,
             isVisible: ds.isVisible,
             type: ds.type || 'line',
             dashed: ds.dashed ?? false
@@ -1404,11 +1409,11 @@ defineExpose({
                                         />
                                     </template>
                                 </g>
-                                <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
+                                <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
                                     <path
                                         v-if="dp && dp.hasSelection && dp.selectionSet && dp.isVisible"
                                         :d="`M ${dp.selectionSet}`"
-                                        :stroke="dp.color"
+                                        :stroke="dp.temperatureColors ? `url(#temperature_grad_line_${i}_${uuid})` : dp.color"
                                         fill="transparent"
                                         stroke-width="2"
                                         stroke-linecap="round"
@@ -1590,11 +1595,11 @@ defineExpose({
     
                             <!-- SPLIT TREE (circles) -->
                             <g v-else>
-                                <g v-for="dp in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
+                                <g v-for="(dp, i) in allMinimapLines.filter(d => d.type === 'line')" :key="String(dp.key)">
                                     <path
                                         v-if="dp && dp.hasSelection && dp.selectionSet && dp.isVisible"
                                         :d="`M ${dp.selectionSet}`"
-                                        :stroke="dp.color"
+                                        :stroke="dp.temperatureColors ? `url(#temperature_grad_line_${i}_${uuid})` : dp.color"
                                         fill="transparent"
                                         stroke-width="2"
                                         stroke-linecap="round"

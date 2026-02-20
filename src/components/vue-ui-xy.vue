@@ -53,6 +53,7 @@ import {
     objectIsEmpty,
     palette,
     placeXYTag,
+    setGradientOffset,
     setOpacity,
     shiftHue,
     themePalettes,
@@ -2134,6 +2135,7 @@ const lineSet = computed(() => {
 
         return {
             ...datapoint,
+            temperatureColors: datapoint.temperatureColors ? datapoint.temperatureColors.map(c => convertColorToHex(c)) : null,
             yOffset,
             autoScaleYLabels,
             individualHeight,
@@ -3599,6 +3601,16 @@ defineExpose({
                                     :stop-color="`${setOpacity(serie.color, FINAL_CONFIG.line.area.opacity)}`" />
                             </linearGradient>
                         </defs>
+                        <defs v-if="serie.temperatureColors">
+                            <linearGradient :id="`temperature_grad_line_${i}_${uniqueId}`" gradientTransform="rotate(90)">
+                                <stop 
+                                    v-for="(color, j) in serie.temperatureColors"
+                                    :key="`temperature_grad_stop_${i}_${j}_${uniqueId}`"
+                                    :stop-color="color"
+                                    :offset="setGradientOffset(j, serie.temperatureColors.length)"
+                                />
+                            </linearGradient>
+                        </defs>
                     </template>
 
                     <!-- HIGHLIGHT AREAS -->
@@ -3890,11 +3902,16 @@ defineExpose({
                             </template>
                         </g>
 
-                        <path data-cy="datapoint-line-smooth"
-                            v-if="!serie.hasDashedSegments && serie.smooth && serie.plots.length > 1 && !!serie.curve" :d="`M${serie.curve}`"
-                            :stroke="serie.color" :stroke-width="FINAL_CONFIG.line.strokeWidth"
+                        <path 
+                            data-cy="datapoint-line-smooth"
+                            v-if="!serie.hasDashedSegments && serie.smooth && serie.plots.length > 1 && !!serie.curve" 
+                            :d="`M${serie.curve}`"
+                            :stroke="serie.temperatureColors ? `url(#temperature_grad_line_${i}_${uniqueId})`: serie.color" 
+                            :stroke-width="FINAL_CONFIG.line.strokeWidth"
                             :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none"
-                            stroke-linecap="round" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"/>
+                            stroke-linecap="round" 
+                            :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"
+                        />
 
                         <template v-else-if="serie.hasDashedSegments">
                             <template v-if="serie.smooth">
@@ -3905,7 +3922,7 @@ defineExpose({
                                     stroke-linecap="round" 
                                     stroke-linejoin="round"
                                     :d="`M ${seg.path}`"
-                                    :stroke="serie.color"
+                                    :stroke="serie.temperatureColors ? `url(#temperature_grad_line_${i}_${uniqueId})`: serie.color"
                                     :stroke-width="FINAL_CONFIG.line.strokeWidth"
                                     :stroke-dasharray="seg.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
                                 />
@@ -3918,15 +3935,18 @@ defineExpose({
                                     stroke-linecap="round" 
                                     stroke-linejoin="round"
                                     :d="`M ${seg.path}`"
-                                    :stroke="serie.color"
+                                    :stroke="serie.temperatureColors ? `url(#temperature_grad_line_${i}_${uniqueId})`: serie.color"
                                     :stroke-width="FINAL_CONFIG.line.strokeWidth"
                                     :stroke-dasharray="seg.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0"
                                 />
                             </template>
                         </template>
 
-                        <path data-cy="datapoint-line-straight" v-else-if="serie.plots.length > 1 && !!serie.straight"
-                            :d="`M${serie.straight}`" :stroke="serie.color"
+                        <path 
+                            data-cy="datapoint-line-straight" 
+                            v-else-if="serie.plots.length > 1 && !!serie.straight"
+                            :d="`M${serie.straight}`" 
+                            :stroke="serie.temperatureColors ? `url(#temperature_grad_line_${i}_${uniqueId})`: serie.color"
                             :stroke-width="FINAL_CONFIG.line.strokeWidth"
                             :stroke-dasharray="serie.dashed ? FINAL_CONFIG.line.strokeWidth * 2 : 0" fill="none"
                             stroke-linecap="round" stroke-linejoin="round" :style="{ transition: loading || !FINAL_CONFIG.line.showTransition ? undefined: `all ${FINAL_CONFIG.line.transitionDurationMs}ms ease-in-out`}"/>
@@ -4630,6 +4650,7 @@ defineExpose({
         <SlicerPreview 
             ref="chartSlicer" 
             v-if="FINAL_CONFIG.chart.zoom.show && maxX > 6 && isDataset && slicerReady"
+            :uuid="uniqueId"
             :allMinimaps="allMinimaps"
             :background="FINAL_CONFIG.chart.zoom.color"
             :borderColor="FINAL_CONFIG.chart.backgroundColor" 

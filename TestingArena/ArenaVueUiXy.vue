@@ -414,9 +414,10 @@ onMounted(() => {
         name: "Serie A",
         series: createDs(35),
         type: "line",
+        temperatureColors: ['#FF0000', '#00FF00', '#0000FF'],
         dataLabels: false,
-        smooth: false,
-        useArea: true,
+        smooth: true,
+        useArea: false,
         useProgression: true,
         // freestyle:
         marks: [10, 20],

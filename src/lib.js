@@ -4028,6 +4028,12 @@ export function parens(str, start = '(', end = ')') {
     return `${start}${str}${end}`;
 }
 
+// Calculate def stop offset value from an index and a quantity of stops
+export function setGradientOffset(i, n) {
+    if (n <= 1) return '0%';
+    return `${(i * 100) / (n - 1)}%`;
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -4132,6 +4138,7 @@ const lib = {
     placeXYTag,
     rotateMatrix,
     sanitizeArray,
+    setGradientOffset,
     setOpacity,
     setOpacityIfWithinBBox,
     shiftHue,

@@ -4040,6 +4040,7 @@ declare module "vue-data-ui" {
         smooth?: boolean;
         prefix?: string;
         suffix?: string;
+        temperatureColors?: string[]; // for line series only
     };
 
     export type VueUiXyDatasetBarItem = {
