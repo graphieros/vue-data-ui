@@ -5905,6 +5905,14 @@ declare module "vue-data-ui" {
         responsive?: boolean;
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparklineConfig>;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<number[]>;
+        gradientPath?: {
+            show?: boolean;
+            segments?: number;
+            colors?: {
+                high?: string;
+                low?: string;
+            };
+        };
         events?: { // v3
             datapointEnter?: VueUiSparklineEvent; // v3
             datapointLeave?: VueUiSparklineEvent; // v3

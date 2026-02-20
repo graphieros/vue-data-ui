@@ -2798,6 +2798,14 @@ export function useConfig(options = {}) {
         responsive: false,
         type: SHAPE.LINE,
         downsample: LTTB,
+        gradientPath: {
+            show: false,
+            segments: 256,
+            colors: {
+                high: '#34eb96',
+                low: '#eb4034',
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
