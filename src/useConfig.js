@@ -2798,6 +2798,9 @@ export function useConfig(options = {}) {
         responsive: false,
         type: SHAPE.LINE,
         downsample: LTTB,
+        // `gradientPath` creates multiple path segments to fake a gradient that follows the path
+        // Only 2 colors are possible.
+        // Could be considered 'experimental'
         gradientPath: {
             show: false,
             segments: 256,
@@ -2805,6 +2808,13 @@ export function useConfig(options = {}) {
                 high: '#34eb96',
                 low: '#eb4034',
             }
+        },
+        // `temperatureColors` applies a color linearGradient def to the exsiting path.
+        // It does not technically follow the path, but is more performant than `gradientPath`
+        // and allows the usage of any number of colors in its `colors` array. 
+        temperatureColors: {
+            show: false,
+            colors: ['#34eb96', '#eb4034']
         },
         events: { // v3
             datapointEnter: null, // v3

@@ -119,6 +119,8 @@ const model = createModel([
     COLOR('gradientPath.colors.low', { def: '#eb4034'}),
     NUMBER('gradientPath.segments', { def: 256, min: 4, max: 256, step: 4}),
 
+    CHECKBOX('temperatureColors.show', { def: true }),
+
     CHECKBOX('style.line.pulse.show', { def: true }),
     CHECKBOX('style.line.pulse.radius', { def: 2 }),
     COLOR('style.line.pulse.color', { def: '#FF0000'}),

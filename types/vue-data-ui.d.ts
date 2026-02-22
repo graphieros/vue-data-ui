@@ -5914,6 +5914,10 @@ declare module "vue-data-ui" {
                 low?: string;
             };
         };
+        temperatureColors?: {
+            show?: boolean;
+            colors?: string[];
+        };
         events?: { // v3
             datapointEnter?: VueUiSparklineEvent; // v3
             datapointLeave?: VueUiSparklineEvent; // v3

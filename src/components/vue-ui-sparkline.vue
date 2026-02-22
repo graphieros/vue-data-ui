@@ -4,6 +4,7 @@ import {
     applyDataLabel,
     calcLinearProgression,
     calcMedian,
+    convertColorToHex,
     createSmoothPath,
     createStraightPath,
     createUid,
@@ -14,6 +15,7 @@ import {
     getMissingDatasetAttributes,
     largestTriangleThreeBucketsArrayObjects,
     objectIsEmpty,
+    setGradientOffset,
     setOpacity,
     shiftHue,
     treeShake,
@@ -93,6 +95,7 @@ const skeletonConfig = computed(() => {
     return treeShake({
         defaultConfig: {
             gradientPath: { show: false },
+            temperatureColors: { show: false },
             style: {
                 backgroundColor: '#99999930',
                 scaleMin: 0,
@@ -338,7 +341,7 @@ const animationKey = computed(() => {
     const ds = downsampled.value || [];
     const sig = ds.map(d => `${d.period}::${Number.isFinite(d.value) ? d.value : 0}`).join("|");
     const cfg = FINAL_CONFIG.value?.style?.animation || {};
-    const gradientPathEnabled = !!FINAL_CONFIG.value?.gradientPath?.show;
+    const gradientPathEnabled = !!FINAL_CONFIG.value?.gradientPath?.show && !FINAL_CONFIG.value.temperatureColors.show;
 
     return `${sig}#${!!cfg.show}#${cfg.animationFrames || 0}#${gradientPathEnabled}`;
 });
@@ -357,7 +360,7 @@ function animateSL() {
     const cfg = FINAL_CONFIG.value?.style?.animation || {};
     const ds = downsampled.value || [];
     const key = animationKey.value;
-    const gradientPathEnabled = !!FINAL_CONFIG.value.gradientPath.show;
+    const gradientPathEnabled = !!FINAL_CONFIG.value.gradientPath.show && !FINAL_CONFIG.value.temperatureColors.show;
 
     if (key && key === lastAnimationKey.value && (isAnimating.value || safeDatasetCopy.value.length === ds.length)) {
         return;
@@ -705,12 +708,19 @@ function selectDatapoint(datapoint, index) {
 }
 
 const gradientSvgPathData = computed(() => {
-    if (isBar.value || !FINAL_CONFIG.value.gradientPath.show) return "";
+    if (isBar.value || !FINAL_CONFIG.value.gradientPath.show) return '';
+    if (FINAL_CONFIG.value.temperatureColors.show) return ''
     const pathData = FINAL_CONFIG.value.style.line.smooth
         ? createSmoothPath(mutableDataset.value)
         : createStraightPath(mutableDataset.value);
-    return `M ${pathData || "0,0"}`;
+    return `M ${pathData || '0,0'}`;
 });
+
+const temperatureColors = computed(() => {
+    if (!FINAL_CONFIG.value.temperatureColors.show) return null;
+    if (FINAL_CONFIG.value.temperatureColors.colors.length === 0) return null;
+    return FINAL_CONFIG.value.temperatureColors.colors.map(c => convertColorToHex(c));
+})
 
 watch(
     () => [
@@ -830,6 +840,19 @@ watch(
                         <feMergeNode in="SourceGraphic" />
                     </feMerge>
                 </filter>
+
+                <linearGradient
+                    v-if="FINAL_CONFIG.temperatureColors.show && !!temperatureColors"
+                    :id="`temperature_grad_sparkline_${uid}`"
+                    gradientTransform="rotate(90)"
+                >
+                    <stop 
+                        v-for="(color, i) in temperatureColors"
+                        :key="`temperature_grad_stop_${i}_${uid}`"
+                        :stop-color="color"
+                        :offset="setGradientOffset(i, temperatureColors.length)"
+                    />
+                </linearGradient>
             </defs>
 
 
@@ -867,7 +890,7 @@ watch(
                 v-if="FINAL_CONFIG.style.line.smooth && !isBar"
                 :id="pulsePathId"
                 :d="`M ${createSmoothPath(mutableDataset) || '0,0'}`" 
-                :stroke="FINAL_CONFIG.style.line.color" 
+                :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color" 
                 fill="none" 
                 :stroke-width="FINAL_CONFIG.style.line.strokeWidth" 
                 stroke-linecap="round" 
@@ -883,7 +906,7 @@ watch(
                 v-if="!FINAL_CONFIG.style.line.smooth && !isBar"
                 :id="pulsePathId"
                 :d="`M ${createStraightPath(mutableDataset) || '0,0'}`" 
-                :stroke="FINAL_CONFIG.style.line.color" 
+                :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color" 
                 fill="none" 
                 :stroke-width="FINAL_CONFIG.style.line.strokeWidth" 
                 stroke-linecap="round" stroke-linejoin="round"
@@ -893,9 +916,9 @@ watch(
             />
 
             <SparklineGradientPath
-                v-if="gradientSvgPathData"
+                v-if="gradientSvgPathData && !temperatureColors"
                 :svgPathData="gradientSvgPathData"
-                :enabled="FINAL_CONFIG.gradientPath.show && !isBar"
+                :enabled="FINAL_CONFIG.gradientPath.show && !isBar && !temperatureColors"
                 :strokeWidth="FINAL_CONFIG.style.line.strokeWidth"
                 :highColor="FINAL_CONFIG.gradientPath.colors.high"
                 :lowColor="FINAL_CONFIG.gradientPath.colors.low"
