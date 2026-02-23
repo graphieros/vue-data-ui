@@ -471,7 +471,7 @@ declare module "vue-data-ui" {
     };
     export type Formatter = null | ((params: FormatterParams) => string | number);
 
-    export type Locale = "ar" | "be-cyrl" | "be-latn" | "ca" | "cs" | "da" | "de" | "el" | "en" | "es" | "et" | "fa" | "fi" | "fr" | "he" | "hi" | "hr" | "hu" | "hy" | "id" | "it" | "ja" | "ka" | "ko" | "lt" | "lv" | "ms" | "nb" | "nl" | "pl" | "pt-br" | "pt" | "rs" | "ru" | "se" | "sk" | "sl" | "sq" | "th" | "tr" | "ua" | "vi" | "zh-cn" | "zh-tw";
+    export type Locale = string;
 
     export type AxisDateFormatter = {
         enable?: boolean;
@@ -3904,7 +3904,7 @@ declare module "vue-data-ui" {
                         VueUiXyDatasetBarItem[],
                         VueUiXyDatasetLineItem[],
                         VueUiXyDatasetPlotItem[]
-                    >
+                    > & { absoluteIndex?: number }
                 ) => string);
                 showTimeLabel?: boolean;
                 useDefaultTimeFormat?: boolean;
@@ -5952,7 +5952,7 @@ declare module "vue-data-ui" {
                     radius?: number
                     durationMs?: number;
                     easeing?: 'ease-in-out' | 'ease' | 'ease-in' | 'ease-out' | 'linear' | 'cubic-bezizer';
-                    cubicBezier: [number, number, number, number];
+                    cubicBezier?: [number, number, number, number];
                     trail?: {
                         show?: boolean;
                         length?: number;
@@ -7549,18 +7549,18 @@ declare module "vue-data-ui" {
                 };
                 tooltip?: ChartTooltip & {
                     customFormat?:
-                    | null
-                    | ((
-                        params: VueUiTooltipParams<
+                        | null
+                        | ((
+                            params: VueUiTooltipParams<
                             VueUiXyDatapointItem[],
                             VueUiXySeries,
                             VueUiXyConfig
-                        >
-                    ) => string);
-                    showTimeLabel?: boolean;
-                    useDefaultTimeFormat?: boolean;
-                    timeFormat?: string;
-                };
+                            > & { absoluteIndex?: number }
+                        ) => string)
+                    showTimeLabel?: boolean
+                    useDefaultTimeFormat?: boolean
+                    timeFormat?: string
+                }
                 legend?: {
                     backgroundColor?: string;
                     color?: string;
