@@ -3289,7 +3289,10 @@ function onGenerateImage(payload) {
 
 async function copyAlt(){
     emit('copyAlt', {
-        config: FINAL_CONFIG.value,
+        config: {
+            ...FINAL_CONFIG.value,
+            formattedDates: timeLabels.value
+        },
         dataset: {
             lines: lineSet.value,
             bars: barSet.value,
@@ -3301,12 +3304,15 @@ async function copyAlt(){
         return
     }
     await Promise.resolve(FINAL_CONFIG.value.chart.userOptions.callbacks.altCopy({ 
-        config: FINAL_CONFIG.value, 
+        config: {
+            ...FINAL_CONFIG.value,
+            formattedDates: timeLabels.value
+        }, 
         dataset: {
             lines: lineSet.value,
             bars: barSet.value,
             plots: plotSet.value,
-        }
+        },
     }));
 }
 
