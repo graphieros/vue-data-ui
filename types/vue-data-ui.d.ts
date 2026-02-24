@@ -319,7 +319,29 @@ declare module "vue-data-ui" {
         borderRadius?: string;
     }
 
-    export type ChartUserOptions = {
+    export type AltCopyArgs<TDataset = unknown, TConfig = Record<string, any>> = {
+        dataset: TDataset;
+        config: TConfig;
+    };
+
+    export type ChartCallbacks<TDataset = unknown, TConfig = Record<string, any>> = {
+        animation?: null | (() => void);
+        annotator?: null | (() => void);
+        csv?: null | ((csvStr?: string) => void);
+        fullscreen?: null | (() => void);
+        img?: null | ((args?: { domElement?: string; imageUri?: string; base64?: string }) => void);
+        labels?: null | (() => void);
+        pdf?: null | ((args?: { domElement?: string; imageUri?: string; base64?: string }) => void);
+        sort?: null | (() => void);
+        stack?: null | (() => void);
+        table?: null | (() => void);
+        tooltip?: null | (() => void);
+        svg?: null | ((args: { blob: Blob; url: URL; text: string; dataUrl: string }) => void);
+        zoom?: null | (() => void);
+        altCopy?: null | ((args: AltCopyArgs<TDataset, TConfig>) => void);
+    };
+
+    export type ChartUserOptions<TDataset = unknown, TConfig = Record<string, any>> = {
         show?: boolean;
         showOnChartHover?: boolean;
         keepStateOnChartLeave?: boolean;
@@ -356,21 +378,7 @@ declare module "vue-data-ui" {
             svg?: string;
             zoom?: string;
         };
-        callbacks?: {
-            animation?: null | (() => void);
-            annotator?: null | (() => void);
-            csv?: null | ((csvStr?: string) => void);
-            fullscreen?: null | (() => void);
-            img?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string } = {}) => void);
-            labels?: null | (() => void);
-            pdf?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string } = {}) => void);
-            sort?: null | (() => void);
-            stack?: null | (() => void);
-            table?: null | (() => void);
-            tooltip?: null | (() => void);
-            svg?: null | (({blob, url, text, dataUrl}: { blob: Blob; url: URL, text: string, dataUrl: string }) => void);
-            zoom?: null | (() => void);
-        };
+        callbacks?: ChartCallbacks<TDataset, TConfig>;
         print?: {
             scale?: number;
             orientation?: 'auto' | 'l' | 'p';
@@ -3910,7 +3918,11 @@ declare module "vue-data-ui" {
                 useDefaultTimeFormat?: boolean;
                 timeFormat?: string;
             };
-            userOptions?: ChartUserOptions;
+            userOptions?: ChartUserOptions<{
+                lines: VueUiXyDatasetLineItem[],
+                bars: VueUiXyDatasetBarItem[],
+                plots: VueUiXyDatasetPlotItem[]
+            } | null, VueUiXyConfig & Record<string, any>>;
         };
         bar?: {
             showTransition?: boolean;
