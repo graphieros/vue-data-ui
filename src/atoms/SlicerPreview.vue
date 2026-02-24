@@ -1150,6 +1150,139 @@ const selectionIndicator = computed(() => {
     return null;
 });
 
+const canStartPlus = computed(() => Number(startValue.value) < Number(endValue.value) - 1);
+const canStartMinus = computed(() => Number(startValue.value) > Number(props.min));
+
+const canEndPlus = computed(() => Number(endValue.value) < Number(props.max));
+const canEndMinus = computed(() => Number(endValue.value) > Number(startValue.value) + 1);
+
+function bumpStart(delta) {
+    const next = Number(startValue.value) + delta;
+    if (delta > 0 && !canStartPlus.value) return;
+    if (delta < 0 && !canStartMinus.value) return;
+
+    isRanging.value = true;
+    start.value = next;
+    commitImmediately();
+}
+
+function bumpEnd(delta) {
+    const next = Number(endValue.value) + delta;
+    if (delta > 0 && !canEndPlus.value) return;
+    if (delta < 0 && !canEndMinus.value) return;
+
+    isRanging.value = true;
+    end.value = next;
+    commitImmediately();
+}
+
+const actionsLeft = {
+    plus: () => bumpStart(1),
+    minus: () => bumpStart(-1),
+    canPlus: canStartPlus,
+    canMinus: canStartMinus,
+};
+
+const actionsRight = {
+    plus: () => bumpEnd(1),
+    minus: () => bumpEnd(-1),
+    canPlus: canEndPlus,
+    canMinus: canEndMinus,
+};
+
+function onSelectionKeydown(event) {
+    if (!event) return;
+    if (isEditableTarget(event.target)) return;
+
+    const key = event.key;
+
+    const isLeft =
+        key === 'ArrowLeft' || key === 'ArrowDown' || key === '-' || key === 'Subtract';
+
+    const isRight =
+        key === 'ArrowRight' || key === 'ArrowUp' || key === '+' || key === 'Add';
+
+    if (!isLeft && !isRight) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isRight) {
+        actionsLeft.plus();
+        actionsRight.plus();
+    } else {
+        actionsLeft.minus();
+        actionsRight.minus();
+    }
+}
+
+function isEditableTarget(el) {
+    return (
+        el instanceof HTMLElement &&
+        (el.isContentEditable ||
+            el.tagName === 'INPUT' ||
+            el.tagName === 'TEXTAREA' ||
+            el.tagName === 'SELECT')
+    );
+}
+
+function focusCompactHandle(side) {
+    if (!hasMinimap.value || !props.minimapCompact) return;
+    const root = zoomWrapper.value;
+    if (!root) return;
+
+    const selector =
+        side === 'start'
+            ? '[data-cy="slicer-compact-handle-left"]'
+            : '[data-cy="slicer-compact-handle-right"]';
+
+    const el = root.querySelector(selector);
+    if (el && el instanceof SVGElement && typeof el.focus === 'function') el.focus();
+}
+
+function onHandleKeydown(side, event) {
+    if (!event) return;
+    if (isEditableTarget(event.target)) return;
+
+    const key = event.key;
+
+    const isMinus = key === 'ArrowLeft' || key === 'ArrowDown' || key === '-' || key === 'Subtract';
+    const isPlus  = key === 'ArrowRight' || key === 'ArrowUp' || key === '+' || key === 'Add';
+
+    if (!isMinus && !isPlus) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (side === 'start') {
+        if (isPlus) actionsLeft.plus();
+        else actionsLeft.minus();
+    } else {
+        if (isPlus) actionsRight.plus();
+        else actionsRight.minus();
+    }
+
+    nextTick(() => focusCompactHandle(side));
+}
+
+const handleLeftA11y = computed(() => ({
+    tabindex: 0,
+    role: 'slider',
+    'aria-label': 'Range start',
+    'aria-valuemin': Number(props.min),
+    'aria-valuemax': Math.max(Number(props.min), Number(endValue.value) - 1),
+    'aria-valuenow': Number(startValue.value),
+}));
+
+const handleRightA11y = computed(() => ({
+    tabindex: 0,
+    role: 'slider',
+    'aria-label': 'Range end',
+    'aria-valuemin': Math.min(Number(props.max), Number(startValue.value) + 1),
+    'aria-valuemax': Number(props.max),
+    'aria-valuenow': Number(endValue.value),
+}));
+
 defineExpose({
     setStartValue,
     setEndValue
@@ -1338,7 +1471,15 @@ defineExpose({
                             :height="Math.max(svgMinimap.height, 0)" 
                             :fill="minimapSelectedColor"
                             :rx="minimapSelectionRadius" 
-                            :style="{ opacity: minimapSelectedColorOpacity }" 
+                            :style="{ opacity: minimapSelectedColorOpacity }"
+                            tabindex="0"
+                            role="slider"
+                            aria-label="Selected range"
+                            :aria-valuemin="Number(props.min)"
+                            :aria-valuemax="Number(props.max)"
+                            :aria-valuenow="Number(startValue)" 
+                            :aria-valuetext="labels.left && labels.right ? `${labels.left} – ${labels.right}` : undefined"
+                            @keydown="onSelectionKeydown"
                         />
 
                         <line
@@ -1449,7 +1590,7 @@ defineExpose({
                             }" 
                         />
 
-                        <!-- COMPACT HANDLES (minimap mode only) -->
+                        <!-- COMPACT LEFT HANDLE -->
                         <rect
                             class="vue-ui-zoom-compact-minimap-handle"
                             v-if="hasMinimap && minimapCompact"
@@ -1461,6 +1602,8 @@ defineExpose({
                             :stroke="handleBorderColor || textColor"
                             :stroke-width="handleBorderWidth"
                             :rx="3"
+                            v-bind="handleLeftA11y"
+                            @keydown="onHandleKeydown('start', $event)"
                         />
 
                         <svg
@@ -1500,7 +1643,7 @@ defineExpose({
                             />
                         </svg>
 
-                        <!-- RIGHT handle (shifted outward to the right) -->
+                        <!-- COMPACT HANDLE RIGHT -->
                         <rect
                             class="vue-ui-zoom-compact-minimap-handle"
                             v-if="hasMinimap && minimapCompact"
@@ -1512,6 +1655,8 @@ defineExpose({
                             :stroke="handleBorderColor || textColor"
                             :stroke-width="handleBorderWidth"
                             :rx="3"
+                            v-bind="handleRightA11y"
+                            @keydown="onHandleKeydown('end', $event)"
                         />
 
                         <svg
@@ -1719,7 +1864,9 @@ defineExpose({
                 }"
                 :min="min"
                 :max="minimapCompact && hasMinimap ? Math.max(0, absLen - 1) : max"
+                :tabindex="hasMinimap ? -1 : 0"
                 v-model.number="startForInput"
+                @focus="hasMinimap && $event.target.blur()"
                 @input="startForInput = $event.target.valueAsNumber"
                 @change="commitImmediately"
                 @keyup.enter="commitImmediately"
@@ -1742,6 +1889,8 @@ defineExpose({
                 }"
                 :min="min"
                 :max="minimapCompact && hasMinimap ? Math.max(0, absLen - 1) : max"
+                :tabindex="hasMinimap ? -1 : 0"
+                @focus="hasMinimap && $event.target.blur()"
                 v-model.number="endForInput"
                 @input="endForInput = $event.target.valueAsNumber"
                 @change="commitImmediately"
