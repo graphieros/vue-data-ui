@@ -3742,6 +3742,12 @@ declare module "vue-data-ui" {
         }
     }
 
+    export type FormattedDate = { text: string; absoluteIndex: number };
+
+    export type VueUiXyConfigAugmented = VueUiXyConfig & {
+        formattedDates: FormattedDate[];
+    } & Record<string, any>;
+
     export type VueUiXyConfig = {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiXyDatasetItem[]>;
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiXyConfig>;
@@ -3922,7 +3928,7 @@ declare module "vue-data-ui" {
                 lines: VueUiXyDatasetLineItem[],
                 bars: VueUiXyDatasetBarItem[],
                 plots: VueUiXyDatasetPlotItem[]
-            } | null, VueUiXyConfig & Record<string, any>>;
+            } | null, VueUiXyConfigAugmented>;
         };
         bar?: {
             showTransition?: boolean;
