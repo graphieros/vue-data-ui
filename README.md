@@ -12,7 +12,7 @@
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
-[![npm](https://img.shields.io/npm/dt/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
+[![npm downloads](https://npmx.dev/api/registry/badge/downloads/vue-data-ui)](https://npmx.dev/package/vue-data-ui?modal=chart)
 [![GitHub Repo stars](https://img.shields.io/github/stars/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
 
 [Interactive documentation](https://vue-data-ui.graphieros.com/)
