@@ -15,25 +15,25 @@ export function movingAverage(data, halfWindow) {
 
     // Trailing average (anchored to start): average of [max(0, i-halfWindow), i]
     const trailing = Array.from({ length: n });
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < n; i += 1) {
         const lo = Math.max(0, i - halfWindow);
         let sum = 0;
-        for (let j = lo; j <= i; j++) sum += data[j].value;
+        for (let j = lo; j <= i; j += 1) sum += data[j].value;
         trailing[i] = sum / (i - lo + 1);
     }
 
     // Leading average (anchored to end): average of [i, min(n-1, i+halfWindow)]
     const leading = Array.from({ length: n });
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < n; i += 1) {
         const hi = Math.min(n - 1, i + halfWindow);
         let sum = 0;
-        for (let j = i; j <= hi; j++) sum += data[j].value;
+        for (let j = i; j <= hi; j += 1) sum += data[j].value;
         leading[i] = sum / (hi - i + 1);
     }
 
     // Position-based blend: near start → mostly trailing, near end → mostly leading
     const result = data.map(d => ({ ...d }));
-    for (let i = 1; i < n - 1; i++) {
+    for (let i = 1; i < n - 1; i += 1) {
         const t = i / (n - 1);
         result[i].value = (1 - t) * trailing[i] + t * leading[i];
     }
@@ -59,21 +59,21 @@ export function smoothing(data, tau) {
     // Forward pass
     const forward = Array.from({ length: n });
     forward[0] = data[0].value;
-    for (let i = 1; i < n; i++) {
+    for (let i = 1; i < n; i += 1) {
         forward[i] = alpha * data[i].value + (1 - alpha) * forward[i - 1];
     }
 
     // Backward pass
     const backward = Array.from({ length: n });
     backward[n - 1] = data[n - 1].value;
-    for (let i = n - 2; i >= 0; i--) {
+    for (let i = n - 2; i >= 0; i -= 1) {
         backward[i] = alpha * data[i].value + (1 - alpha) * backward[i + 1];
     }
 
     // Position-based blend: near start → mostly forward, near end → mostly backward
     // This ensures smooth transitions from both fixed endpoints
     const result = data.map(d => ({ ...d }));
-    for (let i = 1; i < n - 1; i++) {
+    for (let i = 1; i < n - 1; i += 1) {
         const t = i / (n - 1);
         result[i].value = (1 - t) * forward[i] + t * backward[i];
     }
