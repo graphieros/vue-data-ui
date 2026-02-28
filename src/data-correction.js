@@ -4,9 +4,9 @@
  * are smooth.
  * First and last points are preserved.
  *
- * @param {Array<{ value: number }>} data
+ * @param {Array<{ value: number | null }>} data
  * @param {number} halfWindow - number of points on each side (0 = disabled)
- * @returns {Array<{ value: number }>}
+ * @returns {Array<{ value: number | null }>}
  */
 export function movingAverage(data, halfWindow) {
     if (halfWindow <= 0 || data.length < 3) return data;
@@ -46,9 +46,9 @@ export function movingAverage(data, halfWindow) {
  * Smooths without introducing lag — preserves the dynamics/timing of trends.
  * First and last points are preserved.
  *
- * @param {Array<{ value: number }>} data
+ * @param {Array<{ value: number | null }>} data
  * @param {number} tau - time constant (0 = disabled, higher = smoother)
- * @returns {Array<{ value: number }>}
+ * @returns {Array<{ value: number | null }>}
  */
 export function smoothing(data, tau) {
     if (tau <= 0 || data.length < 3) return data;
@@ -84,9 +84,9 @@ export function smoothing(data, tau) {
 /**
  * Applies moving average then smoothing in sequence.
  *
- * @param {Array<{ value: number }>} data
+ * @param {Array<{ value: number | null }>} data
  * @param {{ averageWindow: number, smoothingTau: number }} settings
- * @returns {Array<{ value: number }>}
+ * @returns {Array<{ value: number | null }>}
  */
 export function applyDataCorrection(data, settings) {
     let result = data;
