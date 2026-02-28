@@ -84,6 +84,7 @@ const entries = {
   "components/vue-ui-dag": resolve(__dirname, "src/entries/vue-ui-dag.js"),
   "components/vue-ui-geo": resolve(__dirname, "src/entries/vue-ui-geo.js"),
   "components/vue-ui-bump": resolve(__dirname, "src/entries/vue-ui-bump.js"),
+  "utils": resolve(__dirname, "src/entries/utils.js")
 };
 
 export default defineConfig({

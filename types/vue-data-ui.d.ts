@@ -10950,4 +10950,46 @@ declare module "vue-data-ui" {
             skipArrays?: boolean
         }
     ): Record<string, Ref<any>>;
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Applies a two-stage data correction pipeline to a numeric time series.
+     * ---
+     *
+     * The correction is performed in sequence:
+     *
+     * 1. Bidirectional Moving Average:
+     *    Reduces local noise by blending trailing (left-anchored) and leading
+     *    (right-anchored) averages. This ensures smooth transitions from both
+     *    fixed endpoints while preserving the first and last values.
+     *
+     * 2. Forward-Backward Exponential Smoothing (Zero-Phase):
+     *    Further smooths the signal without introducing phase lag. A forward
+     *    and backward exponential pass are blended to preserve trend timing
+     *    and avoid temporal shift artifacts.
+     *
+     * This utility is designed for visual data refinement,
+     * where smoothness is required without distorting boundary values
+     * or shifting peaks and transitions.
+     *
+     * @param {Array<{ value: number | null }>} data
+     *   The ordered dataset to correct. Each item must contain a numeric `value`.
+     *
+     * @param {{ averageWindow: number, smoothingTau: number }} settings
+     *   Configuration object:
+     *   - `averageWindow`: Half-window size for the moving average.
+     *     `0` disables the moving average stage.
+     *   - `smoothingTau`: Time constant controlling smoothing strength.
+     *     `0` disables the smoothing stage. Higher values produce smoother output.
+     *
+     * @returns {Array<{ value: number | null }>}
+     *   A new array with corrected values. The original input array is not mutated.
+     */
+    export function applyDataCorrection(
+        data: Array<{ value: number | null}>, 
+        settings: { 
+            averageWindow: number, 
+            smoothingTau: number }
+    ): Array<{ value: number | null }>;
 }

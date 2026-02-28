@@ -85,4 +85,5 @@ export {
 } from "./lib";
 
 export { lightenColor, darkenColor, shiftColorHue, mergeConfigs } from "./exposedLib";
+export { applyDataCorrection } from "./data-correction";
 export { useObjectBindings } from "./useObjectBindings";
