@@ -789,7 +789,7 @@ watch(
             ref="svgRef"
             :xmlns="XMLNS"
             data-cy="sparkline-svg"
-            :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible`"
+            :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`background:${FINAL_CONFIG.style.backgroundColor};overflow:visible;direction:ltr`"
             @mouseleave="previousSelectedPlot = undefined"
         >
             <PackageVersion />
