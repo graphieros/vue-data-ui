@@ -69,6 +69,10 @@
       "import": "./dist/vue-data-ui.js",
       "default": "./dist/vue-data-ui.js"
     },
+    "./utils": {
+      "types": "./dist/types/utils.d.ts",
+      "import": "./dist/utils.js"
+    },
     "./*": {
       "types": "./dist/types/*.d.ts",
       "import": "./dist/components/*.js",
