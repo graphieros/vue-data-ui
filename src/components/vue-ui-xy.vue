@@ -60,7 +60,6 @@ import {
     translateSize,
     treeShake,
 } from '../lib';
-import { throttle } from '../canvas-lib.js';
 import { useLocale } from '../useLocale.js';
 import { useConfig } from '../useConfig';
 import { usePrinter } from '../usePrinter.js';
