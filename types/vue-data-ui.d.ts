@@ -10527,6 +10527,19 @@ declare module "vue-data-ui" {
         y: number
     }
 
+    //--------------------------------------------------------------------------------------------//
+
+    /**
+     * UTILITY FUNCTION TYPES
+     * 
+     * IMPORTANT: these types are duplicated in utils.d.ts
+     * They are kept in vue-data-ui.d.ts for the legacy import from "vue-data-ui" to work.
+     * If we ever ship a v4 these types can be forcefully removed from vue-data-ui.ts, with
+     * a breaking change.
+     */
+
+    //--------------------------------------------------------------------------------------------//
+
     /** 
      * Configuration options for cumulative functions 
     */

@@ -1,4 +1,16 @@
-/** 
+    //--------------------------------------------------------------------------------------------//
+
+    /**
+    * UTILITY FUNCTION TYPES
+    * 
+    * IMPORTANT: these types are duplicated in vue-data-ui.d.ts  for the legacy import to work.
+    * If we ever ship a v4 these types can be forcefully removed from vue-data-ui.ts, with
+    * a breaking change.
+    */
+
+    //--------------------------------------------------------------------------------------------//
+    
+    /** 
      * Configuration options for cumulative functions 
     */
     export type CumulativeConfig = {
