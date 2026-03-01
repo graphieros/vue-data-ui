@@ -4059,6 +4059,7 @@ declare module "vue-data-ui" {
         prefix?: string;
         suffix?: string;
         temperatureColors?: string[]; // for line series only
+        dashIndices?: number[]; // for line series only
     };
 
     export type VueUiXyDatasetBarItem = {
@@ -4087,6 +4088,7 @@ declare module "vue-data-ui" {
         useProgression: boolean;
         smooth?: boolean;
         useTag?: boolean;
+        dashIndices?: number[];
     };
 
     export type VueUiXyDatasetPlotItem = {
