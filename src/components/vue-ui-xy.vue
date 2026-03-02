@@ -2497,7 +2497,8 @@ const tooltipContent = computed(() => {
         bars: barSet.value,
         lines: lineSet.value,
         plots: plotSet.value,
-        config: FINAL_CONFIG.value
+        config: FINAL_CONFIG.value,
+        dateLabel: time,
     }))) {
         return customFormat({
             absoluteIndex: selectedSerieIndex.value + slicer.value.start,
@@ -2507,7 +2508,8 @@ const tooltipContent = computed(() => {
             bars: barSet.value,
             lines: lineSet.value,
             plots: plotSet.value,
-            config: FINAL_CONFIG.value
+            config: FINAL_CONFIG.value,
+            dateLabel: time
         })
     } else {
         if (time && time.text && FINAL_CONFIG.value.chart.tooltip.showTimeLabel) {

@@ -3918,7 +3918,7 @@ declare module "vue-data-ui" {
                         VueUiXyDatasetBarItem[],
                         VueUiXyDatasetLineItem[],
                         VueUiXyDatasetPlotItem[]
-                    > & { absoluteIndex?: number }
+                    > & { absoluteIndex?: number; dateLabel?: { text: string, absoluteIndex: number } }
                 ) => string);
                 showTimeLabel?: boolean;
                 useDefaultTimeFormat?: boolean;
