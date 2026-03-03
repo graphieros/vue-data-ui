@@ -61,7 +61,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['onNodeClick', 'onMidpointEnter', 'onMidpointLeave', 'copyAlt'])
+const emit = defineEmits(['onNodeClick', 'onMidpointEnter', 'onMidpointLeave', 'copyAlt', 'rotate'])
 
 const dagChart = ref(null);
 const uid = ref(createUid());
@@ -532,6 +532,7 @@ const directions = ["TB", "RL", "BT", "LR"];
 function switchDirection() {
     direction.value = directions[(directions.indexOf(direction.value) + 1) % directions.length];
     resetZoom();
+    emit('rotate', direction.value);
 }
 
 const updateTooltipPlacement = createTooltipPlacementUpdater({
