@@ -1021,6 +1021,12 @@ defineExpose({
                             {{ getCircleLabel(circle) }}
                         </text>
                     </template>
+
+                    <slot name="circle" v-bind="{ 
+                        ...circle, 
+                        isSelected: selectedDatapoint?.id === circle.id,
+                        uid: `${i}_${uid}`
+                    }"/>
                 </template>
     
                 <slot name="svg" :svg="{ 
