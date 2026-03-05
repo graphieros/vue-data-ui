@@ -528,90 +528,97 @@
         </div>
 
         <!-- CHART MODAL -->
-        <div class="vue-ui-table-chart-modal" v-if="showChart && canChart"
-            :style="`width: ${modalWidth}px;top:${clientY}px; left:${clientX}px;background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
-            <div class="vue-ui-modal-drag-handle" @mousedown="dragMouseDown">
-                <!-- Your modal title or drag icon here -->
-                <span v-html="icons.grip"/>
-                <button class="close-chart-modal" :style="{ cursor: isCursorPointer ? 'pointer' : 'default'}" @click="showChart = false">✖</button>
-            </div>
-            <button style="z-index: 1" class="close-chart-modal" @click="showChart = false"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.closeButtons.backgroundColor};color:${FINAL_CONFIG.style.closeButtons.color};border-radius:${FINAL_CONFIG.style.closeButtons.borderRadius}`">
-                ✖
-            </button>
-
-            <div class="chart-modal-options">
-                <button v-if="availableDonutCategories.length" @click="showDonutOptions = true" v-html="icons.donut"
-                    :class="{ 'is-active-chart': chart.type === constants.DONUT || showDonutOptions }"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
-                <button @click="chart.type = constants.LINE; showDonutOptions = false" v-html="icons.chart"
-                    :class="{ 'is-active-chart': chart.type === constants.LINE && !showDonutOptions }"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
-                <button @click="chart.type = constants.BAR; showDonutOptions = false" v-html="icons.bar"
-                    :class="{ 'is-active-chart': chart.type === constants.BAR && !showDonutOptions }"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
-            </div>
-
-            <div style="width:100%; height: fit-content" ref="chartModal">
-                <!-- DONUT OPTIONS -->
-                <div v-if="showDonutOptions && availableDonutCategories.length"
-                    :style="`background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
-                    <fieldset class="vue-ui-table-fieldset">
-                        <legend>
-                            {{ FINAL_CONFIG.translations.chooseCategoryColumn }}
-                        </legend>
-                        <div class="vue-ui-table-fieldset-wrapper">
-                            <template v-for="(option, i) in availableDonutCategories" :key="`donut_radio_${i}`">
-                                <div class="vue-ui-table-fieldset-option">
-                                    <input type="radio" :name="option.name" :id="option.name"
-                                        :checked="selectedDonutCategory && option.name === selectedDonutCategory.name"
-                                        @input="selectedDonutCategory = availableDonutCategories[i]"
-                                        :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`" />
-                                    <label :for="option.name">
-                                        {{ option.name }}
-                                    </label>
-                                </div>
-                            </template>
-                        </div>
-                        <button class="vue-ui-table-generate-donut" :disabled="!selectedDonutCategory"
-                            @click="applyDonutOption"
-                            :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.buttons.selected.color}`">
-                            <div style="margin-bottom: -3px" v-html="icons.donut" />
-                            {{ FINAL_CONFIG.translations.makeDonut }}
-                        </button>
-                    </fieldset>
+        <BaseDraggableDialog
+            ref="chartModal"
+            :backgroundColor="FINAL_CONFIG.style.chart.modal.backgroundColor"
+            :headerColor="FINAL_CONFIG.style.chart.modal.color"
+            :color="FINAL_CONFIG.style.chart.modal.color"
+            :forcedHeight="500"
+            :isCursorPointer="isCursorPointer"
+            withPadding
+            withFullWidth
+            noLayerUpdate
+            @close="showChart = false"
+            @size="setChartModalDimensions"
+        >
+            <template #before>
+                <div class="vue-ui-table-chart-modal-options">
+                    <button v-if="availableDonutCategories.length" @click="showDonutOptions = true" v-html="icons.donut"
+                        :class="{ 'is-active-chart': chart.type === constants.DONUT || showDonutOptions }"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.DONUT || showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
+                    <button @click="chart.type = constants.LINE; showDonutOptions = false" v-html="icons.chart"
+                        :class="{ 'is-active-chart': chart.type === constants.LINE && !showDonutOptions }"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.LINE && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
+                    <button @click="chart.type = constants.BAR; showDonutOptions = false" v-html="icons.bar"
+                        :class="{ 'is-active-chart': chart.type === constants.BAR && !showDonutOptions }"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor : FINAL_CONFIG.style.chart.modal.buttons.unselected.backgroundColor};color:${chart.type === constants.BAR && !showDonutOptions ? FINAL_CONFIG.style.chart.modal.buttons.selected.color : FINAL_CONFIG.style.chart.modal.buttons.unselected.color}`" />
                 </div>
+            </template>
 
-                <!-- BAR | LINE CHARTS -->
-                <template v-if="[constants.BAR, constants.LINE].includes(chart.type) && !showDonutOptions">
-                    <label v-if="chartTimeLabelOptions.length > 1">
-                        {{ FINAL_CONFIG.translations.xAxisLabels }}
-                        <select v-model="chartTimeLabelSourceModel">
-                            <option v-for="opt in chartTimeLabelOptions">{{ opt }}</option>
-                        </select>
-                    </label>
-                    <div style="width: 100%; margin-bottom: 12px">
-                        <VueUiXy :key="`chart_line_${chartStep}`" :dataset="chartData.xyDatasetLine" :config="chartData.xyConfig" v-if="chart.type === constants.LINE"/>
-                        <VueUiXy :key="`chart_bar_${chartStep}`" :dataset="chartData.xyDatasetBar" :config="chartData.xyConfig" v-if="chart.type === constants.BAR"/>
+            <template #content>
+                <div style="width:100%; height: fit-content">
+                    <!-- DONUT OPTIONS -->
+                    <div v-if="showDonutOptions && availableDonutCategories.length"
+                        :style="`background:${FINAL_CONFIG.style.chart.modal.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.color}`">
+                        <fieldset class="vue-ui-table-fieldset">
+                            <legend>
+                                {{ FINAL_CONFIG.translations.chooseCategoryColumn }}
+                            </legend>
+                            <div class="vue-ui-table-fieldset-wrapper">
+                                <template v-for="(option, i) in availableDonutCategories" :key="`donut_radio_${i}`">
+                                    <div class="vue-ui-table-fieldset-option">
+                                        <input type="radio" :name="option.name" :id="option.name"
+                                            :checked="selectedDonutCategory && option.name === selectedDonutCategory.name"
+                                            @input="selectedDonutCategory = availableDonutCategories[i]"
+                                            :style="`background:${FINAL_CONFIG.style.inputs.backgroundColor};color:${FINAL_CONFIG.style.inputs.color};border:${FINAL_CONFIG.style.inputs.border};accent-color:${FINAL_CONFIG.style.inputs.accentColor}`" />
+                                        <label :for="option.name">
+                                            {{ option.name }}
+                                        </label>
+                                    </div>
+                                </template>
+                            </div>
+                            <button class="vue-ui-table-generate-donut" :disabled="!selectedDonutCategory"
+                                @click="applyDonutOption"
+                                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};background:${FINAL_CONFIG.style.chart.modal.buttons.selected.backgroundColor};color:${FINAL_CONFIG.style.chart.modal.buttons.selected.color}`">
+                                <div style="margin-bottom: -3px" v-html="icons.donut" />
+                                {{ FINAL_CONFIG.translations.makeDonut }}
+                            </button>
+                        </fieldset>
                     </div>
-                    <div v-if="currentSelectionSpan.rows.length >= 2" class="chart-trend"
-                        :style="`color:${FINAL_CONFIG.style.chart.modal.color}`">
-                        <span>---</span> Trend: {{ dataLabel({
-                            v: chartData.progression.trend * 100,
-                            s: '%',
-                            r: 1
-                        }) }}
-                    </div>
-                </template>
 
-                <!-- DONUT CHART -->
-                <template v-if="[constants.DONUT].includes(chart.type) && !showDonutOptions">
-                    <div style="width: 100%; margin-bottom: 32px">
-                        <VueUiDonut :dataset="currentDonut" :config="chartData.donutConfig"/>
-                    </div>
-                </template>
-            </div>
-        </div>
+                    <!-- BAR | LINE CHARTS -->
+                    <template v-if="[constants.BAR, constants.LINE].includes(chart.type) && !showDonutOptions">
+                        <label v-if="chartTimeLabelOptions.length > 1" :style="{
+                            color: FINAL_CONFIG.style.chart.modal.color,
+                        }">
+                            {{ FINAL_CONFIG.translations.xAxisLabels }}
+                            <select v-model="chartTimeLabelSourceModel">
+                                <option v-for="opt in chartTimeLabelOptions">{{ opt }}</option>
+                            </select>
+                        </label>
+                        <div style="width: 100%; margin-bottom: 12px">
+                            <VueUiXy :key="`chart_line_${chartStep}`" :dataset="chartData.xyDatasetLine" :config="chartData.xyConfig" v-if="chart.type === constants.LINE"/>
+                            <VueUiXy :key="`chart_bar_${chartStep}`" :dataset="chartData.xyDatasetBar" :config="chartData.xyConfig" v-if="chart.type === constants.BAR"/>
+                        </div>
+                        <div v-if="currentSelectionSpan.rows.length >= 2" class="chart-trend"
+                            :style="`color:${FINAL_CONFIG.style.chart.modal.color}`">
+                            <span>---</span> Trend: {{ dataLabel({
+                                v: chartData.progression.trend * 100,
+                                s: '%',
+                                r: 1
+                            }) }}
+                        </div>
+                    </template>
+
+                    <!-- DONUT CHART -->
+                    <template v-if="[constants.DONUT].includes(chart.type) && !showDonutOptions">
+                        <div style="width: 100%; margin-bottom: 32px">
+                            <VueUiDonut :dataset="currentDonut" :config="chartData.donutConfig"/>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </BaseDraggableDialog>
     </div>
 
 </template>
@@ -619,12 +626,10 @@
 <script setup>
 import { 
     adaptColorToBackground,
-    calcLinearProgression, 
-    convertColorToHex, 
+    calcLinearProgression,  
     convertConfigColors, 
     createCsvContent,
     dataLabel, 
-    darkenHexColor, 
     downloadCsv, 
     lightenHexColor, 
     palette, 
@@ -636,7 +641,9 @@ import { useConfig } from "../useConfig";
 import VueUiXy from "./vue-ui-xy.vue";
 import VueUiDonut from "./vue-ui-donut.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
-import { computed, ref, nextTick, onMounted, watch } from "vue";
+import { computed, ref, nextTick, onMounted, watch, defineAsyncComponent } from "vue";
+
+const BaseDraggableDialog = defineAsyncComponent(() => import('../atoms/BaseDraggableDialog.vue'));
 
 const props = defineProps({
     config: {
@@ -701,7 +708,6 @@ const currentSelectionSpan = ref({
 });
 
 const currentPage = ref(0);
-const iconColor = ref("#2D353C");
 const iconSize = ref(20);
 const isExportRequest = ref(false);
 const isLoading = ref(false);
@@ -860,10 +866,19 @@ const selectedCellsCalculations = computed(() => {
     }
 });
 
+const chartModalDimensions = ref({
+    width: 1000,
+    height: 500
+});
+
+function setChartModalDimensions({ width, height }) {
+    chartModalDimensions.value = { width, height }
+}
+
 const chartData = computed(() => {
     if (!canChart.value) return [];
-    const height = 316;
-    const width = 512;
+    const height = chartModalDimensions.value.height;
+    const width = chartModalDimensions.value.width;
     const items = currentSelectionSpan.value.rows.length;
     const slot = width / items;
     const max = Math.max(...currentSelectionSpan.value.rows.map(row => row.value));
@@ -903,7 +918,10 @@ const chartData = computed(() => {
     const rounding = props.dataset.header[currentSelectionSpan.value.col].decimals;
 
     const xyConfig = {
+        useCssAnimation: false,
         chart: {
+            width,
+            height: height - 250,
             backgroundColor: bg,
             color: textColor,
             labels: {
@@ -930,10 +948,12 @@ const chartData = computed(() => {
             },
             legend: {
                 color: textColor,
+                show: false, // not necessary since we only show a single series and the title is displayed above
             },
             title: {
                 text: title,
                 color: textColor,
+                textAlign: 'center',
                 fontSize: 18,
             },
             tooltip: {
@@ -945,7 +965,6 @@ const chartData = computed(() => {
                 roundingValue: rounding
             },
             userOptions: {
-                position: 'left',
                 buttons: {
                     pdf: false,
                     csv: false,
@@ -1006,6 +1025,7 @@ const chartData = computed(() => {
     });
 
     const donutConfig = {
+        useCssAnimation: false,
         userOptions: {
                 position: 'left',
                 buttons: {
@@ -1749,6 +1769,7 @@ function closeDragElement() {
 }
 
 const chartModal = ref(null);
+
 function dragMouseDown(e) {
     e = e || window.event;
     e.preventDefault();
@@ -1867,12 +1888,86 @@ watch(isExportRequest, (bool) => {
 
 watch(showChart, (bool) => {
     if (bool) {
-        nextTick(() => {
-            closeDragElement();
-        });
+        chartModal.value && chartModal.value.open();
+    } else {
+        chartModal.value && chartModal.value.close();
     }
 });
+
 </script>
+
+<style>
+.vue-ui-table-chart-modal-options {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 1rem;
+}
+
+.vue-ui-table-chart-modal-options button {
+    height: 24px;
+    padding: 3px;
+    width: 24px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    width: 32px;
+    border-radius: 0.3rem;
+}
+
+.vue-ui-table-chart-modal-options button:hover {
+    outline: 3px solid rgba(128, 128, 128, 0.432);
+}
+
+.vue-ui-table-fieldset-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 12px;
+}
+
+.vue-ui-table-fieldset {
+    border-radius: 6px;
+    margin-bottom: 24px;
+    border: 1px solid white;
+}
+
+.vue-ui-table-fieldset legend {
+    color: grey;
+}
+
+.vue-ui-table-fieldset-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vue-ui-table-fieldset-option input {
+    height: 14px;
+    width: 14px;
+    border-radius: 50%;
+}
+
+button.vue-ui-table-generate-donut {
+    align-items: center;
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    margin: 0 auto;
+    margin-bottom: 12px;
+    margin-top: 24px;
+    padding-left: 12px;
+    padding-right: 12px;
+    width: fit-content;
+    border-radius: 0.3rem;
+}
+
+button.vue-ui-table-generate-donut[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
 
 <style scoped>
 .vue-ui-table-main {
@@ -2244,37 +2339,6 @@ button.th-reset:not(:disabled) {
     width: 100%;
 }
 
-.vue-ui-table-main .vue-ui-table-chart-modal {
-    align-items: center;
-    border-radius: 8px;
-    border: 1px solid white;
-    box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.3);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 200px;
-    min-width: 300px;
-    max-width: 800px;
-    overflow: hidden;
-    padding: 12px;
-    position: fixed;
-    resize: horizontal;
-    user-select: none;
-    z-index: 10000;
-}
-
-.vue-ui-table-main .vue-ui-table-chart-svg {
-    border-radius: 6px;
-    margin-bottom: 12px;
-    overflow: visible;
-    padding: 12px;
-    width: calc(100% - 24px);
-}
-
-.vue-ui-table-main .vue-ui-table-donut-chart {
-    border-radius: 6px;
-}
-
 .vue-ui-table-main td.vue-ui-table-td-iteration {
     min-width: 48px;
     font-size: 12px;
@@ -2286,21 +2350,6 @@ button.th-reset:not(:disabled) {
 .vue-ui-table-main .chart-trend {
     font-size: 12px;
     padding-left: 12px;
-}
-
-.vue-ui-table-main .chart-modal-options {
-    bottom: 12px;
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    position: absolute;
-    right: 24px;
-}
-
-.vue-ui-table-main .chart-modal-options button {
-    height: 24px;
-    padding: 3px;
-    width: 24px;
 }
 
 .vue-ui-table-main .th-range-filter {
@@ -2322,52 +2371,6 @@ button.th-reset:not(:disabled) {
     font-size: 12px;
     font-weight: 400;
     margin-bottom: -3px;
-}
-
-.vue-ui-table-main .vue-ui-table-fieldset-wrapper {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 24px;
-    margin-bottom: 12px;
-}
-
-.vue-ui-table-main .vue-ui-table-fieldset {
-    border-radius: 6px;
-    margin-bottom: 24px;
-    border: 1px solid white;
-}
-
-.vue-ui-table-main .vue-ui-table-fieldset legend {
-    color: grey;
-}
-
-.vue-ui-table-main .vue-ui-table-fieldset-option {
-    display: flex;
-    align-items: center;
-}
-
-.vue-ui-table-main .vue-ui-table-fieldset-option input {
-    height: 14px;
-    width: 14px;
-    border-radius: 50%;
-}
-
-.vue-ui-table-main button.vue-ui-table-generate-donut {
-    align-items: center;
-    display: flex;
-    gap: 3px;
-    justify-content: center;
-    margin: 0 auto;
-    margin-bottom: 12px;
-    margin-top: 24px;
-    padding-left: 12px;
-    padding-right: 12px;
-    width: fit-content;
-}
-
-.vue-ui-table-main button.vue-ui-table-generate-donut[disabled] {
-    opacity: 0.5;
 }
 
 .vue-ui-table-main .vue-ui-table-donut-legend {

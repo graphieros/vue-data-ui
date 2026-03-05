@@ -12,10 +12,14 @@ const props = defineProps({
     isFullscreen: { type: Boolean, default: false },
     withPadding: { type: Boolean, default: false },
     forcedWidth: { type: Number, default: 400 },
-    isCursorPointer: { type: Boolean, default: false }
+    forcedHeight: { type: Number, default: 400 },
+    isCursorPointer: { type: Boolean, default: false },
+    forceAspectRatio: { type: Boolean, default: false },
+    withFullWidth: { type: Boolean, default: false },
+    noLayerUpdate: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(["close", "size"]);
 
 const isOpen = ref(false);
 const hasBeenOpened = ref(false);
@@ -28,6 +32,7 @@ const dialogTitleId = `${dialogId}-title`;
 const dialogBodyId = `${dialogId}-body`;
 
 function bringToFront() {
+    if (props.noLayerUpdate) return;
     instanceKey.value += 1;
 }
 
@@ -35,7 +40,7 @@ const modal = reactive({
     left: window.innerWidth / 2 - 200,
     top: window.innerHeight / 2 - 120,
     width: props.forcedWidth,
-    height: 400,
+    height: props.forcedHeight,
     dragging: false,
     resizing: false,
     dragOffsetX: 0,
@@ -155,6 +160,7 @@ function resize(e) {
     let dy = pointer.y - modal.pointerStartY;
     modal.width = Math.max(240, modal.resizeStartW + dx);
     modal.height = Math.max(400, modal.resizeStartH + dy);
+    emit('size', { width: modal.width, height: modal.height });
 }
 
 function endResize() {
@@ -163,7 +169,12 @@ function endResize() {
     document.removeEventListener("mouseup", endResize);
     document.removeEventListener("touchmove", resize);
     document.removeEventListener("touchend", endResize);
+    emit('size', { width: modal.width, height: modal.height });
 }
+
+onMounted(() => {
+    emit('size', { width: modal.width, height: modal.height });
+})
 
 function initResizeLeft(e) {
     e.preventDefault?.();
@@ -332,10 +343,13 @@ function trapFocus(event) {
                 role="document"
                 :class="{
                     'vue-ui-draggable-dialog-body': !withPadding,
-                    'vue-ui-draggable-dialog-body-pad': withPadding
+                    'vue-ui-draggable-dialog-body-pad': withPadding,
+                    'vue-ui-draggable-dialog-body-full-width': withFullWidth
                 }"
             >
+                <slot name="before" />
                 <slot name="content" />
+                <slot name="after" />
             </div>
             <div
                 class="resize-handle"
@@ -408,6 +422,10 @@ function trapFocus(event) {
     width: calc(100% - 24px);
     height: 80%;
     transition: all 0.2s ease-in-out;
+}
+
+.vue-ui-draggable-dialog-body-full-width {
+    width: 100%;
 }
 
 .resize-handle {
