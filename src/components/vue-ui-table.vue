@@ -616,7 +616,7 @@
 
 </template>
 
-<script>
+<script setup>
 import { 
     adaptColorToBackground,
     calcLinearProgression, 
@@ -630,1330 +630,1248 @@ import {
     palette, 
     treeShake,
     setOpacity,
+    createUid,
 } from "../lib";
 import { useConfig } from "../useConfig";
 import VueUiXy from "./vue-ui-xy.vue";
 import VueUiDonut from "./vue-ui-donut.vue";
 import BaseIcon from "../atoms/BaseIcon.vue";
-import { computed, ref } from "vue";
+import { computed, ref, nextTick, onMounted, watch } from "vue";
 
-export default {
-    name: "vue-ui-table",
-    props: {
-        config: {
-            type: Object,
-            default() {
-                return {}
-            }
-        },
-        dataset: {
-            type: Object,
-            default() {
-                return {}
-            }
+const props = defineProps({
+    config: {
+        type: Object,
+        default() {
+            return {}
         }
     },
-    components: { VueUiXy, VueUiDonut, BaseIcon },
-    emits: ['page-change'],
-    data() {
-        const uid = `vue-ui-table-${Math.random()}`;
+    dataset: {
+        type: Object,
+        default() {
+            return {}
+        }
+    }
+});
+
+const emit = defineEmits(['page-change']);
+
+const { vue_ui_table: DEFAULT_CONFIG } = useConfig();
+
+const uid = createUid();
+const rafId = ref(null);
+const tableCaption = ref(null);
+const buttonTimeout  = ref(null);
+const chart = ref({
+    height: 316,
+    type: 'bar',
+    width: 512
+});
+const constants = ref({
+    ASC: 1,
+    BAR: 'bar',
+    DATE: 'date',
+    DESC: -1,
+    DONUT: 'donut',
+    LINE: 'line',
+    NUMERIC: 'numeric',
+    PERCENTAGE: 'percentage',
+    TEXT: 'text',
+});
+
+const clientX =  ref(100);
+const clientY =  ref(100);
+const dragOffsetX =  ref(0);
+const dragOffsetY =  ref(0);
+const modalWidth =  ref(400);
+const modalHeight =  ref(200);
+
+const cssClass = ref({
+    CELL: "smart-td-selected",
+    FIRST_TD: "smart-td-selected-first",
+    LAST_TD: "smart-td-selected-last",
+    ROW: "smart-td-selected-neighbor",
+});
+
+const currentDonut = ref(undefined);
+const currentFilter = ref(undefined);
+
+const currentSelectionSpan = ref({
+    col: undefined,
+    rows: []
+});
+
+const currentPage = ref(0);
+const iconColor = ref("#2D353C");
+const iconSize = ref(20);
+const isExportRequest = ref(false);
+const isLoading = ref(false);
+const dates = ref({});
+const hasNaN = ref({});
+const filteredDatesIndexes = ref({});
+const immutableRangeFilters = ref({});
+const multiselects = ref({});
+const percentages = ref({});
+const rangeFilters = ref({});
+const searches = ref({});
+const sorts = ref({});
+const itemsPerPage = ref(props.config.rowsPerPage ? props.config.rowsPerPage : 25);
+const paginatorOptions = ref([...new Set([10, 25, 50, 100, 250, 500, props.config.rowsPerPage ? props.config.rowsPerPage : 25, props.dataset.body.length])].sort((a, b) => a - b))
+
+const selectedColumn = ref(undefined);
+const selectedDonutCategory = ref(undefined);
+const selectedPlot = ref(undefined);
+const showChart = ref(false);
+const chartStep = ref(0);
+const chartTimeLabelSourceModel = ref('');
+const filename = ref('');
+const showDonutOptions = ref(false);
+
+const bodyCopy = ref(JSON.parse(JSON.stringify(props.dataset.body)).map((el, i) => {
+    return {
+        ...el,
+        absoluteIndex: i,
+    }
+}));
+
+const tableBody = ref(JSON.parse(JSON.stringify(props.dataset.body)).map((el, i) => {
+    return {
+        ...el,
+        absoluteIndex: i
+    }
+}));
+
+const tableHead = ref(JSON.parse(JSON.stringify(props.dataset.header)).map((head, i) => {
+    return {
+        average: Object.hasOwn(head, 'average') ? head.average : false,
+        decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
+        isMultiselect: Object.hasOwn(head, 'isMultiselect') ? head.isMultiselect : false,
+        isPercentage: Object.hasOwn(head, 'isPercentage') ? head.isPercentage : false,
+        isSearch: Object.hasOwn(head, 'isSearch') ? head.isSearch : false,
+        isSort: Object.hasOwn(head, 'isSort') ? head.isSort : false,
+        name: head.name, // this attribute is mandatory
+        percentageTo: Object.hasOwn(head, 'percentageTo') ? head.percentageTo : undefined,
+        prefix: Object.hasOwn(head, 'prefix') ? head.prefix : '',
+        rangeFilter: Object.hasOwn(head, 'rangeFilter') ? head.rangeFilter : false,
+        suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
+        sum: Object.hasOwn(head, 'sum') ? head.sum : false,
+        type: head.type, // this attribute is mandatory
+        index: i
+    }
+}));
+
+
+const exportButtonTop = computed(() => {
+    if (!tableCaption.value) return 3;
+    return tableCaption.value.getBoundingClientRect().height + 3;
+});
+
+const FINAL_CONFIG = computed(() => {
+    if (!Object.keys(props.config || {}).length) {
+        return DEFAULT_CONFIG
+    }
+    const reconcilied = treeShake({
+        defaultConfig: DEFAULT_CONFIG,
+        userConfig: props.config
+    });
+    return convertConfigColors(reconcilied);
+});
+
+const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
+const colorCancelInactive = computed(() => FINAL_CONFIG.value.style.th.buttons.cancel.inactive.backgroundColor);
+const textColorCancelInactive = computed(() => FINAL_CONFIG.value.style.th.buttons.cancel.inactive.color);
+const colorCancelActive = computed(() => FINAL_CONFIG.value.style.th.buttons.cancel.active.backgroundColor);
+const colorButtonSortActive = computed(() => FINAL_CONFIG.value.style.th.buttons.filter.active.backgroundColor);
+const colorButtonSortActiveColorText = computed(() => FINAL_CONFIG.value.style.th.buttons.filter.active.color);
+
+const colorCancelActiveLight = computed(() => lightenHexColor(colorCancelActive.value, 0.33));
+const colorCancelActiveOutline = computed(() => setOpacity(colorCancelActive.value, 33));
+const colorButtonSortActiveLight = computed(() => lightenHexColor(colorButtonSortActive.value, 0.33));
+const colorButtonSortActiveOutline = computed(() => setOpacity(colorButtonSortActive, 33));
+
+const dateHeaders = computed(() => [...tableHead.value].filter(th => th.type === constants.value.DATE));
+const chartTimeLabelOptions = computed(() => ['', ...dateHeaders.value.map(th => th.name)]);
+
+const chartTimeLabelSourceIndex = computed(() => {
+    const src = dateHeaders.value.find(th => th.name === chartTimeLabelSourceModel.value);
+    return src ? src.index : null;
+});
+
+const pages = computed(() => {
+    const _pages = [];
+    if (bodyCopy.value.length) {
+        for (let i = 0; i < bodyCopy.value.length; i += itemsPerPage.value) {
+            _pages.push(bodyCopy.value.slice(i, i + itemsPerPage.value));
+        }
+    }
+    return _pages;
+})
+
+const visibleRows = computed(() => pages.value[currentPage.value]);
+
+const chartTimeLabels = computed(() => {
+    if (chartTimeLabelSourceIndex.value == null) return []
+    return visibleRows.value.map(r => r.td[chartTimeLabelSourceIndex.value]);
+});
+
+const availableDonutCategories = computed(() => {
+    return Object.keys(multiselects.value).map(index => {
         return {
-            uid,
-            bodyCopy: JSON.parse(JSON.stringify(this.dataset.body)).map((el, i) => {
-                return {
-                    ...el,
-                    absoluteIndex: i,
-                }
-            }),
-            buttonTimeout: null,
-            canMoveChart: false,
-            chart: {
-                height: 316,
-                type: 'bar',
-                width: 512
-            },
-            constants: {
-                ASC: 1,
-                BAR: 'bar',
-                DATE: 'date',
-                DESC: -1,
-                DONUT: 'donut',
-                LINE: 'line',
-                NUMERIC: 'numeric',
-                PERCENTAGE: 'percentage',
-                TEXT: 'text',
-            },
-            clientX: 100,
-            clientY: 100,
-            dragOffsetX: 0,
-            dragOffsetY: 0,
-            modalWidth: 400,
-            modalHeight: 200,
-            cssClass: {
-                CELL: "smart-td-selected",
-                FIRST_TD: "smart-td-selected-first",
-                LAST_TD: "smart-td-selected-last",
-                ROW: "smart-td-selected-neighbor",
-            },
-            currentDonut: undefined,
-            currentFilter: undefined,
-            currentSearch: undefined,
-            currentSelectionSpan: {
-                col: undefined,
-                rows: []
-            },
-            currentPage: 0,
-            dates: {},
-            filteredDatesIndexes: {},
-            hasNaN: {},
-            iconColor: "#2D353C",
-            iconSize: 20,
-            immutableRangeFilters: {},
-            isExportRequest: false,
-            isLoading: false,
-            itemsPerPage: this.config.rowsPerPage ? this.config.rowsPerPage : 25,
-            multiselects: {},
-            paginatorOptions: [...new Set([10, 25, 50, 100, 250, 500, this.config.rowsPerPage ? this.config.rowsPerPage : 25, this.dataset.body.length])].sort((a, b) => a - b),
-            palette,
-            percentages: {},
-            rafId: null,
-            rangeFilters: {},
-            searches: {},
-            selectedColumn: undefined,
-            selectedDonutCategory: undefined,
-            selectedPlot: undefined,
-            showChart: false,
-            showDonutOptions: false,
-            sorts: {},
-            chartStep: 0,
-            chartTimeLabelSourceModel: '',
-            tableBody: JSON.parse(JSON.stringify(this.dataset.body)).map((el, i) => {
-                return {
-                    ...el,
-                    absoluteIndex: i
-                }
-            }),
-            tableHead: JSON.parse(JSON.stringify(this.dataset.header)).map((head, i) => {
-                return {
-                    average: Object.hasOwn(head, 'average') ? head.average : false,
-                    decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
-                    isMultiselect: Object.hasOwn(head, 'isMultiselect') ? head.isMultiselect : false,
-                    isPercentage: Object.hasOwn(head, 'isPercentage') ? head.isPercentage : false,
-                    isSearch: Object.hasOwn(head, 'isSearch') ? head.isSearch : false,
-                    isSort: Object.hasOwn(head, 'isSort') ? head.isSort : false,
-                    name: head.name, // this attribute is mandatory
-                    percentageTo: Object.hasOwn(head, 'percentageTo') ? head.percentageTo : undefined,
-                    prefix: Object.hasOwn(head, 'prefix') ? head.prefix : '',
-                    rangeFilter: Object.hasOwn(head, 'rangeFilter') ? head.rangeFilter : false,
-                    suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
-                    sum: Object.hasOwn(head, 'sum') ? head.sum : false,
-                    type: head.type, // this attribute is mandatory
-                    index: i
-                }
-            }),
-            filename: '',
+            index,
+            name: props.dataset.header[index].name,
+            options: multiselects.value[index],
         }
-    },
-    setup() {
-        const tableCaption = ref(null);
+    });
+});
 
-        const exportButtonTop = computed(() => {
-            if (!tableCaption.value) return 3;
-            return tableCaption.value.getBoundingClientRect().height + 3;
-        });
+const canChart = computed(() => FINAL_CONFIG.value.useChart && currentSelectionSpan.value.rows.length > 1);
 
-        return {
-            tableCaption,
-            exportButtonTop
+const hasNumericTypes = computed(() => props.dataset.header.map(h => h.type).includes(constants.value.NUMERIC));
+
+const icons = computed(() => ({
+    arrowSort: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 9l4 -4l4 4m-4 -4v14" /><path d="M21 15l-4 4l-4 -4m4 4v-14" /></svg>`,
+    bar: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" /><path d="M9 8m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" /><path d="M15 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" /><path d="M4 20l14 0" /></svg>`,
+    chart: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 19l16 0" /><path d="M4 15l4 -6l4 2l4 -5l4 4" /></svg>`,
+    chevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>`,
+    chevronLeft: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value * 1.6}" height="${iconSize.value * 1.6}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>`,
+    chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value * 1.6}" height="${iconSize.value * 1.6}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>`,
+    donut: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value * 0.8}" height="${iconSize.value * 0.8}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3v5m4 4h5" /><path d="M8.929 14.582l-3.429 2.918" /><path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /></svg>`,
+    export: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12.5 21h-7.5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v7.5" /><path d="M3 10h18" /><path d="M10 3v18" /><path d="M16 19h6" /><path d="M19 16l3 3l-3 3" /></svg>`,
+    fileDownload: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /><path d="M12 17v-6" /><path d="M9.5 14.5l2.5 2.5l2.5 -2.5" /></svg>`,
+    filter: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z" /></svg>`,
+    move: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 9l3 3l-3 3" /><path d="M15 12h6" /><path d="M6 9l-3 3l3 3" /><path d="M3 12h6" /><path d="M9 18l3 3l3 -3" /><path d="M12 15v6" /><path d="M15 6l-3 -3l-3 3" /><path d="M12 3v6" /></svg>`,
+    sort09: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 15l3 3l3 -3" /><path d="M7 6v12" /><path d="M17 3a2 2 0 0 1 2 2v3a2 2 0 1 1 -4 0v-3a2 2 0 0 1 2 -2z" /><path d="M17 16m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M19 16v3a2 2 0 0 1 -2 2h-1.5" /></svg>`,
+    sort90: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 15l3 3l3 -3" /><path d="M7 6v12" /><path d="M17 14a2 2 0 0 1 2 2v3a2 2 0 1 1 -4 0v-3a2 2 0 0 1 2 -2z" /><path d="M17 5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M19 5v3a2 2 0 0 1 -2 2h-1.5" /></svg>`,
+    sortAZ: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 10v-5c0 -1.38 .62 -2 2 -2s2 .62 2 2v5m0 -3h-4" /><path d="M19 21h-4l4 -7h-4" /><path d="M4 15l3 3l3 -3" /><path d="M7 6v12" /></svg>`,
+    sortZA: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 21v-5c0 -1.38 .62 -2 2 -2s2 .62 2 2v5m0 -3h-4" /><path d="M19 10h-4l4 -7h-4" /><path d="M4 15l3 3l3 -3" /><path d="M7 6v12" /></svg>`,
+    sum: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
+    table: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" fill="white" d="M 10 2, 21 2, 21 21, 10 21Z"/><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z" /><path d="M3 10h18" /><path d="M10 3v18" /></svg>`,
+    warning: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value * 0.8}" height="${iconSize.value * 0.8}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.24 3.957l-8.422 14.06a1.989 1.989 0 0 0 1.7 2.983h16.845a1.989 1.989 0 0 0 1.7 -2.983l-8.423 -14.06a1.989 1.989 0 0 0 -3.4 0z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>`,
+    grip: `<svg xmlns="http://www.w3.org/2000/svg" width="${iconSize.value}" height="${iconSize.value}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M5 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>`
+}));
+
+const rows = computed(() => bodyCopy.value.map(row => row.td));
+
+const selectedCellsCalculations = computed(() => {
+    return {
+        sumPercentage: Number((currentSelectionSpan.value.rows.map(r => r.value).reduce((a, b) => a + b, 0) * 100).toFixed(props.dataset.header[currentSelectionSpan.value.col].decimals)).toLocaleString(),
+        sumRegular: Number(currentSelectionSpan.value.rows.map(r => r.value).reduce((a, b) => a + b, 0).toFixed(props.dataset.header[currentSelectionSpan.value.col].decimals)).toLocaleString(),
+        averagePercentage: Number((currentSelectionSpan.value.rows.map(r => r.value).reduce((a, b) => a + b, 0) / currentSelectionSpan.value.rows.length * 100).toFixed(props.dataset.header[currentSelectionSpan.value.col].decimals)).toLocaleString(),
+        averageRegular: Number((currentSelectionSpan.value.rows.map(r => r.value).reduce((a, b) => a + b, 0) / currentSelectionSpan.value.rows.length).toFixed(props.dataset.header[currentSelectionSpan.value.col].decimals)).toLocaleString()
+    }
+});
+
+const chartData = computed(() => {
+    if (!canChart.value) return [];
+    const height = 316;
+    const width = 512;
+    const items = currentSelectionSpan.value.rows.length;
+    const slot = width / items;
+    const max = Math.max(...currentSelectionSpan.value.rows.map(row => row.value));
+    const min = Math.min(...currentSelectionSpan.value.rows.map(row => row.value));
+
+    const hasPercentageTo = props.dataset.header[currentSelectionSpan.value.col].isPercentage && props.dataset.header[currentSelectionSpan.value.col].percentageTo;
+    const isDonut = chart.value.type === constants.value.DONUT && selectedDonutCategory.value && selectedDonutCategory.value.name;
+
+    const title = props.dataset.header[currentSelectionSpan.value.col].name + (hasPercentageTo ? ` / ${props.dataset.header[percentages.value[currentSelectionSpan.value.col].referenceIndex].name}` : '') + (isDonut ? ` ${FINAL_CONFIG.value.translations.by} ${selectedDonutCategory.value.name}` : '');
+
+    const prefix = props.dataset.header[currentSelectionSpan.value.col].prefix;
+    const suffix = props.dataset.header[currentSelectionSpan.value.col].suffix;
+
+    const xyDatasetLine = [
+        {
+            name: title,
+            series: currentSelectionSpan.value.rows.map(r => r.value),
+            type: 'line',
+            useProgression: true,
+            smooth: FINAL_CONFIG.value.style.chart.layout.line.smooth,
+            color: FINAL_CONFIG.value.style.chart.layout.line.stroke,
+            useArea: FINAL_CONFIG.value.style.chart.layout.line.useArea
         }
-    },
-    mounted() {
-        if (this.dataset.header.length === 0) {
-            throw new Error("vue-ui-table error: missing header data.\nProvide an array of objects of type:\n{\n name: string;\n type: string; ('text' | 'numeric' | 'date')\n average: boolean;\n decimals: number | undefined;\n sum: boolean;\n isSort:boolean;\n isSearch: boolean;\n isMultiselect: boolean;\n isPercentage: boolean;\n percentageTo: string; (or '')\n}");
+    ]
+    const xyDatasetBar = [
+        {
+            name: title,
+            series: currentSelectionSpan.value.rows.map(r => r.value),
+            type: 'bar',
+            useProgression: true,
+            color: FINAL_CONFIG.value.style.chart.layout.bar.fill
         }
-        if (this.dataset.body.length === 0) {
-            throw new Error("vue-ui-table error: missing body data");
-        }
-        this.isLoading = true;
+    ]
 
-        this.promiseWithAsyncFunction(this.prepareBodyCopy, () => {
-            this.$forceUpdate();
-            this.isLoading = false;
-        });
-        document.addEventListener("keydown", (e) => {
-            const focusedElement = document.activeElement;
-            const isTableCellFocused = focusedElement && Array.from(focusedElement.classList).includes('td-focusable');
+    const bg = FINAL_CONFIG.value.style.chart.modal.backgroundColor;
+    const textColor = adaptColorToBackground(bg)
+    const rounding = props.dataset.header[currentSelectionSpan.value.col].decimals;
 
-            if (isTableCellFocused && e.key.includes("Arrow") || e.code === 'Space') {
-                e.preventDefault();
-            }
-        })
-        this.filename = this.FINAL_CONFIG.style.exportMenu.filename;
-        this.chartTimeLabelSourceModel = this.dateHeaders[0]?.name ?? ''
-    },
-    watch: {
-        isExportRequest: function (bool) {
-            if (bool) {
-                const filenameInput = this.$refs.filenameInputRef;
-                if (filenameInput) {
-                    filenameInput.focus();
-                }
-            }
-        },
-        showChart: function (hasChart) {
-            if (hasChart) {
-                this.$nextTick(() => {
-                    this.closeDragElement();
-                })
-            }
-        },
-        dataset: {
-            handler(newVal) {
-                this.isLoading = true;
-                this.bodyCopy = JSON.parse(JSON.stringify(newVal.body)).map((el, i) => ({
-                    ...el,
-                    absoluteIndex: i
-                }));
-                this.tableBody = JSON.parse(JSON.stringify(newVal.body)).map((el, i) => ({
-                    ...el,
-                    absoluteIndex: i
-                }));
-                this.tableHead = JSON.parse(JSON.stringify(newVal.header)).map((head, i) => ({
-                    average: Object.hasOwn(head, 'average') ? head.average : false,
-                    decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
-                    isMultiselect: Object.hasOwn(head, 'isMultiselect') ? head.isMultiselect : false,
-                    isPercentage: Object.hasOwn(head, 'isPercentage') ? head.isPercentage : false,
-                    isSearch: Object.hasOwn(head, 'isSearch') ? head.isSearch : false,
-                    isSort: Object.hasOwn(head, 'isSort') ? head.isSort : false,
-                    name: head.name,
-                    percentageTo: Object.hasOwn(head, 'percentageTo') ? head.percentageTo : undefined,
-                    prefix: Object.hasOwn(head, 'prefix') ? head.prefix : '',
-                    rangeFilter: Object.hasOwn(head, 'rangeFilter') ? head.rangeFilter : false,
-                    suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
-                    sum: Object.hasOwn(head, 'sum') ? head.sum : false,
-                    type: head.type,
-                    index: i
-                }));
-
-                this.currentSelectionSpan = { col: undefined, rows: [] };
-                this.selectedColumn = undefined;
-
-                
-                // this.currentPage = 0;
-                this.itemsPerPage = this.config.rowsPerPage ? this.config.rowsPerPage : 25;
-                this.percentages = {};
-                this.dates = {};
-                this.filteredDatesIndexes = {};
-                this.hasNaN = {};
-                this.immutableRangeFilters = {};
-                this.rangeFilters = {};
-                this.multiselects = {};
-                this.searches = {};
-                this.sorts = {};
-                this.showChart = false;
-                this.currentDonut = undefined;
-                this.selectedDonutCategory = undefined;
-                this.selectedPlot = undefined;
-                this.showDonutOptions = false;
-                this.currentSelectionSpan.col = undefined;
-                this.currentSelectionSpan.rows = []
-
-                this.promiseWithAsyncFunction(this.prepareBodyCopy, () => {
-                        this.$forceUpdate();
-                        this.updateCurrentPage();
-                        this.isLoading = false;
-                    });
+    const xyConfig = {
+        chart: {
+            backgroundColor: bg,
+            color: textColor,
+            labels: {
+                fontSize: 18,
+                prefix,
+                suffix
             },
-            deep: true, // In case dataset.body/header are updated in-place
-            immediate: false
-        }
-    },
-    computed: {
-        isCursorPointer() {
-            return this.FINAL_CONFIG.useCursorPointer;
-        },
-        colorCancelInactive() {
-            return this.FINAL_CONFIG.style.th.buttons.cancel.inactive.backgroundColor;
-        },
-        textColorCancelInactive() {
-            return this.FINAL_CONFIG.style.th.buttons.cancel.inactive.color;
-        },
-        colorCancelActive() {
-            return this.FINAL_CONFIG.style.th.buttons.cancel.active.backgroundColor;
-        },
-        colorCancelActiveLight() {
-            return lightenHexColor(this.colorCancelActive, 0.33);
-        },
-        colorCancelActiveOutline() {
-            return setOpacity(this.colorCancelActive, 33);
-        },
-        colorButtonSortActive() {
-            return this.FINAL_CONFIG.style.th.buttons.filter.active.backgroundColor;
-        },
-        colorButtonSortActiveLight() {
-            return lightenHexColor(this.colorButtonSortActive, 0.33);
-        },
-        colorButtonSortActiveOutline() {
-            return setOpacity(this.colorButtonSortActive, 33);
-        },
-        colorButtonSortInactive() {
-            return this.FINAL_CONFIG.style.th.buttons.filter.inactive.backgroundColor;
-        },
-        colorButtonSortActiveColorText() {
-            return this.FINAL_CONFIG.style.th.buttons.filter.active.color;
-        },
-        dateHeaders() {
-            return [...this.tableHead].filter(th => th.type === this.constants.DATE);
-        },
-        chartTimeLabelOptions() {
-            return ['', ...this.dateHeaders.map(th => th.name)];
-        },
-        chartTimeLabelSourceIndex() {
-            const src = this.dateHeaders.find(th => th.name === this.chartTimeLabelSourceModel);
-            return src ? src.index : null;
-        },
-        chartTimeLabels() {
-            if (this.chartTimeLabelSourceIndex == null) return []
-            return this.visibleRows.map(r => r.td[this.chartTimeLabelSourceIndex]);
-        },
-        availableDonutCategories() {
-            return Object.keys(this.multiselects).map(index => {
-                return {
-                    index,
-                    name: this.dataset.header[index].name,
-                    options: this.multiselects[index],
-                }
-            });
-        },
-        canChart() {
-            return this.FINAL_CONFIG.useChart && this.currentSelectionSpan.rows.length > 1;
-        },
-        chartData() {
-            if (!this.canChart) return [];
-            const height = 316;
-            const width = 512;
-            const items = this.currentSelectionSpan.rows.length;
-            const slot = width / items;
-            const max = Math.max(...this.currentSelectionSpan.rows.map(row => row.value));
-            const min = Math.min(...this.currentSelectionSpan.rows.map(row => row.value));
-
-            const hasPercentageTo = this.dataset.header[this.currentSelectionSpan.col].isPercentage && this.dataset.header[this.currentSelectionSpan.col].percentageTo;
-            const isDonut = this.chart.type === this.constants.DONUT && this.selectedDonutCategory && this.selectedDonutCategory.name;
-
-            const title = this.dataset.header[this.currentSelectionSpan.col].name + (hasPercentageTo ? ` / ${this.dataset.header[this.percentages[this.currentSelectionSpan.col].referenceIndex].name}` : '') + (isDonut ? ` ${this.FINAL_CONFIG.translations.by} ${this.selectedDonutCategory.name}` : '');
-
-            const prefix = this.dataset.header[this.currentSelectionSpan.col].prefix;
-            const suffix = this.dataset.header[this.currentSelectionSpan.col].suffix;
-
-            const xyDatasetLine = [
-                {
-                    name: title,
-                    series: this.currentSelectionSpan.rows.map(r => r.value),
-                    type: 'line',
-                    useProgression: true,
-                    smooth: this.FINAL_CONFIG.style.chart.layout.line.smooth,
-                    color: this.FINAL_CONFIG.style.chart.layout.line.stroke,
-                    useArea: this.FINAL_CONFIG.style.chart.layout.line.useArea
-                }
-            ]
-            const xyDatasetBar = [
-                {
-                    name: title,
-                    series: this.currentSelectionSpan.rows.map(r => r.value),
-                    type: 'bar',
-                    useProgression: true,
-                    color: this.FINAL_CONFIG.style.chart.layout.bar.fill
-                }
-            ]
-
-            const bg = this.FINAL_CONFIG.style.chart.modal.backgroundColor;
-            const textColor = this.adaptColorToBackground(bg)
-            const rounding = this.dataset.header[this.currentSelectionSpan.col].decimals;
-
-            const xyConfig = {
-                chart: {
-                    backgroundColor: bg,
+            grid: {
+                stroke: lightenHexColor(textColor, 0.5),
+                labels: {
                     color: textColor,
-                    labels: {
-                        fontSize: 18,
-                        prefix,
-                        suffix
-                    },
-                    grid: {
-                        stroke: lightenHexColor(textColor, 0.5),
-                        labels: {
-                            color: textColor,
-                            xAxisLabels: {
-                                color: textColor,
-                                show: this.chartTimeLabels.length,
-                                values: this.chartTimeLabels,
-                                datetimeFormatter: this.FINAL_CONFIG.style.chart.layout.datetimeFormatter,
-                                showOnlyAtModulo: this.FINAL_CONFIG.style.chart.layout.timeLabels.showOnlyAtModulo,
-                                modulo: this.FINAL_CONFIG.style.chart.layout.timeLabels.modulo
-                            },
-                        }
-                    },
-                    highlighter: {
+                    xAxisLabels: {
                         color: textColor,
+                        show: chartTimeLabels.value.length,
+                        values: chartTimeLabels.value,
+                        datetimeFormatter: FINAL_CONFIG.value.style.chart.layout.datetimeFormatter,
+                        showOnlyAtModulo: FINAL_CONFIG.value.style.chart.layout.timeLabels.showOnlyAtModulo,
+                        modulo: FINAL_CONFIG.value.style.chart.layout.timeLabels.modulo
                     },
-                    legend: {
-                        color: textColor,
-                    },
-                    title: {
-                        text: title,
-                        color: textColor,
-                        fontSize: 18,
-                    },
-                    tooltip: {
-                        showTimeLabel: this.chartTimeLabels.length,
-                        backgroundOpacity: 30,
-                        color: textColor,
-                        backgroundColor: bg,
-                        showPercentage: false,
-                        roundingValue: rounding
-                    },
-                    userOptions: {
-                        position: 'left',
-                        buttons: {
-                            pdf: false,
-                            csv: false,
-                            table: false,
-                            annotator: false
-                        }
-                    },
-                    zoom: {
-                        show: this.FINAL_CONFIG.style.chart.layout.zoom.show,
-                        focusOnDrag: true,
-                        minimap: {
-                            show: true
-                        }
-                    },
-                },
-                line: {
-                    labels: {
-                        show: true,
-                        color: textColor,
-                        rounding
-                    },
-                    dot: {
-                        useSerieColor: false,
-                        fill: this.FINAL_CONFIG.style.chart.layout.line.plot.fill,
-                        strokeWidth: this.FINAL_CONFIG.style.chart.layout.line.plot.strokeWidth
-                    }
-                },
-                bar: {
-                    useGradient: false,
-                    border: {
-                        useSerieColor: false,
-                        stroke: this.FINAL_CONFIG.style.chart.layout.bar.stroke,
-                        strokeWidth: this.FINAL_CONFIG.style.chart.layout.bar.strokeWidth
-                    },
-                    labels: {
-                        show: true,
-                        color: textColor,
-                        rounding
-                    }
                 }
+            },
+            highlighter: {
+                color: textColor,
+            },
+            legend: {
+                color: textColor,
+            },
+            title: {
+                text: title,
+                color: textColor,
+                fontSize: 18,
+            },
+            tooltip: {
+                showTimeLabel: chartTimeLabels.value.length,
+                backgroundOpacity: 30,
+                color: textColor,
+                backgroundColor: bg,
+                showPercentage: false,
+                roundingValue: rounding
+            },
+            userOptions: {
+                position: 'left',
+                buttons: {
+                    pdf: false,
+                    csv: false,
+                    table: false,
+                    annotator: false
+                }
+            },
+            zoom: {
+                show: FINAL_CONFIG.value.style.chart.layout.zoom.show,
+                focusOnDrag: true,
+                minimap: {
+                    show: true
+                }
+            },
+        },
+        line: {
+            labels: {
+                show: true,
+                color: textColor,
+                rounding
+            },
+            dot: {
+                useSerieColor: false,
+                fill: FINAL_CONFIG.value.style.chart.layout.line.plot.fill,
+                strokeWidth: FINAL_CONFIG.value.style.chart.layout.line.plot.strokeWidth
             }
+        },
+        bar: {
+            useGradient: false,
+            border: {
+                useSerieColor: false,
+                stroke: FINAL_CONFIG.value.style.chart.layout.bar.stroke,
+                strokeWidth: FINAL_CONFIG.value.style.chart.layout.bar.strokeWidth
+            },
+            labels: {
+                show: true,
+                color: textColor,
+                rounding
+            }
+        }
+    }
 
-            const relativeZero = min >= 0 ? 0 : Math.abs(min);
-            const absoluteMax = max + relativeZero;
+    const relativeZero = min >= 0 ? 0 : Math.abs(min);
+    const absoluteMax = max + relativeZero;
 
-            const isPercentage = this.dataset.header[this.currentSelectionSpan.col].isPercentage;
+    const isPercentage = props.dataset.header[currentSelectionSpan.value.col].isPercentage;
 
-            const plots = this.currentSelectionSpan.rows.map((row, i) => {
-                return {
-                    x: (slot * i) + slot / 2,
-                    y: (1 - ((row.value + relativeZero) / absoluteMax)) * height,
-                    value: isPercentage ? row.value * 100 : row.value,
-                    suffix: isPercentage ? '%' : this.dataset.header[this.currentSelectionSpan.col].suffix ? this.dataset.header[this.currentSelectionSpan.col].suffix : '',
-                    prefix: this.dataset.header[this.currentSelectionSpan.col].prefix ? this.dataset.header[this.currentSelectionSpan.col].prefix : '',
-                    index: row.index,
-                    absoluteValue: isPercentage ? Math.abs(row.value) * 100 : Math.abs(row.value)
+    const plots = currentSelectionSpan.value.rows.map((row, i) => {
+        return {
+            x: (slot * i) + slot / 2,
+            y: (1 - ((row.value + relativeZero) / absoluteMax)) * height,
+            value: isPercentage ? row.value * 100 : row.value,
+            suffix: isPercentage ? '%' : props.dataset.header[currentSelectionSpan.value.col].suffix ? props.dataset.header[currentSelectionSpan.value.col].suffix : '',
+            prefix: props.dataset.header[currentSelectionSpan.value.col].prefix ? props.dataset.header[currentSelectionSpan.value.col].prefix : '',
+            index: row.index,
+            absoluteValue: isPercentage ? Math.abs(row.value) * 100 : Math.abs(row.value)
+        }
+    });
+
+    const donutConfig = {
+        userOptions: {
+                position: 'left',
+                buttons: {
+                    pdf: false,
+                    csv: false,
+                    table: false,
+                    annotator: false
                 }
-            });
-
-            const donutConfig = {
-                userOptions: {
-                        position: 'left',
-                        buttons: {
-                            pdf: false,
-                            csv: false,
-                            table: false,
-                            annotator: false
-                        }
+            },
+        style: {
+            chart: {
+                backgroundColor: bg,
+                color: textColor,
+                layout: {
+                    curvedMarkers: true,
+                    donut: {
+                        strokeWidth: 64,
                     },
-                style: {
-                    chart: {
-                        backgroundColor: bg,
-                        color: textColor,
-                        layout: {
-                            curvedMarkers: true,
-                            donut: {
-                                strokeWidth: 64,
-                            },
-                            labels: {
-                                dataLabels: {
-                                    suffix: isPercentage ? '%' : '',
-                                    prefix,
-                                },
+                    labels: {
+                        dataLabels: {
+                            suffix: isPercentage ? '%' : '',
+                            prefix,
+                        },
+                        value: {
+                            rounding
+                        },
+                        percentage: {
+                            color: textColor,
+                            rounding
+                        },
+                        name: {
+                            color: textColor
+                        },
+                        hollow: {
+                            average: {
+                                color: textColor,
+                                text: FINAL_CONFIG.value.translations.average,
                                 value: {
-                                    rounding
-                                },
-                                percentage: {
-                                    color: textColor,
-                                    rounding
-                                },
-                                name: {
                                     color: textColor
-                                },
-                                hollow: {
-                                    average: {
-                                        color: textColor,
-                                        text: this.FINAL_CONFIG.translations.average,
-                                        value: {
-                                            color: textColor
-                                        }
-                                    },
-                                    total: {
-                                        color: textColor,
-                                        offsetY: -12,
-                                        text: this.FINAL_CONFIG.translations.total,
-                                        value: {
-                                            color: textColor,
-                                            offsetY: -12
-                                        }
-                                    }
+                                }
+                            },
+                            total: {
+                                color: textColor,
+                                offsetY: -12,
+                                text: FINAL_CONFIG.value.translations.total,
+                                value: {
+                                    color: textColor,
+                                    offsetY: -12
                                 }
                             }
-                        },
-                        legend: {
-                            backgroundColor: bg,
-                            color: textColor,
-                            roundingValue: rounding,
-                            roundingPercentage: rounding
-                        },
-                        padding: {
-                            left: 12,
-                            right: 12
-                        },
-                        title: {
-                            text: title,
-                            color: textColor,
-                            fontSize: 18,
-                        },
-                        tooltip: {
-                            backgroundOpacity: 30,
-                            color: textColor,
-                            backgroundColor: bg,
-                            roundingValue: rounding,
-                            roundingValue: rounding
-                        },
+                        }
                     }
                 },
+                legend: {
+                    backgroundColor: bg,
+                    color: textColor,
+                    roundingValue: rounding,
+                    roundingPercentage: rounding
+                },
+                padding: {
+                    left: 12,
+                    right: 12
+                },
+                title: {
+                    text: title,
+                    color: textColor,
+                    fontSize: 18,
+                },
+                tooltip: {
+                    backgroundOpacity: 30,
+                    color: textColor,
+                    backgroundColor: bg,
+                    roundingValue: rounding,
+                    roundingValue: rounding
+                },
             }
-
-            return { 
-                donutConfig, 
-                xyConfig, 
-                xyDatasetLine, 
-                xyDatasetBar, 
-                progression: plots.length >= 2 ? this.calcLinearProgression(plots) : false 
-            };
-        },
-        hasNumericTypes() {
-            return this.dataset.header.map(h => h.type).includes(this.constants.NUMERIC);
-        },
-        icons() {
-            return {
-                arrowSort: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 9l4 -4l4 4m-4 -4v14" /><path d="M21 15l-4 4l-4 -4m4 4v-14" /></svg>`,
-                bar: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" /><path d="M9 8m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" /><path d="M15 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" /><path d="M4 20l14 0" /></svg>`,
-                chart: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 19l16 0" /><path d="M4 15l4 -6l4 2l4 -5l4 4" /></svg>`,
-                chevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M6 9l6 6l6 -6" /></svg>`,
-                chevronLeft: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize * 1.6}" height="${this.iconSize * 1.6}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 6l-6 6l6 6" /></svg>`,
-                chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize * 1.6}" height="${this.iconSize * 1.6}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6" /></svg>`,
-                donut: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize * 0.8}" height="${this.iconSize * 0.8}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3v5m4 4h5" /><path d="M8.929 14.582l-3.429 2.918" /><path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /></svg>`,
-                export: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12.5 21h-7.5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v7.5" /><path d="M3 10h18" /><path d="M10 3v18" /><path d="M16 19h6" /><path d="M19 16l3 3l-3 3" /></svg>`,
-                fileDownload: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /><path d="M12 17v-6" /><path d="M9.5 14.5l2.5 2.5l2.5 -2.5" /></svg>`,
-                filter: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z" /></svg>`,
-                move: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 9l3 3l-3 3" /><path d="M15 12h6" /><path d="M6 9l-3 3l3 3" /><path d="M3 12h6" /><path d="M9 18l3 3l3 -3" /><path d="M12 15v6" /><path d="M15 6l-3 -3l-3 3" /><path d="M12 3v6" /></svg>`,
-                sort09: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 15l3 3l3 -3" /><path d="M7 6v12" /><path d="M17 3a2 2 0 0 1 2 2v3a2 2 0 1 1 -4 0v-3a2 2 0 0 1 2 -2z" /><path d="M17 16m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M19 16v3a2 2 0 0 1 -2 2h-1.5" /></svg>`,
-                sort90: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 15l3 3l3 -3" /><path d="M7 6v12" /><path d="M17 14a2 2 0 0 1 2 2v3a2 2 0 1 1 -4 0v-3a2 2 0 0 1 2 -2z" /><path d="M17 5m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M19 5v3a2 2 0 0 1 -2 2h-1.5" /></svg>`,
-                sortAZ: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 10v-5c0 -1.38 .62 -2 2 -2s2 .62 2 2v5m0 -3h-4" /><path d="M19 21h-4l4 -7h-4" /><path d="M4 15l3 3l3 -3" /><path d="M7 6v12" /></svg>`,
-                sortZA: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 21v-5c0 -1.38 .62 -2 2 -2s2 .62 2 2v5m0 -3h-4" /><path d="M19 10h-4l4 -7h-4" /><path d="M4 15l3 3l3 -3" /><path d="M7 6v12" /></svg>`,
-                sum: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
-                table: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" fill="white" d="M 10 2, 21 2, 21 21, 10 21Z"/><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z" /><path d="M3 10h18" /><path d="M10 3v18" /></svg>`,
-                warning: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize * 0.8}" height="${this.iconSize * 0.8}" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10.24 3.957l-8.422 14.06a1.989 1.989 0 0 0 1.7 2.983h16.845a1.989 1.989 0 0 0 1.7 -2.983l-8.423 -14.06a1.989 1.989 0 0 0 -3.4 0z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>`,
-                grip: `<svg xmlns="http://www.w3.org/2000/svg" width="${this.iconSize}" height="${this.iconSize}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M5 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M12 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 9m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M19 15m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>`
-            }
-        },
-        pages() {
-            const pages = [];
-            if (this.bodyCopy.length) {
-                for (let i = 0; i < this.bodyCopy.length; i += this.itemsPerPage) {
-                    pages.push(this.bodyCopy.slice(i, i + this.itemsPerPage));
-                }
-            }
-            return pages;
-        },
-        rows() {
-            return this.bodyCopy.map(row => row.td);
-        },
-        selectedCellsCalculations() {
-            return {
-                sumPercentage: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a, b) => a + b, 0) * 100).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
-                sumRegular: Number(this.currentSelectionSpan.rows.map(r => r.value).reduce((a, b) => a + b, 0).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
-                averagePercentage: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a, b) => a + b, 0) / this.currentSelectionSpan.rows.length * 100).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString(),
-                averageRegular: Number((this.currentSelectionSpan.rows.map(r => r.value).reduce((a, b) => a + b, 0) / this.currentSelectionSpan.rows.length).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString()
-            }
-        },
-        FINAL_CONFIG() {
-            const { vue_ui_table: DEFAULT_CONFIG } = useConfig();
-
-            if (!Object.keys(this.config || {}).length) {
-                return DEFAULT_CONFIG
-            }
-
-            const reconcilied = this.treeShake({
-                defaultConfig: DEFAULT_CONFIG,
-                userConfig: this.config
-            });
-
-            return this.convertConfigColors(reconcilied);
-        },
-        visibleRows() {
-            return this.pages[this.currentPage];
-        },
-    },
-    methods: {
-        // lib
-        adaptColorToBackground,
-        convertColorToHex,
-        convertConfigColors,
-        createCsvContent,
-        darkenHexColor,
-        dataLabel,
-        downloadCsv,
-        lightenHexColor,
-        treeShake,
-        // specific
-        applyDonutOption() {
-            const donutSet = this.selectedDonutCategory.options.map((option, i) => {
-                return {
-                    name: option,
-                    color: this.palette[i] || this.palette[i % this.palette.length],
-                    values: [this.visibleRows
-                        .filter((row, i) => row.td[this.selectedDonutCategory.index] === option && this.currentSelectionSpan.rows.map(row => row.index).includes(i))
-                        .map(row => row.td[this.currentSelectionSpan.col])
-                        .reduce((a, b) => Math.abs(a) + Math.abs(b), 0)],
-                    absoluteValue: this.visibleRows
-                        .filter((row, i) => row.td[this.selectedDonutCategory.index] === option && this.currentSelectionSpan.rows.map(row => row.index).includes(i))
-                        .map(row => row.td[this.currentSelectionSpan.col])
-                        .reduce((a, b) => a + b, 0)
-                }
-            }).sort((a, b) => b.value - a.value);
-
-            this.currentDonut = donutSet
-            this.$nextTick(() => {
-                this.chart.type = this.constants.DONUT;
-                this.showDonutOptions = false;
-            });
-        },
-        calcRectY(value, y) {
-            if (value >= 0) return y;
-            return this.chartData.zero;
-        },
-        canResetColumn(colIndex, th) {
-            return !this.hasNaN[colIndex] && (th.isSort || th.isSearch || th.isMultiselect || th.rangeFilter) && ![this.constants.DATE].includes(th.type);
-        },
-        createXls(selection = 'all') {
-            const head = this.dataset.header.map(h => h.name);
-            const body = selection === 'all' ? this.bodyCopy.map(b => b.td) : this.visibleRows.map(r => r.td);
-            const table = [head].concat(body);
-            const csvContent = this.createCsvContent(table);
-            this.downloadCsv({ csvContent, title: this.filename })
-        },
-        calcLinearProgression,
-        closeAllDropdowns() {
-            const dropdowns = document.getElementsByClassName("th-dropdown");
-            if (!dropdowns.length) return;
-            Array.from(dropdowns).forEach(dropdown => {
-                dropdown.dataset.isOpen = false;
-            });
-        },
-        debounce(fn, delay) {
-            let timerId;
-            clearTimeout(timerId);
-            timerId = setTimeout(fn, delay);
-        },
-        filterBody() {
-            this.bodyCopy = this.tableBody.filter(el => {
-                for (const index in this.searches) {
-                    if (!el.td[index].toUpperCase().includes(this.searches[index].toUpperCase())) {
-                        return false;
-                    }
-                }
-                for (const index in this.multiselects) {
-                    const filter = this.multiselects[index];
-                    if (!filter.some(f => f === el.td[index])) {
-                        return false;
-                    }
-                }
-                for (const index in this.dates) {
-                    const date = new Date(el.td[index]);
-                    const fromDate = new Date(this.dates[index].from);
-                    const toDate = new Date(this.dates[index].to);
-
-                    if (date < fromDate || date > toDate) {
-                        return false;
-                    }
-                }
-                return true;
-            });
-            this.sortBody();
-        },
-        getAverage(index) {
-            return this.rows
-                .map(td => td[index])
-                .map(el => isNaN(Number(el)) ? 0 : el)
-                .reduce((a, b) => a + b, 0) / this.bodyCopy.length;
-        },
-        getDatesRange(index) {
-            const dates = this.dataset.body.map(row => new Date(row.td[index]));
-            const rawMin = new Date(Math.min(...dates));
-            const rawMax = new Date(Math.max(...dates));
-            const minYear = rawMin.getFullYear();
-            const maxYear = rawMax.getFullYear();
-            const minMonth = String(rawMin.getMonth() + 1).padStart(2, '0');
-            const maxMonth = String(rawMax.getMonth() + 1).padStart(2, '0');
-            const minDay = String(rawMin.getDate()).padStart(2, '0');
-            const maxDay = String(rawMax.getDate()).padStart(2, '0');
-            const min = `${minYear}-${minMonth}-${minDay}`;
-            const max = `${maxYear}-${maxMonth}-${maxDay}`;
-            return {
-                from: min,
-                to: max
-            }
-        },
-        getDonutLegendValue(value) {
-            return Number((value * (this.dataset.header[this.currentSelectionSpan.col].isPercentage ? 100 : 1)).toFixed(this.dataset.header[this.currentSelectionSpan.col].decimals)).toLocaleString();
-        },
-        getDropdownOptions(index) {
-            return [...new Set(this.dataset.body.map(el => {
-                return el.td[index];
-            }))]
-        },
-        getSum(index) {
-            return this.rows
-                .map(td => td[index])
-                .map(el => isNaN(Number(el)) ? 0 : el)
-                .reduce((a, b) => a + b, 0);
-        },
-        includesNaN(arr) {
-            return arr.includes(NaN)
-        },
-        isDropdownOptionSelected(option, index) {
-            if (!this.multiselects[index]) {
-                return true;
-            }
-            return this.multiselects[index].includes(option);
-        },
-        isNumeric(value) {
-            return !isNaN(Number(String(value).replaceAll("%", '')));
-        },
-        isResetDisabled(index, th) {
-            const isSort = th.isSort;
-            const isSearch = th.isSearch;
-            const isMultiselect = th.isMultiselect && this.multiselects[index];
-            const rangeFilter = th.rangeFilter;
-
-            const isRangeAltered = (index) => {
-                if (rangeFilter && this.rangeFilters[index]) {
-                    return Math.round(this.rangeFilters[index].min) === this.immutableRangeFilters[index].min && Math.round(this.rangeFilters[index].max) === this.immutableRangeFilters[index].max;
-                }
-            }
-
-            if (isSort && isSearch && isMultiselect && rangeFilter) {
-                return ["", undefined].includes(this.searches[index]) && [undefined].includes(this.sorts[index]) && this.multiselects[index].length === this.getDropdownOptions(index).length && isRangeAltered(index);
-            }
-            else if (isSort && isSearch && isMultiselect) {
-                return ["", undefined].includes(this.searches[index]) && [undefined].includes(this.sorts[index]) && this.multiselects[index].length === this.getDropdownOptions(index).length;
-            }
-            else if (isSort && isSearch && rangeFilter) {
-                return ["", undefined].includes(this.searches[index]) && [undefined].includes(this.sorts[index]) && isRangeAltered(index);
-            }
-            else if (isSort && isSearch) {
-                return ["", undefined].includes(this.searches[index]) && [undefined].includes(this.sorts[index]);
-            }
-            else if (isSort && isMultiselect && rangeFilter) {
-                return [undefined].includes(this.sorts[index]) && this.multiselects[index].length === this.getDropdownOptions(index).length && isRangeAltered(index);
-            }
-            else if (isSort && isMultiselect) {
-                return [undefined].includes(this.sorts[index]) && this.multiselects[index].length === this.getDropdownOptions(index).length;
-            }
-            else if (isSearch && isMultiselect && rangeFilter) {
-                return ["", undefined].includes(this.searches[index]) && this.multiselects[index].length === this.getDropdownOptions(index).length && isRangeAltered(index);
-            }
-            else if (isSearch && isMultiselect) {
-                return ["", undefined].includes(this.searches[index]) && this.multiselects[index].length === this.getDropdownOptions(index).length;
-            }
-            else if (isSearch && rangeFilter) {
-                return ["", undefined].includes(this.searches[index]) && isRangeAltered(index);
-            }
-            else if (isSearch) {
-                return ["", undefined].includes(this.searches[index]);
-            }
-            else if (isSort && rangeFilter) {
-                return [undefined].includes(this.sorts[index]) && isRangeAltered(index);
-            }
-            else if (isSort) {
-                return [undefined].includes(this.sorts[index]);
-            }
-            else if (isMultiselect && rangeFilter) {
-                return this.multiselects[index].length === this.getDropdownOptions(index).length && isRangeAltered(index);
-            }
-            else if (isMultiselect) {
-                return this.multiselects[index].length === this.getDropdownOptions(index).length;
-            }
-        },
-        getCurrentPageData() {
-            return {
-                totalPages: this.pages.length,
-                itemsPerPage: this.itemsPerPage,
-                currentPage: this.currentPage,
-                currentPageData: this.visibleRows.map(r => r.td)
-            }
-        },
-        onPageChange() {
-            this.$emit('page-change', this.getCurrentPageData());
-        },
-        navigate(direction) {
-            this.resetSelection();
-            if (direction === 'next' && this.currentPage < this.pages.length) {
-                if (this.currentPage + 1 > this.pages.length - 1) {
-                    return;
-                }
-                this.currentPage += 1;
-            } else if (direction === 'previous' && this.currentPage >= 1) {
-                this.currentPage -= 1;
-            } else {
-                if (direction - 1 < 0 || direction > this.pages.length || direction === 'previous') {
-                    return;
-                }
-                this.currentPage = direction - 1;
-            }
-
-            this.onPageChange();
-
-            const table = this.$refs.tableWrapper;
-            table.scrollTo({
-                top: 0,
-                left: 0,
-                behavior: "smooth"
-            });
-        },
-        navigateCell(event) {
-            event.preventDefault();
-            const keyCode = event.keyCode;
-            const up = 38;
-            const down = 40;
-            const left = 37;
-            const right = 39;
-            if (![up, down, left, right].includes(keyCode)) return;
-
-            const currentId = event.target.id;
-            const regex = /cell_(\d+)_(\d+)_vue-ui-table-(\d+)/;
-            const match = currentId.match(regex);
-            const currentRow = parseInt(match[1]);
-            const currentCol = parseInt(match[2]);
-
-            const nextCellRow = document.getElementById(`cell_${currentRow}_${currentCol + 1}_${this.uid}`);
-            const previousCellRow = document.getElementById(`cell_${currentRow}_${currentCol - 1}_${this.uid}`);
-            const nextCellCol = document.getElementById(`cell_${currentRow + 1}_${currentCol}_${this.uid}`);
-            const previousCellCol = document.getElementById(`cell_${currentRow - 1}_${currentCol}_${this.uid}`);
-
-            let nextCell;
-            switch (true) {
-                case keyCode === right:
-                    nextCell = nextCellRow;
-                    break;
-
-                case keyCode === left:
-                    nextCell = previousCellRow;
-                    break;
-
-                case keyCode === up:
-                    nextCell = previousCellCol;
-                    break;
-
-                case keyCode === down:
-                    nextCell = nextCellCol;
-                    break;
-
-                default:
-                    return;
-            }
-
-            if (!nextCell) return;
-            nextCell.focus();
-            nextCell.scrollIntoView({ behavior: "smooth", block: "center" });
-        },
-        openDonutOptions() {
-            this.selectedDonutCategory = this.availableDonutCategories[0]
-            this.showDonutOptions = true;
-        },
-        placeLabelOnTopOrBottom({ previousPlot, currentPlot, nextPlot }) {
-            const top = currentPlot.y - 38;
-            const bottom = currentPlot.y + 16;
-
-            if (previousPlot && nextPlot) {
-                if (previousPlot.value < currentPlot.value && nextPlot.value < currentPlot.value) {
-                    return top;
-                }
-                if (previousPlot.value > currentPlot.value && nextPlot.value > currentPlot.value) {
-                    return bottom
-                }
-                if (previousPlot.value > currentPlot.value && nextPlot.value < currentPlot.value) {
-                    return top;
-                }
-                if (previousPlot.value < currentPlot.value && nextPlot.value > currentPlot.value) {
-                    return top;
-                }
-                return top;
-            }
-
-            if (previousPlot && !nextPlot) {
-                if (previousPlot.value > currentPlot.value) {
-                    return bottom;
-                }
-                return top;
-            }
-
-            if (!previousPlot && nextPlot) {
-                if (nextPlot.value > currentPlot.value) {
-                    return bottom;
-                }
-                return top;
-            }
-
-            if (!previousPlot && !nextPlot) {
-                return top;
-            }
-            return top;
-        },
-        async prepareBodyCopy() {
-            return new Promise((resolve) => {
-                const searchHelper = [];
-
-                this.tableHead.forEach((th, i) => {
-                    if (th.isSearch) {
-                        Object.assign(this.searches, { [i]: "" });
-                    }
-                    if (th.isMultiselect) {
-                        Object.assign(this.multiselects, { [i]: this.getDropdownOptions(i) });
-                    }
-                    if (th.type === this.constants.DATE) {
-                        Object.assign(this.dates, { [i]: this.getDatesRange(i) });
-                        Object.assign(this.filteredDatesIndexes, { [i]: false });
-                    }
-                    if (th.isPercentage || th.percentageTo) {
-                        Object.assign(this.percentages, {
-                            [i]: {
-                                reference: th.percentageTo,
-                                referenceIndex: this.dataset.header.map(el => el.name).indexOf(th.percentageTo)
-                            }
-                        });
-                    }
-
-                    if (th.rangeFilter) {
-                        Object.assign(this.rangeFilters, {
-                            [i]: {
-                                min: Math.round(Math.min(...this.dataset.body.map(el => el.td).map(el => el[i]))),
-                                max: Math.round(Math.max(...this.dataset.body.map(el => el.td).map(el => el[i]))),
-                            }
-                        });
-                        Object.assign(this.immutableRangeFilters, {
-                            [i]: {
-                                min: Math.round(Math.min(...this.dataset.body.map(el => el.td).map(el => el[i]))),
-                                max: Math.round(Math.max(...this.dataset.body.map(el => el.td).map(el => el[i]))),
-                            }
-                        });
-                    }
-
-                    if (th.isPercentage) {
-                        const baseIndex = this.dataset.header.map(el => el.name).indexOf(th.percentageTo);
-                        const sum = this.dataset.body.map(el => el.td[baseIndex]).reduce((a, b) => a + b, 0);
-                        searchHelper.push([i, baseIndex, sum]);
-                    }
-
-                    if (th.type === this.constants.NUMERIC && !th.isPercentage) {
-                        Object.assign(this.hasNaN, { [i]: this.includesNaN(this.dataset.body.map(el => Number(el.td[i]))) })
-                    }
-                });
-
-                this.bodyCopy.forEach((el, index) => {
-                    searchHelper.map(helper => {
-                        const [index, baseIndex, sum] = helper;
-                        el.td[index] = el.td[baseIndex] / sum;
-                    });
-                    // Implements a sorting index for each column type
-                    // Also applied on tableBody as it is used when reseting filters to initial state
-                    el.td.forEach((td, i) => {
-                        if (this.dataset.header[i].type === this.constants.TEXT && this.dataset.header[i].isSearch) {
-                            el[i] = this.stringToNumber(td);
-                        }
-                        if (this.dataset.header[i].type === this.constants.DATE) {
-                            el[i] = new Date(td).getTime();
-                        }
-                        if (this.dataset.header[i].type === this.constants.NUMERIC) {
-                            el[i] = isNaN(Number(td)) ? i : td;
-                        }
-                        this.tableBody[index][i] = el[i];
-                    })
-                });
-                resolve(true);
-            });
-        },
-        promiseWithAsyncFunction(asyncFunction, callback) {
-            return new Promise((resolve, reject) => {
-                asyncFunction()
-                    .then(data => {
-                        try {
-                            const result = callback(data);
-                            resolve(result);
-                        } catch (error) {
-                            reject(error);
-                        }
-                    })
-                    .catch(error => {
-                        reject(error);
-                    });
-            });
-        },
-        resetDates(index) {
-            this.dates[index] = {
-                from: this.getDatesRange(index).from,
-                to: this.getDatesRange(index).to
-            }
-            this.filteredDatesIndexes[index] = false;
-            this.$forceUpdate();
-            this.filterBody();
-        },
-        resetFilter(index, th, event) {
-            const target = event.currentTarget;
-            clearTimeout(this.buttonTimeout);
-            target.classList.add("clicked");
-            this.buttonTimeout = setTimeout(() => {
-                target.classList.remove("clicked");
-            }, 200);
-            this.currentFilter = undefined;
-
-            if (th.rangeFilter) {
-                this.rangeFilters[index].min = this.immutableRangeFilters[index].min;
-                this.rangeFilters[index].max = this.immutableRangeFilters[index].max;
-            }
-
-            if (th.isMultiselect) {
-                this.multiselects[index] = this.getDropdownOptions(index);
-                if (th.type === this.constants.TEXT) {
-                    this.sorts[index] = undefined;
-                }
-                if (th.isSearch) {
-                    this.searches[index] = "";
-                }
-            }
-            else if (th.type === this.constants.NUMERIC) {
-                this.sorts[index] = undefined;
-            } else if (th.type === this.constants.TEXT) {
-                this.sorts[index] = undefined;
-                this.searches[index] = "";
-            } else if (th.type === this.constants.DATE) {
-                this.sorts[index] = undefined;
-            }
-            this.filterBody();
-        },
-        resetSelection() {
-            const rows = document.getElementsByClassName(`tr_${this.uid}`);
-
-            Array.from(rows).forEach(tr => {
-                Array.from(tr.getElementsByTagName("td")).forEach(td => {
-                    if (td.dataset.row === 'even') {
-                        td.style.background = this.FINAL_CONFIG.style.rows.even.backgroundColor;
-                        td.style.color = this.FINAL_CONFIG.style.rows.even.color;
-                    } else {
-                        td.style.background = this.FINAL_CONFIG.style.rows.odd.backgroundColor;
-                        td.style.color = this.FINAL_CONFIG.style.rows.odd.color;
-                    }
-                });
-            });
-            Array.from(rows).forEach(tr => tr.dataset.selected = "false");
-            if (this.currentPage > this.pages.length - 1) {
-                this.currentPage = this.pages.length - 1;
-            }
-            this.showChart = false;
-            this.currentDonut = undefined;
-            this.selectedColumn = undefined;
-            this.chart.type = this.constants.BAR;
-            this.currentSelectionSpan = {
-                col: undefined,
-                rows: [],
-            }
-            this.clientX = 100;
-            this.clientY = 100;
-        },
-        selectColumn(index) {
-            if (this.currentSelectionSpan.col !== index) {
-                this.visibleRows.forEach((row, i) => {
-                    this.selectTd({
-                        td: row.td[index],
-                        rowIndex: i,
-                        colIndex: index,
-                        headerType: this.constants.NUMERIC,
-                        event: {
-                            currentTarget: document.getElementById(`cell_${i}_${index}_${this.uid}`)
-                        }
-                    });
-                });
-                this.selectedColumn = index;
-            } else {
-                this.selectedColumn = undefined;
-                this.resetSelection();
-            }
-        },
-        selectDropdownOption(option, index) {
-            if (this.multiselects[index].includes(option)) {
-                this.multiselects[index] = this.multiselects[index].filter(el => el !== option);
-            } else {
-                this.multiselects[index].push(option);
-            }
-            this.$forceUpdate();
-            this.filterBody();
-        },
-        selectTd({ td, rowIndex, colIndex, headerType, event }) {
-            if (headerType !== this.constants.NUMERIC || isNaN(Number(td))) {
-                this.resetSelection();
-                return;
-            }
-            if (this.currentSelectionSpan.col !== colIndex) {
-                this.resetSelection();
-            }
-            const tr = event.currentTarget.parentNode;
-            this.currentSelectionSpan.col = colIndex;
-
-            if (this.currentSelectionSpan.rows.map(row => row.index).includes(rowIndex)) {
-                tr.dataset.selected = "false";
-                this.currentSelectionSpan.rows = this.currentSelectionSpan.rows.filter(row => row.index !== rowIndex);
-                event.currentTarget.classList.remove(this.cssClass.CELL);
-                Array.from(tr.children).forEach((td, i) => {
-                    if (td.dataset.row === 'even') {
-                        td.style.background = this.FINAL_CONFIG.style.rows.even.backgroundColor;
-                        td.style.color = this.FINAL_CONFIG.style.rows.even.olor;
-                    } else {
-                        td.style.background = this.FINAL_CONFIG.style.rows.odd.backgroundColor;
-                        td.style.color = this.FINAL_CONFIG.style.rows.odd.color;
-                    }
-                });
-
-                if (event.currentTarget.dataset.row === 'even') {
-                    event.currentTarget.style.background = this.FINAL_CONFIG.style.rows.even.backgroundColor;
-                    event.currentTarget.style.color = this.FINAL_CONFIG.style.rows.even.color;
-                } else {
-                    event.currentTarget.style.background = this.FINAL_CONFIG.style.rows.odd.backgroundColor;
-                    event.currentTarget.style.color = this.FINAL_CONFIG.style.rows.odd.color;
-                }
-
-            } else {
-                tr.dataset.selected = "true";
-                this.currentSelectionSpan.rows.push({
-                    index: rowIndex,
-                    value: td
-                });
-                Array.from(tr.children).forEach((td, i) => {
-                    if (td.dataset.row === 'even') {
-                        td.style.background = this.FINAL_CONFIG.style.rows.even.selectedNeighbors.backgroundColor;
-                        td.style.color = this.FINAL_CONFIG.style.rows.even.selectedNeighbors.color;
-                    } else {
-                        td.style.background = this.FINAL_CONFIG.style.rows.odd.selectedNeighbors.backgroundColor;
-                        td.style.color = this.FINAL_CONFIG.style.rows.odd.selectedNeighbors.color;
-                    }
-                });
-
-                if (event.currentTarget.dataset.row === 'odd') {
-                    event.currentTarget.style.background = this.FINAL_CONFIG.style.rows.odd.selectedCell.backgroundColor;
-                    event.currentTarget.style.color = this.FINAL_CONFIG.style.rows.odd.selectedCell.color;
-                } else {
-                    event.currentTarget.style.background = this.FINAL_CONFIG.style.rows.even.selectedCell.backgroundColor;
-                    event.currentTarget.style.color = this.FINAL_CONFIG.style.rows.even.selectedCell.color;
-                }
-            }
-            this.currentSelectionSpan.rows = this.currentSelectionSpan.rows.sort((a, b) => a.index - b.index); // Guarantees the chart will display plots in the same order than the visible rows
-
-            if (this.chart.type === this.constants.DONUT && this.currentSelectionSpan.rows.length > 0) {
-                this.applyDonutOption();
-            }
-
-        },
-        setFilterDatesIndexes(index) {
-            this.filteredDatesIndexes[index] = !(this.getDatesRange(index).from === this.dates[index].from && this.getDatesRange(index).to === this.dates[index].to);
-        },
-        sortBody() {
-            this.resetSelection();
-            Object.keys(this.rangeFilters).forEach(index => {
-                this.filterByRange(this.bodyCopy, index);
-            });
-
-            Object.keys(this.sorts).forEach(index => {
-                this.sortByNumber(this.bodyCopy, index);
-            });
-
-            if (this.currentFilter !== undefined) {
-                this.sortByNumber(this.bodyCopy, this.currentFilter);
-            }
-            // percentage calculation
-            this.dataset.header.forEach((col, i) => {
-                if (col.isPercentage) {
-                    const referenceIndex = this.percentages[i].referenceIndex;
-                    const sum = this.bodyCopy.map(el => el.td[referenceIndex]).reduce((a, b) => a + b, 0);
-                    this.bodyCopy.forEach(row => {
-                        row.td[i] = row.td[referenceIndex] / sum;
-                    });
-                }
-            });
-            if (this.currentPage > this.pages.length - 1) {
-                this.currentPage = this.pages.length - 1;
-            }
-            if ([-1].includes(this.currentPage)) {
-                this.currentPage = 0;
-            }
-            this.$forceUpdate();
-        },
-        filterByRange(arr, index) {
-            this.bodyCopy = arr.filter(el => {
-                return el.td[index] >= this.rangeFilters[index].min && el[index] <= this.rangeFilters[index].max
-            })
-        },
-        sortByNumber(arr, index) {
-            if (this.sorts[index] === this.constants.ASC) {
-                arr = arr.sort((a, b) => {
-                    return a[index] - b[index];
-                });
-            }
-            if (this.sorts[index] === this.constants.DESC) {
-                arr = arr.sort((a, b) => {
-                    return b[index] - a[index];
-                })
-            } else {
-                return 0;
-            }
-        },
-        sortTh(index, event) {
-            this.currentFilter = index;
-            const target = event.currentTarget;
-            clearTimeout(this.buttonTimeout);
-            target.classList.add("clicked");
-            this.buttonTimeout = setTimeout(() => {
-                target.classList.remove("clicked");
-            }, 200);
-            const record = this.sorts[index];
-            if (record === 1) {
-                this.sorts[index] = this.constants.DESC;
-            } else {
-                this.sorts[index] = this.constants.ASC;
-            }
-            this.sortBody();
-        },
-        stringToNumber(str) {
-            let num = 0;
-            for (let i = 0; i < str.length; i += 1) {
-                num += str.charCodeAt(i);
-            }
-            return num;
-        },
-        toggleMultiselect(index, _th, event) {
-            const target = event.currentTarget;
-            clearTimeout(this.buttonTimeout);
-            target.classList.add("clicked");
-            this.buttonTimeout = setTimeout(() => {
-                target.classList.remove("clicked");
-            }, 200);
-
-            const menu = document.getElementById(`th_dropdown_${index}`);
-            if (menu.dataset.isOpen === 'false') {
-                menu.dataset.isOpen = 'true';
-            } else {
-                menu.dataset.isOpen = 'false';
-            }
-        },
-        updateCurrentPage(event) {
-            this.resetSelection();
-            if (!event || !event.target.value) {
-                this.currentPage = 0;
-            } else {
-                this.currentPage = Number(event.target.value);
-            }
-            this.onPageChange();
-        },
-
-        // DONUTS
-
-        calcDonutMarkerConnectorColor(arc) {
-            if (arc.proportion * 100 > 3) {
-                return arc.color;
-            }
-            return "transparent";
-        },
-        calcDonutMarkerLabelPositionX(arc) {
-            return arc.center.endX + this.calcMarkerOffset(arc, 50);
-        },
-        calcMarkerOffset(arc, centerX) {
-            const isRight = arc.center.endX - centerX >= 0;
-            if (isRight) {
-                return 3;
-            }
-            return -2;
-        },
-
-        displayArcPercentage(arc, stepBreakdown) {
-            return isNaN(arc.value / this.sumValues(stepBreakdown)) ? 0 : ((arc.value / this.sumValues(stepBreakdown)) * 100).toFixed(0) + "%";
-        },
-        isArcBigEnough(arc) {
-            return arc.proportion * 100 > 3;
-        },
-        sumValues(source) {
-            return [...source].map(s => s.value).reduce((a, b) => a + b, 0);
-        },
-
-        // CHART DRAGGING METHODS
-        closeDragElement() {
-            document.onmouseup = null;
-            document.onmousemove = null;
-        },
-        dragMouseDown(e) {
-            e = e || window.event;
-            e.preventDefault();
-            const chartModal = this.$refs.chartModal;
-            const rect = chartModal.getBoundingClientRect();
-            this.dragOffsetX = e.clientX - rect.left;
-            this.dragOffsetY = e.clientY - rect.top;
-            this.modalWidth = rect.width;
-            this.modalHeight = rect.height;
-
-            document.onmouseup = this.closeDragElement;
-            document.onmousemove = this.elementDrag;
-        },
-        elementDrag(e) {
-            if (this.rafId) return;
-            const chartModal = this.$refs.chartModal;
-            const rect = chartModal.getBoundingClientRect();
-            this.clientX = e.clientX - this.dragOffsetX;
-            this.clientY = e.clientY - this.dragOffsetY - 40;
-            if (this.clientX < 0) this.clientX = 0;
-            if (this.clientX + rect.width > window.innerWidth) this.clientX = window.innerWidth - rect.width - 48
-            if (this.clientY < 0) this.clientY = 0;
-            if (this.clientY + rect.height > window.innerHeight) this.clientY = window.innerHeight - rect.height - 24;
         },
     }
+
+    return { 
+        donutConfig, 
+        xyConfig, 
+        xyDatasetLine, 
+        xyDatasetBar, 
+        progression: plots.length >= 2 ? calcLinearProgression(plots) : false 
+    };
+});
+
+// Stock piled methods (and yes, this was converted from options API...)
+
+function applyDonutOption() {
+    const donutSet = selectedDonutCategory.value.options.map((option, i) => {
+        return {
+            name: option,
+            color: palette[i] || palette[i % palette.length],
+            values: [visibleRows.value
+                .filter((row, i) => row.td[selectedDonutCategory.value.index] === option && currentSelectionSpan.value.rows.map(row => row.index).includes(i))
+                .map(row => row.td[currentSelectionSpan.value.col])
+                .reduce((a, b) => Math.abs(a) + Math.abs(b), 0)],
+            absoluteValue: visibleRows.value
+                .filter((row, i) => row.td[selectedDonutCategory.value.index] === option && currentSelectionSpan.value.rows.map(row => row.index).includes(i))
+                .map(row => row.td[currentSelectionSpan.value.col])
+                .reduce((a, b) => a + b, 0)
+        }
+    }).sort((a, b) => b.value - a.value);
+
+    currentDonut.value = donutSet
+    nextTick(() => {
+        chart.value.type = constants.value.DONUT;
+        showDonutOptions.value = false;
+    });
 }
+
+function canResetColumn(colIndex, th) {
+    return !hasNaN.value[colIndex] && (th.isSort || th.isSearch || th.isMultiselect || th.rangeFilter) && ![constants.value.DATE].includes(th.type);
+}
+
+function createXls(selection = 'all') {
+    const head = props.dataset.header.map(h => h.name);
+    const body = selection === 'all' ? bodyCopy.value.map(b => b.td) : visibleRows.value.map(r => r.td);
+    const table = [head].concat(body);
+    const csvContent = createCsvContent(table);
+    downloadCsv({ csvContent, title: filename.value })
+}
+
+////////////////////////////// FIXME
+function closeAllDropdowns() {
+    const dropdowns = document.getElementsByClassName("th-dropdown"); // FIXME: this needs to be more instance specific
+    if (!dropdowns.length) return;
+    Array.from(dropdowns).forEach(dropdown => {
+        dropdown.dataset.isOpen = false;
+    });
+}
+
+////////////////////////////// FIXME: available in lib
+function debounce(fn, delay) {
+    let timerId;
+    clearTimeout(timerId);
+    timerId = setTimeout(fn, delay);
+}
+
+function resetSelection() {
+    const rows = document.getElementsByClassName(`tr_${uid}`);
+
+    Array.from(rows).forEach(tr => {
+        Array.from(tr.getElementsByTagName("td")).forEach(td => {
+            if (td.dataset.row === 'even') {
+                td.style.background = FINAL_CONFIG.value.style.rows.even.backgroundColor;
+                td.style.color = FINAL_CONFIG.value.style.rows.even.color;
+            } else {
+                td.style.background = FINAL_CONFIG.value.style.rows.odd.backgroundColor;
+                td.style.color = FINAL_CONFIG.value.style.rows.odd.color;
+            }
+        });
+    });
+    Array.from(rows).forEach(tr => tr.dataset.selected = "false");
+    if (currentPage.value > pages.value.length - 1) {
+        currentPage.value = pages.value.length - 1;
+    }
+    showChart.value = false;
+    currentDonut.value = undefined;
+    selectedColumn.value = undefined;
+    chart.value.type = constants.value.BAR;
+    currentSelectionSpan.value = {
+        col: undefined,
+        rows: [],
+    }
+    clientX.value = 100;
+    clientY.value = 100;
+}
+
+function filterByRange(arr, index) {
+    bodyCopy.value = arr.filter(el => {
+        return el.td[index] >= rangeFilters.value[index].min && el[index] <= rangeFilters.value[index].max
+    })
+}
+
+function sortByNumber(arr, index) {
+    if (sorts.value[index] === constants.value.ASC) {
+        arr = arr.sort((a, b) => {
+            return a[index] - b[index];
+        });
+    }
+    if (sorts.value[index] === constants.value.DESC) {
+        arr = arr.sort((a, b) => {
+            return b[index] - a[index];
+        })
+    } else {
+        return 0;
+    }
+}
+
+function sortBody() {
+    resetSelection();
+    Object.keys(rangeFilters.value).forEach(index => {
+        filterByRange(bodyCopy.value, index);
+    });
+
+    Object.keys(sorts.value).forEach(index => {
+        sortByNumber(bodyCopy.value, index);
+    });
+
+    if (currentFilter.value !== undefined) {
+        sortByNumber(bodyCopy.value, currentFilter.value);
+    }
+    // percentage calculation
+    props.dataset.header.forEach((col, i) => {
+        if (col.isPercentage) {
+            const referenceIndex = percentages.value[i].referenceIndex;
+            const sum = bodyCopy.value.map(el => el.td[referenceIndex]).reduce((a, b) => a + b, 0);
+            bodyCopy.value.forEach(row => {
+                row.td[i] = row.td[referenceIndex] / sum;
+            });
+        }
+    });
+    if (currentPage.value > pages.value.length - 1) {
+        currentPage.value = pages.value.length - 1;
+    }
+    if ([-1].includes(currentPage.value)) {
+        currentPage.value = 0;
+    }
+}
+
+function filterBody() {
+    bodyCopy.value = tableBody.value.filter(el => {
+        for (const index in searches.value) {
+            if (!el.td[index].toUpperCase().includes(searches.value[index].toUpperCase())) {
+                return false;
+            }
+        }
+        for (const index in multiselects.value) {
+            const filter = multiselects.value[index];
+            if (!filter.some(f => f === el.td[index])) {
+                return false;
+            }
+        }
+        for (const index in dates.value) {
+            const date = new Date(el.td[index]);
+            const fromDate = new Date(dates.value[index].from);
+            const toDate = new Date(dates.value[index].to);
+
+            if (date < fromDate || date > toDate) {
+                return false;
+            }
+        }
+        return true;
+    });
+    sortBody();
+}
+
+function getAverage(index) {
+    return rows.value
+        .map(td => td[index])
+        .map(el => isNaN(Number(el)) ? 0 : el)
+        .reduce((a, b) => a + b, 0) / bodyCopy.value.length;
+}
+
+function getDatesRange(index) {
+    const dates = props.dataset.body.map(row => new Date(row.td[index]));
+    const rawMin = new Date(Math.min(...dates));
+    const rawMax = new Date(Math.max(...dates));
+    const minYear = rawMin.getFullYear();
+    const maxYear = rawMax.getFullYear();
+    const minMonth = String(rawMin.getMonth() + 1).padStart(2, '0');
+    const maxMonth = String(rawMax.getMonth() + 1).padStart(2, '0');
+    const minDay = String(rawMin.getDate()).padStart(2, '0');
+    const maxDay = String(rawMax.getDate()).padStart(2, '0');
+    const min = `${minYear}-${minMonth}-${minDay}`;
+    const max = `${maxYear}-${maxMonth}-${maxDay}`;
+    return {
+        from: min,
+        to: max
+    }
+}
+
+function getDropdownOptions(index) {
+    return [...new Set(props.dataset.body.map(el => {
+        return el.td[index];
+    }))]
+}
+
+function getSum(index) {
+    return rows.value
+        .map(td => td[index])
+        .map(el => isNaN(Number(el)) ? 0 : el)
+        .reduce((a, b) => a + b, 0);
+}
+
+function includesNaN(arr) {
+    return arr.includes(NaN)
+}
+
+function isDropdownOptionSelected(option, index) {
+    if (!multiselects.value[index]) {
+        return true;
+    }
+    return multiselects.value[index].includes(option);
+}
+
+function isNumeric(value) {
+    return !isNaN(Number(String(value).replaceAll("%", '')));
+}
+
+function isResetDisabled(index, th) {
+    const isSort = th.isSort;
+    const isSearch = th.isSearch;
+    const isMultiselect = th.isMultiselect && multiselects.value[index];
+    const rangeFilter = th.rangeFilter;
+
+    const isRangeAltered = (index) => {
+        if (rangeFilter && rangeFilters.value[index]) {
+            return Math.round(rangeFilters.value[index].min) === immutableRangeFilters.value[index].min && Math.round(rangeFilters.value[index].max) === immutableRangeFilters.value[index].max;
+        }
+    }
+
+    if (isSort && isSearch && isMultiselect && rangeFilter) {
+        return ["", undefined].includes(searches.value[index]) && [undefined].includes(sorts.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length && isRangeAltered(index);
+    }
+    else if (isSort && isSearch && isMultiselect) {
+        return ["", undefined].includes(searches.value[index]) && [undefined].includes(sorts.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length;
+    }
+    else if (isSort && isSearch && rangeFilter) {
+        return ["", undefined].includes(searches.value[index]) && [undefined].includes(sorts.value[index]) && isRangeAltered(index);
+    }
+    else if (isSort && isSearch) {
+        return ["", undefined].includes(searches.value[index]) && [undefined].includes(sorts.value[index]);
+    }
+    else if (isSort && isMultiselect && rangeFilter) {
+        return [undefined].includes(sorts.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length && isRangeAltered(index);
+    }
+    else if (isSort && isMultiselect) {
+        return [undefined].includes(sorts.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length;
+    }
+    else if (isSearch && isMultiselect && rangeFilter) {
+        return ["", undefined].includes(searches.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length && isRangeAltered(index);
+    }
+    else if (isSearch && isMultiselect) {
+        return ["", undefined].includes(searches.value[index]) && multiselects.value[index].length === getDropdownOptions(index).length;
+    }
+    else if (isSearch && rangeFilter) {
+        return ["", undefined].includes(searches.value[index]) && isRangeAltered(index);
+    }
+    else if (isSearch) {
+        return ["", undefined].includes(searches.value[index]);
+    }
+    else if (isSort && rangeFilter) {
+        return [undefined].includes(sorts.value[index]) && isRangeAltered(index);
+    }
+    else if (isSort) {
+        return [undefined].includes(sorts.value[index]);
+    }
+    else if (isMultiselect && rangeFilter) {
+        return multiselects.value[index].length === getDropdownOptions(index).length && isRangeAltered(index);
+    }
+    else if (isMultiselect) {
+        return multiselects.value[index].length === getDropdownOptions(index).length;
+    }
+}
+
+function getCurrentPageData() {
+    return {
+        totalPages: pages.value.length,
+        itemsPerPage: itemsPerPage.value,
+        currentPage: currentPage.value,
+        currentPageData: visibleRows.value.map(r => r.td)
+    }
+}
+
+defineExpose({
+    getCurrentPageData
+});
+
+function onPageChange() {
+    emit('page-change', getCurrentPageData());
+}
+
+const tableWrapper = ref(null);
+
+function navigate(direction) {
+    resetSelection();
+    if (direction === 'next' && currentPage.value < pages.value.length) {
+        if (currentPage.value + 1 > pages.value.length - 1) {
+            return;
+        }
+        currentPage.value += 1;
+    } else if (direction === 'previous' && currentPage.value >= 1) {
+        currentPage.value -= 1;
+    } else {
+        if (direction - 1 < 0 || direction > pages.value.length || direction === 'previous') {
+            return;
+        }
+        currentPage.value = direction - 1;
+    }
+
+    onPageChange();
+
+    tableWrapper.value && tableWrapper.value.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "smooth"
+    });
+}
+
+function navigateCell(event) {
+    event.preventDefault();
+    const keyCode = event.keyCode;
+    const up = 38;
+    const down = 40;
+    const left = 37;
+    const right = 39;
+    if (![up, down, left, right].includes(keyCode)) return;
+
+    const currentId = event.target.id;
+    const regex = /cell_(\d+)_(\d+)_([0-9a-fA-F-]{36})/;
+    const match = currentId.match(regex);
+
+    const currentRow = parseInt(match[1]);
+    const currentCol = parseInt(match[2]);
+
+    const nextCellRow = document.getElementById(`cell_${currentRow}_${currentCol + 1}_${uid}`);
+    const previousCellRow = document.getElementById(`cell_${currentRow}_${currentCol - 1}_${uid}`);
+    const nextCellCol = document.getElementById(`cell_${currentRow + 1}_${currentCol}_${uid}`);
+    const previousCellCol = document.getElementById(`cell_${currentRow - 1}_${currentCol}_${uid}`);
+
+    let nextCell;
+    switch (true) {
+        case keyCode === right:
+            nextCell = nextCellRow;
+            break;
+
+        case keyCode === left:
+            nextCell = previousCellRow;
+            break;
+
+        case keyCode === up:
+            nextCell = previousCellCol;
+            break;
+
+        case keyCode === down:
+            nextCell = nextCellCol;
+            break;
+
+        default:
+            return;
+    }
+
+    if (!nextCell) return;
+    nextCell.focus();
+    nextCell.scrollIntoView({ behavior: "smooth", block: "center" }); // FIXME: NOT GR8
+}
+
+function stringToNumber(str) {
+    let num = 0;
+    for (let i = 0; i < str.length; i += 1) {
+        num += str.charCodeAt(i);
+    }
+    return num;
+}
+
+async function prepareBodyCopy() {
+    return new Promise((resolve) => {
+        const searchHelper = [];
+
+        tableHead.value.forEach((th, i) => {
+            if (th.isSearch) {
+                Object.assign(searches.value, { [i]: "" });
+            }
+            if (th.isMultiselect) {
+                Object.assign(multiselects.value, { [i]: getDropdownOptions(i) });
+            }
+            if (th.type === constants.value.DATE) {
+                Object.assign(dates.value, { [i]: getDatesRange(i) });
+                Object.assign(filteredDatesIndexes.value, { [i]: false });
+            }
+            if (th.isPercentage || th.percentageTo) {
+                Object.assign(percentages.value, {
+                    [i]: {
+                        reference: th.percentageTo,
+                        referenceIndex: props.dataset.header.map(el => el.name).indexOf(th.percentageTo)
+                    }
+                });
+            }
+
+            if (th.rangeFilter) {
+                Object.assign(rangeFilters.value, {
+                    [i]: {
+                        min: Math.round(Math.min(...props.dataset.body.map(el => el.td).map(el => el[i]))),
+                        max: Math.round(Math.max(...props.dataset.body.map(el => el.td).map(el => el[i]))),
+                    }
+                });
+                Object.assign(immutableRangeFilters.value, {
+                    [i]: {
+                        min: Math.round(Math.min(...props.dataset.body.map(el => el.td).map(el => el[i]))),
+                        max: Math.round(Math.max(...props.dataset.body.map(el => el.td).map(el => el[i]))),
+                    }
+                });
+            }
+
+            if (th.isPercentage) {
+                const baseIndex = props.dataset.header.map(el => el.name).indexOf(th.percentageTo);
+                const sum = props.dataset.body.map(el => el.td[baseIndex]).reduce((a, b) => a + b, 0);
+                searchHelper.push([i, baseIndex, sum]);
+            }
+
+            if (th.type === constants.value.NUMERIC && !th.isPercentage) {
+                Object.assign(hasNaN.value, { [i]: includesNaN(props.dataset.body.map(el => Number(el.td[i]))) })
+            }
+        });
+
+        bodyCopy.value.forEach((el, index) => {
+            searchHelper.map(helper => {
+                const [index, baseIndex, sum] = helper;
+                el.td[index] = el.td[baseIndex] / sum;
+            });
+            // Implements a sorting index for each column type
+            // Also applied on tableBody as it is used when reseting filters to initial state
+            el.td.forEach((td, i) => {
+                if (props.dataset.header[i].type === constants.value.TEXT && props.dataset.header[i].isSearch) {
+                    el[i] = stringToNumber(td);
+                }
+                if (props.dataset.header[i].type === constants.value.DATE) {
+                    el[i] = new Date(td).getTime();
+                }
+                if (props.dataset.header[i].type === constants.value.NUMERIC) {
+                    el[i] = isNaN(Number(td)) ? i : td;
+                }
+                tableBody.value[index][i] = el[i];
+            })
+        });
+        resolve(true);
+    });
+}
+
+function promiseWithAsyncFunction(asyncFunction, callback) {
+    return new Promise((resolve, reject) => {
+        asyncFunction()
+            .then(data => {
+                try {
+                    const result = callback(data);
+                    resolve(result);
+                } catch (error) {
+                    reject(error);
+                }
+            })
+            .catch(error => {
+                reject(error);
+            });
+    });
+}
+
+async function resetDates(index) {
+    dates.value[index] = {
+        from: getDatesRange(index).from,
+        to: getDatesRange(index).to
+    }
+    filteredDatesIndexes.value[index] = false;
+    await nextTick();
+    filterBody();
+}
+
+function resetFilter(index, th, event) {
+    const target = event.currentTarget;
+    clearTimeout(buttonTimeout.value);
+    target.classList.add("clicked");
+    buttonTimeout.value = setTimeout(() => {
+        target.classList.remove("clicked");
+    }, 200);
+    currentFilter.value = undefined;
+
+    if (th.rangeFilter) {
+        rangeFilters.value[index].min = immutableRangeFilters.value[index].min;
+        rangeFilters.value[index].max = immutableRangeFilters.value[index].max;
+    }
+
+    if (th.isMultiselect) {
+        multiselects.value[index] = getDropdownOptions(index);
+        if (th.type === constants.value.TEXT) {
+            sorts.value[index] = undefined;
+        }
+        if (th.isSearch) {
+            searches.value[index] = "";
+        }
+    }
+    else if (th.type === constants.value.NUMERIC) {
+        sorts.value[index] = undefined;
+    } else if (th.type === constants.value.TEXT) {
+        sorts.value[index] = undefined;
+        searches.value[index] = "";
+    } else if (th.type === constants.value.DATE) {
+        sorts.value[index] = undefined;
+    }
+    filterBody();
+}
+
+function selectTd({ td, rowIndex, colIndex, headerType, event }) {
+    if (headerType !== constants.value.NUMERIC || isNaN(Number(td))) {
+        resetSelection();
+        return;
+    }
+    if (currentSelectionSpan.value.col !== colIndex) {
+        resetSelection();
+    }
+    const tr = event.currentTarget.parentNode;
+    currentSelectionSpan.value.col = colIndex;
+
+    if (currentSelectionSpan.value.rows.map(row => row.index).includes(rowIndex)) {
+        tr.dataset.selected = "false";
+        currentSelectionSpan.value.rows = currentSelectionSpan.value.rows.filter(row => row.index !== rowIndex);
+        event.currentTarget.classList.remove(cssClass.value.CELL);
+        Array.from(tr.children).forEach((td, i) => {
+            if (td.dataset.row === 'even') {
+                td.style.background = FINAL_CONFIG.value.style.rows.even.backgroundColor;
+                td.style.color = FINAL_CONFIG.value.style.rows.even.olor;
+            } else {
+                td.style.background = FINAL_CONFIG.value.style.rows.odd.backgroundColor;
+                td.style.color = FINAL_CONFIG.value.style.rows.odd.color;
+            }
+        });
+
+        if (event.currentTarget.dataset.row === 'even') {
+            event.currentTarget.style.background = FINAL_CONFIG.value.style.rows.even.backgroundColor;
+            event.currentTarget.style.color = FINAL_CONFIG.value.style.rows.even.color;
+        } else {
+            event.currentTarget.style.background = FINAL_CONFIG.value.style.rows.odd.backgroundColor;
+            event.currentTarget.style.color = FINAL_CONFIG.value.style.rows.odd.color;
+        }
+
+    } else {
+        tr.dataset.selected = "true";
+        currentSelectionSpan.value.rows.push({
+            index: rowIndex,
+            value: td
+        });
+        Array.from(tr.children).forEach((td, i) => {
+            if (td.dataset.row === 'even') {
+                td.style.background = FINAL_CONFIG.value.style.rows.even.selectedNeighbors.backgroundColor;
+                td.style.color = FINAL_CONFIG.value.style.rows.even.selectedNeighbors.color;
+            } else {
+                td.style.background = FINAL_CONFIG.value.style.rows.odd.selectedNeighbors.backgroundColor;
+                td.style.color = FINAL_CONFIG.value.style.rows.odd.selectedNeighbors.color;
+            }
+        });
+
+        if (event.currentTarget.dataset.row === 'odd') {
+            event.currentTarget.style.background = FINAL_CONFIG.value.style.rows.odd.selectedCell.backgroundColor;
+            event.currentTarget.style.color = FINAL_CONFIG.value.style.rows.odd.selectedCell.color;
+        } else {
+            event.currentTarget.style.background = FINAL_CONFIG.value.style.rows.even.selectedCell.backgroundColor;
+            event.currentTarget.style.color = FINAL_CONFIG.value.style.rows.even.selectedCell.color;
+        }
+    }
+    currentSelectionSpan.value.rows = currentSelectionSpan.value.rows.sort((a, b) => a.index - b.index); // Guarantees the chart will display plots in the same order than the visible rows
+
+    if (chart.value.type === constants.value.DONUT && currentSelectionSpan.value.rows.length > 0) {
+        applyDonutOption();
+    }
+}
+
+function selectColumn(index) {
+    if (currentSelectionSpan.value.col !== index) {
+        visibleRows.value.forEach((row, i) => {
+            selectTd({
+                td: row.td[index],
+                rowIndex: i,
+                colIndex: index,
+                headerType: constants.value.NUMERIC,
+                event: {
+                    currentTarget: document.getElementById(`cell_${i}_${index}_${uid}`)
+                }
+            });
+        });
+        selectedColumn.value = index;
+    } else {
+        selectedColumn.value = undefined;
+        resetSelection();
+    }
+}
+
+async function selectDropdownOption(option, index) {
+    if (multiselects.value[index].includes(option)) {
+        multiselects.value[index] = multiselects.value[index].filter(el => el !== option);
+    } else {
+        multiselects.value[index].push(option);
+    }
+    await nextTick();
+    filterBody();
+}
+
+function setFilterDatesIndexes(index) {
+    filteredDatesIndexes.value[index] = !(getDatesRange(index).from === dates.value[index].from && getDatesRange(index).to === dates.value[index].to);
+}
+
+function sortTh(index, event) {
+    currentFilter.value = index;
+    const target = event.currentTarget;
+    clearTimeout(buttonTimeout.value);
+    target.classList.add("clicked");
+    buttonTimeout.value = setTimeout(() => {
+        target.classList.remove("clicked");
+    }, 200);
+    const record = sorts.value[index];
+    if (record === 1) {
+        sorts.value[index] = constants.value.DESC;
+    } else {
+        sorts.value[index] = constants.value.ASC;
+    }
+    sortBody();
+}
+
+function toggleMultiselect(index, _th, event) {
+    const target = event.currentTarget;
+    clearTimeout(buttonTimeout.value);
+    target.classList.add("clicked");
+    buttonTimeout.value = setTimeout(() => {
+        target.classList.remove("clicked");
+    }, 200);
+
+    const menu = document.getElementById(`th_dropdown_${index}`); // FIXME: add uid
+    if (menu.dataset.isOpen === 'false') {
+        menu.dataset.isOpen = 'true';
+    } else {
+        menu.dataset.isOpen = 'false';
+    }
+}
+
+function updateCurrentPage(event) {
+    resetSelection();
+    if (!event || !event.target.value) {
+        currentPage.value = 0;
+    } else {
+        currentPage.value = Number(event.target.value);
+    }
+    onPageChange();
+}
+
+// FIXME: use BaseDraggableDialog instead of this custom modal
+
+function closeDragElement() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+}
+
+const chartModal = ref(null);
+function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    if (chartModal.value) {
+        const rect = chartModal.value.getBoundingClientRect();
+        dragOffsetX.value = e.clientX - rect.left;
+        dragOffsetY.value = e.clientY - rect.top;
+        modalWidth.value = rect.width;
+        modalHeight.value = rect.height;
+
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+}
+
+function elementDrag(e) {
+    if (rafId.value) return;
+
+    if (chartModal.value) {
+        const rect = chartModal.value.getBoundingClientRect();
+        clientX.value = e.clientX - dragOffsetX.value;
+        clientY.value = e.clientY - dragOffsetY.value - 40;
+        if (clientX.value < 0) clientX.value = 0;
+        if (clientX.value + rect.width > window.innerWidth) clientX.value = window.innerWidth - rect.width - 48
+        if (clientY.value < 0) clientY.value = 0;
+        if (clientY.value + rect.height > window.innerHeight) clientY.value = window.innerHeight - rect.height - 24;
+    }
+}
+
+onMounted(() => {
+    if (props.dataset.header.length === 0) {
+        throw new Error("vue-ui-table error: missing header data.\nProvide an array of objects of type:\n{\n name: string;\n type: string; ('text' | 'numeric' | 'date')\n average: boolean;\n decimals: number | undefined;\n sum: boolean;\n isSort:boolean;\n isSearch: boolean;\n isMultiselect: boolean;\n isPercentage: boolean;\n percentageTo: string; (or '')\n}");
+    }
+    if (props.dataset.body.length === 0) {
+        throw new Error("vue-ui-table error: missing body data");
+    }
+    isLoading.value = true;
+
+    promiseWithAsyncFunction(prepareBodyCopy, async () => {
+        await nextTick();
+        isLoading.value = false;
+    });
+
+    document.addEventListener("keydown", (e) => {
+        const focusedElement = document.activeElement;
+        const isTableCellFocused = focusedElement && Array.from(focusedElement.classList).includes('td-focusable');
+
+        if (isTableCellFocused && e.key.includes("Arrow") || e.code === 'Space') {
+            e.preventDefault();
+        }
+    })
+    filename.value = FINAL_CONFIG.value.style.exportMenu.filename;
+    chartTimeLabelSourceModel.value = dateHeaders.value[0]?.name ?? ''
+});
+
+watch(() => props.dataset, (newVal) => {
+    isLoading.value = true;
+    bodyCopy.value = JSON.parse(JSON.stringify(newVal.body)).map((el, i) => ({
+        ...el,
+        absoluteIndex: i
+    }));
+    tableBody.value = JSON.parse(JSON.stringify(newVal.body)).map((el, i) => ({
+        ...el,
+        absoluteIndex: i
+    }));
+    tableHead.value = JSON.parse(JSON.stringify(newVal.header)).map((head, i) => ({
+        average: Object.hasOwn(head, 'average') ? head.average : false,
+        decimals: Object.hasOwn(head, 'decimals') ? head.decimals : 0,
+        isMultiselect: Object.hasOwn(head, 'isMultiselect') ? head.isMultiselect : false,
+        isPercentage: Object.hasOwn(head, 'isPercentage') ? head.isPercentage : false,
+        isSearch: Object.hasOwn(head, 'isSearch') ? head.isSearch : false,
+        isSort: Object.hasOwn(head, 'isSort') ? head.isSort : false,
+        name: head.name,
+        percentageTo: Object.hasOwn(head, 'percentageTo') ? head.percentageTo : undefined,
+        prefix: Object.hasOwn(head, 'prefix') ? head.prefix : '',
+        rangeFilter: Object.hasOwn(head, 'rangeFilter') ? head.rangeFilter : false,
+        suffix: Object.hasOwn(head, 'suffix') ? head.suffix : '',
+        sum: Object.hasOwn(head, 'sum') ? head.sum : false,
+        type: head.type,
+        index: i
+    }));
+
+    currentSelectionSpan.value = { col: undefined, rows: [] };
+    selectedColumn.value = undefined;
+    
+    // this.currentPage = 0;
+    itemsPerPage.value = props.config.rowsPerPage ? props.config.rowsPerPage : 25;
+    percentages.value = {};
+    dates.value = {};
+    filteredDatesIndexes.value = {};
+    hasNaN.value = {};
+    immutableRangeFilters.value = {};
+    rangeFilters.value = {};
+    multiselects.value = {};
+    searches.value = {};
+    sorts.value = {};
+    showChart.value = false;
+    currentDonut.value = undefined;
+    selectedDonutCategory.value = undefined;
+    selectedPlot.value = undefined;
+    showDonutOptions.value = false;
+    currentSelectionSpan.value.col = undefined;
+    currentSelectionSpan.value.rows = []
+
+    promiseWithAsyncFunction(prepareBodyCopy, async () => {
+        updateCurrentPage();
+        await nextTick();
+        isLoading.value = false;
+    });
+}, { immediate: true, deep: true });
+
+const filenameInputRef = ref(null);
+watch(isExportRequest, (bool) => {
+    bool && filenameInputRef.value && filenameInputRef.value.focus();
+});
+
+watch(showChart, (bool) => {
+    if (bool) {
+        nextTick(() => {
+            closeDragElement();
+        });
+    }
+});
 </script>
 
 <style scoped>
@@ -2489,7 +2407,7 @@ button.th-reset:not(:disabled) {
 }
 
 .vue-ui-table-main td:focus {
-    outline: 3px solid #1f77b490;
+    outline: 3px solid #1f77b490 !important;
 }
 
 .vue-ui-table-main .vue-ui-table-export-hub {
