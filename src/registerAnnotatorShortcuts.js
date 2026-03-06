@@ -1,182 +1,223 @@
-export function registerAnnotatorShortcuts(cmp) {
+export function registerAnnotatorShortcuts(ctx) {
+    const isPrimaryMod = (event) => (ctx.isMacLike.value ? event.metaKey : event.ctrlKey);
 
-    const isPrimaryMod = (e) => (cmp.isMacLike ? e.metaKey : e.ctrlKey);
-
-    const isTypingTarget = (el) => {
-        const node = el;
+    const isTypingTarget = (element) => {
+        const node = element;
         if (!node) return false;
         const tag = (node.tagName || "").toLowerCase();
         const editable = node.isContentEditable;
         return editable || tag === "input" || tag === "textarea" || tag === "select";
     };
 
-    const blockShortcuts = (e) => {
-        // Block shortcuts while summary is closed or typing in inputs, or while text entry is active
-        if (!cmp.isSummaryOpen || isTypingTarget(e.target) || cmp.isWriting) return true;
+    const blockShortcuts = (event) => {
+        if (!ctx.isSummaryOpen.value || isTypingTarget(event.target) || ctx.isWriting.value) return true;
         return false;
     };
 
     const clearModes = () => {
-        cmp.isDeleteMode = false;
-        cmp.isMoveMode = false;
-        cmp.isResizeMode = false;
-        cmp.isSelectMode = false;
-        cmp.isDrawMode = false;
-        cmp.isTextMode = false;
-        cmp.activeShape = undefined;
-        cmp.showCaret = false;
+        ctx.isDeleteMode.value = false;
+        ctx.isMoveMode.value = false;
+        ctx.isResizeMode.value = false;
+        ctx.isSelectMode.value = false;
+        ctx.isDrawMode.value = false;
+        ctx.isTextMode.value = false;
+        ctx.activeShape.value = undefined;
+        ctx.showCaret.value = false;
     };
 
     const toggleMode = (key) => {
         clearModes();
+
         switch (key) {
-            case "m": cmp.isMoveMode = true; break; // Move
-            case "r": cmp.isResizeMode = true; break; // Resize
-            case "d": cmp.isDeleteMode = true; break; // Delete
-            case "g": cmp.isSelectMode = true; cmp.setShapeTo("group"); cmp.activeShape = "group"; break; // Select/Group
-            case "t": cmp.isTextMode = true; cmp.isWriting = false; cmp.showCaret = false; break; // Text (click to place)
-            default: break;
+            case "m":
+                ctx.isMoveMode.value = true;
+                break;
+            case "r":
+                ctx.isResizeMode.value = true;
+                break;
+            case "d":
+                ctx.isDeleteMode.value = true;
+                break;
+            case "g":
+                ctx.isSelectMode.value = true;
+                ctx.setShapeTo("group");
+                ctx.activeShape.value = "group";
+                break;
+            case "t":
+                ctx.isTextMode.value = true;
+                ctx.isWriting.value = false;
+                ctx.showCaret.value = false;
+                break;
+            default:
+                break;
         }
     };
 
     const pickShape = (key) => {
         switch (key) {
-            case "c": cmp.setShapeTo("circle"); break;
-            case "s": cmp.setShapeTo("rect"); break;
-            case "a": cmp.setShapeTo("arrow"); break;
-            case "l": cmp.setShapeTo("line"); break; // Freehand line
-            default: break;
+            case "c":
+                ctx.setShapeTo("circle");
+                break;
+            case "s":
+                ctx.setShapeTo("rect");
+                break;
+            case "a":
+                ctx.setShapeTo("arrow");
+                break;
+            case "l":
+                ctx.setShapeTo("line");
+                break;
+            default:
+                break;
         }
     };
 
-    const nudge = (dx, dy) => {
-        const s = cmp.lastSelectedShape;
-        if (!s) return;
+    const nudge = (deltaX, deltaY) => {
+        const selectedShape = ctx.lastSelectedShape.value;
+        if (!selectedShape) return;
 
-        const add = (prop, delta) => { if (typeof s[prop] === "number") s[prop] += delta; };
-        switch (s.type) {
+        const add = (prop, delta) => {
+            if (typeof selectedShape[prop] === "number") {
+                selectedShape[prop] += delta;
+            }
+        };
+
+        switch (selectedShape.type) {
             case "rect":
             case "circle":
             case "text":
-                add("x", dx); add("y", dy);
+                add("x", deltaX);
+                add("y", deltaY);
                 break;
             case "arrow":
-                add("x", dx); add("y", dy);
-                add("endX", dx); add("endY", dy);
+                add("x", deltaX);
+                add("y", deltaY);
+                add("endX", deltaX);
+                add("endY", deltaY);
                 break;
-            // Freehand lines and groups are skipped (for now...)
             default:
                 break;
         }
     };
 
     const deleteSelection = () => {
-        const s = cmp.lastSelectedShape;
-        if (!s) return;
-        cmp.shapes = cmp.shapes.filter((sh) => sh.id !== s.id);
-        cmp.lastSelectedShape = undefined;
+        const selectedShape = ctx.lastSelectedShape.value;
+        if (!selectedShape) return;
+
+        ctx.shapes.value = ctx.shapes.value.filter((shape) => shape.id !== selectedShape.id);
+        ctx.lastSelectedShape.value = undefined;
     };
 
     let arrowBatchActive = false;
     let arrowIdleTimer = null;
+
     const beginArrowBatch = () => {
         if (arrowBatchActive) return;
         arrowBatchActive = true;
-        cmp.history?.begin?.("nudge");
+        ctx.history?.value?.begin?.("nudge");
     };
+
     const endArrowBatchSoon = () => {
         if (!arrowBatchActive) return;
+
         clearTimeout(arrowIdleTimer);
         arrowIdleTimer = setTimeout(() => {
             arrowBatchActive = false;
-            cmp.history?.end?.();
+            ctx.history?.value?.end?.();
         }, 160);
     };
+
     const endArrowBatchNow = () => {
         clearTimeout(arrowIdleTimer);
-        if (arrowBatchActive) cmp.history?.end?.();
+        if (arrowBatchActive) {
+            ctx.history?.value?.end?.();
+        }
         arrowBatchActive = false;
     };
 
-    const onKeyDown = (e) => {
-        // Undo (Cmd/Ctrl+Z)
-        if (isPrimaryMod(e) && !e.shiftKey && e.key.toLowerCase() === "z") {
-            if (blockShortcuts(e)) return;
-            e.preventDefault();
-            cmp.undoLastShape?.();
+    const onKeyDown = (event) => {
+        if (isPrimaryMod(event) && !event.shiftKey && event.key.toLowerCase() === "z") {
+            if (blockShortcuts(event)) return;
+            event.preventDefault();
+            ctx.undoLastShape?.();
             return;
         }
 
-        // Redo (Cmd/Ctrl+Shift+Z OR Cmd/Ctrl+Y)
         if (
-            (isPrimaryMod(e) && e.shiftKey && e.key.toLowerCase() === "z") ||
-            (isPrimaryMod(e) && e.key.toLowerCase() === "y")
+            (isPrimaryMod(event) && event.shiftKey && event.key.toLowerCase() === "z") ||
+            (isPrimaryMod(event) && event.key.toLowerCase() === "y")
         ) {
-            if (blockShortcuts(e)) return;
-            e.preventDefault();
-            if (typeof cmp.redoLastShape === "function") cmp.redoLastShape();
-            else cmp.history?.redo?.();
+            if (blockShortcuts(event)) return;
+            event.preventDefault();
+            if (typeof ctx.redoLastShape === "function") {
+                ctx.redoLastShape();
+            } else {
+                ctx.history?.value?.redo?.();
+            }
             return;
         }
 
-        if (blockShortcuts(e)) return;
+        if (blockShortcuts(event)) return;
 
-        const k = e.key.toLowerCase();
+        const key = event.key.toLowerCase();
 
-        // Escape: clear modes
-        if (k === "escape") {
-            e.preventDefault();
+        if (key === "escape") {
+            event.preventDefault();
             clearModes();
             return;
         }
 
-        // Delete current selection
-        if (k === "delete" || k === "backspace") {
-            e.preventDefault();
+        if (key === "delete" || key === "backspace") {
+            event.preventDefault();
             deleteSelection();
             return;
         }
 
-        // Mode toggles
-        if (["m", "r", "d", "g", "t"].includes(k)) {
-            e.preventDefault();
-            toggleMode(k);
+        if (["m", "r", "d", "g", "t"].includes(key)) {
+            event.preventDefault();
+            toggleMode(key);
             return;
         }
 
-        // Shape pickers (draw)
-        if (["c", "a", "l", "s"].includes(k)) {
-            e.preventDefault();
-            pickShape(k);
+        if (["c", "a", "l", "s"].includes(key)) {
+            event.preventDefault();
+            pickShape(key);
             return;
         }
 
-        // Nudge arrows (Shift = 10px step)
         const isArrowKey =
-            e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight";
+            event.key === "ArrowUp" ||
+            event.key === "ArrowDown" ||
+            event.key === "ArrowLeft" ||
+            event.key === "ArrowRight";
+
         if (isArrowKey) {
-            e.preventDefault();
+            event.preventDefault();
             beginArrowBatch();
-            const step = e.shiftKey ? 10 : 1;
-            if (e.key === "ArrowUp") nudge(0, -step);
-            if (e.key === "ArrowDown") nudge(0, step);
-            if (e.key === "ArrowLeft") nudge(-step, 0);
-            if (e.key === "ArrowRight") nudge(step, 0);
+
+            const step = event.shiftKey ? 10 : 1;
+
+            if (event.key === "ArrowUp") nudge(0, -step);
+            if (event.key === "ArrowDown") nudge(0, step);
+            if (event.key === "ArrowLeft") nudge(-step, 0);
+            if (event.key === "ArrowRight") nudge(step, 0);
+
             endArrowBatchSoon();
-            return;
         }
     };
 
-    const onKeyUp = (e) => {
-        if (e.key.startsWith("Arrow")) endArrowBatchSoon();
+    const onKeyUp = (event) => {
+        if (event.key.startsWith("Arrow")) {
+            endArrowBatchSoon();
+        }
     };
 
-    window.addEventListener("keydown", onKeyDown, { passive: false });
-    window.addEventListener("keyup", onKeyUp, { passive: true });
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
 
     return function unregister() {
-        window.removeEventListener("keydown", onKeyDown, { passive: false });
-        window.removeEventListener("keyup", onKeyUp, { passive: true });
+        window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("keyup", onKeyUp);
         endArrowBatchNow();
     };
 }

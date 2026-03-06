@@ -348,7 +348,7 @@
             <!-- UNDO LAST SHAPE -->
             <button
               data-cy="annotator-button-undo"
-              :disabled="_historySize.undo === 0"
+              :disabled="HISTORY_SIZE.undo === 0"
               :style="{
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
@@ -393,7 +393,7 @@
             <!-- REDO LAST SHAPE -->
             <button
               data-cy="annotator-button-redo"
-              :disabled="_historySize.redo === 0"
+              :disabled="HISTORY_SIZE.redo === 0"
               :style="{
                   background: FINAL_CONFIG.style.buttons.controls.backgroundColor,
                   border: FINAL_CONFIG.style.buttons.controls.border,
@@ -1429,8 +1429,8 @@
   </div>
 </template>
 
-<script>
-import { ref } from "vue";
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import { opacity, treeShake, convertConfigColors, createUid } from "../lib";
 import { useConfig } from "../useConfig";
 import { domToPng } from "../dom-to-png";
@@ -1441,374 +1441,1459 @@ import Accordion from "./vue-ui-accordion.vue";
 import TeleportedTooltip from "../atoms/TeleportedTooltip.vue";
 import ColorPicker from "../atoms/ColorPicker.vue";
 
-export default {
-  props: {
-    config: {
-        type: Object,
-        default() {
-            return {}
-        }
-    },
-    dataset: {
-        type: Object,
-        default() {
-            return {
-                shapes: [],
-                lastSelectedShape: undefined
-            }
-        }
-    },
-  },
-  components: { 
-    Accordion, 
-    BaseIcon, 
-    ColorPicker,
-    TeleportedTooltip, 
-  },
-  data() {
-    return {
-      activeShape: undefined,
-      strokeSize: 1,
-      currentPointer: {
-        start: {
-          x: 0,
-          y: 0,
-        },
-        end: {
-          x: 0,
-          end: 0,
-        },
-      },
-      currentTarget: undefined,
-      hoveredShapeId: undefined,
-      isBold: false,
-      isBulletTextMode: false,
-      isDash: false,
-      isDeleteMode: false,
-      isDrawing: false,
-      isDrawingNewShape: true,
-      isDrawMode: false,
-      isItalic: false,
-      isMouseDown: false,
-      isMoveMode: false,
-      isPrinting: false,
-      isResizeMode: false,
-      isSelectMode: false,
-      isSummaryOpen: false,
-      isTextMode: false,
-      isUnderline: false,
-      isWriting: false,
-      lastSelectedShape: this.dataset.lastSelectedShape,
-      pointerPosition: {
-        x: 0,
-        y: 0,
-      },
-      preventEdit: true,
-      selectedGroup: [],
-      shapes: this.dataset.shapes ? this.dataset.shapes : [],
-      shapesOrder: [],
-      step: Math.round(Math.random()) * 100000,
-      svgHeight: 1000,
-      svgWidth: 1000,
-      options: {
-        arrow: {
-          color: "grey",
-          filled: true,
-        },
-        circle: {
-          color: "grey",
-          filled: false,
-          radius: 3,
-          strokeWidth: 2,
-        },
-        rect: {
-          color: "grey",
-          filled: false,
-          strokeWidth: 2,
-          height: 12,
-          width: 12,
-        },
-      },
-      selectedColor: "#000000",
-      showCaret: false,
-      sizeRatio: 1,
-      slottedSvg: undefined,
-      sourceWidth: 1,
-      sourceHeight: 1,
-      textAlign: "start",
-      textFont: 20,
-      transparency: 100,
-      transparencyCodes: opacity,
-      dragOffset: null,
-      showTooltip: false,
-      tooltipKey: null,
-      tooltipPos: { x: 0, y: 0 },
-      tooltipAnchor: null,
-      history: [],
-      isMacLike: false,
-      _onKeydown: null,
-      _historySize: { undo: 0, redo: 0 },
-      _rafId: null,
-      _lastPointerId: null,
-      _captureEl: null
-    };
-  },
-  watch: {
-    shapes: {
-      handler(newVal) {
-        if (newVal.length === 0) {
-          this.lastSelectedShape = undefined;
-        }
-      },
-    },
-    isTextMode: {
-      handler(bool) {
-        this.showCaret = bool;
-      }
+const props = defineProps({
+  config: {
+    type: Object,
+    default() {
+        return {}
     }
   },
-  computed: {
-    FINAL_CONFIG() {
-        const DEFAULT_CONFIG = useConfig().vue_ui_annotator;
-
-        if(!Object.keys(this.config || {}).length) {
-            return DEFAULT_CONFIG
+  dataset: {
+    type: Object,
+    default() {
+        return {
+            shapes: [],
+            lastSelectedShape: undefined
         }
-        
-        const reconcilied = this.treeShake({
-            defaultConfig: DEFAULT_CONFIG,
-            userConfig: this.config
-        });
+    }
+  }
+});
 
-        return this.convertConfigColors(reconcilied);
+const emit = defineEmits(['toggleOpenState', 'saveAnnotations'])
+
+const fileName = 'annotations';
+const uid = ref(createUid());
+
+const { isImaging, generateImage } = usePrinter({
+  elementId: uid.value,
+  fileName,
+});
+
+const activeShape = ref(undefined);
+const strokeSize = ref(1);
+const currentPointer = ref({
+  start: { x: 0, y: 0 },
+  end: { x: 0, y: 0 }
+});
+const currentTarget = ref(undefined);
+const hoveredShapeId = ref(undefined);
+const isBold = ref(false);
+const isBulletTextMode = ref(false);
+const isDash = ref(false);
+const isDeleteMode = ref(false);
+const isDrawing = ref(false);
+const isDrawingNewShape = ref(true);
+const isDrawMode = ref(false);
+const isItalic = ref(false);
+const isMouseDown = ref(false);
+const isMoveMode = ref(false);
+const isPrinting = ref(false);
+const isResizeMode = ref(false);
+const isSelectMode = ref(false);
+const isSummaryOpen = ref(false);
+const isTextMode = ref(false);
+const isUnderline = ref(false);
+const isWriting = ref(false);
+const lastSelectedShape = ref(props.dataset?.lastSelectedShape ?? undefined);
+const pointerPosition = ref({ x: 0, y: 0 });
+const preventEdit = ref(true);
+const selectedGroup = ref([]);
+const shapes = ref(props.dataset?.shapes || []);
+const shapesOrder = ref([]);
+const step = ref(Math.round(Math.random()) * 100000);
+const svgHeight = ref(1000);
+const svgWidth = ref(1000);
+const options = ref({
+  arrow: {
+      color: "grey",
+      filled: true,
     },
-    isCursorPointer() {
-      return this.FINAL_CONFIG.useCursorPointer;
+    circle: {
+      color: "grey",
+      filled: false,
+      radius: 3,
+      strokeWidth: 2,
     },
-    tooltipStyleObject() {
-      const s = this.FINAL_CONFIG.style.tooltips;
-      return {
-        backgroundColor: s.backgroundColor,
-        color: s.color,
-        border: s.border,
-        borderRadius: `${s.borderRadius}px`,
-        boxShadow: s.boxShadow,
-      };
+    rect: {
+      color: "grey",
+      filled: false,
+      strokeWidth: 2,
+      height: 12,
+      width: 12,
     },
-    canSelect() {
-      return (
-        this.shapes.filter((shape) => !["line", "group"].includes(shape.type)).length > 1
-      );
-    },
-    colorTransparency() {
-      return this.transparencyCodes[this.transparency > 98 ? 98 : this.transparency];
-    },
-    cursorClass() {
+});
+const selectedColor = ref('#1A1A1A');
+const showCaret = ref(false);
+const sizeRatio = ref(1);
+const slottedSvg = ref(undefined);
+const sourceWidth = ref(1);
+const sourceHeight = ref(1);
+const textAlign = ref('start');
+const textFont = ref(20);
+const transparency = ref(100);
+const transparencyCodes = opacity;
+const dragOffset = ref(null);
+const showTooltip = ref(false);
+const tooltipKey = ref(null);
+const tooltipPos = ref({ x: 0, y: 0 });
+const tooltipAnchor = ref(null);
+const history = ref([]);
+const isMacLike = ref(false);
+const ONKEYDOWN = ref(null);
+const HISTORY_SIZE = ref({ undo: 0, redo: 0 });
+const RAF_ID = ref(null);
+const LAST_POINTER_ID = ref(null);
+const CAPTURE_EL = ref(null);
+const lastPointerId = ref(null);
+
+const FINAL_CONFIG = computed(() => {
+  const DEFAULT_CONFIG = useConfig().vue_ui_annotator;
+
+    if(!Object.keys(props.config || {}).length) {
+        return DEFAULT_CONFIG
+    }
+    
+    const reconcilied = treeShake({
+        defaultConfig: DEFAULT_CONFIG,
+        userConfig: props.config
+    });
+
+    return convertConfigColors(reconcilied);
+});
+
+const isCursorPointer = computed(() => FINAL_CONFIG.value.useCursorPointer);
+
+const tooltipStyleObject = computed(() => {
+  const s = FINAL_CONFIG.value.style.tooltips;
+  return {
+    backgroundColor: s.backgroundColor,
+    color: s.color,
+    border: s.border,
+    borderRadius: `${s.borderRadius}px`,
+    boxShadow: s.boxShadow,
+  };
+});
+
+const canSelect = computed(() => shapes.value.filter((shape) => !["line", "group"].includes(shape.type)).length > 1);
+
+const colorTransparency = computed(() => transparencyCodes[transparency.value > 98 ? 98 : transparency.value]);
+
+const cursorClass = computed(() => {
+  switch (true) {
+    case isDeleteMode.value:
+      return "default";
+
+    case isMoveMode.value:
+      return "move";
+
+    case isTextMode.value:
+      return "text";
+
+    case isResizeMode.value:
+      return "se-resize";
+
+    default:
+      return "";
+  }
+});
+
+const records = computed(() => shapes.value);
+const mainSvg = ref(null);
+
+function includeSelectionIndicator(shape) {
+  if (!shape) {
+    return;
+  }
+
+  switch (true) {
+    case shape.type === "rect":
+      return `
+                <rect
+                id="${shape.id}" 
+                style="stroke-dasharray: 10; display:${
+                  hoveredShapeId.value && hoveredShapeId.value === shape.id
+                    ? "initial"
+                    : "none"
+                }"
+                x="${shape.x - 20}"
+                y="${shape.y - 20}"
+                height="${shape.rectHeight + 40}"
+                width="${shape.rectWidth + 40}"
+                fill="transparent"
+                stroke="grey"
+                />
+            `;
+
+    case shape.type === "circle":
+      return `
+                <rect
+                id="${shape.id}" 
+                style="stroke-dasharray: 10; display:${
+                  hoveredShapeId.value && hoveredShapeId.value === shape.id
+                    ? "initial"
+                    : "none"
+                }"
+                x="${shape.x - shape.circleRadius - 20}"
+                y="${shape.y - shape.circleRadius - 20}"
+                height="${shape.circleRadius * 2 + 40}"
+                width="${shape.circleRadius * 2 + 40}"
+                fill="transparent"
+                stroke="grey"
+                />
+            `;
+
+    case shape.type === "arrow":
+      const isPositiveX = shape.endX - shape.x > 0;
+      const isPositiveY = shape.endY - shape.y > 0;
+      return `
+                <rect
+                id="${shape.id}" 
+                style="stroke-dasharray: 10; display:${
+                  hoveredShapeId.value && hoveredShapeId.value === shape.id
+                    ? "initial"
+                    : "none"
+                }"
+                x="${isPositiveX ? shape.x - 20 : shape.endX - 20}"
+                y="${isPositiveY ? shape.y - 20 : shape.endY - 20}"
+                height="${
+                  isPositiveY ? shape.endY - shape.y + 40 : shape.y - shape.endY + 40
+                }"
+                width="${
+                  isPositiveX ? shape.endX - shape.x + 40 : shape.x - shape.endX + 40
+                }"
+                fill="transparent"
+                stroke="grey"
+                />
+            `;
+
+    case shape.type === "text":
+      const selectedText = mainSvg.value ? Array.from(mainSvg.value.getElementsByTagName("text")).find(
+        (textElement) => textElement.id === shape.id
+      ) : null;
+      if (!selectedText) {
+        return;
+      }
+      const { x, y, width, height } = selectedText.getBBox();
+      return `
+                <rect
+                id="${shape.id}" 
+                style="stroke-dasharray: 10; display:${
+                  hoveredShapeId.value && hoveredShapeId.value === shape.id
+                    ? "initial"
+                    : "none"
+                }"
+                x="${x - 20}"
+                y="${y - 20}"
+                height="${height + 40}"
+                width="${width + 40}"
+                fill="transparent"
+                stroke="grey"
+                />
+            `;
+
+    default:
+      return ``;
+  }
+}
+
+function includeDeleteButton(shape, isBulletTextMode = false) {
+  switch (true) {
+    case shape.type === "circle":
+      return `
+                <g id="${shape.id}" style="display:${
+        isDeleteMode.value ? "initial" : "none"
+      };">
+                    <circle id="${shape.id}" cx="${shape.x}" cy="${
+        shape.y
+      }" r="12" fill="red"/>
+                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
+        shape.x - 4
+      }" y1="${shape.y - 4}" x2="${shape.x + 4}" y2="${shape.y + 4}"/>
+                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
+        shape.x + 4
+      }" y1="${shape.y - 4}" x2="${shape.x - 4}" y2="${shape.y + 4}"/>
+                </g>
+            `;
+
+    case shape.type === "text":
+      // determine position of delete button from textAlign property
+      let offsetX;
+      let offsetY = [-8, -12, -4, -12, -4];
       switch (true) {
-        case this.isDeleteMode:
-          return "default";
+        case shape.textAlign === "start":
+          if (isBulletTextMode) {
+            offsetX = [-20, -24, -16, -16, -24];
+          } else {
+            offsetX = [-16, -20, -12, -12, -20];
+          }
+          break;
 
-        case this.isMoveMode:
-          return "move";
+        case shape.textAlign === "middle":
+          offsetX = [0, -4, 4, 4, -4];
+          offsetY = [-32, -36, -28, -36, -28];
+          break;
 
-        case this.isTextMode:
-          return "text";
-
-        case this.isResizeMode:
-          return "se-resize";
+        case shape.textAlign === "end":
+          offsetX = [16, 20, 12, 12, 20];
+          break;
 
         default:
-          return "";
+          offsetX = [0, 0, 0];
+          break;
       }
-    },
-    records() {
-      return this.shapes;
-    },
-    userShapes() {
-      return this.records.map((shape) => {
-        switch (true) {
-          case shape && shape.type === "arrow":
-            const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
-            const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
-            return {
-              html: `
-              <defs>
-              <marker 
-                  id="${shape.id}" 
-                  markerWidth="${shapeWidthMax}" 
-                  markerHeight="${shapeWidthMax}" 
-                  refX="0" 
-                  refY="${shapeWidthMin}" 
-                  orient="auto"
-              >
-                  <polygon 
-                  points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}" 
-                  fill="${shape.color}"
-                  />
-              </marker>
-              </defs>
-              ${this.includeSelectionIndicator(shape)}
-              <g id="${shape.id}">
-                  <path 
-                  style="stroke-linecap: round !important; ${
-                    shape.isDash
-                      ? `stroke-dasharray: ${shape.strokeWidth * 3}`
-                      : ""
-                  }" 
-                  stroke="${shape.color}" 
-                  id="${shape.id}" 
-                  d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}" 
-                  stroke-width="${shape.strokeWidth}" 
-                  marker-end="url(#${shape.id})"
-                  />
-              </g>
-              <g id="${shape.id}">
-              <rect 
-                  id="${shape.id}"
-                  x="${shape.x - 10}"
-                  y="${shape.y - 10}"
-                  height="20"
-                  width="20"
-                  fill="rgba(0,0,0,0.3)"
-                  style="display:${
-                    this.isResizeMode || this.isMoveMode ? "initial" : "none"
-                  }; rx:1 !important; ry:1 !important;"
-              />
-              </g>
-              ${this.includeDeleteButton(shape)}
-              </g>
-              `,
-              id: shape.id
-            };
 
-          case shape && shape.type === "circle":
-            return {
-              html: `
-              <g id="${shape.id}">
-                  ${this.includeSelectionIndicator(shape)}
-                  <circle 
-                  id="${shape.id}" 
-                  cx="${shape.x}" 
-                  cy="${shape.y}" 
-                  r="${
-                    shape.circleRadius
-                      ? shape.circleRadius
-                      : Number.MIN_VALUE
-                  }"
-                  fill="${
-                    shape.isFilled
-                      ? shape.color + shape.alpha
-                      : "rgba(255,255,255,0.001)"
-                  }" 
-                  stroke="${shape.color + shape.alpha}" 
-                  stroke-width="${shape.strokeWidth}"
-                  style="${
-                    shape.isDash
-                      ? `stroke-dasharray: ${shape.strokeWidth * 3}`
-                      : ""
-                  }"
-                  >
-                  </circle>
-              </g>
-              
-              ${this.includeDeleteButton(shape)}`,
-              id: shape.id
-            };
-
-          case shape && shape.type === "group":
-            return {
-              html: `<g id="${shape.id}">
-                            <rect
-                                id="${this.isResizeMode ? "" : shape.id}"
-                                x="${shape.x}"
-                                y="${shape.y}"
-                                fill="transparent"
-                                height="${shape.rectHeight}"
-                                width="${shape.rectWidth}"
-                                stroke="grey"
-                                stroke-width="1"
-                                style="rx:1 !important; ry:1 !important; ${
-                                  shape.isDash
-                                    ? `stroke-dasharray: ${shape.strokeWidth * 3}`
-                                    : ""
-                                }; display:${
-              this.isSelectMode ||
-              this.isDeleteMode ||
-              (this.hoveredShapeId && this.hoveredShapeId === shape.id)
-                ? "initial"
-                : "none"
-            };"
-                            />
-                <g id="${shape.id}">
-                ${shape.content ? shape.content : ""}
+      return `
+                <g id="${shape.id}" style="display:${
+        isDeleteMode.value ? "initial" : "none"
+      };">
+                    <circle id="${shape.id}" cx="${shape.x + offsetX[0]}" cy="${
+        shape.y + offsetY[0]
+      }" r="12" fill="red"/>
+                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
+        shape.x + offsetX[1]
+      }" y1="${shape.y + offsetY[1]}" x2="${shape.x + offsetX[2]}" y2="${
+        shape.y + offsetY[2]
+      }"/>
+                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
+        shape.x + offsetX[3]
+      }" y1="${shape.y + offsetY[3]}" x2="${shape.x + offsetX[4]}" y2="${
+        shape.y + offsetY[4]
+      }"/>
                 </g>
-                            ${this.includeDeleteButton(shape)}
-                            </g> `,
-                            id: shape.id
-            }
+            `;
 
-          case shape && shape.type === "rect":
-            return {
-              html: `<g id="${shape.id}">
-                            ${this.includeSelectionIndicator(shape)}
-                            <rect
-                                id="${this.isResizeMode ? "" : shape.id}"
-                                x="${shape.x}"
-                                y="${shape.y}"
-                                fill="${
-                                  shape.isFilled
-                                    ? shape.color + shape.alpha
-                                    : "rgba(255,255,255,0.001)"
-                                }"
-                                height="${shape.rectHeight}"
-                                width="${shape.rectWidth}"
-                                stroke="${shape.color + shape.alpha}"
-                                stroke-width="${shape.strokeWidth}"
-                                style="rx:1 !important; ry:1 !important; ${
-                                  shape.isDash
-                                    ? `stroke-dasharray: ${shape.strokeWidth * 3}`
-                                    : ""
-                                }"
-                            />
-                            <rect id="${shape.id}"
-                                x="${shape.x + shape.rectWidth}"
-                                y="${shape.y + shape.rectHeight}"
-                                height="20"
-                                width="20"
-                                fill="rgba(0,0,0,0.3)"
-                                style="display:${
-                                  this.isResizeMode ? "initial" : "none"
-                                }; rx:1 !important; ry:1 !important;"
-                            />
-                            ${this.includeDeleteButton(shape)}
-                            </g> `,
-                            id: shape.id
-            }
+    default:
+      return `
+                <g id="${shape.id}" style="display:${
+        isDeleteMode.value ? "initial" : "none"
+      };">
+                    <circle id="${shape.id}" cx="${shape.x - 4}" cy="${
+        shape.y - 4
+      }" r="12" fill="red"/>
+                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
+        shape.x - 8
+      }" y1="${shape.y - 8}" x2="${shape.x}" y2="${shape.y}"/>
+                    <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
+        shape.x
+      }" y1="${shape.y - 8}" x2="${shape.x - 8}" y2="${shape.y}"/>
+                </g>
+            `;
+  }
+}
 
-          case shape && shape.type === "line":
-            return {
-              html: `
-                    <g id="${shape.id}">
-                        <path 
-                        id="${shape.id}" 
-                        d="M${shape.path ? shape.path : ""}" 
-                        style="stroke:${
-                          shape.color + shape.alpha
-                        } !important; fill:none; stroke-width:${
-              shape.strokeWidth
-            } !important; stroke-linecap: round !important; stroke-linejoin: round !important;"        
+function computeCaretPosition(shape) {
+  switch (true) {
+    case shape.textAlign === "middle":
+      return `<path class="vue-ui-annotator-caret" stroke="black" stroke-width="2" d="M${shape.x},${
+        shape.y - shape.fontSize
+      } ${shape.x},${
+        shape.y - shape.fontSize - 15
+      }" /> <path class="vue-ui-annotator-caret" stroke="black" stroke-width="2" d="M${shape.x - 3},${
+        shape.y - shape.fontSize - 5
+      } ${shape.x},${shape.y - shape.fontSize} ${shape.x + 3},${
+        shape.y - shape.fontSize - 5
+      }"/>`;
+
+    case shape.textAlign === "start":
+      const bulletModeOffset = shape.isBulletTextMode ? shape.fontSize : 0;
+      return `<path class="vue-ui-annotator-caret" d="M${shape.x - 20 - bulletModeOffset},${
+        shape.y - shape.fontSize / 6
+      } ${shape.x - 5 - bulletModeOffset},${
+        shape.y - shape.fontSize / 6
+      }" stroke="black" stroke-width="2" />
+                    <path class="vue-ui-annotator-caret" d="M${shape.x - 10 - bulletModeOffset},${
+        shape.y - shape.fontSize / 3
+      } ${shape.x - 5 - bulletModeOffset},${shape.y - shape.fontSize / 6} ${
+        shape.x - 10 - bulletModeOffset
+      },${shape.y}" stroke="black" stroke-width="2">`;
+
+    case shape.textAlign === "end":
+      return `<path class="vue-ui-annotator-caret" d="M${shape.x + 20},${shape.y - shape.fontSize / 6} ${
+        shape.x + 5
+      },${shape.y - shape.fontSize / 6}" stroke="black" stroke-width="2" />
+                    <path class="vue-ui-annotator-caret" d="M${shape.x + 10},${shape.y - shape.fontSize / 3} ${
+        shape.x + 5
+      },${shape.y - shape.fontSize / 6} ${shape.x + 10},${
+        shape.y
+      }" stroke="black" stroke-width="2">`;
+
+    default:
+      return "";
+  }
+}
+
+function computeTextElement(shape, content, isBulletTextMode = false) {
+  switch (true) {
+    case shape.textAlign === "start":
+      return `
+            <g id="${shape.id}">
+                <rect 
+                    id="${shape.id}" 
+                    style="display:${
+                      lastSelectedShape.value && lastSelectedShape.value.id === shape.id
+                        ? "initial"
+                        : "none"
+                    };" 
+                    x="${shape.x}" 
+                    y="${shape.y - 50}" 
+                    height="${
+                      shape.lines === 0 || shape.lines === 1
+                        ? shape.fontSize * 4
+                        : shape.fontSize * 2 * shape.lines
+                    }"
+                    width="100" 
+                    fill="rgba(0,0,0,0)"
+                />
+                <text
+                style="user-select:none; height:100px;"
+                id="${shape.id}"
+                x="${shape.x}"
+                y="${shape.y}"
+                text-anchor="${shape.textAlign}"
+                font-size="${shape.fontSize}"
+                fill="${shape.color}"
+                font-weight="${shape.isBold ? "bold" : "normal"}"
+                font-style="${shape.isItalic ? "italic" : "normal"}"
+                text-decoration="${shape.isUnderline ? "underline" : "none"}"
+                >
+                    ${content.join("")}
+                </text>
+                ${
+                  showCaret.value &&
+                  lastSelectedShape.value &&
+                  lastSelectedShape.value.id === shape.id
+                    ? computeCaretPosition(shape)
+                    : ""
+                }
+                ${includeDeleteButton(shape, isBulletTextMode)}
+            </g> 
+            `;
+
+    case shape.textAlign === "middle":
+      return `
+                <g id="${shape.id}">
+                <rect 
+                    id="${shape.id}" 
+                    style="display:${
+                      lastSelectedShape.value && lastSelectedShape.value.id === shape.id
+                        ? "initial"
+                        : "none"
+                    };" 
+                    x="${shape.x - 50}" 
+                    y="${shape.y - 50}" 
+                    height="${
+                      shape.lines === 0 || shape.lines === 1
+                        ? shape.fontSize * 4
+                        : shape.fontSize * 2 * shape.lines
+                    }"
+                    width="100" 
+                    fill="rgba(0,0,0,0)"
+                />
+                <text
+                style="user-select:none; height:100px;"
+                id="${shape.id}"
+                x="${shape.x}"
+                y="${shape.y}"
+                text-anchor="${shape.textAlign}"
+                font-size="${shape.fontSize}"
+                fill="${shape.color}"
+                font-weight="${shape.isBold ? "bold" : "normal"}"
+                font-style="${shape.isItalic ? "italic" : "normal"}"
+                text-decoration="${shape.isUnderline ? "underline" : "none"}"
+                >
+                    ${content.join("")}
+                </text>
+                ${
+                  showCaret.value &&
+                  lastSelectedShape.value &&
+                  lastSelectedShape.value.id === shape.id
+                    ? computeCaretPosition(shape)
+                    : ""
+                }
+                ${includeDeleteButton(shape)}
+                </g>
+            `;
+
+    case shape.textAlign === "end":
+      return `
+            <g id="${shape.id}">
+                <rect 
+                    id="${shape.id}" 
+                    style="display:${
+                      lastSelectedShape.value && lastSelectedShape.value.id === shape.id
+                        ? "initial"
+                        : "none"
+                    };" 
+                    x="${shape.x - 100}" 
+                    y="${shape.y - 50}" 
+                    height="${
+                      shape.lines === 0 || shape.lines === 1
+                        ? shape.fontSize * 4
+                        : shape.fontSize * 2 * shape.lines
+                    }"
+                    width="100" 
+                    fill="rgba(0,0,0,0)"
+                />
+                <text
+                style="user-select:none; height:100px;"
+                id="${shape.id}"
+                x="${shape.x}"
+                y="${shape.y}"
+                text-anchor="${shape.textAlign}"
+                font-size="${shape.fontSize}"
+                fill="${shape.color}"
+                font-weight="${shape.isBold ? "bold" : "normal"}"
+                font-style="${shape.isItalic ? "italic" : "normal"}"
+                text-decoration="${shape.isUnderline ? "underline" : "none"}"
+                >
+                    ${content.join("")}
+                </text>
+                ${
+                  showCaret.value &&
+                  lastSelectedShape.value &&
+                  lastSelectedShape.value.id === shape.id
+                    ? computeCaretPosition(shape)
+                    : ""
+                }
+                ${includeDeleteButton(shape)}
+            </g> 
+            `;
+
+    default:
+      return "";
+  }
+}
+
+const userShapes = computed(() => {
+  return records.value.map((shape) => {
+    switch (true) {
+      case shape && shape.type === "arrow":
+        const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
+        const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
+        return {
+          html: `
+          <defs>
+          <marker 
+              id="${shape.id}" 
+              markerWidth="${shapeWidthMax}" 
+              markerHeight="${shapeWidthMax}" 
+              refX="0" 
+              refY="${shapeWidthMin}" 
+              orient="auto"
+          >
+              <polygon 
+              points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}" 
+              fill="${shape.color}"
+              />
+          </marker>
+          </defs>
+          ${includeSelectionIndicator(shape)}
+          <g id="${shape.id}">
+              <path 
+              style="stroke-linecap: round !important; ${
+                shape.isDash
+                  ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                  : ""
+              }" 
+              stroke="${shape.color}" 
+              id="${shape.id}" 
+              d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}" 
+              stroke-width="${shape.strokeWidth}" 
+              marker-end="url(#${shape.id})"
+              />
+          </g>
+          <g id="${shape.id}">
+          <rect 
+              id="${shape.id}"
+              x="${shape.x - 10}"
+              y="${shape.y - 10}"
+              height="20"
+              width="20"
+              fill="rgba(0,0,0,0.3)"
+              style="display:${
+                isResizeMode.value || isMoveMode.value ? "initial" : "none"
+              }; rx:1 !important; ry:1 !important;"
+          />
+          </g>
+          ${includeDeleteButton(shape)}
+          </g>
+          `,
+          id: shape.id
+        };
+
+      case shape && shape.type === "circle":
+        return {
+          html: `
+          <g id="${shape.id}">
+              ${includeSelectionIndicator(shape)}
+              <circle 
+              id="${shape.id}" 
+              cx="${shape.x}" 
+              cy="${shape.y}" 
+              r="${
+                shape.circleRadius
+                  ? shape.circleRadius
+                  : Number.MIN_VALUE
+              }"
+              fill="${
+                shape.isFilled
+                  ? shape.color + shape.alpha
+                  : "rgba(255,255,255,0.001)"
+              }" 
+              stroke="${shape.color + shape.alpha}" 
+              stroke-width="${shape.strokeWidth}"
+              style="${
+                shape.isDash
+                  ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                  : ""
+              }"
+              >
+              </circle>
+          </g>
+          
+          ${includeDeleteButton(shape)}`,
+          id: shape.id
+        };
+
+      case shape && shape.type === "group":
+        return {
+          html: `<g id="${shape.id}">
+            <rect
+                id="${isResizeMode.value ? "" : shape.id}"
+                x="${shape.x}"
+                y="${shape.y}"
+                fill="transparent"
+                height="${shape.rectHeight}"
+                width="${shape.rectWidth}"
+                stroke="grey"
+                stroke-width="1"
+                style="rx:1 !important; ry:1 !important; ${
+                  shape.isDash
+                    ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                    : ""
+                }; display:${
+          isSelectMode.value ||
+          isDeleteMode.value ||
+          (hoveredShapeId.value && hoveredShapeId.value === shape.id)
+            ? "initial"
+            : "none"
+        };"
                         />
-                ${this.includeDeleteButton(shape)}
-                    </g>
-                    `,
-                    id: shape.id
-            }
+            <g id="${shape.id}">
+            ${shape.content ? shape.content : ""}
+            </g>
+            ${includeDeleteButton(shape)}
+            </g> `,
+            id: shape.id
+        }
 
-          case shape && shape.type === "text":
-            const parsedText = shape.textContent.split("‎");
-            const parsedContent = [];
-            for (let i = 0; i < parsedText.length; i += 1) {
-              parsedContent.push(`
+      case shape && shape.type === "rect":
+        return {
+          html: `<g id="${shape.id}">
+            ${includeSelectionIndicator(shape)}
+            <rect
+                id="${isResizeMode.value ? "" : shape.id}"
+                x="${shape.x}"
+                y="${shape.y}"
+                fill="${
+                  shape.isFilled
+                    ? shape.color + shape.alpha
+                    : "rgba(255,255,255,0.001)"
+                }"
+                height="${shape.rectHeight}"
+                width="${shape.rectWidth}"
+                stroke="${shape.color + shape.alpha}"
+                stroke-width="${shape.strokeWidth}"
+                style="rx:1 !important; ry:1 !important; ${
+                  shape.isDash
+                    ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                    : ""
+                }"
+            />
+            <rect id="${shape.id}"
+                x="${shape.x + shape.rectWidth}"
+                y="${shape.y + shape.rectHeight}"
+                height="20"
+                width="20"
+                fill="rgba(0,0,0,0.3)"
+                style="display:${
+                  isResizeMode.value ? "initial" : "none"
+                }; rx:1 !important; ry:1 !important;"
+            />
+            ${includeDeleteButton(shape)}
+            </g> `,
+            id: shape.id
+        }
+
+      case shape && shape.type === "line":
+        return {
+          html: `
+                <g id="${shape.id}">
+                    <path 
+                    id="${shape.id}" 
+                    d="M${shape.path ? shape.path : ""}" 
+                    style="stroke:${
+                      shape.color + shape.alpha
+                    } !important; fill:none; stroke-width:${
+          shape.strokeWidth
+        } !important; stroke-linecap: round !important; stroke-linejoin: round !important;"        
+                    />
+            ${includeDeleteButton(shape)}
+                </g>
+                `,
+                id: shape.id
+        }
+
+      case shape && shape.type === "text":
+        const parsedText = shape.textContent.split("‎");
+        const parsedContent = [];
+        for (let i = 0; i < parsedText.length; i += 1) {
+          parsedContent.push(`
+        ${
+          shape.isBulletTextMode
+            ? `<tspan x="${shape.x - shape.fontSize}" y="${
+                shape.y + shape.fontSize * i
+              }" id="${shape.id}" font-size="${shape.fontSize / 2}">⬤</tspan>`
+            : ""
+        }
+                <tspan id="${shape.id}" x="${shape.x}" y="${
+            shape.y + shape.fontSize * i
+          }">
+                    ${parsedText[i]}
+                </tspan>`);
+        }
+        return {
+          html: `
+            ${includeSelectionIndicator(shape)}
+            ${computeTextElement(
+              shape,
+              parsedContent,
+              shape.isBulletTextMode
+            )}
+            `,
+            id: shape.id
+        };
+      default:
+        break;
+    }
+  })
+});
+
+function copy(source) {
+  if (source === undefined || source === null) return source;
+  try {
+    if (typeof structuredClone === 'function') return structuredClone(source);
+    return JSON.parse(JSON.stringify(source));
+  } catch {
+    if (Array.isArray(source)) return source.map(v => copy(v));
+    if (typeof source === 'object') return Object.fromEntries(
+      Object.entries(source).map(([k, v]) => [k, copy(v)])
+    );
+    return source;
+  }
+}
+
+function drawUp(useShapeReference = false) {
+  if (!activeShape.value || !isDrawing.value) {
+    return;
+  }
+  currentPointer.value.end = {
+    x: pointerPosition.value.x,
+    y: pointerPosition.value.y,
+  };
+  let currentShape;
+  if (shapes.value.length > 0 && currentTarget.value) {
+    currentShape = [...shapes.value].find(
+      (shape) => shape.id === currentTarget.value.id
+    );
+  }
+
+  let a, b, distanceToPointer;
+  if (currentShape) {
+    a = currentShape.x - currentPointer.value.end.x;
+    b = currentShape.y - currentPointer.value.end.y;
+    distanceToPointer = Math.sqrt(a * a + b * b);
+  }
+
+  let Xmax, Xmin, Ymax, Ymin;
+  if (useShapeReference) {
+    Xmax = Math.max(currentPointer.value.end.x, currentShape.x);
+    Xmin = Math.min(currentPointer.value.end.x, currentShape.x);
+    Ymax = Math.max(currentPointer.value.end.y, currentShape.y);
+    Ymin = Math.min(currentPointer.value.end.y, currentShape.y);
+  } else {
+    Xmax = Math.max(currentPointer.value.end.x, currentPointer.value.start.x);
+    Xmin = Math.min(currentPointer.value.end.x, currentPointer.value.start.x);
+    Ymax = Math.max(currentPointer.value.end.y, currentPointer.value.start.y);
+    Ymin = Math.min(currentPointer.value.end.y, currentPointer.value.start.y);
+  }
+
+  switch (true) {
+      case activeShape.value === "arrow":
+        shapes.value.at(-1).endX = currentPointer.value.end.x;
+        shapes.value.at(-1).endY = currentPointer.value.end.y;
+        break;
+
+      case activeShape.value === "circle":
+        const offset = 20; // used to avoid shape shifting when resizing over another shape
+        shapes.value.at(-1).circleRadius = isDrawingNewShape.value
+          ? copy(Xmax - Xmin) + offset
+          : distanceToPointer + offset;
+        break;
+
+      case activeShape.value === "line":
+        shapes.value.at(-1).path += ` ${pointerPosition.value.x} ${pointerPosition.value.y} `;
+        break;
+
+      case ["rect", "group"].includes(activeShape.value):
+        const minRectSize = 20;
+        shapes.value.at(-1).rectWidth =
+          copy(currentPointer.value.end.x - shapes.value.at(-1).x) > 0
+            ? copy(currentPointer.value.end.x - shapes.value.at(-1).x)
+            : minRectSize;
+        shapes.value.at(-1).rectHeight =
+          copy(currentPointer.value.end.y - shapes.value.at(-1).y) > 0
+            ? copy(currentPointer.value.end.y - shapes.value.at(-1).y)
+            : minRectSize;
+
+      default:
+        break;
+    }
+}
+
+function TICK_DRAW() {
+  if (!isDrawing.value) { 
+    RAF_ID.value = null; 
+    return; 
+  }
+  drawUp();
+  RAF_ID.value = requestAnimationFrame(TICK_DRAW);
+}
+
+function bringToFrontById(id) {
+  const i = shapes.value.findIndex(s => s.id === id);
+  if (i > -1 && i !== shapes.value.length - 1) {
+    const [s] = shapes.value.splice(i, 1);
+    shapes.value.push(s);
+  }
+}
+
+function shapeIdUnderPointer(e) {
+  const idIsShape = (id) => !!id && shapes.value.some(s => s.id === id);
+
+  // if event already targets a shape, use it
+  if (idIsShape(e?.target?.id)) return e.target.id;
+
+  // temporarily disable the glass to probe the element below
+  const glass = mainSvg.value?.querySelector('.annotator__glass');
+  if (!glass) return null;
+
+  const prev = glass.style.pointerEvents;
+  glass.style.pointerEvents = 'none';
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  glass.style.pointerEvents = prev || 'all';
+
+  return idIsShape(el?.id) ? el.id : null;
+}
+
+function makeHistory(opts = {}) {
+  const {
+    maxEntries = 200,
+    maxBytes   = 2000000,
+  } = opts;
+
+  const state = { open: false, before: null, undo: [], redo: [] };
+  const bytes = { undo: 0, redo: 0 };
+  const sz = (s) => (typeof s === 'string' ? s.length * 2 : 0); // UTF-16-ish
+
+  const snapshot = () => JSON.stringify({
+    shapes: copy(shapes.value),
+    lastSelectedShape: copy(lastSelectedShape.value),
+  });
+
+  const apply = (snap) => {
+    const s = JSON.parse(snap);
+    shapes.value = s.shapes;
+    lastSelectedShape.value = s.lastSelectedShape;
+  };
+
+  const refreshSizes = () => {
+    HISTORY_SIZE.value.undo = state.undo.length;
+    HISTORY_SIZE.value.redo = state.redo.length;
+  };
+
+  const pushCapped = (stackName, snap) => {
+    const stack = state[stackName];
+    stack.push(snap);
+    bytes[stackName] += sz(snap);
+    while (stack.length > maxEntries || bytes[stackName] > maxBytes) {
+      const removed = stack.shift();
+      bytes[stackName] -= sz(removed);
+    }
+  };
+
+  return {
+    begin() {
+      if (state.open) return;
+      state.open = true;
+      state.before = snapshot();
+    },
+    end() {
+      if (!state.open) return;
+      state.open = false;
+      const after = snapshot();
+      if (after !== state.before) {
+        pushCapped('undo', state.before);
+        state.redo.length = 0;
+        bytes.redo = 0;
+      }
+      state.before = null;
+      refreshSizes();
+    },
+    undo() {
+      const prev = state.undo.pop();
+      if (!prev) return;
+      bytes.undo -= sz(prev);
+      const curr = snapshot();
+      pushCapped('redo', curr);
+      apply(prev);
+      refreshSizes();
+    },
+    redo() {
+      const next = state.redo.pop();
+      if (!next) return;
+      bytes.redo -= sz(next);
+      const curr = snapshot();
+      pushCapped('undo', curr);
+      apply(next);
+      refreshSizes();
+    },
+    size() {
+      return {
+        undo: state.undo.length,
+        redo: state.redo.length,
+        approxBytes: { undo: bytes.undo, redo: bytes.redo }
+      };
+    }
+  };
+}
+
+function updateTooltipPosition() {
+  if (!tooltipAnchor.value) return;
+  const r = tooltipAnchor.value.getBoundingClientRect();
+  tooltipPos.value = { x: r.left + r.width / 2, y: r.top };
+}
+
+// FIXME: remove placement arg
+function showToolTipFor(key, ev, _placement = "top") {
+  tooltipKey.value = key;
+  tooltipAnchor.value = ev.currentTarget || ev.target;
+  updateTooltipPosition();
+  showTooltip.value = true;
+  window.addEventListener("scroll", updateTooltipPosition, true);
+  window.addEventListener("resize", updateTooltipPosition, { passive: true });
+}
+
+function hideTooltip() {
+  showTooltip.value = false;
+  tooltipKey.value = null;
+  tooltipAnchor.value = null;
+  window.removeEventListener("scroll", updateTooltipPosition, true);
+  window.removeEventListener("resize", updateTooltipPosition);
+}
+
+function initDragOffset(e) {
+  const shapeId = (e?.target && e.target.id) || (currentTarget.value && currentTarget.value.id);
+  const shape = shapes.value.find((s) => s.id === shapeId);
+  if (!shape) { 
+    dragOffset.value = null; 
+    return; 
+  }
+
+  lastSelectedShape.value = shape;
+
+  const px = pointerPosition.value.x;
+  const py = pointerPosition.value.y;
+
+  switch (shape.type) {
+    case "rect":
+    case "circle":
+    case "text":
+      dragOffset.value = { dx: px - shape.x, dy: py - shape.y };
+      break;
+
+    case "arrow":
+      dragOffset.value = {
+        dx: px - shape.x,
+        dy: py - shape.y,
+        endDx: px - shape.endX,
+        endDy: py - shape.endY,
+      };
+      break;
+
+    case "group":
+      // Use group origin as anchor (no centering)
+      dragOffset.value = { dx: px - (shape.x || 0), dy: py - (shape.y || 0) };
+      break;
+
+    default:
+      dragOffset.value = { dx: 0, dy: 0 };
+      break;
+  }
+}
+
+function bringShapeTo(layer) {
+  const thisShape = shapes.value.find(
+    (shape) => shape.id === lastSelectedShape.value.id
+  );
+  switch (true) {
+    case layer === "front":
+      shapes.value = shapes.value.filter((shape) => shape.id !== thisShape.id);
+      shapes.value.push(thisShape);
+      break;
+
+    case layer === "back":
+      shapes.value = shapes.value.filter((shape) => shape.id !== thisShape.id);
+      shapes.value = [thisShape, ...shapes.value];
+      break;
+
+    default:
+      return;
+  }
+}
+
+function copyPaste() {
+  if (!lastSelectedShape.value?.id) return;
+  const shapeCopy = {
+    ...lastSelectedShape.value,
+    id: `${lastSelectedShape.value.id}_copy_${createUid()}`,
+    x: lastSelectedShape.value.x - 100 < 0 ? 1 : lastSelectedShape.value.x - 100,
+    y: lastSelectedShape.value.y - 100 < 0 ? 1 : lastSelectedShape.value.y - 100,
+  };
+  shapes.value.push(shapeCopy);
+}
+
+function allowEditAndHoverShapes(e) {
+  e.preventDefault();
+  preventEdit.value = false;
+  if (e.target && e.target.id) {
+    hoveredShapeId.value = e.target.id;
+  }
+}
+
+function deleteEmptyTextElement() {
+  if (!lastSelectedShape.value || !lastSelectedShape.value.id.includes("text")) {
+    return;
+  }
+
+  if (lastSelectedShape.value.textContent === "") {
+    shapes.value = shapes.value.filter(
+      (shape) => shape.id !== lastSelectedShape.value.id
+    );
+    lastSelectedShape.value = shapes.value.at(-1);
+  }
+}
+
+function clickSvg(e) {
+  if (isDeleteMode.value) {
+    return;
+  }
+  e.preventDefault(); 
+  e.stopPropagation();
+
+  deleteEmptyTextElement();
+
+  if (isTextMode.value) {
+    isWriting.value = true;
+    showCaret.value = true;
+  } else {
+    isWriting.value = false;
+    showCaret.value = false;
+    isTextMode.value = false;
+  }
+
+  let id = `text_${createUid()}`;
+
+  if (isWriting.value) {
+    history.value?.begin();
+    shapes.value.push({
+      id,
+      type: "text",
+      lines: 0,
+      x: pointerPosition.value.x,
+      y: pointerPosition.value.y,
+      textContent: "",
+      fontSize: copy(textFont.value),
+      textAlign: copy(textAlign.value),
+      isBold: copy(isBold.value),
+      isItalic: copy(isItalic.value),
+      isUnderline: copy(isUnderline.value),
+      color: copy(selectedColor.value),
+      isBulletTextMode: copy(isBulletTextMode.value),
+    });
+    currentTarget.value = shapes.value.at(-1);
+    lastSelectedShape.value = shapes.value.at(-1);
+    history.value?.end();
+    return;
+  }
+
+  const setIsDashState = () => {
+    isDash.value = shapes.value.find((shape) => shape.id === e.target.id).isDash;
+  };
+  const setStrokeSize = () => {
+    strokeSize.value = shapes.value.find(
+      (shape) => shape.id === e.target.id
+    ).strokeWidth;
+  };
+
+  isSelectMode.value = false;
+
+  if (e.target.id.includes("arrow")) {
+    activeShape.value = "arrow";
+    setIsDashState();
+    setStrokeSize();
+    return;
+  }
+  if (e.target.id.includes("circle")) {
+    activeShape.value = "circle";
+    options.value.circle.filled = shapes.value.find(
+      (shape) => shape.id === e.target.id
+    ).isFilled;
+    setIsDashState();
+    setStrokeSize();
+    return;
+  }
+  if (e.target.id.includes("rect")) {
+    activeShape.value = "rect";
+    options.value.rect.filled = shapes.value.find(
+      (shape) => shape.id === e.target.id
+    ).isFilled;
+    setIsDashState();
+    setStrokeSize();
+    return;
+  }
+  if (e.target.id.includes("line")) {
+    activeShape.value = "line";
+    setStrokeSize();
+    return;
+  }
+
+  if (e.target.id.includes("text")) {
+    isTextMode.value = true;
+    isWriting.value = true;
+    showCaret.value = true;
+    const lastShape = shapes.value.find((shape) => shape.id === e.target.id);
+    if (lastShape && lastShape.textAlign) {
+      textAlign.value = shapes.value.find(
+        (shape) => shape.id === e.target.id
+      ).textAlign;
+    }
+    if (lastShape) {
+      isBulletTextMode.value = shapes.value.find(
+        (shape) => shape.id === e.target.id
+      ).isBulletTextMode;
+    }
+    return;
+  }
+}
+
+function setSelectedTextAlignTo(position) {
+  if (!lastSelectedShape.value || lastSelectedShape.value.type !== "text") {
+    return;
+  }
+  lastSelectedShape.value.textAlign = position;
+}
+
+function undoLastShape() {
+  history.value?.undo?.();
+}
+
+function redoLastShape() {
+  history.value?.redo?.();
+}
+
+const NO_ACTION_KEYS = [
+  16,
+  17,
+  18,
+  20,
+  27,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  39,
+  40,
+  45,
+  91,
+  112,
+  113,
+  114,
+  115,
+  116,
+  117,
+  118,
+  119,
+  120,
+  121,
+  122,
+  123,
+  221,
+  255,
+  "Unidentified",
+];
+
+function write(e) {
+  if (preventEdit.value) {
+    return;
+  }
+  e.preventDefault();
+  const keyCode = e.keyCode;
+
+  if (!isWriting.value) {
+    return;
+  }
+  showCaret.value = true;
+  let text;
+  if (lastSelectedShape.value.type === "text") {
+    text = shapes.value.find((shape) => shape.id === lastSelectedShape.value.id);
+  } else {
+    text = shapes.value.at(-1);
+  }
+  currentTarget.value = text;
+
+  if (text.type !== "text") {
+    return;
+  }
+
+  currentTarget.value.isBold = copy(isBold.value);
+  currentTarget.value.isItalic = copy(isItalic.value);
+  currentTarget.value.isUnderline = copy(isUnderline.value);
+
+  switch (true) {
+    case [8, 46].includes(keyCode) :
+      text.textContent = text.textContent.slice(0, -1);
+      break;
+    case keyCode === 9:
+      text.textContent += "&nbsp; &nbsp; &nbsp; &nbsp;";
+      break;
+    case keyCode === 13:
+      text.lines += 1;
+      text.textContent += "‎"; // used to parse lines to create tspan elements when ENTER is pressed
+      return;
+    case NO_ACTION_KEYS.includes(keyCode):
+      return;
+
+    default:
+      text.textContent += e.key;
+  }
+}
+
+function groupShapes() {
+  selectedGroup.value = [];
+
+  if (activeShape.value !== "group") {
+    isSelectMode.value = false;
+    shapes.value = shapes.value.filter((shape) => shape.type !== "group");
+    return;
+  }
+  const group = shapes.value.at(-1);
+
+  shapes.value.forEach((shape) => {
+    if (shape.type === "group") {
+      return;
+    }
+    switch (true) {
+      case shape.type === "arrow":
+        // TLBR: top left -> bottom right
+        const isArrowTLBR =
+          shape.x <= shape.endX &&
+          shape.y <= shape.endY &&
+          group.x <= shape.x &&
+          group.y <= shape.y &&
+          group.x + group.rectWidth >= shape.endX &&
+          group.y + group.rectHeight >= shape.endY;
+
+        // BLTR: bottom left -> top right
+        const isArrowBLTR =
+          shape.endY < shape.y &&
+          shape.x < shape.endX &&
+          group.x <= shape.x &&
+          group.y <= shape.y &&
+          group.x + group.rectWidth >= shape.endX &&
+          group.y + group.rectHeight >= shape.y;
+
+        // TRBL: top right -> bottom left
+        const isArrowTRBL =
+          shape.x > shape.endX &&
+          shape.y < shape.endY &&
+          group.x <= shape.endX &&
+          group.y <= shape.endY &&
+          group.x + group.rectWidth >= shape.x &&
+          group.y + group.rectHeight >= shape.endY;
+
+        // BRTL: bottom right -> top left
+        const isArrowBRTL =
+          shape.x > shape.endX &&
+          shape.y > shape.endY &&
+          group.x <= shape.endX &&
+          group.y <= shape.endY &&
+          group.x + group.rectWidth >= shape.x &&
+          group.y + group.rectHeight >= shape.y;
+
+        if (isArrowTLBR || isArrowBLTR || isArrowTRBL || isArrowBRTL) {
+          selectedGroup.value.push(shape);
+        }
+        break;
+
+      case shape.type === "circle":
+        if (
+          group.x <= shape.x + shape.circleRadius &&
+          group.y <= shape.y + shape.circleRadius &&
+          shape.x + shape.circleRadius <= group.x + group.rectWidth &&
+          shape.y + shape.circleRadius <= group.y + group.rectHeight
+        ) {
+          selectedGroup.value.push(shape);
+        }
+        break;
+
+      case shape.type === "rect":
+        if (
+          group.x <= shape.x &&
+          group.y <= shape.y &&
+          shape.x <= group.x + group.rectWidth &&
+          shape.y <= group.y + group.rectHeight &&
+          shape.x + shape.rectWidth <= group.x + group.rectWidth &&
+          shape.y + shape.rectHeight <= group.y + group.rectHeight &&
+          shape.rectWidth <= group.rectWidth &&
+          shape.rectHeight <= group.rectHeight
+        ) {
+          selectedGroup.value.push(shape);
+        }
+        break;
+
+      case shape.type === "text":
+        if (group.x <= shape.x && group.y <= shape.y) {
+          selectedGroup.value.push(shape);
+        }
+        break;
+
+      default:
+        break;
+    }
+  });
+
+  // add an old independant id to the selectedShape to keep track of old id
+  // replace id of selected shape with the group id
+  selectedGroup.value = selectedGroup.value.map((shape) => {
+    return {
+      ...shape,
+      id: group.id,
+      oldId: shape.id,
+      diffX: shape.x - group.x,
+      diffY: shape.y - group.y,
+      diffEndX: shape.endX ? shape.endX - group.x : 0,
+      diffEndY: shape.endY ? shape.endY - group.y : 0,
+    };
+  });
+
+  group.source = selectedGroup.value;
+
+  if (selectedGroup.value.length > 1) {
+    const bannedIds = copy(selectedGroup.value).map((shape) => {
+      return shape.oldId;
+    });
+
+    // remove selected shapes from the shapes array
+    shapes.value = shapes.value.filter((shape) => !bannedIds.includes(shape.id));
+
+    // redraw each shape in the context of the group
+    selectedGroup.value.forEach((shape) => {
+      switch (true) {
+        case shape.type === "circle":
+          group.content += `
+            <circle
+            id="${shape.id}"
+            cx="${shape.x}"
+            cy="${shape.y}"
+            r="${shape.circleRadius ? shape.circleRadius : Number.MIN_VALUE}"
+            fill="${
+              shape.isFilled ? shape.color + shape.alpha : "rgba(255,255,255,0.001)"
+            }"
+            stroke="${shape.color + shape.alpha}" 
+            stroke-width="${shape.strokeWidth}"
+            style="${
+              shape.isDash
+                ? `stroke-dasharray: ${shape.strokeWidth * 3}`
+                : ""
+            }"
+            />
+        `;
+          break;
+
+        case shape.type === "rect":
+          group.content += `
+            <rect
+            id="${isResizeMode.value ? "" : shape.id}"
+            x="${shape.x}"
+            y="${shape.y}"
+            fill="${
+              shape.isFilled ? shape.color + shape.alpha : "rgba(255,255,255,0.001)"
+            }"
+            height="${shape.rectHeight}"
+            width="${shape.rectWidth}"
+            stroke="${shape.color + shape.alpha}"
+            stroke-width="${shape.strokeWidth}"
+            style="rx:1 !important; ry:1 !important; ${
+              shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""
+            }"
+                        />
+        `;
+          break;
+
+        case shape.type === "arrow":
+          const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
+          const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
+          const uid = createUid();
+          group.content += `
+            <g id="${shape.id}">
+            <defs>
+                <marker 
+                id="${uid}" 
+                markerWidth="${shapeWidthMax}" 
+                markerHeight="${shapeWidthMax}" 
+                refX="0" 
+                refY="${shapeWidthMin}" 
+                orient="auto"
+                >
+                <polygon 
+                points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}" 
+                fill="${shape.color}"
+                />
+                </marker>
+            </defs>
+
+            <path 
+                style="stroke-linecap: round !important; ${
+                  shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""
+                }" 
+                stroke="${shape.color}" 
+                id="${shape.id}" 
+                d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}" 
+                stroke-width="${shape.strokeWidth}" 
+                marker-end="url(#${uid})"
+            />
+            </g>
+        `;
+          break;
+
+        case shape.type === "text":
+          const parsedText = shape.textContent.split("‎");
+          const parsedContent = [];
+          for (let i = 0; i < parsedText.length; i += 1) {
+            parsedContent.push(`
             ${
               shape.isBulletTextMode
                 ? `<tspan x="${shape.x - shape.fontSize}" y="${
@@ -1816,1781 +2901,731 @@ export default {
                   }" id="${shape.id}" font-size="${shape.fontSize / 2}">⬤</tspan>`
                 : ""
             }
-                    <tspan id="${shape.id}" x="${shape.x}" y="${
-                shape.y + shape.fontSize * i
-              }">
-                        ${parsedText[i]}
-                    </tspan>`);
+            <tspan id="${shape.id}" x="${shape.x}" y="${
+              shape.y + shape.fontSize * i
+            }">
+                ${parsedText[i]}
+            </tspan>`);
+          }
+          group.content += `
+            ${computeTextElement(shape, parsedContent, shape.isBulletTextMode)}
+            `;
+          break;
+
+        default:
+          break;
+      }
+    });
+  } else {
+    // no valid selection: remove selection rect
+    shapes.value = shapes.value.filter((shape) => shape.id !== group.id);
+  }
+}
+
+function moveGroup(group) {
+  group.content = "";
+
+  const baseX = group.x || 0;
+  const baseY = group.y || 0;
+
+  (group.source || []).forEach((shape) => {
+    switch (shape.type) {
+      case "circle": {
+        const cx = baseX + shape.diffX;
+        const cy = baseY + shape.diffY;
+        group.content += `
+          <circle
+            id="${shape.id}"
+            cx="${cx}"
+            cy="${cy}"
+            r="${shape.circleRadius ? shape.circleRadius : Number.MIN_VALUE}"
+            fill="${shape.isFilled ? shape.color + shape.alpha : "rgba(255,255,255,0.001)"}"
+            stroke="${shape.color + shape.alpha}"
+            stroke-width="${shape.strokeWidth}"
+            style="${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""}"
+          />
+        `;
+        break;
+      }
+
+      case "rect": {
+        const x = baseX + shape.diffX;
+        const y = baseY + shape.diffY;
+        group.content += `
+          <rect
+            id="${isResizeMode.value ? "" : shape.id}"
+            x="${x}"
+            y="${y}"
+            fill="${shape.isFilled ? shape.color + shape.alpha : "rgba(255,255,255,0.001)"}"
+            height="${shape.rectHeight}"
+            width="${shape.rectWidth}"
+            stroke="${shape.color + shape.alpha}"
+            stroke-width="${shape.strokeWidth}"
+            style="rx:1 !important; ry:1 !important; ${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""}"
+          />
+        `;
+        break;
+      }
+
+      case "arrow": {
+        const sx = baseX + shape.diffX;
+        const sy = baseY + shape.diffY;
+        const ex = baseX + shape.diffEndX;
+        const ey = baseY + shape.diffEndY;
+        const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
+        const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
+        const uid = `m_${shape.id}_${createUid()}`;
+        group.content += `
+          <g id="${shape.id}">
+            <defs>
+              <marker 
+                id="${uid}" 
+                markerWidth="${shapeWidthMax}" 
+                markerHeight="${shapeWidthMax}" 
+                refX="0" 
+                refY="${shapeWidthMin}" 
+                orient="auto">
+                <polygon points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}" fill="${shape.color}" />
+              </marker>
+            </defs>
+            <path
+              style="stroke-linecap: round !important; ${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""}"
+              stroke="${shape.color}"
+              id="${shape.id}"
+              d="M${sx},${sy} ${ex},${ey}"
+              stroke-width="${shape.strokeWidth}"
+              marker-end="url(#${uid})"
+            />
+          </g>
+        `;
+        break;
+      }
+
+      case "text": {
+        const parsedText = (shape.textContent || "").split("‎");
+        const content = parsedText.map((line, i) => `
+          ${shape.isBulletTextMode
+            ? `<tspan x="${baseX + shape.diffX - shape.fontSize}" y="${baseY + shape.diffY + shape.fontSize * i}" id="${shape.id}" font-size="${shape.fontSize / 2}">⬤</tspan>`
+            : ""
+          }
+          <tspan id="${shape.id}" x="${baseX + shape.diffX}" y="${baseY + shape.diffY + shape.fontSize * i}">
+            ${line}
+          </tspan>
+        `).join("");
+
+        group.content += `
+          <g id="${shape.id}">
+            <text
+              style="user-select:none; height:100px;"
+              id="${shape.id}"
+              x="${baseX + shape.diffX}"
+              y="${baseY + shape.diffY}"
+              text-anchor="${shape.textAlign}"
+              font-size="${shape.fontSize}"
+              fill="${shape.color}"
+              font-weight="${shape.isBold ? "bold" : "normal"}"
+              font-style="${shape.isItalic ? "italic" : "normal"}"
+              text-decoration="${shape.isUnderline ? "underline" : "none"}">
+              ${content}
+            </text>
+          </g>
+        `;
+        break;
+      }
+
+      default:
+        break;
+    }
+  });
+}
+
+function onPointerOut(e) {
+  if (e.relatedTarget && mainSvg.value && mainSvg.value.contains(e.relatedTarget)) return; // still inside
+  preventEdit.value = true;
+  hoveredShapeId.value = undefined;
+}
+
+function drawDown() {
+  isDrawing.value = true;
+  if (!activeShape.value && !isSelectMode.value) {
+    return;
+  }
+
+  if (!isDrawing.value) {
+    return;
+  }
+
+  isDrawingNewShape.value = true;
+
+  currentPointer.value.start = {
+    x: pointerPosition.value.x,
+    y: pointerPosition.value.y,
+  };
+  let id = `${isSelectMode.value ? "group" : activeShape.value}_${createUid()}`;
+
+  switch (true) {
+    case activeShape.value === "arrow":
+      shapes.value.push({
+        id,
+        x: pointerPosition.value.x,
+        y: pointerPosition.value.y,
+        endX: pointerPosition.value.x,
+        endY: pointerPosition.value.y,
+        type: activeShape.value,
+        color: copy(selectedColor.value),
+        strokeWidth: copy(Math.abs(strokeSize.value)),
+        isDash: copy(isDash.value),
+      });
+      lastSelectedShape.value = shapes.value.at(-1);
+      break;
+
+    case activeShape.value === "circle":
+      shapes.value.push({
+        alpha: options.value.circle.filled ? colorTransparency.value : "",
+        id,
+        color: copy(selectedColor.value),
+        isFilled: copy(options.value.circle.filled),
+        circleRadius: copy(options.value.circle.radius),
+        circleStrokeWidth: copy(options.value.circle.strokeWidth),
+        type: activeShape.value,
+        x: pointerPosition.value.x,
+        y: pointerPosition.value.y,
+        strokeWidth: copy(Math.abs(strokeSize.value)),
+        isDash: copy(isDash.value),
+      });
+      lastSelectedShape.value = shapes.value.at(-1);
+      break;
+
+    case activeShape.value === "line":
+      shapes.value.push({
+        alpha: copy(colorTransparency.value),
+        id,
+        x: pointerPosition.value.x,
+        y: pointerPosition.value.y,
+        type: activeShape.value,
+        color: copy(selectedColor.value),
+        strokeWidth: copy(Math.abs(strokeSize.value)),
+        isDash: copy(isDash.value),
+        path: `${pointerPosition.value.x} ${pointerPosition.value.y}`,
+      });
+      lastSelectedShape.value = shapes.value.at(-1);
+      break;
+
+    case activeShape.value === "rect":
+      shapes.value.push({
+        alpha: options.value.rect.filled ? colorTransparency.value : "",
+        id,
+        color: copy(selectedColor.value),
+        isFilled: copy(options.value.rect.filled),
+        rectStrokeWidth: copy(options.value.rect.strokeWidth),
+        rectHeight: copy(options.value.rect.height),
+        rectWidth: copy(options.value.rect.width),
+        type: activeShape.value,
+        x: pointerPosition.value.x,
+        y: pointerPosition.value.y,
+        strokeWidth: copy(Math.abs(strokeSize.value)),
+        isDash: copy(isDash.value),
+      });
+      lastSelectedShape.value = shapes.value.at(-1);
+      break;
+
+    case activeShape.value === "group":
+      shapes.value.push({
+        alpha: 1,
+        id: `group_${createUid()}`,
+        x: pointerPosition.value.x,
+        y: pointerPosition.value.y,
+        isFilled: false,
+        rectHeight: copy(options.value.rect.height),
+        rectWidth: copy(options.value.rect.width),
+        rectStrokeWidth: 1,
+        type: "group",
+        color: "grey",
+        strokeWidth: 1,
+        isDash: true,
+        content: "",
+      });
+      break;
+
+    default:
+      break;
+  }
+
+  if (!RAF_ID.value) RAF_ID.value = requestAnimationFrame(TICK_DRAW);
+}
+
+function chooseAction(e) {
+  if (isDeleteMode.value) {
+    isMouseDown.value = false;
+    return;
+  }
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  isMouseDown.value = true;
+
+  // Only capture when we have a real pointer id
+  if (e.pointerId != null) {
+    try { mainSvg.value?.setPointerCapture?.(e.pointerId); } catch {}
+    lastPointerId.value = e.pointerId;
+  } else {
+    lastPointerId.value = null;
+  }
+
+  if (isDrawMode.value || isMoveMode.value || isResizeMode.value || isSelectMode.value) {
+    history.value?.begin?.();
+  }
+
+  if (isDrawMode.value) {
+    drawDown();
+    return;
+  }
+
+  if (isMoveMode.value) {
+    const id = shapeIdUnderPointer(e) || hoveredShapeId.value || lastSelectedShape.value?.id;
+    if (id) {
+      bringToFrontById(id);
+      currentTarget.value = { id };
+    }
+    initDragOffset(e);
+  }
+}
+
+function move(shape) {
+  if (!shape || !shape.id || shape.type === "line") return;
+
+  if (!dragOffset.value) {
+    initDragOffset({ target: { id: shape.id } });
+    if (!dragOffset.value) return;
+  }
+
+  const { dx, dy, endDx, endDy } = dragOffset.value;
+  const px = pointerPosition.value.x;
+  const py = pointerPosition.value.y;
+
+  lastSelectedShape.value = shape;
+
+  switch (shape.type) {
+    case "arrow":
+      shape.x = px - dx;
+      shape.y = py - dy;
+      shape.endX = px - (endDx ?? dx);
+      shape.endY = py - (endDy ?? dy);
+      break;
+
+    case "circle":
+      shape.x = px - dx;
+      shape.y = py - dy;
+      break;
+
+    case "rect":
+      shape.x = px - dx;
+      shape.y = py - dy;
+      break;
+
+    case "text":
+      shape.x = px - dx;
+      shape.y = py - dy;
+      break;
+
+    case "group":
+      shape.x = px - dx;
+      shape.y = py - dy;
+      moveGroup(shape);
+      break;
+
+    default:
+      break;
+  }
+}
+
+function moveDown() {
+  const id = currentTarget.value?.id || hoveredShapeId.value;
+  if (!id) return;
+  const shape = shapes.value.find(s => s.id === id);
+  if (!shape) return;
+  move(shape);
+}
+
+function resize() {
+  isDrawingNewShape.value = false;
+  const shapeId = currentTarget.value.id;
+  if (!shapeId) {
+    return;
+  }
+  isDrawing.value = true;
+  const shape = shapes.value.find((shape) => shape.id === shapeId);
+  activeShape.value = shape.type;
+  shapes.value = shapes.value.filter((el) => el.id !== shapeId);
+  shapes.value.push(shape);
+  drawUp(true);
+}
+
+function chooseMove(e) {
+  if (isDeleteMode.value) return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (e.target.localName !== "svg") currentTarget.value = e.target;
+
+  if (isMoveMode.value && isMouseDown.value) moveDown();
+  else if (isResizeMode.value && isMouseDown.value) resize();
+}
+
+function clickShape(e) {
+  const shapeId = e.target.id;
+  switch (true) {
+    case isDeleteMode.value:
+      history.value?.begin();
+      shapes.value = [...shapes.value].filter((shape) => shape.id !== shapeId);
+      lastSelectedShape.value = undefined;
+      history.value?.end();
+      return;
+
+    default:
+      lastSelectedShape.value = shapes.value.find((shape) => shape.id === shapeId);
+      break;
+  }
+}
+
+const drawSvgContainer = ref(null);
+
+function walkTheDOM(node, func) {
+  func(node);
+  node = node.firstChild;
+  while (node) {
+    walkTheDOM(node, func);
+    node = node.nextSibling;
+  }
+}
+
+function print() {
+  isPrinting.value = true;
+  isDeleteMode.value = false;
+  isMoveMode.value = false;
+  isResizeMode.value = false;
+  isTextMode.value = false;
+  isWriting.value = false;
+  isSelectMode.value = false;
+  activeShape.value = undefined;
+  showCaret.value = false;
+
+  nextTick(async () => {
+    const wrapper = drawSvgContainer.value;
+    if (!wrapper) return;
+
+    walkTheDOM(wrapper, (node) => {
+      if (node && node.nodeType === 1) {
+        node.setAttribute("font-family", "Helvetica");
+        node.style.fontFamily = "Helvetica";
+      }
+    });
+
+    try {
+      let JsPDF;
+      try {
+        JsPDF = (await import("jspdf")).default;
+      } catch (e) {
+        throw new Error("jspdf is not installed. Run npm install jspdf");
+      }
+
+      const pngDataUrl = await domToPng({
+        container: wrapper,
+        scale: 2,
+      });
+
+      const image = new Image();
+      image.src = pngDataUrl;
+
+      image.onload = () => {
+        const a4 = {
+          width: 595.28,
+          height: 841.89,
+        };
+
+        const contentWidth = image.width;
+        const contentHeight = image.height;
+        const pageHeight = (contentWidth / a4.width) * a4.height;
+
+        const imgWidth = a4.width;
+        const imgHeight = (imgWidth / contentWidth) * contentHeight;
+
+        const pdf = new JsPDF("", "pt", "a4");
+        let position = 0;
+        let leftHeight = contentHeight;
+
+        if (leftHeight < pageHeight) {
+          pdf.addImage(pngDataUrl, "PNG", 0, 0, imgWidth, imgHeight, "", "FAST");
+        } else {
+          while (leftHeight > 0) {
+            pdf.addImage(pngDataUrl, "PNG", 0, position, imgWidth, imgHeight, "", "FAST");
+            leftHeight -= pageHeight;
+            position -= a4.height;
+            if (leftHeight > 0) {
+              pdf.addPage();
             }
-            return {
-              html: `
-                ${this.includeSelectionIndicator(shape)}
-                ${this.computeTextElement(
-                  shape,
-                  parsedContent,
-                  shape.isBulletTextMode
-                )}
-                `,
-                id: shape.id
-            };
-          default:
-            break;
+          }
+        }
+
+        pdf.save(`${new Date().toLocaleDateString()}_annotations.pdf`);
+      };
+    } catch (err) {
+      console.error("Error generating image:", err);
+    } finally {
+      isPrinting.value = false;
+
+      walkTheDOM(wrapper, (node) => {
+        if (node && node.nodeType === 1) {
+          node.setAttribute("font-family", FINAL_CONFIG.value.style.fontFamily);
+          node.style.fontFamily = FINAL_CONFIG.value.style.fontFamily;
         }
       });
-    },
-  },
-    setup() {
-    const fileName = 'annotations';
-      const uid = ref(createUid())
-
-    const { isImaging, generateImage } = usePrinter({
-      elementId: uid.value,
-      fileName,
-    })
-
-    return {
-      uid,
-      isImaging,
-      generateImage
     }
-  },
-  mounted() {
-    const wrapper = this.$refs.drawSvgContainer;
+  });
+}
+
+function resetDraw(e) {
+  if (!isDeleteMode.value && e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  isDrawing.value = false;
+  isMouseDown.value = false;
+  dragOffset.value = null;
+
+  if (lastPointerId.value != null) {
+    try { mainSvg.value?.releasePointerCapture?.(lastPointerId.value); } catch {}
+    lastPointerId.value = null;
+  }
+
+  if (RAF_ID.value) { 
+    cancelAnimationFrame(RAF_ID.value); 
+    RAF_ID.value = null; 
+  }
+
+  if (isSelectMode.value) groupShapes();
+  history.value?.end();
+}
+
+function setFillOfSelectedRect() {
+  if (!lastSelectedShape.value || !lastSelectedShape.value.id.includes("rect")) {
+    return;
+  }
+  lastSelectedShape.value.isFilled = !lastSelectedShape.value.isFilled;
+}
+
+function setFillOfSelectedCircle() {
+  if (!lastSelectedShape.value || !lastSelectedShape.value.id.includes("circle")) {
+    return;
+  }
+  lastSelectedShape.value.isFilled = !lastSelectedShape.value.isFilled;
+}
+
+function setColorOfSelectedShape() {
+  if (!lastSelectedShape.value) {
+    return;
+  }
+
+  lastSelectedShape.value.color = copy(selectedColor.value);
+
+  if (["arrow", "text"].includes(lastSelectedShape.value.id)) {
+    return;
+  }
+
+  lastSelectedShape.value.alpha = copy(colorTransparency.value);
+}
+
+function setSelectedShapeToDash() {
+  if (!lastSelectedShape.value || lastSelectedShape.value.type === "text") {
+    return;
+  }
+  lastSelectedShape.value.isDash = copy(isDash.value);
+}
+
+function setTransparencyOfSelectedShape() {
+  if (
+    !lastSelectedShape.value ||
+    ["arrow", "text"].includes(lastSelectedShape.value.id)
+  ) {
+    return;
+  }
+  lastSelectedShape.value.alpha = copy(colorTransparency.value);
+}
+
+function setStrokeWidthOfSelectedShape() {
+  if (
+    !lastSelectedShape.value ||
+    !["arrow", "circle", "rect", "line"].includes(lastSelectedShape.value.type)
+  ) {
+    return;
+  }
+  lastSelectedShape.value.strokeWidth = copy(Math.abs(strokeSize.value));
+}
+
+function setCurrentStyleOfSelectedText() {
+  if (!lastSelectedShape.value || lastSelectedShape.value.type !== "text") {
+    return;
+  }
+  lastSelectedShape.value.isBold = copy(isBold.value);
+  lastSelectedShape.value.isItalic = copy(isItalic.value);
+  lastSelectedShape.value.isUnderline = copy(isUnderline.value);
+  lastSelectedShape.value.fontSize = copy(textFont.value);
+  lastSelectedShape.value.isBulletTextMode = copy(isBulletTextMode.value);
+}
+
+function setPointer(e) {
+  e.preventDefault();
+  if (!mainSvg.value) return;
+  const rect = mainSvg.value.getBoundingClientRect();
+  let clientX, clientY;
+
+  if (e.touches && e.touches.length > 0) {
+    // Use the first touch if available
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else {
+    // Fall back to mouse event properties
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+
+  pointerPosition.value.x = ((clientX - rect.left) / rect.width) * svgWidth.value;
+  pointerPosition.value.y = ((clientY - rect.top) / rect.height) * svgHeight.value;
+}
+
+function setShapeTo(shape) {
+  showCaret.value = false;
+  deleteEmptyTextElement();
+  if (shape === activeShape.value) {
+    activeShape.value = undefined;
+    isDrawMode.value = false;
+
+    return;
+  }
+  isDrawMode.value = true;
+  isDeleteMode.value = false;
+  isMoveMode.value = false;
+  isResizeMode.value = false;
+  isTextMode.value = false;
+  activeShape.value = shape;
+}
+
+function toggleSummary() {
+  isSummaryOpen.value = !isSummaryOpen.value;
+  if (!isSummaryOpen.value) {
+    isMoveMode.value = false;
+    isResizeMode.value = false;
+    isTextMode.value = false;
+    isWriting.value = false;
+    activeShape.value = undefined;
+    showCaret.value = false;
+    isDeleteMode.value = false;
+    isWriting.value = false;
+  }
+  emit("toggleOpenState", { isOpen: isSummaryOpen.value });
+}
+
+function save() {
+    emit("saveAnnotations", {
+        shapes: shapes.value,
+        lastSelectedShape: lastSelectedShape.value
+    })
+}
+
+let UNREGISTER_SHORTCUTS = null;
+
+onMounted(() => {
+  if (drawSvgContainer.value) {
     let foundSvg = false;
 
-    this.walkTheDOM(wrapper, (node) => {
+    walkTheDOM(drawSvgContainer.value, (node) => {
       if (!foundSvg) {
         if (["DIV", "svg", "section", "canvas"].includes(node.tagName)) {
-          this.slottedSvg = node;
+          slottedSvg.value = node;
           foundSvg = true;
           return;
         }
       }
     });
+  }
 
-    this.isMacLike = (() => {
-        if (typeof navigator === "undefined") return false;
-        const uaDataPlatform = navigator.userAgentData?.platform ?? "";
-        if (uaDataPlatform) return /mac|ios/i.test(uaDataPlatform);
-        const ua = navigator.userAgent ?? "";
-        return /(Mac|iPhone|iPad|iPod)/i.test(ua);
-    })();
+  isMacLike.value = (() => {
+      if (typeof navigator === "undefined") return false;
+      const uaDataPlatform = navigator.userAgentData?.platform ?? "";
+      if (uaDataPlatform) return /mac|ios/i.test(uaDataPlatform);
+      const ua = navigator.userAgent ?? "";
+      return /(Mac|iPhone|iPad|iPod)/i.test(ua);
+  })();
 
-    const slottedSvgRect = this.slottedSvg.getBoundingClientRect();
+  const slottedSvgRect = slottedSvg?.value.getBoundingClientRect();
 
-    this.sizeRatio = slottedSvgRect.height / slottedSvgRect.width;
+  sizeRatio.value = slottedSvgRect.height / slottedSvgRect.width;
 
-    this.svgWidth = 1000;
-    this.svgHeight = this.sizeRatio * 1000;
-    this.sourceWidth = slottedSvgRect.width;
-    this.sourceHeight = slottedSvgRect.height;
+  svgWidth.value = 1000;
+  svgHeight.value = sizeRatio.value * 1000;
+  sourceWidth.value = slottedSvgRect.width;
+  sourceHeight.value = slottedSvgRect.height;
 
-    const myObserver = new ResizeObserver((entries) => {
-      entries.forEach((entry) => {
-        this.sourceWidth = entry.contentRect.width;
-        this.sourceHeight = entry.contentRect.height;
-        this.sizeRatio = entry.contentRect.height / entry.contentRect.width;
-        this.svgHeight = this.sizeRatio * 1000;
-      });
+  const myObserver = new ResizeObserver((entries) => {
+    entries.forEach((entry) => {
+      sourceWidth.value = entry.contentRect.width;
+      sourceHeight.value = entry.contentRect.height;
+      sizeRatio.value = entry.contentRect.height / entry.contentRect.width;
+      svgHeight.value = sizeRatio.value * 1000;
     });
-
-    myObserver.observe(this.slottedSvg);
-
-    this._onKeydown = (e) => this.write(e);
-    window.addEventListener("keydown", this._onKeydown);
-    this.history = this.makeHistory();
-
-    if (this.history.size) {
-      const s = this.history.size();
-      this._historySize.undo = s.undo;
-      this._historySize.redo = s.redo;
-    }
-
-    this._unregisterShortcuts = registerAnnotatorShortcuts(this);
-  },
-  beforeUnmount() {
-    this.hideTooltip();
-    if (this._rafId) cancelAnimationFrame(this._rafId);
-    if (this._onKeydown) window.removeEventListener("keydown", this._onKeydown);
-  },
-  unmounted() {
-    if (this._unregisterShortcuts) this._unregisterShortcuts();
-  },
-  destroyed() {
-    window.removeEventListener("keydown", (e) => {
-      this.write(e);
-    });
-  },
-  methods: {
-    treeShake,
-    convertConfigColors,
-    _tickDraw() {
-      if (!this.isDrawing) { this._rafId = null; return; }
-      this.drawUp();
-      this._rafId = requestAnimationFrame(() => this._tickDraw());
-    },
-    bringToFrontById(id) {
-      const i = this.shapes.findIndex(s => s.id === id);
-      if (i > -1 && i !== this.shapes.length - 1) {
-        const [s] = this.shapes.splice(i, 1);
-        this.shapes.push(s);
-      }
-    },
-
-    _shapeIdUnderPointer(e) {
-      const idIsShape = (id) => !!id && this.shapes.some(s => s.id === id);
-
-      // if event already targets a shape, use it
-      if (idIsShape(e?.target?.id)) return e.target.id;
-
-      // temporarily disable the glass to probe the element below
-      const glass = this.$refs.mainSvg?.querySelector('.annotator__glass');
-      if (!glass) return null;
-
-      const prev = glass.style.pointerEvents;
-      glass.style.pointerEvents = 'none';
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      glass.style.pointerEvents = prev || 'all';
-
-      return idIsShape(el?.id) ? el.id : null;
-    },
-    makeHistory(opts = {}) {
-      const {
-        maxEntries = 200,
-        maxBytes   = 2000000,
-      } = opts;
-
-      const state = { open: false, before: null, undo: [], redo: [] };
-      const bytes = { undo: 0, redo: 0 };
-      const sz = (s) => (typeof s === 'string' ? s.length * 2 : 0); // UTF-16-ish
-
-      const snapshot = () => JSON.stringify({
-        shapes: this.copy(this.shapes),
-        lastSelectedShape: this.copy(this.lastSelectedShape),
-      });
-
-      const apply = (snap) => {
-        const s = JSON.parse(snap);
-        this.shapes = s.shapes;
-        this.lastSelectedShape = s.lastSelectedShape;
-      };
-
-      const refreshSizes = () => {
-        this._historySize.undo = state.undo.length;
-        this._historySize.redo = state.redo.length;
-      };
-
-      const pushCapped = (stackName, snap) => {
-        const stack = state[stackName];
-        stack.push(snap);
-        bytes[stackName] += sz(snap);
-        while (stack.length > maxEntries || bytes[stackName] > maxBytes) {
-          const removed = stack.shift();
-          bytes[stackName] -= sz(removed);
-        }
-      };
-
-      return {
-        begin() {
-          if (state.open) return;
-          state.open = true;
-          state.before = snapshot();
-        },
-        end() {
-          if (!state.open) return;
-          state.open = false;
-          const after = snapshot();
-          if (after !== state.before) {
-            pushCapped('undo', state.before);
-            state.redo.length = 0;
-            bytes.redo = 0;
-          }
-          state.before = null;
-          refreshSizes();
-        },
-        undo() {
-          const prev = state.undo.pop();
-          if (!prev) return;
-          bytes.undo -= sz(prev);
-          const curr = snapshot();
-          pushCapped('redo', curr);
-          apply(prev);
-          refreshSizes();
-        },
-        redo() {
-          const next = state.redo.pop();
-          if (!next) return;
-          bytes.redo -= sz(next);
-          const curr = snapshot();
-          pushCapped('undo', curr);
-          apply(next);
-          refreshSizes();
-        },
-        size() {
-          return {
-            undo: state.undo.length,
-            redo: state.redo.length,
-            approxBytes: { undo: bytes.undo, redo: bytes.redo }
-          };
-        }
-      };
-    },
-    showToolTipFor(key, ev, placement = "top") {
-      this.tooltipKey = key;
-      this.tooltipAnchor = ev.currentTarget || ev.target;
-      this.updateTooltipPosition();
-      this.showTooltip = true;
-      window.addEventListener("scroll", this.updateTooltipPosition, true);
-      window.addEventListener("resize", this.updateTooltipPosition, { passive: true });
-      this.tooltipPlacement = placement;
-    },
-    hideTooltip() {
-      this.showTooltip = false;
-      this.tooltipKey = null;
-      this.tooltipAnchor = null;
-      window.removeEventListener("scroll", this.updateTooltipPosition, true);
-      window.removeEventListener("resize", this.updateTooltipPosition);
-    },
-    updateTooltipPosition() {
-      if (!this.tooltipAnchor) return;
-      const r = this.tooltipAnchor.getBoundingClientRect();
-      this.tooltipPos = { x: r.left + r.width / 2, y: r.top };
-    },
-    initDragOffset(e) {
-      const shapeId = (e?.target && e.target.id) || (this.currentTarget && this.currentTarget.id);
-      const shape = this.shapes.find((s) => s.id === shapeId);
-      if (!shape) { this.dragOffset = null; return; }
-
-      this.lastSelectedShape = shape;
-
-      const px = this.pointerPosition.x;
-      const py = this.pointerPosition.y;
-
-      switch (shape.type) {
-        case "rect":
-        case "circle":
-        case "text":
-          this.dragOffset = { dx: px - shape.x, dy: py - shape.y };
-          break;
-
-        case "arrow":
-          this.dragOffset = {
-            dx: px - shape.x,
-            dy: py - shape.y,
-            endDx: px - shape.endX,
-            endDy: py - shape.endY,
-          };
-          break;
-
-        case "group":
-          // Use group origin as anchor (no centering)
-          this.dragOffset = { dx: px - (shape.x || 0), dy: py - (shape.y || 0) };
-          break;
-
-        default:
-          this.dragOffset = { dx: 0, dy: 0 };
-          break;
-      }
-    },
-    bringShapeTo(layer) {
-      const thisShape = this.shapes.find(
-        (shape) => shape.id === this.lastSelectedShape.id
-      );
-      switch (true) {
-        case layer === "front":
-          this.shapes = this.shapes.filter((shape) => shape.id !== thisShape.id);
-          this.shapes.push(thisShape);
-          break;
-
-        case layer === "back":
-          this.shapes = this.shapes.filter((shape) => shape.id !== thisShape.id);
-          this.shapes = [thisShape, ...this.shapes];
-          break;
-
-        default:
-          return;
-      }
-    },
-    clickSvg(e) {
-      if (this.isDeleteMode) {
-        return;
-      }
-
-      e.preventDefault(); e.stopPropagation();
-
-      this.deleteEmptyTextElement();
-
-      if (this.isTextMode) {
-        this.isWriting = true;
-        this.showCaret = true;
-      } else {
-        this.isWriting = false;
-        this.showCaret = false;
-        this.isTextMode = false;
-      }
-
-      let id = `text_${Math.random() * 10000}_${Math.random() * 99999}`;
-
-      if (this.isWriting) {
-        this.history?.begin();
-        this.shapes.push({
-          id,
-          type: "text",
-          lines: 0,
-          x: this.pointerPosition.x,
-          y: this.pointerPosition.y,
-          textContent: "",
-          fontSize: this.copy(this.textFont),
-          textAlign: this.copy(this.textAlign),
-          isBold: this.copy(this.isBold),
-          isItalic: this.copy(this.isItalic),
-          isUnderline: this.copy(this.isUnderline),
-          color: this.copy(this.selectedColor),
-          isBulletTextMode: this.copy(this.isBulletTextMode),
-        });
-        this.currentTarget = this.shapes.at(-1);
-        this.lastSelectedShape = this.shapes.at(-1);
-        this.history?.end();
-        return;
-      }
-
-      const setIsDashState = () => {
-        this.isDash = this.shapes.find((shape) => shape.id === e.target.id).isDash;
-      };
-      const setStrokeSize = () => {
-        this.strokeSize = this.shapes.find(
-          (shape) => shape.id === e.target.id
-        ).strokeWidth;
-      };
-
-      this.isSelectMode = false;
-
-      if (e.target.id.includes("arrow")) {
-        this.activeShape = "arrow";
-        setIsDashState();
-        setStrokeSize();
-        return;
-      }
-      if (e.target.id.includes("circle")) {
-        this.activeShape = "circle";
-        this.options.circle.filled = this.shapes.find(
-          (shape) => shape.id === e.target.id
-        ).isFilled;
-        setIsDashState();
-        setStrokeSize();
-        return;
-      }
-      if (e.target.id.includes("rect")) {
-        this.activeShape = "rect";
-        this.options.rect.filled = this.shapes.find(
-          (shape) => shape.id === e.target.id
-        ).isFilled;
-        setIsDashState();
-        setStrokeSize();
-        return;
-      }
-      if (e.target.id.includes("line")) {
-        this.activeShape = "line";
-        setStrokeSize();
-        return;
-      }
-
-      if (e.target.id.includes("text")) {
-        this.isTextMode = true;
-        this.isWriting = true;
-        this.showCaret = true;
-        const lastShape = this.shapes.find((shape) => shape.id === e.target.id);
-        if (lastShape && lastShape.textAlign) {
-          this.textAlign = this.shapes.find(
-            (shape) => shape.id === e.target.id
-          ).textAlign;
-        }
-        if (lastShape) {
-          this.isBulletTextMode = this.shapes.find(
-            (shape) => shape.id === e.target.id
-          ).isBulletTextMode;
-        }
-        return;
-      }
-    },
-    copyPaste() {
-      const shapeCopy = {
-        ...this.lastSelectedShape,
-        id: `${this.lastSelectedShape.id}_copy`,
-        x: this.lastSelectedShape.x - 100 < 0 ? 1 : this.lastSelectedShape.x - 100,
-        y: this.lastSelectedShape.y - 100 < 0 ? 1 : this.lastSelectedShape.y - 100,
-      };
-      this.shapes.push(shapeCopy);
-    },
-    includeDeleteButton(shape, isBulletTextMode = false) {
-      switch (true) {
-        case shape.type === "circle":
-          return `
-                    <g id="${shape.id}" style="display:${
-            this.isDeleteMode ? "initial" : "none"
-          };">
-                        <circle id="${shape.id}" cx="${shape.x}" cy="${
-            shape.y
-          }" r="12" fill="red"/>
-                        <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-            shape.x - 4
-          }" y1="${shape.y - 4}" x2="${shape.x + 4}" y2="${shape.y + 4}"/>
-                        <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-            shape.x + 4
-          }" y1="${shape.y - 4}" x2="${shape.x - 4}" y2="${shape.y + 4}"/>
-                    </g>
-                `;
-
-        case shape.type === "text":
-          // determine position of delete button from textAlign property
-          let offsetX;
-          let offsetY = [-8, -12, -4, -12, -4];
-          switch (true) {
-            case shape.textAlign === "start":
-              if (isBulletTextMode) {
-                offsetX = [-20, -24, -16, -16, -24];
-              } else {
-                offsetX = [-16, -20, -12, -12, -20];
-              }
-              break;
-
-            case shape.textAlign === "middle":
-              offsetX = [0, -4, 4, 4, -4];
-              offsetY = [-32, -36, -28, -36, -28];
-              break;
-
-            case shape.textAlign === "end":
-              offsetX = [16, 20, 12, 12, 20];
-              break;
-
-            default:
-              offsetX = [0, 0, 0];
-              break;
-          }
-
-          return `
-                    <g id="${shape.id}" style="display:${
-            this.isDeleteMode ? "initial" : "none"
-          };">
-                        <circle id="${shape.id}" cx="${shape.x + offsetX[0]}" cy="${
-            shape.y + offsetY[0]
-          }" r="12" fill="red"/>
-                        <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-            shape.x + offsetX[1]
-          }" y1="${shape.y + offsetY[1]}" x2="${shape.x + offsetX[2]}" y2="${
-            shape.y + offsetY[2]
-          }"/>
-                        <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-            shape.x + offsetX[3]
-          }" y1="${shape.y + offsetY[3]}" x2="${shape.x + offsetX[4]}" y2="${
-            shape.y + offsetY[4]
-          }"/>
-                    </g>
-                `;
-
-        default:
-          return `
-                    <g id="${shape.id}" style="display:${
-            this.isDeleteMode ? "initial" : "none"
-          };">
-                        <circle id="${shape.id}" cx="${shape.x - 4}" cy="${
-            shape.y - 4
-          }" r="12" fill="red"/>
-                        <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-            shape.x - 8
-          }" y1="${shape.y - 8}" x2="${shape.x}" y2="${shape.y}"/>
-                        <line stroke="white" stroke-width="2" id="${shape.id}" x1="${
-            shape.x
-          }" y1="${shape.y - 8}" x2="${shape.x - 8}" y2="${shape.y}"/>
-                    </g>
-                `;
-      }
-    },
-    includeSelectionIndicator(shape) {
-      if (!shape) {
-        return;
-      }
-
-      switch (true) {
-        case shape.type === "rect":
-          return `
-                    <rect
-                    id="${shape.id}" 
-                    style="stroke-dasharray: 10; display:${
-                      this.hoveredShapeId && this.hoveredShapeId === shape.id
-                        ? "initial"
-                        : "none"
-                    }"
-                    x="${shape.x - 20}"
-                    y="${shape.y - 20}"
-                    height="${shape.rectHeight + 40}"
-                    width="${shape.rectWidth + 40}"
-                    fill="transparent"
-                    stroke="grey"
-                    />
-                `;
-
-        case shape.type === "circle":
-          return `
-                    <rect
-                    id="${shape.id}" 
-                    style="stroke-dasharray: 10; display:${
-                      this.hoveredShapeId && this.hoveredShapeId === shape.id
-                        ? "initial"
-                        : "none"
-                    }"
-                    x="${shape.x - shape.circleRadius - 20}"
-                    y="${shape.y - shape.circleRadius - 20}"
-                    height="${shape.circleRadius * 2 + 40}"
-                    width="${shape.circleRadius * 2 + 40}"
-                    fill="transparent"
-                    stroke="grey"
-                    />
-                `;
-
-        case shape.type === "arrow":
-          const isPositiveX = shape.endX - shape.x > 0;
-          const isPositiveY = shape.endY - shape.y > 0;
-          return `
-                    <rect
-                    id="${shape.id}" 
-                    style="stroke-dasharray: 10; display:${
-                      this.hoveredShapeId && this.hoveredShapeId === shape.id
-                        ? "initial"
-                        : "none"
-                    }"
-                    x="${isPositiveX ? shape.x - 20 : shape.endX - 20}"
-                    y="${isPositiveY ? shape.y - 20 : shape.endY - 20}"
-                    height="${
-                      isPositiveY ? shape.endY - shape.y + 40 : shape.y - shape.endY + 40
-                    }"
-                    width="${
-                      isPositiveX ? shape.endX - shape.x + 40 : shape.x - shape.endX + 40
-                    }"
-                    fill="transparent"
-                    stroke="grey"
-                    />
-                `;
-
-        case shape.type === "text":
-          const selectedText = this.$refs.mainSvg ? Array.from(this.$refs.mainSvg.getElementsByTagName("text")).find(
-            (textElement) => textElement.id === shape.id
-          ) : null;
-          if (!selectedText) {
-            return;
-          }
-          const { x, y, width, height } = selectedText.getBBox();
-          return `
-                    <rect
-                    id="${shape.id}" 
-                    style="stroke-dasharray: 10; display:${
-                      this.hoveredShapeId && this.hoveredShapeId === shape.id
-                        ? "initial"
-                        : "none"
-                    }"
-                    x="${x - 20}"
-                    y="${y - 20}"
-                    height="${height + 40}"
-                    width="${width + 40}"
-                    fill="transparent"
-                    stroke="grey"
-                    />
-                `;
-
-        default:
-          return ``;
-      }
-    },
-    allowEditAndHoverShapes(e) {
-      e.preventDefault();
-      this.preventEdit = false;
-      if (e.target && e.target.id) {
-        this.hoveredShapeId = e.target.id;
-      }
-    },
-    setSelectedTextAlignTo(position) {
-      if (!this.lastSelectedShape || this.lastSelectedShape.type !== "text") {
-        return;
-      }
-      this.lastSelectedShape.textAlign = position;
-    },
-    undoLastShape() {
-      this.history?.undo?.();
-    },
-    redoLastShape() {
-      this.history?.redo?.();
-    },
-    write(e) {
-      if (this.preventEdit) {
-        return;
-      }
-      e.preventDefault();
-      const keyCode = e.keyCode;
-
-      if (!this.isWriting) {
-        return;
-      }
-      this.showCaret = true;
-      let text;
-      if (this.lastSelectedShape.type === "text") {
-        text = this.shapes.find((shape) => shape.id === this.lastSelectedShape.id);
-      } else {
-        text = this.shapes.at(-1);
-      }
-      this.currentTarget = text;
-
-      if (text.type !== "text") {
-        return;
-      }
-
-      this.currentTarget.isBold = this.copy(this.isBold);
-      this.currentTarget.isItalic = this.copy(this.isItalic);
-      this.currentTarget.isUnderline = this.copy(this.isUnderline);
-
-      const noActionKeys = [
-        16,
-        17,
-        18,
-        20,
-        27,
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        45,
-        91,
-        112,
-        113,
-        114,
-        115,
-        116,
-        117,
-        118,
-        119,
-        120,
-        121,
-        122,
-        123,
-        221,
-        255,
-        "Unidentified",
-      ];
-
-      switch (true) {
-        case keyCode === 8:
-          text.textContent = text.textContent.slice(0, -1);
-          break;
-        case keyCode === 9:
-          text.textContent += "&nbsp; &nbsp; &nbsp; &nbsp;";
-          break;
-        case keyCode === 13:
-          text.lines += 1;
-          text.textContent += "‎"; // used to parse lines to create tspan elements when ENTER is pressed
-          return;
-        case noActionKeys.includes(keyCode):
-          return;
-
-        default:
-          text.textContent += e.key;
-      }
-    },
-    groupShapes() {
-      this.selectedGroup = [];
-
-      if (this.activeShape !== "group") {
-        this.isSelectMode = false;
-        this.shapes = this.shapes.filter((shape) => shape.type !== "group");
-        return;
-      }
-      const group = this.shapes.at(-1);
-
-      this.shapes.forEach((shape) => {
-        if (shape.type === "group") {
-          return;
-        }
-        switch (true) {
-          case shape.type === "arrow":
-            // TLBR: top left -> bottom right
-            const isArrowTLBR =
-              shape.x <= shape.endX &&
-              shape.y <= shape.endY &&
-              group.x <= shape.x &&
-              group.y <= shape.y &&
-              group.x + group.rectWidth >= shape.endX &&
-              group.y + group.rectHeight >= shape.endY;
-
-            // BLTR: bottom left -> top right
-            const isArrowBLTR =
-              shape.endY < shape.y &&
-              shape.x < shape.endX &&
-              group.x <= shape.x &&
-              group.y <= shape.y &&
-              group.x + group.rectWidth >= shape.endX &&
-              group.y + group.rectHeight >= shape.y;
-
-            // TRBL: top right -> bottom left
-            const isArrowTRBL =
-              shape.x > shape.endX &&
-              shape.y < shape.endY &&
-              group.x <= shape.endX &&
-              group.y <= shape.endY &&
-              group.x + group.rectWidth >= shape.x &&
-              group.y + group.rectHeight >= shape.endY;
-
-            // BRTL: bottom right -> top left
-            const isArrowBRTL =
-              shape.x > shape.endX &&
-              shape.y > shape.endY &&
-              group.x <= shape.endX &&
-              group.y <= shape.endY &&
-              group.x + group.rectWidth >= shape.x &&
-              group.y + group.rectHeight >= shape.y;
-
-            if (isArrowTLBR || isArrowBLTR || isArrowTRBL || isArrowBRTL) {
-              this.selectedGroup.push(shape);
-            }
-            break;
-
-          case shape.type === "circle":
-            if (
-              group.x <= shape.x + shape.circleRadius &&
-              group.y <= shape.y + shape.circleRadius &&
-              shape.x + shape.circleRadius <= group.x + group.rectWidth &&
-              shape.y + shape.circleRadius <= group.y + group.rectHeight
-            ) {
-              this.selectedGroup.push(shape);
-            }
-            break;
-
-          case shape.type === "rect":
-            if (
-              group.x <= shape.x &&
-              group.y <= shape.y &&
-              shape.x <= group.x + group.rectWidth &&
-              shape.y <= group.y + group.rectHeight &&
-              shape.x + shape.rectWidth <= group.x + group.rectWidth &&
-              shape.y + shape.rectHeight <= group.y + group.rectHeight &&
-              shape.rectWidth <= group.rectWidth &&
-              shape.rectHeight <= group.rectHeight
-            ) {
-              this.selectedGroup.push(shape);
-            }
-            break;
-
-          case shape.type === "text":
-            if (group.x <= shape.x && group.y <= shape.y) {
-              this.selectedGroup.push(shape);
-            }
-            break;
-
-          default:
-            break;
-        }
-      });
-
-      // add an old independant id to the selectedShape to keep track of old id
-      // replace id of selected shape with the group id
-      this.selectedGroup = this.selectedGroup.map((shape) => {
-        return {
-          ...shape,
-          id: group.id,
-          oldId: shape.id,
-          diffX: shape.x - group.x,
-          diffY: shape.y - group.y,
-          diffEndX: shape.endX ? shape.endX - group.x : 0,
-          diffEndY: shape.endY ? shape.endY - group.y : 0,
-        };
-      });
-
-      group.source = this.selectedGroup;
-
-      if (this.selectedGroup.length > 1) {
-        const bannedIds = this.copy(this.selectedGroup).map((shape) => {
-          return shape.oldId;
-        });
-
-        // remove selected shapes from the shapes array
-        this.shapes = this.shapes.filter((shape) => !bannedIds.includes(shape.id));
-
-        // redraw each shape in the context of the group
-        this.selectedGroup.forEach((shape) => {
-          switch (true) {
-            case shape.type === "circle":
-              group.content += `
-                <circle
-                id="${shape.id}"
-                cx="${shape.x}"
-                cy="${shape.y}"
-                r="${shape.circleRadius ? shape.circleRadius : Number.MIN_VALUE}"
-                fill="${
-                  shape.isFilled ? shape.color + shape.alpha : "rgba(255,255,255,0.001)"
-                }"
-                stroke="${shape.color + shape.alpha}" 
-                                stroke-width="${shape.strokeWidth}"
-                                style="${
-                                  shape.isDash
-                                    ? `stroke-dasharray: ${shape.strokeWidth * 3}`
-                                    : ""
-                                }"
-                                />
-            `;
-              break;
-
-            case shape.type === "rect":
-              group.content += `
-                <rect
-                id="${this.isResizeMode ? "" : shape.id}"
-                x="${shape.x}"
-                y="${shape.y}"
-                fill="${
-                  shape.isFilled ? shape.color + shape.alpha : "rgba(255,255,255,0.001)"
-                }"
-                height="${shape.rectHeight}"
-                width="${shape.rectWidth}"
-                stroke="${shape.color + shape.alpha}"
-                stroke-width="${shape.strokeWidth}"
-                style="rx:1 !important; ry:1 !important; ${
-                  shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""
-                }"
-                            />
-            `;
-              break;
-
-            case shape.type === "arrow":
-              const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
-              const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
-              const uid = Date.now();
-              group.content += `
-                <g id="${shape.id}">
-                <defs>
-                    <marker 
-                    id="${uid}" 
-                    markerWidth="${shapeWidthMax}" 
-                    markerHeight="${shapeWidthMax}" 
-                    refX="0" 
-                    refY="${shapeWidthMin}" 
-                    orient="auto"
-                    >
-                    <polygon 
-                    points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}" 
-                    fill="${shape.color}"
-                    />
-                    </marker>
-                </defs>
-
-                <path 
-                    style="stroke-linecap: round !important; ${
-                      shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""
-                    }" 
-                    stroke="${shape.color}" 
-                    id="${shape.id}" 
-                    d="M${shape.x},${shape.y} ${shape.endX},${shape.endY}" 
-                    stroke-width="${shape.strokeWidth}" 
-                    marker-end="url(#${uid})"
-                />
-                </g>
-            `;
-              break;
-
-            case shape.type === "text":
-              const parsedText = shape.textContent.split("‎");
-              const parsedContent = [];
-              for (let i = 0; i < parsedText.length; i += 1) {
-                parsedContent.push(`
-                ${
-                  shape.isBulletTextMode
-                    ? `<tspan x="${shape.x - shape.fontSize}" y="${
-                        shape.y + shape.fontSize * i
-                      }" id="${shape.id}" font-size="${shape.fontSize / 2}">⬤</tspan>`
-                    : ""
-                }
-                <tspan id="${shape.id}" x="${shape.x}" y="${
-                  shape.y + shape.fontSize * i
-                }">
-                    ${parsedText[i]}
-                </tspan>`);
-              }
-              group.content += `
-                ${this.computeTextElement(shape, parsedContent, shape.isBulletTextMode)}
-                `;
-              break;
-
-            default:
-              break;
-          }
-        });
-      } else {
-        // no valid selection: remove selection rect
-        this.shapes = this.shapes.filter((shape) => shape.id !== group.id);
-      }
-    },
-    moveGroup(group) {
-      group.content = "";
-
-      const baseX = group.x || 0;
-      const baseY = group.y || 0;
-
-      (group.source || []).forEach((shape) => {
-        switch (shape.type) {
-          case "circle": {
-            const cx = baseX + shape.diffX;
-            const cy = baseY + shape.diffY;
-            group.content += `
-              <circle
-                id="${shape.id}"
-                cx="${cx}"
-                cy="${cy}"
-                r="${shape.circleRadius ? shape.circleRadius : Number.MIN_VALUE}"
-                fill="${shape.isFilled ? shape.color + shape.alpha : "rgba(255,255,255,0.001)"}"
-                stroke="${shape.color + shape.alpha}"
-                stroke-width="${shape.strokeWidth}"
-                style="${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""}"
-              />
-            `;
-            break;
-          }
-
-          case "rect": {
-            const x = baseX + shape.diffX;
-            const y = baseY + shape.diffY;
-            group.content += `
-              <rect
-                id="${this.isResizeMode ? "" : shape.id}"
-                x="${x}"
-                y="${y}"
-                fill="${shape.isFilled ? shape.color + shape.alpha : "rgba(255,255,255,0.001)"}"
-                height="${shape.rectHeight}"
-                width="${shape.rectWidth}"
-                stroke="${shape.color + shape.alpha}"
-                stroke-width="${shape.strokeWidth}"
-                style="rx:1 !important; ry:1 !important; ${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""}"
-              />
-            `;
-            break;
-          }
-
-          case "arrow": {
-            const sx = baseX + shape.diffX;
-            const sy = baseY + shape.diffY;
-            const ex = baseX + shape.diffEndX;
-            const ey = baseY + shape.diffEndY;
-            const shapeWidthMax = shape.strokeWidth > 3 ? 5 : 10;
-            const shapeWidthMin = shape.strokeWidth > 3 ? 2.5 : 5;
-            const uid = `m_${shape.id}_${Math.random().toString(36).slice(2)}`;
-            group.content += `
-              <g id="${shape.id}">
-                <defs>
-                  <marker 
-                    id="${uid}" 
-                    markerWidth="${shapeWidthMax}" 
-                    markerHeight="${shapeWidthMax}" 
-                    refX="0" 
-                    refY="${shapeWidthMin}" 
-                    orient="auto">
-                    <polygon points="0 0,${shapeWidthMax} ${shapeWidthMin}, 0 ${shapeWidthMax}" fill="${shape.color}" />
-                  </marker>
-                </defs>
-                <path
-                  style="stroke-linecap: round !important; ${shape.isDash ? `stroke-dasharray: ${shape.strokeWidth * 3}` : ""}"
-                  stroke="${shape.color}"
-                  id="${shape.id}"
-                  d="M${sx},${sy} ${ex},${ey}"
-                  stroke-width="${shape.strokeWidth}"
-                  marker-end="url(#${uid})"
-                />
-              </g>
-            `;
-            break;
-          }
-
-          case "text": {
-            const parsedText = (shape.textContent || "").split("‎");
-            const content = parsedText.map((line, i) => `
-              ${shape.isBulletTextMode
-                ? `<tspan x="${baseX + shape.diffX - shape.fontSize}" y="${baseY + shape.diffY + shape.fontSize * i}" id="${shape.id}" font-size="${shape.fontSize / 2}">⬤</tspan>`
-                : ""
-              }
-              <tspan id="${shape.id}" x="${baseX + shape.diffX}" y="${baseY + shape.diffY + shape.fontSize * i}">
-                ${line}
-              </tspan>
-            `).join("");
-
-            group.content += `
-              <g id="${shape.id}">
-                <text
-                  style="user-select:none; height:100px;"
-                  id="${shape.id}"
-                  x="${baseX + shape.diffX}"
-                  y="${baseY + shape.diffY}"
-                  text-anchor="${shape.textAlign}"
-                  font-size="${shape.fontSize}"
-                  fill="${shape.color}"
-                  font-weight="${shape.isBold ? "bold" : "normal"}"
-                  font-style="${shape.isItalic ? "italic" : "normal"}"
-                  text-decoration="${shape.isUnderline ? "underline" : "none"}">
-                  ${content}
-                </text>
-              </g>
-            `;
-            break;
-          }
-
-          default:
-            break;
-        }
-      });
-    },
-    onPointerOut(e) {
-      const svg = this.$refs.mainSvg;
-      if (e.relatedTarget && svg && svg.contains(e.relatedTarget)) return; // still inside
-      this.preventEdit = true;
-      this.hoveredShapeId = undefined;
-    },
-    chooseAction(e) {
-      if (this.isDeleteMode) {
-        this.isMouseDown = false;
-        return;
-      }
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      this.isMouseDown = true;
-
-      // Only capture when we have a real pointer id
-      if (e.pointerId != null) {
-        try { this.$refs.mainSvg?.setPointerCapture?.(e.pointerId); } catch {}
-        this.lastPointerId = e.pointerId;
-      } else {
-        this.lastPointerId = null;
-      }
-
-      if (this.isDrawMode || this.isMoveMode || this.isResizeMode || this.isSelectMode) {
-        this.history?.begin?.();
-      }
-
-      if (this.isDrawMode) {
-        this.drawDown();
-        return;
-      }
-
-      if (this.isMoveMode) {
-        const id = this._shapeIdUnderPointer(e) || this.hoveredShapeId || this.lastSelectedShape?.id;
-        if (id) {
-          this.bringToFrontById(id);
-          this.currentTarget = { id };
-        }
-        this.initDragOffset(e);
-      }
-    },
-    chooseMove(e) {
-      if (this.isDeleteMode) return;
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (e.target.localName !== "svg") this.currentTarget = e.target;
-
-      if (this.isMoveMode && this.isMouseDown) this.moveDown();
-      else if (this.isResizeMode && this.isMouseDown) this.resize();
-    },
-    computeCaretPosition(shape) {
-      switch (true) {
-        case shape.textAlign === "middle":
-          return `<path class="vue-ui-annotator-caret" stroke="black" stroke-width="2" d="M${shape.x},${
-            shape.y - shape.fontSize
-          } ${shape.x},${
-            shape.y - shape.fontSize - 15
-          }" /> <path class="vue-ui-annotator-caret" stroke="black" stroke-width="2" d="M${shape.x - 3},${
-            shape.y - shape.fontSize - 5
-          } ${shape.x},${shape.y - shape.fontSize} ${shape.x + 3},${
-            shape.y - shape.fontSize - 5
-          }"/>`;
-
-        case shape.textAlign === "start":
-          const bulletModeOffset = shape.isBulletTextMode ? shape.fontSize : 0;
-          return `<path class="vue-ui-annotator-caret" d="M${shape.x - 20 - bulletModeOffset},${
-            shape.y - shape.fontSize / 6
-          } ${shape.x - 5 - bulletModeOffset},${
-            shape.y - shape.fontSize / 6
-          }" stroke="black" stroke-width="2" />
-                        <path class="vue-ui-annotator-caret" d="M${shape.x - 10 - bulletModeOffset},${
-            shape.y - shape.fontSize / 3
-          } ${shape.x - 5 - bulletModeOffset},${shape.y - shape.fontSize / 6} ${
-            shape.x - 10 - bulletModeOffset
-          },${shape.y}" stroke="black" stroke-width="2">`;
-
-        case shape.textAlign === "end":
-          return `<path class="vue-ui-annotator-caret" d="M${shape.x + 20},${shape.y - shape.fontSize / 6} ${
-            shape.x + 5
-          },${shape.y - shape.fontSize / 6}" stroke="black" stroke-width="2" />
-                        <path class="vue-ui-annotator-caret" d="M${shape.x + 10},${shape.y - shape.fontSize / 3} ${
-            shape.x + 5
-          },${shape.y - shape.fontSize / 6} ${shape.x + 10},${
-            shape.y
-          }" stroke="black" stroke-width="2">`;
-
-        default:
-          return "";
-      }
-    },
-    computeTextElement(shape, content, isBulletTextMode = false) {
-      switch (true) {
-        case shape.textAlign === "start":
-          return `
-                <g id="${shape.id}">
-                    <rect 
-                        id="${shape.id}" 
-                        style="display:${
-                          this.lastSelectedShape && this.lastSelectedShape.id === shape.id
-                            ? "initial"
-                            : "none"
-                        };" 
-                        x="${shape.x}" 
-                        y="${shape.y - 50}" 
-                        height="${
-                          shape.lines === 0 || shape.lines === 1
-                            ? shape.fontSize * 4
-                            : shape.fontSize * 2 * shape.lines
-                        }"
-                        width="100" 
-                        fill="rgba(0,0,0,0)"
-                    />
-                    <text
-                    style="user-select:none; height:100px;"
-                    id="${shape.id}"
-                    x="${shape.x}"
-                    y="${shape.y}"
-                    text-anchor="${shape.textAlign}"
-                    font-size="${shape.fontSize}"
-                    fill="${shape.color}"
-                    font-weight="${shape.isBold ? "bold" : "normal"}"
-                    font-style="${shape.isItalic ? "italic" : "normal"}"
-                    text-decoration="${shape.isUnderline ? "underline" : "none"}"
-                    >
-                        ${content.join("")}
-                    </text>
-                    ${
-                      this.showCaret &&
-                      this.lastSelectedShape &&
-                      this.lastSelectedShape.id === shape.id
-                        ? this.computeCaretPosition(shape)
-                        : ""
-                    }
-                    ${this.includeDeleteButton(shape, isBulletTextMode)}
-                </g> 
-                `;
-
-        case shape.textAlign === "middle":
-          return `
-                    <g id="${shape.id}">
-                    <rect 
-                        id="${shape.id}" 
-                        style="display:${
-                          this.lastSelectedShape && this.lastSelectedShape.id === shape.id
-                            ? "initial"
-                            : "none"
-                        };" 
-                        x="${shape.x - 50}" 
-                        y="${shape.y - 50}" 
-                        height="${
-                          shape.lines === 0 || shape.lines === 1
-                            ? shape.fontSize * 4
-                            : shape.fontSize * 2 * shape.lines
-                        }"
-                        width="100" 
-                        fill="rgba(0,0,0,0)"
-                    />
-                    <text
-                    style="user-select:none; height:100px;"
-                    id="${shape.id}"
-                    x="${shape.x}"
-                    y="${shape.y}"
-                    text-anchor="${shape.textAlign}"
-                    font-size="${shape.fontSize}"
-                    fill="${shape.color}"
-                    font-weight="${shape.isBold ? "bold" : "normal"}"
-                    font-style="${shape.isItalic ? "italic" : "normal"}"
-                    text-decoration="${shape.isUnderline ? "underline" : "none"}"
-                    >
-                        ${content.join("")}
-                    </text>
-                    ${
-                      this.showCaret &&
-                      this.lastSelectedShape &&
-                      this.lastSelectedShape.id === shape.id
-                        ? this.computeCaretPosition(shape)
-                        : ""
-                    }
-                    ${this.includeDeleteButton(shape)}
-                    </g>
-                `;
-
-        case shape.textAlign === "end":
-          return `
-                <g id="${shape.id}">
-                    <rect 
-                        id="${shape.id}" 
-                        style="display:${
-                          this.lastSelectedShape && this.lastSelectedShape.id === shape.id
-                            ? "initial"
-                            : "none"
-                        };" 
-                        x="${shape.x - 100}" 
-                        y="${shape.y - 50}" 
-                        height="${
-                          shape.lines === 0 || shape.lines === 1
-                            ? shape.fontSize * 4
-                            : shape.fontSize * 2 * shape.lines
-                        }"
-                        width="100" 
-                        fill="rgba(0,0,0,0)"
-                    />
-                    <text
-                    style="user-select:none; height:100px;"
-                    id="${shape.id}"
-                    x="${shape.x}"
-                    y="${shape.y}"
-                    text-anchor="${shape.textAlign}"
-                    font-size="${shape.fontSize}"
-                    fill="${shape.color}"
-                    font-weight="${shape.isBold ? "bold" : "normal"}"
-                    font-style="${shape.isItalic ? "italic" : "normal"}"
-                    text-decoration="${shape.isUnderline ? "underline" : "none"}"
-                    >
-                        ${content.join("")}
-                    </text>
-                    ${
-                      this.showCaret &&
-                      this.lastSelectedShape &&
-                      this.lastSelectedShape.id === shape.id
-                        ? this.computeCaretPosition(shape)
-                        : ""
-                    }
-                    ${this.includeDeleteButton(shape)}
-                </g> 
-                `;
-
-        default:
-          return "";
-      }
-    },
-    copy(source) {
-      if (source === undefined || source === null) return source;
-      try {
-        // modern, safe deep clone
-        if (typeof structuredClone === 'function') return structuredClone(source);
-        return JSON.parse(JSON.stringify(source));
-      } catch {
-        // very safe fallback for simple objects/arrays
-        if (Array.isArray(source)) return source.map(v => this.copy(v));
-        if (typeof source === 'object') return Object.fromEntries(
-          Object.entries(source).map(([k, v]) => [k, this.copy(v)])
-        );
-        return source;
-      }
-    },
-    clickShape(e) {
-      const shapeId = e.target.id;
-      switch (true) {
-        case this.isDeleteMode:
-          this.history?.begin();
-          this.shapes = [...this.shapes].filter((shape) => shape.id !== shapeId);
-          this.lastSelectedShape = undefined;
-          this.history?.end();
-          return;
-
-        default:
-          this.lastSelectedShape = this.shapes.find((shape) => shape.id === shapeId);
-          break;
-      }
-    },
-    deleteEmptyTextElement() {
-      if (!this.lastSelectedShape || !this.lastSelectedShape.id.includes("text")) {
-        return;
-      }
-
-      if (this.lastSelectedShape.textContent === "") {
-        this.shapes = this.shapes.filter(
-          (shape) => shape.id !== this.lastSelectedShape.id
-        );
-        this.lastSelectedShape = this.shapes.at(-1);
-      }
-    },
-    drawUp(useShapeReference = false) {
-      if (!this.activeShape || !this.isDrawing) {
-        return;
-      }
-      this.currentPointer.end = {
-        x: this.pointerPosition.x,
-        y: this.pointerPosition.y,
-      };
-      let currentShape;
-      if (this.shapes.length > 0 && this.currentTarget) {
-        currentShape = [...this.shapes].find(
-          (shape) => shape.id === this.currentTarget.id
-        );
-      }
-
-      let a, b, distanceToPointer;
-      if (currentShape) {
-        a = currentShape.x - this.currentPointer.end.x;
-        b = currentShape.y - this.currentPointer.end.y;
-        distanceToPointer = Math.sqrt(a * a + b * b);
-      }
-
-      let Xmax, Xmin, Ymax, Ymin;
-      if (useShapeReference) {
-        Xmax = Math.max(this.currentPointer.end.x, currentShape.x);
-        Xmin = Math.min(this.currentPointer.end.x, currentShape.x);
-        Ymax = Math.max(this.currentPointer.end.y, currentShape.y);
-        Ymin = Math.min(this.currentPointer.end.y, currentShape.y);
-      } else {
-        Xmax = Math.max(this.currentPointer.end.x, this.currentPointer.start.x);
-        Xmin = Math.min(this.currentPointer.end.x, this.currentPointer.start.x);
-        Ymax = Math.max(this.currentPointer.end.y, this.currentPointer.start.y);
-        Ymin = Math.min(this.currentPointer.end.y, this.currentPointer.start.y);
-      }
-
-      switch (true) {
-          case this.activeShape === "arrow":
-            this.shapes.at(-1).endX = this.currentPointer.end.x;
-            this.shapes.at(-1).endY = this.currentPointer.end.y;
-            break;
-
-          case this.activeShape === "circle":
-            const offset = 20; // used to avoid shape shifting when resizing over another shape
-            this.shapes.at(-1).circleRadius = this.isDrawingNewShape
-              ? this.copy(Xmax - Xmin) + offset
-              : distanceToPointer + offset;
-            break;
-
-          case this.activeShape === "line":
-            this.shapes.at(
-              -1
-            ).path += ` ${this.pointerPosition.x} ${this.pointerPosition.y} `;
-            break;
-
-          case ["rect", "group"].includes(this.activeShape):
-            const minRectSize = 20;
-            this.shapes.at(-1).rectWidth =
-              this.copy(this.currentPointer.end.x - this.shapes.at(-1).x) > 0
-                ? this.copy(this.currentPointer.end.x - this.shapes.at(-1).x)
-                : minRectSize;
-            this.shapes.at(-1).rectHeight =
-              this.copy(this.currentPointer.end.y - this.shapes.at(-1).y) > 0
-                ? this.copy(this.currentPointer.end.y - this.shapes.at(-1).y)
-                : minRectSize;
-
-          default:
-            break;
-        }
-    },
-    drawDown() {
-      this.isDrawing = true;
-      if (!this.activeShape && !this.isSelectMode) {
-        return;
-      }
-
-      if (!this.isDrawing) {
-        return;
-      }
-
-      this.isDrawingNewShape = true;
-
-      this.currentPointer.start = {
-        x: this.pointerPosition.x,
-        y: this.pointerPosition.y,
-      };
-      let id = `${this.isSelectMode ? "group" : this.activeShape}_${
-        Math.random() * 10000
-      }_${Date.now()}`;
-
-      switch (true) {
-        case this.activeShape === "arrow":
-          this.shapes.push({
-            id,
-            x: this.pointerPosition.x,
-            y: this.pointerPosition.y,
-            endX: this.pointerPosition.x,
-            endY: this.pointerPosition.y,
-            type: this.activeShape,
-            color: this.copy(this.selectedColor),
-            strokeWidth: this.copy(Math.abs(this.strokeSize)),
-            isDash: this.copy(this.isDash),
-          });
-          this.lastSelectedShape = this.shapes.at(-1);
-          break;
-
-        case this.activeShape === "circle":
-          this.shapes.push({
-            alpha: this.options.circle.filled ? this.colorTransparency : "",
-            id,
-            color: this.copy(this.selectedColor),
-            isFilled: this.copy(this.options.circle.filled),
-            circleRadius: this.copy(this.options.circle.radius),
-            circleStrokeWidth: this.copy(this.options.circle.strokeWidth),
-            type: this.activeShape,
-            x: this.pointerPosition.x,
-            y: this.pointerPosition.y,
-            strokeWidth: this.copy(Math.abs(this.strokeSize)),
-            isDash: this.copy(this.isDash),
-          });
-          this.lastSelectedShape = this.shapes.at(-1);
-          break;
-
-        case this.activeShape === "line":
-          this.shapes.push({
-            alpha: this.copy(this.colorTransparency),
-            id,
-            x: this.pointerPosition.x,
-            y: this.pointerPosition.y,
-            type: this.activeShape,
-            color: this.copy(this.selectedColor),
-            strokeWidth: this.copy(Math.abs(this.strokeSize)),
-            isDash: this.copy(this.isDash),
-            path: `${this.pointerPosition.x} ${this.pointerPosition.y}`,
-          });
-          this.lastSelectedShape = this.shapes.at(-1);
-          break;
-
-        case this.activeShape === "rect":
-          this.shapes.push({
-            alpha: this.options.rect.filled ? this.colorTransparency : "",
-            id,
-            color: this.copy(this.selectedColor),
-            isFilled: this.copy(this.options.rect.filled),
-            rectStrokeWidth: this.copy(this.options.rect.strokeWidth),
-            rectHeight: this.copy(this.options.rect.height),
-            rectWidth: this.copy(this.options.rect.width),
-            type: this.activeShape,
-            x: this.pointerPosition.x,
-            y: this.pointerPosition.y,
-            strokeWidth: this.copy(Math.abs(this.strokeSize)),
-            isDash: this.copy(this.isDash),
-          });
-          this.lastSelectedShape = this.shapes.at(-1);
-          break;
-
-        case this.activeShape === "group":
-          this.shapes.push({
-            alpha: 1,
-            id: `group_${Math.random() * 10000}_${Date.now()}`,
-            x: this.pointerPosition.x,
-            y: this.pointerPosition.y,
-            isFilled: false,
-            rectHeight: this.copy(this.options.rect.height),
-            rectWidth: this.copy(this.options.rect.width),
-            rectStrokeWidth: 1,
-            type: "group",
-            color: "grey",
-            strokeWidth: 1,
-            isDash: true,
-            content: "",
-          });
-          break;
-
-        default:
-          break;
-      }
-
-      if (!this._rafId) this._rafId = requestAnimationFrame(() => this._tickDraw());
-    },
-    move(shape) {
-      if (!shape || !shape.id || shape.type === "line") return;
-
-      if (!this.dragOffset) {
-        this.initDragOffset({ target: { id: shape.id } });
-        if (!this.dragOffset) return;
-      }
-
-      const { dx, dy, endDx, endDy } = this.dragOffset;
-      const px = this.pointerPosition.x;
-      const py = this.pointerPosition.y;
-
-      this.lastSelectedShape = shape;
-
-      switch (shape.type) {
-        case "arrow":
-          shape.x = px - dx;
-          shape.y = py - dy;
-          shape.endX = px - (endDx ?? dx);
-          shape.endY = py - (endDy ?? dy);
-          break;
-
-        case "circle":
-          shape.x = px - dx;
-          shape.y = py - dy;
-          break;
-
-        case "rect":
-          shape.x = px - dx;
-          shape.y = py - dy;
-          break;
-
-        case "text":
-          shape.x = px - dx;
-          shape.y = py - dy;
-          break;
-
-        case "group":
-          shape.x = px - dx;
-          shape.y = py - dy;
-          this.moveGroup(shape);
-          break;
-
-        default:
-          break;
-      }
-    },
-    moveDown() {
-      const id = this.currentTarget?.id || this.hoveredShapeId;
-      if (!id) return;
-      const shape = this.shapes.find(s => s.id === id);
-      if (!shape) return;
-      this.move(shape);
-    },
-    print() {
-      this.isPrinting = true;
-      this.isDeleteMode = false;
-      this.isMoveMode = false;
-      this.isResizeMode = false;
-      this.isTextMode = false;
-      this.isWriting = false;
-      this.isSelectMode = false;
-      this.activeShape = undefined;
-      this.showCaret = false;
-
-      this.$nextTick(async () => {
-        const wrapper = this.$refs.drawSvgContainer;
-        this.walkTheDOM(wrapper, (node) => {
-          if (node && node.nodeType === 1) {
-            node.setAttribute("font-family", "Helvetica");
-            node.style.fontFamily = "Helvetica";
-          }
-        });
-
-        try {
-          let JsPDF;
-          try {
-            JsPDF = (await import("jspdf")).default;
-          } catch (e) {
-            throw new Error("jspdf is not installed. Run npm install jspdf");
-          }
-
-          const pngDataUrl = await domToPng({
-            container: wrapper,
-            scale: 2,
-          });
-
-          const image = new Image();
-          image.src = pngDataUrl;
-
-          image.onload = () => {
-            const a4 = {
-              width: 595.28,
-              height: 841.89,
-            };
-
-            const contentWidth = image.width;
-            const contentHeight = image.height;
-            const pageHeight = (contentWidth / a4.width) * a4.height;
-
-            const imgWidth = a4.width;
-            const imgHeight = (imgWidth / contentWidth) * contentHeight;
-
-            const pdf = new JsPDF("", "pt", "a4");
-            let position = 0;
-            let leftHeight = contentHeight;
-
-            if (leftHeight < pageHeight) {
-              pdf.addImage(pngDataUrl, "PNG", 0, 0, imgWidth, imgHeight, "", "FAST");
-            } else {
-              while (leftHeight > 0) {
-                pdf.addImage(pngDataUrl, "PNG", 0, position, imgWidth, imgHeight, "", "FAST");
-                leftHeight -= pageHeight;
-                position -= a4.height;
-                if (leftHeight > 0) {
-                  pdf.addPage();
-                }
-              }
-            }
-
-            pdf.save(`${new Date().toLocaleDateString()}_annotations.pdf`);
-          };
-        } catch (err) {
-          console.error("Error generating image:", err);
-        } finally {
-          this.isPrinting = false;
-
-          this.walkTheDOM(wrapper, (node) => {
-            if (node && node.nodeType === 1) {
-              node.setAttribute("font-family", this.FINAL_CONFIG.style.fontFamily);
-              node.style.fontFamily = this.FINAL_CONFIG.style.fontFamily;
-            }
-          });
-        }
-      });
-    },
-    resetDraw(e) {
-      if (!this.isDeleteMode && e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      this.isDrawing = false;
-      this.isMouseDown = false;
-      this.dragOffset = null;
-
-      if (this.lastPointerId != null) {
-        try { this.$refs.mainSvg?.releasePointerCapture?.(this.lastPointerId); } catch {}
-        this.lastPointerId = null;
-      }
-
-      if (this._rafId) { cancelAnimationFrame(this._rafId); this._rafId = null; }
-
-      if (this.isSelectMode) this.groupShapes();
-      this.history?.end();
-    },
-    resize() {
-      this.isDrawingNewShape = false;
-      const shapeId = this.currentTarget.id;
-      if (!shapeId) {
-        return;
-      }
-      this.isDrawing = true;
-      const shape = this.shapes.find((shape) => shape.id === shapeId);
-      this.activeShape = shape.type;
-      this.shapes = this.shapes.filter((el) => el.id !== shapeId);
-      this.shapes.push(shape);
-      this.drawUp(true);
-    },
-    setFillOfSelectedRect() {
-      if (!this.lastSelectedShape || !this.lastSelectedShape.id.includes("rect")) {
-        return;
-      }
-      this.lastSelectedShape.isFilled = !this.lastSelectedShape.isFilled;
-    },
-    setFillOfSelectedCircle() {
-      if (!this.lastSelectedShape || !this.lastSelectedShape.id.includes("circle")) {
-        return;
-      }
-      this.lastSelectedShape.isFilled = !this.lastSelectedShape.isFilled;
-    },
-    setColorOfSelectedShape() {
-      if (!this.lastSelectedShape) {
-        return;
-      }
-
-      this.lastSelectedShape.color = this.copy(this.selectedColor);
-
-      if (["arrow", "text"].includes(this.lastSelectedShape.id)) {
-        return;
-      }
-
-      this.lastSelectedShape.alpha = this.copy(this.colorTransparency);
-    },
-    setSelectedShapeToDash() {
-      if (!this.lastSelectedShape || this.lastSelectedShape.type === "text") {
-        return;
-      }
-      this.lastSelectedShape.isDash = this.copy(this.isDash);
-    },
-    setTransparencyOfSelectedShape() {
-      if (
-        !this.lastSelectedShape ||
-        ["arrow", "text"].includes(this.lastSelectedShape.id)
-      ) {
-        return;
-      }
-      this.lastSelectedShape.alpha = this.copy(this.colorTransparency);
-    },
-    setStrokeWidthOfSelectedShape() {
-      if (
-        !this.lastSelectedShape ||
-        !["arrow", "circle", "rect", "line"].includes(this.lastSelectedShape.type)
-      ) {
-        return;
-      }
-      this.lastSelectedShape.strokeWidth = this.copy(Math.abs(this.strokeSize));
-    },
-    setCurrentStyleOfSelectedText() {
-      if (!this.lastSelectedShape || this.lastSelectedShape.type !== "text") {
-        return;
-      }
-      this.lastSelectedShape.isBold = this.copy(this.isBold);
-      this.lastSelectedShape.isItalic = this.copy(this.isItalic);
-      this.lastSelectedShape.isUnderline = this.copy(this.isUnderline);
-      this.lastSelectedShape.fontSize = this.copy(this.textFont);
-      this.lastSelectedShape.isBulletTextMode = this.copy(this.isBulletTextMode);
-    },
-    setPointer(e) {
-      e.preventDefault();
-      const mainSvg = this.$refs.mainSvg;
-      const rect = mainSvg.getBoundingClientRect();
-      let clientX, clientY;
-
-      if (e.touches && e.touches.length > 0) {
-        // Use the first touch if available
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else {
-        // Fall back to mouse event properties
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-
-      this.pointerPosition.x = ((clientX - rect.left) / rect.width) * this.svgWidth;
-      this.pointerPosition.y = ((clientY - rect.top) / rect.height) * this.svgHeight;
-    },
-    setShapeTo(shape) {
-      this.showCaret = false;
-      this.deleteEmptyTextElement();
-      if (shape === this.activeShape) {
-        this.activeShape = undefined;
-        this.isDrawMode = false;
-
-        return;
-      }
-      this.isDrawMode = true;
-      this.isDeleteMode = false;
-      this.isMoveMode = false;
-      this.isResizeMode = false;
-      this.isTextMode = false;
-      this.activeShape = shape;
-    },
-    toggleSummary() {
-      this.isSummaryOpen = !this.isSummaryOpen;
-      if (!this.isSummaryOpen) {
-        this.isMoveMode = false;
-        this.isResizeMode = false;
-        this.isTextMode = false;
-        this.isWriting = false;
-        this.activeShape = undefined;
-        this.showCaret = false;
-        this.isDeleteMode = false;
-        this.isWriting = false;
-      }
-      this.$emit("toggleOpenState", { isOpen: this.isSummaryOpen });
-    },
-    walkTheDOM(node, func) {
-      func(node);
-      node = node.firstChild;
-      while (node) {
-        this.walkTheDOM(node, func);
-        node = node.nextSibling;
-      }
-    },
-    save() {
-        this.$emit("saveAnnotations", {
-            shapes: this.shapes,
-            lastSelectedShape: this.lastSelectedShape
-        })
-    }
-  },
-};
+  });
+
+  myObserver.observe(slottedSvg.value);
+
+  ONKEYDOWN.value = (e) => write(e);
+  window.addEventListener("keydown", ONKEYDOWN.value);
+  history.value = makeHistory();
+
+  if (history.value.size) {
+    const s = history.value.size();
+    HISTORY_SIZE.value.undo = s.undo;
+    HISTORY_SIZE.value.redo = s.redo;
+  }
+
+  UNREGISTER_SHORTCUTS = registerAnnotatorShortcuts({
+    isMacLike,
+    isSummaryOpen,
+    isWriting,
+    isDeleteMode,
+    isMoveMode,
+    isResizeMode,
+    isSelectMode,
+    isDrawMode,
+    isTextMode,
+    activeShape,
+    showCaret,
+    lastSelectedShape,
+    shapes,
+    history,
+    setShapeTo,
+    undoLastShape,
+    redoLastShape,
+  });
+});
+
+onBeforeUnmount(() => {
+  hideTooltip();
+  if (RAF_ID.value) cancelAnimationFrame(RAF_ID.value);
+  if (ONKEYDOWN.value) window.removeEventListener("keydown", ONKEYDOWN.value);
+  UNREGISTER_SHORTCUTS && UNREGISTER_SHORTCUTS();
+  window.removeEventListener("keydown", write);
+})
+
+watch(shapes, (newVal) => {
+  if (newVal.length === 0) {
+    lastSelectedShape.value = undefined;
+  }
+});
+
+watch(isTextMode, (bool) => {
+  showCaret.value = bool;
+});
 </script>
 
 <style lang="scss" scoped>
