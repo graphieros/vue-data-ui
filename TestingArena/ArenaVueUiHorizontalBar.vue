@@ -147,6 +147,9 @@ const model = createModel([
     TEXT("style.fontFamily", { def: "inherit" }),
     COLOR("style.chart.backgroundColor", { def: "#FFFFFF" }),
     COLOR("style.chart.color", { def: "#1A1A1A" }),
+
+    COLOR('style.chart.layout.bars.rowColor', { def: '#E1E5E8'}),
+    NUMBER('style.chart.layout.bars.rowRadius', { def: 4}),
     SELECT("style.chart.layout.bars.sort", ["asc", "desc", "none"], { def: "desc" }),
     CHECKBOX("style.chart.layout.bars.useStroke", { def: false }),
     NUMBER("style.chart.layout.bars.strokeWidth", { def: 2, min: 0, max: 12 }),

@@ -5727,6 +5727,8 @@ declare module "vue-data-ui" {
                 height?: number;
                 layout?: {
                     bars?: {
+                        rowColor?: string | null;
+                        rowRadius?: number;
                         sort?: "desc" | "asc" | "none";
                         useStroke?: boolean;
                         strokeWidth?: number;
@@ -5811,7 +5813,7 @@ declare module "vue-data-ui" {
                 };
             };
         };
-        userOptions?: ChartUserOptions;
+        userOptions?: ChartUserOptions<Array<VueUiHorizontalBarDatapoint>, VueUiHorizontalBarConfig & { [key: string ]: unknown }>;
         table?: {
             show?: boolean;
             useDialog?: boolean;
@@ -5851,7 +5853,7 @@ declare module "vue-data-ui" {
         value: number;
     };
 
-    export type VueUiHorizontalBarDatapoint = VueUiVerticalBarDatapoint; // v3 renaming
+    export type VueUiHorizontalBarDatapoint = VueUiVerticalBarDatapoint & { [key: string]: unknown }; // v3 renaming
 
     export type VueUiVerticalBarSerie = {
         children: VueUiVerticalBarDatapoint[] | VueUiHorizontalBarDatapoint[];

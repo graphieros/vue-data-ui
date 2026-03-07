@@ -2200,6 +2200,8 @@ export function useConfig(options = {}) {
                 height: 316,
                 layout: {
                     bars: {
+                        rowColor: null,
+                        rowRadius: 4,
                         sort: SORT.DESC,
                         useStroke: false,
                         strokeWidth: 2,

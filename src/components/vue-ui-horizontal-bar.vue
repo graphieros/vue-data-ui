@@ -774,7 +774,7 @@ const max = computed(() => {
 
 function calcBarWidth(val) {
     const ratio = val / max.value;
-    return (drawingArea.value.width / (hasNegative.value ? 2 : 1)) * ratio;
+    return checkNaN((drawingArea.value.width / (hasNegative.value ? 2 : 1)) * ratio);
 }
 
 function calcDataLabelX(val) {
@@ -1505,6 +1505,21 @@ defineExpose({
                         }" />
                     </defs>
                 </g>
+
+                <template v-if="FINAL_CONFIG.style.chart.layout.bars.rowColor">
+                    <g v-for="(_, i) in bars">
+                        <!-- BAR GUTTERS -->
+                        <rect 
+                            :x="0" 
+                            :y="drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight"
+                            :width="WIDTH" 
+                            :height="barHeight <= 0 ? 0.0001 : barHeight"
+                            :fill="FINAL_CONFIG.style.chart.layout.bars.rowColor"
+                            :rx="FINAL_CONFIG.style.chart.layout.bars.rowRadius"
+                            :style="{ pointerEvents: 'none' }" 
+                        />
+                    </g>
+                </template>
 
                 <g v-for="(serie, i) in bars">
                     <!-- UNDERLAYER -->
