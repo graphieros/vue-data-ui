@@ -5838,6 +5838,7 @@ declare module "vue-data-ui" {
     export type VueUiHorizontalBarConfig = VueUiVerticalBarConfig; // v3 renaming;
 
     export type VueUiVerticalBarDatapoint = {
+        [key: string]: unknown;
         children?: Array<any>;
         childIndex?: number;
         hasChildren?: boolean;
