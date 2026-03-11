@@ -1628,6 +1628,7 @@ declare module "vue-data-ui" {
         | "mu"
         | "network"
         | "nineToZero"
+        | "npmx"
         | "numbers"
         | "palette"
         | "pause"
