@@ -1820,6 +1820,73 @@ function isPlotAlone(plotSeries, index) {
 /                                 DATAPOINTS COMPUTING                                     /
 /******************************************************************************************/
 
+function getSerieVerticalGeometry({
+    datapoint,
+    totalSeries,
+    gap,
+    usableHeight,
+    autoScaleValueMin,
+    autoScaleValueMax,
+    individualExtremes,
+    forceExactScale = false
+}) {
+    const scaleSteps = datapoint.scaleSteps || FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps;
+    const corrector = 1.0000001;
+
+    const scaleBuilder = forceExactScale || !FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale
+        ? calculateNiceScaleWithExactExtremes
+        : calculateNiceScale;
+
+    const safeIndividualMax = individualExtremes.max === individualExtremes.min
+        ? individualExtremes.max * corrector
+        : individualExtremes.max;
+
+    const safeAutoScaleMax = autoScaleValueMax === autoScaleValueMin
+        ? autoScaleValueMax * corrector
+        : autoScaleValueMax;
+
+    const individualScale = scaleBuilder(
+        individualExtremes.min,
+        safeIndividualMax,
+        scaleSteps
+    );
+
+    const autoScaleSteps = scaleBuilder(
+        autoScaleValueMin,
+        safeAutoScaleMax,
+        scaleSteps
+    );
+
+    const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
+    const autoScaleZero = 0;
+
+    const individualMax = individualScale.max + Math.abs(individualZero);
+    const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
+
+    const origIdx = datapoint.stackIndex;
+    const flippedIdx = totalSeries - 1 - origIdx;
+    const flippedLowerRatio = mutableConfig.value.isStacked ? 1 - datapoint.cumulatedStackRatio : 0;
+    const yOffset = mutableConfig.value.isStacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
+    const individualHeight = mutableConfig.value.isStacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
+
+    const zeroPosition = drawingArea.value?.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
+    const autoScaleZeroPosition = drawingArea.value?.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+
+    return {
+        scaleSteps,
+        individualScale,
+        autoScaleSteps,
+        individualZero,
+        autoScaleZero,
+        individualMax,
+        autoScaleMax,
+        yOffset,
+        individualHeight,
+        zeroPosition,
+        autoScaleZeroPosition
+    };
+}
+
 const barSet = computed(() => {
     const stackSeries = activeSeriesWithStackRatios.value
         .filter(s => ['bar', 'line', 'plot'].includes(s.type));
@@ -1847,28 +1914,26 @@ const barSet = computed(() => {
             max: datapoint.scaleMax || Math.max(...datapoint.absoluteValues) || 1,
             min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues.filter(v => ![undefined, null].includes(v))) > 0 ? 0 : Math.min(...datapoint.absoluteValues.filter(v => ![null, undefined].includes(v)))
         };
-        const scaleSteps = datapoint.scaleSteps || FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps;
 
-        const corrector = 1.0000001;
-
-        const individualScale = FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
-
-        const autoScaleSteps = FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
-
-        const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
-        const autoScaleZero = 0;
-
-        const individualMax = individualScale.max + individualZero;
-        const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
-
-        const origIdx = datapoint.stackIndex;
-        const flippedIdx = totalSeries - 1 - origIdx;
-        const flippedLowerRatio = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
-        const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
-        const individualHeight = stacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
-
-        const zeroPosition = drawingArea.value?.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
-        const autoScaleZeroPosition = drawingArea.value?.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+        const {
+            individualScale,
+            autoScaleSteps,
+            individualZero,
+            individualMax,
+            autoScaleMax,
+            yOffset,
+            individualHeight,
+            zeroPosition,
+            autoScaleZeroPosition
+        } = getSerieVerticalGeometry({
+            datapoint,
+            totalSeries,
+            gap,
+            usableHeight,
+            autoScaleValueMin: autoScale.valueMin,
+            autoScaleValueMax: autoScale.valueMax,
+            individualExtremes
+        });
 
         const barLen = absoluteDataset.value.filter(ds => ds.type === 'bar').filter(s => !segregatedSeries.value.includes(s.id)).length;
 
@@ -1998,29 +2063,25 @@ const lineSet = computed(() => {
             min: datapoint.scaleMin || (Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues))
         };
 
-        const scaleSteps = datapoint.scaleSteps || FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps
-
-        const corrector = 1.0000001;
-
-        const individualScale = FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps) : calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
-
-        const autoScaleSteps = FINAL_CONFIG.value.chart.grid.labels.yAxis.useNiceScale ? calculateNiceScale(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps) : calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
-
-        const individualZero = (individualScale.min >= 0 ? 0 : Math.abs(individualScale.min));
-        const autoScaleZero = 0;
-
-        const individualMax = individualScale.max + Math.abs(individualZero);
-        const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
-
-        const origIdx = datapoint.stackIndex;
-        const flippedIdx = totalSeries - 1 - origIdx;
-        const flippedLowerRatio = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
-        const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
-        const individualHeight = stacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
-
-        const zeroPosition = drawingArea.value?.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
-
-        const autoScaleZeroPosition = drawingArea.value?.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+        const {
+            individualScale,
+            autoScaleSteps,
+            individualZero,
+            individualMax,
+            autoScaleMax,
+            yOffset,
+            individualHeight,
+            zeroPosition,
+            autoScaleZeroPosition
+        } = getSerieVerticalGeometry({
+            datapoint,
+            totalSeries,
+            gap,
+            usableHeight,
+            autoScaleValueMin: autoScale.valueMin,
+            autoScaleValueMax: autoScale.valueMax,
+            individualExtremes
+        });
 
         const plots = datapoint.series.map((plot, j) => {
             const yRatio = mutableConfig.value.useIndividualScale
@@ -2208,28 +2269,26 @@ const plotSet = computed(() => {
             min: datapoint.scaleMin || Math.min(...datapoint.absoluteValues) > 0 ? 0 : Math.min(...datapoint.absoluteValues)
         };
 
-        const scaleSteps = datapoint.scaleSteps || FINAL_CONFIG.value.chart.grid.labels.yAxis.commonScaleSteps;
-
-        const corrector = 1.0000001;
-
-        const individualScale = calculateNiceScaleWithExactExtremes(individualExtremes.min, individualExtremes.max === individualExtremes.min ? individualExtremes.max * corrector : individualExtremes.max, scaleSteps);
-
-        const autoScaleSteps = calculateNiceScaleWithExactExtremes(autoScale.valueMin, autoScale.valueMax === autoScale.valueMin ? autoScale.valueMax * corrector : autoScale.valueMax, scaleSteps);
-
-        const individualZero = individualScale.min >= 0 ? 0 : Math.abs(individualScale.min);
-        const autoScaleZero = 0;
-
-        const individualMax = individualScale.max + individualZero;
-        const autoScaleMax = autoScaleSteps.max + Math.abs(autoScaleZero);
-
-        const origIdx = datapoint.stackIndex;
-        const flippedIdx = totalSeries - 1 - origIdx;
-        const flippedLowerRatio = stacked ? 1 - datapoint.cumulatedStackRatio : 0;
-        const yOffset = stacked ? usableHeight * flippedLowerRatio + gap * flippedIdx : 0;
-        const individualHeight = stacked ? usableHeight * datapoint.stackRatio : drawingArea.value.height;
-
-        const zeroPosition = drawingArea.value?.bottom - yOffset - ((individualHeight) * individualZero / individualMax);
-        const autoScaleZeroPosition = drawingArea.value?.bottom - yOffset - (individualHeight * autoScaleZero / autoScaleMax);
+        const {
+            individualScale,
+            autoScaleSteps,
+            individualZero,
+            individualMax,
+            autoScaleMax,
+            yOffset,
+            individualHeight,
+            zeroPosition,
+            autoScaleZeroPosition
+        } = getSerieVerticalGeometry({
+            datapoint,
+            totalSeries,
+            gap,
+            usableHeight,
+            autoScaleValueMin: autoScale.valueMin,
+            autoScaleValueMax: autoScale.valueMax,
+            individualExtremes,
+            forceExactScale: true
+        });
 
         const plots = datapoint.series.map((plot, j) => {
             const yRatio = mutableConfig.value.useIndividualScale ? ((datapoint.absoluteValues[j] + Math.abs(individualZero)) / individualMax) : ratioToMax(plot)
