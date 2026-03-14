@@ -654,6 +654,19 @@ watch(
     }
 );
 
+function onEscapeKeydown(event) {
+    if (event.key !== 'Escape') return;
+    if (!rootRef.value) return;
+    if (!rootRef.value.contains(document.activeElement)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    close();
+    triggerRef.value?.focus();
+}
+
+
 onMounted(() => {
     window.addEventListener('pointerdown', onGlobalPointerDown, true);
 
@@ -692,6 +705,7 @@ onBeforeUnmount(() => {
         :style="`z-index: ${zIndex}; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; ${
             position === 'right' ? `right:${isFullscreen ? '12px': '0'}` : `left:${isFullscreen ? '12px' : '0'}`
         }; padding: 4px; background:transparent;`"
+        @keydown="onEscapeKeydown"
     >
         <div
             ref="triggerRef"
@@ -1125,6 +1139,7 @@ onBeforeUnmount(() => {
         data-dom-to-png-ignore
         class="vue-ui-user-options"
         :style="`z-index: ${zIndex}; height: 34px; position: ${isFullscreen ? 'fixed' : 'absolute'}; top: 0; ${position === 'right' ? `right:${isFullscreen ? '12px': '0'}` : `left:${isFullscreen ? '12px' : '0'}`}; padding: 4px; background:transparent;`"
+        @keydown="onEscapeKeydown"
     >
         <div
             ref="triggerRef"
