@@ -32,7 +32,17 @@ const props = defineProps({
 const emit = defineEmits(['clickMarker'])
 
 function handleClick(legend, i) {
+    if (!props.clickable) return
     emit('clickMarker', { legend, i })
+}
+
+function handleKeydown(event, legend, i) {
+    if (!props.clickable) return
+
+    if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        handleClick(legend, i)
+    }
 }
 </script>
 
@@ -50,16 +60,23 @@ function handleClick(legend, i) {
         <!-- For BaseLegendToggle -->
         <slot name="legendToggle"/>
         
-        <div v-for="(legend, i) in legendSet" :key="`legend_${i}`"
-            :class="{ 'vue-data-ui-legend-item': true, 'active': clickable && isCursorPointer }">
+        <div
+            v-for="(legend, i) in legendSet"
+            :key="`legend_${i}`"
+            :class="{ 'vue-data-ui-legend-item': true, 'active': clickable && isCursorPointer }"
+            :role="clickable ? 'button' : undefined"
+            :tabindex="clickable ? 0 : undefined"
+            @keydown="handleKeydown($event, legend, i)"
+        >
             <svg
                 data-cy="legend-marker"
-                v-if="legend.shape" 
-                @click="handleClick(legend, i)" 
-                height="1em" 
+                v-if="legend.shape"
+                @click="handleClick(legend, i)"
+                height="1em"
                 width="1em"
                 :viewBox="legend.shape && legend.shape === 'star' ? '-10 -10 80 80' : '0 0 60 60'"
                 :style="`overflow: visible; opacity:${legend.opacity}`"
+                aria-hidden="true"
             >
                 <Shape 
                     stroke="none"
@@ -110,5 +127,10 @@ function handleClick(legend, i) {
 
 .active {
     cursor: pointer;
+}
+
+.vue-data-ui-legend-item:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
 }
 </style>
