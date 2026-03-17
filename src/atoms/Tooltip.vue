@@ -85,6 +85,14 @@ const props = defineProps({
     smoothSnapThreshold: {
         type: Number,
         default: 0.25
+    },
+    isA11yMode: {
+        type: Boolean,
+        default: false
+    },
+    a11yPosition: {
+        type: Object,
+        default: null
     }
 });
 
@@ -171,6 +179,7 @@ function getScaleFromTransform(el) {
 }
 
 function placeTooltip({ x: _x, y: _y }) {
+    if (props.isA11yMode) return;
     x.value = _x;
     y.value = _y;
 }
@@ -257,17 +266,42 @@ onUnmounted(() => {
     cancelAnimation();
 });
 
+const effectiveClientPosition = computed(() => {
+    if (
+        props.isA11yMode &&
+        props.a11yPosition &&
+        typeof props.a11yPosition.x === 'number' &&
+        typeof props.a11yPosition.y === 'number'
+    ) {
+        return {
+            x: props.a11yPosition.x,
+            y: props.a11yPosition.y
+        };
+    }
+
+    return {
+        x: displayPosition.value.x,
+        y: displayPosition.value.y
+    };
+});
+
 // Match the coordinate system used by the tooltip positioning logic
 // to keep the tooltip aligned with the cursor inside transformed dialogs
 const normalizedClientPosition = computed(() => {
     const cbRect = cbRectSnapshot.value;
-    if (!cbRect) return { x: displayPosition.value.x, y: displayPosition.value.y };
+
+    if (!cbRect) {
+        return {
+            x: effectiveClientPosition.value.x,
+            y: effectiveClientPosition.value.y
+        };
+    }
 
     const { scaleX, scaleY } = cbScaleSnapshot.value;
 
     return {
-        x: (displayPosition.value.x - cbRect.left) / scaleX,
-        y: (displayPosition.value.y - cbRect.top) / scaleY
+        x: (effectiveClientPosition.value.x - cbRect.left) / scaleX,
+        y: (effectiveClientPosition.value.y - cbRect.top) / scaleY
     };
 });
 
