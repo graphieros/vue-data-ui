@@ -46,6 +46,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_onion.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -98,6 +99,11 @@ const readyTeleport = ref(false);
 const tableUnit = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -608,7 +614,7 @@ const dataTable = computed(() => {
 
     const body = mutableDataset.value.map(ds => {
         return [
-            `<span style="color:${ds.color}">⬤</span> ${ds.name}`,
+            `<span style="color:${ds.color}" aria-hidden="true">⬤</span> ${ds.name}`,
             `${Number(ds.percentage ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingPercentage).toLocaleString()}%`,
             `${ds.prefix || ''}${![null, undefined, NaN, 'NaN'].includes(ds.value) ? (ds.value.toFixed(FINAL_CONFIG.value.table.td.roundingValue)).toLocaleString() : '-'}${ds.suffix || ''}`
         ]
@@ -664,6 +670,8 @@ function onTrapClick({ datapoint }) {
 function onTrapLeave({ datapoint }) {
     selectedSerie.value = undefined;
     isTooltip.value = false;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.absoluteIndex });
     }
@@ -715,10 +723,13 @@ function onionLabel(onion, i) {
 
 const dataTooltipSlot = ref(null);
 
-function useTooltip({ datapoint, seriesIndex, show = true }) {
+function useTooltip({ datapoint, seriesIndex, show = true, triggerMode = 'pointer' }) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.absoluteIndex });
     }
+
+    tooltipTriggerMode.value = triggerMode;
+    activeTooltipIndex.value = seriesIndex;
 
     const absoluteIndex = datapoint.absoluteIndex;
     selectedSerie.value = seriesIndex;
@@ -921,6 +932,110 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+    selectedSerie.value = undefined;
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!mutableDataset.value.length) return;
+
+    const isPreviousKey = event.key === 'ArrowLeft';
+    const isNextKey = event.key === 'ArrowRight';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activeTooltipIndex.value = null;
+        tooltipTriggerMode.value = 'pointer';
+        isTooltip.value = false;
+        selectedSerie.value = undefined;
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+
+        const onion = mutableDataset.value[activeTooltipIndex.value];
+        if (!onion) return;
+
+        onTrapClick({ datapoint: onion });
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= mutableDataset.value.length) {
+        nextIndex = isNextKey ? 0 : mutableDataset.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= mutableDataset.value.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = mutableDataset.value.length - 1;
+        }
+    }
+
+    const onion = mutableDataset.value[nextIndex];
+    if (!onion) return;
+
+    setKeyboardTooltipPositionFromSeriesIndex(nextIndex);
+    useTooltip({
+        datapoint: onion,
+        seriesIndex: nextIndex,
+        show: true,
+        triggerMode: 'keyboard'
+    });
+}
+
+function setKeyboardTooltipPositionFromSeriesIndex(seriesIndex) {
+    if (!Number.isFinite(seriesIndex)) return;
+    if (!svgRef.value) return;
+
+    const onion = mutableDataset.value[seriesIndex];
+    if (!onion) return;
+
+    const radius = onion.radius;
+    const angle = Math.PI * 7 / 4;
+
+    const svgX = drawableArea.value.centerX + radius * Math.cos(angle);
+    const svgY = drawableArea.value.centerY + radius * Math.sin(angle);
+
+    const box = svgRef.value.getBoundingClientRect();
+
+    tooltipA11yPosition.value = {
+        x: box.left + (svgX / svg.value.width) * box.width,
+        y: box.top + (svgY / svg.value.height) * box.height
+    };
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = dataTable.value?.body ?? [];
+    return { headers, rows };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -947,6 +1062,20 @@ defineExpose({
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
     >
+        <!-- A11Y -->
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1076,93 +1205,49 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'resizing': resizing }"
-            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.width <= 0 ? 10 : svg.width"
-                :height="svg.height <= 0 ? 10 : svg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position:relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'resizing': resizing }"
+                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-
-            <!-- GUTTERS -->
-            <circle 
-                v-for="(onion, i) in mutableDataset" 
-                data-cy="onion-gutter"
-                :cx="drawableArea.centerX" 
-                :cy="drawableArea.centerY" 
-                :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
-                :stroke="FINAL_CONFIG.style.chart.layout.gutter.color" 
-                :stroke-width="onionSkin.gutter" 
-                fill="none"
-                :stroke-dasharray="onion.path.bgDashArray"
-                :stroke-dashoffset="onion.path.fullOffset"
-                stroke-linecap="round"
-                :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
-                :style="{
-                    transform: 'rotate(-90deg)',
-                    transformOrigin: '50% 50%',
-                    transition: resizing || loading ? 'none' : 'all 0.3s ease-in-out !important',
-                    animation: resizing || loading ? 'none' : 'xyAnimation 0.5s ease-in'
-                }"
-            />
-            
-            <!-- TRACKS -->
-            <circle 
-                data-cy="onion-track"
-                v-for="(onion, i) in mutableDataset" 
-                :cx="drawableArea.centerX" 
-                :cy="drawableArea.centerY" 
-                :r="onion.radius < 0 ? 0.0001 : onion.radius" 
-                :stroke="`${onion.color}`" 
-                :stroke-width="onionSkin.track" 
-                fill="none"
-                :stroke-dasharray="onion.path.dashArray"
-                :stroke-dashoffset="onion.path.dashOffset"
-                :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
-                stroke-linecap="round"
-                :style="{
-                    transform: 'rotate(-90deg)',
-                    transformOrigin: '50% 50%',
-                    transition: resizing || loading ? 'none' : 'all 0.3s ease-in-out !important',
-                    animation: resizing || loading ? 'none' : 'xyAnimation 0.5s ease-in'
-                }"
-            />
-
-            <!-- GRADIENT -->
-            <defs>
-                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / FINAL_CONFIG.style.chart.gradientIntensity" />
-                </filter>
-            </defs>
-
-            <g :filter="`url(#blur_${uid})`" v-if="FINAL_CONFIG.style.chart.useGradient">
-                <circle
-                    data-cy="onion-gradient"
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="0"
+                    :y="0"
+                    :width="svg.width <= 0 ? 10 : svg.width"
+                    :height="svg.height <= 0 ? 10 : svg.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+    
+                <!-- GUTTERS -->
+                <circle 
                     v-for="(onion, i) in mutableDataset" 
+                    data-cy="onion-gutter"
                     :cx="drawableArea.centerX" 
                     :cy="drawableArea.centerY" 
                     :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
-                    :stroke="`white`" 
-                    :stroke-width="onionSkin.track / 3" 
+                    :stroke="FINAL_CONFIG.style.chart.layout.gutter.color" 
+                    :stroke-width="onionSkin.gutter" 
                     fill="none"
+                    :stroke-dasharray="onion.path.bgDashArray"
+                    :stroke-dashoffset="onion.path.fullOffset"
                     stroke-linecap="round"
-                    :stroke-dasharray="onion.path.dashArray"
-                    :stroke-dashoffset="onion.path.dashOffset"
+                    :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
                     :style="{
                         transform: 'rotate(-90deg)',
                         transformOrigin: '50% 50%',
@@ -1170,69 +1255,126 @@ defineExpose({
                         animation: resizing || loading ? 'none' : 'xyAnimation 0.5s ease-in'
                     }"
                 />
-            </g>
-            
-            <!-- TOOLTIP TRAPS -->
-            <circle 
-                v-for="(onion, i) in mutableDataset" 
-                data-cy="tooltip-trap"
-                :data-cy="`onion-track-${i}`"
-                :cx="drawableArea.centerX" 
-                :cy="drawableArea.centerY" 
-                :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
-                stroke="transparent" 
-                :stroke-width="Math.max(onionSkin.track, onionSkin.gutter)" 
-                fill="none"
-                :stroke-dasharray="onion.path.bgDashArray"
-                :stroke-dashoffset="onion.path.fullOffset"
-                stroke-linecap="round"
-                class="vue-ui-onion-path"
-                :style="{
-                    transform: 'rotate(-90deg)',
-                    transformOrigin: '50% 50%',
-                }"
-                @mouseenter="useTooltip({
-                    datapoint: onion,
-                    show: true,
-                    seriesIndex: i,
-                })"
-                @mouseleave="onTrapLeave({ datapoint: onion })"
-                @click="onTrapClick({ datapoint: onion })"
-            />
-
-            <!-- LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.labels.show">
-                <g 
+                
+                <!-- TRACKS -->
+                <circle 
+                    data-cy="onion-track"
                     v-for="(onion, i) in mutableDataset" 
+                    :cx="drawableArea.centerX" 
+                    :cy="drawableArea.centerY" 
+                    :r="onion.radius < 0 ? 0.0001 : onion.radius" 
+                    :stroke="`${onion.color}`" 
+                    :stroke-width="onionSkin.track" 
+                    fill="none"
+                    :stroke-dasharray="onion.path.dashArray"
+                    :stroke-dashoffset="onion.path.dashOffset"
+                    :class="{'vue-ui-onion-path': true, 'vue-ui-onion-blur': FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie !== i}"
+                    stroke-linecap="round"
+                    :style="{
+                        transform: 'rotate(-90deg)',
+                        transformOrigin: '50% 50%',
+                        transition: resizing || loading ? 'none' : 'all 0.3s ease-in-out !important',
+                        animation: resizing || loading ? 'none' : 'xyAnimation 0.5s ease-in'
+                    }"
+                />
+    
+                <!-- GRADIENT -->
+                <defs>
+                    <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / FINAL_CONFIG.style.chart.gradientIntensity" />
+                    </filter>
+                </defs>
+    
+                <g :filter="`url(#blur_${uid})`" v-if="FINAL_CONFIG.style.chart.useGradient">
+                    <circle
+                        data-cy="onion-gradient"
+                        v-for="(onion, i) in mutableDataset" 
+                        :cx="drawableArea.centerX" 
+                        :cy="drawableArea.centerY" 
+                        :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
+                        :stroke="`white`" 
+                        :stroke-width="onionSkin.track / 3" 
+                        fill="none"
+                        stroke-linecap="round"
+                        :stroke-dasharray="onion.path.dashArray"
+                        :stroke-dashoffset="onion.path.dashOffset"
+                        :style="{
+                            transform: 'rotate(-90deg)',
+                            transformOrigin: '50% 50%',
+                            transition: resizing || loading ? 'none' : 'all 0.3s ease-in-out !important',
+                            animation: resizing || loading ? 'none' : 'xyAnimation 0.5s ease-in'
+                        }"
+                    />
+                </g>
+                
+                <!-- TOOLTIP TRAPS -->
+                <circle 
+                    v-for="(onion, i) in mutableDataset" 
+                    data-cy="tooltip-trap"
+                    :data-cy="`onion-track-${i}`"
+                    :cx="drawableArea.centerX" 
+                    :cy="drawableArea.centerY" 
+                    :r="onion.radius <= 0 ? 0.0001 : onion.radius" 
+                    stroke="transparent" 
+                    :stroke-width="Math.max(onionSkin.track, onionSkin.gutter)" 
+                    fill="none"
+                    :stroke-dasharray="onion.path.bgDashArray"
+                    :stroke-dashoffset="onion.path.fullOffset"
+                    stroke-linecap="round"
+                    class="vue-ui-onion-path"
+                    :style="{
+                        transform: 'rotate(-90deg)',
+                        transformOrigin: '50% 50%',
+                    }"
                     @mouseenter="useTooltip({
                         datapoint: onion,
                         show: true,
                         seriesIndex: i,
+                        triggerMode: 'pointer'
                     })"
                     @mouseleave="onTrapLeave({ datapoint: onion })"
                     @click="onTrapClick({ datapoint: onion })"
-                >                
-                    <text
-                        class="vue-ui-onion-label"
-                        data-cy="onion-label"
-                        v-if="!segregated.includes(onion.id)"
-                        :x="svg.width / 2 - onionSkin.gutter * 0.8 + FINAL_CONFIG.style.chart.layout.labels.offsetX"
-                        :y="onion.labelY + FINAL_CONFIG.style.chart.layout.labels.offsetY"
-                        text-anchor="end"
-                        :font-size="FINAL_CONFIG.style.chart.layout.labels.fontSize"
-                        :fill="FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie === i ? onion.color:  FINAL_CONFIG.style.chart.layout.labels.color"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.labels.bold ? 'bold' : 'normal'"
-                    >
-                        {{ onionLabel(onion, i) }}
-                    </text>
+                />
+    
+                <!-- LABELS -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.labels.show">
+                    <g 
+                        v-for="(onion, i) in mutableDataset" 
+                        @mouseenter="useTooltip({
+                            datapoint: onion,
+                            show: true,
+                            seriesIndex: i,
+                            triggerMode: 'pointer'
+                        })"
+                        @mouseleave="onTrapLeave({ datapoint: onion })"
+                        @click="onTrapClick({ datapoint: onion })"
+                    >                
+                        <text
+                            class="vue-ui-onion-label"
+                            data-cy="onion-label"
+                            v-if="!segregated.includes(onion.id)"
+                            :x="svg.width / 2 - onionSkin.gutter * 0.8 + FINAL_CONFIG.style.chart.layout.labels.offsetX"
+                            :y="onion.labelY + FINAL_CONFIG.style.chart.layout.labels.offsetY"
+                            text-anchor="end"
+                            :font-size="FINAL_CONFIG.style.chart.layout.labels.fontSize"
+                            :fill="FINAL_CONFIG.useBlurOnHover && ![null, undefined].includes(selectedSerie) && selectedSerie === i ? onion.color:  FINAL_CONFIG.style.chart.layout.labels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.labels.bold ? 'bold' : 'normal'"
+                        >
+                            {{ onionLabel(onion, i) }}
+                        </text>
+                    </g>
                 </g>
-            </g>
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
+
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1298,6 +1440,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1422,5 +1566,27 @@ defineExpose({
 .vue-ui-onion-blur {
     filter: blur(3px) opacity(50%) grayscale(100%);
     transition: all 0.15s ease-in-out;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
