@@ -37,6 +37,7 @@ import {
     objectIsEmpty, 
     palette, 
     sumSeries, 
+    svgToClientCoords, 
     themePalettes, 
     treeShake, 
 } from "../lib";
@@ -60,6 +61,7 @@ import Shape from "../atoms/Shape.vue";
 import themes from "../themes/vue_ui_stackbar.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import SlicerPreview from "../atoms/SlicerPreview.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
@@ -140,6 +142,10 @@ const parentElement = shallowRef(null);
 const parentLayoutIsStable = ref(false);
 const parentLayoutStableRunSequence = ref(0);
 const pendingParentLayoutSequence = ref(0);
+
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
 
 const stableParentSize = useStableElementSize({
     elementRef: parentElement,
@@ -286,6 +292,8 @@ function onChartLeave() {
     setUserOptionsVisibility(false);
     emit('selectX', { seriesIndex: null, datapoint: null });
     trapIndex.value = null;
+    activeTooltipIndex.value = null;
+    isTooltip.value = false;
 }
 
 function prepareConfig() {
@@ -1320,8 +1328,11 @@ function onTrapLeave(i) {
         const datapoint = getDatapoint(i);
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: i + slicer.value.start });
     }
-    isTooltip.value = null;
+    isTooltip.value = false;
     trapIndex.value = null;
+    if (activeTooltipIndex.value === i) {
+        activeTooltipIndex.value = null;
+    }
 }
 
 const datapointsForSlicerCustomFormat = computed(() => {
@@ -1342,8 +1353,12 @@ watch(() => props.selectedXIndex, (v) => {
     }
 }, { immediate: true })
 
-function useTooltip(seriesIndex) {
+function useTooltip(seriesIndex, triggerMode = 'pointer') {
     if (allSegregated.value) return;
+
+    tooltipTriggerMode.value = triggerMode;
+
+    activeTooltipIndex.value = seriesIndex;
     trapIndex.value = seriesIndex;
     isTooltip.value = true;
 
@@ -1528,7 +1543,7 @@ const dataTable = computed(() => {
             return ds.series[i] ?? 0
         }).reduce((a,b ) => a + b, 0);
 
-        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ? timeLabels.value[i].text : i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue)));
+        body.push([FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[i] ? timeLabels.value[i]?.text : i+1].concat(formattedDataset.value.map(ds => (ds.series[i] ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue))).concat((sum ?? 0).toFixed(FINAL_CONFIG.value.table.td.roundingValue)));
     }
 
     const config = {
@@ -1931,6 +1946,121 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+const isFocus = ref(false);
+
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTooltipIndex.value = null;
+    isTooltip.value = false;
+    trapIndex.value = null;
+    emit('selectX', { seriesIndex: null, datapoint: null });
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (allSegregated.value) return;
+    if (!slicer.value.end && slicer.value.end !== 0) return;
+
+    const isVertical = FINAL_CONFIG.value.orientation === 'vertical';
+    const isHorizontal = FINAL_CONFIG.value.orientation === 'horizontal';
+
+    const isPreviousKey =
+        (isVertical && event.key === 'ArrowLeft') ||
+        (isHorizontal && event.key === 'ArrowUp');
+
+    const isNextKey =
+        (isVertical && event.key === 'ArrowRight') ||
+        (isHorizontal && event.key === 'ArrowDown');
+
+    const isActivationKey =
+        event.key === 'Enter' || event.key === ' ';
+
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    const slicerDiff = slicer.value.end - slicer.value.start;
+
+    if (slicerDiff <= 0) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activeTooltipIndex.value = null;
+        isTooltip.value = false;
+        trapIndex.value = null;
+        emit('selectX', { seriesIndex: null, datapoint: null });
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+        selectDatapoint(activeTooltipIndex.value);
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= slicerDiff) {
+        if (isNextKey) {
+            nextIndex = 0;
+        } else {
+            nextIndex = slicerDiff - 1;
+        }
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= slicerDiff) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = slicerDiff - 1;
+        }
+    }
+
+    activeTooltipIndex.value = nextIndex;
+    setKeyboardTooltipPositionFromIndex(nextIndex);
+    useTooltip(nextIndex, 'keyboard');
+}
+
+function setKeyboardTooltipPositionFromIndex(index) {
+    if (!Number.isFinite(index)) return;
+
+    let svgX;
+    let svgY;
+
+    if (FINAL_CONFIG.value.orientation === 'vertical') {
+        svgX = drawingArea.value.left + (index * barSlot.value) + barSlot.value / 2;
+        svgY = drawingArea.value.top + drawingArea.value.height / 2;
+    } else {
+        svgX = drawingArea.value.left + drawingArea.value.width / 2;
+        svgY = drawingArea.value.top + (index * barSlot.value) + barSlot.value / 2;
+    }
+
+    const coords = svgToClientCoords(svgX, svgY, svgRef.value);
+
+    if (!coords) return;
+
+    tooltipA11yPosition.value = coords;
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? []
+    const rows = dataTable.value?.body ?? []
+    return { headers, rows };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1959,6 +2089,20 @@ defineExpose({
         @mouseenter="onChartEnter" 
         @mouseleave="onChartLeave"
     >
+        <!-- A11Y -->
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -2086,172 +2230,163 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS"
-            :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`"
-            :class="{ 'vue-data-ui-loading' : loading }"
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="drawingArea.left"
-                :y="drawingArea.top"
-                :width="drawingArea.width <= 0 ? 10 : drawingArea.width"
-                :height="drawingArea.height <= 0 ? 10 : drawingArea.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position:relative">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`"
+                :class="{ 'vue-data-ui-loading' : loading }"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-            
-            <!-- GRADIENT DEFS -->
-            <defs v-if="FINAL_CONFIG.style.chart.bars.gradient.show">
-                <linearGradient v-for="(ds, i) in formattedDataset" :id="`gradient_${ds.id}`" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" :stop-color="ds.color"/>
-                    <stop offset="61.8%" :stop-color="lightenHexColor(ds.color, FINAL_CONFIG.style.chart.bars.gradient.intensity / 100)"/>
-                    <stop offset="100%" :stop-color="ds.color"/>
-                </linearGradient>
-            </defs>
-
-            <!-- FRAME -->
-            <rect 
-                data-cy="frame" 
-                v-if="FINAL_CONFIG.style.chart.grid.frame.show"
-                :style="{ pointerEvents: 'none', transition: 'none', animation: 'none !important' }"
-                :x="Math.max(0, drawingArea.left)" 
-                :y="Math.max(0, drawingArea.top)"
-                :width="Math.max(0, drawingArea.width)"
-                :height="Math.max(0, drawingArea.height)" 
-                fill="transparent"
-                :stroke="FINAL_CONFIG.style.chart.grid.frame.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.grid.frame.strokeWidth"
-                :stroke-linecap="FINAL_CONFIG.style.chart.grid.frame.strokeLinecap"
-                :stroke-linejoin="FINAL_CONFIG.style.chart.grid.frame.strokeLinejoin"
-                :stroke-dasharray="FINAL_CONFIG.style.chart.grid.frame.strokeDasharray" 
-            />
-
-            <!-- HORIZONTAL LINES (vertical mode) -->
-            <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines && FINAL_CONFIG.orientation === 'vertical'">
-                <line
-                    v-for="(yLabel, i) in yLabels"
-                    :x1="drawingArea.left"
-                    :x2="drawingArea.right"
-                    :y1="yLabel.y"
-                    :y2="yLabel.y"
-                    :stroke="FINAL_CONFIG.style.chart.grid.x.linesColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.grid.x.linesThickness"
-                    :stroke-dasharray="FINAL_CONFIG.style.chart.grid.x.linesStrokeDasharray"
-                    stroke-linecap="round"
-                />
-            </template>
-
-            <!-- HORIZONTAL LINES (horizontal mode) -->
-            <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines && FINAL_CONFIG.orientation === 'horizontal'">
-                <line
-                    v-for="(_, i) in (slicer.end - slicer.start + 1)"
-                    :x1="drawingArea.left"
-                    :x2="drawingArea.right"
-                    :y1="drawingArea.top + (barSlot * i)"
-                    :y2="drawingArea.top + (barSlot * i)"
-                    :stroke="FINAL_CONFIG.style.chart.grid.x.linesColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.grid.x.linesThickness"
-                    :stroke-dasharray="FINAL_CONFIG.style.chart.grid.x.linesStrokeDasharray"
-                    stroke-linecap="round"
-                />
-            </template>
-
-            <!-- VERTICAL LINES (vertical mode) -->
-            <template v-if="FINAL_CONFIG.style.chart.grid.y.showVerticalLines && FINAL_CONFIG.orientation === 'vertical'">
-                <line
-                    v-for="(_, i) in (slicer.end - slicer.start + 1)"
-                    :x1="drawingArea.left + (barSlot * i)"
-                    :x2="drawingArea.left + (barSlot * i)"
-                    :y1="drawingArea.top"
-                    :y2="drawingArea.bottom"
-                    :stroke="FINAL_CONFIG.style.chart.grid.y.linesColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.grid.y.linesThickness"
-                    :stroke-dasharray="FINAL_CONFIG.style.chart.grid.y.linesStrokeDasharray"
-                    stroke-linecap="round"
-                />
-            </template>
-
-            <!-- VERTICAL LINES (horizontal mode) -->
-            <template v-if="FINAL_CONFIG.style.chart.grid.y.showVerticalLines && FINAL_CONFIG.orientation === 'horizontal'">
-                <line
-                    v-for="(yLabel, i) in yLabels"
-                    :x1="yLabel.horizontal_x"
-                    :x2="yLabel.horizontal_x"
-                    :y1="drawingArea.top"
-                    :y2="drawingArea.bottom"
-                    :stroke="FINAL_CONFIG.style.chart.grid.y.linesColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.grid.y.linesThickness"
-                    :stroke-dasharray="FINAL_CONFIG.style.chart.grid.y.linesStrokeDasharray"
-                    stroke-linecap="round"
-                />
-            </template>
-
-            <g v-for="(dp, i) in formattedDataset">
-
-                <defs v-if="$slots.pattern">
-                    <slot name="pattern" v-bind="{ seriesIndex: dp.absoluteIndex, patternId: `pattern_${uid}_${dp.absoluteIndex}`}"/>
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="drawingArea.left"
+                    :y="drawingArea.top"
+                    :width="drawingArea.width <= 0 ? 10 : drawingArea.width"
+                    :height="drawingArea.height <= 0 ? 10 : drawingArea.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+                
+                <!-- GRADIENT DEFS -->
+                <defs v-if="FINAL_CONFIG.style.chart.bars.gradient.show">
+                    <linearGradient v-for="(ds, i) in formattedDataset" :id="`gradient_${ds.id}`" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" :stop-color="ds.color"/>
+                        <stop offset="61.8%" :stop-color="lightenHexColor(ds.color, FINAL_CONFIG.style.chart.bars.gradient.intensity / 100)"/>
+                        <stop offset="100%" :stop-color="ds.color"/>
+                    </linearGradient>
                 </defs>
-
-                <!-- STACKED BARS (vertical mode) -->
-                <template v-if="FINAL_CONFIG.orientation === 'vertical'">
-                    <rect 
-                        v-for="(rect, j) in dp.x"
-                        :x="rect"
-                        :y="forceValidValue(dp.y[j])"
-                        :height="dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0"
-                        :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
-                        :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
-                        :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
+    
+                <!-- FRAME -->
+                <rect 
+                    data-cy="frame" 
+                    v-if="FINAL_CONFIG.style.chart.grid.frame.show"
+                    :style="{ pointerEvents: 'none', transition: 'none', animation: 'none !important' }"
+                    :x="Math.max(0, drawingArea.left)" 
+                    :y="Math.max(0, drawingArea.top)"
+                    :width="Math.max(0, drawingArea.width)"
+                    :height="Math.max(0, drawingArea.height)" 
+                    fill="transparent"
+                    :stroke="FINAL_CONFIG.style.chart.grid.frame.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.frame.strokeWidth"
+                    :stroke-linecap="FINAL_CONFIG.style.chart.grid.frame.strokeLinecap"
+                    :stroke-linejoin="FINAL_CONFIG.style.chart.grid.frame.strokeLinejoin"
+                    :stroke-dasharray="FINAL_CONFIG.style.chart.grid.frame.strokeDasharray" 
+                />
+    
+                <!-- HORIZONTAL LINES (vertical mode) -->
+                <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines && FINAL_CONFIG.orientation === 'vertical'">
+                    <line
+                        v-for="(yLabel, i) in yLabels"
+                        :x1="drawingArea.left"
+                        :x2="drawingArea.right"
+                        :y1="yLabel.y"
+                        :y2="yLabel.y"
+                        :stroke="FINAL_CONFIG.style.chart.grid.x.linesColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.grid.x.linesThickness"
+                        :stroke-dasharray="FINAL_CONFIG.style.chart.grid.x.linesStrokeDasharray"
                         stroke-linecap="round"
-                        stroke-linejoin="round"
-                        :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
-                    />     
-                    <g v-if="$slots.pattern">
-                        <rect 
-                        v-for="(rect, j) in dp.x"
-                        :x="rect"
-                        :y="forceValidValue(dp.y[j])"
-                        :height="dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0"
-                        :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
-                        :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
-                        :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
-                    /> 
-                    </g>      
-                </template>
-
-                <!-- STACKED BARS (horizontal mode) -->
-                <template v-else>
-                    <rect 
-                        v-for="(rect, j) in dp.horizontal_x"
-                        :x="forceValidValue(rect, drawingArea.left)"
-                        :y="dp.horizontal_y[j] < 0 ? 0 : dp.horizontal_y[j]"
-                        :width="forceValidValue(dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j])"
-                        :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
-                        :height="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
-                        :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
                     />
-                    <g v-if="$slots.pattern">
+                </template>
+    
+                <!-- HORIZONTAL LINES (horizontal mode) -->
+                <template v-if="FINAL_CONFIG.style.chart.grid.x.showHorizontalLines && FINAL_CONFIG.orientation === 'horizontal'">
+                    <line
+                        v-for="(_, i) in (slicer.end - slicer.start + 1)"
+                        :x1="drawingArea.left"
+                        :x2="drawingArea.right"
+                        :y1="drawingArea.top + (barSlot * i)"
+                        :y2="drawingArea.top + (barSlot * i)"
+                        :stroke="FINAL_CONFIG.style.chart.grid.x.linesColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.grid.x.linesThickness"
+                        :stroke-dasharray="FINAL_CONFIG.style.chart.grid.x.linesStrokeDasharray"
+                        stroke-linecap="round"
+                    />
+                </template>
+    
+                <!-- VERTICAL LINES (vertical mode) -->
+                <template v-if="FINAL_CONFIG.style.chart.grid.y.showVerticalLines && FINAL_CONFIG.orientation === 'vertical'">
+                    <line
+                        v-for="(_, i) in (slicer.end - slicer.start + 1)"
+                        :x1="drawingArea.left + (barSlot * i)"
+                        :x2="drawingArea.left + (barSlot * i)"
+                        :y1="drawingArea.top"
+                        :y2="drawingArea.bottom"
+                        :stroke="FINAL_CONFIG.style.chart.grid.y.linesColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.grid.y.linesThickness"
+                        :stroke-dasharray="FINAL_CONFIG.style.chart.grid.y.linesStrokeDasharray"
+                        stroke-linecap="round"
+                    />
+                </template>
+    
+                <!-- VERTICAL LINES (horizontal mode) -->
+                <template v-if="FINAL_CONFIG.style.chart.grid.y.showVerticalLines && FINAL_CONFIG.orientation === 'horizontal'">
+                    <line
+                        v-for="(yLabel, i) in yLabels"
+                        :x1="yLabel.horizontal_x"
+                        :x2="yLabel.horizontal_x"
+                        :y1="drawingArea.top"
+                        :y2="drawingArea.bottom"
+                        :stroke="FINAL_CONFIG.style.chart.grid.y.linesColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.grid.y.linesThickness"
+                        :stroke-dasharray="FINAL_CONFIG.style.chart.grid.y.linesStrokeDasharray"
+                        stroke-linecap="round"
+                    />
+                </template>
+    
+                <g v-for="(dp, i) in formattedDataset">
+    
+                    <defs v-if="$slots.pattern">
+                        <slot name="pattern" v-bind="{ seriesIndex: dp.absoluteIndex, patternId: `pattern_${uid}_${dp.absoluteIndex}`}"/>
+                    </defs>
+    
+                    <!-- STACKED BARS (vertical mode) -->
+                    <template v-if="FINAL_CONFIG.orientation === 'vertical'">
+                        <rect 
+                            v-for="(rect, j) in dp.x"
+                            :x="rect"
+                            :y="forceValidValue(dp.y[j])"
+                            :height="dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0"
+                            :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
+                            :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
+                            :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
+                        />     
+                        <g v-if="$slots.pattern">
+                            <rect 
+                            v-for="(rect, j) in dp.x"
+                            :x="rect"
+                            :y="forceValidValue(dp.y[j])"
+                            :height="dp.height[j] < 0 ? 0.0001 : dp.height[j] || 0"
+                            :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
+                            :width="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
+                            :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
+                        /> 
+                        </g>      
+                    </template>
+    
+                    <!-- STACKED BARS (horizontal mode) -->
+                    <template v-else>
                         <rect 
                             v-for="(rect, j) in dp.horizontal_x"
                             :x="forceValidValue(rect, drawingArea.left)"
@@ -2259,417 +2394,437 @@ defineExpose({
                             :width="forceValidValue(dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j])"
                             :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
                             :height="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
-                            :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
+                            :fill="FINAL_CONFIG.style.chart.bars.gradient.show ? `url(#gradient_${dp.id})` : dp.color"
                             :stroke="FINAL_CONFIG.style.chart.backgroundColor"
                             :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
                         />
-                    </g>    
-                </template>
-            </g>
-
-            <!-- X AXIS -->
-            <line
-                data-cy="line-axis-x"
-                v-if="FINAL_CONFIG.style.chart.grid.x.showAxis"
-                :x1="drawingArea.left"
-                :x2="drawingArea.right"
-                :y1="drawingArea.bottom"
-                :y2="drawingArea.bottom"
-                :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
-                :stroke-width="FINAL_CONFIG.style.chart.grid.x.axisThickness"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-
-            <!-- Y AXIS -->
-            <line
-                data-cy="line-axis-y"
-                v-if="FINAL_CONFIG.style.chart.grid.y.showAxis && !FINAL_CONFIG.style.chart.bars.distributed"
-                :x1="drawingArea.left"
-                :x2="drawingArea.left"
-                :y1="drawingArea.top"
-                :y2="drawingArea.bottom"
-                :stroke="FINAL_CONFIG.style.chart.grid.y.axisColor"
-                :stroke-width="FINAL_CONFIG.style.chart.grid.y.axisThickness"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-
-            <!-- X AXIS LABEL -->
-            <text
-                ref="xAxisLabel"
-                data-cy="axis-label-x"
-                v-if="FINAL_CONFIG.style.chart.grid.x.axisName.show && FINAL_CONFIG.style.chart.grid.x.axisName.text"
-                :x="drawingArea.left + (drawingArea.width / 2)"
-                :y="drawingArea.chartHeight - 3"
-                :font-size="FINAL_CONFIG.style.chart.grid.x.axisName.fontSize"
-                :fill="FINAL_CONFIG.style.chart.grid.x.axisName.color"
-                :font-weight="FINAL_CONFIG.style.chart.grid.x.axisName.bold ? 'bold': 'normal'"
-                text-anchor="middle"
-            >
-                {{ FINAL_CONFIG.style.chart.grid.x.axisName.text }}
-            </text>
-
-            <!-- Y AXIS LABEL -->
-            <text
-                ref="yAxisLabel"
-                data-cy="axis-label-y"
-                v-if="FINAL_CONFIG.style.chart.grid.y.axisName.show && FINAL_CONFIG.style.chart.grid.y.axisName.text"
-                :transform="`translate(${FINAL_CONFIG.style.chart.grid.y.axisName.fontSize}, ${drawingArea.top + (drawingArea.height / 2)}) rotate(-90)`"
-                :font-size="FINAL_CONFIG.style.chart.grid.y.axisName.fontSize"
-                :fill="FINAL_CONFIG.style.chart.grid.y.axisName.color"
-                :font-weight="FINAL_CONFIG.style.chart.grid.y.axisName.bold ? 'bold': 'normal'"
-                text-anchor="middle"
-            >
-                {{ FINAL_CONFIG.style.chart.grid.y.axisName.text }}
-            </text>
-
-            <!-- RECT DATA LABELS (vertical mode) -->
-            <template v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.orientation === 'vertical'">
-                <g v-for="(dp, i) in formattedDataset">            
-                    <!-- RECT LABELS -->
-                    <template v-for="(rect, j) in dp.x">                    
-                        <text
-                            data-cy="label-datapoint"
-                            v-if="isLabelDisplayed(dp.series[j], dp.proportions[j])"
-                            :x="rect + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2)"
-                            :y="dp.y[j] + dp.height[j] / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.fontSize / 3"
-                            :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
-                            :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
-                            text-anchor="middle"
-                        >
-                            {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
-                                barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
-                                barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
-                        </text>
+                        <g v-if="$slots.pattern">
+                            <rect 
+                                v-for="(rect, j) in dp.horizontal_x"
+                                :x="forceValidValue(rect, drawingArea.left)"
+                                :y="dp.horizontal_y[j] < 0 ? 0 : dp.horizontal_y[j]"
+                                :width="forceValidValue(dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j])"
+                                :rx="FINAL_CONFIG.style.chart.bars.borderRadius > dp.height[j] / 2 ? (dp.height[j] < 0 ? 0 : dp.height[j]) / 2 : FINAL_CONFIG.style.chart.bars.borderRadius "
+                                :height="barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2)"
+                                :fill="`url(#pattern_${uid}_${dp.absoluteIndex})`"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :stroke-width="FINAL_CONFIG.style.chart.bars.strokeWidth"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                :class="{ 'vue-data-ui-bar-animated': FINAL_CONFIG.useCssAnimation, 'vue-data-ui-bar-transition': isLoaded }"
+                            />
+                        </g>    
                     </template>
                 </g>
-
-                <!-- RECT TOTAL LABELS -->
-                <g ref="sumTop" v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
-                    <template v-for="(total, i) in totalLabels">
-                        <text
-                            data-cy="label-total"
-                            v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
-                            :x="drawingArea.left + (barSlot * i) + barSlot / 2"
-                            :y="placeLabelTotalY(i)"
-                            text-anchor="middle"
-                            :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
-                            :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
-                            :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
-                        >
-                            {{ barDataLabel(total.value, total, i, total.sign) }}
-                        </text>
-                    </template>
-                </g>
-            </template>
-
-            <!-- RECT DATA LABELS (horizontal mode) -->
-            <template v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.orientation === 'horizontal'">
-                <g v-for="(dp, i) in formattedDataset">            
-                    <!-- RECT LABELS -->
-                    <template v-for="(rect, j) in dp.horizontal_x">
-                        <text
-                            data-cy="label-datapoint"
-                            v-if="isLabelDisplayed(dp.series[j], dp.proportions[j])"
-                            :x="rect + ((dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2)"
-                            :y="dp.horizontal_y[j] + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2) + (FINAL_CONFIG.style.chart.bars.dataLabels.fontSize /3)"
-                            :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
-                            :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
-                            text-anchor="middle"
-                        >
-                            {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
-                                barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
-                                barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
-                        </text>
-                    </template>
-                </g>
-                <!-- RECT TOTAL LABELS -->
-                <g ref="sumRight" v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
-                    <template v-for="(total, i) in totalLabels">
-                        <text
-                            data-cy="label-total"
-                            v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
-                            :x="placeLabelTotalX(i)"
-                            :y="drawingArea.top + (barSlot * i) + barSlot / 2 + (FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3)"
-                            text-anchor="start"
-                            :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
-                            :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
-                            :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
-                        >
-                            {{ barDataLabel(total.value, total, i, total.sign) }}
-                        </text>
-                    </template>
-                </g>
-            </template>
-
-            <!-- SCALE LABELS (vertical mode) -->
-            <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'vertical'">
-                <g ref="scaleLabels">
-                    <line
-                        data-cy="scale-line-y"
-                        v-for="(yLabel, i) in yLabels"
-                        :x1="drawingArea.left"
-                        :x2="drawingArea.left - 6"
-                        :y1="yLabel.y"
-                        :y2="yLabel.y"
-                        :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
-                        :stroke-width="1"
-                    />
-                    <text
-                        data-cy="scale-label-y"
-                        v-for="(yLabel, i) in yLabels"
-                        :x="yLabel.x"
-                        :y="yLabel.y + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
-                        :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                        :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                        text-anchor="end"
-                    >
-                        {{ 
-                            applyDataLabel(
-                                FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
-                                yLabel.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
-                                    v: yLabel.value,
-                                    s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
-                                    r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
-                                }),
-                                { datapoint: yLabel }
-                            )
-                        }}
-                    </text>
-                </g>
-            </template>
-
-            <!-- SCALE LABELS (horizontal mode) -->
-            <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'horizontal'">
-                <g ref="scaleLabels">
-                    <line
-                        data-cy="scale-line-y"
-                        v-for="(yLabel, i) in yLabels"
-                        :x1="yLabel.horizontal_x"
-                        :x2="yLabel.horizontal_x"
-                        :y1="drawingArea.bottom"
-                        :y2="drawingArea.bottom + 6"
-                        :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
-                        :stroke-width="1"
-                        stroke-linecap="round"
-                    />
-                    <text
-                        data-cy="scale-label-y"
-                        class="vue-data-ui-time-label"
-                        v-for="(yLabel, i) in yLabels"
-                        :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                        :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                        :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
-                        :transform="`translate(${yLabel.horizontal_x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
-                    >
-                        {{ 
-                            applyDataLabel(
-                                FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
-                                yLabel.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
-                                    v: yLabel.value,
-                                    s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
-                                    r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
-                                }),
-                                { datapoint: yLabel }
-                            )
-                        }}
-                    </text>
-                </g>
-            </template>
-
-            <!-- TIME LABELS VERTICAL-->
-            <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'vertical'">
-                <g ref="timeLabelsEls">
-                    <g v-if="$slots['time-label']">
-                        <g v-for="(timeLabel, i) in displayedTimeLabels">
-                            <slot name="time-label" v-bind="{
-                                x: drawingArea.left + (barSlot * i) + barSlot / 2,
-                                y: drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY,
-                                fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
-                                fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
-                                transform: `translate(${drawingArea.left + (barSlot * i) + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`,
-                                absoluteIndex: timeLabel.absoluteIndex,
-                                content: timeLabel.text,
-                                textAnchor: FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle',
-                                show: true
-                            }"/>
-                        </g>
-                    </g>
-                    <g v-else>
-                        <g v-for="(timeLabel, i) in displayedTimeLabels">
+    
+                <!-- X AXIS -->
+                <line
+                    data-cy="line-axis-x"
+                    v-if="FINAL_CONFIG.style.chart.grid.x.showAxis"
+                    :x1="drawingArea.left"
+                    :x2="drawingArea.right"
+                    :y1="drawingArea.bottom"
+                    :y2="drawingArea.bottom"
+                    :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.x.axisThickness"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
+    
+                <!-- Y AXIS -->
+                <line
+                    data-cy="line-axis-y"
+                    v-if="FINAL_CONFIG.style.chart.grid.y.showAxis && !FINAL_CONFIG.style.chart.bars.distributed"
+                    :x1="drawingArea.left"
+                    :x2="drawingArea.left"
+                    :y1="drawingArea.top"
+                    :y2="drawingArea.bottom"
+                    :stroke="FINAL_CONFIG.style.chart.grid.y.axisColor"
+                    :stroke-width="FINAL_CONFIG.style.chart.grid.y.axisThickness"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
+    
+                <!-- X AXIS LABEL -->
+                <text
+                    ref="xAxisLabel"
+                    data-cy="axis-label-x"
+                    v-if="FINAL_CONFIG.style.chart.grid.x.axisName.show && FINAL_CONFIG.style.chart.grid.x.axisName.text"
+                    :x="drawingArea.left + (drawingArea.width / 2)"
+                    :y="drawingArea.chartHeight - 3"
+                    :font-size="FINAL_CONFIG.style.chart.grid.x.axisName.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.grid.x.axisName.color"
+                    :font-weight="FINAL_CONFIG.style.chart.grid.x.axisName.bold ? 'bold': 'normal'"
+                    text-anchor="middle"
+                >
+                    {{ FINAL_CONFIG.style.chart.grid.x.axisName.text }}
+                </text>
+    
+                <!-- Y AXIS LABEL -->
+                <text
+                    ref="yAxisLabel"
+                    data-cy="axis-label-y"
+                    v-if="FINAL_CONFIG.style.chart.grid.y.axisName.show && FINAL_CONFIG.style.chart.grid.y.axisName.text"
+                    :transform="`translate(${FINAL_CONFIG.style.chart.grid.y.axisName.fontSize}, ${drawingArea.top + (drawingArea.height / 2)}) rotate(-90)`"
+                    :font-size="FINAL_CONFIG.style.chart.grid.y.axisName.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.grid.y.axisName.color"
+                    :font-weight="FINAL_CONFIG.style.chart.grid.y.axisName.bold ? 'bold': 'normal'"
+                    text-anchor="middle"
+                >
+                    {{ FINAL_CONFIG.style.chart.grid.y.axisName.text }}
+                </text>
+    
+                <!-- RECT DATA LABELS (vertical mode) -->
+                <template v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.orientation === 'vertical'">
+                    <g v-for="(dp, i) in formattedDataset">            
+                        <!-- RECT LABELS -->
+                        <template v-for="(rect, j) in dp.x">                    
                             <text
-                                v-if="!String(timeLabel.text).includes('\n')"
-                                class="vue-data-ui-time-label"
-                                :key="i"
-                                data-cy="time-label"
-                                :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
-                                    ? 'start'
-                                    : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
-                                    ? 'end'
-                                    : 'middle'"
-                                :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
-                                :font-weight="FINAL_CONFIG.style.chart.grid.x.timeLabels.bold ? 'bold' : 'normal'"
-                                :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
-                                :transform="`translate(${drawingArea.left + barSlot * i + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
-                                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-                                @click="() => selectTimeLabel(timeLabel, i)"
+                                data-cy="label-datapoint"
+                                v-if="isLabelDisplayed(dp.series[j], dp.proportions[j])"
+                                :x="rect + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2)"
+                                :y="dp.y[j] + dp.height[j] / 2 + FINAL_CONFIG.style.chart.bars.dataLabels.fontSize / 3"
+                                :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
+                                :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
+                                text-anchor="middle"
                             >
-                                {{ timeLabel.text }}
+                                {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
+                                    barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
+                                    barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
                             </text>
+                        </template>
+                    </g>
+    
+                    <!-- RECT TOTAL LABELS -->
+                    <g ref="sumTop" v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
+                        <template v-for="(total, i) in totalLabels">
                             <text
-                                v-else
-                                :key="i + '-multi'"
-                                data-cy="time-label"
-                                :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
-                                    ? 'start'
-                                    : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
-                                    ? 'end'
-                                    : 'middle'"
-                                :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
-                                :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
-                                :transform="`
-                                    translate(
-                                    ${drawingArea.left + barSlot * i + barSlot / 2},
-                                    ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}
-                                    ),
-                                    rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})
-                                `"
-                                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-                                v-html="createTSpansFromLineBreaksOnX({
-                                    content: String(timeLabel.text),
+                                data-cy="label-total"
+                                v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
+                                :x="drawingArea.left + (barSlot * i) + barSlot / 2"
+                                :y="placeLabelTotalY(i)"
+                                text-anchor="middle"
+                                :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
+                                :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
+                                :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
+                            >
+                                {{ barDataLabel(total.value, total, i, total.sign) }}
+                            </text>
+                        </template>
+                    </g>
+                </template>
+    
+                <!-- RECT DATA LABELS (horizontal mode) -->
+                <template v-if="mutableConfig.dataLabels.show && FINAL_CONFIG.orientation === 'horizontal'">
+                    <g v-for="(dp, i) in formattedDataset">            
+                        <!-- RECT LABELS -->
+                        <template v-for="(rect, j) in dp.horizontal_x">
+                            <text
+                                data-cy="label-datapoint"
+                                v-if="isLabelDisplayed(dp.series[j], dp.proportions[j])"
+                                :x="rect + ((dp.horizontal_width[j] < 0 ? 0.0001 : dp.horizontal_width[j]) / 2)"
+                                :y="dp.horizontal_y[j] + (barSlot * (1 - FINAL_CONFIG.style.chart.bars.gapRatio / 2) / 2) + (FINAL_CONFIG.style.chart.bars.dataLabels.fontSize /3)"
+                                :font-size="FINAL_CONFIG.style.chart.bars.dataLabels.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.bars.dataLabels.adaptColorToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.bars.dataLabels.color"
+                                :font-weight="FINAL_CONFIG.style.chart.bars.dataLabels.bold ? 'bold' : 'normal'"
+                                text-anchor="middle"
+                            >
+                                {{ FINAL_CONFIG.style.chart.bars.showDistributedPercentage && FINAL_CONFIG.style.chart.bars.distributed ? 
+                                    barDataLabelPercentage(dp.proportions[j] * 100, dp, i, j) : 
+                                    barDataLabel(dp.series[j], dp, i, j, dp.signedSeries[j]) }}
+                            </text>
+                        </template>
+                    </g>
+                    <!-- RECT TOTAL LABELS -->
+                    <g ref="sumRight" v-if="FINAL_CONFIG.style.chart.bars.totalValues.show && formattedDataset.length > 1">
+                        <template v-for="(total, i) in totalLabels">
+                            <text
+                                data-cy="label-total"
+                                v-if="FINAL_CONFIG.style.chart.bars.dataLabels.hideEmptyValues ? total.value !== 0 : true"
+                                :x="placeLabelTotalX(i)"
+                                :y="drawingArea.top + (barSlot * i) + barSlot / 2 + (FINAL_CONFIG.style.chart.bars.totalValues.fontSize / 3)"
+                                text-anchor="start"
+                                :font-size="FINAL_CONFIG.style.chart.bars.totalValues.fontSize"
+                                :font-weight="FINAL_CONFIG.style.chart.bars.totalValues.bold ? 'bold' : 'normal'"
+                                :fill="FINAL_CONFIG.style.chart.bars.totalValues.color"
+                            >
+                                {{ barDataLabel(total.value, total, i, total.sign) }}
+                            </text>
+                        </template>
+                    </g>
+                </template>
+    
+                <!-- SCALE LABELS (vertical mode) -->
+                <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'vertical'">
+                    <g ref="scaleLabels">
+                        <line
+                            data-cy="scale-line-y"
+                            v-for="(yLabel, i) in yLabels"
+                            :x1="drawingArea.left"
+                            :x2="drawingArea.left - 6"
+                            :y1="yLabel.y"
+                            :y2="yLabel.y"
+                            :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
+                            :stroke-width="1"
+                        />
+                        <text
+                            data-cy="scale-label-y"
+                            v-for="(yLabel, i) in yLabels"
+                            :x="yLabel.x"
+                            :y="yLabel.y + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                            :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                            :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                            text-anchor="end"
+                        >
+                            {{ 
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
+                                    yLabel.value,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
+                                        v: yLabel.value,
+                                        s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
+                                        r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
+                                    }),
+                                    { datapoint: yLabel }
+                                )
+                            }}
+                        </text>
+                    </g>
+                </template>
+    
+                <!-- SCALE LABELS (horizontal mode) -->
+                <template v-if="FINAL_CONFIG.style.chart.grid.y.axisLabels.show && !FINAL_CONFIG.style.chart.bars.distributed && FINAL_CONFIG.orientation === 'horizontal'">
+                    <g ref="scaleLabels">
+                        <line
+                            data-cy="scale-line-y"
+                            v-for="(yLabel, i) in yLabels"
+                            :x1="yLabel.horizontal_x"
+                            :x2="yLabel.horizontal_x"
+                            :y1="drawingArea.bottom"
+                            :y2="drawingArea.bottom + 6"
+                            :stroke="FINAL_CONFIG.style.chart.grid.x.axisColor"
+                            :stroke-width="1"
+                            stroke-linecap="round"
+                        />
+                        <text
+                            data-cy="scale-label-y"
+                            class="vue-data-ui-time-label"
+                            v-for="(yLabel, i) in yLabels"
+                            :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                            :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                            :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle'"
+                            :transform="`translate(${yLabel.horizontal_x}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
+                        >
+                            {{ 
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.chart.grid.y.axisLabels.formatter,
+                                    yLabel.value,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.chart.bars.dataLabels.prefix,
+                                        v: yLabel.value,
+                                        s: FINAL_CONFIG.style.chart.bars.dataLabels.suffix,
+                                        r: FINAL_CONFIG.style.chart.grid.y.axisLabels.rounding,
+                                    }),
+                                    { datapoint: yLabel }
+                                )
+                            }}
+                        </text>
+                    </g>
+                </template>
+    
+                <!-- TIME LABELS VERTICAL-->
+                <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'vertical'">
+                    <g ref="timeLabelsEls">
+                        <g v-if="$slots['time-label']">
+                            <g v-for="(timeLabel, i) in displayedTimeLabels">
+                                <slot name="time-label" v-bind="{
+                                    x: drawingArea.left + (barSlot * i) + barSlot / 2,
+                                    y: drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY,
                                     fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
                                     fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
-                                    x: 0,
-                                    y: 0
-                                })"
-                                @click="() => selectTimeLabel(timeLabel, i)"
-                            />
+                                    transform: `translate(${drawingArea.left + (barSlot * i) + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`,
+                                    absoluteIndex: timeLabel.absoluteIndex,
+                                    content: timeLabel.text,
+                                    textAnchor: FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0 ? 'end' : 'middle',
+                                    show: true
+                                }"/>
+                            </g>
+                        </g>
+                        <g v-else>
+                            <g v-for="(timeLabel, i) in displayedTimeLabels">
+                                <text
+                                    v-if="!String(timeLabel.text).includes('\n')"
+                                    class="vue-data-ui-time-label"
+                                    :key="i"
+                                    data-cy="time-label"
+                                    :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
+                                        ? 'start'
+                                        : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
+                                        ? 'end'
+                                        : 'middle'"
+                                    :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                                    :font-weight="FINAL_CONFIG.style.chart.grid.x.timeLabels.bold ? 'bold' : 'normal'"
+                                    :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
+                                    :transform="`translate(${drawingArea.left + barSlot * i + barSlot / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})`"
+                                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                                    @click="() => selectTimeLabel(timeLabel, i)"
+                                >
+                                    {{ timeLabel.text }}
+                                </text>
+                                <text
+                                    v-else
+                                    :key="i + '-multi'"
+                                    data-cy="time-label"
+                                    :text-anchor="FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation > 0
+                                        ? 'start'
+                                        : FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation < 0
+                                        ? 'end'
+                                        : 'middle'"
+                                    :font-size="FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize"
+                                    :fill="FINAL_CONFIG.style.chart.grid.x.timeLabels.color"
+                                    :transform="`
+                                        translate(
+                                        ${drawingArea.left + barSlot * i + barSlot / 2},
+                                        ${drawingArea.bottom + FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.grid.x.timeLabels.offsetY}
+                                        ),
+                                        rotate(${FINAL_CONFIG.style.chart.grid.x.timeLabels.rotation})
+                                    `"
+                                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                                    v-html="createTSpansFromLineBreaksOnX({
+                                        content: String(timeLabel.text),
+                                        fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
+                                        fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
+                                        x: 0,
+                                        y: 0
+                                    })"
+                                    @click="() => selectTimeLabel(timeLabel, i)"
+                                />
+                            </g>
                         </g>
                     </g>
-                </g>
-            </template>
-
-            <!-- TIME LABELS HORIZONTAL -->
-            <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'horizontal'">
-                <g ref="timeLabelsEls">
-                    <g v-if="$slots['time-label']">
-                        <g v-for="(timeLabel, i) in timeLabels">
-                            <slot name="time-label" v-bind="{
-                                x: drawingArea.left - 8,
-                                y: drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3,
-                                fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
-                                fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
-                                transform: null,
-                                absoluteIndex: timeLabel.absoluteIndex,
-                                content: timeLabel.text,
-                                textAnchor: 'end',
-                                show: true
-                            }" />
-                        </g>
-                    </g>
-                    <g v-else>
-                        <g v-for="(timeLabel, i) in timeLabels">
-                            <text
-                                v-if="!String(timeLabel.text).includes('\n')"
-                                data-cy="time-label"
-                                text-anchor="end"
-                                :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
-                                :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                                :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                                :x="drawingArea.left - 8"
-                                :y="drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
-                                :style="{
-                                    cursor: isCursorPointer ? 'pointer' : 'default'
-                                }"
-                                @click="() => selectTimeLabel(timeLabel, i)"
-                            >
-                                {{ timeLabel.text }}
-                            </text>
-                            <text
-                                v-else
-                                data-cy="time-label"
-                                text-anchor="end"
-                                :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
-                                :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
-                                :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
-                                :x="drawingArea.left - 8"
-                                :y="drawingArea.top + barSlot * i + barSlot / 2 + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
-                                :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
-                                @click="() => selectTimeLabel(timeLabel, i)"
-                                v-html="createTSpansFromLineBreaksOnY({
-                                    content: String(timeLabel.text),
-                                    fontSize: FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize,
-                                    fill: FINAL_CONFIG.style.chart.grid.y.axisLabels.color,
+                </template>
+    
+                <!-- TIME LABELS HORIZONTAL -->
+                <template v-if="FINAL_CONFIG.style.chart.grid.x.timeLabels.show && FINAL_CONFIG.orientation === 'horizontal'">
+                    <g ref="timeLabelsEls">
+                        <g v-if="$slots['time-label']">
+                            <g v-for="(timeLabel, i) in timeLabels">
+                                <slot name="time-label" v-bind="{
                                     x: drawingArea.left - 8,
-                                    y: 0
-                                })"
-                            />
+                                    y: drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3,
+                                    fontSize: FINAL_CONFIG.style.chart.grid.x.timeLabels.fontSize,
+                                    fill: FINAL_CONFIG.style.chart.grid.x.timeLabels.color,
+                                    transform: null,
+                                    absoluteIndex: timeLabel.absoluteIndex,
+                                    content: timeLabel.text,
+                                    textAnchor: 'end',
+                                    show: true
+                                }" />
+                            </g>
+                        </g>
+                        <g v-else>
+                            <g v-for="(timeLabel, i) in timeLabels">
+                                <text
+                                    v-if="!String(timeLabel.text).includes('\n')"
+                                    data-cy="time-label"
+                                    text-anchor="end"
+                                    :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                                    :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                                    :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                                    :x="drawingArea.left - 8"
+                                    :y="drawingArea.top + (barSlot * i ) + (barSlot / 2) + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                                    :style="{
+                                        cursor: isCursorPointer ? 'pointer' : 'default'
+                                    }"
+                                    @click="() => selectTimeLabel(timeLabel, i)"
+                                >
+                                    {{ timeLabel.text }}
+                                </text>
+                                <text
+                                    v-else
+                                    data-cy="time-label"
+                                    text-anchor="end"
+                                    :font-size="FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize"
+                                    :font-weight="FINAL_CONFIG.style.chart.grid.y.axisLabels.bold ? 'bold' : 'normal'"
+                                    :fill="FINAL_CONFIG.style.chart.grid.y.axisLabels.color"
+                                    :x="drawingArea.left - 8"
+                                    :y="drawingArea.top + barSlot * i + barSlot / 2 + FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize / 3"
+                                    :style="{ cursor: isCursorPointer ? 'pointer' : 'default' }"
+                                    @click="() => selectTimeLabel(timeLabel, i)"
+                                    v-html="createTSpansFromLineBreaksOnY({
+                                        content: String(timeLabel.text),
+                                        fontSize: FINAL_CONFIG.style.chart.grid.y.axisLabels.fontSize,
+                                        fill: FINAL_CONFIG.style.chart.grid.y.axisLabels.color,
+                                        x: drawingArea.left - 8,
+                                        y: 0
+                                    })"
+                                />
+                            </g>
                         </g>
                     </g>
-                </g>
-            </template>
-
-            <!-- TOOLTIP TRAPS (vertical mode) -->
-            <template v-if="mutableConfig.showTooltip && FINAL_CONFIG.orientation === 'vertical'">            
-                <rect
-                    data-cy="tooltip-trap"
-                    v-for="(_, i) in (slicer.end - slicer.start)"
-                    :x="drawingArea.left + (i * barSlot)"
-                    :y="drawingArea.top"
-                    :width="barSlot"
-                    :height="drawingArea.height < 0 ? 0 : drawingArea.height"
-                    @click="() => selectDatapoint(i)"
-                    @mouseenter="() => useTooltip(i)"
-                    @mouseleave="() => onTrapLeave(i)"
-                    :fill="i === trapIndex || i === selectedMinimapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
-                    :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
+                </template>
+    
+                <!-- TOOLTIP TRAPS (vertical mode) -->
+                <template v-if="mutableConfig.showTooltip && FINAL_CONFIG.orientation === 'vertical'">            
+                    <rect
+                        data-cy="tooltip-trap"
+                        v-for="(_, i) in (slicer.end - slicer.start)"
+                        :x="drawingArea.left + (i * barSlot)"
+                        :y="drawingArea.top"
+                        :width="barSlot"
+                        :height="drawingArea.height < 0 ? 0 : drawingArea.height"
+                        @click="() => selectDatapoint(i)"
+                        @mouseenter="() => useTooltip(i, 'pointer')"
+                        @mouseleave="() => onTrapLeave(i)"
+                        :fill="i === trapIndex || i === selectedMinimapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
+                        :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
+                    />
+                </template>
+    
+                <!-- TOOLTIP TRAPS (vertical mode) -->
+                <template v-if="mutableConfig.showTooltip && FINAL_CONFIG.orientation === 'horizontal'">            
+                    <rect
+                        data-cy="tooltip-trap"
+                        v-for="(_, i) in (slicer.end - slicer.start)"
+                        :x="drawingArea.left"
+                        :y="drawingArea.top + (i * barSlot)"
+                        :width="drawingArea.width < 0 ? 0 : drawingArea.width"
+                        :height="barSlot"
+                        @click="() => selectDatapoint(i)"
+                        @mouseenter="() => useTooltip(i, 'pointer')"
+                        @mouseleave="() => onTrapLeave(i)"
+                        :fill="i === trapIndex || i === selectedMinimapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
+                        :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
+                    />
+                </template>
+    
+                <!-- ZOOM PREVIEW -->
+                <rect 
+                    v-if="isPrecog" 
+                    v-bind="precogRect" 
+                    :data-start="slicer.start" 
+                    :data-end="slicer.end"
                 />
-            </template>
+    
+                <slot name="svg" :svg="{ 
+                    drawingArea,
+                    data: formattedDataset,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
 
-            <!-- TOOLTIP TRAPS (vertical mode) -->
-            <template v-if="mutableConfig.showTooltip && FINAL_CONFIG.orientation === 'horizontal'">            
-                <rect
-                    data-cy="tooltip-trap"
-                    v-for="(_, i) in (slicer.end - slicer.start)"
-                    :x="drawingArea.left"
-                    :y="drawingArea.top + (i * barSlot)"
-                    :width="drawingArea.width < 0 ? 0 : drawingArea.width"
-                    :height="barSlot"
-                    @click="() => selectDatapoint(i)"
-                    @mouseenter="() => useTooltip(i)"
-                    @mouseleave="() => onTrapLeave(i)"
-                    :fill="i === trapIndex || i === selectedMinimapIndex ? FINAL_CONFIG.style.chart.highlighter.color : 'transparent'"
-                    :style="{ opacity: FINAL_CONFIG.style.chart.highlighter.opacity / 100 }"
-                />
-            </template>
-
-            <!-- ZOOM PREVIEW -->
-            <rect 
-                v-if="isPrecog" 
-                v-bind="precogRect" 
-                :data-start="slicer.start" 
-                :data-end="slicer.end"
-            />
-
-            <slot name="svg" :svg="{ 
-                drawingArea,
-                data: formattedDataset,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }" />
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -2787,6 +2942,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -2938,5 +3095,27 @@ defineExpose({
         animation: none !important;
         transition: none !important;
     }
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
