@@ -39,6 +39,7 @@ import { throttle } from '../canvas-lib';
 import { useConfig } from '../useConfig';
 import { useLoading } from '../useLoading';
 import { usePrinter } from '../usePrinter';
+import { useSvgExport } from '../useSvgExport';
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from '../useResponsive';
 import { useThemeCheck } from '../useThemeCheck';
@@ -50,7 +51,7 @@ import themes from "../themes/vue_ui_treemap.json";
 import Legend from "../atoms/Legend.vue";
 import BaseIcon from '../atoms/BaseIcon.vue';
 import BaseScanner from '../atoms/BaseScanner.vue';
-import { useSvgExport } from '../useSvgExport';
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from '../atoms/BaseLegendToggle.vue';
 
 const DataTable = defineAsyncComponent(() => import('../atoms/DataTable.vue'));
@@ -119,6 +120,11 @@ const rootLayout = ref(null);
 const rootTextCache = ref(new Map());
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -1047,6 +1053,8 @@ function hideSeries(name) {
 function onTrapLeave({ datapoint, seriesIndex }) {
     selectedRect.value = null;
     isTooltip.value = false;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
     }
@@ -1054,13 +1062,15 @@ function onTrapLeave({ datapoint, seriesIndex }) {
 
 const dataTooltipSlot = ref(null);
 
-function useTooltip({ datapoint, seriesIndex }) {
+function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
     if (allSegregated.value) return;
 
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
     }
 
+    activeTooltipIndex.value = seriesIndex;
+    tooltipTriggerMode.value = triggerMode;
     selectedRect.value = datapoint;
     dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: datasetCopy.value };
 
@@ -1676,6 +1686,108 @@ async function copyAlt(){
     }));
 }
 
+
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+    selectedRect.value = null;
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!squarified.value.length) return;
+    if (allSegregated.value) return;
+
+    const isPreviousKey = event.key === 'ArrowLeft';
+    const isNextKey = event.key === 'ArrowRight';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activeTooltipIndex.value = null;
+        tooltipTriggerMode.value = 'pointer';
+        isTooltip.value = false;
+        selectedRect.value = null;
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+
+        const rect = squarified.value[activeTooltipIndex.value];
+        if (!rect) return;
+
+        zoom(rect, activeTooltipIndex.value);
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= squarified.value.length) {
+        nextIndex = isNextKey ? 0 : squarified.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= squarified.value.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = squarified.value.length - 1;
+        }
+    }
+
+    const rect = squarified.value[nextIndex];
+    if (!rect) return;
+
+    setKeyboardTooltipPositionFromIndex(nextIndex);
+    useTooltip({
+        datapoint: rect,
+        seriesIndex: nextIndex,
+        triggerMode: 'keyboard'
+    });
+}
+
+function setKeyboardTooltipPositionFromIndex(index) {
+    if (!Number.isFinite(index)) return;
+    if (!svgRef.value) return;
+
+    const rect = squarified.value[index];
+    if (!rect) return;
+
+    const svgX = rect.x0 + getWidth(rect) / 2;
+    const svgY = rect.y0 + getHeight(rect) / 2;
+
+    const box = svgRef.value.getBoundingClientRect();
+
+    tooltipA11yPosition.value = {
+        x: box.left + ((svgX - viewBox.value.startX) / viewBox.value.width) * box.width,
+        y: box.top + ((svgY - viewBox.value.startY) / viewBox.value.height) * box.height
+    };
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = dataTable.value?.body ?? [];
+    return { headers, rows };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1698,7 +1810,21 @@ defineExpose({
     <div ref="treemapChart"
         :class="`vue-data-ui-component vue-ui-treemap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
-        :id="`treemap_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+        :id="`treemap_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
+    >
+        <!-- A11Y -->
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
 
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
@@ -1875,129 +2001,141 @@ defineExpose({
         </nav>
 
         <!-- CHART -->
-        <svg 
-            ref="svgRef"
-            :xmlns="XMLNS" 
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom, 'loading': loading }"
-            data-cy="treemap-svg" 
-            :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
-            :style="`max-width:100%; overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-        >
-            <PackageVersion />
-
-            <g v-for="(rect, _i) in squarified" :key="`tgrad_${rect.id}`">            
-                <defs v-if="FINAL_CONFIG.style.chart.layout.rects.gradient.show">
-                    <radialGradient :id="`tgrad_${rect.id}`" gradientTransform="translate(-1, -1.000001) scale(2, 2)">
-                        <stop offset="18%" :stop-color="rect.color"/>
-                        <stop offset="100%" :stop-color="lightenHexColor(rect.color, FINAL_CONFIG.style.chart.layout.rects.gradient.intensity / 100)"/>
-                    </radialGradient>
-                </defs>
-            </g>
-
-            <!-- PARENT WRAPPERS -->
-            <g
-                v-for="(parent, i) in parentWrappers"
-                :key="`parent_${parent.id}`"
-                class="vue-ui-treemap-parent-wrapper"
+        <div style="position:relative;">
+            <svg 
+                ref="svgRef"
+                :xmlns="XMLNS" 
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom, 'loading': loading }"
+                data-cy="treemap-svg" 
+                :viewBox="`${viewBox.startX} ${viewBox.startY} ${viewBox.width <= 0 ? 10 : viewBox.width} ${viewBox.height <= 0 ? 10 : viewBox.height}`"
+                :style="`max-width:100%; overflow: hidden; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <rect
-                    :x="parent.x0"
-                    :y="parent.y0"
-                    :height="getHeight(parent)"
-                    :width="getWidth(parent)"
-                    :fill="FINAL_CONFIG.style.chart.layout.rects.group.useSeriesBackgroundColor ? lightenHexColor(parent.color ?? FINAL_CONFIG.style.chart.backgroundColor, FINAL_CONFIG.style.chart.layout.rects.group.backgroundLighterRatio) : FINAL_CONFIG.style.chart.backgroundColor"
-                    :rx="0"
-                    :stroke="FINAL_CONFIG.style.chart.layout.rects.group.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.rects.group.strokeWidth"
-                    class="vue-data-ui-cursor-default vue-ui-treemap-rect"
-                />
-                <foreignObject
-                    v-if="$slots['group-label'] && !allSegregated"
-                    :width="getWidth(parent)"
-                    :height="getHeight(parent)"
-                    :x="parent.x0"
-                    :y="parent.y0"
+                <PackageVersion />
+    
+                <g v-for="(rect, _i) in squarified" :key="`tgrad_${rect.id}`">            
+                    <defs v-if="FINAL_CONFIG.style.chart.layout.rects.gradient.show">
+                        <radialGradient :id="`tgrad_${rect.id}`" gradientTransform="translate(-1, -1.000001) scale(2, 2)">
+                            <stop offset="18%" :stop-color="rect.color"/>
+                            <stop offset="100%" :stop-color="lightenHexColor(rect.color, FINAL_CONFIG.style.chart.layout.rects.gradient.intensity / 100)"/>
+                        </radialGradient>
+                    </defs>
+                </g>
+    
+                <!-- PARENT WRAPPERS -->
+                <g
+                    v-for="(parent, i) in parentWrappers"
+                    :key="`parent_${parent.id}`"
+                    class="vue-ui-treemap-parent-wrapper"
                 >
-                    <slot name="group-label" v-bind="{ group: parent }"/>
-                </foreignObject>
-
-                <g v-else-if="!loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && !allSegregated"
-                    style="pointer-events: none"
-                    v-html="buildTreemapText({ rect: parent, seriesIndex: 0, isTitle: true })"
-                    class="vue-data-ui-cursor-default"
-                />
-            </g>
-
-            <g v-for="(rect, i) in squarified" :key="`k_${rect.id}`">
-                <rect
-                    data-cy="datapoint-rect"
-                    :x="rect.x0" 
-                    :y="rect.y0" 
-                    :height="getHeight(rect)" 
-                    :width="getWidth(rect)" 
-                    :fill="isSafari ? rect.color ?? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.rects.gradient.show ? allSegregated ? FINAL_CONFIG.style.chart.backgroundColor :  `url(#tgrad_${rect.id})` : rect.color ?? FINAL_CONFIG.style.chart.backgroundColor"
-                    :rx="getSafeRadius(rect)"
-                    :stroke="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.stroke : FINAL_CONFIG.style.chart.layout.rects.stroke"
-                    :stroke-width="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.strokeWidth : FINAL_CONFIG.style.chart.layout.rects.strokeWidth"
-                    @click.stop="zoom(rect, i)"
-                    @mouseenter="() => useTooltip({
-                        datapoint: rect,
-                        seriesIndex: i,
-                    })"
-                    @mouseleave="onTrapLeave({ datapoint: rect, seriesIndex: i})"
-                    :style="`opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
-                    :class="[
-                        'vue-ui-treemap-rect',
-                        canDrill(rect)
-                        ? 'vue-data-ui-zoom-plus'
-                        : (isZoom ? 'vue-data-ui-zoom-minus' : '')
-                    ]"
-                />
-
-                <!-- DEFAULT DATALABELS-->
-                <g 
-                    :style="`pointer-events:none; opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
-                    v-if="!$slots.rect && !loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && !allSegregated" 
-                    v-html="buildTreemapText({ rect, seriesIndex: i })" 
-
-                />
-
-                <!-- SLOTTED CONTENT -->
-                <foreignObject
-                    :x="rect.x0" 
-                    :y="rect.y0" 
-                    :height="getHeight(rect)" 
-                    :width="getWidth(rect)"
-                    class="vue-ui-treemap-cell-foreignObject"
-                >
-                    <div 
-                        :style="{
-                            width: '100%',
-                            height: '100%',
-                        }"
-                        class="vue-ui-treemap-cell"
+                    <rect
+                        :x="parent.x0"
+                        :y="parent.y0"
+                        :height="getHeight(parent)"
+                        :width="getWidth(parent)"
+                        :fill="FINAL_CONFIG.style.chart.layout.rects.group.useSeriesBackgroundColor ? lightenHexColor(parent.color ?? FINAL_CONFIG.style.chart.backgroundColor, FINAL_CONFIG.style.chart.layout.rects.group.backgroundLighterRatio) : FINAL_CONFIG.style.chart.backgroundColor"
+                        :rx="0"
+                        :stroke="FINAL_CONFIG.style.chart.layout.rects.group.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.rects.group.strokeWidth"
+                        class="vue-data-ui-cursor-default vue-ui-treemap-rect"
+                    />
+                    <foreignObject
+                        v-if="$slots['group-label'] && !allSegregated"
+                        :width="getWidth(parent)"
+                        :height="getHeight(parent)"
+                        :x="parent.x0"
+                        :y="parent.y0"
                     >
-                        <slot
-                            v-if="!loading"
-                            name="rect" 
-                            v-bind="{ 
-                                rect: {
-                                    ...rect,
-                                    height: getHeight(rect),
-                                    width: getWidth(rect),
-                                    isSelected: !selectedRect ? true : selectedRect.id === rect.id
-                                },
-                                shouldShow: rect.proportion > FINAL_CONFIG.style.chart.layout.labels.hideUnderProportion || isZoom, 
-                                fontSize: calcFontSize(rect), 
-                                isZoom, 
-                                textColor: adaptColorToBackground(rect.color) 
-                        }"/>
-                    </div>
-                </foreignObject>
-            </g>
+                        <slot name="group-label" v-bind="{ group: parent }"/>
+                    </foreignObject>
+    
+                    <g v-else-if="!loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && !allSegregated"
+                        style="pointer-events: none"
+                        v-html="buildTreemapText({ rect: parent, seriesIndex: 0, isTitle: true })"
+                        class="vue-data-ui-cursor-default"
+                    />
+                </g>
+    
+                <g v-for="(rect, i) in squarified" :key="`k_${rect.id}`">
+                    <rect
+                        data-cy="datapoint-rect"
+                        :x="rect.x0" 
+                        :y="rect.y0" 
+                        :height="getHeight(rect)" 
+                        :width="getWidth(rect)" 
+                        :fill="isSafari ? rect.color ?? FINAL_CONFIG.style.chart.backgroundColor : FINAL_CONFIG.style.chart.layout.rects.gradient.show ? allSegregated ? FINAL_CONFIG.style.chart.backgroundColor :  `url(#tgrad_${rect.id})` : rect.color ?? FINAL_CONFIG.style.chart.backgroundColor"
+                        :rx="getSafeRadius(rect)"
+                        :stroke="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.stroke : FINAL_CONFIG.style.chart.layout.rects.stroke"
+                        :stroke-width="selectedRect && selectedRect.id === rect.id ? FINAL_CONFIG.style.chart.layout.rects.selected.strokeWidth : FINAL_CONFIG.style.chart.layout.rects.strokeWidth"
+                        @click.stop="zoom(rect, i)"
+                        @mouseenter="() => useTooltip({
+                            datapoint: rect,
+                            seriesIndex: i,
+                            triggerMode: 'pointer'
+                        })"
+                        @mouseleave="onTrapLeave({ datapoint: rect, seriesIndex: i})"
+                        :style="`opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
+                        :class="[
+                            'vue-ui-treemap-rect',
+                            canDrill(rect)
+                            ? 'vue-data-ui-zoom-plus'
+                            : (isZoom ? 'vue-data-ui-zoom-minus' : '')
+                        ]"
+                    />
+    
+                    <!-- DEFAULT DATALABELS-->
+                    <g 
+                        :style="`pointer-events:none; opacity:${selectedRect ? selectedRect.id === rect.id ? 1 : FINAL_CONFIG.style.chart.layout.rects.selected.unselectedOpacity : 1}`"
+                        v-if="!$slots.rect && !loading && FINAL_CONFIG.style.chart.layout.labels.showDefaultLabels && !allSegregated" 
+                        v-html="buildTreemapText({ rect, seriesIndex: i })" 
+    
+                    />
+    
+                    <!-- SLOTTED CONTENT -->
+                    <foreignObject
+                        :x="rect.x0" 
+                        :y="rect.y0" 
+                        :height="getHeight(rect)" 
+                        :width="getWidth(rect)"
+                        class="vue-ui-treemap-cell-foreignObject"
+                    >
+                        <div 
+                            :style="{
+                                width: '100%',
+                                height: '100%',
+                            }"
+                            class="vue-ui-treemap-cell"
+                        >
+                            <slot
+                                v-if="!loading"
+                                name="rect" 
+                                v-bind="{ 
+                                    rect: {
+                                        ...rect,
+                                        height: getHeight(rect),
+                                        width: getWidth(rect),
+                                        isSelected: !selectedRect ? true : selectedRect.id === rect.id
+                                    },
+                                    shouldShow: rect.proportion > FINAL_CONFIG.style.chart.layout.labels.hideUnderProportion || isZoom, 
+                                    fontSize: calcFontSize(rect), 
+                                    isZoom, 
+                                    textColor: adaptColorToBackground(rect.color) 
+                            }"/>
+                        </div>
+                    </foreignObject>
+                </g>
+    
+                <slot name="svg" v-bind="{ svg, isZoom, rect: selectedRect, config: FINAL_CONFIG, isPrintingImg: isPrinting | isImaging | isCallbackImaging, isPrintingSvg: isCallbackSvg }"/>
+            </svg>
 
-            <slot name="svg" v-bind="{ svg, isZoom, rect: selectedRect, config: FINAL_CONFIG, isPrintingImg: isPrinting | isImaging | isCallbackImaging, isPrintingSvg: isCallbackSvg }"/>
-        </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -2065,6 +2203,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -2231,5 +2371,28 @@ defineExpose({
     flex-direction: row;
     align-items:center;
     gap: 3px;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible,
+.vue-ui-treemap-crumb:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
