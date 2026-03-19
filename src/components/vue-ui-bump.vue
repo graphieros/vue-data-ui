@@ -48,6 +48,7 @@ import { useTimeLabelCollision } from "../useTimeLabelCollider";
 import themes from "../themes/vue_ui_bump.json";
 import Title from "../atoms/Title.vue";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseDraggableDialog from "../atoms/BaseDraggableDialog.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -101,12 +102,13 @@ const userOptionsRef = ref(null);
 const userHovers = ref(false);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
-
+const selectedSeries = ref(null);
 const labelsLeft = ref(null);
 const labelsRight = ref(null);
 const timeLabelsEls = ref(null);
 
-const selectedSeries = ref(null);
+const activePointIndex = ref(null); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -560,6 +562,21 @@ const formattedDataset = computed(() => {
     })
 });
 
+const a11yPoints = computed(() => {
+    return formattedDataset.value.flatMap((serie, seriesIndex) => {
+        return serie.coordinates
+            .map((point, pointIndex) => ({
+                ...point,
+                pointIndex,
+                seriesIndex,
+                seriesId: serie.id,
+                seriesName: serie.name,
+                pointId: `${serie.id}_${pointIndex}`
+            }))
+            .filter(point => isValidUserValue(point.value));
+    });
+});
+
 function spreadLabelsVertically(labels, minGap, topLimit, bottomLimit) {
     const sorted = labels.toSorted((a, b) => a.y - b.y);
 
@@ -727,6 +744,115 @@ const slicer = computed(() => ({
     start: 0,
     end: maxLen.value
 }));
+
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+const keyboardNavigableSeries = computed(() => {
+    return [...formattedDataset.value]
+        .map((serie) => {
+            const lastValidCoordinate = [...serie.coordinates]
+                .filter(point => isValidUserValue(point.value))
+                .at(-1);
+
+            return {
+                ...serie,
+                navigationRank: lastValidCoordinate?.rank ?? Number.POSITIVE_INFINITY
+            };
+        })
+        .sort((a, b) => a.navigationRank - b.navigationRank);
+});
+
+function onSvgFocus() {
+    activePointIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    clearKeyboardSelection();
+    isFocus.value = false;
+}
+
+function getNextPointIndex(currentIndex, direction) {
+    const len = keyboardNavigableSeries.value.length;
+    if (!len) return null;
+    if (currentIndex === null || currentIndex < 0 || currentIndex >= len) return 0;
+    if (direction === 'previous') return (currentIndex - 1 + len) % len;
+    return (currentIndex + 1) % len;
+}
+
+function clearKeyboardSelection() {
+    if (activePointIndex.value !== null) {
+        const currentSerie = keyboardNavigableSeries.value[activePointIndex.value];
+        currentSerie && onPointLeave(currentSerie, currentSerie);
+    }
+    activePointIndex.value = null;
+    selectedSeries.value = null;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!keyboardNavigableSeries.value.length) return;
+
+    const isPreviousKey = ['ArrowLeft', 'ArrowUp'].includes(event.key);
+    const isNextKey = ['ArrowRight', 'ArrowDown'].includes(event.key);
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearKeyboardSelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activePointIndex.value === null) return;
+
+        const serie = keyboardNavigableSeries.value[activePointIndex.value];
+        if (!serie) return;
+
+        onPointClick(serie, serie);
+        return;
+    }
+
+    let nextIndex = activePointIndex.value;
+
+    if (nextIndex === null) {
+        nextIndex = 0;
+    } else if (isPreviousKey) {
+        nextIndex = getNextPointIndex(nextIndex, 'previous');
+    } else if (isNextKey) {
+        nextIndex = getNextPointIndex(nextIndex, 'next');
+    }
+
+    const serie = keyboardNavigableSeries.value[nextIndex];
+    if (!serie) return;
+
+    activePointIndex.value = nextIndex;
+    onPointEnter(serie, serie);
+}
+
+const a11yTable = computed(() => {
+    return {
+        head: dataTable.value.head,
+        body: formattedDataset.value.map((serie) => {
+            return [
+                serie.name,
+                ...serie.coordinates.map((point) => {
+                    if (!isValidUserValue(point.value)) return "-";
+                    return `${point.displayValue} (${point.rank})`;
+                })
+            ];
+        }),
+        caption: FINAL_CONFIG.value.a11y.translations.tableCaption,
+        notice: FINAL_CONFIG.value.a11y.translations.tableAvailable,
+    };
+});
 
 useTimeLabelCollision({
     timeLabelsEls: timeLabelsEls,
@@ -996,6 +1122,19 @@ defineExpose({
         @mouseenter="onChartEnter" 
         @mouseleave="onChartLeave"
     >
+        <p :id="`chart-instructions-${uid}`" class="sr-only">
+            {{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}
+        </p>
+
+        <A11yDataTable
+            v-if="a11yTable.body.length"
+            :uid="uid"
+            :head="a11yTable.head"
+            :body="a11yTable.body"
+            :caption="a11yTable.caption"
+            :notice="a11yTable.notice"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1122,112 +1261,84 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS"
-            :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.svgHeight <= 0 ? 10 : drawingArea.svgHeight}`"
-            :class="{ 'vue-data-ui-loading' : loading, 'no-transition': !FINAL_CONFIG.useCssAnimation, 'with-transition': FINAL_CONFIG.useCssAnimation }"
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-            role="img" 
-            aria-live="polite" 
-            preserveAspectRatio="xMidYMid"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="drawingArea.left"
-                :y="drawingArea.top"
-                :width="drawingArea.width <= 0 ? 10 : drawingArea.width"
-                :height="drawingArea.height <= 0 ? 10 : drawingArea.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position:relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.svgHeight <= 0 ? 10 : drawingArea.svgHeight}`"
+                :class="{ 'vue-data-ui-loading' : loading, 'no-transition': !FINAL_CONFIG.useCssAnimation, 'with-transition': FINAL_CONFIG.useCssAnimation }"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                role="img" 
+                aria-live="polite" 
+                preserveAspectRatio="xMidYMid"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-
-            <!-- LINES -->
-            <template v-for="serie in formattedDataset">
-                <path 
-                    class="transition-opacity"
-                    :d="`M${serie.path}`" 
-                    :stroke="FINAL_CONFIG.style.chart.layout.lines.coatingColor"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.lines.strokeWidth + 2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round" 
-                    fill="none" 
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="drawingArea.left"
+                    :y="drawingArea.top"
+                    :width="drawingArea.width <= 0 ? 10 : drawingArea.width"
+                    :height="drawingArea.height <= 0 ? 10 : drawingArea.height"
                     :style="{
-                        opacity: selectedSeries == null ? 1 : selectedSeries === serie.id ? 1 : 0.1
+                        pointerEvents: 'none'
                     }"
-                    @mouseenter="selectedSeries = serie.id"
-                    @mouseleave="selectedSeries = null"
-                />
-                <path 
-                    class="transition-opacity"
-                    :d="`M${serie.path}`" 
-                    :stroke="serie.color"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.lines.strokeWidth"
-                    stroke-linecap="round"
-                    stroke-linejoin="round" 
-                    fill="none"
-                    :style="{
-                        opacity: selectedSeries == null ? 1 : selectedSeries === serie.id ? 1 : 0.1
-                    }"
-                    @mouseenter="onPointEnter(serie, serie)"
-                    @mouseleave="onPointLeave(serie, serie)"
-                    @click="onPointClick(serie, serie)"
-                />
-            </template>
-
-            <!-- PLOTS -->
-            <template v-for="serie in formattedDataset">
-                <!-- RANK LAYOUT -->
-                <template v-if="FINAL_CONFIG.style.chart.layout.plots.labels.displayedValue === 'rank'">
-                    <circle
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+    
+                <!-- LINES -->
+                <template v-for="serie in formattedDataset">
+                    <path 
                         class="transition-opacity"
-                        v-for="(point, i) in serie.coordinates"
-                        :cx="point.x"
-                        :cy="point.y"
-                        :r="FINAL_CONFIG.style.chart.layout.plots.radius"
-                        :fill="serie.color"
-                        :stroke="FINAL_CONFIG.style.chart.layout.plots.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.plots.strokeWidth"
+                        :d="`M${serie.path}`" 
+                        :stroke="FINAL_CONFIG.style.chart.layout.lines.coatingColor"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.lines.strokeWidth + 2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round" 
+                        fill="none" 
                         :style="{
                             opacity: selectedSeries == null ? 1 : selectedSeries === serie.id ? 1 : 0.1
                         }"
-                        @mouseenter="onPointEnter({ ...point, pointIndex: i }, serie)"
-                        @mouseleave="onPointLeave({ ...point, pointIndex: i }, serie)"
-                        @click="onPointEnter({ ...point, pointIndex: i }, serie)"
+                        @mouseenter="selectedSeries = serie.id"
+                        @mouseleave="selectedSeries = null"
+                    />
+                    <path 
+                        class="transition-opacity"
+                        :d="`M${serie.path}`" 
+                        :stroke="serie.color"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.lines.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round" 
+                        fill="none"
+                        :style="{
+                            opacity: selectedSeries == null ? 1 : selectedSeries === serie.id ? 1 : 0.1
+                        }"
+                        @mouseenter="onPointEnter(serie, serie)"
+                        @mouseleave="onPointLeave(serie, serie)"
+                        @click="onPointClick(serie, serie)"
                     />
                 </template>
-                <template v-if="FINAL_CONFIG.style.chart.layout.plots.labels.show && FINAL_CONFIG.style.chart.layout.plots.labels.displayedValue === 'rank'">
-                    <text
-                        class="transition-opacity"
-                        v-for="label in serie.coordinates"
-                        :x="label.x"
-                        :y="label.y + FINAL_CONFIG.style.chart.layout.plots.labels.fontSize / 3"
-                        :fill="label.labelColor"
-                        :font-size="FINAL_CONFIG.style.chart.layout.plots.labels.fontSize"
-                        text-anchor="middle"
-                        :style="{
-                            userSelect: 'none',
-                            pointerEvents: 'none',
-                            opacity: selectedSeries == null ? 1 : selectedSeries === serie.id ? 1 : 0.1
-                        }" 
-                    >
-                        {{ label.rank }}
-                    </text>
-                </template>
-
-                <!-- VALUE LAYOUT -->
-                <template v-if="FINAL_CONFIG.style.chart.layout.plots.labels.displayedValue === 'value'">
-                    <template v-for="label in serie.coordinates">
-                        <rect
-                            v-if="isValidUserValue(label.value)"
+    
+                <!-- PLOTS -->
+                <template v-for="serie in formattedDataset">
+                    <!-- RANK LAYOUT -->
+                    <template v-if="FINAL_CONFIG.style.chart.layout.plots.labels.displayedValue === 'rank'">
+                        <circle
                             class="transition-opacity"
-                            v-bind="getValueRect(label)"
+                            v-for="(point, i) in serie.coordinates"
+                            :cx="point.x"
+                            :cy="point.y"
+                            :r="FINAL_CONFIG.style.chart.layout.plots.radius"
+                            :fill="serie.color"
+                            :stroke="FINAL_CONFIG.style.chart.layout.plots.stroke"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.plots.strokeWidth"
                             :style="{
                                 opacity: selectedSeries == null ? 1 : selectedSeries === serie.id ? 1 : 0.1
                             }"
@@ -1235,9 +1346,11 @@ defineExpose({
                             @mouseleave="onPointLeave({ ...point, pointIndex: i }, serie)"
                             @click="onPointEnter({ ...point, pointIndex: i }, serie)"
                         />
+                    </template>
+                    <template v-if="FINAL_CONFIG.style.chart.layout.plots.labels.show && FINAL_CONFIG.style.chart.layout.plots.labels.displayedValue === 'rank'">
                         <text
-                            v-if="isValidUserValue(label.value) && FINAL_CONFIG.style.chart.layout.plots.labels.show"
                             class="transition-opacity"
+                            v-for="label in serie.coordinates"
                             :x="label.x"
                             :y="label.y + FINAL_CONFIG.style.chart.layout.plots.labels.fontSize / 3"
                             :fill="label.labelColor"
@@ -1247,150 +1360,186 @@ defineExpose({
                                 userSelect: 'none',
                                 pointerEvents: 'none',
                                 opacity: selectedSeries == null ? 1 : selectedSeries === serie.id ? 1 : 0.1
-                            }"
+                            }" 
                         >
-                            {{ label.displayValue }}
+                            {{ label.rank }}
                         </text>
                     </template>
-                </template>
-            </template>
-
-            <!-- SERIES LABELS -->
-            <template v-if="FINAL_CONFIG.style.chart.layout.nameLabels.leftLabels.show">
-                <g ref="labelsLeft">
-                    <text 
-                        class="transition-opacity"
-                        v-for="(series, i) in nameLabels.left.filter(el => isValidUserValue(el.value))"
-                        :x="drawingArea.left"
-                        :y="series.y + FINAL_CONFIG.style.chart.layout.nameLabels.fontSize / 3"
-                        :fill="FINAL_CONFIG.style.chart.layout.nameLabels.useSerieColor ? series.color : FINAL_CONFIG.style.chart.layout.nameLabels.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nameLabels.fontSize"
-                        :font--weight="FINAL_CONFIG.style.chart.layout.nameLabels.bold ? 'bold' : 'normal'"
-                        text-anchor="end"
-                        v-html="createTSpansFromLineBreaksOnX({
-                            content: series.name,
-                            fontSize: FINAL_CONFIG.style.chart.layout.nameLabels.fontSize,
-                            fill: FINAL_CONFIG.style.chart.layout.nameLabels.useSerieColor ? series.color : FINAL_CONFIG.style.chart.layout.nameLabels.color,
-                            x: drawingArea.left - FINAL_CONFIG.style.chart.layout.nameLabels.offsetX,
-                            y: series.y + FINAL_CONFIG.style.chart.layout.nameLabels.fontSize / 3,
-                            translateY: true
-                        })"
-                        :style="{
-                            opacity: selectedSeries == null ? 1 : selectedSeries === series.id ? 1 : 0.1
-                        }"
-                        @mouseenter="onPointEnter(series, series)"
-                        @mouseleave="onPointLeave(series, series)"
-                        @click="onPointClick(series, series)"
-                    />
-                </g>
-            </template>
-
-            <template v-if="FINAL_CONFIG.style.chart.layout.nameLabels.rightLabels.show">
-                <g ref="labelsRight">
-                    <text 
-                        class="transition-opacity"
-                        v-for="(series, i) in nameLabels.right.filter(el => isValidUserValue(el.value))"
-                        :x="drawingArea.right"
-                        :y="series.y + FINAL_CONFIG.style.chart.layout.nameLabels.fontSize / 3"
-                        :fill="FINAL_CONFIG.style.chart.layout.nameLabels.useSerieColor ? series.color : FINAL_CONFIG.style.chart.layout.nameLabels.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nameLabels.fontSize"
-                        :font--weight="FINAL_CONFIG.style.chart.layout.nameLabels.bold ? 'bold' : 'normal'"
-                        text-anchor="start"
-                        v-html="createTSpansFromLineBreaksOnX({
-                            content: series.name,
-                            fontSize: FINAL_CONFIG.style.chart.layout.nameLabels.fontSize,
-                            fill: FINAL_CONFIG.style.chart.layout.nameLabels.useSerieColor ? series.color : FINAL_CONFIG.style.chart.layout.nameLabels.color,
-                            x: drawingArea.right + FINAL_CONFIG.style.chart.layout.nameLabels.offsetX,
-                            y: series.y + FINAL_CONFIG.style.chart.layout.nameLabels.fontSize / 3,
-                            translateY: true
-                        })"
-                        :style="{
-                            opacity: selectedSeries == null ? 1 : selectedSeries === series.id ? 1 : 0.1
-                        }"
-                        @mouseenter="onPointEnter(series, series)"
-                        @mouseleave="onPointLeave(series, series)"
-                        @click="onPointClick(series, series)"
-                    />
-                </g>
-            </template>
-
-            <!-- TIME LABELS -->
-            <template v-if="FINAL_CONFIG.style.chart.layout.timeLabels.show">
-                <g ref="timeLabelsEls">
-                    <g v-if="$slots['time-label']">
-                        <g v-for="(timeLabel, i) in displayedTimeLabels">
-                            <slot name="time-label" v-bind="{
-                                x: drawingArea.unitW * i + drawingArea.unitW /2 + drawingArea.left,
-                                y: drawingArea.chartHeight + FINAL_CONFIG.style.chart.layout.timeLabels.offsetY,
-                                fontSize: FINAL_CONFIG.style.chart.layout.timeLabels.fontSize,
-                                fill: FINAL_CONFIG.style.chart.layout.timeLabels.color,
-                                transform: `translate(${drawingArea.unitW * i + drawingArea.unitW /2 + drawingArea.left}, ${drawingArea.chartHeight + FINAL_CONFIG.style.chart.layout.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.timeLabels.rotation})`,
-                                absoluteIndex: timeLabel.absoluteIndex,
-                                content: timeLabel.text,
-                                textAnchor: FINAL_CONFIG.style.chart.layout.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.timeLabels.rotation < 0 ? 'end' : 'middle',
-                                show: true
-                            }"/>
-                        </g>
-                    </g>
-
-                    <g v-else>
-                        <g v-for="(timeLabel, i) in displayedTimeLabels">
+    
+                    <!-- VALUE LAYOUT -->
+                    <template v-if="FINAL_CONFIG.style.chart.layout.plots.labels.displayedValue === 'value'">
+                        <template v-for="label in serie.coordinates">
+                            <rect
+                                v-if="isValidUserValue(label.value)"
+                                class="transition-opacity"
+                                v-bind="getValueRect(label)"
+                                :style="{
+                                    opacity: selectedSeries == null ? 1 : selectedSeries === serie.id ? 1 : 0.1
+                                }"
+                                @mouseenter="onPointEnter({ ...point, pointIndex: i }, serie)"
+                                @mouseleave="onPointLeave({ ...point, pointIndex: i }, serie)"
+                                @click="onPointEnter({ ...point, pointIndex: i }, serie)"
+                            />
                             <text
-                                v-if="!String(timeLabel.text).includes('\n')"
-                                class="vue-data-ui-time-label"
-                                :key="i"
-                                data-cy="time-label"
-                                :text-anchor="FINAL_CONFIG.style.chart.layout.timeLabels.rotation > 0
-                                    ? 'start'
-                                    : FINAL_CONFIG.style.chart.layout.timeLabels.rotation < 0
-                                    ? 'end'
-                                    : 'middle'"
-                                :font-size="FINAL_CONFIG.style.chart.layout.timeLabels.fontSize"
-                                :font-weight="FINAL_CONFIG.style.chart.layout.timeLabels.bold ? 'bold' : 'normal'"
-                                :fill="FINAL_CONFIG.style.chart.layout.timeLabels.color"
-                                :transform="`translate(${drawingArea.unitW * i + drawingArea.unitW /2 + drawingArea.left}, ${drawingArea.chartHeight + FINAL_CONFIG.style.chart.layout.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.timeLabels.rotation})`"
-                                >
-                                {{ timeLabel.text }}
+                                v-if="isValidUserValue(label.value) && FINAL_CONFIG.style.chart.layout.plots.labels.show"
+                                class="transition-opacity"
+                                :x="label.x"
+                                :y="label.y + FINAL_CONFIG.style.chart.layout.plots.labels.fontSize / 3"
+                                :fill="label.labelColor"
+                                :font-size="FINAL_CONFIG.style.chart.layout.plots.labels.fontSize"
+                                text-anchor="middle"
+                                :style="{
+                                    userSelect: 'none',
+                                    pointerEvents: 'none',
+                                    opacity: selectedSeries == null ? 1 : selectedSeries === serie.id ? 1 : 0.1
+                                }"
+                            >
+                                {{ label.displayValue }}
                             </text>
-
-                            <text
-                                v-else
-                                :key="i + '-multi'"
-                                data-cy="time-label"
-                                :text-anchor="FINAL_CONFIG.style.chart.layout.timeLabels.rotation > 0
-                                    ? 'start'
-                                    : FINAL_CONFIG.style.chart.layout.timeLabels.rotation < 0
-                                    ? 'end'
-                                    : 'middle'"
-                                :font-size="FINAL_CONFIG.style.chart.layout.timeLabels.fontSize"
-                                :fill="FINAL_CONFIG.style.chart.layout.timeLabels.color"
-                                :transform="`
-                                    translate(
-                                    ${drawingArea.unitW * i + drawingArea.unitW /2 + drawingArea.left},
-                                    ${drawingArea.chartHeight + FINAL_CONFIG.style.chart.layout.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.layout.timeLabels.offsetY}
-                                    ),
-                                    rotate(${FINAL_CONFIG.style.chart.layout.timeLabels.rotation})
-                                `"
-                                v-html="createTSpansFromLineBreaksOnX({
-                                    content: String(timeLabel.text),
+                        </template>
+                    </template>
+                </template>
+    
+                <!-- SERIES LABELS -->
+                <template v-if="FINAL_CONFIG.style.chart.layout.nameLabels.leftLabels.show">
+                    <g ref="labelsLeft">
+                        <text 
+                            class="transition-opacity"
+                            v-for="(series, i) in nameLabels.left.filter(el => isValidUserValue(el.value))"
+                            :x="drawingArea.left"
+                            :y="series.y + FINAL_CONFIG.style.chart.layout.nameLabels.fontSize / 3"
+                            :fill="FINAL_CONFIG.style.chart.layout.nameLabels.useSerieColor ? series.color : FINAL_CONFIG.style.chart.layout.nameLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.nameLabels.fontSize"
+                            :font--weight="FINAL_CONFIG.style.chart.layout.nameLabels.bold ? 'bold' : 'normal'"
+                            text-anchor="end"
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: series.name,
+                                fontSize: FINAL_CONFIG.style.chart.layout.nameLabels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.layout.nameLabels.useSerieColor ? series.color : FINAL_CONFIG.style.chart.layout.nameLabels.color,
+                                x: drawingArea.left - FINAL_CONFIG.style.chart.layout.nameLabels.offsetX,
+                                y: series.y + FINAL_CONFIG.style.chart.layout.nameLabels.fontSize / 3,
+                                translateY: true
+                            })"
+                            :style="{
+                                opacity: selectedSeries == null ? 1 : selectedSeries === series.id ? 1 : 0.1
+                            }"
+                            @mouseenter="onPointEnter(series, series)"
+                            @mouseleave="onPointLeave(series, series)"
+                            @click="onPointClick(series, series)"
+                        />
+                    </g>
+                </template>
+    
+                <template v-if="FINAL_CONFIG.style.chart.layout.nameLabels.rightLabels.show">
+                    <g ref="labelsRight">
+                        <text 
+                            class="transition-opacity"
+                            v-for="(series, i) in nameLabels.right.filter(el => isValidUserValue(el.value))"
+                            :x="drawingArea.right"
+                            :y="series.y + FINAL_CONFIG.style.chart.layout.nameLabels.fontSize / 3"
+                            :fill="FINAL_CONFIG.style.chart.layout.nameLabels.useSerieColor ? series.color : FINAL_CONFIG.style.chart.layout.nameLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.nameLabels.fontSize"
+                            :font--weight="FINAL_CONFIG.style.chart.layout.nameLabels.bold ? 'bold' : 'normal'"
+                            text-anchor="start"
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: series.name,
+                                fontSize: FINAL_CONFIG.style.chart.layout.nameLabels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.layout.nameLabels.useSerieColor ? series.color : FINAL_CONFIG.style.chart.layout.nameLabels.color,
+                                x: drawingArea.right + FINAL_CONFIG.style.chart.layout.nameLabels.offsetX,
+                                y: series.y + FINAL_CONFIG.style.chart.layout.nameLabels.fontSize / 3,
+                                translateY: true
+                            })"
+                            :style="{
+                                opacity: selectedSeries == null ? 1 : selectedSeries === series.id ? 1 : 0.1
+                            }"
+                            @mouseenter="onPointEnter(series, series)"
+                            @mouseleave="onPointLeave(series, series)"
+                            @click="onPointClick(series, series)"
+                        />
+                    </g>
+                </template>
+    
+                <!-- TIME LABELS -->
+                <template v-if="FINAL_CONFIG.style.chart.layout.timeLabels.show">
+                    <g ref="timeLabelsEls">
+                        <g v-if="$slots['time-label']">
+                            <g v-for="(timeLabel, i) in displayedTimeLabels">
+                                <slot name="time-label" v-bind="{
+                                    x: drawingArea.unitW * i + drawingArea.unitW /2 + drawingArea.left,
+                                    y: drawingArea.chartHeight + FINAL_CONFIG.style.chart.layout.timeLabels.offsetY,
                                     fontSize: FINAL_CONFIG.style.chart.layout.timeLabels.fontSize,
                                     fill: FINAL_CONFIG.style.chart.layout.timeLabels.color,
-                                    x: 0,
-                                    y: 0
-                                })"
-                            />
+                                    transform: `translate(${drawingArea.unitW * i + drawingArea.unitW /2 + drawingArea.left}, ${drawingArea.chartHeight + FINAL_CONFIG.style.chart.layout.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.timeLabels.rotation})`,
+                                    absoluteIndex: timeLabel.absoluteIndex,
+                                    content: timeLabel.text,
+                                    textAnchor: FINAL_CONFIG.style.chart.layout.timeLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.timeLabels.rotation < 0 ? 'end' : 'middle',
+                                    show: true
+                                }"/>
+                            </g>
+                        </g>
+    
+                        <g v-else>
+                            <g v-for="(timeLabel, i) in displayedTimeLabels">
+                                <text
+                                    v-if="!String(timeLabel.text).includes('\n')"
+                                    class="vue-data-ui-time-label"
+                                    :key="i"
+                                    data-cy="time-label"
+                                    :text-anchor="FINAL_CONFIG.style.chart.layout.timeLabels.rotation > 0
+                                        ? 'start'
+                                        : FINAL_CONFIG.style.chart.layout.timeLabels.rotation < 0
+                                        ? 'end'
+                                        : 'middle'"
+                                    :font-size="FINAL_CONFIG.style.chart.layout.timeLabels.fontSize"
+                                    :font-weight="FINAL_CONFIG.style.chart.layout.timeLabels.bold ? 'bold' : 'normal'"
+                                    :fill="FINAL_CONFIG.style.chart.layout.timeLabels.color"
+                                    :transform="`translate(${drawingArea.unitW * i + drawingArea.unitW /2 + drawingArea.left}, ${drawingArea.chartHeight + FINAL_CONFIG.style.chart.layout.timeLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.timeLabels.rotation})`"
+                                    >
+                                    {{ timeLabel.text }}
+                                </text>
+    
+                                <text
+                                    v-else
+                                    :key="i + '-multi'"
+                                    data-cy="time-label"
+                                    :text-anchor="FINAL_CONFIG.style.chart.layout.timeLabels.rotation > 0
+                                        ? 'start'
+                                        : FINAL_CONFIG.style.chart.layout.timeLabels.rotation < 0
+                                        ? 'end'
+                                        : 'middle'"
+                                    :font-size="FINAL_CONFIG.style.chart.layout.timeLabels.fontSize"
+                                    :fill="FINAL_CONFIG.style.chart.layout.timeLabels.color"
+                                    :transform="`
+                                        translate(
+                                        ${drawingArea.unitW * i + drawingArea.unitW /2 + drawingArea.left},
+                                        ${drawingArea.chartHeight + FINAL_CONFIG.style.chart.layout.timeLabels.fontSize * 1.3 + FINAL_CONFIG.style.chart.layout.timeLabels.offsetY}
+                                        ),
+                                        rotate(${FINAL_CONFIG.style.chart.layout.timeLabels.rotation})
+                                    `"
+                                    v-html="createTSpansFromLineBreaksOnX({
+                                        content: String(timeLabel.text),
+                                        fontSize: FINAL_CONFIG.style.chart.layout.timeLabels.fontSize,
+                                        fill: FINAL_CONFIG.style.chart.layout.timeLabels.color,
+                                        x: 0,
+                                        y: 0
+                                    })"
+                                />
+                            </g>
                         </g>
                     </g>
-                </g>
-            </template>
-
-            <slot name="svg" :svg="{ 
-                drawingArea,
-                data: formattedDataset,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+                </template>
+    
+                <slot name="svg" :svg="{ 
+                    drawingArea,
+                    data: formattedDataset,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <!-- WATERMARK -->
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
@@ -1451,60 +1600,80 @@ defineExpose({
 </template>
 
 <style scoped lang="scss">
-    @import "../vue-data-ui.css";
+@import "../vue-data-ui.css";
 
-    .vue-ui-bump * {
-        transition: unset;
+.vue-ui-bump * {
+    transition: unset;
+}
+
+.vue-ui-bump {
+    user-select: none;
+    width: 100%;
+}
+
+.transition-opacity {
+    transition: opacity 0.2s ease-in-out;
+}
+
+.with-transition {
+    path,
+    line,
+    rect,
+    circle {
+        animation: start-transition 0.5s ease-in;
+        transform-origin: center;
     }
 
-    .vue-ui-bump {
-        user-select: none;
-        width: 100%;
-    }
-
-    .transition-opacity {
-        transition: opacity 0.2s ease-in-out;
-    }
-
-    .with-transition {
-        path,
-        line,
-        rect,
-        circle {
-            animation: start-transition 0.5s ease-in;
-            transform-origin: center;
-        }
-    
-        @keyframes start-transition {
-            0% {
-                transform: scale(0.9, 0.9);
-                opacity: 0;
-            }
-    
-            80% {
-                transform: scale(1.02, 1.02);
-                opacity: 1;
-            }
-    
-            to {
-                transform: scale(1, 1);
-                opacity: 1;
-            }
+    @keyframes start-transition {
+        0% {
+            transform: scale(0.9, 0.9);
+            opacity: 0;
         }
 
-        text {
-            animation: start-opacity 0.5 ease-in;
+        80% {
+            transform: scale(1.02, 1.02);
+            opacity: 1;
         }
 
-        @keyframes start-opacity {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+        to {
+            transform: scale(1, 1);
+            opacity: 1;
         }
     }
 
+    text {
+        animation: start-opacity 0.5 ease-in;
+    }
 
+    @keyframes start-opacity {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
+}
 </style>
