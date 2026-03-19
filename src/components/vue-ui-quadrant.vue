@@ -49,6 +49,7 @@ import Shape from "../atoms/Shape.vue";
 import themes from "../themes/vue_ui_quadrant.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -101,6 +102,12 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const activeTooltipPlotId = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -758,7 +765,15 @@ const dataTable = computed(() => {
             ),
             ds.sideName || ds.quadrantSide
         ]
-    })
+    });
+
+    const a11yBody = body.map(b => {
+        return b.map((c, i) => {
+            if (i === 0) return c.name ?? '';
+            return c
+        });
+    });
+
     const config = {
         th: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -773,7 +788,7 @@ const dataTable = computed(() => {
         breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint
     }
 
-    return { head, body, config, colNames: head }
+    return { head, body, a11yBody, config, colNames: head }
 });
 
 function toggleLegend() {
@@ -876,7 +891,31 @@ const hoveredPlotId = ref(null);
 const hoveredPlot = ref(null);
 const dataTooltipSlot = ref(null);
 
-function useTooltip(category, plot, categoryIndex) {
+function clearPlotSelection() {
+    hoveredPlotId.value = null;
+    hoveredPlot.value = null;
+    activeTooltipIndex.value = null;
+    activeTooltipPlotId.value = null;
+    isTooltip.value = false;
+}
+
+function updateTooltipA11yPosition(plotId) {
+    if (!svgRef.value || !plotId) return;
+
+    const selector = `[data-a11y-plot-id="${plotId}"]`;
+    const trap = svgRef.value.querySelector(selector);
+
+    if (!trap) return;
+
+    const box = trap.getBoundingClientRect();
+
+    tooltipA11yPosition.value = {
+        x: box.left + (box.width / 2),
+        y: box.top + (box.height / 2)
+    };
+}
+
+function useTooltip(category, plot, categoryIndex, triggerMode = 'pointer', flatIndex = null) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint: plot, seriesIndex: categoryIndex });
     }
@@ -887,14 +926,16 @@ function useTooltip(category, plot, categoryIndex) {
         shape: category.shape
     }
 
+    tooltipTriggerMode.value = triggerMode;
+    activeTooltipIndex.value = flatIndex;
+    activeTooltipPlotId.value = plot.uid;
+
     dataTooltipSlot.value = {
         datapoint: plot,
         seriesIndex: categoryIndex,
         series: drawableDataset.value,
         config: FINAL_CONFIG.value
     }
-
-    isTooltip.value = true;
 
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
@@ -940,15 +981,23 @@ function useTooltip(category, plot, categoryIndex) {
         tooltipContent.value = `<div style="text-align:left;font-size:${FINAL_CONFIG.value.style.chart.tooltip.fontSize}px">${html}</div>`;
     }
 
+    if (triggerMode === 'keyboard') {
+        nextTick(() => {
+            updateTooltipA11yPosition(plot.uid);
+        });
+    }
+
+    isTooltip.value = true;
 }
 
 function onTrapLeave(plot, index) {
-    isTooltip.value = false;
-    hoveredPlotId.value = null;
-    hoveredPlot.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint: plot, seriesIndex: index });
     }
+    if (activeTooltipPlotId.value === plot.uid && tooltipTriggerMode.value === 'keyboard') return;
+    isTooltip.value = false;
+    hoveredPlotId.value = null;
+    hoveredPlot.value = null;
 }
 
 function selectPlot(category, plot, index) {
@@ -1277,6 +1326,91 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+***************************************************************************************************/
+
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    activeTooltipPlotId.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    clearPlotSelection();
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!a11yPlots.value.length) return;
+
+    const isPreviousKey = event.key === 'ArrowLeft' || event.key === 'ArrowUp';
+    const isNextKey = event.key === 'ArrowRight' || event.key === 'ArrowDown';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearPlotSelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+
+        const entry = a11yPlots.value[activeTooltipIndex.value];
+        if (!entry) return;
+
+        selectPlot(entry.category, entry.plot, entry.categoryIndex);
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= a11yPlots.value.length) {
+        nextIndex = isNextKey ? 0 : a11yPlots.value.length - 1;
+    } else {
+        nextIndex += isNextKey ? 1 : -1;
+
+        if (nextIndex < 0) {
+            nextIndex = a11yPlots.value.length - 1;
+        }
+
+        if (nextIndex >= a11yPlots.value.length) {
+            nextIndex = 0;
+        }
+    }
+
+    const entry = a11yPlots.value[nextIndex];
+    if (!entry) return;
+
+    useTooltip(entry.category, entry.plot, entry.categoryIndex, 'keyboard', nextIndex);
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = dataTable.value?.a11yBody ?? [];
+    return { headers, rows };
+});
+
+const a11yPlots = computed(() => {
+    return drawableDataset.value.flatMap((category, categoryIndex) => {
+        return category.series.map(plot => {
+            return {
+                category,
+                plot,
+                categoryIndex
+            };
+        });
+    });
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1297,7 +1431,32 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-data-ui-component vue-ui-quadrant ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="quadrantChart" :id="`vue-ui-quadrant_${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? `height: 100%` : ''}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div 
+        :class="`vue-data-ui-component vue-ui-quadrant ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" 
+        ref="quadrantChart" 
+        :id="`vue-ui-quadrant_${uid}`" 
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? `height: 100%` : ''}`" 
+        @mouseenter="() => setUserOptionsVisibility(true)" 
+        @mouseleave="() => {
+            setUserOptionsVisibility(false);
+            if (!isFocus) {
+                clearPlotSelection();
+            }
+        }"
+    >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1433,498 +1592,532 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg 
-            ref="svgRef"
-            data-cy="quadrant-svg"
-            :xmlns="XMLNS"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`"
-            :style="`max-width:100%;overflow:hidden;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  :id="`svg_${uid}`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="mutableSvg.startX"
-                :y="mutableSvg.startY"
-                :width="mutableSvg.width"
-                :height="mutableSvg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position: relative;">
+            <svg 
+                ref="svgRef"
+                data-cy="quadrant-svg"
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+                :viewBox="`${mutableSvg.startX} ${mutableSvg.startY} ${mutableSvg.width} ${mutableSvg.height}`"
+                :style="`max-width:100%;overflow:hidden;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"  
+                :id="`svg_${uid}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-
-            <!-- DEFS -->
-            <defs>
-                <radialGradient
-                    cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
-                    v-for="(d, i) in drawableDataset"
-                    :id="`quadrant_gradient_${uid}_${i}`"
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="mutableSvg.startX"
+                    :y="mutableSvg.startY"
+                    :width="mutableSvg.width"
+                    :height="mutableSvg.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
                 >
-                    <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), FINAL_CONFIG.style.chart.layout.areas.opacity)"/>
-                    <stop offset="100%" :stop-color="setOpacity(d.color, FINAL_CONFIG.style.chart.layout.areas.opacity)" />
-                </radialGradient>
-            </defs>
-
-            <!-- GRID -->            
-            <!-- GRADUATIONS-->
-            <g v-if="FINAL_CONFIG.style.chart.layout.grid.graduations.show">
-                <rect v-for="graduation in graduations"
-                    data-cy="grid-rect"
-                    :fill="FINAL_CONFIG.style.chart.layout.grid.graduations.fill ? setOpacity(FINAL_CONFIG.style.chart.layout.grid.graduations.color, graduation.opacity) : 'none'"
-                    :x="graduation.x"
-                    :y="graduation.y"
-                    :height="graduation.height <= 0 ? 0.001 : graduation.height"
-                    :width="graduation.width <= 0 ? 0.001 : graduation.width"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.graduations.strokeWidth"
-                    :stroke="FINAL_CONFIG.style.chart.layout.grid.graduations.stroke"
-                    :rx="FINAL_CONFIG.style.chart.layout.grid.graduations.roundingForce"
-                />
-            </g>
-
-            <!-- AXIS -->
-            <line
-                data-cy="axis-x"
-                :x1="svg.left"
-                :y1="svg.centerY"
-                :x2="svg.right"
-                :y2="svg.centerY"
-                :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
-            />
-            <line
-                data-cy="axis-y"
-                :x1="svg.centerX"
-                :y1="svg.top"
-                :x2="svg.centerX"
-                :y2="svg.bottom"
-                :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
-            />
-            <!-- ARROWS -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.grid.showArrows">
-                <polygon data-cy="axis-arrow" :points="`${svg.right - 8},${svg.centerY - 6} ${svg.right},${svg.centerY} ${svg.right - 8},${svg.centerY + 6}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none" />
-                <polygon data-cy="axis-arrow" :points="`${svg.left + 8},${svg.centerY - 6} ${svg.left},${svg.centerY} ${svg.left + 8},${svg.centerY + 6}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none" />
-                <polygon data-cy="axis-arrow" :points="`${svg.centerX - 6},${svg.top + 8} ${svg.centerX},${svg.top} ${svg.centerX + 6},${svg.top + 8}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none"/>
-                <polygon data-cy="axis-arrow" :points="`${svg.centerX - 6},${svg.bottom - 8} ${svg.centerX},${svg.bottom} ${svg.centerX + 6},${svg.bottom - 8}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none"/>
-            </g>
-
-            <!-- QUADRANT LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.show && !isZoom">            
-                <!-- TL -->
-                <text
-                    data-cy="quadrant-label-tl"
-                    v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.text"
-                    :x="0"
-                    :y="svg.top - svg.padding / 2"
-                    text-anchor="start"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.fontSize"
-                    :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.bold ? 'bold' : ''}`"
-                    @click="selectSide('tl')"
-                >
-                    {{ FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.text }}
-                </text>
-
-                <!-- TR -->
-                <text
-                data-cy="quadrant-label-tr"
-                    v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.text"
-                    :x="svg.width"
-                    :y="svg.top - svg.padding / 2"
-                    text-anchor="end"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.fontSize"
-                    :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.bold ? 'bold' : ''}`"
-                    @click="selectSide('tr')"
-                >
-                    {{ FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.text }}
-                </text>
-
-                <!-- BR -->
-                <text
-                data-cy="quadrant-label-br"
-                    v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.text"
-                    :x="svg.width"
-                    :y="svg.bottom + svg.padding *0.7"
-                    text-anchor="end"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.fontSize"
-                    :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.bold ? 'bold' : ''}`"
-                    @click="selectSide('br')"
-                >
-                    {{ FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.text }}
-                </text>
-
-                <!-- BL -->
-                <text
-                    data-cy="quadrant-label-bl"
-                    v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.text"
-                    :x="0"
-                    :y="svg.bottom + svg.padding * 0.7"
-                    text-anchor="start"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.fontSize"
-                    :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.bold ? 'bold' : ''}`"
-                    @click="selectSide('bl')"
-                >
-                    {{ FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.text }}
-                </text>
-            </g>
-
-            <!-- AXIS VALUES -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.labels.axisLabels.show">
-                <!-- Y MAX -->
-                <text
-                    data-cy="label-y-max"
-                    :x="svg.centerX"
-                    :y="svg.top - svg.padding / 6"
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
-                >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.labels.plotLabels.y.formatter,
-                        axisValues.y.max,
-                        dataLabel({
-                            v: axisValues.y.max,
-                            r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
-                        })) 
-                    }}
-                </text>
-                <text
-                    data-cy="axis-y-name"
-                    :x="svg.centerX"
-                    :y="svg.top - svg.padding / 2"
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
-                >
-                    {{ FINAL_CONFIG.style.chart.layout.grid.yAxis.name }}
-                </text>
-
-                <!-- Y MIN -->
-                <text
-                    data-cy="label-y-min"
-                    :x="svg.centerX"
-                    :y="svg.bottom + svg.padding * 0.35"
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.negative"
-                >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.labels.plotLabels.y.formatter,
-                        axisValues.y.min,
-                        dataLabel({
-                            v: axisValues.y.min,
-                            r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
-                        })) 
-                    }}
-                </text>
-
-                <!-- X MIN -->
-                <text
-                    data-cy="label-x-min"
-                    :id="`xLabelMin_${uid}`"
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
-                    :transform="`translate(${svg.padding - FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize}, ${svg.height / 2}), rotate(-90)`"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.negative"
-                >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.labels.plotLabels.x.formatter,
-                        axisValues.x.min,
-                        dataLabel({
-                            v: axisValues.x.min,
-                            r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
-                        })) 
-                    }}
-                </text>
-
-                <!-- X MAX -->
-                <text
-                    data-cy="label-x-max"
-                    :id="`xLabelMax_${uid}`"
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
-                    :transform="`translate(${svg.width - svg.padding + FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize}, ${svg.height / 2}), rotate(90)`"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
-                >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.labels.plotLabels.x.formatter,
-                        axisValues.x.max,
-                        dataLabel({
-                            v: axisValues.x.max,
-                            r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
-                        })) 
-                    }}
-                </text>       
-                <text
-                    data-cy="axis-x-name"
-                    :id="`xLabelMaxName_${uid}`"
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
-                    :transform="`translate(${svg.width - FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize}, ${svg.height / 2}), rotate(90)`"
-                    :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
-                >
-                    {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.name }}
-                </text>       
-            </g>
-
-            <!-- AREAS GIFT WRAPPING -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.areas.show">
-                <g v-for="(category, i) in drawableDataset">
-                    <polygon
-                        data-cy="gift-wrap"
-                        v-if="category.series.length > 2"
-                        data-cy-quadrant-area
-                        :fill="FINAL_CONFIG.style.chart.layout.areas.useGradient ? `url(#quadrant_gradient_${uid}_${i})` : setOpacity(category.color, FINAL_CONFIG.style.chart.layout.areas.opacity)"
-                        :points="giftWrap(category)"
+                    <slot name="chart-background"/>
+                </foreignObject>
+    
+                <!-- DEFS -->
+                <defs>
+                    <radialGradient
+                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        v-for="(d, i) in drawableDataset"
+                        :id="`quadrant_gradient_${uid}_${i}`"
+                    >
+                        <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), FINAL_CONFIG.style.chart.layout.areas.opacity)"/>
+                        <stop offset="100%" :stop-color="setOpacity(d.color, FINAL_CONFIG.style.chart.layout.areas.opacity)" />
+                    </radialGradient>
+                </defs>
+    
+                <!-- GRID -->            
+                <!-- GRADUATIONS-->
+                <g v-if="FINAL_CONFIG.style.chart.layout.grid.graduations.show">
+                    <rect v-for="graduation in graduations"
+                        data-cy="grid-rect"
+                        :fill="FINAL_CONFIG.style.chart.layout.grid.graduations.fill ? setOpacity(FINAL_CONFIG.style.chart.layout.grid.graduations.color, graduation.opacity) : 'none'"
+                        :x="graduation.x"
+                        :y="graduation.y"
+                        :height="graduation.height <= 0 ? 0.001 : graduation.height"
+                        :width="graduation.width <= 0 ? 0.001 : graduation.width"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.grid.graduations.strokeWidth"
+                        :stroke="FINAL_CONFIG.style.chart.layout.grid.graduations.stroke"
+                        :rx="FINAL_CONFIG.style.chart.layout.grid.graduations.roundingForce"
                     />
                 </g>
-            </g>
-
-            <!-- SIDE TRAPS -->
-            <g>
-                <rect
-                    data-cy="side-trap-tl"
-                    @click="selectQuadrantSide('TL')"
-                    :x="svg.left"
-                    :y="svg.top"
-                    :width="(svg.usableWidth / 2) <= 0 ? 0.001 : (svg.usableWidth / 2)"
-                    :height="(svg.usableHeight / 2) <= 0 ? 0.001 : (svg.usableHeight / 2)"
-                    fill="transparent"
-                    :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+    
+                <!-- AXIS -->
+                <line
+                    data-cy="axis-x"
+                    :x1="svg.left"
+                    :y1="svg.centerY"
+                    :x2="svg.right"
+                    :y2="svg.centerY"
+                    :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
                 />
-                <rect
-                    data-cy="side-trap-tr"
-                    @click="selectQuadrantSide('TR')"
-                    :x="svg.centerX"
-                    :y="svg.top"
-                    :width="(svg.usableWidth / 2) <= 0 ? 0.001 : (svg.usableWidth / 2)"
-                    :height="(svg.usableHeight / 2) <= 0 ? 0.001 : (svg.usableHeight / 2)"
-                    fill="transparent"
-                    :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+                <line
+                    data-cy="axis-y"
+                    :x1="svg.centerX"
+                    :y1="svg.top"
+                    :x2="svg.centerX"
+                    :y2="svg.bottom"
+                    :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
                 />
-                <rect
-                    data-cy="side-trap-br"
-                    @click="selectQuadrantSide('BR')"
-                    :x="svg.centerX"
-                    :y="svg.centerY"
-                    :width="(svg.usableWidth / 2) <= 0 ? 0.001 : (svg.usableWidth / 2)"
-                    :height="(svg.usableHeight / 2) <= 0 ? 0.001 : (svg.usableHeight / 2)"
-                    fill="transparent"
-                    :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
-                />
-                <rect
-                    data-cy="side-trap-bl"
-                    @click="selectQuadrantSide('BL')"
-                    :x="svg.left"
-                    :y="svg.centerY"
-                    :width="(svg.usableWidth / 2) <= 0 ? 0.001 : (svg.usableWidth / 2)"
-                    :height="(svg.usableHeight / 2) <= 0 ? 0.001 : (svg.usableHeight / 2)"
-                    fill="transparent"
-                    :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
-                />
-            </g>
-
-            <!-- PLOTS -->
-            <template v-if="!FINAL_CONFIG.style.chart.layout.labels.plotLabels.showAsTag">
-                <g v-for="(category, i) in drawableDataset">
-                    <template v-if="$slots.datapoint && !loading">
-                        <foreignObject
-                            v-for="plot in category.series"
-                            :x="plot.x - 1"
-                            :y="plot.y - 1"
-                            width="2"
-                            height="2"
-                            style="overflow: visible"
-                            @mouseenter="useTooltip(category, plot, i)"
-                            @mouseleave="onTrapLeave(plot, i)"
-                            @click="selectPlot(category, plot, i)"
-                        >
-                            <slot name="datapoint" v-bind="{ datapoint: plot }" />
-                        </foreignObject>
-                    </template>
-
-                    <template v-else>
-                        <Shape
-                            v-for="plot in category.series"
-                            :color="category.color"
-                            :isSelected="hoveredPlotId && plot.uid === hoveredPlotId"
-                            :plot="plot"
-                            :radius="FINAL_CONFIG.style.chart.layout.plots.radius / (isZoom ? 1.5 : 1)"
-                            :shape="category.shape"
-                            :stroke="FINAL_CONFIG.style.chart.layout.plots.outline ? FINAL_CONFIG.style.chart.layout.plots.outlineColor : 'none'"
-                            :strokeWidth="FINAL_CONFIG.style.chart.layout.plots.outlineWidth"
-                            @mouseenter="useTooltip(category, plot, i)"
-                            @mouseleave="onTrapLeave(plot, i)"
-                            @click="selectPlot(category, plot, i)"
-                        />
-                    </template>
+                <!-- ARROWS -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.grid.showArrows">
+                    <polygon data-cy="axis-arrow" :points="`${svg.right - 8},${svg.centerY - 6} ${svg.right},${svg.centerY} ${svg.right - 8},${svg.centerY + 6}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none" />
+                    <polygon data-cy="axis-arrow" :points="`${svg.left + 8},${svg.centerY - 6} ${svg.left},${svg.centerY} ${svg.left + 8},${svg.centerY + 6}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none" />
+                    <polygon data-cy="axis-arrow" :points="`${svg.centerX - 6},${svg.top + 8} ${svg.centerX},${svg.top} ${svg.centerX + 6},${svg.top + 8}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none"/>
+                    <polygon data-cy="axis-arrow" :points="`${svg.centerX - 6},${svg.bottom - 8} ${svg.centerX},${svg.bottom} ${svg.centerX + 6},${svg.bottom - 8}`" :fill="FINAL_CONFIG.style.chart.layout.grid.stroke" stroke="none"/>
                 </g>
-
-                <g v-if="mutableConfig.plotLabels.show" style="pointer-events: none;">
-                    <g v-for="category in drawableDataset">
-                        <g v-for="plot in category.series">
-                            <!-- SINGLE LINE -->
-                            <text
-                                v-if="!String(plot.name).includes('\n')"
-                                data-cy="plot-label"
-                                :x="plot.x" 
-                                :y="plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius" 
-                                text-anchor="middle" 
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1)"
-                                :fill="FINAL_CONFIG.style.chart.layout.labels.plotLabels.color"
-                            >
-                                {{ plot.name }}
-                            </text>
-                            <text
-                                v-else
-                                data-cy="plot-label"
-                                :x="plot.x" 
-                                :y="plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius" 
-                                text-anchor="middle" 
-                                :font-size="FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1)"
-                                :fill="FINAL_CONFIG.style.chart.layout.labels.plotLabels.color"
-                                v-html="createTSpansFromLineBreaksOnX({
-                                    content: String(plot.name),
-                                    fontSize: FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1),
-                                    fill: FINAL_CONFIG.style.chart.layout.labels.plotLabels.color,
-                                    x: plot.x,
-                                    y: plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius
-                                })"
-                            />
-                        </g>
+    
+                <!-- QUADRANT LABELS -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.show && !isZoom">            
+                    <!-- TL -->
+                    <text
+                        data-cy="quadrant-label-tl"
+                        v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.text"
+                        :x="0"
+                        :y="svg.top - svg.padding / 2"
+                        text-anchor="start"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.bold ? 'bold' : ''}`"
+                        @click="selectSide('tl')"
+                    >
+                        {{ FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tl.text }}
+                    </text>
+    
+                    <!-- TR -->
+                    <text
+                    data-cy="quadrant-label-tr"
+                        v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.text"
+                        :x="svg.width"
+                        :y="svg.top - svg.padding / 2"
+                        text-anchor="end"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.bold ? 'bold' : ''}`"
+                        @click="selectSide('tr')"
+                    >
+                        {{ FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.tr.text }}
+                    </text>
+    
+                    <!-- BR -->
+                    <text
+                    data-cy="quadrant-label-br"
+                        v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.text"
+                        :x="svg.width"
+                        :y="svg.bottom + svg.padding *0.7"
+                        text-anchor="end"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.bold ? 'bold' : ''}`"
+                        @click="selectSide('br')"
+                    >
+                        {{ FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.br.text }}
+                    </text>
+    
+                    <!-- BL -->
+                    <text
+                        data-cy="quadrant-label-bl"
+                        v-if="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.text"
+                        :x="0"
+                        :y="svg.bottom + svg.padding * 0.7"
+                        text-anchor="start"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.fontSize"
+                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.bold ? 'bold' : ''}`"
+                        @click="selectSide('bl')"
+                    >
+                        {{ FINAL_CONFIG.style.chart.layout.labels.quadrantLabels.bl.text }}
+                    </text>
+                </g>
+    
+                <!-- AXIS VALUES -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.labels.axisLabels.show">
+                    <!-- Y MAX -->
+                    <text
+                        data-cy="label-y-max"
+                        :x="svg.centerX"
+                        :y="svg.top - svg.padding / 6"
+                        text-anchor="middle"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
+                    >
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.plotLabels.y.formatter,
+                            axisValues.y.max,
+                            dataLabel({
+                                v: axisValues.y.max,
+                                r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
+                            })) 
+                        }}
+                    </text>
+                    <text
+                        data-cy="axis-y-name"
+                        :x="svg.centerX"
+                        :y="svg.top - svg.padding / 2"
+                        text-anchor="middle"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
+                    >
+                        {{ FINAL_CONFIG.style.chart.layout.grid.yAxis.name }}
+                    </text>
+    
+                    <!-- Y MIN -->
+                    <text
+                        data-cy="label-y-min"
+                        :x="svg.centerX"
+                        :y="svg.bottom + svg.padding * 0.35"
+                        text-anchor="middle"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.negative"
+                    >
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.plotLabels.y.formatter,
+                            axisValues.y.min,
+                            dataLabel({
+                                v: axisValues.y.min,
+                                r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
+                            })) 
+                        }}
+                    </text>
+    
+                    <!-- X MIN -->
+                    <text
+                        data-cy="label-x-min"
+                        :id="`xLabelMin_${uid}`"
+                        text-anchor="middle"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
+                        :transform="`translate(${svg.padding - FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize}, ${svg.height / 2}), rotate(-90)`"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.negative"
+                    >
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.plotLabels.x.formatter,
+                            axisValues.x.min,
+                            dataLabel({
+                                v: axisValues.x.min,
+                                r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
+                            })) 
+                        }}
+                    </text>
+    
+                    <!-- X MAX -->
+                    <text
+                        data-cy="label-x-max"
+                        :id="`xLabelMax_${uid}`"
+                        text-anchor="middle"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
+                        :transform="`translate(${svg.width - svg.padding + FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize}, ${svg.height / 2}), rotate(90)`"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
+                    >
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.labels.plotLabels.x.formatter,
+                            axisValues.x.max,
+                            dataLabel({
+                                v: axisValues.x.max,
+                                r: FINAL_CONFIG.style.chart.layout.labels.plotLabels.rounding
+                            })) 
+                        }}
+                    </text>       
+                    <text
+                        data-cy="axis-x-name"
+                        :id="`xLabelMaxName_${uid}`"
+                        text-anchor="middle"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize"
+                        :transform="`translate(${svg.width - FINAL_CONFIG.style.chart.layout.labels.axisLabels.fontSize}, ${svg.height / 2}), rotate(90)`"
+                        :fill="FINAL_CONFIG.style.chart.layout.labels.axisLabels.color.positive"
+                    >
+                        {{ FINAL_CONFIG.style.chart.layout.grid.xAxis.name }}
+                    </text>       
+                </g>
+    
+                <!-- AREAS GIFT WRAPPING -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.areas.show">
+                    <g v-for="(category, i) in drawableDataset">
+                        <polygon
+                            data-cy="gift-wrap"
+                            v-if="category.series.length > 2"
+                            data-cy-quadrant-area
+                            :fill="FINAL_CONFIG.style.chart.layout.areas.useGradient ? `url(#quadrant_gradient_${uid}_${i})` : setOpacity(category.color, FINAL_CONFIG.style.chart.layout.areas.opacity)"
+                            :points="giftWrap(category)"
+                        />
                     </g>
                 </g>
-            </template>
-
-            <template v-else>
-                <g v-if="mutableConfig.plotLabels.show">
-                    <template v-for="(category, i) in drawableDataset">
-                        <foreignObject 
-                            v-for="plot in category.series" style="overflow: visible;" height="10" width="100" :x="plot.x - 50" :y="plot.y - (FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize)" 
-                            @mouseover="useTooltip(category, plot, i)"
-                            @mouseleave="onTrapLeave(plot, i)"
-                            @click="selectPlot(category, plot, i)">
-                            <div :style="`color:${adaptColorToBackground(category.color)};margin: 0 auto; font-size:${FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize}px; text-align:center;background:${category.color}; padding: 2px 4px; border-radius: 12px; height: fit-content;`">
-                                {{  plot.name }}
-                            </div>
-                        </foreignObject>
-                    </template>
+    
+                <!-- SIDE TRAPS -->
+                <g>
+                    <rect
+                        data-cy="side-trap-tl"
+                        @click="selectQuadrantSide('TL')"
+                        :x="svg.left"
+                        :y="svg.top"
+                        :width="(svg.usableWidth / 2) <= 0 ? 0.001 : (svg.usableWidth / 2)"
+                        :height="(svg.usableHeight / 2) <= 0 ? 0.001 : (svg.usableHeight / 2)"
+                        fill="transparent"
+                        :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+                    />
+                    <rect
+                        data-cy="side-trap-tr"
+                        @click="selectQuadrantSide('TR')"
+                        :x="svg.centerX"
+                        :y="svg.top"
+                        :width="(svg.usableWidth / 2) <= 0 ? 0.001 : (svg.usableWidth / 2)"
+                        :height="(svg.usableHeight / 2) <= 0 ? 0.001 : (svg.usableHeight / 2)"
+                        fill="transparent"
+                        :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+                    />
+                    <rect
+                        data-cy="side-trap-br"
+                        @click="selectQuadrantSide('BR')"
+                        :x="svg.centerX"
+                        :y="svg.centerY"
+                        :width="(svg.usableWidth / 2) <= 0 ? 0.001 : (svg.usableWidth / 2)"
+                        :height="(svg.usableHeight / 2) <= 0 ? 0.001 : (svg.usableHeight / 2)"
+                        fill="transparent"
+                        :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+                    />
+                    <rect
+                        data-cy="side-trap-bl"
+                        @click="selectQuadrantSide('BL')"
+                        :x="svg.left"
+                        :y="svg.centerY"
+                        :width="(svg.usableWidth / 2) <= 0 ? 0.001 : (svg.usableWidth / 2)"
+                        :height="(svg.usableHeight / 2) <= 0 ? 0.001 : (svg.usableHeight / 2)"
+                        fill="transparent"
+                        :class="{ 'vue-data-ui-zoom-plus': !isZoom, 'vue-data-ui-zoom-minus': isZoom }"
+                    />
                 </g>
-            </template>
+    
+                <!-- PLOTS -->
+                <template v-if="!FINAL_CONFIG.style.chart.layout.labels.plotLabels.showAsTag">
+                    <g v-for="(category, i) in drawableDataset">
+                        <template v-if="$slots.datapoint && !loading">
+                            <g v-for="plot in category.series" :key="plot.uid">
+                                <foreignObject
+                                    :x="plot.x - 1"
+                                    :y="plot.y - 1"
+                                    width="2"
+                                    height="2"
+                                    style="overflow: visible; pointer-events: none;"
+                                    @mouseenter="useTooltip(category, plot, i)"
+                                    @mouseleave="onTrapLeave(plot, i)"
+                                    @click="selectPlot(category, plot, i)"
+                                >
+                                    <slot name="datapoint" v-bind="{ datapoint: plot }" />
+                                </foreignObject>
 
-            <!-- HIDDEN AREAS ON ZOOM -->
-            <g v-if="isZoom" class="vue-ui-dna">
-                <polygon 
-                    v-if="selectedSide === 'TL'"
-                    :points="`${svg.left - 1},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.top - 1} ${svg.right},${svg.top - 1} ${svg.right},${svg.bottom} ${svg.left - 1},${svg.bottom} ${svg.left - 1},${svg.centerY}`"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                    style="opacity:1"
-                />
-                <polygon 
-                    v-if="selectedSide === 'TR'"
-                    :points="`${svg.left},${svg.top - 1} ${svg.centerX},${svg.top - 1} ${svg.centerX},${svg.centerY} ${svg.right + 1},${svg.centerY} ${svg.right + 1},${svg.bottom} ${svg.left},${svg.bottom} ${svg.left},${svg.top - 1}`"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                    style="opacity:1"
-                />
-                <polygon 
-                    v-if="selectedSide === 'BR'"
-                    :points="`${svg.left},${svg.top} ${svg.right + 1},${svg.top} ${svg.right + 1},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.bottom + 1} ${svg.left},${svg.bottom + 1} ${svg.left},${svg.top}`"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                    style="opacity:1"
-                />
-                <polygon 
-                    v-if="selectedSide === 'BL'"
-                    :points="`${svg.left - 1},${svg.top} ${svg.right},${svg.top} ${svg.right},${svg.bottom + 1} ${svg.centerX},${svg.bottom + 1} ${svg.centerX},${svg.centerY} ${svg.left - 1},${svg.centerY} ${svg.left - 1},${svg.top}`"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                    style="opacity:1"
-                />
-            </g>
+                                <circle
+                                    :data-a11y-plot-id="plot.uid"
+                                    :cx="plot.x"
+                                    :cy="plot.y"
+                                    :r="Math.max(FINAL_CONFIG.style.chart.layout.plots.radius / (isZoom ? 1.5 : 1), 10)"
+                                    fill="transparent"
+                                    :aria-label="`${category.name} ${plot.name}: ${FINAL_CONFIG.style.chart.layout.grid.xAxis.name || 'x'} ${plot.xValue}, ${FINAL_CONFIG.style.chart.layout.grid.yAxis.name || 'y'} ${plot.yValue}`"
+                                    style="pointer-events: none"
+                                />
+                            </g>
+                        </template>
+    
+                        <template v-else>
+                            <g v-for="(plot, plotIndex) in category.series" :key="plot.uid">
+                                <Shape
+                                    :color="category.color"
+                                    :isSelected="hoveredPlotId && plot.uid === hoveredPlotId"
+                                    :plot="plot"
+                                    :radius="FINAL_CONFIG.style.chart.layout.plots.radius / (isZoom ? 1.5 : 1)"
+                                    :shape="category.shape"
+                                    :stroke="FINAL_CONFIG.style.chart.layout.plots.outline ? FINAL_CONFIG.style.chart.layout.plots.outlineColor : 'none'"
+                                    :strokeWidth="FINAL_CONFIG.style.chart.layout.plots.outlineWidth"
+                                    @mouseenter="useTooltip(category, plot, i, 'pointer')"
+                                    @mouseleave="onTrapLeave(plot, i)"
+                                    @click="selectPlot(category, plot, i)"
+                                />
+                                <circle
+                                    data-dom-to-png-ignore
+                                    :data-a11y-plot-id="plot.uid"
+                                    :cx="plot.x"
+                                    :cy="plot.y"
+                                    :r="Math.max(FINAL_CONFIG.style.chart.layout.plots.radius / (isZoom ? 1.5 : 1), 10)"
+                                    fill="transparent"
+                                    :aria-label="`${category.name} ${plot.name}: ${FINAL_CONFIG.style.chart.layout.grid.xAxis.name || 'x'} ${plot.xValue}, ${FINAL_CONFIG.style.chart.layout.grid.yAxis.name || 'y'} ${plot.yValue}`"
+                                    style="pointer-events: none"
+                                />
+                            </g>
+                        </template>
+                    </g>
+    
+                    <g v-if="mutableConfig.plotLabels.show" style="pointer-events: none;">
+                        <g v-for="category in drawableDataset">
+                            <g v-for="plot in category.series">
+                                <!-- SINGLE LINE -->
+                                <text
+                                    v-if="!String(plot.name).includes('\n')"
+                                    data-cy="plot-label"
+                                    :x="plot.x" 
+                                    :y="plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius" 
+                                    text-anchor="middle" 
+                                    :font-size="FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1)"
+                                    :fill="FINAL_CONFIG.style.chart.layout.labels.plotLabels.color"
+                                >
+                                    {{ plot.name }}
+                                </text>
+                                <text
+                                    v-else
+                                    data-cy="plot-label"
+                                    :x="plot.x" 
+                                    :y="plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius" 
+                                    text-anchor="middle" 
+                                    :font-size="FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1)"
+                                    :fill="FINAL_CONFIG.style.chart.layout.labels.plotLabels.color"
+                                    v-html="createTSpansFromLineBreaksOnX({
+                                        content: String(plot.name),
+                                        fontSize: FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize / (isZoom ? 1.5 : 1),
+                                        fill: FINAL_CONFIG.style.chart.layout.labels.plotLabels.color,
+                                        x: plot.x,
+                                        y: plot.y + FINAL_CONFIG.style.chart.layout.labels.plotLabels.offsetY + FINAL_CONFIG.style.chart.layout.plots.radius
+                                    })"
+                                />
+                            </g>
+                        </g>
+                    </g>
+                </template>
+    
+                <template v-else>
+                    <g v-if="mutableConfig.plotLabels.show">
+                        <template v-for="(category, i) in drawableDataset">
+                            <foreignObject 
+                                v-for="plot in category.series" style="overflow: visible;" height="10" width="100" :x="plot.x - 50" :y="plot.y - (FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize)" 
+                                @mouseover="useTooltip(category, plot, i)"
+                                @mouseleave="onTrapLeave(plot, i)"
+                                @click="selectPlot(category, plot, i)">
+                                <div :style="`color:${adaptColorToBackground(category.color)};margin: 0 auto; font-size:${FINAL_CONFIG.style.chart.layout.labels.plotLabels.fontSize}px; text-align:center;background:${category.color}; padding: 2px 4px; border-radius: 12px; height: fit-content;`">
+                                    {{  plot.name }}
+                                </div>
+                            </foreignObject>
+                        </template>
+                    </g>
+                </template>
+    
+                <!-- HIDDEN AREAS ON ZOOM -->
+                <g v-if="isZoom" class="vue-ui-dna">
+                    <polygon 
+                        v-if="selectedSide === 'TL'"
+                        :points="`${svg.left - 1},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.top - 1} ${svg.right},${svg.top - 1} ${svg.right},${svg.bottom} ${svg.left - 1},${svg.bottom} ${svg.left - 1},${svg.centerY}`"
+                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                        style="opacity:1"
+                    />
+                    <polygon 
+                        v-if="selectedSide === 'TR'"
+                        :points="`${svg.left},${svg.top - 1} ${svg.centerX},${svg.top - 1} ${svg.centerX},${svg.centerY} ${svg.right + 1},${svg.centerY} ${svg.right + 1},${svg.bottom} ${svg.left},${svg.bottom} ${svg.left},${svg.top - 1}`"
+                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                        style="opacity:1"
+                    />
+                    <polygon 
+                        v-if="selectedSide === 'BR'"
+                        :points="`${svg.left},${svg.top} ${svg.right + 1},${svg.top} ${svg.right + 1},${svg.centerY} ${svg.centerX},${svg.centerY} ${svg.centerX},${svg.bottom + 1} ${svg.left},${svg.bottom + 1} ${svg.left},${svg.top}`"
+                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                        style="opacity:1"
+                    />
+                    <polygon 
+                        v-if="selectedSide === 'BL'"
+                        :points="`${svg.left - 1},${svg.top} ${svg.right},${svg.top} ${svg.right},${svg.bottom + 1} ${svg.centerX},${svg.bottom + 1} ${svg.centerX},${svg.centerY} ${svg.left - 1},${svg.centerY} ${svg.left - 1},${svg.top}`"
+                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                        style="opacity:1"
+                    />
+                </g>
+    
+                <g v-if="selectedSide && !isAnimating">
+                    <text
+                        :x="selectedSideLabelCoordinates.x"
+                        :y="selectedSideLabelCoordinates.y - (selectedSideLabelCoordinates.fontSize / 1.5)"
+                        :font-size="selectedSideLabelCoordinates.fontSize / 1.5"
+                        :fill="selectedSideLabelCoordinates.fill"
+                        text-anchor="middle"
+                        :font-weight="selectedSideLabelCoordinates.bold ? 'bold' : 'normal'"
+                    >
+                        {{ selectedSideLabelCoordinates.text }}
+                    </text>
+                </g>
+    
+                <!-- MINI MAP -->
+                <g v-if="isZoom && selectedSide">
+                    <rect
+                        data-cy="minimap-tl"
+                        :x="miniMap[selectedSide].tl.x"
+                        :y="miniMap[selectedSide].tl.y"
+                        height="20"
+                        width="20"
+                        :fill="miniMap[selectedSide].tl.fill"
+                        :style="`cursor: ${isCursorPointer ? 'pointer': 'default'}; opacity: ${selectedSide === 'TL' ? 1 : 0.2}`"
+                        @click="selectQuadrantSide('TL')"
+                        :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TL'}"
+                    />
+                    <rect
+                        data-cy="minimap-tr"
+                        :x="miniMap[selectedSide].tr.x"
+                        :y="miniMap[selectedSide].tr.y"
+                        height="20"
+                        width="20"
+                        :fill="miniMap[selectedSide].tr.fill"
+                        :style="`cursor: ${isCursorPointer ? 'pointer' : 'default'}; opacity: ${selectedSide === 'TR' ? 1 : 0.2}`"
+                        @click="selectQuadrantSide('TR')"
+                        :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TR'}"
+                    />
+                    <rect
+                        data-cy="minimap-br"
+                        :x="miniMap[selectedSide].br.x"
+                        :y="miniMap[selectedSide].br.y"
+                        height="20"
+                        width="20"
+                        :fill="miniMap[selectedSide].br.fill"
+                        :style="`cursor: ${isCursorPointer ? 'pointer': 'default'}; opacity: ${selectedSide === 'BR' ? 1 : 0.2}`"
+                        @click="selectQuadrantSide('BR')"
+                        :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'BR'}"
+                    />
+                    <rect
+                        data-cy="minimap-bl"
+                        :x="miniMap[selectedSide].bl.x"
+                        :y="miniMap[selectedSide].bl.y"
+                        height="20"
+                        width="20"
+                        :fill="miniMap[selectedSide].bl.fill"
+                        :style="`cursor: ${isCursorPointer ? 'pointer' : 'default'}; opacity: ${selectedSide === 'BL' ? 1 : 0.2}`"
+                        @click="selectQuadrantSide('BL')"
+                        :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'BL'}"
+                    />
+                    <path
+                        class="vue-ui-quadrant-minimap-crosshairs"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor" 
+                        :stroke-width="1"
+                        :d="miniMap[selectedSide].crosshairs.horizontal"
+                    />
+                    <path
+                        class="vue-ui-quadrant-minimap-crosshairs"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor" 
+                        :stroke-width="1"
+                        :d="miniMap[selectedSide].crosshairs.vertical"
+                    />
+                </g>
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
 
-            <g v-if="selectedSide && !isAnimating">
-                <text
-                    :x="selectedSideLabelCoordinates.x"
-                    :y="selectedSideLabelCoordinates.y - (selectedSideLabelCoordinates.fontSize / 1.5)"
-                    :font-size="selectedSideLabelCoordinates.fontSize / 1.5"
-                    :fill="selectedSideLabelCoordinates.fill"
-                    text-anchor="middle"
-                    :font-weight="selectedSideLabelCoordinates.bold ? 'bold' : 'normal'"
-                >
-                    {{ selectedSideLabelCoordinates.text }}
-                </text>
-            </g>
-
-            <!-- MINI MAP -->
-            <g v-if="isZoom && selectedSide">
-                <rect
-                    data-cy="minimap-tl"
-                    :x="miniMap[selectedSide].tl.x"
-                    :y="miniMap[selectedSide].tl.y"
-                    height="20"
-                    width="20"
-                    :fill="miniMap[selectedSide].tl.fill"
-                    :style="`cursor: ${isCursorPointer ? 'pointer': 'default'}; opacity: ${selectedSide === 'TL' ? 1 : 0.2}`"
-                    @click="selectQuadrantSide('TL')"
-                    :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TL'}"
-                />
-                <rect
-                    data-cy="minimap-tr"
-                    :x="miniMap[selectedSide].tr.x"
-                    :y="miniMap[selectedSide].tr.y"
-                    height="20"
-                    width="20"
-                    :fill="miniMap[selectedSide].tr.fill"
-                    :style="`cursor: ${isCursorPointer ? 'pointer' : 'default'}; opacity: ${selectedSide === 'TR' ? 1 : 0.2}`"
-                    @click="selectQuadrantSide('TR')"
-                    :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'TR'}"
-                />
-                <rect
-                    data-cy="minimap-br"
-                    :x="miniMap[selectedSide].br.x"
-                    :y="miniMap[selectedSide].br.y"
-                    height="20"
-                    width="20"
-                    :fill="miniMap[selectedSide].br.fill"
-                    :style="`cursor: ${isCursorPointer ? 'pointer': 'default'}; opacity: ${selectedSide === 'BR' ? 1 : 0.2}`"
-                    @click="selectQuadrantSide('BR')"
-                    :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'BR'}"
-                />
-                <rect
-                    data-cy="minimap-bl"
-                    :x="miniMap[selectedSide].bl.x"
-                    :y="miniMap[selectedSide].bl.y"
-                    height="20"
-                    width="20"
-                    :fill="miniMap[selectedSide].bl.fill"
-                    :style="`cursor: ${isCursorPointer ? 'pointer' : 'default'}; opacity: ${selectedSide === 'BL' ? 1 : 0.2}`"
-                    @click="selectQuadrantSide('BL')"
-                    :class="{'vue-ui-quadrant-mini-map-cell': true, 'vue-ui-quadrant-mini-map-cell-selectable': selectedSide !== 'BL'}"
-                />
-                <path
-                    class="vue-ui-quadrant-minimap-crosshairs"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor" 
-                    :stroke-width="1"
-                    :d="miniMap[selectedSide].crosshairs.horizontal"
-                />
-                <path
-                    class="vue-ui-quadrant-minimap-crosshairs"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor" 
-                    :stroke-width="1"
-                    :d="miniMap[selectedSide].crosshairs.vertical"
-                />
-            </g>
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1991,6 +2184,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -2110,5 +2305,27 @@ path, line, rect, circle, polygon {
 }
 .vue-ui-quadrant-mini-map-cell-selectable:hover {
     opacity: 0.5 !important;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
