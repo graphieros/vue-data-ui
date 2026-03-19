@@ -50,6 +50,7 @@ import themes from "../themes/vue_ui_heatmap.json";
 import vFitText from "../directives/vFitText";
 import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -115,6 +116,12 @@ const xAxisSumRects = ref(null);
 
 const source = ref(null);
 const observedEl = shallowRef(null);
+
+const activeTooltipIndex = ref(null); // a11y
+const activeTooltipCellId = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -588,10 +595,39 @@ function reportHide(idx, didHide) {
 const hoveredValue = ref(null);
 const dataTooltipSlot = ref(null);
 
-function useTooltip(datapoint, seriesIndex, x, y) {
+function clearCellSelection() {
+    isTooltip.value = false;
+    hoveredCell.value = undefined;
+    hoveredValue.value = null;
+    selectedClone.value = null;
+    activeTooltipIndex.value = null;
+    activeTooltipCellId.value = null;
+}
+
+function updateTooltipA11yPosition(cellId) {
+    if (!svgRef.value || !cellId) return;
+
+    const trap = svgRef.value.querySelector(`[data-a11y-cell-id="${cellId}"]`);
+    if (!trap) return;
+
+    const box = trap.getBoundingClientRect();
+
+    tooltipA11yPosition.value = {
+        x: box.left + (box.width / 2),
+        y: box.top + (box.height / 2)
+    };
+}
+
+function useTooltip(datapoint, seriesIndex, x, y, triggerMode = 'pointer', flatIndex = null) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex })
     }
+
+    if (!mutableConfig.value.showTooltip) return;
+
+    tooltipTriggerMode.value = triggerMode;
+    activeTooltipIndex.value = flatIndex;
+    activeTooltipCellId.value = datapoint.id;
 
     selectedClone.value = { x, y };
 
@@ -638,12 +674,19 @@ function useTooltip(datapoint, seriesIndex, x, y) {
         )}</span></div>`
         tooltipContent.value = `<div style="font-size:${FINAL_CONFIG.value.style.tooltip.fontSize}px">${html}</div>`;
     }
+
+    if (triggerMode === 'keyboard') {
+        nextTick(() => {
+            updateTooltipA11yPosition(datapoint.id);
+        });
+    }
 }
 
 function onTrapLeave({ datapoint, seriesIndex }) {
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex})
     }
+    if (activeTooltipCellId.value === datapoint.id && tooltipTriggerMode.value === 'keyboard') return;
     isTooltip.value = false;
     hoveredCell.value = undefined;
     hoveredValue.value = null;
@@ -908,6 +951,194 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+function getCellEntry(rowIndex, columnIndex) {
+    const row = mutableDataset.value[rowIndex];
+    if (!row) return null;
+
+    const cell = row.temperatures[columnIndex];
+    if (!cell) return null;
+
+    return {
+        cell,
+        rowIndex,
+        columnIndex
+    };
+}
+
+function getFlatIndexFromGridPosition(rowIndex, columnIndex) {
+    let flatIndex = 0;
+    for (let i = 0; i < rowIndex; i += 1) {
+        flatIndex += mutableDataset.value[i]?.temperatures?.length || 0;
+    }
+    return flatIndex + columnIndex;
+}
+
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    activeTooltipCellId.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    clearCellSelection();
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!a11yCells.value.length) return;
+
+    const isLeftKey = event.key === 'ArrowLeft';
+    const isRightKey = event.key === 'ArrowRight';
+    const isUpKey = event.key === 'ArrowUp';
+    const isDownKey = event.key === 'ArrowDown';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isLeftKey && !isRightKey && !isUpKey && !isDownKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearCellSelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+
+        const activeEntry = a11yCells.value[activeTooltipIndex.value];
+        if (!activeEntry) return;
+
+        selectDatapoint(activeEntry.cell, activeEntry.rowIndex);
+        return;
+    }
+
+    let currentEntry = activeTooltipIndex.value === null
+        ? null
+        : a11yCells.value[activeTooltipIndex.value];
+
+    if (!currentEntry) {
+        const firstEntry = a11yCells.value[0];
+        if (!firstEntry) return;
+
+        const x = drawingArea.value.left + drawingArea.value.cellSize.width * firstEntry.columnIndex;
+        const y = drawingArea.value.top + drawingArea.value.cellSize.height * firstEntry.rowIndex;
+
+        useTooltip(firstEntry.cell, firstEntry.rowIndex, x, y, 'keyboard', 0);
+        return;
+    }
+
+    let nextRowIndex = currentEntry.rowIndex;
+    let nextColumnIndex = currentEntry.columnIndex;
+
+    if (isRightKey) {
+        nextColumnIndex += 1;
+    } else if (isLeftKey) {
+        nextColumnIndex -= 1;
+    } else if (isDownKey) {
+        nextRowIndex += 1;
+    } else if (isUpKey) {
+        nextRowIndex -= 1;
+    }
+
+    const rowCount = a11yGrid.value.rowCount;
+
+    if (rowCount <= 0) return;
+
+    if (nextRowIndex < 0) {
+        nextRowIndex = rowCount - 1;
+    }
+
+    if (nextRowIndex >= rowCount) {
+        nextRowIndex = 0;
+    }
+
+    const targetRow = mutableDataset.value[nextRowIndex];
+    if (!targetRow || !targetRow.temperatures.length) return;
+
+    const targetColumnCount = targetRow.temperatures.length;
+
+    if (nextColumnIndex < 0) {
+        nextColumnIndex = targetColumnCount - 1;
+    }
+
+    if (nextColumnIndex >= targetColumnCount) {
+        nextColumnIndex = 0;
+    }
+
+    const nextEntry = getCellEntry(nextRowIndex, nextColumnIndex);
+    if (!nextEntry) return;
+
+    const nextFlatIndex = getFlatIndexFromGridPosition(nextRowIndex, nextColumnIndex);
+
+    const x = drawingArea.value.left + drawingArea.value.cellSize.width * nextEntry.columnIndex;
+    const y = drawingArea.value.top + drawingArea.value.cellSize.height * nextEntry.rowIndex;
+
+    useTooltip(
+        nextEntry.cell,
+        nextEntry.rowIndex,
+        x,
+        y,
+        'keyboard',
+        nextFlatIndex
+    );
+}
+
+const a11yTable = computed(() => {
+    const headers = [
+        FINAL_CONFIG.value.table.colNames.xAxis,
+        ...FINAL_DATASET.value.map(ds => ds.name)
+    ];
+
+    const rows = dataLabels.value.xLabels.map((label, rowIndex) => {
+        return [
+            label,
+            ...FINAL_DATASET.value.map(ds => {
+                const value = ds.values?.[rowIndex];
+                return isNaN(value)
+                    ? '-'
+                    : dataLabel({
+                        p: FINAL_CONFIG.value.style.layout.dataLabels.prefix,
+                        v: value,
+                        s: FINAL_CONFIG.value.style.layout.dataLabels.suffix,
+                        r: FINAL_CONFIG.value.table.td.roundingValue
+                    });
+            })
+        ];
+    });
+
+    return { headers, rows };
+});
+
+const a11yGrid = computed(() => {
+    const rowCount = mutableDataset.value.length;
+    const columnCount = Math.max(
+        0,
+        ...mutableDataset.value.map(serie => serie.temperatures.length)
+    );
+
+    return {
+        rowCount,
+        columnCount
+    };
+});
+
+const a11yCells = computed(() => {
+    return mutableDataset.value.flatMap((serie, rowIndex) => {
+        return serie.temperatures.map((cell, columnIndex) => ({
+            cell,
+            rowIndex,
+            columnIndex
+        }));
+    });
+});
+
 defineExpose({
     getData,
     getImage,
@@ -925,7 +1156,33 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="heatmapChart" :class="`vue-data-ui-component vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.backgroundColor}`" :id="`heatmap__${uid}`" @mouseenter="() => setVisibility(true)" @mouseleave="() => setVisibility(false)">
+    <div 
+        ref="heatmapChart" 
+        :class="`vue-data-ui-component vue-ui-heatmap ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" 
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%;${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.backgroundColor}`" 
+        :id="`heatmap__${uid}`" 
+        @mouseenter="() => setVisibility(true)" 
+        @mouseleave="() => {
+            setVisibility(false);
+            if (!isFocus) {
+                clearCellSelection();
+            }
+        }"
+    >
+
+        <!-- A11Y -->
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
         
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
@@ -1062,6 +1319,7 @@ defineExpose({
             <svg
                 ref="svgRef"
                 :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
                 :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
                 :viewBox="`0 0 ${svg.width} ${svg.height}`" 
                 width="100%"
@@ -1069,6 +1327,10 @@ defineExpose({
                 aria-live="polite"
                 role="img"
                 preserveAspectRatio="xMidYMid"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
                 <PackageVersion />
     
@@ -1128,6 +1390,7 @@ defineExpose({
                             />
                             <rect
                                 data-cy="cell"
+                                :data-a11y-cell-id="cell.id"
                                 :x="drawingArea.left + drawingArea.cellSize.width * j + (cellGap / 2) + drawingArea.sumCellXHeight"
                                 :y="drawingArea.top + drawingArea.cellSize.height * i + (cellGap / 2)"
                                 :width="drawingArea.cellSize.width - cellGap"
@@ -1135,7 +1398,15 @@ defineExpose({
                                 :fill="cell.color"
                                 :stroke="FINAL_CONFIG.style.backgroundColor"
                                 :stroke-width="cellGap"
-                                @mouseover="useTooltip(cell, i, drawingArea.left + drawingArea.cellSize.width * j, drawingArea.top + drawingArea.cellSize.height * i)"
+                                :aria-label="`${cell.yAxisName}${cell.xAxisName ? ` - ${cell.xAxisName}` : ''}: ${isNaN(cell.value) ? '-' : cell.value}`"
+                                @mouseover="useTooltip(
+                                    cell, 
+                                    i, 
+                                    drawingArea.left + drawingArea.cellSize.width * j, 
+                                    drawingArea.top + drawingArea.cellSize.height * i, 
+                                    'pointer',
+                                    getFlatIndexFromGridPosition(i, j)
+                                )"
                                 @mouseout="() => onTrapLeave({ datapoint: cell, seriesIndex: i })"
                                 @click="() => selectDatapoint(cell, i)"
                             />
@@ -1416,6 +1687,10 @@ defineExpose({
                     }}
                 </div>
             </div>
+
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
@@ -1447,6 +1722,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1635,6 +1912,7 @@ caption {
 
 .vue-ui-heatmap-chart-wrapper {
     width: 100%;
+    position: relative;
 }
 
 .vue-ui-heatmap-chart-wrapper-legend-right{
@@ -1708,5 +1986,27 @@ caption {
     flex-wrap: nowrap;
     align-items:center;
     justify-content: space-between;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
