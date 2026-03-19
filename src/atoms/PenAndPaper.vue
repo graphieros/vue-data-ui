@@ -921,6 +921,7 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    z-index: 1;
 }
 
 .vue-ui-pen-and-paper-action {
