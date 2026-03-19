@@ -29,6 +29,7 @@ import {
     palette,
     setOpacity,
     shiftHue,
+    svgToClientCoords,
     themePalettes,
     treeShake,
     XMLNS,
@@ -52,6 +53,7 @@ import Legend from "../atoms/Legend.vue";
 import Accordion from "./vue-ui-accordion.vue";
 import BaseScanner from "../atoms/BaseScanner.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const Tooltip = defineAsyncComponent(() => import("../atoms/Tooltip.vue"));
 const BaseIcon = defineAsyncComponent(() => import("../atoms/BaseIcon.vue"));
@@ -113,6 +115,9 @@ const dataLabelOverflowLeft = ref(0);
 const dataLabels = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref("pointer");
 
 const emit = defineEmits(["selectLegend", "copyAlt"]);
 
@@ -845,12 +850,20 @@ function handleDatapointLeave({ datapoint, seriesIndex }) {
     hoveredBar.value = null;
     isTooltip.value = false;
     selectedBarId.value = null;
+    if (activeTooltipIndex.value === seriesIndex) {
+        activeTooltipIndex.value = null;
+    }
 }
 
-function useTooltip(bar, seriesIndex) {
+function useTooltip(bar, seriesIndex, triggerMode = 'pointer') {
+    tooltipTriggerMode.value = triggerMode;
+
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datpoint: bar, seriesIndex });
     }
+
+    activeTooltipIndex.value = seriesIndex;
+    hoveredBar.value = bar;
 
     dataTooltipSlot.value = {
         datapoint: bar,
@@ -1267,6 +1280,160 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+const isFocus = ref(false);
+
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTooltipIndex.value = null;
+    isTooltip.value = false;
+    isFocus.value = false;
+}
+
+function clearKeyboardSelection() {
+    if (activeTooltipIndex.value === null) return;
+
+    const currentBar = bars.value[activeTooltipIndex.value];
+
+    if (currentBar) {
+        handleDatapointLeave({
+            datapoint: currentBar,
+            seriesIndex: activeTooltipIndex.value
+        });
+    }
+
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+
+    const isNextKey = event.key === "ArrowRight" || event.key === "ArrowDown";
+    const isPreviousKey = event.key === "ArrowLeft" || event.key === "ArrowUp";
+    const isActivationKey = event.key === "Enter" || event.key === " ";
+    const isEscapeKey = event.key === "Escape";
+
+    if (!isNextKey && !isPreviousKey && !isActivationKey && !isEscapeKey) return;
+
+    const barCount = bars.value.length;
+
+    if (!barCount) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearKeyboardSelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+
+        const currentBar = bars.value[activeTooltipIndex.value];
+
+        if (!currentBar) return;
+
+        selectDatapoint({
+            datapoint: currentBar,
+            seriesIndex: activeTooltipIndex.value
+        });
+
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= barCount) {
+        if (isNextKey) {
+            nextIndex = 0;
+        } else {
+            nextIndex = barCount - 1;
+        }
+    } else if (isNextKey) {
+        nextIndex += 1;
+
+        if (nextIndex >= barCount) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+
+        if (nextIndex < 0) {
+            nextIndex = barCount - 1;
+        }
+    }
+
+    const bar = bars.value[nextIndex];
+
+    if (!bar) return;
+
+    activeTooltipIndex.value = nextIndex;
+    setKeyboardTooltipPositionFromBar(bar);
+    useTooltip(bar, nextIndex, 'keyboard');
+}
+
+function setKeyboardTooltipPositionFromBar(bar) {
+    if (!bar) return;
+    let svgX = drawingArea.value.right;
+    let svgY = drawingArea.value.top + (BAR_GAP.value + barHeight.value) * bar.absoluteIndex + (parentLabelOffsets.value[bar.absoluteIndex] * parentLabelBlockHeight.value)
+    if (!Number.isFinite(svgX) || !Number.isFinite(svgY)) {
+        return;
+    }
+    const coords = svgToClientCoords(svgX, svgY, svgRef.value);
+    if (!coords) return;
+    tooltipA11yPosition.value = coords;
+}
+
+const a11yTable = computed(() => {
+    return {
+        head: table.value.head,
+        body: table.value.body.map((row) => {
+            return [
+                row.parentName,
+                row.parentValue === "" ? "" : dataLabel({
+                    v: row.parentValue,
+                    r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue,
+                    p: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.prefix,
+                    s: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.suffix,
+                }),
+                row.percentageToTotal === "" ? "" : dataLabel({
+                    v: row.percentageToTotal * 100,
+                    r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage,
+                    s: "%",
+                }),
+                row.childName,
+                row.childValue === "" ? "" : dataLabel({
+                    v: row.childValue,
+                    r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.value.roundingValue,
+                    p: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.prefix,
+                    s: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.suffix,
+                }),
+                row.childPercentageToParent === "" ? "" : dataLabel({
+                    v: row.childPercentageToParent * 100,
+                    r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage,
+                    s: "%",
+                }),
+                row.childPercentageToTotal === "" ? "" : dataLabel({
+                    v: row.childPercentageToTotal * 100,
+                    r: FINAL_CONFIG.value.style.chart.layout.bars.dataLabels.percentage.roundingPercentage,
+                    s: "%",
+                }),
+            ];
+        }),
+        caption: FINAL_CONFIG.value.a11y.translations.tableCaption,
+        notice: FINAL_CONFIG.value.a11y.translations.tableAvailable,
+    };
+});
+
 defineExpose({
     autoSize,
     getData,
@@ -1294,6 +1461,20 @@ defineExpose({
         }`" ref="verticalBarChart" :id="`vue-ui-vertical-bar_${uid}`"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};height:100%`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+
+        <p :id="`chart-instructions-${uid}`" class="sr-only">
+            {{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}
+        </p>
+
+        <A11yDataTable
+            v-if="a11yTable.body.length"
+            :uid="uid"
+            :head="a11yTable.head"
+            :body="a11yTable.body"
+            :caption="a11yTable.caption"
+            :notice="a11yTable.notice"
+        />
+
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator" 
             :svgRef="svgRef"
@@ -1470,319 +1651,334 @@ defineExpose({
         </div>
 
         <!-- CHART -->
-        <svg ref="svgRef" :xmlns="XMLNS" :class="{
-            'vue-data-ui-fullscreen--on': isFullscreen,
-            'vue-data-ui-fulscreen--off': !isFullscreen,
-        }" :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`">
-            <g ref="G" class="vue-data-ui-g">
-                <PackageVersion />
-
-                <!-- BACKGROUND SLOT -->
-                <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="WIDTH"
-                    :height="HEIGHT" :style="{
-                        pointerEvents: 'none',
-                    }">
-                    <slot name="chart-background" />
-                </foreignObject>
-
-                <!-- defs -->
-                <linearGradient x1="0%" y1="0%" x2="100%" y2="0%" v-for="(bar, i) in bars"
-                    :id="`vertical_bar_gradient_${uid}_${i}`">
-                    <stop offset="0%" :stop-color="bar.color" />
-                    <stop offset="100%" :stop-color="setOpacity(
-                        shiftHue(bar.color, 0.03),
-                        100 - FINAL_CONFIG.style.chart.layout.bars.gradientIntensity
-                    )
-                        " />
-                </linearGradient>
-
-                <g v-if="$slots.pattern">
-                    <defs v-for="bar in bars">
-                        <slot name="pattern" v-bind="{
-                            seriesIndex: bar.absoluteIndex,
-                            patternId: `pattern_${uid}_${bar.absoluteIndex}`,
-                        }" />
-                    </defs>
-                </g>
-
-                <template v-if="FINAL_CONFIG.style.chart.layout.bars.rowColor">
-                    <g v-for="(_, i) in bars">
-                        <!-- BAR GUTTERS -->
-                        <rect 
-                            :x="0" 
-                            :y="drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight"
-                            :width="WIDTH" 
-                            :height="barHeight <= 0 ? 0.0001 : barHeight"
-                            :fill="FINAL_CONFIG.style.chart.layout.bars.rowColor"
-                            :rx="FINAL_CONFIG.style.chart.layout.bars.rowRadius"
-                            :style="{ pointerEvents: 'none' }" 
-                        />
+        <div style="position: relative;">
+            <svg ref="svgRef" 
+                :xmlns="XMLNS" 
+                :class="{
+                    'vue-data-ui-fullscreen--on': isFullscreen,
+                    'vue-data-ui-fulscreen--off': !isFullscreen,
+                }" 
+                :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                tabindex="0"
+                :aria-describedby="`chart-instructions-${uid}`"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"    
+            >
+                <g ref="G" class="vue-data-ui-g">
+                    <PackageVersion />
+    
+                    <!-- BACKGROUND SLOT -->
+                    <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="WIDTH"
+                        :height="HEIGHT" :style="{
+                            pointerEvents: 'none',
+                        }">
+                        <slot name="chart-background" />
+                    </foreignObject>
+    
+                    <!-- defs -->
+                    <linearGradient x1="0%" y1="0%" x2="100%" y2="0%" v-for="(bar, i) in bars"
+                        :id="`vertical_bar_gradient_${uid}_${i}`">
+                        <stop offset="0%" :stop-color="bar.color" />
+                        <stop offset="100%" :stop-color="setOpacity(
+                            shiftHue(bar.color, 0.03),
+                            100 - FINAL_CONFIG.style.chart.layout.bars.gradientIntensity
+                        )
+                            " />
+                    </linearGradient>
+    
+                    <g v-if="$slots.pattern">
+                        <defs v-for="bar in bars">
+                            <slot name="pattern" v-bind="{
+                                seriesIndex: bar.absoluteIndex,
+                                patternId: `pattern_${uid}_${bar.absoluteIndex}`,
+                            }" />
+                        </defs>
                     </g>
-                </template>
-
-                <g v-for="(serie, i) in bars">
-                    <!-- UNDERLAYER -->
-                    <rect data-cy="datapoint-underlayer" :x="checkNaN(
-                        hasNegative
-                            ? drawingArea.left +
-                            drawingArea.width / 2 -
-                            (serie.sign === 1
-                                ? 0
-                                : calcBarWidth(serie.value) <= 0
-                                    ? 0.0001
-                                    : calcBarWidth(serie.value))
-                            : drawingArea.left
-                    )
-                        " :y="drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" :width="checkNaN(
-                calcBarWidth(serie.value) <= 0
-                    ? 0.0001
-                    : calcBarWidth(serie.value)
-            )
-                " :height="barHeight <= 0 ? 0.0001 : barHeight"
-                        :fill="FINAL_CONFIG.style.chart.layout.bars.underlayerColor"
-                        :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
-                        :class="{ animated: FINAL_CONFIG.useCssAnimation }" />
-                </g>
-
-                <g v-for="(serie, i) in bars">
-                    <!-- BARS -->
-                    <rect data-cy="datapoint-bar" :x="checkNaN(
-                        hasNegative
-                            ? drawingArea.left +
-                            drawingArea.width / 2 -
-                            (serie.sign === 1
-                                ? 0
-                                : calcBarWidth(serie.value) <= 0
-                                    ? 0.0001
-                                    : calcBarWidth(serie.value))
-                            : drawingArea.left
-                    )
-                        " :y="drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" :width="checkNaN(
-                calcBarWidth(serie.value) <= 0
-                    ? 0.0001
-                    : calcBarWidth(serie.value)
-            )
-                " :height="barHeight <= 0 ? 0.0001 : barHeight" :fill="FINAL_CONFIG.style.chart.layout.bars.useGradient
-                    ? `url(#vertical_bar_gradient_${uid}_${i})`
-                    : setOpacity(
-                        serie.color,
-                        FINAL_CONFIG.style.chart.layout.bars.fillOpacity
-                    )
-                " :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius" :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke
-                    ? serie.color
-                    : 'none'
-                " :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke
-                    ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth
-                    : 0
-                " :class="{ animated: FINAL_CONFIG.useCssAnimation }" />
-                    <rect v-if="$slots.pattern" :x="checkNaN(
-                        hasNegative
-                            ? drawingArea.left +
-                            drawingArea.width / 2 -
-                            (serie.sign === 1
-                                ? 0
-                                : calcBarWidth(serie.value) <= 0
-                                    ? 0.0001
-                                    : calcBarWidth(serie.value))
-                            : drawingArea.left
-                    )
-                        " :y="drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" :width="checkNaN(
-                calcBarWidth(serie.value) <= 0
-                    ? 0.0001
-                    : calcBarWidth(serie.value)
-            )
-                " :height="barHeight <= 0 ? 0.0001 : barHeight" :fill="`url(#pattern_${uid}_${serie.absoluteIndex})`"
-                        :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius" :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke
-                                ? serie.color
-                                : 'none'
-                            " :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke
-                    ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth
-                    : 0
-                " :class="{ animated: FINAL_CONFIG.useCssAnimation }" />
-
-                    <!-- SEPARATORS -->
-                    <line 
-                        data-cy="datapoint-separator" 
-                        v-if="(!serie.isChild || serie.isLastChild) && FINAL_CONFIG.style.chart.layout.separators.show && i !== bars.length - 1" 
-                        :x1="WIDTH" 
-                        :x2="FINAL_CONFIG.style.chart.layout.separators.fullWidth ? 0 : drawingArea.left" 
-                        :y1="barHeight + BAR_GAP / 2 + drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" 
-                        :y2="barHeight + BAR_GAP / 2 + drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" 
-                        :stroke="FINAL_CONFIG.style.chart.layout.separators.color" 
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth" 
-                        stroke-linecap="round" 
-                        :style="{
-                            transition: 'none !important',
-                            animation: 'none !important',
-                        }" 
-                    />
-
-                    <line v-if="
-                        hasNegative && FINAL_CONFIG.style.chart.layout.separators.show
-                    " :x1="drawingArea.left + drawingArea.width / 2" :x2="drawingArea.left + drawingArea.width / 2"
-                        :y1="drawingArea.top" :y2="drawingArea.bottom"
-                        :stroke="FINAL_CONFIG.style.chart.layout.separators.color" :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth
-                            " stroke-linecap="round" />
-                </g>
-
-                <!-- PARENT NAMES -->
-                <g ref="parentLabels">
-                    <g v-for="(serie, i) in bars" class="vue-ui-horizontal-bar-parent-label">
-                        <rect
-                            class="vue-ui-horizontal-bar-parent-marker"
-                            v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"  
-                            :x="2"
-                            :y="getParentData(serie, i).y - (FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize / 1.5)"
-                            :height="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize / 1.5"
-                            :width="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize / 1.5"
-                            :rx="1"
-                            :fill="serie.color"
-                            style="animation: none !important; transition: none !important;"
-                        />
-                        <text 
-                            data-cy="datapoint-parent-name"  
-                            v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"  
-                            :y="getParentData(serie, i).y" 
-                            :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize" 
-                            :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color" 
-                            :x="FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
-                            :font-weight="FINAL_CONFIG.style.chart.layout.bars.parentLabels.bold ? 'bold' : 'normal'"
-                            text-anchor="start"
-                            v-html="createTSpansFromLineBreaksOnX({
-                                content: `${getParentName(serie, i)}`,
-                                fontSize: FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize,
-                                fill: FINAL_CONFIG.style.chart.layout.bars.parentLabels.color,
-                                x: FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize,
-                                y: getParentData(serie, i).y,
-                                translateY: false
-                            })"
-                        />
-                        <text 
-                            data-cy="datapoint-parent-value"  
-                            v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"  
-                            :y="getParentData(serie, i).y + getLineCountFromString(getParentName(serie, i)) *FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize * 1.1" 
-                            :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize" 
-                            :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color" 
-                            :x="FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
-                            :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
-                            text-anchor="start"
-                        >
-
-                            {{ getParentDataLabel(serie, i) }}
-                        </text>
+    
+                    <template v-if="FINAL_CONFIG.style.chart.layout.bars.rowColor">
+                        <g v-for="(_, i) in bars">
+                            <!-- BAR GUTTERS -->
+                            <rect 
+                                :x="0" 
+                                :y="drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight"
+                                :width="WIDTH" 
+                                :height="barHeight <= 0 ? 0.0001 : barHeight"
+                                :fill="FINAL_CONFIG.style.chart.layout.bars.rowColor"
+                                :rx="FINAL_CONFIG.style.chart.layout.bars.rowRadius"
+                                :style="{ pointerEvents: 'none' }" 
+                            />
+                        </g>
+                    </template>
+    
+                    <g v-for="(serie, i) in bars">
+                        <!-- UNDERLAYER -->
+                        <rect data-cy="datapoint-underlayer" :x="checkNaN(
+                            hasNegative
+                                ? drawingArea.left +
+                                drawingArea.width / 2 -
+                                (serie.sign === 1
+                                    ? 0
+                                    : calcBarWidth(serie.value) <= 0
+                                        ? 0.0001
+                                        : calcBarWidth(serie.value))
+                                : drawingArea.left
+                        )
+                            " :y="drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" :width="checkNaN(
+                    calcBarWidth(serie.value) <= 0
+                        ? 0.0001
+                        : calcBarWidth(serie.value)
+                )
+                    " :height="barHeight <= 0 ? 0.0001 : barHeight"
+                            :fill="FINAL_CONFIG.style.chart.layout.bars.underlayerColor"
+                            :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius"
+                            :class="{ animated: FINAL_CONFIG.useCssAnimation }" />
                     </g>
-                </g>
-
-                <!-- CHILDREN | LONELY PARENTS NAMES FOR WIDTH CALCULATION -->
-                <g ref="childLabels">
-                    <g v-for="(serie, i) in immutableBars" class="vue-ui-horizontal-bar-child-label">
-                        <text 
-                            v-if="(serie.isChild || !serie.hasChildren) && FINAL_CONFIG.style.chart.layout.bars.nameLabels.show" 
-                            text-anchor="start" 
-                            :x="Math.abs(FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX)" 
-                            :y="checkNaN(drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 2 + parentLabelOffsets[i] * parentLabelBlockHeight)" 
-                            :font-size="FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize" 
-                            fill="transparent"
-                            :font-weight="FINAL_CONFIG.style.chart.layout.bars.nameLabels.bold
-                                ? 'bold'
-                                : 'normal'
-                            "
-                            style="user-select: none;"
-                            v-html="createTSpansFromLineBreaksOnX({
-                                content: serie.name,
-                                fontSize: FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize,
-                                fill: 'transparent',
-                                x: Math.abs(FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX),
-                                y: checkNaN(drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 2 + parentLabelOffsets[i] * parentLabelBlockHeight),
-                                translateY: true
-                            })"
+    
+                    <g v-for="(serie, i) in bars">
+                        <!-- BARS -->
+                        <rect data-cy="datapoint-bar" :x="checkNaN(
+                            hasNegative
+                                ? drawingArea.left +
+                                drawingArea.width / 2 -
+                                (serie.sign === 1
+                                    ? 0
+                                    : calcBarWidth(serie.value) <= 0
+                                        ? 0.0001
+                                        : calcBarWidth(serie.value))
+                                : drawingArea.left
+                        )
+                            " :y="drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" :width="checkNaN(
+                    calcBarWidth(serie.value) <= 0
+                        ? 0.0001
+                        : calcBarWidth(serie.value)
+                )
+                    " :height="barHeight <= 0 ? 0.0001 : barHeight" :fill="FINAL_CONFIG.style.chart.layout.bars.useGradient
+                        ? `url(#vertical_bar_gradient_${uid}_${i})`
+                        : setOpacity(
+                            serie.color,
+                            FINAL_CONFIG.style.chart.layout.bars.fillOpacity
+                        )
+                    " :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius" :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke
+                        ? serie.color
+                        : 'none'
+                    " :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke
+                        ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth
+                        : 0
+                    " :class="{ animated: FINAL_CONFIG.useCssAnimation }" />
+                        <rect v-if="$slots.pattern" :x="checkNaN(
+                            hasNegative
+                                ? drawingArea.left +
+                                drawingArea.width / 2 -
+                                (serie.sign === 1
+                                    ? 0
+                                    : calcBarWidth(serie.value) <= 0
+                                        ? 0.0001
+                                        : calcBarWidth(serie.value))
+                                : drawingArea.left
+                        )
+                            " :y="drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" :width="checkNaN(
+                    calcBarWidth(serie.value) <= 0
+                        ? 0.0001
+                        : calcBarWidth(serie.value)
+                )
+                    " :height="barHeight <= 0 ? 0.0001 : barHeight" :fill="`url(#pattern_${uid}_${serie.absoluteIndex})`"
+                            :rx="FINAL_CONFIG.style.chart.layout.bars.borderRadius" :stroke="FINAL_CONFIG.style.chart.layout.bars.useStroke
+                                    ? serie.color
+                                    : 'none'
+                                " :stroke-width="FINAL_CONFIG.style.chart.layout.bars.useStroke
+                        ? FINAL_CONFIG.style.chart.layout.bars.strokeWidth
+                        : 0
+                    " :class="{ animated: FINAL_CONFIG.useCssAnimation }" />
+    
+                        <!-- SEPARATORS -->
+                        <line 
+                            data-cy="datapoint-separator" 
+                            v-if="(!serie.isChild || serie.isLastChild) && FINAL_CONFIG.style.chart.layout.separators.show && i !== bars.length - 1" 
+                            :x1="WIDTH" 
+                            :x2="FINAL_CONFIG.style.chart.layout.separators.fullWidth ? 0 : drawingArea.left" 
+                            :y1="barHeight + BAR_GAP / 2 + drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" 
+                            :y2="barHeight + BAR_GAP / 2 + drawingArea.top + (BAR_GAP + barHeight) * i + parentLabelOffsets[i] * parentLabelBlockHeight" 
+                            :stroke="FINAL_CONFIG.style.chart.layout.separators.color" 
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth" 
+                            stroke-linecap="round" 
+                            :style="{
+                                transition: 'none !important',
+                                animation: 'none !important',
+                            }" 
                         />
+    
+                        <line v-if="
+                            hasNegative && FINAL_CONFIG.style.chart.layout.separators.show
+                        " :x1="drawingArea.left + drawingArea.width / 2" :x2="drawingArea.left + drawingArea.width / 2"
+                            :y1="drawingArea.top" :y2="drawingArea.bottom"
+                            :stroke="FINAL_CONFIG.style.chart.layout.separators.color" :stroke-width="FINAL_CONFIG.style.chart.layout.separators.strokeWidth
+                                " stroke-linecap="round" />
                     </g>
-                </g>
-
-                <g>
-                    <g v-for="(serie, i) in bars" class="vue-ui-horizontal-bar-child-label">
-                        <!-- CHILDREN | LONELY PARENTS NAMES -->
-                        <text 
-                            data-cy="datapoint-name" 
-                            v-if="(serie.isChild || !serie.hasChildren) && FINAL_CONFIG.style.chart.layout.bars.nameLabels.show" 
-                            text-anchor="end" 
-                            :x="drawingArea.left + FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX - 6" 
-                            :y="drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 3 + parentLabelOffsets[i] * parentLabelBlockHeight" :font-size="FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize" 
-                            :fill="FINAL_CONFIG.style.chart.layout.bars.nameLabels.color" 
-                            :font-weight="FINAL_CONFIG.style.chart.layout.bars.nameLabels.bold
-                                ? 'bold'
-                                : 'normal'
-                            "
+    
+                    <!-- PARENT NAMES -->
+                    <g ref="parentLabels">
+                        <g v-for="(serie, i) in bars" class="vue-ui-horizontal-bar-parent-label">
+                            <rect
+                                class="vue-ui-horizontal-bar-parent-marker"
+                                v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"  
+                                :x="2"
+                                :y="getParentData(serie, i).y - (FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize / 1.5)"
+                                :height="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize / 1.5"
+                                :width="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize / 1.5"
+                                :rx="1"
+                                :fill="serie.color"
+                                style="animation: none !important; transition: none !important;"
+                            />
+                            <text 
+                                data-cy="datapoint-parent-name"  
+                                v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"  
+                                :y="getParentData(serie, i).y" 
+                                :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize" 
+                                :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color" 
+                                :x="FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
+                                :font-weight="FINAL_CONFIG.style.chart.layout.bars.parentLabels.bold ? 'bold' : 'normal'"
+                                text-anchor="start"
+                                v-html="createTSpansFromLineBreaksOnX({
+                                    content: `${getParentName(serie, i)}`,
+                                    fontSize: FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize,
+                                    fill: FINAL_CONFIG.style.chart.layout.bars.parentLabels.color,
+                                    x: FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize,
+                                    y: getParentData(serie, i).y,
+                                    translateY: false
+                                })"
+                            />
+                            <text 
+                                data-cy="datapoint-parent-value"  
+                                v-if="serie.isChild && serie.childIndex === 0 && FINAL_CONFIG.style.chart.layout.bars.parentLabels.show"  
+                                :y="getParentData(serie, i).y + getLineCountFromString(getParentName(serie, i)) *FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize * 1.1" 
+                                :font-size="FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize" 
+                                :fill="FINAL_CONFIG.style.chart.layout.bars.parentLabels.color" 
+                                :x="FINAL_CONFIG.style.chart.layout.bars.parentLabels.offsetX + FINAL_CONFIG.style.chart.layout.bars.parentLabels.fontSize"
+                                :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold ? 'bold' : 'normal'"
+                                text-anchor="start"
+                            >
+    
+                                {{ getParentDataLabel(serie, i) }}
+                            </text>
+                        </g>
+                    </g>
+    
+                    <!-- CHILDREN | LONELY PARENTS NAMES FOR WIDTH CALCULATION -->
+                    <g ref="childLabels">
+                        <g v-for="(serie, i) in immutableBars" class="vue-ui-horizontal-bar-child-label">
+                            <text 
+                                v-if="(serie.isChild || !serie.hasChildren) && FINAL_CONFIG.style.chart.layout.bars.nameLabels.show" 
+                                text-anchor="start" 
+                                :x="Math.abs(FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX)" 
+                                :y="checkNaN(drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 2 + parentLabelOffsets[i] * parentLabelBlockHeight)" 
+                                :font-size="FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize" 
+                                fill="transparent"
+                                :font-weight="FINAL_CONFIG.style.chart.layout.bars.nameLabels.bold
+                                    ? 'bold'
+                                    : 'normal'
+                                "
+                                style="user-select: none;"
                                 v-html="createTSpansFromLineBreaksOnX({
                                     content: serie.name,
                                     fontSize: FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize,
-                                    fill: FINAL_CONFIG.style.chart.layout.bars.nameLabels.color,
-                                    x: drawingArea.left + FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX - 6,
-                                    y: drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 3 + parentLabelOffsets[i] * parentLabelBlockHeight,
+                                    fill: 'transparent',
+                                    x: Math.abs(FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX),
+                                    y: checkNaN(drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 2 + parentLabelOffsets[i] * parentLabelBlockHeight),
                                     translateY: true
                                 })"
-                        />
+                            />
+                        </g>
                     </g>
-                </g>
-
-                <!-- DATA LABELS -->
-                <g ref="dataLabels">
-                    <g v-for="(serie, i) in bars" class="vue-ui-horizontal-bar-child-label">
-                        <text 
-                            data-cy="datapoint-label" 
-                            :x="!hasNegative
-                                ? Math.min(
-                                    calcDataLabelX(serie.value) +
-                                    3 +
-                                    FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX,
-                                    drawingArea.right - 2
-                                )
-                                : drawingArea.left +
-                                drawingArea.width / 2 +
-                                (serie.sign === 1 ? -12 : 12) +
-                                (serie.sign === 1
-                                    ? -FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX
-                                    : FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX)
-                            " 
-                            :y="drawingArea.top +
-                                (BAR_GAP + barHeight) * i +
-                                barHeight / 2 + parentLabelOffsets[i] * parentLabelBlockHeight +
-                                FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize / 3
-                                " :text-anchor="!hasNegative || serie.sign === -1 ? 'start' : 'end'" :font-size="FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize
-                                " :fill="FINAL_CONFIG.style.chart.layout.bars.dataLabels.color" :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold
+    
+                    <g>
+                        <g v-for="(serie, i) in bars" class="vue-ui-horizontal-bar-child-label">
+                            <!-- CHILDREN | LONELY PARENTS NAMES -->
+                            <text 
+                                data-cy="datapoint-name" 
+                                v-if="(serie.isChild || !serie.hasChildren) && FINAL_CONFIG.style.chart.layout.bars.nameLabels.show" 
+                                text-anchor="end" 
+                                :x="drawingArea.left + FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX - 6" 
+                                :y="drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 3 + parentLabelOffsets[i] * parentLabelBlockHeight" :font-size="FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize" 
+                                :fill="FINAL_CONFIG.style.chart.layout.bars.nameLabels.color" 
+                                :font-weight="FINAL_CONFIG.style.chart.layout.bars.nameLabels.bold
                                     ? 'bold'
                                     : 'normal'
-                            "
-                        >
-                            {{ makeDataLabel(serie.value, serie, i, serie.sign) }}
-                        </text>
+                                "
+                                    v-html="createTSpansFromLineBreaksOnX({
+                                        content: serie.name,
+                                        fontSize: FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize,
+                                        fill: FINAL_CONFIG.style.chart.layout.bars.nameLabels.color,
+                                        x: drawingArea.left + FINAL_CONFIG.style.chart.layout.bars.nameLabels.offsetX - 6,
+                                        y: drawingArea.top + (BAR_GAP + barHeight) * i + barHeight / 2 + FINAL_CONFIG.style.chart.layout.bars.nameLabels.fontSize / 3 + parentLabelOffsets[i] * parentLabelBlockHeight,
+                                        translateY: true
+                                    })"
+                            />
+                        </g>
                     </g>
+    
+                    <!-- DATA LABELS -->
+                    <g ref="dataLabels">
+                        <g v-for="(serie, i) in bars" class="vue-ui-horizontal-bar-child-label">
+                            <text 
+                                data-cy="datapoint-label" 
+                                :x="!hasNegative
+                                    ? Math.min(
+                                        calcDataLabelX(serie.value) +
+                                        3 +
+                                        FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX,
+                                        drawingArea.right - 2
+                                    )
+                                    : drawingArea.left +
+                                    drawingArea.width / 2 +
+                                    (serie.sign === 1 ? -12 : 12) +
+                                    (serie.sign === 1
+                                        ? -FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX
+                                        : FINAL_CONFIG.style.chart.layout.bars.dataLabels.offsetX)
+                                " 
+                                :y="drawingArea.top +
+                                    (BAR_GAP + barHeight) * i +
+                                    barHeight / 2 + parentLabelOffsets[i] * parentLabelBlockHeight +
+                                    FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize / 3
+                                    " :text-anchor="!hasNegative || serie.sign === -1 ? 'start' : 'end'" :font-size="FINAL_CONFIG.style.chart.layout.bars.dataLabels.fontSize
+                                    " :fill="FINAL_CONFIG.style.chart.layout.bars.dataLabels.color" :font-weight="FINAL_CONFIG.style.chart.layout.bars.dataLabels.bold
+                                        ? 'bold'
+                                        : 'normal'
+                                "
+                            >
+                                {{ makeDataLabel(serie.value, serie, i, serie.sign) }}
+                            </text>
+                        </g>
+                    </g>
+    
+                    <g v-for="(serie, i) in bars">
+                        <!-- TOOLTIP TRAPS -->
+                        <rect data-cy="tooltip-trap" :x="0" :y="drawingArea.top + (BAR_GAP + barHeight) * i - BAR_GAP / 2 + parentLabelOffsets[i] * parentLabelBlockHeight"
+                            :width="WIDTH" :height="barHeight + BAR_GAP <= 0 ? 0.0001 : barHeight + BAR_GAP"
+                            :fill="selectedBarId === serie.id
+                                    ? setOpacity(
+                                        FINAL_CONFIG.style.chart.layout.highlighter.color,
+                                        FINAL_CONFIG.style.chart.layout.highlighter.opacity
+                                    )
+                                    : 'transparent'
+                                " @mouseenter="useTooltip(serie, i, 'pointer')" @mouseleave="
+                    handleDatapointLeave({ datapoint: serie, seriesIndex: i })
+                    " @click="selectDatapoint({ datapoint: serie, seriesIndex: i })" />
+                    </g>
+    
+                    <slot name="svg" :svg="{
+                        ...svg,
+                        isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }" />
                 </g>
+            </svg>
 
-                <g v-for="(serie, i) in bars">
-                    <!-- TOOLTIP TRAPS -->
-                    <rect data-cy="tooltip-trap" :x="0" :y="drawingArea.top + (BAR_GAP + barHeight) * i - BAR_GAP / 2 + parentLabelOffsets[i] * parentLabelBlockHeight"
-                        :width="WIDTH" :height="barHeight + BAR_GAP <= 0 ? 0.0001 : barHeight + BAR_GAP"
-                        :fill="selectedBarId === serie.id
-                                ? setOpacity(
-                                    FINAL_CONFIG.style.chart.layout.highlighter.color,
-                                    FINAL_CONFIG.style.chart.layout.highlighter.opacity
-                                )
-                                : 'transparent'
-                            " @mouseenter="useTooltip(serie, i)" @mouseleave="
-                handleDatapointLeave({ datapoint: serie, seriesIndex: i })
-                " @click="selectDatapoint({ datapoint: serie, seriesIndex: i })" />
-                </g>
-
-                <slot name="svg" :svg="{
-                    ...svg,
-                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                    isPrintingSvg: isCallbackSvg,
-                }" />
-            </g>
-        </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }" />
@@ -1862,8 +2058,10 @@ defineExpose({
                 typeof FINAL_CONFIG.style.chart.tooltip.customFormat === 'function'
                 " :smooth="FINAL_CONFIG.style.chart.tooltip.smooth"
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
-            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce" :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold
-                ">
+            :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce" :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
+        >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
             </template>
@@ -2226,5 +2424,27 @@ caption {
 
 .animated {
     transition: all 0.3s ease-in-out !important;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
