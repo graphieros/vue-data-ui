@@ -58,6 +58,7 @@ import themes from "../themes/vue_ui_donut_evolution.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Slicer from "../atoms/Slicer.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -120,7 +121,10 @@ const isLoaded = ref(false);
 
 const resizeObserver = shallowRef(null);
 const observedEl = shallowRef(null);
-const to = ref(null)
+const to = ref(null);
+
+const activeTooltipIndex = ref(null); // a11y
+const isFocus = ref(false); // a11y
 
 const emit = defineEmits(['selectLegend', 'copyAlt']);
 
@@ -723,6 +727,7 @@ function displayArcPercentage(arc, stepBreakdown) {
 function leave(datapoint) {
     hoveredIndex.value = null;
     hoveredDatapoint.value = null;
+    activeTooltipIndex.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.seriesIndex + slicer.value.start });
     }
@@ -734,6 +739,7 @@ function enter(datapoint) {
     }
     hoveredIndex.value = datapoint.index;
     hoveredDatapoint.value = datapoint;
+    activeTooltipIndex.value = datapoint.index;
 }
 
 const fixedDatapointIndex = ref(null);
@@ -886,8 +892,14 @@ const table = computed(() => {
                 percentage: ds.values[i] ? ds.values[i] / sum * 100 : 0
             }
         })).concat([`${FINAL_CONFIG.value.style.chart.layout.dataLabels.prefix}${Number(sum.toFixed(FINAL_CONFIG.value.table.td.roundingValue))}${FINAL_CONFIG.value.style.chart.layout.dataLabels.suffix}`]))
-
     }
+
+    const bodyA11y = body.map((b) => {
+        return b.map((d,i) => {
+            if (i === 0 || i === b.length - 1) return d;
+            return `${labellizeValue(d.value ?? 0, null, i)} (${d.percentage.toFixed(1)}%)`;
+        });
+    });
 
     const config = {
         th: {
@@ -907,7 +919,7 @@ const table = computed(() => {
         FINAL_CONFIG.value.table.columnNames.period
     ].concat(convertedDataset.value.filter(ds => !segregated.value.includes(ds.uid)).map(ds => ds.name)).concat(FINAL_CONFIG.value.table.columnNames.total)
 
-    return { head, body, config, colNames };
+    return { head, body, bodyA11y, config, colNames };
 });
 
 function getData() {
@@ -1120,6 +1132,81 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTooltipIndex.value = null;
+    hoveredIndex.value = null;
+    hoveredDatapoint.value = null;
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!drawableDataset.value.length) return;
+
+    const isPreviousKey = event.key === 'ArrowLeft';
+    const isNextKey = event.key === 'ArrowRight';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activeTooltipIndex.value = null;
+        hoveredIndex.value = null;
+        hoveredDatapoint.value = null;
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+
+        const datapoint = drawableDataset.value[activeTooltipIndex.value];
+        if (!datapoint) return;
+
+        fixDatapoint(datapoint, activeTooltipIndex.value);
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= drawableDataset.value.length) {
+        nextIndex = isNextKey ? 0 : drawableDataset.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= drawableDataset.value.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = drawableDataset.value.length - 1;
+        }
+    }
+
+    const datapoint = drawableDataset.value[nextIndex];
+    if (!datapoint) return;
+
+    enter(datapoint);
+}
+
+const a11yTable = computed(() => {
+    const headers = table.value?.colNames ?? [];
+    const rows = table.value?.bodyA11y ?? [];
+    return { headers, rows };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1139,6 +1226,21 @@ defineExpose({
 
 <template>
     <div ref="donutEvolutionChart" :class="`vue-data-ui-component vue-ui-donut-evolution ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="uid" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+
+        <!-- A11Y -->
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1261,325 +1363,336 @@ defineExpose({
             </template>
         </UserOptions>
         
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS" 
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
-            data-cy="donut-evolution-svg" 
-            :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" 
-            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="svg.left"
-                :y="svg.top"
-                :width="svg.width"
-                :height="svg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position: relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS" 
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
+                data-cy="donut-evolution-svg" 
+                :viewBox="`0 0 ${svg.absoluteWidth} ${svg.absoluteHeight}`" 
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-
-            <defs>
-                <linearGradient :id="`hover_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, FINAL_CONFIG.style.chart.layout.highlighter.opacity)"/>
-                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.layout.highlighter.color, FINAL_CONFIG.style.chart.layout.highlighter.opacity)"/>
-                </linearGradient>
-
-                <radialGradient :id="`focus_${uid}`">
-                    <stop offset="0%" :stop-color="setOpacity(convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor), 0)" />
-                    <stop offset="77%" :stop-color="setOpacity('#FFFFFF', 30)" />
-                    <stop offset="100%" :stop-color="setOpacity(convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor), 0)" />
-                </radialGradient>
-            </defs>
-            
-
-            <!-- GRID -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
-                <line
-                    data-cy="axis-y"
-                    :x1="svg.left" 
-                    :x2="svg.left" 
-                    :y1="svg.top" 
-                    :y2="svg.top + svg.height" 
-                    :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
-                    stroke-linecap="round"
-                />
-
-                <line 
-                    data-cy="axis-x"
-                    :x1="svg.left" 
-                    :x2="svg.right" 
-                    :y1="svg.bottom" 
-                    :y2="svg.bottom" 
-                    :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
-                    stroke-linecap="round" 
-                />
-
-                <g v-if="FINAL_CONFIG.style.chart.layout.grid.showVerticalLines">
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="svg.left"
+                    :y="svg.top"
+                    :width="svg.width"
+                    :height="svg.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+    
+                <defs>
+                    <linearGradient :id="`hover_${uid}`" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, FINAL_CONFIG.style.chart.layout.highlighter.opacity)"/>
+                        <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.layout.highlighter.color, FINAL_CONFIG.style.chart.layout.highlighter.opacity)"/>
+                    </linearGradient>
+    
+                    <radialGradient :id="`focus_${uid}`">
+                        <stop offset="0%" :stop-color="setOpacity(convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor), 0)" />
+                        <stop offset="77%" :stop-color="setOpacity('#FFFFFF', 30)" />
+                        <stop offset="100%" :stop-color="setOpacity(convertColorToHex(FINAL_CONFIG.style.chart.backgroundColor), 0)" />
+                    </radialGradient>
+                </defs>
+                
+    
+                <!-- GRID -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
                     <line
-                        data-cy="vertical-separator"
-                        v-for="(l, i) in (slicer.end - slicer.start)" 
-                        :x1="svg.left + ((i +1 ) * slit)" 
-                        :x2="svg.left + ((i +1) * slit)" 
+                        data-cy="axis-y"
+                        :x1="svg.left" 
+                        :x2="svg.left" 
                         :y1="svg.top" 
-                        :y2="svg.bottom" 
+                        :y2="svg.top + svg.height" 
                         :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
                         :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
                         stroke-linecap="round"
                     />
-                </g>
-            </g>
-
-            <!-- AXIS LABELS -->
-            <g>
-                <text ref="yAxisLabel" data-cy="xy-axis-yLabel"
-                    v-if="FINAL_CONFIG.style.chart.layout.grid.axis.yLabel"
-                    :font-size="FINAL_CONFIG.style.chart.layout.grid.axis.fontSize" 
-                    :fill="FINAL_CONFIG.style.chart.layout.grid.axis.color"
-                    :transform="`translate(${FINAL_CONFIG.style.chart.layout.grid.axis.fontSize}, ${svg.top + svg.height / 2}) rotate(-90)`"
-                    text-anchor="middle" style="transition: none">
-                    {{ FINAL_CONFIG.style.chart.layout.grid.axis.yLabel }}
-                </text>
-                <text ref="xAxisLabel" data-cy="xy-axis-xLabel"
-                    v-if="FINAL_CONFIG.style.chart.layout.grid.axis.xLabel" text-anchor="middle"
-                    :x="svg.absoluteWidth / 2"
-                    :y="svg.absoluteHeight - 3"
-                    :font-size="FINAL_CONFIG.style.chart.layout.grid.axis.fontSize" :fill="FINAL_CONFIG.style.chart.layout.grid.axis.color">
-                    {{ FINAL_CONFIG.style.chart.layout.grid.axis.xLabel }}
-                </text>
-            </g>
-
-            <!-- Y LABELS -->
-            <g ref="scaleLabels" v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null}">
-                <g v-for="(yLabel, i) in yLabels">
+    
                     <line 
-                        data-cy="axis-y-tick"
-                        v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
+                        data-cy="axis-x"
                         :x1="svg.left" 
-                        :x2="svg.left - 5" 
-                        :y1="yLabel.y" 
-                        :y2="yLabel.y" 
+                        :x2="svg.right" 
+                        :y1="svg.bottom" 
+                        :y2="svg.bottom" 
                         :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
                         :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
+                        stroke-linecap="round" 
                     />
-                    <text
-                        data-cy="axis-y-label"
-                        v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
-                        :x="svg.left + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.offsetX - 7" 
-                        :y="yLabel.y + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize / 3" 
-                        :font-size="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize" 
-                        text-anchor="end"
-                        :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
-                    >
-                        {{ canShowValue(yLabel.value) ? applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.dataLabels.formatter,
-                            yLabel.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.dataLabels.prefix,
-                                v: yLabel.value,
-                                s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.roundingValue
-                            }),
-                            { datapoint: yLabel, seriesIndex: i }
-                        ) : '' 
-                        }}
+    
+                    <g v-if="FINAL_CONFIG.style.chart.layout.grid.showVerticalLines">
+                        <line
+                            data-cy="vertical-separator"
+                            v-for="(l, i) in (slicer.end - slicer.start)" 
+                            :x1="svg.left + ((i +1 ) * slit)" 
+                            :x2="svg.left + ((i +1) * slit)" 
+                            :y1="svg.top" 
+                            :y2="svg.bottom" 
+                            :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
+                            stroke-linecap="round"
+                        />
+                    </g>
+                </g>
+    
+                <!-- AXIS LABELS -->
+                <g>
+                    <text ref="yAxisLabel" data-cy="xy-axis-yLabel"
+                        v-if="FINAL_CONFIG.style.chart.layout.grid.axis.yLabel"
+                        :font-size="FINAL_CONFIG.style.chart.layout.grid.axis.fontSize" 
+                        :fill="FINAL_CONFIG.style.chart.layout.grid.axis.color"
+                        :transform="`translate(${FINAL_CONFIG.style.chart.layout.grid.axis.fontSize}, ${svg.top + svg.height / 2}) rotate(-90)`"
+                        text-anchor="middle" style="transition: none">
+                        {{ FINAL_CONFIG.style.chart.layout.grid.axis.yLabel }}
+                    </text>
+                    <text ref="xAxisLabel" data-cy="xy-axis-xLabel"
+                        v-if="FINAL_CONFIG.style.chart.layout.grid.axis.xLabel" text-anchor="middle"
+                        :x="svg.absoluteWidth / 2"
+                        :y="svg.absoluteHeight - 3"
+                        :font-size="FINAL_CONFIG.style.chart.layout.grid.axis.fontSize" :fill="FINAL_CONFIG.style.chart.layout.grid.axis.color">
+                        {{ FINAL_CONFIG.style.chart.layout.grid.axis.xLabel }}
                     </text>
                 </g>
-            </g>
-
-            <!-- X LABELS -->
-            <g ref="timeLabelsEls" v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true,}">
-                <g v-for="(_, i) in (slicer.end - slicer.start)">
-                    <g v-if="((FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast) && timeLabels[i] && timeLabels[i].text">
-                        <!-- SINGLE LINE -->
-                        <text
-                            class="vue-data-ui-time-label"
-                            v-if="!String(timeLabels[i].text).includes('\n')"
-                            data-cy="axis-x-label"
-                            :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
-                            :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
-                            :transform="`translate(${svg.left + (slit * i) + (slit / 2)}, ${svg.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
     
-                        >
-                            {{ timeLabels[i].text || '' }}
-                        </text>
-                        <!-- MULTILINE -->
+                <!-- Y LABELS -->
+                <g ref="scaleLabels" v-if="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.show" :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null}">
+                    <g v-for="(yLabel, i) in yLabels">
+                        <line 
+                            data-cy="axis-y-tick"
+                            v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
+                            :x1="svg.left" 
+                            :x2="svg.left - 5" 
+                            :y1="yLabel.y" 
+                            :y2="yLabel.y" 
+                            :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke" 
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" 
+                        />
                         <text
-                            v-else
-                            class="vue-data-ui-time-label"
-                            data-cy="axis-x-label"
-                            :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
-                            :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
-                            :transform="`translate(${svg.left + (slit * i) + (slit / 2)}, ${svg.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
-                            v-html="createTSpansFromLineBreaksOnX({
-                                content: String(timeLabels[i].text),
-                                fontSize: FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize,
-                                fill: FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color,
-                                x: 0,
-                                y: 0
-                            })"
-                        />
+                            data-cy="axis-y-label"
+                            v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
+                            :x="svg.left + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.offsetX - 7" 
+                            :y="yLabel.y + FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize / 3" 
+                            :font-size="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.fontSize" 
+                            text-anchor="end"
+                            :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
+                        >
+                            {{ canShowValue(yLabel.value) ? applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.dataLabels.formatter,
+                                yLabel.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.dataLabels.prefix,
+                                    v: yLabel.value,
+                                    s: FINAL_CONFIG.style.chart.layout.dataLabels.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.roundingValue
+                                }),
+                                { datapoint: yLabel, seriesIndex: i }
+                            ) : '' 
+                            }}
+                        </text>
                     </g>
                 </g>
-            </g>
-            
-            <!-- DATAPOINTS -->
-            <g v-for="(datapoint, i ) in drawableDataset">
-                <line
-                    :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null}"
-                    v-if="FINAL_CONFIG.style.chart.layout.line.show && i < drawableDataset.length - 1 && ![datapoint.subtotal, drawableDataset[i + 1].subtotal].includes(null)"
-                    :x1="datapoint.x"
-                    :y1="datapoint.y"
-                    :x2="drawableDataset[i + 1].x"
-                    :y2="drawableDataset[i + 1].y"
-                    :stroke="FINAL_CONFIG.style.chart.layout.line.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.line.strokeWidth"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
-                <g v-if="datapoint.subtotal !== null">
-                    <circle
-                        v-if="datapoint.subtotal"
-                        :cx="datapoint.x"
-                        :cy="datapoint.y"
-                        :r="datapoint.activeRadius"
-                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                    />
-                </g>
-            </g>
-
-            <g v-for="(datapoint, i ) in drawableDataset" :data-cy="`donut-wrapper-${i}`" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null)}">
-                <g v-if="datapoint.subtotal">
-                    <g v-if="hoveredIndex !== null && hoveredIndex === i">
-                        <g v-for="arc in datapoint.donutHover">
-                            <path
-                                v-if="isArcBigEnoughHover(arc)"
-                                :data-cy="`donut_hover_${i}`"
-                                :d="calcNutArrowPath(arc, {x: arc.center.endX, y: arc.center.endY}, 12, 12, { x: datapoint.x, y: datapoint.y}, false, 20)"
-                                :stroke="arc.color"
-                                stroke-width="1"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                fill="none"
-                            />
-                        </g>
-                        <!-- DATALABELS (hovered datapoint) -->
-                        <g v-for="(arc, i) in datapoint.donutHover">
+    
+                <!-- X LABELS -->
+                <g ref="timeLabelsEls" v-if="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.show" :class="{'donut-opacity': true,}">
+                    <g v-for="(_, i) in (slicer.end - slicer.start)">
+                        <g v-if="((FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast && (i === 0 || i === maxLength - 1)) || !FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.showOnlyFirstAndLast) && timeLabels[i] && timeLabels[i].text">
+                            <!-- SINGLE LINE -->
                             <text
-                                v-if="isArcBigEnoughHover(arc)"
-                                :data-cy="`donut-datalabel-value-${i}`"
-                                data-cy-hover-label
-                                :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
-                                :x="calcMarkerOffsetX(arc, true, 9).x"
-                                :y="calcMarkerOffsetY(arc, 14, 10)"
-                                :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
-                                :font-size="8"
-                                :font-weight="'bold'"
+                                class="vue-data-ui-time-label"
+                                v-if="!String(timeLabels[i].text).includes('\n')"
+                                data-cy="axis-x-label"
+                                :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
+                                :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
+                                :transform="`translate(${svg.left + (slit * i) + (slit / 2)}, ${svg.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
+        
                             >
-                            {{ arc.name}}: {{ displayArcPercentage(arc, datapoint.donut)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value, arc, i) }})
+                                {{ timeLabels[i].text || '' }}
                             </text>
-                        </g>
-                        <g>
-                            <circle
-                                :cx="datapoint.x"
-                                :cy="datapoint.y"
-                                :r="datapoint.hoverRadius"
-                                :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                            <!-- MULTILINE -->
+                            <text
+                                v-else
+                                class="vue-data-ui-time-label"
+                                data-cy="axis-x-label"
+                                :text-anchor="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
+                                :font-size="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color"
+                                :transform="`translate(${svg.left + (slit * i) + (slit / 2)}, ${svg.bottom + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.rotation})`"
+                                v-html="createTSpansFromLineBreaksOnX({
+                                    content: String(timeLabels[i].text),
+                                    fontSize: FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.fontSize,
+                                    fill: FINAL_CONFIG.style.chart.layout.grid.xAxis.dataLabels.color,
+                                    x: 0,
+                                    y: 0
+                                })"
                             />
                         </g>
                     </g>
                 </g>
-            </g>
-            <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null)}">
-                <g v-if="datapoint.subtotal !== null">
-                    <circle 
-                        v-if="datapoint.subtotal === 0"
-                        :cx="datapoint.x"
-                        :cy="datapoint.y"
-                        :r="3"
-                        :fill="FINAL_CONFIG.style.chart.color"
+                
+                <!-- DATAPOINTS -->
+                <g v-for="(datapoint, i ) in drawableDataset">
+                    <line
+                        :class="{'donut-opacity': true, 'donut-behind': hoveredIndex !== null}"
+                        v-if="FINAL_CONFIG.style.chart.layout.line.show && i < drawableDataset.length - 1 && ![datapoint.subtotal, drawableDataset[i + 1].subtotal].includes(null)"
+                        :x1="datapoint.x"
+                        :y1="datapoint.y"
+                        :x2="drawableDataset[i + 1].x"
+                        :y2="drawableDataset[i + 1].y"
+                        :stroke="FINAL_CONFIG.style.chart.layout.line.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.line.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                     />
-                    <g v-else-if="hoveredIndex !== null && hoveredIndex === i">
-                        <path 
-                            v-for="(arc, k) in datapoint.donutHover"
-                            :d="arc.arcSlice"
-                            :fill="`${arc.color}`"
-                            :stroke-width="1"
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        />
-                    </g>
-                    <g v-else>
-                        <path
-                        :data-cy="`arc_${i}`"
-                            v-for="(arc, k) in datapoint.donut"
-                            :d="arc.arcSlice"
-                            :fill="`${arc.color}`"
-                            :stroke-width="0.5"
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                    <g v-if="datapoint.subtotal !== null">
+                        <circle
+                            v-if="datapoint.subtotal"
+                            :cx="datapoint.x"
+                            :cy="datapoint.y"
+                            :r="datapoint.activeRadius"
+                            :fill="FINAL_CONFIG.style.chart.backgroundColor"
                         />
                     </g>
                 </g>
-            </g>
+    
+                <g v-for="(datapoint, i ) in drawableDataset" :data-cy="`donut-wrapper-${i}`" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null)}">
+                    <g v-if="datapoint.subtotal">
+                        <g v-if="hoveredIndex !== null && hoveredIndex === i">
+                            <g v-for="arc in datapoint.donutHover">
+                                <path
+                                    v-if="isArcBigEnoughHover(arc)"
+                                    :data-cy="`donut_hover_${i}`"
+                                    :d="calcNutArrowPath(arc, {x: arc.center.endX, y: arc.center.endY}, 12, 12, { x: datapoint.x, y: datapoint.y}, false, 20)"
+                                    :stroke="arc.color"
+                                    stroke-width="1"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    fill="none"
+                                />
+                            </g>
+                            <!-- DATALABELS (hovered datapoint) -->
+                            <g v-for="(arc, i) in datapoint.donutHover">
+                                <text
+                                    v-if="isArcBigEnoughHover(arc)"
+                                    :data-cy="`donut-datalabel-value-${i}`"
+                                    data-cy-hover-label
+                                    :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
+                                    :x="calcMarkerOffsetX(arc, true, 9).x"
+                                    :y="calcMarkerOffsetY(arc, 14, 10)"
+                                    :fill="FINAL_CONFIG.style.chart.layout.grid.yAxis.dataLabels.color"
+                                    :font-size="8"
+                                    :font-weight="'bold'"
+                                >
+                                {{ arc.name}}: {{ displayArcPercentage(arc, datapoint.donut)  }} ({{ arc.value === null ? '-' : labellizeValue(arc.value, arc, i) }})
+                                </text>
+                            </g>
+                            <g>
+                                <circle
+                                    :cx="datapoint.x"
+                                    :cy="datapoint.y"
+                                    :r="datapoint.hoverRadius"
+                                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                                />
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null)}">
+                    <g v-if="datapoint.subtotal !== null">
+                        <circle 
+                            v-if="datapoint.subtotal === 0"
+                            :cx="datapoint.x"
+                            :cy="datapoint.y"
+                            :r="3"
+                            :fill="FINAL_CONFIG.style.chart.color"
+                        />
+                        <g v-else-if="hoveredIndex !== null && hoveredIndex === i">
+                            <path 
+                                v-for="(arc, k) in datapoint.donutHover"
+                                :d="arc.arcSlice"
+                                :fill="`${arc.color}`"
+                                :stroke-width="1"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            />
+                        </g>
+                        <g v-else>
+                            <path
+                            :data-cy="`arc_${i}`"
+                                v-for="(arc, k) in datapoint.donut"
+                                :d="arc.arcSlice"
+                                :fill="`${arc.color}`"
+                                :stroke-width="0.5"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            />
+                        </g>
+                    </g>
+                </g>
+    
+                <!-- DATALABELS -->
+                <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || (isFixed && i !== fixedDatapoint.index)}">
+                    <text 
+                        v-if="datapoint.subtotal !== null && FINAL_CONFIG.style.chart.layout.dataLabels.show"
+                        text-anchor="middle"
+                        :x="datapoint.x"
+                        :y="hoveredIndex === datapoint.index && datapoint.subtotal ? datapoint.y + FINAL_CONFIG.style.chart.layout.dataLabels.fontSize / 3 : datapoint.y - datapoint.radius - FINAL_CONFIG.style.chart.layout.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.dataLabels.offsetY"
+                        :font-size="FINAL_CONFIG.style.chart.layout.dataLabels.fontSize"
+                        :font-weight="'bold'"
+                        :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
+                    >
+                        {{ labellizeValue(datapoint.subtotal, datapoint, i) }}
+                    </text>
+                </g>
+    
+                <!-- TRAPS -->
+                <rect 
+                    v-for="(datapoint, i) in drawableDataset"
+                    :x="svg.left + (i * slit)"
+                    :y="svg.top"
+                    :width="slit"
+                    :height="svg.height"
+                    :fill="[hoveredIndex, fixedDatapointIndex].includes(datapoint.index) ? `url(#hover_${uid})` : 'transparent'"
+                    :class="{'donut-hover': isCursorPointer && datapoint.subtotal && [hoveredIndex, fixedDatapointIndex].includes(datapoint.index)}"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                />
+                <rect 
+                    v-for="(datapoint, i) in drawableDataset"
+                    :data-cy="`trap-${i}`"
+                    data-cy-trap
+                    :x="svg.left + (i * slit)"
+                    :y="svg.top"
+                    :width="slit"
+                    :height="svg.height"
+                    fill="transparent"
+                    @mouseenter="enter(datapoint)"
+                    @mouseleave="leave(datapoint)"
+                    @click="fixDatapoint(datapoint, i)"
+                    :class="{'donut-hover': isCursorPointer && hoveredIndex === datapoint.index && datapoint.subtotal}"
+                />
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
 
-            <!-- DATALABELS -->
-            <g v-for="(datapoint, i ) in drawableDataset" :class="{'donut-opacity': true, 'donut-behind': (i !== hoveredIndex && hoveredIndex !== null) || (isFixed && i !== fixedDatapoint.index)}">
-                <text 
-                    v-if="datapoint.subtotal !== null && FINAL_CONFIG.style.chart.layout.dataLabels.show"
-                    text-anchor="middle"
-                    :x="datapoint.x"
-                    :y="hoveredIndex === datapoint.index && datapoint.subtotal ? datapoint.y + FINAL_CONFIG.style.chart.layout.dataLabels.fontSize / 3 : datapoint.y - datapoint.radius - FINAL_CONFIG.style.chart.layout.dataLabels.fontSize + FINAL_CONFIG.style.chart.layout.dataLabels.offsetY"
-                    :font-size="FINAL_CONFIG.style.chart.layout.dataLabels.fontSize"
-                    :font-weight="'bold'"
-                    :fill="FINAL_CONFIG.style.chart.layout.dataLabels.color"
-                >
-                    {{ labellizeValue(datapoint.subtotal, datapoint, i) }}
-                </text>
-            </g>
-
-            <!-- TRAPS -->
-            <rect 
-                v-for="(datapoint, i) in drawableDataset"
-                :x="svg.left + (i * slit)"
-                :y="svg.top"
-                :width="slit"
-                :height="svg.height"
-                :fill="[hoveredIndex, fixedDatapointIndex].includes(datapoint.index) ? `url(#hover_${uid})` : 'transparent'"
-                :class="{'donut-hover': isCursorPointer && datapoint.subtotal && [hoveredIndex, fixedDatapointIndex].includes(datapoint.index)}"
-                :style="{
-                    pointerEvents: 'none'
-                }"
-            />
-            <rect 
-                v-for="(datapoint, i) in drawableDataset"
-                :data-cy="`trap-${i}`"
-                data-cy-trap
-                :x="svg.left + (i * slit)"
-                :y="svg.top"
-                :width="slit"
-                :height="svg.height"
-                fill="transparent"
-                @mouseenter="enter(datapoint)"
-                @mouseleave="leave(datapoint)"
-                @click="fixDatapoint(datapoint, i)"
-                :class="{'donut-hover': isCursorPointer && hoveredIndex === datapoint.index && datapoint.subtotal}"
-            />
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1798,4 +1911,25 @@ defineExpose({
     }
 }
 
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
+}
 </style>
