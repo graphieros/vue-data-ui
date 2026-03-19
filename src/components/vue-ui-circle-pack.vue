@@ -27,6 +27,7 @@ import {
     lightenHexColor,
     objectIsEmpty,
     palette,
+    svgToClientCoords,
     themePalettes,
     treeShake,
 } from '../lib';
@@ -44,6 +45,7 @@ import img from '../img';
 import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_circle_pack.json";
 import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -93,6 +95,11 @@ const tooltipContent = ref("");
 const selectedDatapoint = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -390,11 +397,14 @@ function calcOffsetY(radius, offset) {
 }
 
 function onTrapLeave(datapoint, seriesIndex) {
-    isTooltip.value = false;
-    selectedDatapoint.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex });
     }
+    if (tooltipTriggerMode.value === 'keyboard' && selectedDatapoint.value?.id === datapoint?.id) return;
+    isTooltip.value = false;
+    selectedDatapoint.value = null;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
 }
 
 function onTrapClick(datapoint, seriesIndex) {
@@ -407,8 +417,10 @@ function onTrapClick(datapoint, seriesIndex) {
 const dataTooltipSlot = ref(null);
 const useCustomFormat = ref(false);
 
-function onTrapEnter(datapoint, seriesIndex) {
+function onTrapEnter(datapoint, seriesIndex, triggerMode = 'pointer') {
     selectedDatapoint.value = datapoint;
+    activeTooltipIndex.value = seriesIndex;
+    tooltipTriggerMode.value = triggerMode;
 
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
@@ -708,6 +720,107 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+function setKeyboardTooltipPositionFromIndex(index) {
+    if (!Number.isFinite(index)) return;
+    if (!svgRef.value) return;
+    const circle = circles.value[index];
+    if (!circle) return;
+    const coords = svgToClientCoords(circle.x, circle.y, svgRef.value);
+    if (!coords) return;
+    tooltipA11yPosition.value = coords;
+}
+
+function clearKeyboardSelection() {
+    if (activeTooltipIndex.value !== null) {
+        const currentCircle = circles.value[activeTooltipIndex.value];
+        currentCircle && onTrapLeave(currentCircle, activeTooltipIndex.value);
+    }
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+    selectedDatapoint.value = null;
+}
+
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    clearKeyboardSelection();
+    isFocus.value = false;
+}
+
+function getNextCircleIndex(currentIndex, direction) {
+    const len = circles.value.length;
+    if (!len) return null;
+    if (currentIndex === null || currentIndex < 0 || currentIndex >= len) {
+        return direction === 'next' ? 0 : len - 1;
+    }
+    if (direction === 'previous') {
+        return (currentIndex - 1 + len) % len;
+    }
+    return (currentIndex + 1) % len;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!circles.value.length) return;
+
+    const isPreviousKey = ['ArrowLeft', 'ArrowUp'].includes(event.key);
+    const isNextKey = ['ArrowRight', 'ArrowDown'].includes(event.key);
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearKeyboardSelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+        const circle = circles.value[activeTooltipIndex.value];
+        if (!circle) return;
+        onTrapClick(circle, activeTooltipIndex.value);
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= circles.value.length) {
+        nextIndex = isNextKey ? 0 : circles.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex = getNextCircleIndex(nextIndex, 'next');
+    } else if (isPreviousKey) {
+        nextIndex = getNextCircleIndex(nextIndex, 'previous');
+    }
+
+    const circle = circles.value[nextIndex];
+    if (!circle) return;
+    activeTooltipIndex.value = nextIndex;
+    setKeyboardTooltipPositionFromIndex(nextIndex);
+    onTrapEnter(circle, nextIndex, 'keyboard');
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = dataTable.value?.body?.map(row => [
+        row[0]?.name ?? '',
+        row[1]
+    ]) ?? [];
+
+    return { headers, rows };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -720,7 +833,6 @@ defineExpose({
     toggleFullscreen,
     copyAlt
 });
-
 </script>
 
 <template>
@@ -732,6 +844,19 @@ defineExpose({
         @mouseenter="() => setUserOptionsVisibility(true)"
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -864,10 +989,15 @@ defineExpose({
             <svg
                 ref="svgRef"
                 :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
                 :viewBox="viewBox"
                 preserveAspectRatio="xMidYMid meet"
                 :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'not-responsive': !FINAL_CONFIG.responsive }"
                 :style="`display:block;${FINAL_CONFIG.responsive ? 'width:100%;height:auto' : 'height:100%;'};overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};background:${FINAL_CONFIG.style.chart.backgroundColor};`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
                 <PackageVersion />
     
@@ -913,7 +1043,7 @@ defineExpose({
                         :fill="FINAL_CONFIG.style.chart.circles.gradient.show ? `url(#${circle.id})` : circle.color"
                         :rx="circle.r"
 
-                        @mouseenter="onTrapEnter(circle, i)"
+                        @mouseenter="onTrapEnter(circle, i, 'pointer')"
                         @mouseout="onTrapLeave(circle, i)"
                         @click="onTrapClick(circle, i)"
                     />
@@ -1035,6 +1165,9 @@ defineExpose({
                     isPrintingSvg: isCallbackSvg,
                 }" />
             </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
         </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
@@ -1066,6 +1199,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThrehsold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
@@ -1147,5 +1282,31 @@ text {
 .loading rect,
 .loading text {
     transition: none !important;
+}
+
+.vue-ui-circle-pack-svg-container {
+    position: relative;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
