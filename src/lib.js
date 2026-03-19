@@ -4034,6 +4034,42 @@ export function setGradientOffset(i, n) {
     return `${(i * 100) / (n - 1)}%`;
 }
 
+export function svgToClientCoords(x, y, svgEl) {
+    if (!svgEl) return null;
+
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return null;
+    }
+
+    if (svgEl.createSVGPoint && svgEl.getScreenCTM) {
+        const point = svgEl.createSVGPoint();
+        point.x = x;
+        point.y = y;
+
+        const matrix = svgEl.getScreenCTM();
+
+        if (matrix) {
+            const result = point.matrixTransform(matrix);
+
+            if (!Number.isFinite(result.x) || !Number.isFinite(result.y)) {
+                return null;
+            }
+
+            return {
+                x: result.x,
+                y: result.y
+            };
+        }
+    }
+
+    const rect = svgEl.getBoundingClientRect();
+
+    return {
+        x: rect.left + x,
+        y: rect.top + y
+    };
+}
+
 const lib = {
     XMLNS,
     abbreviate,
@@ -4153,7 +4189,8 @@ const lib = {
     triggerResize,
     wrapText,
     createStraightPathWithCutsSegments,
-    createSmoothPathWithCutsSegments
+    createSmoothPathWithCutsSegments,
+    svgToClientCoords
 };
 export default lib;
 
