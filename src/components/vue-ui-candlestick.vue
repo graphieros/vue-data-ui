@@ -18,6 +18,7 @@ import {
     createCsvContent, 
     createUid, 
     dataLabel, 
+    deepClone, 
     downloadCsv,
     error,
     functionReturnsString,
@@ -47,6 +48,7 @@ import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_candlestick.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import SlicerPreview from "../atoms/SlicerPreview.vue"; // Must be ready in responsive mode
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -109,6 +111,11 @@ const userOptionsRef = ref(null);
 const selectedMinimapIndex = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -875,6 +882,8 @@ function onTrapLeave(index, datapoint) {
     }
     hoveredIndex.value = undefined;
     isTooltip.value = false;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
 }
 
 watch(() => props.selectedXIndex, (v) => {
@@ -891,11 +900,14 @@ watch(() => props.selectedXIndex, (v) => {
     }
 }, { immediate: true })
 
-function useTooltip(index, datapoint) {
+function useTooltip(index, datapoint, triggerMode = 'pointer') {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: index + slicer.value.start })
     }
+
     hoveredIndex.value = index;
+    activeTooltipIndex.value = index;
+    tooltipTriggerMode.value = triggerMode;
 
     dataTooltipSlot.value = {
         datapoint,
@@ -1141,6 +1153,46 @@ const dataTable = computed(() => {
         ]
     });
 
+    const bodyA11y = drawableDataset.value.map((ds, i) => {
+        const timeLabel = FINAL_CONFIG.value.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable
+            ? (timeLabels.value?.[i]?.text ?? '')
+            : ds.period;
+
+        const label_open = dataLabel({
+            p: FINAL_CONFIG.value.table.td.prefix,
+            v: ds.open.value,
+            s: FINAL_CONFIG.value.table.td.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
+        });
+        const label_high = dataLabel({
+            p: FINAL_CONFIG.value.table.td.prefix,
+            v: ds.high.value,
+            s: FINAL_CONFIG.value.table.td.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
+        });
+        const label_low = dataLabel({
+            p: FINAL_CONFIG.value.table.td.prefix,
+            v: ds.low.value,
+            s: FINAL_CONFIG.value.table.td.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
+        });
+        const label_close = dataLabel({
+            p: FINAL_CONFIG.value.table.td.prefix,
+            v: ds.close.value,
+            s: FINAL_CONFIG.value.table.td.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
+        });
+
+        return [
+            timeLabel,
+            label_open,
+            label_high,
+            label_low,
+            label_close,
+            `${isNaN(ds.volume) ? '-' : ds.volume}`,
+        ]
+    });
+
     const config = {
         th: {
             backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
@@ -1164,7 +1216,7 @@ const dataTable = computed(() => {
         FINAL_CONFIG.value.translations.volume
     ]
 
-    return { head: colNames, body, config, colNames }
+    return { head: colNames, body, bodyA11y, config, colNames }
 })
 
 const isFullscreen = ref(false)
@@ -1361,6 +1413,99 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+    hoveredIndex.value = undefined;
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!drawableDataset.value.length) return;
+
+    const isPreviousKey = event.key === 'ArrowLeft';
+    const isNextKey = event.key === 'ArrowRight';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activeTooltipIndex.value = null;
+        tooltipTriggerMode.value = 'pointer';
+        isTooltip.value = false;
+        hoveredIndex.value = undefined;
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+
+        const datapoint = drawableDataset.value[activeTooltipIndex.value];
+        if (!datapoint) return;
+
+        selectDatapoint(activeTooltipIndex.value, datapoint);
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= drawableDataset.value.length) {
+        nextIndex = isNextKey ? 0 : drawableDataset.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= drawableDataset.value.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = drawableDataset.value.length - 1;
+        }
+    }
+
+    const datapoint = drawableDataset.value[nextIndex];
+    if (!datapoint) return;
+
+    setKeyboardTooltipPositionFromIndex(nextIndex);
+    useTooltip(nextIndex, datapoint, 'keyboard');
+}
+
+function setKeyboardTooltipPositionFromIndex(index) {
+    if (!Number.isFinite(index)) return;
+    if (!svgRef.value) return;
+
+    const svgX = drawingArea.value.left + (slot.value * index) + (slot.value / 2);
+    const svgY = drawingArea.value.top + drawingArea.value.height / 2;
+
+    const box = svgRef.value.getBoundingClientRect();
+
+    tooltipA11yPosition.value = {
+        x: box.left + (svgX / svg.value.width) * box.width,
+        y: box.top + (svgY / svg.value.height) * box.height
+    };
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = dataTable.value?.bodyA11y ?? [];
+    return { headers, rows };
+});
+
 defineExpose({
     getImage,
     generatePdf,
@@ -1378,6 +1523,21 @@ defineExpose({
 
 <template>
     <div ref="candlestickChart" :class="`vue-data-ui-component vue-ui-candlestick ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`position:relative;font-family:${FINAL_CONFIG.style.fontFamily}; text-align:center;background:${FINAL_CONFIG.style.backgroundColor}; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" :id="`vue-ui-candlestick_${uid}`" @mouseenter="onChartEnter" @mouseleave="onChartLeave">
+
+        <!-- A11Y -->
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1506,318 +1666,328 @@ defineExpose({
         </UserOptions>
         
         <!-- CHART -->
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS"
-            :aria-label="FINAL_CONFIG.style.title.text || 'candlestick chart'"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.color}`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="drawingArea.left"
-                :y="drawingArea.top"
-                :width="Math.max(0.1, drawingArea.width)"
-                :height="Math.max(0.1, drawingArea.height)"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position:relative">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.color}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-            
-            <g v-if="drawableDataset.length > 0">
-                <!-- DEFS -->
-            <defs>
-                <!-- BEARISH GRADIENT -->
-                <linearGradient :id="`bearish_gradient_${uid}`" x2="0%" y2="100%">
-                    <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.candle.colors.bearish"/>
-                    <stop offset="50%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bearish, 0.02)}DE`"/>
-                    <stop offset="100%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bearish, 0.05)}66`"/>
-                </linearGradient>
-                <!-- BULLISH GRADIENT -->
-                <linearGradient :id="`bullish_gradient_${uid}`" x2="0%" y2="100%">
-                    <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.candle.colors.bullish"/>
-                    <stop offset="50%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bullish, 0.02)}DE`"/>
-                    <stop offset="100%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bullish, 0.05)}66`"/>
-                </linearGradient>
-            </defs>
-
-            <!-- AXIS -->
-            <g v-if="FINAL_CONFIG.style.layout.grid.show">
-                <line
-                    data-cy="candlestick-grid-y-axis"
-                    :x1="drawingArea.left"
-                    :x2="drawingArea.left"
-                    :y1="drawingArea.top"
-                    :y2="drawingArea.bottom"
-                    :stroke="FINAL_CONFIG.style.layout.grid.stroke"
-                    :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
-                    stroke-linecap="round"
-                />
-                <line
-                    data-cy="candlestick-grid-x-axis"
-                    :x1="drawingArea.left"
-                    :x2="drawingArea.right"
-                    :y1="drawingArea.bottom"
-                    :y2="drawingArea.bottom"
-                    :stroke="FINAL_CONFIG.style.layout.grid.stroke"
-                    :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
-                    stroke-linecap="round"
-                />
-                <!-- HORIZONTAL GRID -->
-                <template v-if="FINAL_CONFIG.style.layout.grid.horizontalLines.show">
-                    <line 
-                        v-for="h in yLabels"
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="drawingArea.left"
+                    :y="drawingArea.top"
+                    :width="Math.max(0.1, drawingArea.width)"
+                    :height="Math.max(0.1, drawingArea.height)"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+                
+                <g v-if="drawableDataset.length > 0">
+                    <!-- DEFS -->
+                <defs>
+                    <!-- BEARISH GRADIENT -->
+                    <linearGradient :id="`bearish_gradient_${uid}`" x2="0%" y2="100%">
+                        <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.candle.colors.bearish"/>
+                        <stop offset="50%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bearish, 0.02)}DE`"/>
+                        <stop offset="100%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bearish, 0.05)}66`"/>
+                    </linearGradient>
+                    <!-- BULLISH GRADIENT -->
+                    <linearGradient :id="`bullish_gradient_${uid}`" x2="0%" y2="100%">
+                        <stop offset="0%" :stop-color="FINAL_CONFIG.style.layout.candle.colors.bullish"/>
+                        <stop offset="50%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bullish, 0.02)}DE`"/>
+                        <stop offset="100%" :stop-color="`${shiftHue(FINAL_CONFIG.style.layout.candle.colors.bullish, 0.05)}66`"/>
+                    </linearGradient>
+                </defs>
+    
+                <!-- AXIS -->
+                <g v-if="FINAL_CONFIG.style.layout.grid.show">
+                    <line
+                        data-cy="candlestick-grid-y-axis"
                         :x1="drawingArea.left"
-                        :x2="drawingArea.right"
-                        :y1="h.y"
-                        :y2="h.y"
-                        :stroke="FINAL_CONFIG.style.layout.grid.horizontalLines.stroke"
-                        :stroke-width="FINAL_CONFIG.style.layout.grid.horizontalLines.strokeWidth"
-                        :stroke-dasharray="FINAL_CONFIG.style.layout.grid.horizontalLines.strokeDasharray"
-                        stroke-linecap="round"
-                    />
-                </template>
-
-                <!-- VERTICAL GRID -->
-                <template v-if="FINAL_CONFIG.style.layout.grid.verticalLines.show">
-                    <g v-for="(v, i) in displayedTimeLabels">
-                        <line
-                            v-if="v.text"
-                            :x1="drawingArea.left + (slot * i) + (slot / 2)"
-                            :x2="drawingArea.left + (slot * i) + (slot / 2)"
-                            :y1="drawingArea.top"
-                            :y2="drawingArea.bottom"
-                            :stroke="FINAL_CONFIG.style.layout.grid.verticalLines.stroke"
-                            :stroke-width="FINAL_CONFIG.style.layout.grid.verticalLines.strokeWidth"
-                            :stroke-dasharray="FINAL_CONFIG.style.layout.grid.verticalLines.strokeDasharray"
-                            stroke-linecap="round"
-                        />
-                    </g>
-                </template>
-
-                <!-- X AXIS TICKS -->
-                <template v-if="FINAL_CONFIG.style.layout.grid.xAxis.ticks.show">
-                    <g v-for="(v, i) in displayedTimeLabels">
-                        <line
-                            v-if="v.text"
-                            :x1="drawingArea.left + (slot * i) + (slot / 2)"
-                            :x2="drawingArea.left + (slot * i) + (slot / 2)"
-                            :y1="drawingArea.bottom"
-                            :y2="drawingArea.bottom + 3"
-                            :stroke="FINAL_CONFIG.style.layout.grid.stroke"
-                            :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
-                            stroke-linecap="round"
-                        />
-                    </g>
-                </template>
-            </g>
-
-            <!-- LABELS -->
-            <!-- Y LABELS -->
-            <g v-if="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.show" ref="scaleLabels">
-                <g v-for="(yLabel, i) in yLabels">
-                    <line 
-                        data-cy="y-scale-tick"
-                        v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
-                        :x1="drawingArea.left" 
-                        :x2="drawingArea.left - 5" 
-                        :y1="yLabel.y" 
-                        :y2="yLabel.y" 
-                        :stroke="FINAL_CONFIG.style.layout.grid.stroke" 
+                        :x2="drawingArea.left"
+                        :y1="drawingArea.top"
+                        :y2="drawingArea.bottom"
+                        :stroke="FINAL_CONFIG.style.layout.grid.stroke"
                         :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
                         stroke-linecap="round"
                     />
-                    <text 
-                        data-cy="y-scale-label"
-                        v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
-                        :x="drawingArea.left - 8 + FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.offsetX" 
-                        :y="yLabel.y + svg.yAxisFontSize / 3" 
-                        :font-size="svg.yAxisFontSize" 
-                        text-anchor="end"
-                        :fill="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.color"
-                        :font-weight="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
-                    >
-                        {{ 
-                            dataLabel({
-                                p: FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.prefix,
-                                v: yLabel.value,
-                                s: FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.suffix,
-                                r: FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.roundingValue
-                            })
-                        }}
-                    </text>
-                </g>
-            </g>
-            <!-- X LABELS -->
-            <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show && !FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable" ref="timeLabelsEls">
-                <g v-for="(xLabel, i) in xLabels">
-                    <text
-                        class="vue-data-ui-time-label"
-                        data-cy="x-label"
-                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + svg.xAxisFontSize * 1.5}), rotate(${FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation})`"
-                        :text-anchor="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
-                        :font-size="svg.xAxisFontSize"
-                        :fill="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.color"
-                        :font-weight="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
-                    >
-                        {{ xLabel }}
-                    </text>
-                </g>
-            </g>
-            <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show && FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable" ref="timeLabelsEls">
-                <g v-for="(timeLabel, i) in displayedTimeLabels">
-                    <text
-                        class="vue-data-ui-time-label"
-                        data-cy="x-label"
-                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + svg.xAxisFontSize * 1.5}), rotate(${FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation})`"
-                        :text-anchor="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
-                        :font-size="svg.xAxisFontSize"
-                        :fill="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.color"
-                        :font-weight="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
-                    >
-                        {{ timeLabel?.text ?? '' }}
-                    </text>
-                </g>
-            </g>
-            
-
-            <template v-if="FINAL_CONFIG.type === 'candlestick'">
-                <!-- CANDLE WICK -->
-                <g>
-                    <g v-for="(wick, i) in drawableDataset">
-                        <rect
-                            :data-cy="`candlestick-wick-vertical-${i}`" 
-                            :x="wick.open.x - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
-                            :y="wick.high.y"
-                            :width="FINAL_CONFIG.style.layout.wick.strokeWidth"
-                            :height="Math.abs(wick.high.y - wick.low.y)"
-                            :fill="FINAL_CONFIG.style.layout.wick.stroke"
-                            stroke="none"
-                            :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
-                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                    <line
+                        data-cy="candlestick-grid-x-axis"
+                        :x1="drawingArea.left"
+                        :x2="drawingArea.right"
+                        :y1="drawingArea.bottom"
+                        :y2="drawingArea.bottom"
+                        :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                        :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
+                        stroke-linecap="round"
+                    />
+                    <!-- HORIZONTAL GRID -->
+                    <template v-if="FINAL_CONFIG.style.layout.grid.horizontalLines.show">
+                        <line 
+                            v-for="h in yLabels"
+                            :x1="drawingArea.left"
+                            :x2="drawingArea.right"
+                            :y1="h.y"
+                            :y2="h.y"
+                            :stroke="FINAL_CONFIG.style.layout.grid.horizontalLines.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.grid.horizontalLines.strokeWidth"
+                            :stroke-dasharray="FINAL_CONFIG.style.layout.grid.horizontalLines.strokeDasharray"
+                            stroke-linecap="round"
                         />
-                        <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'circle'">
-                            <circle 
-                                :cx="wick.high.x" 
-                                :cy="wick.high.y" 
-                                :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
-                                :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
-                                :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                            />
-                            <circle 
-                                :cx="wick.low.x" 
-                                :cy="wick.low.y" 
-                                :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
-                                :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
-                                :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                            />
-                        </g>
-                        <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'line'">
-                            <rect
-                                :data-cy="`candlestick-wick-high-${i}`"
-                                :x="wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
-                                :y="wick.high.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
-                                :width="Math.abs((wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.high.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
-                                :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
-                                :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
-                                :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
-                                stroke="none"
-                                :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                            />
-                            <rect
-                                :data-cy="`candlestick-wick-low-${i}`"
-                                :x="wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
-                                :y="wick.low.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
-                                :width="Math.abs((wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.low.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
-                                :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
-                                :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
-                                stroke="none"
-                                :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
-                                :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                    </template>
+    
+                    <!-- VERTICAL GRID -->
+                    <template v-if="FINAL_CONFIG.style.layout.grid.verticalLines.show">
+                        <g v-for="(v, i) in displayedTimeLabels">
+                            <line
+                                v-if="v.text"
+                                :x1="drawingArea.left + (slot * i) + (slot / 2)"
+                                :x2="drawingArea.left + (slot * i) + (slot / 2)"
+                                :y1="drawingArea.top"
+                                :y2="drawingArea.bottom"
+                                :stroke="FINAL_CONFIG.style.layout.grid.verticalLines.stroke"
+                                :stroke-width="FINAL_CONFIG.style.layout.grid.verticalLines.strokeWidth"
+                                :stroke-dasharray="FINAL_CONFIG.style.layout.grid.verticalLines.strokeDasharray"
+                                stroke-linecap="round"
                             />
                         </g>
+                    </template>
+    
+                    <!-- X AXIS TICKS -->
+                    <template v-if="FINAL_CONFIG.style.layout.grid.xAxis.ticks.show">
+                        <g v-for="(v, i) in displayedTimeLabels">
+                            <line
+                                v-if="v.text"
+                                :x1="drawingArea.left + (slot * i) + (slot / 2)"
+                                :x2="drawingArea.left + (slot * i) + (slot / 2)"
+                                :y1="drawingArea.bottom"
+                                :y2="drawingArea.bottom + 3"
+                                :stroke="FINAL_CONFIG.style.layout.grid.stroke"
+                                :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
+                                stroke-linecap="round"
+                            />
+                        </g>
+                    </template>
+                </g>
+    
+                <!-- LABELS -->
+                <!-- Y LABELS -->
+                <g v-if="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.show" ref="scaleLabels">
+                    <g v-for="(yLabel, i) in yLabels">
+                        <line 
+                            data-cy="y-scale-tick"
+                            v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max"
+                            :x1="drawingArea.left" 
+                            :x2="drawingArea.left - 5" 
+                            :y1="yLabel.y" 
+                            :y2="yLabel.y" 
+                            :stroke="FINAL_CONFIG.style.layout.grid.stroke" 
+                            :stroke-width="FINAL_CONFIG.style.layout.grid.strokeWidth"
+                            stroke-linecap="round"
+                        />
+                        <text 
+                            data-cy="y-scale-label"
+                            v-if="yLabel.value >= niceScale.min && yLabel.value <= niceScale.max" 
+                            :x="drawingArea.left - 8 + FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.offsetX" 
+                            :y="yLabel.y + svg.yAxisFontSize / 3" 
+                            :font-size="svg.yAxisFontSize" 
+                            text-anchor="end"
+                            :fill="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.color"
+                            :font-weight="FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.bold ? 'bold' : 'normal'"
+                        >
+                            {{ 
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.prefix,
+                                    v: yLabel.value,
+                                    s: FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.suffix,
+                                    r: FINAL_CONFIG.style.layout.grid.yAxis.dataLabels.roundingValue
+                                })
+                            }}
+                        </text>
                     </g>
                 </g>
-                <!-- CANDLE BODY -->
+                <!-- X LABELS -->
+                <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show && !FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable" ref="timeLabelsEls">
+                    <g v-for="(xLabel, i) in xLabels">
+                        <text
+                            class="vue-data-ui-time-label"
+                            data-cy="x-label"
+                            :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + svg.xAxisFontSize * 1.5}), rotate(${FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation})`"
+                            :text-anchor="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
+                            :font-size="svg.xAxisFontSize"
+                            :fill="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.color"
+                            :font-weight="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
+                        >
+                            {{ xLabel }}
+                        </text>
+                    </g>
+                </g>
+                <g v-if="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.show && FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.datetimeFormatter.enable" ref="timeLabelsEls">
+                    <g v-for="(timeLabel, i) in displayedTimeLabels">
+                        <text
+                            class="vue-data-ui-time-label"
+                            data-cy="x-label"
+                            :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${drawingArea.bottom + svg.xAxisFontSize * 1.5}), rotate(${FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation})`"
+                            :text-anchor="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.rotation < 0 ? 'end' : 'middle'"
+                            :font-size="svg.xAxisFontSize"
+                            :fill="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.color"
+                            :font-weight="FINAL_CONFIG.style.layout.grid.xAxis.dataLabels.bold ? 'bold': 'normal'"
+                        >
+                            {{ timeLabel?.text ?? '' }}
+                        </text>
+                    </g>
+                </g>
+                
+    
+                <template v-if="FINAL_CONFIG.type === 'candlestick'">
+                    <!-- CANDLE WICK -->
+                    <g>
+                        <g v-for="(wick, i) in drawableDataset">
+                            <rect
+                                :data-cy="`candlestick-wick-vertical-${i}`" 
+                                :x="wick.open.x - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
+                                :y="wick.high.y"
+                                :width="FINAL_CONFIG.style.layout.wick.strokeWidth"
+                                :height="Math.abs(wick.high.y - wick.low.y)"
+                                :fill="FINAL_CONFIG.style.layout.wick.stroke"
+                                stroke="none"
+                                :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
+                                :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                            />
+                            <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'circle'">
+                                <circle 
+                                    :cx="wick.high.x" 
+                                    :cy="wick.high.y" 
+                                    :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
+                                    :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                                    :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                                />
+                                <circle 
+                                    :cx="wick.low.x" 
+                                    :cy="wick.low.y" 
+                                    :r="FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot / 20 : FINAL_CONFIG.style.layout.wick.extremity.size" 
+                                    :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                                    :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                                />
+                            </g>
+                            <g v-if="FINAL_CONFIG.style.layout.wick.extremity.shape === 'line'">
+                                <rect
+                                    :data-cy="`candlestick-wick-high-${i}`"
+                                    :x="wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
+                                    :y="wick.high.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
+                                    :width="Math.abs((wick.high.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.high.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
+                                    :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
+                                    :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
+                                    :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                                    stroke="none"
+                                    :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                                />
+                                <rect
+                                    :data-cy="`candlestick-wick-low-${i}`"
+                                    :x="wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2"
+                                    :y="wick.low.y - (FINAL_CONFIG.style.layout.wick.strokeWidth / 2)"
+                                    :width="Math.abs((wick.low.x - (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2) - (wick.low.x + (FINAL_CONFIG.style.layout.wick.extremity.size === 'auto' ? slot * FINAL_CONFIG.style.layout.candle.widthRatio : FINAL_CONFIG.style.layout.wick.extremity.size) / 2))"
+                                    :height="FINAL_CONFIG.style.layout.wick.strokeWidth"
+                                    :fill="FINAL_CONFIG.style.layout.wick.extremity.color"
+                                    stroke="none"
+                                    :rx="FINAL_CONFIG.style.layout.wick.strokeWidth / 2"
+                                    :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                                />
+                            </g>
+                        </g>
+                    </g>
+                    <!-- CANDLE BODY -->
+                    <g>
+                        <rect
+                            v-for="(candle, i) in drawableDataset"
+                            :data-cy="`candlestick-rect-underlayer-${i}`"
+                            :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
+                            :y="candle.isBullish ? candle.close.y : candle.open.y"
+                            :height="Math.abs(candle.close.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.close.y - candle.open.y)"
+                            :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
+                            :fill="FINAL_CONFIG.style.layout.candle.gradient.underlayer"
+                            :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
+                            stroke="none"
+                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                        />
+                        <rect
+                            v-for="(candle, i) in drawableDataset"
+                            :data-cy="`candlestick-rect-${i}`"
+                            :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
+                            :y="candle.isBullish ? candle.close.y : candle.open.y"
+                            :height="Math.abs(candle.close.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.close.y - candle.open.y)"
+                            :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
+                            :fill="candle.isBullish ? FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bullish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bearish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bearish"
+                            :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
+                            :stroke="FINAL_CONFIG.style.layout.candle.stroke"
+                            :stroke-width="FINAL_CONFIG.style.layout.candle.strokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                        />
+                    </g>
+                </template>
+    
+                <template v-if="FINAL_CONFIG.type === 'ohlc'">
+                    <g v-for="(dp, i) in drawableDataset">
+                        <path
+                            :d="`M ${dp.high.x},${dp.high.y} ${dp.low.x},${dp.low.y} M${dp.open.x - Math.min(6, slot / 3)},${dp.open.y} ${dp.open.x},${dp.open.y} M${dp.close.x},${dp.close.y} ${dp.close.x + Math.min(6, slot / 3)},${dp.close.y}`"
+                            :stroke="dp.isBullish ? FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.colors.bearish"
+                            :stroke-width="1"
+                        />
+                    </g>
+                </template>
+    
+                <!-- TOOLTIP TRAPS -->
                 <g>
-                    <rect
-                        v-for="(candle, i) in drawableDataset"
-                        :data-cy="`candlestick-rect-underlayer-${i}`"
-                        :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
-                        :y="candle.isBullish ? candle.close.y : candle.open.y"
-                        :height="Math.abs(candle.close.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.close.y - candle.open.y)"
-                        :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
-                        :fill="FINAL_CONFIG.style.layout.candle.gradient.underlayer"
-                        :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
-                        stroke="none"
-                        :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
-                    />
-                    <rect
-                        v-for="(candle, i) in drawableDataset"
-                        :data-cy="`candlestick-rect-${i}`"
-                        :x="candle.open.x - slot / 2 + (slot * (1 - FINAL_CONFIG.style.layout.candle.widthRatio) / 2)"
-                        :y="candle.isBullish ? candle.close.y : candle.open.y"
-                        :height="Math.abs(candle.close.y - candle.open.y) <= 0 ? 0.0001 : Math.abs(candle.close.y - candle.open.y)"
-                        :width="slot * FINAL_CONFIG.style.layout.candle.widthRatio <= 0 ? 0.0001 : slot * FINAL_CONFIG.style.layout.candle.widthRatio"
-                        :fill="candle.isBullish ? FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bullish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.gradient.show ? `url(#bearish_gradient_${uid})` : FINAL_CONFIG.style.layout.candle.colors.bearish"
-                        :rx="FINAL_CONFIG.style.layout.candle.borderRadius"
-                        :stroke="FINAL_CONFIG.style.layout.candle.stroke"
-                        :stroke-width="FINAL_CONFIG.style.layout.candle.strokeWidth"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        :class="{ 'vue-data-ui-transition' : isLoaded && !loading }"
+                    <rect 
+                        v-for="(rect, i) in drawableDataset"
+                        data-cy="tooltip-trap"
+                        :x="drawingArea.left + i * slot"
+                        :y="drawingArea.top"
+                        :height="drawingArea.height <= 0 ? 0.0001 : drawingArea.height"
+                        :width="slot <= 0 ? 0.0001 : slot"
+                        :fill="hoveredIndex === i || selectedMinimapIndex === i ? setOpacity(FINAL_CONFIG.style.layout.selector.color, FINAL_CONFIG.style.layout.selector.opacity) : 'transparent'"
+                        @mouseover="() => useTooltip(i, rect, 'pointer')"
+                        @mouseleave="() => onTrapLeave(i, rect)"
+                        @click="() => selectDatapoint(i, rect)"
                     />
                 </g>
-            </template>
-
-            <template v-if="FINAL_CONFIG.type === 'ohlc'">
-                <g v-for="(dp, i) in drawableDataset">
-                    <path
-                        :d="`M ${dp.high.x},${dp.high.y} ${dp.low.x},${dp.low.y} M${dp.open.x - Math.min(6, slot / 3)},${dp.open.y} ${dp.open.x},${dp.open.y} M${dp.close.x},${dp.close.y} ${dp.close.x + Math.min(6, slot / 3)},${dp.close.y}`"
-                        :stroke="dp.isBullish ? FINAL_CONFIG.style.layout.candle.colors.bullish : FINAL_CONFIG.style.layout.candle.colors.bearish"
-                        :stroke-width="1"
-                    />
                 </g>
-            </template>
-
-            <!-- TOOLTIP TRAPS -->
-            <g>
+    
+                <!-- ZOOM PREVIEW -->
                 <rect 
-                    v-for="(rect, i) in drawableDataset"
-                    data-cy="tooltip-trap"
-                    :x="drawingArea.left + i * slot"
-                    :y="drawingArea.top"
-                    :height="drawingArea.height <= 0 ? 0.0001 : drawingArea.height"
-                    :width="slot <= 0 ? 0.0001 : slot"
-                    :fill="hoveredIndex === i || selectedMinimapIndex === i ? setOpacity(FINAL_CONFIG.style.layout.selector.color, FINAL_CONFIG.style.layout.selector.opacity) : 'transparent'"
-                    @mouseover="() => useTooltip(i, rect)"
-                    @mouseleave="() => onTrapLeave(i, rect)"
-                    @click="() => selectDatapoint(i, rect)"
+                    v-if="isPrecog" 
+                    v-bind="precogRect" 
+                    :data-start="slicer.start" 
+                    :data-end="slicer.end"
                 />
-            </g>
-            </g>
+    
+                <slot name="svg" :svg="{
+                    ...svg,
+                    data: drawableDataset,
+                    drawingArea,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
 
-            <!-- ZOOM PREVIEW -->
-            <rect 
-                v-if="isPrecog" 
-                v-bind="precogRect" 
-                :data-start="slicer.start" 
-                :data-end="slicer.end"
-            />
-
-            <slot name="svg" :svg="{
-                ...svg,
-                data: drawableDataset,
-                drawingArea,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1939,6 +2109,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -2048,5 +2220,27 @@ path, line, rect {
 
 .vue-data-ui-transition {
     transition: all 0.2s ease-in-out !important;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
