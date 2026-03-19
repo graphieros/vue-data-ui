@@ -46,6 +46,7 @@ import Title from "../atoms/Title.vue";
 import Legend from "../atoms/Legend.vue";
 import themes from "../themes/vue_ui_galaxy.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -95,6 +96,12 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const activeTooltipSerieId = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -451,12 +458,34 @@ function toggleFullscreen(state) {
 
 const dataTooltipSlot = ref(null);
 
-function onTrapLeave(datapoint) {
+function clearSerieSelection() {
     isTooltip.value = false;
     selectedSerie.value = null;
+    activeTooltipIndex.value = null;
+    activeTooltipSerieId.value = null;
+}
+
+function updateTooltipA11yPosition(serieId) {
+    if (!svgRef.value || !serieId) return;
+
+    const trap = svgRef.value.querySelector(`[data-a11y-serie-id="${serieId}"]`);
+    if (!trap) return;
+
+    const box = trap.getBoundingClientRect();
+
+    tooltipA11yPosition.value = {
+        x: box.left + (box.width / 2),
+        y: box.top + (box.height / 2)
+    };
+}
+
+function onTrapLeave(datapoint) {
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.absoluteIndex });
     }
+    if (activeTooltipSerieId.value === datapoint.id && tooltipTriggerMode.value === 'keyboard') return;
+    isTooltip.value = false;
+    selectedSerie.value = null;
 }
 
 function onTrapClick(datapoint) {
@@ -482,10 +511,16 @@ function buildLabel({
     })
 } 
 
-function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
+function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false, triggerMode = 'pointer', flatIndex = null }) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.absoluteIndex });
     }
+
+    if (!mutableConfig.value.showTooltip) return;
+
+    tooltipTriggerMode.value = triggerMode;
+    activeTooltipIndex.value = flatIndex;
+    activeTooltipSerieId.value = datapoint.id;
 
     dataTooltipSlot.value = {
         datapoint,
@@ -537,6 +572,12 @@ function useTooltip({ datapoint, _relativeIndex, seriesIndex, show=false }) {
         })}</b></div>`;
 
         tooltipContent.value = `<div>${html}</div>`;
+    }
+
+    if (triggerMode === 'keyboard') {
+        nextTick(() => {
+            updateTooltipA11yPosition(datapoint.id);
+        });
     }
 }
 
@@ -806,6 +847,91 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+***************************************************************************************************/
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    activeTooltipSerieId.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    clearSerieSelection();
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!a11ySeries.value.length) return;
+
+    const isPreviousKey = event.key === 'ArrowLeft' || event.key === 'ArrowUp';
+    const isNextKey = event.key === 'ArrowRight' || event.key === 'ArrowDown';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearSerieSelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+
+        const entry = a11ySeries.value[activeTooltipIndex.value];
+        if (!entry) return;
+
+        onTrapClick(entry.datapoint);
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= a11ySeries.value.length) {
+        nextIndex = isNextKey ? 0 : a11ySeries.value.length - 1;
+    } else {
+        nextIndex += isNextKey ? 1 : -1;
+
+        if (nextIndex < 0) {
+            nextIndex = a11ySeries.value.length - 1;
+        }
+
+        if (nextIndex >= a11ySeries.value.length) {
+            nextIndex = 0;
+        }
+    }
+
+    const entry = a11ySeries.value[nextIndex];
+    if (!entry) return;
+
+    useTooltip({
+        datapoint: entry.datapoint,
+        seriesIndex: entry.datapoint.seriesIndex,
+        show: true,
+        triggerMode: 'keyboard',
+        flatIndex: nextIndex
+    });
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = dataTable.value?.body ?? [];
+    return { headers, rows };
+});
+
+const a11ySeries = computed(() => {
+    return galaxySet.value.map((datapoint, index) => ({
+        datapoint,
+        index
+    }));
+});
+
 defineExpose({
     getData,
     getImage,
@@ -825,7 +951,32 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="galaxyChart" :class="`vue-data-ui-component vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'} ${loading ? 'loading' : ''}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`galaxy_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div 
+        ref="galaxyChart" 
+        :class="`vue-data-ui-component vue-ui-galaxy ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'} ${loading ? 'loading' : ''}`" 
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;${!FINAL_CONFIG.style.chart.title.text ? 'padding-top:36px' : ''};background:${FINAL_CONFIG.style.chart.backgroundColor}`" 
+        :id="`galaxy_${uid}`" 
+        @mouseenter="() => setUserOptionsVisibility(true)" 
+        @mouseleave="() => {
+            setUserOptionsVisibility(false);
+            if (!isFocus) {
+                clearSerieSelection();
+            }
+        }"
+    >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -954,95 +1105,114 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS" 
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
-            data-cy="galaxy-svg" 
-            :viewBox="svg.viewBox" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.width"
-                :height="svg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position:relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
+                data-cy="galaxy-svg" 
+                :viewBox="svg.viewBox" :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-            
-            <!-- GRADIENT -->
-            <defs>
-                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / FINAL_CONFIG.style.chart.layout.arcs.gradient.intensity" />
-                </filter>
-            </defs>
-
-            <!-- PATHS -->
-            <g v-for="datapoint in galaxySet">
-                <path
-                    data-cy="datapoint-border"
-                    v-if="datapoint.value"
-                    :d="datapoint.path"
-                    fill="none"
-                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                    :stroke-width="getStrokeWidth(datapoint).border"
-                    stroke-linecap="round"                    
-                />
-                <path
-                    data-cy="datapoint-path"
-                    v-if="datapoint.value"
-                    :d="datapoint.path"
-                    fill="none"
-                    :stroke="datapoint.color"
-                    :stroke-width="getStrokeWidth(datapoint).path"
-                    stroke-linecap="round"
-                    :class="`${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
-                />
-                <g :filter="`url(#blur_${uid})`" v-if="datapoint.value && FINAL_CONFIG.style.chart.layout.arcs.gradient.show">
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="0"
+                    :y="0"
+                    :width="svg.width"
+                    :height="svg.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+                
+                <!-- GRADIENT -->
+                <defs>
+                    <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" :stdDeviation="100 / FINAL_CONFIG.style.chart.layout.arcs.gradient.intensity" />
+                    </filter>
+                </defs>
+    
+                <!-- PATHS -->
+                <g v-for="datapoint in galaxySet">
                     <path
+                        data-cy="datapoint-border"
+                        v-if="datapoint.value"
                         :d="datapoint.path"
                         fill="none"
-                        :stroke="FINAL_CONFIG.style.chart.layout.arcs.gradient.color"
-                        :stroke-width="getStrokeWidth(datapoint).blur"
+                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                        :stroke-width="getStrokeWidth(datapoint).border"
+                        stroke-linecap="round"                    
+                    />
+                    <path
+                        data-cy="datapoint-path"
+                        v-if="datapoint.value"
+                        :d="datapoint.path"
+                        fill="none"
+                        :stroke="datapoint.color"
+                        :stroke-width="getStrokeWidth(datapoint).path"
                         stroke-linecap="round"
-                        :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                        :class="`${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                    />
+                    <g :filter="`url(#blur_${uid})`" v-if="datapoint.value && FINAL_CONFIG.style.chart.layout.arcs.gradient.show">
+                        <path
+                            :d="datapoint.path"
+                            fill="none"
+                            :stroke="FINAL_CONFIG.style.chart.layout.arcs.gradient.color"
+                            :stroke-width="getStrokeWidth(datapoint).blur"
+                            stroke-linecap="round"
+                            :class="`vue-ui-galaxy-gradient ${selectedSerie && selectedSerie !== datapoint.id && FINAL_CONFIG.useBlurOnHover ? 'vue-ui-galaxy-blur' : ''}`"
+                        />
+                    </g>
+                </g>
+    
+                <!-- TRAPS -->
+                <g v-for="(datapoint, i) in galaxySet">
+                    <path
+                        data-cy="tooltip-trap"
+                        :data-a11y-serie-id="datapoint.id"
+                        v-if="datapoint.value"
+                        :d="datapoint.path"
+                        fill="none"
+                        stroke="transparent"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.arcs.strokeWidth + FINAL_CONFIG.style.chart.layout.arcs.borderWidth"
+                        stroke-linecap="round"
+                        :aria-label="`${datapoint.name}: ${dataLabel({
+                            p: FINAL_CONFIG.style.chart.layout.labels.dataLabels.prefix,
+                            v: datapoint.value,
+                            s: FINAL_CONFIG.style.chart.layout.labels.dataLabels.suffix,
+                            r: FINAL_CONFIG.style.chart.tooltip.roundingValue
+                        })}`"
+                        @mouseenter="useTooltip({
+                            datapoint,
+                            relativeIndex: i,
+                            seriesIndex: datapoint.seriesIndex,
+                            show: true,
+                            triggerMode: 'pointer',
+                            flatIndex: i
+                        })"
+                        @mouseleave="onTrapLeave(datapoint)"
+                        @click="onTrapClick(datapoint)"
                     />
                 </g>
-            </g>
-
-            <!-- TRAPS -->
-            <g v-for="(datapoint, i) in galaxySet">
-                <path
-                    data-cy="tooltip-trap"
-                    v-if="datapoint.value"
-                    :d="datapoint.path"
-                    fill="none"
-                    stroke="transparent"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.arcs.strokeWidth + FINAL_CONFIG.style.chart.layout.arcs.borderWidth"
-                    stroke-linecap="round"
-                    @mouseenter="useTooltip({
-                        datapoint,
-                        relativeIndex: i,
-                        seriesIndex: datapoint.seriesIndex,
-                        show: true
-                    })"
-                    @mouseleave="onTrapLeave(datapoint)"
-                    @click="onTrapClick(datapoint)"
-                />
-            </g>
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1107,6 +1277,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1231,5 +1403,27 @@ path {
 }
 .vue-data-ui-wrapper-fullscreen {
     overflow: auto;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
