@@ -230,6 +230,14 @@ declare module "vue-data-ui" {
     export type VueUiBuiltInSkeletonConfig<C> = Omit<C, 'skeletonConfig' | 'skeletonDataset'>;
     export type VueUiBuiltInSkeletonDataset<D> = D | null;
 
+    export type A11YConfig = {
+        translations?: {
+            keyboardNavigation?: string;
+            tableAvailable?: string;
+            tableCaption?: string;
+        };
+    };
+
     export type VueUiPatternName =
         | "bubbles"
         | "flooring"
@@ -544,6 +552,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiTreemapEvent; // v3
             datapointLeave?: VueUiTreemapEvent; // v3
@@ -739,6 +748,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiGalaxyEvent; // v3
             datapointLeave?: VueUiGalaxyEvent; // v3
@@ -1757,6 +1767,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiDonutEvolutionEvent; // v3
             datapointLeave?: VueUiDonutEvolutionEvent; // v3
@@ -2084,6 +2095,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiRingsEvent; // v3
             datapointLeave?: VueUiRingsEvent; // v3
@@ -2898,6 +2910,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiAgePyramidEvent; // v3
             datapointLeave?: VueUiAgePyramidEvent; // v3
@@ -3065,6 +3078,7 @@ declare module "vue-data-ui" {
         debug?: boolean;
         loading?: boolean;
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiCandlestickEvent; // v3
             datapointLeave?: VueUiCandlestickEvent; // v3
@@ -3273,6 +3287,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiScatterEvent; // v3
             datapointLeave?: VueUiScatterEvent; // v3
@@ -3512,6 +3527,7 @@ declare module "vue-data-ui" {
         loading?: boolean; // v3
         responsive?: boolean; // v3
         theme?: Theme;
+        a11y?: A11YConfig;
         style?: {
             backgroundColor?: string;
             color?: string;
@@ -3755,6 +3771,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         responsive?: boolean; // v3
         loading?: boolean; // v3
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiXyEvent; // v3
             datapointLeave?: VueUiXyEvent; // v3
@@ -4156,6 +4173,7 @@ declare module "vue-data-ui" {
         customPalette?: string[];
         useBlurOnHover?: boolean;
         useCssAnimation?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiDonutEvent;
             datapointLeave?: VueUiDonutEvent;
@@ -4202,6 +4220,7 @@ declare module "vue-data-ui" {
                             formatter?: Formatter;
                         };
                         percentage?: {
+                            show?: boolean;
                             color?: string;
                             bold?: boolean;
                             fontSize?: number;
@@ -4210,6 +4229,7 @@ declare module "vue-data-ui" {
                             formatter?: Formatter;
                         };
                         name?: {
+                            show?: boolean;
                             color?: string;
                             bold?: boolean;
                             fontSize?: number;
@@ -4396,6 +4416,7 @@ declare module "vue-data-ui" {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiDonutEvent;
             datapointLeave?: VueUiDonutEvent;
@@ -4611,6 +4632,7 @@ declare module "vue-data-ui" {
         debug?: boolean;
         loading?: boolean;
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiWaffleEvent; // v3
             datapointLeave?: VueUiWaffleEvent; // v3
@@ -4971,6 +4993,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiQuadrantEvent; // v3
             datapointLeave?: VueUiQuadrantEvent; // v3
@@ -5518,6 +5541,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiOnionEvent; // v3
             datapointLeave?: VueUiOnionEvent; // v3
@@ -5714,6 +5738,7 @@ declare module "vue-data-ui" {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
             datapointLeave?: VueUiVerticalBarEvent | VueUiHorizontalBarEvent;
@@ -5927,6 +5952,11 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         theme?: Theme;
         type?: "line" | "bar";
+        a11y?: A11YConfig;
+        translations?: {
+            period?: string;
+            value?: string;
+        };
         responsive?: boolean;
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiSparklineConfig>;
         skeletonDataset?: VueUiBuiltInSkeletonDataset<number[]>;
@@ -6721,6 +6751,7 @@ declare module "vue-data-ui" {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiQuickChartDataset>;
         debug?: boolean; // v3
         loading?: boolean; // v3
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: ChartEvent<object | object[]>;
             datapointLeave?: ChartEvent<object | object[]>;
@@ -7409,6 +7440,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiWordCloudEvent; // v3
             datapointLeave?: VueUiWordCloudEvent; // v3
@@ -7782,6 +7814,7 @@ declare module "vue-data-ui" {
         debug?: boolean;
         loading?: boolean;
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiFlowEvent;
             datapointLeave?: VueUiFlowEvent;
@@ -8345,6 +8378,7 @@ declare module "vue-data-ui" {
         responsive?: boolean;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiStackbarEvent; // v3
             datapointLeave?: VueUiStackbarEvent; // v3
@@ -8582,6 +8616,7 @@ declare module "vue-data-ui" {
         debug?: boolean;
         theme?: Theme;
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiStacklineEvent;
             datapointLeave?: VueUiStacklineEvent;
@@ -9296,6 +9331,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         responsive?: boolean;
         loading?: boolean; // v3
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiCirclePackEvent; // v3
             datapointLeave?: VueUiCirclePackEvent; // v3
@@ -10258,6 +10294,7 @@ declare module "vue-data-ui" {
         theme?: Theme;
         customPalette?: string[];
         useCssAnimation?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiBumpEvent;
             datapointLeave?: VueUiBumpEvent;

@@ -18,6 +18,14 @@ export function useConfig(options = {}) {
     const COLOR_GRID = options.colorGrid ?? COLOR_GREY_LIGHT;
     const COLOR_BORDER = options.colorBorder ?? COLOR_GREY_LIGHT;
 
+    const A11Y = {
+        translations: {
+            keyboardNavigation: 'Use the left and right arrow keys to move between data points.',
+            tableAvailable: 'A data table for this chart is available below.',
+            tableCaption: 'Chart data table'
+        }
+    };
+
     const FONT = {
         _6: 6,
         _8: 8,
@@ -304,6 +312,7 @@ export function useConfig(options = {}) {
         debug: false,
         theme: '',
         responsive: false,
+        a11y: A11Y,
         events: {
             datapointEnter: null,
             datapointLeave: null,
@@ -508,6 +517,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         theme: '',
         responsive: false,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints'
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -703,6 +719,7 @@ export function useConfig(options = {}) {
         theme: '',
         responsive: false,
         loading: false, // v3
+        a11y: A11Y,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -1046,6 +1063,7 @@ export function useConfig(options = {}) {
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
+        a11y: A11Y,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -1121,6 +1139,7 @@ export function useConfig(options = {}) {
                             formatter: null
                         },
                         percentage: {
+                            show: true,
                             color: COLOR_TEXT_PRIMARY,
                             bold: true,
                             fontSize: FONT._18,
@@ -1129,6 +1148,7 @@ export function useConfig(options = {}) {
                             formatter: null
                         },
                         name: {
+                            show: true,
                             color: COLOR_TEXT_PRIMARY,
                             bold: false,
                             fontSize: FONT._14,
@@ -1221,6 +1241,7 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        a11y: A11Y,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -1330,6 +1351,7 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        a11y: A11Y,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -1528,6 +1550,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints'
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -2083,6 +2112,7 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        a11y: A11Y,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -2186,6 +2216,13 @@ export function useConfig(options = {}) {
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints'
+            }
+        },
         events: {
             datapointEnter: null,
             datapointLeave: null,
@@ -2318,6 +2355,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints'
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -2457,6 +2501,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints',
+            }
+        },
         events: {
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -2637,6 +2688,7 @@ export function useConfig(options = {}) {
         loading: false, // v3
         responsive: false,
         responsiveProportionalSizing: true,
+        a11y: A11Y,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -2800,6 +2852,11 @@ export function useConfig(options = {}) {
         responsive: false,
         type: SHAPE.LINE,
         downsample: LTTB,
+        a11y: A11Y,
+        translations: {
+            period: 'period',
+            value: 'value'
+        },
         // `gradientPath` creates multiple path segments to fake a gradient that follows the path
         // Only 2 colors are possible.
         // Could be considered 'experimental'
@@ -3258,6 +3315,7 @@ export function useConfig(options = {}) {
         skeletonConfig: null,
         debug: false, // v3
         loading: false, // v3
+        a11y: A11Y,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -3414,6 +3472,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints',
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -3652,6 +3717,7 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        a11y: A11Y,
         events: {
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -3756,6 +3822,7 @@ export function useConfig(options = {}) {
         loading: false, // v3
         responsive: false, // v3
         theme: '',
+        a11y: A11Y,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -4088,6 +4155,7 @@ export function useConfig(options = {}) {
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
         useBlurOnHover: true,
+        a11y: A11Y,
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -4207,6 +4275,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints'
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -4805,6 +4880,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints'
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -5054,6 +5136,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints'
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -6570,6 +6659,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints',
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -7204,6 +7300,13 @@ export function useConfig(options = {}) {
         theme: '',
         customPalette: [],
         useCssAnimation: false,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints',
+            }
+        },
         events: {
             datapointEnter: null,
             datapointLeave: null,
