@@ -37,11 +37,12 @@ import { useResponsive } from "../useResponsive";
 import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import img from "../img";
+import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_flow.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
-import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
-import img from "../img";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -89,6 +90,12 @@ const userOptionsRef = ref(null);
 const tooltip = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const activeTooltipNodeId = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const isDataset = computed(() => {
     return !!props.dataset && props.dataset.length;
@@ -652,12 +659,35 @@ const dataTooltipSlot = ref(null);
 const useCustomFormat = ref(false);
 const selectedNodeId = ref(null);
 
+function clearNodeSelection() {
+    selectedNodeId.value = null;
+    selectedNodes.value = null;
+    selectedSource.value = null;
+    isTooltip.value = false;
+    activeTooltipIndex.value = null;
+    activeTooltipNodeId.value = null;
+}
 
-function selectNode(node, index) {
+function updateTooltipA11yPosition(nodeId) {
+    if (!svgRef.value || !nodeId) return;
+    const trap = svgRef.value.querySelector(`[data-a11y-node-id="${nodeId}"]`);
+    if (!trap) return;
+    const box = trap.getBoundingClientRect();
+    tooltipA11yPosition.value = {
+        x: box.left + (box.width / 2),
+        y: box.top + (box.height / 2)
+    };
+}
+
+function selectNode(node, index, triggerMode = 'pointer', flatIndex = null) {
     segregated.value = [];
     selectedNodes.value = findConnectedNodes(node.name);
     selectedSource.value = node.name;
     selectedNodeId.value = node.id;
+
+    tooltipTriggerMode.value = triggerMode;
+    activeTooltipIndex.value = flatIndex;
+    activeTooltipNodeId.value = node.id;
 
     const nodeName = node.name;
     const dataset = sanitizedDataset.value;
@@ -781,14 +811,21 @@ function selectNode(node, index) {
 
         tooltipContent.value = html;
     }
+
+    if (triggerMode === 'keyboard') {
+        nextTick(() => {
+            updateTooltipA11yPosition(node.id);
+        });
+    }
 }
 
 function unselectNode(index) {
-    selectedNodeId.value = null;
     const datapoint = dataTooltipSlot.value;
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: index });
     }
+    if (tooltipTriggerMode.value === 'keyboard' && activeTooltipNodeId.value) return;
+    selectedNodeId.value = null;
     selectedNodes.value = null;
     selectedSource.value = null;
     isTooltip.value = false;
@@ -898,6 +935,58 @@ const dataTable = computed(() => {
         body,
         config,
     };
+});
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = dataTable.value?.body ?? [];
+    return { headers, rows };
+});
+
+const a11yNodes = computed(() => {
+    return [...mutableDataset.value.nodes]
+        .map((node, index) => ({
+            ...node,
+            index,
+            centerX: node.x + nodeWidth.value / 2,
+            centerY: checkNaN(node.absoluteY) + FINAL_CONFIG.value.style.chart.padding.top + node.height / 2
+        }))
+        .sort((a, b) => {
+            if (a.x === b.x) return a.absoluteY - b.absoluteY;
+            return a.x - b.x;
+        });
+});
+
+const a11yColumns = computed(() => {
+    const tolerance = 1;
+    const columns = [];
+
+    a11yNodes.value.forEach((node) => {
+        const existingColumn = columns.find(column => Math.abs(column.x - node.x) <= tolerance);
+
+        if (existingColumn) {
+            existingColumn.nodes.push(node);
+        } else {
+            columns.push({
+                x: node.x,
+                nodes: [node]
+            });
+        }
+    });
+
+    columns.forEach(column => {
+        column.nodes.sort((a, b) => a.absoluteY - b.absoluteY);
+    });
+
+    return columns.sort((a, b) => a.x - b.x);
+});
+
+const a11yNodeIndexMap = computed(() => {
+    const map = new Map();
+    a11yNodes.value.forEach((node, index) => {
+        map.set(node.id, index);
+    });
+    return map;
 });
 
 function getData() {
@@ -1087,17 +1176,6 @@ async function generateSvg({ isCb }) {
     }
 }
 
-async function focusNode(node, i) {
-    selectNode(node, i);
-    if (mutableConfig.value.showTooltip) {
-        await nextTick();
-        if (flowChart.value && tooltip.value) {
-            const { left, top } = flowChart.value.getBoundingClientRect();
-            tooltip.value.placeTooltip({x: (left ?? 0) + 12, y: (top ?? 0) + 12 });
-        }
-    }
-}
-
 function onGenerateImage(payload) {
     if (payload?.stage === "start") {
         isCallbackImaging.value = true;
@@ -1127,6 +1205,144 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+function findColumnIndexByNodeId(nodeId) {
+    return a11yColumns.value.findIndex(column =>
+        column.nodes.some(node => node.id === nodeId)
+    );
+}
+
+function findRowIndexInColumn(columnIndex, nodeId) {
+    const column = a11yColumns.value[columnIndex];
+    if (!column) return -1;
+
+    return column.nodes.findIndex(node => node.id === nodeId);
+}
+
+function findClosestNodeInColumn(columnIndex, centerY) {
+    const column = a11yColumns.value[columnIndex];
+    if (!column || !column.nodes.length) return null;
+
+    let closest = column.nodes[0];
+    let minDistance = Math.abs(closest.centerY - centerY);
+
+    for (let i = 1; i < column.nodes.length; i += 1) {
+        const node = column.nodes[i];
+        const distance = Math.abs(node.centerY - centerY);
+
+        if (distance < minDistance) {
+            closest = node;
+            minDistance = distance;
+        }
+    }
+
+    return closest;
+}
+
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    activeTooltipNodeId.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    clearNodeSelection();
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!a11yNodes.value.length) return;
+
+    const isLeftKey = event.key === 'ArrowLeft';
+    const isRightKey = event.key === 'ArrowRight';
+    const isUpKey = event.key === 'ArrowUp';
+    const isDownKey = event.key === 'ArrowDown';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isLeftKey && !isRightKey && !isUpKey && !isDownKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearNodeSelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+        clickNode(activeTooltipIndex.value);
+        return;
+    }
+
+    if (activeTooltipNodeId.value === null) {
+        const firstNode = a11yColumns.value[0]?.nodes?.[0];
+        if (!firstNode) return;
+
+        const firstIndex = a11yNodeIndexMap.value.get(firstNode.id) ?? 0;
+        selectNode(firstNode, firstIndex, 'keyboard', firstIndex);
+        return;
+    }
+
+    const currentIndex = a11yNodeIndexMap.value.get(activeTooltipNodeId.value);
+    if (currentIndex === undefined) return;
+
+    const currentNode = a11yNodes.value[currentIndex];
+    if (!currentNode) return;
+
+    const currentColumnIndex = findColumnIndexByNodeId(currentNode.id);
+    if (currentColumnIndex < 0) return;
+
+    let nextNode = null;
+
+    if (isUpKey || isDownKey) {
+        const currentRowIndex = findRowIndexInColumn(currentColumnIndex, currentNode.id);
+        if (currentRowIndex < 0) return;
+
+        const column = a11yColumns.value[currentColumnIndex];
+        if (!column?.nodes?.length) return;
+
+        let nextRowIndex = currentRowIndex + (isDownKey ? 1 : -1);
+
+        if (nextRowIndex < 0) {
+            nextRowIndex = column.nodes.length - 1;
+        }
+
+        if (nextRowIndex >= column.nodes.length) {
+            nextRowIndex = 0;
+        }
+
+        nextNode = column.nodes[nextRowIndex];
+    }
+
+    if (isLeftKey || isRightKey) {
+        let nextColumnIndex = currentColumnIndex + (isRightKey ? 1 : -1);
+
+        if (nextColumnIndex < 0) {
+            nextColumnIndex = a11yColumns.value.length - 1;
+        }
+
+        if (nextColumnIndex >= a11yColumns.value.length) {
+            nextColumnIndex = 0;
+        }
+
+        nextNode = findClosestNodeInColumn(nextColumnIndex, currentNode.centerY);
+    }
+
+    if (!nextNode) return;
+
+    const nextIndex = a11yNodeIndexMap.value.get(nextNode.id);
+    if (nextIndex === undefined) return;
+
+    selectNode(nextNode, nextIndex, 'keyboard', nextIndex);
+}
+
+
 defineExpose({
     getData,
     getImage,
@@ -1145,10 +1361,33 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="flowChart" :class="`vue-data-ui-component vue-ui-flow ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''
-        }`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
-        :id="`flow_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)"
-        @mouseleave="() => setUserOptionsVisibility(false)">
+    <div 
+        ref="flowChart" 
+        :class="`vue-data-ui-component vue-ui-flow ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''
+        }`" 
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
+        :id="`flow_${uid}`" 
+        @mouseenter="() => setUserOptionsVisibility(true)"
+        @mouseleave="() => {
+            setUserOptionsVisibility(false);
+            if (!isFocus) {
+                clearNodeSelection();
+            }
+        }"
+    >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator" 
             :svgRef="svgRef"
@@ -1272,166 +1511,170 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg 
-            ref="svgRef" 
-            :xmlns="XMLNS" 
-            :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" 
-            :class="{
-                'vue-data-ui-fullscreen--on': isFullscreen,
-                'vue-data-ui-fulscreen--off': !isFullscreen,
-            }"
-            :style="{
-                maxWidth: '100%',
-                overflow: 'visible',
-                background: 'transparent',
-                color: FINAL_CONFIG.style.chart.color,
-            }"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="drawingArea.width"
-                :height="drawingArea.height" :style="{
-                    pointerEvents: 'none',
-                }">
-                <slot name="chart-background" />
-            </foreignObject>
-
-            <defs>
-                <linearGradient v-for="(grad, i) in mutableDataset.links" :id="grad.id" x1="0%" y1="0%" x2="100%"
-                    y2="0%">
-                    <stop offset="0%" :stop-color="grad.sourceColor" />
-                    <stop offset="100%" :stop-color="grad.targetColor" />
-                </linearGradient>
-            </defs>
-
-            <path 
-                data-cy="link" 
-                v-for="path in mutableDataset.links" 
-                class="vue-ui-flow-link" 
-                :d="path.path" 
-                stroke-linejoin="round" 
-                stroke-miterlimit="1"
-                :fill="`url(#${path.id})`" 
-                :stroke="FINAL_CONFIG.style.chart.links.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.links.strokeWidth" 
-                :style="`
-                    opacity:${selectedNodes
-                        ? selectedNodes.includes(path.source) &&
-                            selectedNodes.includes(path.target)
-                            ? 1
-                            : 0.3
-                        : selectedSource
-                            ? [path.target, path.source].includes(selectedSource)
+        <div style="position:relative;">
+            <svg 
+                ref="svgRef" 
+                :xmlns="XMLNS" 
+                :aria-describedby="`chart-instructions-${uid}`"
+                :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" 
+                :class="{
+                    'vue-data-ui-fullscreen--on': isFullscreen,
+                    'vue-data-ui-fulscreen--off': !isFullscreen,
+                }"
+                :style="{
+                    maxWidth: '100%',
+                    overflow: 'visible',
+                    background: 'transparent',
+                    color: FINAL_CONFIG.style.chart.color,
+                }"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
+            >
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject v-if="$slots['chart-background']" :x="0" :y="0" :width="drawingArea.width"
+                    :height="drawingArea.height" :style="{
+                        pointerEvents: 'none',
+                    }">
+                    <slot name="chart-background" />
+                </foreignObject>
+    
+                <defs>
+                    <linearGradient v-for="(grad, i) in mutableDataset.links" :id="grad.id" x1="0%" y1="0%" x2="100%"
+                        y2="0%">
+                        <stop offset="0%" :stop-color="grad.sourceColor" />
+                        <stop offset="100%" :stop-color="grad.targetColor" />
+                    </linearGradient>
+                </defs>
+    
+                <path 
+                    data-cy="link" 
+                    v-for="path in mutableDataset.links" 
+                    class="vue-ui-flow-link" 
+                    :d="path.path" 
+                    stroke-linejoin="round" 
+                    stroke-miterlimit="1"
+                    :fill="`url(#${path.id})`" 
+                    :stroke="FINAL_CONFIG.style.chart.links.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.links.strokeWidth" 
+                    :style="`
+                        opacity:${selectedNodes
+                            ? selectedNodes.includes(path.source) &&
+                                selectedNodes.includes(path.target)
                                 ? 1
                                 : 0.3
-                            : FINAL_CONFIG.style.chart.links.opacity
-                    }
-                `" 
-            />
-
-            <rect 
-                data-cy="node" 
-                v-for="(node, i) in mutableDataset.nodes" 
-                class="vue-ui-flow-node" 
-                :x="node.x"
-                :y="checkNaN(node.absoluteY) + FINAL_CONFIG.style.chart.padding.top" 
-                :height="checkNaN(node.height)"
-                :width="nodeWidth" 
-                :fill="node.color" 
-                :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.nodes.strokeWidth" 
-                :rx="FINAL_CONFIG.style.chart.nodes.borderRadius"
-                :style="{
-                    opacity: selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0.3) : 1,
-                    outline: selectedNodeId !== null && selectedNodeId === node.id ? '2px solid currentColor' : undefined,
-                }"
-
-                role="button"
-                tabindex="0"
-                :aria-label="`${node.name}: ${applyDataLabel(
-                    FINAL_CONFIG.style.chart.nodes.labels.formatter,
-                    node.value,
-                    dataLabel({
-                        p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
-                        v: node.value,
-                        s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
-                        r: FINAL_CONFIG.style.chart.nodes.labels.rounding
-                    })
-                )}`"
-                @mouseenter="selectNode(node, i)"
-                @mouseleave="unselectNode(i)" 
-                @click="clickNode(i)"
-                @keydown.enter.prevent="clickNode(i)"
-                @keydown.space.prevent="clickNode(i)"
-                @keydown.esc.prevent="unselectNode(i)"
-                @focus="focusNode(node, i)"
-                @blur="unselectNode(i)"
-            />
-
-            <g v-if="FINAL_CONFIG.style.chart.nodes.labels.show">
-                <text 
-                    data-cy="node-name" 
+                            : selectedSource
+                                ? [path.target, path.source].includes(selectedSource)
+                                    ? 1
+                                    : 0.3
+                                : FINAL_CONFIG.style.chart.links.opacity
+                        }
+                    `" 
+                />
+    
+                <rect 
+                    data-cy="node"
+                    :data-a11y-node-id="node.id"
                     v-for="(node, i) in mutableDataset.nodes" 
-                    :x="node.x + nodeWidth / 2" 
-                    :y="(FINAL_CONFIG.style.chart.nodes.labels.showValue ? checkNaN(
-                        node.absoluteY +
-                        node.height / 2 -
-                        FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4
-                    ) : node.absoluteY + node.height / 2 + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3) + FINAL_CONFIG.style.chart.padding.top" 
-                    :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" 
-                    :fill="adaptColorToBackground(node.color)"
-                    text-anchor="middle" 
-                    :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1}`"
-                >
-                    {{
-                        FINAL_CONFIG.style.chart.nodes.labels.abbreviation.use
-                            ? abbreviate({
-                                source: node.name,
-                                length:
-                                    FINAL_CONFIG.style.chart.nodes.labels.abbreviation.length,
-                            })
-                            : node.name
-                    }}
-                </text>
-
-                <template v-if="FINAL_CONFIG.style.chart.nodes.labels.showValue">
+                    class="vue-ui-flow-node" 
+                    :x="node.x"
+                    :y="checkNaN(node.absoluteY) + FINAL_CONFIG.style.chart.padding.top" 
+                    :height="checkNaN(node.height)"
+                    :width="nodeWidth" 
+                    :fill="node.color" 
+                    :stroke="FINAL_CONFIG.style.chart.nodes.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.nodes.strokeWidth" 
+                    :rx="FINAL_CONFIG.style.chart.nodes.borderRadius"
+                    :style="{
+                        opacity: selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0.3) : 1,
+                        outline: selectedNodeId !== null && selectedNodeId === node.id ? '2px solid currentColor' : undefined,
+                    }"
+                    :aria-label="`${node.name}: ${applyDataLabel(
+                        FINAL_CONFIG.style.chart.nodes.labels.formatter,
+                        node.value,
+                        dataLabel({
+                            p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
+                            v: node.value,
+                            s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
+                            r: FINAL_CONFIG.style.chart.nodes.labels.rounding
+                        })
+                    )}`"
+                    @mouseenter="selectNode(node, i, 'pointer', a11yNodeIndexMap.get(node.id))"
+                    @mouseleave="unselectNode(i)"
+                    @click="clickNode(i)"
+                />
+    
+                <g v-if="FINAL_CONFIG.style.chart.nodes.labels.show">
                     <text 
-                        data-cy="node-value" 
+                        data-cy="node-name" 
                         v-for="(node, i) in mutableDataset.nodes" 
                         :x="node.x + nodeWidth / 2" 
-                        :y="checkNaN(
+                        :y="(FINAL_CONFIG.style.chart.nodes.labels.showValue ? checkNaN(
                             node.absoluteY +
-                            node.height / 2 +
-                            FINAL_CONFIG.style.chart.nodes.labels.fontSize / 1.3
-                        ) + FINAL_CONFIG.style.chart.padding.top" 
+                            node.height / 2 -
+                            FINAL_CONFIG.style.chart.nodes.labels.fontSize / 4
+                        ) : node.absoluteY + node.height / 2 + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3) + FINAL_CONFIG.style.chart.padding.top" 
                         :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" 
                         :fill="adaptColorToBackground(node.color)"
                         text-anchor="middle" 
                         :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1}`"
                     >
                         {{
-                            applyDataLabel(
-                                FINAL_CONFIG.style.chart.nodes.labels.formatter,
-                                node.value,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
-                                    v: node.value,
-                                    s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
-                                    r: FINAL_CONFIG.style.chart.nodes.labels.rounding,
-                                }),
-                                { datapoint: node, seriesIndex: i })
+                            FINAL_CONFIG.style.chart.nodes.labels.abbreviation.use
+                                ? abbreviate({
+                                    source: node.name,
+                                    length:
+                                        FINAL_CONFIG.style.chart.nodes.labels.abbreviation.length,
+                                })
+                                : node.name
                         }}
                     </text>
-                </template>
-            </g>
+    
+                    <template v-if="FINAL_CONFIG.style.chart.nodes.labels.showValue">
+                        <text 
+                            data-cy="node-value" 
+                            v-for="(node, i) in mutableDataset.nodes" 
+                            :x="node.x + nodeWidth / 2" 
+                            :y="checkNaN(
+                                node.absoluteY +
+                                node.height / 2 +
+                                FINAL_CONFIG.style.chart.nodes.labels.fontSize / 1.3
+                            ) + FINAL_CONFIG.style.chart.padding.top" 
+                            :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize" 
+                            :fill="adaptColorToBackground(node.color)"
+                            text-anchor="middle" 
+                            :style="`pointer-events: none; opacity:${selectedNodes ? (selectedNodes.includes(node.name) ? 1 : 0) : 1}`"
+                        >
+                            {{
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.chart.nodes.labels.formatter,
+                                    node.value,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.chart.nodes.labels.prefix,
+                                        v: node.value,
+                                        s: FINAL_CONFIG.style.chart.nodes.labels.suffix,
+                                        r: FINAL_CONFIG.style.chart.nodes.labels.rounding,
+                                    }),
+                                    { datapoint: node, seriesIndex: i })
+                            }}
+                        </text>
+                    </template>
+                </g>
+    
+                <slot name="svg" :svg="{
+                    ...drawingArea,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }" />
+            </svg>
 
-            <slot name="svg" :svg="{
-                ...drawingArea,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }" />
-        </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }" />
@@ -1484,6 +1727,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
@@ -1556,5 +1801,27 @@ defineExpose({
 .vue-ui-flow-node,
 .vue-ui-flow-link {
     transition: opacity 0.2s ease-in-out;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
