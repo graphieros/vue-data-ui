@@ -52,6 +52,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_waffle.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -110,6 +111,11 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -852,6 +858,39 @@ const dataTooltipSlot = ref(null);
 
 const selectedSeriesIndex = ref(null);
 
+const navigableSeries = computed(() => {
+    const grouped = new Map();
+
+    rects.value.forEach((rect, rectIndex) => {
+        if (!grouped.has(rect.serieIndex)) {
+            grouped.set(rect.serieIndex, {
+                serieIndex: rect.serieIndex,
+                absoluteIndex: rect.absoluteIndex,
+                serieId: rect.serieId,
+                name: rect.name,
+                color: rect.color,
+                value: rect.value,
+                proportion: rect.proportion,
+                rectIndexes: [rectIndex]
+            });
+        } else {
+            grouped.get(rect.serieIndex).rectIndexes.push(rectIndex);
+        }
+    });
+
+    return Array.from(grouped.values()).sort((a, b) => a.serieIndex - b.serieIndex);
+});
+
+function getSeriesNavigationEntry(seriesIndex) {
+    return navigableSeries.value.find((series) => series.serieIndex === seriesIndex) || null;
+}
+
+function getRepresentativeRectIndexForSeries(seriesIndex) {
+    const entry = getSeriesNavigationEntry(seriesIndex);
+    if (!entry || !entry.rectIndexes.length) return null;
+    return entry.rectIndexes[0];
+}
+
 function selectDatapoint(index) {
     const selected = rects.value[index];
     if (FINAL_CONFIG.value.events.datapointClick) {
@@ -869,45 +908,61 @@ function onTrapLeave(index) {
     selectedSeriesIndex.value = null;
     isTooltip.value = false;
     selectedSerie.value = null;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
 }
 
-function useTooltip(index) {
-    if(segregated.value.length === props.dataset.length) return;
-    
+function useTooltip(index, triggerMode = 'pointer') {
+    if (segregated.value.length === props.dataset.length) return;
+
     const selected = rects.value[index];
+    if (!selected) return;
+
+    tooltipTriggerMode.value = triggerMode;
+    activeTooltipIndex.value = selected.serieIndex;
 
     dataTooltipSlot.value = {
         datapoint: selected,
         seriesIndex: selected.absoluteIndex,
         series: datasetCopy.value,
         config: FINAL_CONFIG.value
-    }
-    
+    };
+
     if (FINAL_CONFIG.value.events.datapointEnter && selectedSeriesIndex.value !== selected.serieIndex) {
-        FINAL_CONFIG.value.events.datapointEnter({ datapoint: selected,  seriesIndex: selected.serieIndex })
+        FINAL_CONFIG.value.events.datapointEnter({
+            datapoint: selected,
+            seriesIndex: selected.serieIndex
+        });
     }
 
     selectedSeriesIndex.value = selected.serieIndex;
     isTooltip.value = true;
-    selectedSerie.value = rects.value[index].serieIndex;
+    selectedSerie.value = selected.serieIndex;
 
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
 
-    if(isFunction(customFormat) && functionReturnsString(() => customFormat({ 
-        seriesIndex: rects.value[index].absoluteIndex, 
-        datapoint: selected, 
-        series: datasetCopy.value, 
-        config: FINAL_CONFIG.value}))) {
-        tooltipContent.value = customFormat({ 
-            seriesIndex: rects.value[index].absoluteIndex, 
-            datapoint: selected, 
-            series: datasetCopy.value, 
-            config: FINAL_CONFIG.value})
+    if (
+        isFunction(customFormat) &&
+        functionReturnsString(() =>
+            customFormat({
+                seriesIndex: selected.absoluteIndex,
+                datapoint: selected,
+                series: datasetCopy.value,
+                config: FINAL_CONFIG.value
+            })
+        )
+    ) {
+        tooltipContent.value = customFormat({
+            seriesIndex: selected.absoluteIndex,
+            datapoint: selected,
+            series: datasetCopy.value,
+            config: FINAL_CONFIG.value
+        });
     } else {
         let html = "";
-    
-        html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`; 
-        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="60" width="60" stroke="none" rx="1" fill="${selected.color}" />${slots.pattern ? `<rect x="0" y="0" height="60" width="60" stroke="none" rx="1" stroke="none" fill="url(#pattern_${uid.value}_${selected.absoluteIndex})"/>`: ''}</svg>`;
+
+        html += `<div data-cy="waffle-tooltip-name" style="width:100%;text-align:center;border-bottom:1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor};padding-bottom:6px;margin-bottom:3px;">${selected.name}</div>`;
+        html += `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><svg viewBox="0 0 60 60" height="14" width="14"><rect data-cy="waffle-tooltip-marker" x="0" y="0" height="60" width="60" stroke="none" rx="1" fill="${selected.color}" />${slots.pattern ? `<rect x="0" y="0" height="60" width="60" stroke="none" rx="1" stroke="none" fill="url(#pattern_${uid.value}_${selected.absoluteIndex})"/>` : ''}</svg>`;
 
         html += `<b>${buildLabel({
             config: FINAL_CONFIG.value.style.chart.tooltip,
@@ -924,7 +979,7 @@ function useTooltip(index) {
                 }),
                 {
                     datapoint: selected,
-                    seriesIndex: rects.value[index].absoluteIndex,
+                    seriesIndex: selected.absoluteIndex,
                     series: datasetCopy.value
                 }
             )}</span>`,
@@ -938,7 +993,6 @@ function useTooltip(index) {
         tooltipContent.value = html;
     }
 }
-
 const emit = defineEmits(['selectLegend', 'copyAlt']);
 
 const table = computed(() => {
@@ -1236,6 +1290,130 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+    selectedSerie.value = null;
+    selectedSeriesIndex.value = null;
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!navigableSeries.value.length) return;
+    if (segregated.value.length === props.dataset.length) return;
+
+    const isPreviousKey = event.key === 'ArrowLeft';
+    const isNextKey = event.key === 'ArrowRight';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activeTooltipIndex.value = null;
+        tooltipTriggerMode.value = 'pointer';
+        isTooltip.value = false;
+        selectedSerie.value = null;
+        selectedSeriesIndex.value = null;
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+
+        const rectIndex = getRepresentativeRectIndexForSeries(activeTooltipIndex.value);
+        if (rectIndex === null) return;
+
+        selectDatapoint(rectIndex);
+        return;
+    }
+
+    const currentNavigationIndex = navigableSeries.value.findIndex(
+        (series) => series.serieIndex === activeTooltipIndex.value
+    );
+
+    let nextSeries = null;
+
+    if (currentNavigationIndex === -1) {
+        nextSeries = isNextKey
+            ? navigableSeries.value[0]
+            : navigableSeries.value[navigableSeries.value.length - 1];
+    } else if (isNextKey) {
+        nextSeries = navigableSeries.value[
+            (currentNavigationIndex + 1) % navigableSeries.value.length
+        ];
+    } else {
+        nextSeries = navigableSeries.value[
+            (currentNavigationIndex - 1 + navigableSeries.value.length) % navigableSeries.value.length
+        ];
+    }
+
+    if (!nextSeries) return;
+
+    const rectIndex = getRepresentativeRectIndexForSeries(nextSeries.serieIndex);
+    if (rectIndex === null) return;
+
+    setKeyboardTooltipPositionFromSeriesIndex(nextSeries.serieIndex);
+    useTooltip(rectIndex, 'keyboard');
+}
+
+function setKeyboardTooltipPositionFromSeriesIndex(seriesIndex) {
+    if (!Number.isFinite(seriesIndex)) return;
+    if (!svgRef.value) return;
+
+    const entry = getSeriesNavigationEntry(seriesIndex);
+    if (!entry || !entry.rectIndexes.length) return;
+
+    const centers = entry.rectIndexes
+        .map((rectIndex) => {
+            const position = positions.value[rectIndex];
+            if (!position) return null;
+
+            return {
+                x: position.x + FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween / 2 + absoluteRectDimension.value / 2,
+                y: position.y + FINAL_CONFIG.value.style.chart.layout.grid.spaceBetween / 2 + absoluteRectDimensionY.value / 2
+            };
+        })
+        .filter(Boolean);
+
+    if (!centers.length) return;
+
+    const minX = Math.min(...centers.map((point) => point.x));
+    const maxX = Math.max(...centers.map((point) => point.x));
+    const minY = Math.min(...centers.map((point) => point.y));
+    const maxY = Math.max(...centers.map((point) => point.y));
+
+    const svgX = (minX + maxX) / 2;
+    const svgY = (minY + maxY) / 2;
+
+    const box = svgRef.value.getBoundingClientRect();
+
+    tooltipA11yPosition.value = {
+        x: box.left + (svgX / svg.value.width) * box.width,
+        y: box.top + (svgY / svg.value.height) * box.height
+    };
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = dataTable.value?.body ?? [];
+    return { headers, rows };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1262,6 +1440,20 @@ defineExpose({
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
     >
+        <!-- A11Y -->
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1392,140 +1584,151 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg 
-            ref="svgRef"
-            :xmlns="XMLNS" 
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
-            data-cy="waffle-svg" 
-            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" 
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" 
-        >
-            <PackageVersion />
-
-            <!-- DEFS -->
-            <defs>
-                <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" v-for="(rect,i) in rects" :id="`gradient_${uid}_${i}`">
-                    <stop offset="0%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.rect.gradientIntensity)"/>
-                    <stop offset="100%" :stop-color="rect.color" />
-                </radialGradient>
-            </defs>
-
-            <!-- RECTS -->
-            <defs>
-                <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceGraphic" :stdDeviation="2" />
-                    <feColorMatrix type="saturate" values="0" />
-                </filter>
-            </defs>
-
-            <!-- CUSTOM CELLS SLOTS -->
-            <template v-if="FINAL_CONFIG.useCustomCells && rects.length">
-                <foreignObject 
-                    v-for="(position, i) in positions"
-                    :x="position.x"
-                    :y="position.y"
-                    :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
-                    :width="rectDimension <= 0 ? 0.0001 : rectDimension"
-                    class="vue-ui-waffle-custom-cell-foreignObject"
-                >
-                    <slot name="cell" v-bind="{ cell: {...position, color: rects[i].color, ...rects[i]}, isSelected: [null, undefined].includes(selectedSerie) ? true : rects[i].serieIndex === selectedSerie }"/>
-                </foreignObject>
-            </template> 
-
-            <rect v-if="!rects.length && !FINAL_CONFIG.useCustomCells"
-                :x="12"
-                :y="12"
-                :height="drawingArea.height - 24"
-                :width="drawingArea.width - 24"
-                :rx="3"
-                fill="none"
-                stroke="black"
-            />
-
-            <template v-else-if="rects.length && !FINAL_CONFIG.useCustomCells">
-
-                <g v-if="$slots.pattern">
-                    <defs v-for="ds in datasetCopyReference">
-                        <slot name="pattern" v-bind="{seriesIndex: ds.absoluteIndex, patternId: `pattern_${uid}_${ds.absoluteIndex}`}"/>
-                    </defs>
-                </g>
-
-                <rect
-                    data-cy="datapoint-underlayer"
-                    v-for="(position, i) in positions"
-                    :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
-                    :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                    :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                    :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
-                    :width="rectDimension <= 0 ? 0.0001 : rectDimension"
-                    fill="white"
-                    :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.rect.strokeWidth"
-                    :filter="getBlurFilter(rects[i].serieIndex)"
+        <div style="position:relative;">
+            <svg 
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
+                data-cy="waffle-svg"
+                tabindex="0"
+                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" 
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
+            >
+                <PackageVersion />
+    
+                <!-- DEFS -->
+                <defs>
+                    <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" v-for="(rect,i) in rects" :id="`gradient_${uid}_${i}`">
+                        <stop offset="0%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.rect.gradientIntensity)"/>
+                        <stop offset="100%" :stop-color="rect.color" />
+                    </radialGradient>
+                </defs>
+    
+                <!-- RECTS -->
+                <defs>
+                    <filter :id="`blur_${uid}`" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" :stdDeviation="2" />
+                        <feColorMatrix type="saturate" values="0" />
+                    </filter>
+                </defs>
+    
+                <!-- CUSTOM CELLS SLOTS -->
+                <template v-if="FINAL_CONFIG.useCustomCells && rects.length">
+                    <foreignObject 
+                        v-for="(position, i) in positions"
+                        :x="position.x"
+                        :y="position.y"
+                        :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
+                        :width="rectDimension <= 0 ? 0.0001 : rectDimension"
+                        class="vue-ui-waffle-custom-cell-foreignObject"
+                    >
+                        <slot name="cell" v-bind="{ cell: {...position, color: rects[i].color, ...rects[i]}, isSelected: [null, undefined].includes(selectedSerie) ? true : rects[i].serieIndex === selectedSerie }"/>
+                    </foreignObject>
+                </template> 
+    
+                <rect v-if="!rects.length && !FINAL_CONFIG.useCustomCells"
+                    :x="12"
+                    :y="12"
+                    :height="drawingArea.height - 24"
+                    :width="drawingArea.width - 24"
+                    :rx="3"
+                    fill="none"
+                    stroke="black"
                 />
-                <rect
-                    data-cy="datapoint-rect"
-                    v-for="(position, i) in positions"
-                    :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
-                    :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                    :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                    :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
-                    :width="rectDimension <= 0 ? 0.0001 : rectDimension"
-                    :fill="FINAL_CONFIG.style.chart.layout.rect.useGradient && FINAL_CONFIG.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
-                    :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.rect.strokeWidth"
-                    :filter="getBlurFilter(rects[i].serieIndex)"
-                />
-                <g v-if="$slots.pattern">
+    
+                <template v-else-if="rects.length && !FINAL_CONFIG.useCustomCells">
+    
+                    <g v-if="$slots.pattern">
+                        <defs v-for="ds in datasetCopyReference">
+                            <slot name="pattern" v-bind="{seriesIndex: ds.absoluteIndex, patternId: `pattern_${uid}_${ds.absoluteIndex}`}"/>
+                        </defs>
+                    </g>
+    
                     <rect
+                        data-cy="datapoint-underlayer"
                         v-for="(position, i) in positions"
                         :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
                         :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                         :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
                         :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
                         :width="rectDimension <= 0 ? 0.0001 : rectDimension"
-                        :fill="`url(#pattern_${uid}_${rects[i].absoluteIndex})`"
-                        stroke="none"
+                        fill="white"
+                        :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.rect.strokeWidth"
                         :filter="getBlurFilter(rects[i].serieIndex)"
                     />
-                
-                </g>
-            </template>
-
-            <!-- DATA LABELS -->
-            <template v-for="(position, i) in positions">
-                <text
-                    :key="`datalabel_${i}`"
-                    data-cy="datapoint-caption"
-                    v-if="showDataLabel(i, position)"
-                    v-text="getCaption(i, position)"
-                    :x="(position.x + FINAL_CONFIG.style.chart.layout.labels.captions.offsetX + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2) + 6"
-                    :y="position.y + FINAL_CONFIG.style.chart.layout.labels.captions.offsetY + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2 + absoluteRectDimensionY / 2 + FINAL_CONFIG.style.chart.layout.labels.captions.fontSize / 3"
-                    :font-size="FINAL_CONFIG.style.chart.layout.labels.captions.fontSize"
-                    :fill="adaptColorToBackground(rects[i].color)"
-                    :filter="getBlurFilter(rects[i].serieIndex)"
-                />
-            </template>
+                    <rect
+                        data-cy="datapoint-rect"
+                        v-for="(position, i) in positions"
+                        :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
+                        :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                        :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                        :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
+                        :width="rectDimension <= 0 ? 0.0001 : rectDimension"
+                        :fill="FINAL_CONFIG.style.chart.layout.rect.useGradient && FINAL_CONFIG.style.chart.layout.rect.gradientIntensity > 0 ? `url(#gradient_${uid}_${i})` : rects[i].color"
+                        :stroke="FINAL_CONFIG.style.chart.layout.rect.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.layout.rect.strokeWidth"
+                        :filter="getBlurFilter(rects[i].serieIndex)"
+                    />
+                    <g v-if="$slots.pattern">
+                        <rect
+                            v-for="(position, i) in positions"
+                            :rx="FINAL_CONFIG.style.chart.layout.rect.rounded ? FINAL_CONFIG.style.chart.layout.rect.rounding : 0"
+                            :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                            :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                            :height="rectDimensionY <= 0 ? 0.0001 : rectDimensionY"
+                            :width="rectDimension <= 0 ? 0.0001 : rectDimension"
+                            :fill="`url(#pattern_${uid}_${rects[i].absoluteIndex})`"
+                            stroke="none"
+                            :filter="getBlurFilter(rects[i].serieIndex)"
+                        />
+                    
+                    </g>
+                </template>
     
-            <rect
-                data-cy="tooltip-trap"
-                v-for="(position, i) in positions"
-                :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
-                :height="absoluteRectDimensionY"
-                :width="absoluteRectDimension"
-                fill="transparent"
-                stroke="none"
-                @mouseover="useTooltip(i)"
-                @mouseleave="onTrapLeave(i)"
-                @click="selectDatapoint(i)"
-            />
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+                <!-- DATA LABELS -->
+                <template v-for="(position, i) in positions">
+                    <text
+                        :key="`datalabel_${i}`"
+                        data-cy="datapoint-caption"
+                        v-if="showDataLabel(i, position)"
+                        v-text="getCaption(i, position)"
+                        :x="(position.x + FINAL_CONFIG.style.chart.layout.labels.captions.offsetX + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2) + 6"
+                        :y="position.y + FINAL_CONFIG.style.chart.layout.labels.captions.offsetY + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2 + absoluteRectDimensionY / 2 + FINAL_CONFIG.style.chart.layout.labels.captions.fontSize / 3"
+                        :font-size="FINAL_CONFIG.style.chart.layout.labels.captions.fontSize"
+                        :fill="adaptColorToBackground(rects[i].color)"
+                        :filter="getBlurFilter(rects[i].serieIndex)"
+                    />
+                </template>
+        
+                <rect
+                    data-cy="tooltip-trap"
+                    v-for="(position, i) in positions"
+                    :x="position.x + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                    :y="position.y + FINAL_CONFIG.style.chart.layout.grid.spaceBetween / 2"
+                    :height="absoluteRectDimensionY"
+                    :width="absoluteRectDimension"
+                    fill="transparent"
+                    stroke="none"
+                    @mouseover="useTooltip(i)"
+                    @mouseleave="onTrapLeave(i)"
+                    @click="selectDatapoint(i)"
+                />
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
+
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1602,6 +1805,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1678,5 +1883,27 @@ defineExpose({
     justify-content: center;
     text-align:center;
     width:100%;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
