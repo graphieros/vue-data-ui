@@ -52,6 +52,7 @@ import Title from "../atoms/Title.vue";
 import Shape from "../atoms/Shape.vue";
 import img from "../img";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const VueUiXy = defineAsyncComponent(() => import('./vue-ui-xy.vue'));
@@ -113,6 +114,9 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeA11ySeriesIndex = ref(null); // a11y
+const isFocus = ref(false); // a11y
 
 function prepareConfig() {
     const mergedConfig = useNestedProp({
@@ -1116,6 +1120,135 @@ async function copyAlt(src = 'main-chart', ds = null, cfg = null){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+function onSvgFocus() {
+    activeA11ySeriesIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    clearKeyboardSelection();
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!drawableDataset.value.length) return;
+
+    const isPreviousSeriesKey = event.key === 'ArrowUp';
+    const isNextSeriesKey = event.key === 'ArrowDown';
+    const isPreviousXKey = event.key === 'ArrowLeft';
+    const isNextXKey = event.key === 'ArrowRight';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (
+        !isPreviousSeriesKey &&
+        !isNextSeriesKey &&
+        !isPreviousXKey &&
+        !isNextXKey &&
+        !isActivationKey &&
+        !isEscapeKey
+    ) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearKeyboardSelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeA11ySeriesIndex.value !== null) {
+            const ds = drawableDataset.value[activeA11ySeriesIndex.value];
+            if (ds) {
+                createXyDatasetForDialog(ds);
+            }
+            return;
+        }
+
+        if (selectedX.value) {
+            selectX(selectedX.value);
+        }
+        return;
+    }
+
+    if (isPreviousSeriesKey || isNextSeriesKey) {
+        let nextSeriesIndex = activeA11ySeriesIndex.value;
+
+        if (nextSeriesIndex === null) {
+            nextSeriesIndex = isNextSeriesKey ? 0 : drawableDataset.value.length - 1;
+        } else {
+            nextSeriesIndex = getWrappedSeriesIndex(
+                nextSeriesIndex + (isNextSeriesKey ? 1 : -1)
+            );
+        }
+
+        activeA11ySeriesIndex.value = nextSeriesIndex;
+        selectedYAxisLabelIndex.value = nextSeriesIndex;
+        return;
+    }
+
+    if (!xAxisTrapsAndLabels.value.length) return;
+
+    let nextXIndex = selectedX.value?.index ?? null;
+
+    if (nextXIndex === null) {
+        nextXIndex = isNextXKey ? 0 : xAxisTrapsAndLabels.value.length - 1;
+    } else {
+        nextXIndex = getWrappedXIndex(
+            nextXIndex + (isNextXKey ? 1 : -1)
+        );
+    }
+
+    const trap = xAxisTrapsAndLabels.value[nextXIndex];
+    if (!trap) return;
+
+    onTrapEnter(trap);
+}
+
+function getWrappedSeriesIndex(index) {
+    const len = drawableDataset.value.length;
+    if (!len) return null;
+    return ((index % len) + len) % len;
+}
+
+function getWrappedXIndex(index) {
+    const len = xAxisTrapsAndLabels.value.length;
+    if (!len) return null;
+    return ((index % len) + len) % len;
+}
+
+function clearKeyboardSelection() {
+    activeA11ySeriesIndex.value = null;
+    selectedYAxisLabelIndex.value = null;
+
+    if (selectedX.value) {
+        onTrapLeave(selectedX.value);
+    } else {
+        selectedX.value = null;
+    }
+}
+
+const a11yTable = computed(() => {
+    return {
+        head: dataTable.value.head,
+        body: dataTable.value.body.map(row => {
+            return [
+                row[0]?.name ?? '',
+                ...row.slice(1)
+            ];
+        }),
+        caption: FINAL_CONFIG.value.a11y.translations.tableCaption,
+        notice: FINAL_CONFIG.value.a11y.translations.tableAvailable,
+    };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -1134,14 +1267,31 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="ridgelineChart" :class="`vue-data-ui-component vue-ui-ridgeline ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
+    <div 
+        ref="ridgelineChart" 
+        :class="`vue-data-ui-component vue-ui-ridgeline ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`"
         :id="`vue-ui-ridgeline_${uid}`" :style="{
             fontFamily: FINAL_CONFIG.style.fontFamily,
             width: '100%',
             textAlign: 'center',
             background: FINAL_CONFIG.style.chart.backgroundColor,
             height: FINAL_CONFIG.responsive ? '100%' : undefined
-        }" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+        }" 
+        @mouseenter="() => setUserOptionsVisibility(true)" 
+        @mouseleave="() => setUserOptionsVisibility(false)"
+    >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable.body.length"
+            :uid="uid"
+            :head="a11yTable.head"
+            :body="a11yTable.body"
+            :caption="a11yTable.caption"
+            :notice="a11yTable.notice"
+        />
 
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef" 
@@ -1266,220 +1416,254 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg ref="svgRef" :xmlns="XMLNS"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawingArea.fullHeight <= 0 ? 10 : drawingArea.fullHeight}`"
-            :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};${FINAL_CONFIG.responsive ? `height: ${parentHeight}px; width: 100%;` : ''}`">
-            <PackageVersion />
-
-            <defs>
-                <linearGradient v-for="(dp, i) in legendSet" :id="`gradient-${dp.id}-${uid}`" x1="50%" y1="0%" x2="50%"
-                    y2="100%">
-                    <stop offset="0%" :stop-color="dp.color" stop-opacity="1" />
-                    <stop offset="30%" :stop-color="dp.color" stop-opacity="0.7" />
-                    <stop offset="70%" :stop-color="dp.color" stop-opacity="0.3" />
-                    <stop offset="100%" :stop-color="dp.color" stop-opacity="0.1" />
-                </linearGradient>
-
-                <template v-for="(ds, i) in drawableDataset">
-                    <linearGradient v-for="(dp, j) in ds.datapoints" :key="`grad${dp.id}`"
-                        :id="`gradient-single-${uid}-${dp.uid}`" x1="50%" y1="0%" x2="50%" y2="100%">
+        <div style="position: relative;">
+            <svg 
+                ref="svgRef" 
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${drawingArea.fullHeight <= 0 ? 10 : drawingArea.fullHeight}`"
+                :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color};${FINAL_CONFIG.responsive ? `height: ${parentHeight}px; width: 100%;` : ''}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
+            >
+                <PackageVersion />
+    
+                <defs>
+                    <linearGradient v-for="(dp, i) in legendSet" :id="`gradient-${dp.id}-${uid}`" x1="50%" y1="0%" x2="50%"
+                        y2="100%">
                         <stop offset="0%" :stop-color="dp.color" stop-opacity="1" />
                         <stop offset="30%" :stop-color="dp.color" stop-opacity="0.7" />
                         <stop offset="70%" :stop-color="dp.color" stop-opacity="0.3" />
                         <stop offset="100%" :stop-color="dp.color" stop-opacity="0.1" />
                     </linearGradient>
-                </template>
-            </defs>
-
-            <g v-for="(ds, i) in drawableDataset" :key="`ds-${i}`">
-                <!-- Paths -->
-                <g v-for="(dp, j) in ds.datapoints" :key="dp.id">
-                    <g v-if="$slots.pattern">
-                        <defs>
-                            <slot name="pattern" v-bind="{ datapointIndex: i, seriesIndex: j, patternId: `pattern_${uid}_${dp.uid}` }" />
-                        </defs>
-                    </g>
-                    <!-- PATH BACKGROUND -->
-                    <path :fill="$slots.pattern ? `url(#pattern_${uid}_${dp.uid})` : FINAL_CONFIG.style.chart.backgroundColor" stroke="none" stroke-linecap="round"
-                        :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath" :style="{
-                            opacity: FINAL_CONFIG.style.chart.areas.opacity,
-                        }" />
-
-                    <!-- PATH -->
-                    <path
-                        fill="none"
-                        :stroke="FINAL_CONFIG.style.chart.areas.stroke.useSerieColor ? dp.color : FINAL_CONFIG.style.chart.areas.stroke.color"
-                        :stroke-width="FINAL_CONFIG.style.chart.areas.strokeWidth"
-                        :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPathRidge : dp.straightPathRidge"
-                        stroke-linecap="round" stroke-linejoin="round"
-                        :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation && !loading }" 
-                        :style="{
-                            strokeDasharray: dp.pathLength,
-                            strokeDashoffset: FINAL_CONFIG.useCssAnimation ? dp.pathLength : 0,
-                        }" 
-                    />
-                    <path
-                        :fill="!FINAL_CONFIG.style.chart.areas.useGradient ? dp.color : FINAL_CONFIG.style.chart.areas.useCommonColor ? `url(#gradient-${dp.id}-${uid})` : `url(#gradient-single-${uid}-${dp.uid})`"
-                        stroke="none"
-                        :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath"
-                        stroke-linecap="round" stroke-linejoin="round"
-                        :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation && !loading }" 
-                        :style="{
-                            strokeDasharray: dp.pathLength,
-                            strokeDashoffset: FINAL_CONFIG.useCssAnimation ? dp.pathLength : 0,
-                        }" />
-
-                    <!-- ZERO LINE -->
-                    <path
-                        v-if="FINAL_CONFIG.style.chart.zeroLine.show"
-                        :stroke="FINAL_CONFIG.style.chart.zeroLine.useSerieColor ? dp.color : FINAL_CONFIG.style.chart.zeroLine.stroke"
-                        :stroke-dasharray="FINAL_CONFIG.style.chart.zeroLine.strokeDasharray"
-                        :stroke-width="FINAL_CONFIG.style.chart.zeroLine.strokeWidth" 
-                        :d="dp.zeroPath"
-                        stroke-linecap="round" 
-                    />
-
-                    <!-- MAX POINT INDICATOR -->
-                    <template v-if="FINAL_CONFIG.style.chart.areas.maxPoint.show && dp.plots.length > 1">
-                        <template v-for="plot in dp.plots">
-                            <line v-if="plot.isMaxPoint" :x1="plot.x" :y1="plot.y" :x2="plot.x" :y2="plot.zero"
-                                :stroke="FINAL_CONFIG.style.chart.areas.maxPoint.adaptStrokeToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.areas.maxPoint.stroke"
-                                :stroke-width="FINAL_CONFIG.style.chart.areas.maxPoint.strokeWidth"
-                                stroke-linecap="round"
-                                :stroke-dasharray="FINAL_CONFIG.style.chart.areas.maxPoint.strokeDasharray" />
-                        </template>
+    
+                    <template v-for="(ds, i) in drawableDataset">
+                        <linearGradient v-for="(dp, j) in ds.datapoints" :key="`grad${dp.id}`"
+                            :id="`gradient-single-${uid}-${dp.uid}`" x1="50%" y1="0%" x2="50%" y2="100%">
+                            <stop offset="0%" :stop-color="dp.color" stop-opacity="1" />
+                            <stop offset="30%" :stop-color="dp.color" stop-opacity="0.7" />
+                            <stop offset="70%" :stop-color="dp.color" stop-opacity="0.3" />
+                            <stop offset="100%" :stop-color="dp.color" stop-opacity="0.1" />
+                        </linearGradient>
                     </template>
-
-                    <!-- SINGLE PLOT CASE -->
-                    <template v-if="dp.plots.length === 1">
-                        <circle :cx="dp.plots[0].x" :cy="dp.plots[0].y"
-                            :stroke="FINAL_CONFIG.style.chart.selector.dot.stroke"
-                            :stroke-width="FINAL_CONFIG.style.chart.selector.dot.strokeWidth"
-                            :r="FINAL_CONFIG.style.chart.selector.dot.radius"
-                            :fill="FINAL_CONFIG.style.chart.selector.dot.useDatapointColor ? dp.color : FINAL_CONFIG.style.chart.selector.dot.fill"
-                            :style="{
-                                pointerEvents: 'none'
+                </defs>
+    
+                <g v-for="(ds, i) in drawableDataset" :key="`ds-${i}`">
+                    <!-- Paths -->
+                    <g v-for="(dp, j) in ds.datapoints" :key="dp.id">
+                        <g v-if="$slots.pattern">
+                            <defs>
+                                <slot name="pattern" v-bind="{ datapointIndex: i, seriesIndex: j, patternId: `pattern_${uid}_${dp.uid}` }" />
+                            </defs>
+                        </g>
+                        <!-- PATH BACKGROUND -->
+                        <path :fill="$slots.pattern ? `url(#pattern_${uid}_${dp.uid})` : FINAL_CONFIG.style.chart.backgroundColor" stroke="none" stroke-linecap="round"
+                            :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath" :style="{
+                                opacity: FINAL_CONFIG.style.chart.areas.opacity,
                             }" />
-                    </template>
+    
+                        <!-- PATH -->
+                        <path
+                            fill="none"
+                            :stroke="FINAL_CONFIG.style.chart.areas.stroke.useSerieColor ? dp.color : FINAL_CONFIG.style.chart.areas.stroke.color"
+                            :stroke-width="FINAL_CONFIG.style.chart.areas.strokeWidth"
+                            :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPathRidge : dp.straightPathRidge"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation && !loading }" 
+                            :style="{
+                                strokeDasharray: dp.pathLength,
+                                strokeDashoffset: FINAL_CONFIG.useCssAnimation ? dp.pathLength : 0,
+                            }" 
+                        />
+                        <path
+                            :fill="!FINAL_CONFIG.style.chart.areas.useGradient ? dp.color : FINAL_CONFIG.style.chart.areas.useCommonColor ? `url(#gradient-${dp.id}-${uid})` : `url(#gradient-single-${uid}-${dp.uid})`"
+                            stroke="none"
+                            :d="FINAL_CONFIG.style.chart.areas.smooth ? dp.smoothPath : dp.straightPath"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            :class="{ 'vue-ui-ridgeline-animate': FINAL_CONFIG.useCssAnimation && !loading }" 
+                            :style="{
+                                strokeDasharray: dp.pathLength,
+                                strokeDashoffset: FINAL_CONFIG.useCssAnimation ? dp.pathLength : 0,
+                            }" />
+    
+                        <!-- ZERO LINE -->
+                        <path
+                            v-if="FINAL_CONFIG.style.chart.zeroLine.show"
+                            :stroke="FINAL_CONFIG.style.chart.zeroLine.useSerieColor ? dp.color : FINAL_CONFIG.style.chart.zeroLine.stroke"
+                            :stroke-dasharray="FINAL_CONFIG.style.chart.zeroLine.strokeDasharray"
+                            :stroke-width="FINAL_CONFIG.style.chart.zeroLine.strokeWidth" 
+                            :d="dp.zeroPath"
+                            stroke-linecap="round" 
+                        />
+    
+                        <!-- MAX POINT INDICATOR -->
+                        <template v-if="FINAL_CONFIG.style.chart.areas.maxPoint.show && dp.plots.length > 1">
+                            <template v-for="plot in dp.plots">
+                                <line v-if="plot.isMaxPoint" :x1="plot.x" :y1="plot.y" :x2="plot.x" :y2="plot.zero"
+                                    :stroke="FINAL_CONFIG.style.chart.areas.maxPoint.adaptStrokeToBackground ? adaptColorToBackground(dp.color) : FINAL_CONFIG.style.chart.areas.maxPoint.stroke"
+                                    :stroke-width="FINAL_CONFIG.style.chart.areas.maxPoint.strokeWidth"
+                                    stroke-linecap="round"
+                                    :stroke-dasharray="FINAL_CONFIG.style.chart.areas.maxPoint.strokeDasharray" />
+                            </template>
+                        </template>
+    
+                        <!-- SINGLE PLOT CASE -->
+                        <template v-if="dp.plots.length === 1">
+                            <circle :cx="dp.plots[0].x" :cy="dp.plots[0].y"
+                                :stroke="FINAL_CONFIG.style.chart.selector.dot.stroke"
+                                :stroke-width="FINAL_CONFIG.style.chart.selector.dot.strokeWidth"
+                                :r="FINAL_CONFIG.style.chart.selector.dot.radius"
+                                :fill="FINAL_CONFIG.style.chart.selector.dot.useDatapointColor ? dp.color : FINAL_CONFIG.style.chart.selector.dot.fill"
+                                :style="{
+                                    pointerEvents: 'none'
+                                }" />
+                        </template>
+                    </g>
+    
+                    <!-- Y AXIS LABELS -->
+                    <text :x="ds.label.x" :y="ds.label.y" text-anchor="end"
+                        :font-size="FINAL_CONFIG.style.chart.yAxis.labels.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.yAxis.labels.color" :style="{
+                            cursor: FINAL_CONFIG.style.chart.dialog.show && isCursorPointer ? 'pointer' : 'default'
+                        }"
+                        :text-decoration="FINAL_CONFIG.style.chart.dialog.show && (selectedYAxisLabelIndex === i || (!!selectedDatapoint && ds.uid === selectedDatapoint.uid) || activeA11ySeriesIndex === i) ? 'underline' : ''"
+                        @mouseenter="setYAxisLabelHoverIndex(i)" @mouseleave="resetYAxisLabelIndex"
+                        @click="createXyDatasetForDialog(ds)">
+                        {{ ds.name }}
+                    </text>
                 </g>
-
-                <!-- Y AXIS LABELS -->
-                <text :x="ds.label.x" :y="ds.label.y" text-anchor="end"
-                    :font-size="FINAL_CONFIG.style.chart.yAxis.labels.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.bold ? 'bold' : 'normal'"
-                    :fill="FINAL_CONFIG.style.chart.yAxis.labels.color" :style="{
-                        cursor: FINAL_CONFIG.style.chart.dialog.show && isCursorPointer ? 'pointer' : 'default'
-                    }"
-                    :text-decoration="FINAL_CONFIG.style.chart.dialog.show && (selectedYAxisLabelIndex === i || (!!selectedDatapoint && ds.uid === selectedDatapoint.uid)) ? 'underline' : ''"
-                    @mouseenter="setYAxisLabelHoverIndex(i)" @mouseleave="resetYAxisLabelIndex"
-                    @click="createXyDatasetForDialog(ds)">
-                    {{ ds.name }}
-                </text>
-            </g>
-
-            <!-- X AXIS LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.xAxis.labels.values.length" ref="timeLabelsEls">
-                <template v-for="(xLabel, i) in xAxisTrapsAndLabels">
-                    <slot name="time-label" v-bind="{
-                        show: (xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo) ||
-                            (xLabel && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && (i === 0 || i === xAxisTrapsAndLabels.length - 1)) ||
-                            (xLabel && selectedX && selectedX.index === i) ||
-                            (xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo && (i % Math.floor(xAxisTrapsAndLabels.length / FINAL_CONFIG.style.chart.xAxis.labels.modulo)) === 0),
-                        fontSize: FINAL_CONFIG.style.chart.xAxis.labels.fontSize,
-                        content: xLabel.label,
-                        textAnchor: FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle',
-                        fill: FINAL_CONFIG.style.chart.xAxis.labels.color,
-                        transform: `translate(${xLabel.selectorX}, ${drawingArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`,
-                        x: xLabel.selectorX,
-                        y: drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY
-                    }">
-                        <g v-if="(xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo) ||
+    
+                <!-- X AXIS LABELS -->
+                <g v-if="FINAL_CONFIG.style.chart.xAxis.labels.values.length" ref="timeLabelsEls">
+                    <template v-for="(xLabel, i) in xAxisTrapsAndLabels">
+                        <slot name="time-label" v-bind="{
+                            show: (xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo) ||
                                 (xLabel && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && (i === 0 || i === xAxisTrapsAndLabels.length - 1)) ||
                                 (xLabel && selectedX && selectedX.index === i) ||
-                                (xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo && (i % Math.floor(xAxisTrapsAndLabels.length / FINAL_CONFIG.style.chart.xAxis.labels.modulo)) === 0)"
-                        >
-                        <!-- SINGLE LINE -->
-                        <text
-                            class="vue-ui-ridgeline-x-axis-label"
-                            v-if="!String(xLabel.label).includes('\n')"
-                            :font-size="FINAL_CONFIG.style.chart.xAxis.labels.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.xAxis.labels.color"
-                            :font-weight="FINAL_CONFIG.style.chart.xAxis.labels.bold ? 'bold' : 'normal'"
-                            :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
-                            :text-anchor="FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle'"
-                            :style="{
-                                opacity: selectedX ? selectedX.index === i ? 1 : 0.2 : 1
-                            }">
-                            {{ xLabel.label }}
-                        </text>
-
-                        <!-- MULTILINE -->
-                        <text
-                            class="vue-ui-ridgeline-x-axis-label"
-                            v-else
-                            :font-size="FINAL_CONFIG.style.chart.xAxis.labels.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.xAxis.labels.color"
-                            :font-weight="FINAL_CONFIG.style.chart.xAxis.labels.bold ? 'bold' : 'normal'"
-                            :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
-                            :text-anchor="FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle'"
-                            :style="{
-                                opacity: selectedX ? selectedX.index === i ? 1 : 0.2 : 1
-                            }"
-                            v-html="createTSpansFromLineBreaksOnX({
-                                content: String(xLabel.label),
-                                fontSize: FINAL_CONFIG.style.chart.xAxis.labels.fontSize,
-                                fill: FINAL_CONFIG.style.chart.xAxis.labels.color,
-                                x: 0,
-                                y: 0
-                            })"
-                        />
-                        </g>
-                    </slot>
-                </template>
-            </g>
-
-            <!-- TOOLTIP TRAPS, SELECTOR AND DATALABELS-->
-            <g>
-                <!-- TOOLTIP TRAPS -->
-                <rect 
-                    v-for="(trap, i) in xAxisTrapsAndLabels" 
-                    :x="trap.x" 
-                    :y="trap.y"
-                    :width="trap.width < 0 ? 0.1 : trap.width" 
-                    :height="trap.height < 0 ? 0.1 : trap.height"
-                    fill="transparent" 
-                    @mouseenter="onTrapEnter(trap)" 
-                    @mouseleave="onTrapLeave(trap)"
-                    @click="() => selectX(trap)" 
-                />
-
-                <!-- SELECTOR -->
-                <line v-if="FINAL_CONFIG.style.chart.selector.show && !!selectedX" :x1="selectedX.selectorX"
-                    :x2="selectedX.selectorX" :y1="selectedX.y" :y2="selectedX.y + selectedX.height - rowHeight / 2"
-                    :stroke="FINAL_CONFIG.style.chart.selector.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.selector.strokeWidth"
-                    :stroke-dasharray="FINAL_CONFIG.style.chart.selector.strokeDasharray" stroke-linecap="round"
-                    :style="{ pointerEvents: 'none' }" />
-
-                <!-- SELECTED X -->
-                <template v-if="!!selectedX">
-                    <template v-for="ds in drawableDataset">
-                        <template v-for="dp in ds.datapoints">
-                            <template v-for="(plot, k) in dp.plots">
-                                <!-- DOT -->
-                                <circle v-if="!!selectedX && selectedX.index === k" :cx="plot.x" :cy="plot.y"
-                                    :stroke="FINAL_CONFIG.style.chart.selector.dot.stroke"
-                                    :stroke-width="FINAL_CONFIG.style.chart.selector.dot.strokeWidth"
-                                    :r="FINAL_CONFIG.style.chart.selector.dot.radius"
-                                    :fill="FINAL_CONFIG.style.chart.selector.dot.useDatapointColor ? dp.color : FINAL_CONFIG.style.chart.selector.dot.fill"
-                                    :style="{
-                                        pointerEvents: 'none'
-                                    }" />
-                                <!-- DATA LABELS -->
-                                <text v-if="selectedX && selectedX.index === k"
-                                    :x="isTextOverflowingRight(
-                                        plot.x, applyDataLabel(
+                                (xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo && (i % Math.floor(xAxisTrapsAndLabels.length / FINAL_CONFIG.style.chart.xAxis.labels.modulo)) === 0),
+                            fontSize: FINAL_CONFIG.style.chart.xAxis.labels.fontSize,
+                            content: xLabel.label,
+                            textAnchor: FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle',
+                            fill: FINAL_CONFIG.style.chart.xAxis.labels.color,
+                            transform: `translate(${xLabel.selectorX}, ${drawingArea.top + xLabel.height + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`,
+                            x: xLabel.selectorX,
+                            y: drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY
+                        }">
+                            <g v-if="(xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo) ||
+                                    (xLabel && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && (i === 0 || i === xAxisTrapsAndLabels.length - 1)) ||
+                                    (xLabel && selectedX && selectedX.index === i) ||
+                                    (xLabel && !FINAL_CONFIG.style.chart.xAxis.labels.showOnlyFirstAndLast && FINAL_CONFIG.style.chart.xAxis.labels.showOnlyAtModulo && (i % Math.floor(xAxisTrapsAndLabels.length / FINAL_CONFIG.style.chart.xAxis.labels.modulo)) === 0)"
+                            >
+                            <!-- SINGLE LINE -->
+                            <text
+                                class="vue-ui-ridgeline-x-axis-label"
+                                v-if="!String(xLabel.label).includes('\n')"
+                                :font-size="FINAL_CONFIG.style.chart.xAxis.labels.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.xAxis.labels.color"
+                                :font-weight="FINAL_CONFIG.style.chart.xAxis.labels.bold ? 'bold' : 'normal'"
+                                :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
+                                :text-anchor="FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle'"
+                                :style="{
+                                    opacity: selectedX ? selectedX.index === i ? 1 : 0.2 : 1
+                                }">
+                                {{ xLabel.label }}
+                            </text>
+    
+                            <!-- MULTILINE -->
+                            <text
+                                class="vue-ui-ridgeline-x-axis-label"
+                                v-else
+                                :font-size="FINAL_CONFIG.style.chart.xAxis.labels.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.xAxis.labels.color"
+                                :font-weight="FINAL_CONFIG.style.chart.xAxis.labels.bold ? 'bold' : 'normal'"
+                                :transform="`translate(${xLabel.selectorX}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.xAxis.labels.offsetY}), rotate(${FINAL_CONFIG.style.chart.xAxis.labels.rotation})`"
+                                :text-anchor="FINAL_CONFIG.style.chart.xAxis.labels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.xAxis.labels.rotation < 0 ? 'end' : 'middle'"
+                                :style="{
+                                    opacity: selectedX ? selectedX.index === i ? 1 : 0.2 : 1
+                                }"
+                                v-html="createTSpansFromLineBreaksOnX({
+                                    content: String(xLabel.label),
+                                    fontSize: FINAL_CONFIG.style.chart.xAxis.labels.fontSize,
+                                    fill: FINAL_CONFIG.style.chart.xAxis.labels.color,
+                                    x: 0,
+                                    y: 0
+                                })"
+                            />
+                            </g>
+                        </slot>
+                    </template>
+                </g>
+    
+                <!-- TOOLTIP TRAPS, SELECTOR AND DATALABELS-->
+                <g>
+                    <!-- TOOLTIP TRAPS -->
+                    <rect 
+                        v-for="(trap, i) in xAxisTrapsAndLabels" 
+                        :x="trap.x" 
+                        :y="trap.y"
+                        :width="trap.width < 0 ? 0.1 : trap.width" 
+                        :height="trap.height < 0 ? 0.1 : trap.height"
+                        fill="transparent" 
+                        @mouseenter="onTrapEnter(trap)" 
+                        @mouseleave="onTrapLeave(trap)"
+                        @click="() => selectX(trap)" 
+                    />
+    
+                    <!-- SELECTOR -->
+                    <line v-if="FINAL_CONFIG.style.chart.selector.show && !!selectedX" :x1="selectedX.selectorX"
+                        :x2="selectedX.selectorX" :y1="selectedX.y" :y2="selectedX.y + selectedX.height - rowHeight / 2"
+                        :stroke="FINAL_CONFIG.style.chart.selector.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.selector.strokeWidth"
+                        :stroke-dasharray="FINAL_CONFIG.style.chart.selector.strokeDasharray" stroke-linecap="round"
+                        :style="{ pointerEvents: 'none' }" />
+    
+                    <!-- SELECTED X -->
+                    <template v-if="!!selectedX">
+                        <template v-for="ds in drawableDataset">
+                            <template v-for="dp in ds.datapoints">
+                                <template v-for="(plot, k) in dp.plots">
+                                    <!-- DOT -->
+                                    <circle v-if="!!selectedX && selectedX.index === k" :cx="plot.x" :cy="plot.y"
+                                        :stroke="FINAL_CONFIG.style.chart.selector.dot.stroke"
+                                        :stroke-width="FINAL_CONFIG.style.chart.selector.dot.strokeWidth"
+                                        :r="FINAL_CONFIG.style.chart.selector.dot.radius"
+                                        :fill="FINAL_CONFIG.style.chart.selector.dot.useDatapointColor ? dp.color : FINAL_CONFIG.style.chart.selector.dot.fill"
+                                        :style="{
+                                            pointerEvents: 'none'
+                                        }" />
+                                    <!-- DATA LABELS -->
+                                    <text v-if="selectedX && selectedX.index === k"
+                                        :x="isTextOverflowingRight(
+                                            plot.x, applyDataLabel(
+                                                FINAL_CONFIG.style.chart.selector.labels.formatter,
+                                                plot.value,
+                                                dataLabel({
+                                                    p: FINAL_CONFIG.style.chart.xAxis.labels.prefix,
+                                                    v: plot.value,
+                                                    s: FINAL_CONFIG.style.chart.xAxis.labels.suffix,
+                                                    r: FINAL_CONFIG.style.chart.selector.labels.rounding
+                                                })
+                                            ), FINAL_CONFIG.style.chart.selector.labels.fontSize) ? plot.x - (FINAL_CONFIG.style.chart.selector.labels.fontSize / 2) : plot.x + (FINAL_CONFIG.style.chart.selector.labels.fontSize / 2)"
+                                        :y="plot.y + FINAL_CONFIG.style.chart.selector.labels.fontSize / 3" :text-anchor="isTextOverflowingRight(
+                                            plot.x, applyDataLabel(
+                                                FINAL_CONFIG.style.chart.selector.labels.formatter,
+                                                plot.value,
+                                                dataLabel({
+                                                    p: FINAL_CONFIG.style.chart.xAxis.labels.prefix,
+                                                    v: plot.value,
+                                                    s: FINAL_CONFIG.style.chart.xAxis.labels.suffix,
+                                                    r: FINAL_CONFIG.style.chart.selector.labels.rounding
+                                                })
+                                            ), FINAL_CONFIG.style.chart.selector.labels.fontSize) ? 'end' : 'start'"
+                                        :font-size="FINAL_CONFIG.style.chart.selector.labels.fontSize"
+                                        :fill="FINAL_CONFIG.style.chart.selector.labels.color" :style="{
+                                            pointerEvents: 'none'
+                                        }">
+                                        {{ applyDataLabel(
                                             FINAL_CONFIG.style.chart.selector.labels.formatter,
                                             plot.value,
                                             dataLabel({
@@ -1488,44 +1672,23 @@ defineExpose({
                                                 s: FINAL_CONFIG.style.chart.xAxis.labels.suffix,
                                                 r: FINAL_CONFIG.style.chart.selector.labels.rounding
                                             })
-                                        ), FINAL_CONFIG.style.chart.selector.labels.fontSize) ? plot.x - (FINAL_CONFIG.style.chart.selector.labels.fontSize / 2) : plot.x + (FINAL_CONFIG.style.chart.selector.labels.fontSize / 2)"
-                                    :y="plot.y + FINAL_CONFIG.style.chart.selector.labels.fontSize / 3" :text-anchor="isTextOverflowingRight(
-                                        plot.x, applyDataLabel(
-                                            FINAL_CONFIG.style.chart.selector.labels.formatter,
-                                            plot.value,
-                                            dataLabel({
-                                                p: FINAL_CONFIG.style.chart.xAxis.labels.prefix,
-                                                v: plot.value,
-                                                s: FINAL_CONFIG.style.chart.xAxis.labels.suffix,
-                                                r: FINAL_CONFIG.style.chart.selector.labels.rounding
-                                            })
-                                        ), FINAL_CONFIG.style.chart.selector.labels.fontSize) ? 'end' : 'start'"
-                                    :font-size="FINAL_CONFIG.style.chart.selector.labels.fontSize"
-                                    :fill="FINAL_CONFIG.style.chart.selector.labels.color" :style="{
-                                        pointerEvents: 'none'
-                                    }">
-                                    {{ applyDataLabel(
-                                        FINAL_CONFIG.style.chart.selector.labels.formatter,
-                                        plot.value,
-                                        dataLabel({
-                                            p: FINAL_CONFIG.style.chart.xAxis.labels.prefix,
-                                            v: plot.value,
-                                            s: FINAL_CONFIG.style.chart.xAxis.labels.suffix,
-                                            r: FINAL_CONFIG.style.chart.selector.labels.rounding
-                                        })
-                                    ) }}
-                                </text>
+                                        ) }}
+                                    </text>
+                                </template>
                             </template>
                         </template>
                     </template>
-                </template>
-            </g>
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }" />
-        </svg>
+                </g>
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }" />
+            </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }" />
@@ -1691,5 +1854,27 @@ defineExpose({
         transform: scale(1, 1);
         opacity: 1;
     }
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>

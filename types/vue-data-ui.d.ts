@@ -7246,6 +7246,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiDumbbellEvent; // v3
             datapointLeave?: VueUiDumbbellEvent; // v3
@@ -9589,6 +9590,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiRidgelineEvent; // v3
             datapointLeave?: VueUiRidgelineEvent; // v3
