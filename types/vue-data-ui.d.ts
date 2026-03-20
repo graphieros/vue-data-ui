@@ -10192,6 +10192,7 @@ declare module "vue-data-ui" {
         debug?: boolean;
         responsive?: boolean;
         theme?: Theme;
+        a11y?: A11YConfig;
         projection?: 'aitoff' | 'azimuthalEquidistant' | 'bonne' | 'equirectangular' | 'gallPeters' | 'globe' | 'hammer' | 'mercator' | 'mollweide' | 'robinson' | 'sinusoidal' | 'vanDerGrinten' | 'winkelTripel';
         userOptions?: ChartUserOptions;
         map?: {

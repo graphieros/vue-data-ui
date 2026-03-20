@@ -9,15 +9,14 @@ import {
     toRefs,
     watch,
 } from "vue";
-
 import {
     convertColorToHex,
     createUid,
     isFunction,
+    svgToClientCoords,
     treeShake,
     XMLNS,
 } from "../lib.js";
-
 import usePanZoom from "../usePanZoom.js";
 import { throttle } from "../canvas-lib.js";
 import { useConfig } from "../useConfig.js";
@@ -29,13 +28,12 @@ import { useNestedProp } from "../useNestedProp.js";
 import { useThemeCheck } from "../useThemeCheck.js";
 import { useUserOptionState } from "../useUserOptionState.js";
 import { useChartAccessibility } from "../useChartAccessibility.js";
-
 import img from "../img.js";
 import geo from "../geoProjections.js";
-
 import Title from "../atoms/Title.vue";
 import themes from "../themes/vue_ui_geo.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseZoomControls from "../atoms/BaseZoomControls.vue";
 
 const Tooltip = defineAsyncComponent(() => import("../atoms/Tooltip.vue"));
@@ -81,6 +79,11 @@ const observedEl = ref(null);
 
 const zoomControlsTop = ref(null);
 const zoomControlsBottom = ref(null);
+
+const activePointKeyboardIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref("pointer"); // a11y
+const isFocus = ref(false); // a11y
 
 const isFullscreen = ref(false);
 
@@ -1368,6 +1371,25 @@ const projectedPoints = computed(() => {
         .filter(Boolean);
 });
 
+const keyboardNavigablePoints = computed(() => {
+    return projectedPoints.value.map((point, keyboardIndex) => {
+        return {
+            ...point,
+            keyboardIndex,
+        };
+    });
+});
+
+function setKeyboardTooltipPositionFromPoint(point) {
+    const fittedPoint = applyFitToPoint(point);
+    const clientPosition = svgToClientCoords(fittedPoint.x, fittedPoint.y, svgRef.value);
+    if (!clientPosition) return;
+    tooltipA11yPosition.value = {
+        x: clientPosition.x,
+        y: clientPosition.y,
+    };
+}
+
 const isTooltipVisible = ref(false);
 const tooltipContent = ref("");
 const useCustomFormat = ref(false);
@@ -1496,8 +1518,18 @@ function onTerritoryClick(territory) {
     }
 }
 
-function onPointEnter(point) {
+function onPointEnter(point, keyboardIndex = null, triggerMode = "pointer") {
+    tooltipTriggerMode.value = triggerMode;
     highlightedPointKey.value = point.uid;
+
+    if (Number.isInteger(keyboardIndex)) {
+        activePointKeyboardIndex.value = keyboardIndex;
+    }
+
+    if (triggerMode === "keyboard") {
+        setKeyboardTooltipPositionFromPoint(point);
+    }
+
     showTooltipWithHtml(formatPointTooltip(point));
 
     if (FINAL_CONFIG.value.events.datapointEnter) {
@@ -1508,9 +1540,16 @@ function onPointEnter(point) {
     }
 }
 
-function onPointLeave(point) {
+function onPointLeave(point, triggerMode = "pointer") {
+    if (triggerMode === "pointer" && tooltipTriggerMode.value === "keyboard") return;
+
     highlightedPointKey.value = null;
     hideTooltip();
+
+    if (triggerMode !== "pointer") {
+        activePointKeyboardIndex.value = null;
+        tooltipTriggerMode.value = "pointer";
+    }
 
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({
@@ -1756,6 +1795,217 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+function findNearestPointInDirection(fromIndex, direction) {
+    const list = keyboardNavigablePoints.value;
+    if (!list.length) return null;
+
+    const fromPoint = list[fromIndex];
+    if (!fromPoint) return null;
+
+    let bestIndex = null;
+    let bestScore = Infinity;
+
+    for (let i = 0; i < list.length; i += 1) {
+        if (i === fromIndex) continue;
+
+        const candidate = list[i];
+        const deltaX = candidate.x - fromPoint.x;
+        const deltaY = candidate.y - fromPoint.y;
+
+        let isEligible = false;
+        let primaryDistance = 0;
+        let secondaryDistance = 0;
+
+        if (direction === "right" && deltaX > 0) {
+            isEligible = true;
+            primaryDistance = deltaX;
+            secondaryDistance = Math.abs(deltaY);
+        }
+
+        if (direction === "left" && deltaX < 0) {
+            isEligible = true;
+            primaryDistance = Math.abs(deltaX);
+            secondaryDistance = Math.abs(deltaY);
+        }
+
+        if (direction === "down" && deltaY > 0) {
+            isEligible = true;
+            primaryDistance = deltaY;
+            secondaryDistance = Math.abs(deltaX);
+        }
+
+        if (direction === "up" && deltaY < 0) {
+            isEligible = true;
+            primaryDistance = Math.abs(deltaY);
+            secondaryDistance = Math.abs(deltaX);
+        }
+
+        if (!isEligible) continue;
+
+        const score = primaryDistance * primaryDistance + secondaryDistance * secondaryDistance * 4;
+
+        if (score < bestScore) {
+            bestScore = score;
+            bestIndex = i;
+        }
+    }
+
+    return bestIndex;
+}
+
+function getInitialKeyboardPointIndex(direction) {
+    const list = keyboardNavigablePoints.value;
+    if (!list.length) return null;
+
+    if (direction === "right") {
+        return list.reduce((bestIndex, point, index, array) => {
+            return point.x < array[bestIndex].x ? index : bestIndex;
+        }, 0);
+    }
+
+    if (direction === "left") {
+        return list.reduce((bestIndex, point, index, array) => {
+            return point.x > array[bestIndex].x ? index : bestIndex;
+        }, 0);
+    }
+
+    if (direction === "down") {
+        return list.reduce((bestIndex, point, index, array) => {
+            return point.y < array[bestIndex].y ? index : bestIndex;
+        }, 0);
+    }
+
+    if (direction === "up") {
+        return list.reduce((bestIndex, point, index, array) => {
+            return point.y > array[bestIndex].y ? index : bestIndex;
+        }, 0);
+    }
+
+    return 0;
+}
+
+function onSvgFocus() {
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    const activePoint =
+        activePointKeyboardIndex.value != null
+            ? keyboardNavigablePoints.value[activePointKeyboardIndex.value]
+            : null;
+
+    if (activePoint) {
+        onPointLeave(activePoint, "keyboard");
+    } else {
+        activePointKeyboardIndex.value = null;
+        tooltipTriggerMode.value = "pointer";
+        hideTooltip();
+        highlightedPointKey.value = null;
+    }
+
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!keyboardNavigablePoints.value.length) return;
+
+    const isRight = event.key === "ArrowRight";
+    const isLeft = event.key === "ArrowLeft";
+    const isDown = event.key === "ArrowDown";
+    const isUp = event.key === "ArrowUp";
+    const isActivate = event.key === "Enter" || event.key === " ";
+    const isEscape = event.key === "Escape";
+
+    if (!isRight && !isLeft && !isDown && !isUp && !isActivate && !isEscape) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscape) {
+        const activePoint =
+            activePointKeyboardIndex.value != null
+                ? keyboardNavigablePoints.value[activePointKeyboardIndex.value]
+                : null;
+
+        if (activePoint) {
+            onPointLeave(activePoint, "keyboard");
+        } else {
+            activePointKeyboardIndex.value = null;
+            tooltipTriggerMode.value = "pointer";
+            hideTooltip();
+            highlightedPointKey.value = null;
+        }
+
+        return;
+    }
+
+    if (isActivate) {
+        const activePoint =
+            activePointKeyboardIndex.value != null
+                ? keyboardNavigablePoints.value[activePointKeyboardIndex.value]
+                : null;
+
+        if (!activePoint) return;
+
+        onPointClick(activePoint);
+        return;
+    }
+
+    const direction = isRight
+        ? "right"
+        : isLeft
+          ? "left"
+          : isDown
+            ? "down"
+            : "up";
+
+    let nextIndex = null;
+
+    if (activePointKeyboardIndex.value == null) {
+        nextIndex = getInitialKeyboardPointIndex(direction);
+    } else {
+        nextIndex = findNearestPointInDirection(activePointKeyboardIndex.value, direction);
+
+        if (nextIndex == null) {
+            nextIndex = getInitialKeyboardPointIndex(direction);
+        }
+    }
+
+    if (nextIndex == null) return;
+
+    const nextPoint = keyboardNavigablePoints.value[nextIndex];
+    if (!nextPoint) return;
+
+    onPointEnter(nextPoint, nextIndex, "keyboard");
+}
+
+const a11yTable = computed(() => {
+    const headers = ["Name", "Latitude", "Longitude", "Description"];
+
+    const rows = points.value.map((point) => {
+        const latitude = Array.isArray(point.coordinates) ? point.coordinates[1] : null;
+        const longitude = Array.isArray(point.coordinates) ? point.coordinates[0] : null;
+
+        return [
+            point.name ?? "",
+            Number.isFinite(latitude) ? String(latitude) : "",
+            Number.isFinite(longitude) ? String(longitude) : "",
+            point.description ?? "",
+        ];
+    });
+
+    return {
+        headers,
+        rows,
+    };
+});
+
 defineExpose({
     getImage,
     generatePdf,
@@ -1785,6 +2035,19 @@ defineExpose({
             height: isResponsiveActive ? `${HEIGHT}px` : undefined,
         }"
     >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <div
             ref="noTitle"
             v-if="hasOptionsNoTitle"
@@ -1927,145 +2190,155 @@ defineExpose({
             @resetZoom="hardResetZoom"
         />
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS"
-            :viewBox="viewBox"
-            preserveAspectRatio="xMidYMid meet"
-            :style="{
-                display: 'block',
-                width: '100%',
-                height: isResponsiveActive ? `${HEIGHT}px` : 'auto',
-                background: FINAL_CONFIG.style.chart.backgroundColor,
-                touchAction: panZoomActive ? 'none' : 'auto',
-                cursor: panZoomActive ? (isInteracting ? 'grabbing' : 'grab') : 'default',
-            }"
-            :id="`vue-ui-geo_${uid}`"
-            @pointerdown="startInteraction"
-            @pointerup="stopInteraction"
-            @pointercancel="stopInteraction"
-            @pointerleave="stopInteraction"
-            @wheel="onWheelInteraction"
-        >
-            <PackageVersion />
-
-            <g
-                :transform="mapFitTransform.transform"
-                :style="{ pointerEvents: isInteracting ? 'none' : 'auto' }"
+        <div style="position: relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :viewBox="viewBox"
+                preserveAspectRatio="xMidYMid meet"
+                :aria-describedby="`map-keyboard-instructions-${uid}`"
+                tabindex="0"
+                :style="{
+                    display: 'block',
+                    width: '100%',
+                    height: isResponsiveActive ? `${HEIGHT}px` : 'auto',
+                    background: FINAL_CONFIG.style.chart.backgroundColor,
+                    touchAction: panZoomActive ? 'none' : 'auto',
+                    cursor: panZoomActive ? (isInteracting ? 'grabbing' : 'grab') : 'default',
+                }"
+                :id="`vue-ui-geo_${uid}`"
+                @pointerdown="startInteraction"
+                @pointerup="stopInteraction"
+                @pointercancel="stopInteraction"
+                @pointerleave="stopInteraction"
+                @wheel="onWheelInteraction"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <g>
-                    <path
-                        class="vue-ui-geo-territory"
-                        data-cy="tooltip-trap-territory"
-                        v-for="territory in areaPaths"
-                        :key="territory.uid"
-                        :d="territory.path"
-                        :fill="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.fill : territoryStyle.fill"
-                        :stroke="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.stroke : territoryStyle.stroke"
-                        :stroke-width="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.strokeWidth : territoryStyle.strokeWidth"
-                        vector-effect="non-scaling-stroke"
-                        @mouseenter="onTerritoryEnter(territory)"
-                        @mouseleave="onTerritoryLeave(territory)"
-                        @click="onTerritoryClick(territory)"
-                    />
-                </g>
-
-                <g>
-                    <path
-                        class="vue-ui-geo-territory"
-                        v-for="territory in linePaths"
-                        :key="territory.uid"
-                        :d="territory.path"
-                        fill="none"
-                        :stroke="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.stroke : territoryStyle.stroke"
-                        :stroke-width="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.strokeWidth : territoryStyle.strokeWidth"
-                        vector-effect="non-scaling-stroke"
-                        @mouseenter="onTerritoryEnter(territory)"
-                        @mouseleave="onTerritoryLeave(territory)"
-                        @click="onTerritoryClick(territory)"
-                    />
-                </g>
-
-                <g>
-                    <circle
-                        v-for="geoJsonPoint in geoJsonPoints"
-                        :key="geoJsonPoint.uid"
-                        :cx="geoJsonPoint.x"
-                        :cy="geoJsonPoint.y"
-                        :r="geoJsonPoint.radius"
-                        :fill="geoJsonPoint.fill"
-                        :stroke="geoJsonPoint.stroke"
-                        :stroke-width="geoJsonPoint.strokeWidth"
-                        vector-effect="non-scaling-stroke"
-                        @mouseenter="onGeoJsonPointEnter(geoJsonPoint)"
-                        @mouseleave="onGeoJsonPointLeave"
-                    />
-                </g>
-
-                <g v-for="point in projectedPoints" :key="point.uid">
-                    <slot
-                        name="datapoint"
-                        v-bind="{
-                            point,
-                            onPointEnter,
-                            onPointLeave,
-                            onPointClick,
-                            highlighted: highlightedPointKey === point.uid
-                        }"
-                    >
-                        <circle
-                            :class="{
-                                'vue-ui-geo-point': true,
-                                'vue-ui-geo-point-with-event': hasPointClickEvent && isCursorPointer,
-                            }"
-                            :cx="point.x"
-                            :cy="point.y"
-                            :r="highlightedPointKey === point.uid ? point.radius * point.hoverRadiusRatio : point.radius"
-                            :fill="point.fill"
-                            :stroke="pointStyle.stroke"
-                            :stroke-width="pointStyle.strokeWidth"
+                <PackageVersion />
+    
+                <g
+                    :transform="mapFitTransform.transform"
+                    :style="{ pointerEvents: isInteracting ? 'none' : 'auto' }"
+                >
+                    <g>
+                        <path
+                            class="vue-ui-geo-territory"
+                            data-cy="tooltip-trap-territory"
+                            v-for="territory in areaPaths"
+                            :key="territory.uid"
+                            :d="territory.path"
+                            :fill="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.fill : territoryStyle.fill"
+                            :stroke="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.stroke : territoryStyle.stroke"
+                            :stroke-width="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.strokeWidth : territoryStyle.strokeWidth"
                             vector-effect="non-scaling-stroke"
-                            @mouseenter="onPointEnter(point)"
-                            @mouseleave="onPointLeave(point)"
-                            @click="onPointClick(point)"
+                            @mouseenter="onTerritoryEnter(territory)"
+                            @mouseleave="onTerritoryLeave(territory)"
+                            @click="onTerritoryClick(territory)"
                         />
-                    </slot>
-
-                    <text
-                        class="vue-ui-geo-point-label"
-                        v-if="FINAL_CONFIG.style.chart.points.labels.show"
-                        :x="point.x"
-                        :y="
-                            point.y +
-                            (highlightedPointKey === point.uid
-                                ? point.radius * point.hoverRadiusRatio
-                                : point.radius) +
-                            FINAL_CONFIG.style.chart.points.labels.offsetY +
-                            (1 * FINAL_CONFIG.style.chart.points.labels.fontSizeRatio)
-                        "
-                        text-anchor="middle"
-                        :fill="FINAL_CONFIG.style.chart.points.labels.color"
-                        :font-size="1 * FINAL_CONFIG.style.chart.points.labels.fontSizeRatio"
-                    >
-                        {{ point.name }}
-                    </text>
+                    </g>
+    
+                    <g>
+                        <path
+                            class="vue-ui-geo-territory"
+                            v-for="territory in linePaths"
+                            :key="territory.uid"
+                            :d="territory.path"
+                            fill="none"
+                            :stroke="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.stroke : territoryStyle.stroke"
+                            :stroke-width="highlightedTerritoryKey === territory.uid ? territoryStyle.hover.strokeWidth : territoryStyle.strokeWidth"
+                            vector-effect="non-scaling-stroke"
+                            @mouseenter="onTerritoryEnter(territory)"
+                            @mouseleave="onTerritoryLeave(territory)"
+                            @click="onTerritoryClick(territory)"
+                        />
+                    </g>
+    
+                    <g>
+                        <circle
+                            v-for="geoJsonPoint in geoJsonPoints"
+                            :key="geoJsonPoint.uid"
+                            :cx="geoJsonPoint.x"
+                            :cy="geoJsonPoint.y"
+                            :r="geoJsonPoint.radius"
+                            :fill="geoJsonPoint.fill"
+                            :stroke="geoJsonPoint.stroke"
+                            :stroke-width="geoJsonPoint.strokeWidth"
+                            vector-effect="non-scaling-stroke"
+                            @mouseenter="onGeoJsonPointEnter(geoJsonPoint)"
+                            @mouseleave="onGeoJsonPointLeave"
+                        />
+                    </g>
+    
+                    <g v-for="(point, pointKeyboardIndex) in projectedPoints" :key="point.uid">
+                        <slot
+                            name="datapoint"
+                            v-bind="{
+                                point,
+                                onPointEnter,
+                                onPointLeave,
+                                onPointClick,
+                                highlighted: highlightedPointKey === point.uid
+                            }"
+                        >
+                            <circle
+                                :class="{
+                                    'vue-ui-geo-point': true,
+                                    'vue-ui-geo-point-with-event': hasPointClickEvent && isCursorPointer,
+                                }"
+                                :cx="point.x"
+                                :cy="point.y"
+                                :r="highlightedPointKey === point.uid ? point.radius * point.hoverRadiusRatio : point.radius"
+                                :fill="point.fill"
+                                :stroke="pointStyle.stroke"
+                                :stroke-width="pointStyle.strokeWidth"
+                                vector-effect="non-scaling-stroke"
+                                @mouseenter="onPointEnter(point, pointKeyboardIndex)"
+                                @mouseleave="onPointLeave(point)"
+                                @click="onPointClick(point)"
+                            />
+                        </slot>
+    
+                        <text
+                            class="vue-ui-geo-point-label"
+                            v-if="FINAL_CONFIG.style.chart.points.labels.show"
+                            :x="point.x"
+                            :y="
+                                point.y +
+                                (highlightedPointKey === point.uid
+                                    ? point.radius * point.hoverRadiusRatio
+                                    : point.radius) +
+                                FINAL_CONFIG.style.chart.points.labels.offsetY +
+                                (1 * FINAL_CONFIG.style.chart.points.labels.fontSizeRatio)
+                            "
+                            text-anchor="middle"
+                            :fill="FINAL_CONFIG.style.chart.points.labels.color"
+                            :font-size="1 * FINAL_CONFIG.style.chart.points.labels.fontSizeRatio"
+                        >
+                            {{ point.name }}
+                        </text>
+                    </g>
+                    <slot
+                        name="svg"
+                        :svg="{
+                            drawingArea: viewBox,
+                            isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                            isPrintingSvg: isCallbackSvg,
+                            data: {
+                                areaPaths,
+                                linePaths,
+                                geoJsonPoints,
+                                projectedPoints
+                            }
+                        }"
+                    />
                 </g>
-                <slot
-                    name="svg"
-                    :svg="{
-                        drawingArea: viewBox,
-                        isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                        isPrintingSvg: isCallbackSvg,
-                        data: {
-                            areaPaths,
-                            linePaths,
-                            geoJsonPoints,
-                            projectedPoints
-                        }
-                    }"
-                />
-            </g>
-        </svg>
+            </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }" />
@@ -2103,6 +2376,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
@@ -2144,5 +2419,27 @@ defineExpose({
 
 .vue-ui-geo-interacting .vue-ui-geo-point {
     transition: none !important;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>

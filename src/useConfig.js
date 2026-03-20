@@ -7275,6 +7275,13 @@ export function useConfig(options = {}) {
         responsive: false,
         projection: 'equirectangular',
         theme: '',
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints',
+            }
+        },
         userOptions: USER_OPTIONS({
             tooltip: true,
             pdf: true,
