@@ -45,6 +45,7 @@ import Title from '../atoms/Title.vue'; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_chord.json";
 import Legend from '../atoms/Legend.vue'; // Must be ready in responsive mode
 import BaseScanner from '../atoms/BaseScanner.vue';
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -97,6 +98,10 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeA11yType = ref('group'); // a11y
+const activeA11yIndex = ref(null); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -1102,6 +1107,187 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+const visibleRibbons = computed(() => {
+    return (selectedGroup.value
+        ? chordData.value.chords.filter(c => c.source.groupId === selectedGroup.value.id)
+        : selectedLegendId.value
+            ? chordData.value.chords.filter(c => c.source.groupId === selectedLegendId.value)
+            : chordData.value.chords
+    ).filter(c => c.source.value);
+});
+
+const a11yTargets = computed(() => {
+    const groups = chordData.value.groups.map((group, index) => ({
+        type: 'group',
+        index,
+        item: group
+    }));
+
+    const ribbons = visibleRibbons.value.map((ribbon, index) => ({
+        type: 'ribbon',
+        index,
+        item: {
+            ...ribbon,
+            path: ribbonPath(ribbon.source, ribbon.target),
+            color: formattedDataset.value.colors[ribbon.source.index]
+        }
+    }));
+
+    return { groups, ribbons };
+});
+
+const a11yTable = computed(() => {
+    const headers = [
+        '',
+        ...table.value.head.map((header) => header.name)
+    ];
+
+    const rows = table.value.body.map((row, rowIndex) => {
+        return [
+            table.value.head[rowIndex]?.name ?? `${rowIndex}`,
+            ...row.map((value) => getLabel(value))
+        ];
+    });
+
+    return { headers, rows };
+});
+
+function setActiveA11yGroup(index) {
+    const target = a11yTargets.value.groups[index];
+    if (!target) return;
+    activeA11yType.value = 'group';
+    activeA11yIndex.value = index;
+    selectedRibbon.value = null;
+    selectedGroup.value = target.item;
+}
+
+function setActiveA11yRibbon(index) {
+    const target = a11yTargets.value.ribbons[index];
+    if (!target) return;
+    activeA11yType.value = 'ribbon';
+    activeA11yIndex.value = index;
+    selectedGroup.value = null;
+    selectedRibbon.value = target.item;
+}
+
+function resetA11ySelection() {
+    activeA11yIndex.value = null;
+    activeA11yType.value = 'group';
+    selectedGroup.value = null;
+    selectedRibbon.value = null;
+}
+
+function onSvgFocus() {
+    isFocus.value = true;
+    activeA11yType.value = 'group';
+    activeA11yIndex.value = null;
+}
+
+function onSvgBlur() {
+    isFocus.value = false;
+    resetA11ySelection();
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+
+    const isPreviousKey = event.key === 'ArrowLeft';
+    const isNextKey = event.key === 'ArrowRight';
+    const isUpKey = event.key === 'ArrowUp';
+    const isDownKey = event.key === 'ArrowDown';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (
+        !isPreviousKey &&
+        !isNextKey &&
+        !isUpKey &&
+        !isDownKey &&
+        !isActivationKey &&
+        !isEscapeKey
+    ) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        resetA11ySelection();
+        return;
+    }
+
+    if (isUpKey) {
+        activeA11yType.value = 'group';
+        if (a11yTargets.value.groups.length) {
+            setActiveA11yGroup(
+                activeA11yIndex.value === null
+                    ? 0
+                    : Math.min(activeA11yIndex.value, a11yTargets.value.groups.length - 1)
+            );
+        }
+        return;
+    }
+
+    if (isDownKey) {
+        if (!a11yTargets.value.ribbons.length) return;
+        activeA11yType.value = 'ribbon';
+        setActiveA11yRibbon(
+            activeA11yIndex.value === null
+                ? 0
+                : Math.min(activeA11yIndex.value, a11yTargets.value.ribbons.length - 1)
+        );
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeA11yType.value === 'group') {
+            const target = a11yTargets.value.groups[activeA11yIndex.value];
+            if (target) {
+                onGroupClick(target.item, target.index);
+            }
+        } else {
+            const target = a11yTargets.value.ribbons[activeA11yIndex.value];
+            if (target) {
+                onRibbonClick(target.item, target.index);
+            }
+        }
+        return;
+    }
+
+    const collection =
+        activeA11yType.value === 'group'
+            ? a11yTargets.value.groups
+            : a11yTargets.value.ribbons;
+
+    if (!collection.length) return;
+
+    let nextIndex = activeA11yIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= collection.length) {
+        nextIndex = isNextKey ? 0 : collection.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= collection.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = collection.length - 1;
+        }
+    }
+
+    if (activeA11yType.value === 'group') {
+        setActiveA11yGroup(nextIndex);
+    } else {
+        setActiveA11yRibbon(nextIndex);
+    }
+}
+
 defineExpose({
     getData,
     getImage,
@@ -1129,7 +1315,21 @@ defineExpose({
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         :id="`chord_${uid}`" 
         @mouseenter="() => setUserOptionsVisibility(true)"
-        @mouseleave="() => setUserOptionsVisibility(false)">
+        @mouseleave="() => setUserOptionsVisibility(false)"
+    >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator && svgRef" 
             :color="FINAL_CONFIG.style.chart.color"
@@ -1252,13 +1452,18 @@ defineExpose({
             :xmlns="XMLNS"
             ref="svgRef" 
             :viewBox="`0 0 ${svg.width} ${svg.height}`" 
+            :aria-describedby="`chart-instructions-${uid}`"
+            tabindex="0"
             preserveAspectRatio="xMidYMid meet"
             :style="{
-                overflow: 'visible'
+                overflow: 'visible',
             }"
             :class="{'vue-ui-chord-rotating': dragging, 'vue-ui-chord-idle': !dragging }"
             @mousedown.prevent="onDown"
             @touchstart.prevent="onDown"
+            @focus="onSvgFocus"
+            @blur="onSvgBlur"
+            @keydown="onSvgKeydown"
         >
             <PackageVersion />
 
@@ -1520,6 +1725,9 @@ defineExpose({
                 isPrintingSvg: isCallbackSvg, 
             }"/>
         </svg>
+        <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+            <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1719,5 +1927,27 @@ defineExpose({
 
 .vue-ui-chord-rotating {
     cursor: grabbing;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
