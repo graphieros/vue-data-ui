@@ -7975,6 +7975,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiParallelCoordinatePlotEvent; // v3
             datapointLeave?: VueUiParallelCoordinatePlotEvent; // v3

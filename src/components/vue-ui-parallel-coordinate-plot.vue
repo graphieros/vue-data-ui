@@ -30,6 +30,7 @@ import {
     isFunction, 
     objectIsEmpty,
     palette, 
+    svgToClientCoords,
     themePalettes,
     translateSize,
     treeShake,
@@ -52,6 +53,7 @@ import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import Shape from "../atoms/Shape.vue";
 import img from "../img";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -104,8 +106,12 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
-
 const xAxisLabels = ref(null);
+
+const activeA11yItemIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const uid = ref(createUid());
 const isFullscreen = ref(false)
@@ -630,6 +636,19 @@ const mutableDataset = computed(() => {
         });
 });
 
+const keyboardNavigableSeries = computed(() => {
+    return mutableDataset.value.flatMap((group, S) => {
+        return group.series.map((serie, relativeIndex) => ({
+            shape: group.shape,
+            serieName: group.name,
+            serie,
+            relativeIndex,
+            seriesIndex: serie.seriesIndex,
+            S,
+            key: `${S}_${relativeIndex}`
+        }));
+    });
+});
 
 function makeDataLabel({ value, index, datapoint }) {
     return applyDataLabel(
@@ -654,16 +673,39 @@ function onTrapLeave({ shape, serie, S }) {
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint: { ...serie, shape }, seriesIndex: S });
     }
+
+    const activeItem = activeA11yItemIndex.value !== null
+        ? keyboardNavigableSeries.value[activeA11yItemIndex.value]
+        : null;
+
+    if (
+        tooltipTriggerMode.value === 'keyboard' &&
+        activeItem &&
+        activeItem.serie.id === serie.id
+    ) {
+        return;
+    }
+
     selectedItem.value = null;
-    isTooltip.value = null;
+    isTooltip.value = false;
 }
 
-function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex, S }) {
+function updateTooltipA11yPosition(serie) {
+    if (!svgRef.value || !serie?.datapoints?.length) return;
+    const middlePoint = serie.datapoints[Math.floor(serie.datapoints.length / 2)];
+    if (!middlePoint) return;
+    const coords = svgToClientCoords(middlePoint.x, middlePoint.y, svgRef.value);
+    if (!coords) return;
+    tooltipA11yPosition.value = coords;
+}
+
+function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex, S, triggerMode = 'pointer' }) {
 
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint: {...serie, shape }, seriesIndex: S })
     }
 
+    tooltipTriggerMode.value = triggerMode;
     dataTooltipSlot.value = { serie, relativeIndex, seriesIndex, series: immutableDataset.value, scales: scales.value };
     isTooltip.value = true;
     selectedItem.value = serie.id;
@@ -711,6 +753,12 @@ function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex, S }) 
             }
         })
         tooltipContent.value = `<div>${html}</div>`;
+    }
+
+    if (triggerMode === 'keyboard') {
+        nextTick(() => {
+            updateTooltipA11yPosition(serie);
+        });
     }
 }
 
@@ -948,6 +996,116 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+function getWrappedA11yItemIndex(index) {
+    const len = keyboardNavigableSeries.value.length;
+    if (!len) return null;
+    return ((index % len) + len) % len;
+}
+
+function clearKeyboardSelection() {
+    if (activeA11yItemIndex.value !== null) {
+        const activeItem = keyboardNavigableSeries.value[activeA11yItemIndex.value];
+
+        if (activeItem) {
+            onTrapLeave({
+                shape: activeItem.shape,
+                serie: activeItem.serie,
+                S: activeItem.S
+            });
+        }
+    }
+
+    activeA11yItemIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    selectedItem.value = null;
+    isTooltip.value = false;
+}
+
+function onSvgFocus() {
+    activeA11yItemIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    clearKeyboardSelection();
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!keyboardNavigableSeries.value.length) return;
+
+    const isPreviousKey = ['ArrowUp', 'ArrowLeft'].includes(event.key);
+    const isNextKey = ['ArrowDown', 'ArrowRight'].includes(event.key);
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearKeyboardSelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeA11yItemIndex.value === null) return;
+
+        const activeItem = keyboardNavigableSeries.value[activeA11yItemIndex.value];
+        if (!activeItem) return;
+
+        selectDatapoint({
+            serie: activeItem.serie,
+            shape: activeItem.shape,
+            S: activeItem.S
+        });
+        return;
+    }
+
+    let nextIndex = activeA11yItemIndex.value;
+
+    if (nextIndex === null) {
+        nextIndex = isNextKey ? 0 : keyboardNavigableSeries.value.length - 1;
+    } else {
+        nextIndex = getWrappedA11yItemIndex(nextIndex + (isNextKey ? 1 : -1));
+    }
+
+    const activeItem = keyboardNavigableSeries.value[nextIndex];
+    if (!activeItem) return;
+
+    activeA11yItemIndex.value = nextIndex;
+
+    useTooltip({
+        shape: activeItem.shape,
+        serieName: activeItem.serieName,
+        serie: activeItem.serie,
+        relativeIndex: activeItem.relativeIndex,
+        seriesIndex: activeItem.seriesIndex,
+        S: activeItem.S,
+        triggerMode: 'keyboard'
+    });
+}
+
+const a11yTable = computed(() => {
+    return {
+        head: dataTable.value.head,
+        body: dataTable.value.body.map(row => [
+            row[0] ?? '',
+            row[1] ?? '',
+            ...row.slice(2)
+        ]),
+        caption: FINAL_CONFIG.value.a11y.translations.tableCaption,
+        notice: FINAL_CONFIG.value.a11y.translations.tableAvailable,
+    };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -976,6 +1134,19 @@ defineExpose({
         @mouseenter="() => setUserOptionsVisibility(true)" 
         @mouseleave="() => setUserOptionsVisibility(false)"
     >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable.body.length"
+            :uid="uid"
+            :head="a11yTable.head"
+            :body="a11yTable.body"
+            :caption="a11yTable.caption"
+            :notice="a11yTable.notice"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1105,240 +1276,254 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS" 
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`" 
-            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="drawingArea.left"
-                :y="drawingArea.top"
-                :width="drawingArea.width"
-                :height="drawingArea.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position:relative">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS" 
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" :viewBox="`0 0 ${drawingArea.chartWidth <= 0 ? 10 : drawingArea.chartWidth} ${drawingArea.chartHeight <= 0 ? 10 : drawingArea.chartHeight}`" 
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-
-
-            <!-- SCALES -->
-            <g v-for="(scale, i) in scales" style="pointer-events: none;">
-                <!-- AXIS -->
-                <line
-                    data-cy="pcp-axis"
-                    :x1="drawingArea.left + (slot * i) + (slot / 2)"
-                    :x2="drawingArea.left + (slot * i) + (slot / 2)"
-                    :y1="drawingArea.top"
-                    :y2="drawingArea.bottom"
-                    :stroke="FINAL_CONFIG.style.chart.yAxis.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.yAxis.strokeWidth"
-                />
-
-                <template v-if="FINAL_CONFIG.style.chart.yAxis.labels.ticks.show">                
-                    <!-- TICKS -->
-                    <line v-for="tick in scale.ticks"
-                        data-cy="scale-tick"
-                        :x1="tick.x"
-                        :x2="tick.x - 10"
-                        :y1="tick.y"
-                        :y2="tick.y"
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="drawingArea.left"
+                    :y="drawingArea.top"
+                    :width="drawingArea.width"
+                    :height="drawingArea.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+    
+    
+                <!-- SCALES -->
+                <g v-for="(scale, i) in scales" style="pointer-events: none;">
+                    <!-- AXIS -->
+                    <line
+                        data-cy="pcp-axis"
+                        :x1="drawingArea.left + (slot * i) + (slot / 2)"
+                        :x2="drawingArea.left + (slot * i) + (slot / 2)"
+                        :y1="drawingArea.top"
+                        :y2="drawingArea.bottom"
                         :stroke="FINAL_CONFIG.style.chart.yAxis.stroke"
                         :stroke-width="FINAL_CONFIG.style.chart.yAxis.strokeWidth"
-                        :style="`opacity:${selectedItem && !mutableConfig.showTooltip ? 0.2 : 1}`"
                     />
-                    
-                    <!-- TICK LABELS -->
-                    <g v-if="!loading">
-                        <text 
-                            data-cy="scale-label"
-                            v-for="(tick) in scale.ticks"
-                            :x="tick.x - 12 + FINAL_CONFIG.style.chart.yAxis.labels.ticks.offsetX"
-                            :y="tick.y + FINAL_CONFIG.style.chart.yAxis.labels.ticks.offsetY + (chartDimensions.ticksFontSize / 3)"
-                            :fill="FINAL_CONFIG.style.chart.yAxis.labels.ticks.color"
-                            text-anchor="end"
-                            :font-size="chartDimensions.ticksFontSize"
-                            :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.ticks.bold ? 'bold' : 'normal'"
+    
+                    <template v-if="FINAL_CONFIG.style.chart.yAxis.labels.ticks.show">                
+                        <!-- TICKS -->
+                        <line v-for="tick in scale.ticks"
+                            data-cy="scale-tick"
+                            :x1="tick.x"
+                            :x2="tick.x - 10"
+                            :y1="tick.y"
+                            :y2="tick.y"
+                            :stroke="FINAL_CONFIG.style.chart.yAxis.stroke"
+                            :stroke-width="FINAL_CONFIG.style.chart.yAxis.strokeWidth"
                             :style="`opacity:${selectedItem && !mutableConfig.showTooltip ? 0.2 : 1}`"
-                        >
-                            {{ makeDataLabel({ value: tick.value, index: i, datapoint: tick }) }}
-                        </text>
-                    </g>
-                </template>
-            </g>
-
-            <!-- AXIS NAMES -->
-            <g ref="xAxisLabels" v-if="FINAL_CONFIG.style.chart.yAxis.labels.showAxisNames">
-                <template v-for="(scale, i) in scales" style="pointer-events: none;">
-                    <!-- SINGLE LINE -->
-                    <text
-                        v-if="!String(scale.name).includes('\n')"
-                        class="vue-ui-parallel-coordinate-plot-x-label"
-                        data-cy="pcp-axis-label"
-                        :fill="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor"
-                        :font-size="chartDimensions.axisNameFontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesBold ? 'bold' : ''"
-                        :text-anchor="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation === 0 ? 'middle' : FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation < 0 ? 'start' : 'end'"
-                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${topLabelsHeight - chartDimensions.axisNameFontSize}), rotate(${FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation})`"
-                    >
-                        {{ scale.name }}
-                    </text>
-
-                    <!-- MULTILINE -->
-                    <text
-                        v-else
-                        data-cy="pcp-axis-label"
-                        class="vue-ui-parallel-coordinate-plot-x-label"
-                        :fill="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor"
-                        :font-size="chartDimensions.axisNameFontSize"
-                        :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesBold ? 'bold' : ''"
-                        :text-anchor="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation === 0 ? 'middle' : FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation < 0 ? 'start' : 'end'"
-                        :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${topLabelsHeight - chartDimensions.axisNameFontSize}), rotate(${FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation})`"
-                        v-html="createTSpansFromLineBreaksOnX({
-                            content: String(scale.name),
-                            fontSize: chartDimensions.axisNameFontSize,
-                            fill: FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor,
-                            x: 0,
-                            y: 0
-                        })"
-                    />
-                </template>
-            </g>
-
-            <g v-for="(serie, S) in mutableDataset">
-                <!-- DATAPOINTS -->
-                <g v-for="(serieSet, i) in serie.series">
-                    <!-- PLOTS -->
-                    <g v-if="FINAL_CONFIG.style.chart.plots.show">
-                        <Shape
-                            v-for="(dp, D) in serieSet.datapoints"
-                            :plot="{ x: dp.x, y: dp.y }"
-                            :color="serie.color"
-                            :shape="serie.shape"
-                            :radius="serie.shape === 'triangle' ? chartDimensions.plotSize * 1.2 : chartDimensions.plotSize"
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                            :strokeWidth="0.5"
-                            @mouseenter="useTooltip({
-                                shape: serie.shape,
-                                serieName: serie.name,
-                                serie: serieSet,
-                                relativeIndex: i,
-                                seriesIndex: serieSet.seriesIndex,
-                                S
-                            })"
-                            @mouseleave="onTrapLeave({ serie: serieSet, shape: serie.shape, S })"
-                            :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? FINAL_CONFIG.style.chart.plots.opacity : 0.2 : FINAL_CONFIG.style.chart.plots.opacity}`"
-                            @click="() => selectDatapoint({ serie: serieSet, shape: serie.shape, S })"
                         />
-                        <!-- SERIE LABEL WHEN TOOLTIP IS DISABLED -->
-                        <template v-if="!mutableConfig.showTooltip" style="pointer-events: none;">
+                        
+                        <!-- TICK LABELS -->
+                        <g v-if="!loading">
                             <text 
-                                v-if="selectedItem && selectedItem === serieSet.id && serieSet.datapoints.length"
-                                :x="serieSet.datapoints[0].x - chartDimensions.ticksFontSize"
-                                :y="serieSet.datapoints[0].y + (chartDimensions.ticksFontSize / 3)"
+                                data-cy="scale-label"
+                                v-for="(tick) in scale.ticks"
+                                :x="tick.x - 12 + FINAL_CONFIG.style.chart.yAxis.labels.ticks.offsetX"
+                                :y="tick.y + FINAL_CONFIG.style.chart.yAxis.labels.ticks.offsetY + (chartDimensions.ticksFontSize / 3)"
+                                :fill="FINAL_CONFIG.style.chart.yAxis.labels.ticks.color"
                                 text-anchor="end"
                                 :font-size="chartDimensions.ticksFontSize"
-                                :fill="serie.color"
-                                font-weight="bold"
+                                :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.ticks.bold ? 'bold' : 'normal'"
+                                :style="`opacity:${selectedItem && !mutableConfig.showTooltip ? 0.2 : 1}`"
                             >
-                                {{ serieSet.name }}
+                                {{ makeDataLabel({ value: tick.value, index: i, datapoint: tick }) }}
+                            </text>
+                        </g>
+                    </template>
+                </g>
+    
+                <!-- AXIS NAMES -->
+                <g ref="xAxisLabels" v-if="FINAL_CONFIG.style.chart.yAxis.labels.showAxisNames">
+                    <template v-for="(scale, i) in scales" style="pointer-events: none;">
+                        <!-- SINGLE LINE -->
+                        <text
+                            v-if="!String(scale.name).includes('\n')"
+                            class="vue-ui-parallel-coordinate-plot-x-label"
+                            data-cy="pcp-axis-label"
+                            :fill="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor"
+                            :font-size="chartDimensions.axisNameFontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesBold ? 'bold' : ''"
+                            :text-anchor="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation === 0 ? 'middle' : FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation < 0 ? 'start' : 'end'"
+                            :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${topLabelsHeight - chartDimensions.axisNameFontSize}), rotate(${FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation})`"
+                        >
+                            {{ scale.name }}
+                        </text>
+    
+                        <!-- MULTILINE -->
+                        <text
+                            v-else
+                            data-cy="pcp-axis-label"
+                            class="vue-ui-parallel-coordinate-plot-x-label"
+                            :fill="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor"
+                            :font-size="chartDimensions.axisNameFontSize"
+                            :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesBold ? 'bold' : ''"
+                            :text-anchor="FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation === 0 ? 'middle' : FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation < 0 ? 'start' : 'end'"
+                            :transform="`translate(${drawingArea.left + (slot * i) + (slot / 2)}, ${topLabelsHeight - chartDimensions.axisNameFontSize}), rotate(${FINAL_CONFIG.style.chart.yAxis.labels.axisNamesRotation})`"
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: String(scale.name),
+                                fontSize: chartDimensions.axisNameFontSize,
+                                fill: FINAL_CONFIG.style.chart.yAxis.labels.axisNamesColor,
+                                x: 0,
+                                y: 0
+                            })"
+                        />
+                    </template>
+                </g>
+    
+                <g v-for="(serie, S) in mutableDataset">
+                    <!-- DATAPOINTS -->
+                    <g v-for="(serieSet, i) in serie.series">
+                        <!-- PLOTS -->
+                        <g v-if="FINAL_CONFIG.style.chart.plots.show">
+                            <Shape
+                                v-for="(dp, D) in serieSet.datapoints"
+                                :plot="{ x: dp.x, y: dp.y }"
+                                :color="serie.color"
+                                :shape="serie.shape"
+                                :radius="serie.shape === 'triangle' ? chartDimensions.plotSize * 1.2 : chartDimensions.plotSize"
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                :strokeWidth="0.5"
+                                @mouseenter="useTooltip({
+                                    shape: serie.shape,
+                                    serieName: serie.name,
+                                    serie: serieSet,
+                                    relativeIndex: i,
+                                    seriesIndex: serieSet.seriesIndex,
+                                    S,
+                                    triggerMode: 'pointer'
+                                })"
+                                @mouseleave="onTrapLeave({ serie: serieSet, shape: serie.shape, S })"
+                                :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? FINAL_CONFIG.style.chart.plots.opacity : 0.2 : FINAL_CONFIG.style.chart.plots.opacity}`"
+                                @click="() => selectDatapoint({ serie: serieSet, shape: serie.shape, S })"
+                            />
+                            <!-- SERIE LABEL WHEN TOOLTIP IS DISABLED -->
+                            <template v-if="!mutableConfig.showTooltip" style="pointer-events: none;">
+                                <text 
+                                    v-if="selectedItem && selectedItem === serieSet.id && serieSet.datapoints.length"
+                                    :x="serieSet.datapoints[0].x - chartDimensions.ticksFontSize"
+                                    :y="serieSet.datapoints[0].y + (chartDimensions.ticksFontSize / 3)"
+                                    text-anchor="end"
+                                    :font-size="chartDimensions.ticksFontSize"
+                                    :fill="serie.color"
+                                    font-weight="bold"
+                                >
+                                    {{ serieSet.name }}
+                                </text>
+                            </template>
+    
+                            <template v-if="FINAL_CONFIG.style.chart.comments.show">
+                                <g v-for="dp in serieSet.datapoints">                                
+                                    <foreignObject v-if="dp.comment" style="overflow: visible" height="12" :width="FINAL_CONFIG.style.chart.comments.width" :x="dp.x - (FINAL_CONFIG.style.chart.comments.width / 2) + FINAL_CONFIG.style.chart.comments.offsetX" :y="dp.y + FINAL_CONFIG.style.chart.comments.offsetY + 6">
+                                        <div style="width: 100%;">
+                                            <slot name="plot-comment" :plot="{...dp, color: serie.color}"/>
+                                        </div>
+                                    </foreignObject>
+                                </g>
+                            </template>
+                        </g>
+    
+                        <!-- LABELS -->
+                        <template v-if="!loading && (mutableConfig.dataLabels.show || (selectedItem && selectedItem === serieSet.id))">
+                            <text
+                                data-cy="plot-label"
+                                v-for="(dp, k) in serieSet.datapoints"
+                                :x="dp.x + 12 + FINAL_CONFIG.style.chart.yAxis.labels.datapoints.offsetX"
+                                :y="dp.y + FINAL_CONFIG.style.chart.yAxis.labels.datapoints.offsetY + (chartDimensions.datapointFontSize / 3)"
+                                :fill="FINAL_CONFIG.style.chart.yAxis.labels.datapoints.useSerieColor ? serie.color : FINAL_CONFIG.style.chart.yAxis.labels.datapoints.color"
+                                text-anchor="start"
+                                :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.datapoints.bold ? 'bold' : 'normal'"
+                                :class="{ 'vue-ui-pcp-animated': false, 'vue-ui-pcp-transition': !loading }"
+                                :font-size="chartDimensions.datapointFontSize"
+                                @mouseenter="useTooltip({
+                                    shape: serie.shape,
+                                    serieName: serie.name,
+                                    serie: serieSet,
+                                    relativeIndex: i,
+                                    seriesIndex: serieSet.seriesIndex,
+                                    S,
+                                    triggerMode: 'pointer'
+                                })"
+                                @mouseleave="onTrapLeave({ serie: serieSet, shape: serie.shape, S })"
+                                @click="() => selectDatapoint({ serie: serieSet, shape: serie.shape, S })"
+                                :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? 1 : 0.2 : 1}`"
+                            >
+                                {{ makeDataLabel({ value: dp.value, index: k, datapoint: dp }) }}
                             </text>
                         </template>
-
-                        <template v-if="FINAL_CONFIG.style.chart.comments.show">
-                            <g v-for="dp in serieSet.datapoints">                                
-                                <foreignObject v-if="dp.comment" style="overflow: visible" height="12" :width="FINAL_CONFIG.style.chart.comments.width" :x="dp.x - (FINAL_CONFIG.style.chart.comments.width / 2) + FINAL_CONFIG.style.chart.comments.offsetX" :y="dp.y + FINAL_CONFIG.style.chart.comments.offsetY + 6">
-                                    <div style="width: 100%;">
-                                        <slot name="plot-comment" :plot="{...dp, color: serie.color}"/>
-                                    </div>
-                                </foreignObject>
-                            </g>
-                        </template>
-                    </g>
-
-                    <!-- LABELS -->
-                    <template v-if="!loading && (mutableConfig.dataLabels.show || (selectedItem && selectedItem === serieSet.id))">
-                        <text
-                            data-cy="plot-label"
-                            v-for="(dp, k) in serieSet.datapoints"
-                            :x="dp.x + 12 + FINAL_CONFIG.style.chart.yAxis.labels.datapoints.offsetX"
-                            :y="dp.y + FINAL_CONFIG.style.chart.yAxis.labels.datapoints.offsetY + (chartDimensions.datapointFontSize / 3)"
-                            :fill="FINAL_CONFIG.style.chart.yAxis.labels.datapoints.useSerieColor ? serie.color : FINAL_CONFIG.style.chart.yAxis.labels.datapoints.color"
-                            text-anchor="start"
-                            :font-weight="FINAL_CONFIG.style.chart.yAxis.labels.datapoints.bold ? 'bold' : 'normal'"
-                            :class="{ 'vue-ui-pcp-animated': false, 'vue-ui-pcp-transition': !loading }"
-                            :font-size="chartDimensions.datapointFontSize"
+    
+                        <!-- LINES -->
+                        <path
+                            data-cy="datapoint-line"
+                            :d="`M${FINAL_CONFIG.style.chart.lines.smooth ? serieSet.smoothPath : serieSet.straightPath}`" 
+                            :stroke="serie.color" 
+                            :stroke-width="FINAL_CONFIG.style.chart.lines.strokeWidth"
+                            fill="none"
+                            :class="{ 'vue-ui-pcp-animated vue-data-ui-line-animated': FINAL_CONFIG.useCssAnimation, 'vue-ui-pcp-transition': !loading  }"
                             @mouseenter="useTooltip({
                                 shape: serie.shape,
                                 serieName: serie.name,
                                 serie: serieSet,
                                 relativeIndex: i,
                                 seriesIndex: serieSet.seriesIndex,
-                                S
+                                S,
+                                triggerMode: 'pointer'
                             })"
                             @mouseleave="onTrapLeave({ serie: serieSet, shape: serie.shape, S })"
                             @click="() => selectDatapoint({ serie: serieSet, shape: serie.shape, S })"
-                            :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? 1 : 0.2 : 1}`"
-                        >
-                            {{ makeDataLabel({ value: dp.value, index: k, datapoint: dp }) }}
-                        </text>
-                    </template>
-
-                    <!-- LINES -->
-                    <path
-                        data-cy="datapoint-line"
-                        :d="`M${FINAL_CONFIG.style.chart.lines.smooth ? serieSet.smoothPath : serieSet.straightPath}`" 
-                        :stroke="serie.color" 
-                        :stroke-width="FINAL_CONFIG.style.chart.lines.strokeWidth"
-                        fill="none"
-                        :class="{ 'vue-ui-pcp-animated vue-data-ui-line-animated': FINAL_CONFIG.useCssAnimation, 'vue-ui-pcp-transition': !loading  }"
-                        @mouseenter="useTooltip({
-                            shape: serie.shape,
-                            serieName: serie.name,
-                            serie: serieSet,
-                            relativeIndex: i,
-                            seriesIndex: serieSet.seriesIndex,
-                            S
-                        })"
-                        @mouseleave="onTrapLeave({ serie: serieSet, shape: serie.shape, S })"
-                        @click="() => selectDatapoint({ serie: serieSet, shape: serie.shape, S })"
-                        :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? FINAL_CONFIG.style.chart.lines.opacity : 0.2 : FINAL_CONFIG.style.chart.lines.opacity}; stroke-dasharray:${serieSet.pathLength}; stroke-dashoffset: ${FINAL_CONFIG.useCssAnimation ? serieSet.pathLength : 0}`"
-                    />
-                    <!-- TOOLTIP TRAPS -->
-                    <path
-                        data-cy="tooltip-trap"
-                        v-if="mutableConfig.showTooltip"
-                        :d="`M${FINAL_CONFIG.style.chart.lines.smooth ? serieSet.smoothPath : serieSet.straightPath}`" 
-                        stroke="transparent" 
-                        :stroke-width="12"
-                        fill="none"
-                        :class="{ 'vue-ui-pcp-animated vue-data-ui-line-animated': FINAL_CONFIG.useCssAnimation, 'vue-ui-pcp-transition': !loading  }"
-                        @mouseenter="useTooltip({
-                            shape: serie.shape,
-                            serieName: serie.name,
-                            serie: serieSet,
-                            relativeIndex: i,
-                            seriesIndex: serieSet.seriesIndex,
-                            S
-                        })"
-                        @mouseleave="onTrapLeave({ serie: serieSet, shape: serie.shape, S })"
-                        @click="() => selectDatapoint({ serie: serieSet, shape: serie.shape, S })"
-                        style="opacity:0"
-                    />
+                            :style="`opacity:${selectedItem ? selectedItem === serieSet.id ? FINAL_CONFIG.style.chart.lines.opacity : 0.2 : FINAL_CONFIG.style.chart.lines.opacity}; stroke-dasharray:${serieSet.pathLength}; stroke-dashoffset: ${FINAL_CONFIG.useCssAnimation ? serieSet.pathLength : 0}`"
+                        />
+                        <!-- TOOLTIP TRAPS -->
+                        <path
+                            data-cy="tooltip-trap"
+                            v-if="mutableConfig.showTooltip"
+                            :d="`M${FINAL_CONFIG.style.chart.lines.smooth ? serieSet.smoothPath : serieSet.straightPath}`" 
+                            stroke="transparent" 
+                            :stroke-width="12"
+                            fill="none"
+                            :class="{ 'vue-ui-pcp-animated vue-data-ui-line-animated': FINAL_CONFIG.useCssAnimation, 'vue-ui-pcp-transition': !loading  }"
+                            @mouseenter="useTooltip({
+                                shape: serie.shape,
+                                serieName: serie.name,
+                                serie: serieSet,
+                                relativeIndex: i,
+                                seriesIndex: serieSet.seriesIndex,
+                                S,
+                                triggerMode: 'pointer'
+                            })"
+                            @mouseleave="onTrapLeave({ serie: serieSet, shape: serie.shape, S })"
+                            @click="() => selectDatapoint({ serie: serieSet, shape: serie.shape, S })"
+                            style="opacity:0"
+                        />
+                    </g>
                 </g>
-            </g>
-            <slot name="svg" :svg="{
-                ...drawingArea,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+                <slot name="svg" :svg="{
+                    ...drawingArea,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1404,6 +1589,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1503,4 +1690,25 @@ defineExpose({
     }
 }
 
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
+}
 </style>
