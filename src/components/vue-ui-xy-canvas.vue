@@ -64,6 +64,7 @@ import BaseIcon from "../atoms/BaseIcon.vue";
 import Accordion from "./vue-ui-accordion.vue"; // Must be ready in responsive mode
 import SlicerPreview from "../atoms/SlicerPreview.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -128,6 +129,11 @@ const suppressChild = ref(false);
 const selectedMinimapIndex = ref(null);
 const isCallbackImaging = ref(false);
 
+const isKeyboardTooltipMode = ref(false); // a11y
+const isFocus = ref(false); // a11y
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+
 const isDataset = computed(() => Array.isArray(FINAL_DATASET.value) && FINAL_DATASET.value.length > 0);
 
 const emit = defineEmits(['selectLegend', 'selectX', 'copyAlt']);
@@ -140,6 +146,40 @@ onMounted(() => {
 });
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const chartAriaLabel = computed(() => {
+    const title = FINAL_CONFIG.value.style.chart.title.text || 'XY chart';
+    const visiblePoints = slicer.value.end - slicer.value.start;
+    const visibleSeries = formattedDataset.value.filter(ds => !segregated.value.includes(ds.absoluteIndex)).length;
+
+    return `${title}. ${visibleSeries} series. ${visiblePoints} visible data points.`;
+});
+
+const activePointA11yText = computed(() => {
+    if (activeTooltipIndex.value === null) return '';
+
+    const absoluteIndex = activeTooltipIndex.value + slicer.value.start;
+
+    const label =
+        FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[activeTooltipIndex.value]
+            ? (
+                FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat
+                    ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[activeTooltipIndex.value]?.text
+                    : preciseAllTimeLabelsTooltip.value[activeTooltipIndex.value]?.text
+            )
+            : (timeLabels.value[absoluteIndex]?.text ?? `Point ${absoluteIndex + 1}`);
+
+    const values = formattedDataset.value
+        .filter(ds => !segregated.value.includes(ds.absoluteIndex))
+        .map(ds => {
+            const point = ds.series[activeTooltipIndex.value];
+            const rawValue = point?.value ?? point ?? null;
+            return `${ds.name}: ${rawValue}`;
+        })
+        .join('. ');
+
+    return `${label}. ${values}.`;
+});
 
 const isCursorPointer = computed(() => FINAL_CONFIG.value.userOptions.useCursorPointer);
 
@@ -1810,14 +1850,16 @@ function handleMousemove(e) {
     }
 
     if ((mouseX * 2) < drawingArea.value.left || (mouseX * 2) > drawingArea.value.right) {
-        isTooltip.value = false;
-        tooltipIndex.value = null;
+        clearA11yTooltip();
         return;
     }
 
     const effectiveMouseX = (mouseX * 2) - (drawingArea.value.left);
-    tooltipIndex.value = Math.floor(effectiveMouseX / (drawingArea.value.slot));
+    const index = Math.floor(effectiveMouseX / (drawingArea.value.slot));
+    tooltipIndex.value = index;
+    activeTooltipIndex.value = index;
     isTooltip.value = true;
+    isKeyboardTooltipMode.value = false;
 
     if (!tooltipHasChanged.value) return;
 
@@ -1858,6 +1900,138 @@ function handleMousemove(e) {
     tooltipHasChanged.value = false;
 }
 
+function getTooltipDatapointAtIndex(index) {
+    return formattedDataset.value.map(ds => ({
+        shape: ds.shape || null,
+        name: ds.name,
+        color: ds.color,
+        type: ds.type || 'line',
+        value: ds.series.find((s, i) => i === index)
+    }));
+}
+
+function buildTooltipContentForIndex(index) {
+    let html = "";
+    const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
+    const datapoint = getTooltipDatapointAtIndex(index);
+
+    selectX({ seriesIndex: index, datapoint });
+
+    if (
+        isFunction(customFormat) &&
+        functionReturnsString(() => customFormat({
+            seriesIndex: index,
+            datapoint,
+            series: formattedDataset.value,
+            config: FINAL_CONFIG.value
+        }))
+    ) {
+        return customFormat({
+            seriesIndex: index,
+            datapoint,
+            series: formattedDataset.value,
+            config: FINAL_CONFIG.value
+        });
+    }
+
+    if (FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[index]) {
+        html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[index]?.text : preciseAllTimeLabelsTooltip.value[index]?.text}</div>`;
+    } else {
+        html += `<div style="padding-bottom: 6px; margin-bottom: 4px; border-bottom: 1px solid ${FINAL_CONFIG.value.style.chart.tooltip.borderColor}; width:100%">${timeLabels.value[index + slicer.value.start]?.text ?? ''}</div>`;
+    }
+
+    html += tootlipDataset.value.join('');
+    return html;
+}
+
+function setKeyboardTooltipPositionFromIndex(index) {
+    if (!canvas.value || !drawingArea.value?.slot) return;
+
+    const rect = canvas.value.getBoundingClientRect();
+    const scaleX = rect.width / drawingArea.value.canvasWidth;
+    const scaleY = rect.height / drawingArea.value.canvasHeight;
+
+    const canvasX = drawingArea.value.left + (drawingArea.value.slot * index) + (drawingArea.value.slot / 2);
+    const canvasY = drawingArea.value.top + (drawingArea.value.height / 2);
+
+    tooltipA11yPosition.value = {
+        x: rect.left + canvasX * scaleX,
+        y: rect.top + canvasY * scaleY
+    };
+}
+
+function setTooltipFromIndex(index, { fromKeyboard = false } = {}) {
+    if (!isDataset.value || allSegregated.value) return;
+    if (index === null || index === undefined) return;
+    if (index < 0 || index >= (slicer.value.end - slicer.value.start)) return;
+
+    tooltipIndex.value = index;
+    activeTooltipIndex.value = index;
+    isTooltip.value = true;
+    isKeyboardTooltipMode.value = fromKeyboard;
+    tooltipContent.value = buildTooltipContentForIndex(index);
+
+    if (fromKeyboard) {
+        setKeyboardTooltipPositionFromIndex(index);
+    }
+
+    tooltipHasChanged.value = false;
+    draw();
+}
+
+function clearA11yTooltip() {
+    isTooltip.value = false;
+    tooltipIndex.value = null;
+    activeTooltipIndex.value = null;
+    tooltipContent.value = '';
+    mouseY.value = null;
+    isKeyboardTooltipMode.value = false;
+    draw();
+}
+
+function onCanvasFocus() {
+    isFocus.value = true;
+}
+
+function onCanvasBlur() {
+    isFocus.value = false;
+    clearA11yTooltip();
+}
+
+function onCanvasKeydown(event) {
+    if (!canvas.value || isAnnotator.value) return;
+    if (document.activeElement !== canvas.value) return;
+
+    const isLeftArrow = event.key === 'ArrowLeft';
+    const isRightArrow = event.key === 'ArrowRight';
+
+    if (!isLeftArrow && !isRightArrow) return;
+
+    const visiblePoints = slicer.value.end - slicer.value.start;
+    if (visiblePoints <= 0) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= visiblePoints) {
+        nextIndex = isRightArrow ? 0 : visiblePoints - 1;
+    } else if (isRightArrow) {
+        nextIndex += 1;
+        if (nextIndex >= visiblePoints) {
+            nextIndex = 0;
+        }
+    } else {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = visiblePoints - 1;
+        }
+    }
+
+    setTooltipFromIndex(nextIndex, { fromKeyboard: true });
+}
+
 function selectX({ seriesIndex, datapoint }) {
     const index = slicer.value.start + seriesIndex
     emit('selectX', {
@@ -1869,17 +2043,17 @@ function selectX({ seriesIndex, datapoint }) {
 
 watch(() => props.selectedXIndex, (v) => {
     if ([null, undefined].includes(props.selectedXIndex)) {
-        tooltipIndex.value = null;
+        clearA11yTooltip();
         return;
     }
 
     const targetIndex = v - slicer.value.start;
     if (targetIndex < 0 || v >= slicer.value.end) {
-        tooltipIndex.value = null;
+        clearA11yTooltip();
     } else {
-        tooltipIndex.value = targetIndex ?? null;
+        setTooltipFromIndex(targetIndex, { fromKeyboard: false });
     }
-}, { immediate: true })
+}, { immediate: true });
 
 watch(() => tooltipIndex.value, (_) => {
     debounceCanvasResize();
@@ -1914,11 +2088,7 @@ watch(() => mutableConfig.value.stacked, (_) => {
 });
 
 function handleMouseLeave() {
-    isTooltip.value = false;
-    tooltipIndex.value = null;
-    tooltipContent.value = '';
-    mouseY.value = null;
-    draw();
+    clearA11yTooltip();
 }
 
 const responsiveObserver = shallowRef(null);
@@ -2306,6 +2476,18 @@ defineExpose({
 
 <template>
     <div :style="`width:100%; position:relative; ${FINAL_CONFIG.responsive ? 'height: 100%' : ''}; background:${FINAL_CONFIG.style.chart.backgroundColor};`" ref="xy" :id="`xy_canvas_${uid}`" :class="`vue-data-ui-component vue-ui-xy-canvas ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''}`" @mouseenter="onChartEnter" @mouseleave="onChartLeave">
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <div
+            class="sr-only"
+            aria-live="polite"
+            aria-atomic="true"
+        >
+            {{ activePointA11yText }}
+        </div>
+
         <div ref="chartTitle" v-if="FINAL_CONFIG.style.chart.title.text"
             :style="`width:100%;background:${FINAL_CONFIG.style.chart.backgroundColor};`">
             <Title 
@@ -2407,10 +2589,18 @@ defineExpose({
         ref="container">
             <canvas
                 data-cy="canvas"
-                ref="canvas" 
+                ref="canvas"
+                :aria-label="chartAriaLabel"
+                :aria-describedby="`chart-instructions-${uid}`"
+                role="img"
+                aria-live="polite"
+                tabindex="0"
                 style="width:100%; height:100%;" 
                 @mousemove="handleMousemove($event)"
                 @mouseleave="handleMouseLeave"
+                @focus="onCanvasFocus"
+                @blur="onCanvasBlur"
+                @keydown="onCanvasKeydown"
             />
 
             <!-- v3 Skeleton loader -->
@@ -2439,6 +2629,8 @@ defineExpose({
                 :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
                 :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
                 :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+                :isA11yMode="isKeyboardTooltipMode"
+                :a11yPosition="tooltipA11yPosition"
             >
                 <template #tooltip-before>
                     <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
@@ -2620,5 +2812,27 @@ canvas {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+canvas:focus {
+    outline: none;
+}
+
+canvas:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>

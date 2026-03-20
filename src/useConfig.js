@@ -4988,6 +4988,7 @@ export function useConfig(options = {}) {
         responsive: false,
         theme: '',
         customPalette: [],
+        a11y: A11Y,
         downsample: {
             threshold: 10000
         },

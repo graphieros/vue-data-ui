@@ -7565,6 +7565,7 @@ declare module "vue-data-ui" {
         skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiXyCanvasDatasetItem[]>;
         debug?: boolean;
         loading?: boolean;
+        a11y?: A11YConfig;
         downsample?: {
             threshold?: number;
         };
