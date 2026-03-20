@@ -49,6 +49,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_radar.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -100,6 +101,11 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -693,6 +699,9 @@ const dataTooltipSlot = ref(null);
 function onTrapLeave(apex, i) {
     isTooltip.value = false;
     selectedIndex.value = null;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint: apex, seriesIndex: i });
     }
@@ -704,10 +713,13 @@ function onTrapClick(apex, i) {
     }
 }
 
-function useTooltip(apex, i) {
+function useTooltip(apex, i, triggerMode = 'pointer') {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint: apex, seriesIndex: i });
     }
+
+    tooltipTriggerMode.value = triggerMode;
+    activeTooltipIndex.value = i;
 
     const cats = datasetCopy.value.slice();
 
@@ -956,6 +968,100 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+    selectedIndex.value = null;
+    isFocus.value = false;
+}
+
+function setKeyboardTooltipPositionFromIndex(index) {
+    if (!Number.isFinite(index)) return;
+    if (!svgRef.value) return;
+
+    const apex = radar.value[index];
+    if (!apex) return;
+
+    const box = svgRef.value.getBoundingClientRect();
+
+    tooltipA11yPosition.value = {
+        x: box.left + (apex.labelX / svg.value.width) * box.width,
+        y: box.top + (apex.labelY / svg.value.height) * box.height
+    };
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!radar.value.length) return;
+
+    const isPreviousKey = ['ArrowLeft', 'ArrowUp'].includes(event.key);
+    const isNextKey = ['ArrowRight', 'ArrowDown'].includes(event.key);
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activeTooltipIndex.value = null;
+        tooltipTriggerMode.value = 'pointer';
+        isTooltip.value = false;
+        selectedIndex.value = null;
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+        const apex = radar.value[activeTooltipIndex.value];
+        if (!apex) return;
+        onTrapClick(apex, activeTooltipIndex.value);
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= radar.value.length) {
+        nextIndex = isNextKey ? 0 : radar.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= radar.value.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = radar.value.length - 1;
+        }
+    }
+
+    const apex = radar.value[nextIndex];
+    if (!apex) return;
+
+    activeTooltipIndex.value = nextIndex;
+    setKeyboardTooltipPositionFromIndex(nextIndex);
+
+    useTooltip(apex, nextIndex, 'keyboard');
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames?.map(h => h.name ?? h) ?? [];
+    const rows = dataTable.value?.body ?? [];
+    return { headers, rows };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -982,6 +1088,19 @@ defineExpose({
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; ${FINAL_CONFIG.responsive ? 'height: 100%;' : ''} text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
     >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1112,145 +1231,155 @@ defineExpose({
         </UserOptions>
 
         <!-- CHART -->
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
-            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" 
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.width <= 0 ? 10 : svg.width"
-                :height="svg.height <= 0 ? 10 : svg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position: relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
+                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`" :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`" 
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-
-            <!-- DEFS -->
-            <defs>
-                <radialGradient
-                    cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
-                    v-for="(d, i) in datasetCopy"
-                    :id="`radar_gradient_${uid}_${i}`"
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="0"
+                    :y="0"
+                    :width="svg.width <= 0 ? 10 : svg.width"
+                    :height="svg.height <= 0 ? 10 : svg.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
                 >
-                    <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)"/>
-                    <stop offset="100%" :stop-color="setOpacity(d.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
-                </radialGradient>
-            </defs>
-
-            <!-- GRID -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
-                <!-- RADIAL LINES -->
-                <line
-                    data-cy="radial-line"
-                    v-for="line in radar"
-                    :x1="svg.width / 2"
-                    :y1="svg.height / 2"
-                    :x2="line.x"
-                    :y2="line.y"
-                    :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
-                />
-                <!-- INNER POLYGONS -->
-                <g v-if="FINAL_CONFIG.style.chart.layout.grid.graduations > 0">
-                    <path
-                        data-cy="polygon-inner"
-                        v-for="radius in innerPolygons"
-                        :d="createPolygonPath({
-                            plot: { x: svg.width / 2, y: svg.height / 2 },
-                            radius: radius,
-                            sides: apexes,
-                            rotation: 0
-                        }).path"
-                        fill="none"
+                    <slot name="chart-background"/>
+                </foreignObject>
+    
+                <!-- DEFS -->
+                <defs>
+                    <radialGradient
+                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        v-for="(d, i) in datasetCopy"
+                        :id="`radar_gradient_${uid}_${i}`"
+                    >
+                        <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)"/>
+                        <stop offset="100%" :stop-color="setOpacity(d.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
+                    </radialGradient>
+                </defs>
+    
+                <!-- GRID -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.grid.show">
+                    <!-- RADIAL LINES -->
+                    <line
+                        data-cy="radial-line"
+                        v-for="line in radar"
+                        :x1="svg.width / 2"
+                        :y1="svg.height / 2"
+                        :x2="line.x"
+                        :y2="line.y"
                         :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
                         :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
                     />
+                    <!-- INNER POLYGONS -->
+                    <g v-if="FINAL_CONFIG.style.chart.layout.grid.graduations > 0">
+                        <path
+                            data-cy="polygon-inner"
+                            v-for="radius in innerPolygons"
+                            :d="createPolygonPath({
+                                plot: { x: svg.width / 2, y: svg.height / 2 },
+                                radius: radius,
+                                sides: apexes,
+                                rotation: 0
+                            }).path"
+                            fill="none"
+                            :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth"
+                        />
+                    </g>
                 </g>
-            </g>
-
-            <!-- OUTER POLYGON -->
-            <path
-                data-cy="polygon-outer"
-                :d="outerPolygon.path" 
-                fill="none" 
-                :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke" 
-                :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" 
-                stroke-linejoin="round" 
-                stroke-linecap="round"
-            />
-
-            <!-- APEX LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
-            <text v-for="(label, i) in radar"
-                data-cy="label-apex"
-                class="vue-ui-radar-apex-label"
-                :x="label.labelX"
-                :y="label.labelY"
-                :text-anchor="label.labelAnchor"
-                :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
-                :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
-                @mouseenter="useTooltip(label, i)"
-                @mouseleave="onTrapLeave(label, i)"
-                @click="onTrapClick(label, i)"
-            >
-                {{ label.name }}
-            </text>
-            </g>
-
-            <!-- PLOTS -->
-            <g v-for="(d, i) in datasetCopy">
-                <g>
-                    <polygon
-                        data-cy="polygon-datapoint-wrapper"
-                        :points="makePath(radar.map(r => r.plots[i]), false, true)"
-                        :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth + 1"
-                        fill="none"
-                        v-if="FINAL_CONFIG.useCssAnimation || (!FINAL_CONFIG.useCssAnimation && !segregated.includes(i))"
-                        :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
-                    />
-                    <polygon
-                        data-cy="polygon-datapoint"
-                        :points="makePath(radar.map(r => r.plots[i]), false, true)"
-                        :stroke="d.color"
-                        :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth"
-                        v-if="FINAL_CONFIG.useCssAnimation || (!FINAL_CONFIG.useCssAnimation && !segregated.includes(i))"
-                        :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.transparent ? 'transparent' : FINAL_CONFIG.style.chart.layout.dataPolygon.useGradient ? `url(#radar_gradient_${uid}_${i})` : setOpacity(d.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)"
-                        :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
-                    />
+    
+                <!-- OUTER POLYGON -->
+                <path
+                    data-cy="polygon-outer"
+                    :d="outerPolygon.path" 
+                    fill="none" 
+                    :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke" 
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" 
+                    stroke-linejoin="round" 
+                    stroke-linecap="round"
+                />
+    
+                <!-- APEX LABELS -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.labels.dataLabels.show">
+                <text v-for="(label, i) in radar"
+                    data-cy="label-apex"
+                    class="vue-ui-radar-apex-label"
+                    :x="label.labelX"
+                    :y="label.labelY"
+                    :text-anchor="label.labelAnchor"
+                    :font-size="FINAL_CONFIG.style.chart.layout.labels.dataLabels.fontSize"
+                    :fill="FINAL_CONFIG.style.chart.layout.labels.dataLabels.color"
+                    @mouseenter="useTooltip(label, i, 'pointer')"
+                    @mouseleave="onTrapLeave(label, i)"
+                    @click="onTrapClick(label, i)"
+                >
+                    {{ label.name }}
+                </text>
                 </g>
-            </g>
-            
-            <g v-if="FINAL_CONFIG.style.chart.layout.plots.show">
-                <g v-for="(category, i) in radar">
-                    <circle
-                        data-cy="datapoint-circle"
-                        v-for="(p, j) in category.plots"
-                        :cx="p.x"
-                        :cy="p.y"
-                        :fill="segregated.includes(j) ? 'transparent' : datasetCopy[j] ? datasetCopy[j].color : 'transparent'"
-                        :r="selectedIndex !== null && selectedIndex === i ? FINAL_CONFIG.style.chart.layout.plots.radius * 1.6 : FINAL_CONFIG.style.chart.layout.plots.radius"
-                        :stroke="segregated.includes(j) ? 'transparent' : FINAL_CONFIG.style.chart.backgroundColor"
-                        :stroke-width="0.5"
-                        :class="{ 'animated-out': segregated.includes(j) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === j && FINAL_CONFIG.useCssAnimation }"
-                    />
+    
+                <!-- PLOTS -->
+                <g v-for="(d, i) in datasetCopy">
+                    <g>
+                        <polygon
+                            data-cy="polygon-datapoint-wrapper"
+                            :points="makePath(radar.map(r => r.plots[i]), false, true)"
+                            :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth + 1"
+                            fill="none"
+                            v-if="FINAL_CONFIG.useCssAnimation || (!FINAL_CONFIG.useCssAnimation && !segregated.includes(i))"
+                            :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
+                        />
+                        <polygon
+                            data-cy="polygon-datapoint"
+                            :points="makePath(radar.map(r => r.plots[i]), false, true)"
+                            :stroke="d.color"
+                            :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth"
+                            v-if="FINAL_CONFIG.useCssAnimation || (!FINAL_CONFIG.useCssAnimation && !segregated.includes(i))"
+                            :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.transparent ? 'transparent' : FINAL_CONFIG.style.chart.layout.dataPolygon.useGradient ? `url(#radar_gradient_${uid}_${i})` : setOpacity(d.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)"
+                            :class="{ 'animated-out': segregated.includes(i) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === i && FINAL_CONFIG.useCssAnimation }"
+                        />
+                    </g>
                 </g>
-            </g>
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+                
+                <g v-if="FINAL_CONFIG.style.chart.layout.plots.show">
+                    <g v-for="(category, i) in radar">
+                        <circle
+                            data-cy="datapoint-circle"
+                            v-for="(p, j) in category.plots"
+                            :cx="p.x"
+                            :cy="p.y"
+                            :fill="segregated.includes(j) ? 'transparent' : datasetCopy[j] ? datasetCopy[j].color : 'transparent'"
+                            :r="selectedIndex !== null && selectedIndex === i ? FINAL_CONFIG.style.chart.layout.plots.radius * 1.6 : FINAL_CONFIG.style.chart.layout.plots.radius"
+                            :stroke="segregated.includes(j) ? 'transparent' : FINAL_CONFIG.style.chart.backgroundColor"
+                            :stroke-width="0.5"
+                            :class="{ 'animated-out': segregated.includes(j) && FINAL_CONFIG.useCssAnimation, 'animated-in': isAnimating && inSegregation === j && FINAL_CONFIG.useCssAnimation }"
+                        />
+                    </g>
+                </g>
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1317,6 +1446,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1467,4 +1598,25 @@ polygon {
     }
 }
 
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
+}
 </style>
