@@ -7034,6 +7034,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean;
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUiStripPlotEvent; // v3
             datapointLeave?: VueUiStripPlotEvent; // v3

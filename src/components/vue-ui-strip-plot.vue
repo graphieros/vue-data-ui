@@ -52,6 +52,7 @@ import Shape from "../atoms/Shape.vue";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_strip_plot.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
@@ -111,6 +112,12 @@ const xAxisLabel = ref(null);
 const yAxisLabel = ref(null);
 const timeLabelsEls = ref(null);
 const scaleLabels = ref(null);
+
+const activeSeriesIndex = ref(null); // a11y
+const activeDatapointIndex = ref(null); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -590,6 +597,7 @@ const dataTooltipSlot = ref(null);
 const selectedDatapoint = ref(null);
 
 function onTrapLeave({ datapoint, seriesIndex }) {
+    if (tooltipTriggerMode.value === 'keyboard') return;
     isTooltip.value = false;
     selectedDatapoint.value = null;
     if (FINAL_CONFIG.value.events.datapointLeave) {
@@ -604,11 +612,12 @@ function onTrapClick({ datapoint, seriesIndex }) {
     }
 }
 
-function useTooltip({ datapoint, seriesIndex }) {
+function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex });
     }
 
+    tooltipTriggerMode.value = triggerMode;
     dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: immutableDataset.value };
     isTooltip.value = true;
     selectedDatapoint.value = datapoint;
@@ -894,6 +903,152 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+function getSeriesCount() {
+    return drawableDataset.value.length;
+}
+
+function getPlotsForSeries(seriesIndex) {
+    return drawableDataset.value[seriesIndex]?.plots ?? [];
+}
+
+function getActiveDatapoint(seriesIndex = activeSeriesIndex.value, datapointIndex = activeDatapointIndex.value) {
+    if (!Number.isInteger(seriesIndex) || !Number.isInteger(datapointIndex)) return null;
+    return getPlotsForSeries(seriesIndex)[datapointIndex] ?? null;
+}
+
+function clearKeyboardSelection() {
+    activeSeriesIndex.value = null;
+    activeDatapointIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+    selectedDatapoint.value = null;
+}
+
+function setKeyboardTooltipPosition(datapoint) {
+    if (!datapoint || !svgRef.value) return;
+
+    const box = svgRef.value.getBoundingClientRect();
+
+    tooltipA11yPosition.value = {
+        x: box.left + (datapoint.x / WIDTH.value) * box.width,
+        y: box.top + (datapoint.y / HEIGHT.value) * box.height
+    };
+}
+
+function activateKeyboardDatapoint(seriesIndex, datapointIndex) {
+    const datapoint = getActiveDatapoint(seriesIndex, datapointIndex);
+    if (!datapoint) return;
+
+    activeSeriesIndex.value = seriesIndex;
+    activeDatapointIndex.value = datapointIndex;
+    tooltipTriggerMode.value = 'keyboard';
+
+    setKeyboardTooltipPosition(datapoint);
+
+    useTooltip({
+        datapoint,
+        seriesIndex,
+        triggerMode: 'keyboard'
+    });
+}
+
+function onSvgFocus() {
+    isFocus.value = true;
+    activeSeriesIndex.value = null;
+    activeDatapointIndex.value = null;
+}
+
+function onSvgBlur() {
+    isFocus.value = false;
+    clearKeyboardSelection();
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!getSeriesCount()) return;
+
+    const isLeftKey = event.key === 'ArrowLeft';
+    const isRightKey = event.key === 'ArrowRight';
+    const isUpKey = event.key === 'ArrowUp';
+    const isDownKey = event.key === 'ArrowDown';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (
+        !isLeftKey &&
+        !isRightKey &&
+        !isUpKey &&
+        !isDownKey &&
+        !isActivationKey &&
+        !isEscapeKey
+    ) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearKeyboardSelection();
+        return;
+    }
+
+    let nextSeriesIndex = activeSeriesIndex.value;
+    let nextDatapointIndex = activeDatapointIndex.value;
+
+    if (nextSeriesIndex === null || nextDatapointIndex === null) {
+        nextSeriesIndex = 0;
+        nextDatapointIndex = 0;
+    } else if (isLeftKey || isRightKey) {
+        const seriesCount = getSeriesCount();
+
+        nextSeriesIndex = isRightKey
+            ? (nextSeriesIndex + 1) % seriesCount
+            : (nextSeriesIndex - 1 + seriesCount) % seriesCount;
+
+        const nextSeriesPlots = getPlotsForSeries(nextSeriesIndex);
+        if (!nextSeriesPlots.length) return;
+
+        nextDatapointIndex = Math.min(nextDatapointIndex, nextSeriesPlots.length - 1);
+    } else if (isUpKey || isDownKey) {
+        const currentSeriesPlots = getPlotsForSeries(nextSeriesIndex);
+        if (!currentSeriesPlots.length) return;
+
+        nextDatapointIndex = isUpKey
+            ? (nextDatapointIndex + 1) % currentSeriesPlots.length
+            : (nextDatapointIndex - 1 + currentSeriesPlots.length) % currentSeriesPlots.length;
+    }
+
+    if (isActivationKey) {
+        const datapoint = getActiveDatapoint();
+        if (!datapoint) return;
+        onTrapClick({
+            datapoint,
+            seriesIndex: activeSeriesIndex.value
+        });
+        return;
+    }
+
+    activateKeyboardDatapoint(nextSeriesIndex, nextDatapointIndex);
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = dataTable.value?.body?.map(row => {
+        return row.map(cell => {
+            if (cell && typeof cell === 'object' && 'name' in cell) {
+                return cell.name;
+            }
+            return cell;
+        });
+    }) ?? [];
+
+    return { headers, rows };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -912,7 +1067,27 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="stripPlotChart" :class="`vue-data-ui-component vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" :id="`strip-plot_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div 
+        ref="stripPlotChart" 
+        :class="`vue-data-ui-component vue-ui-strip-plot ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" 
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`" 
+        :id="`strip-plot_${uid}`" 
+        @mouseenter="() => setUserOptionsVisibility(true)" 
+        @mouseleave="() => setUserOptionsVisibility(false)"
+    >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -1043,261 +1218,271 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS" 
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
-            :viewBox="`0 0 ${WIDTH} ${HEIGHT}`" 
-            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="drawingArea.left"
-                :y="drawingArea.top"
-                :width="Math.max(0.1, drawingArea.width)"
-                :height="Math.max(0.1, drawingArea.height)"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position: relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS" 
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }" 
+                :viewBox="`0 0 ${WIDTH} ${HEIGHT}`" 
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color};`"
+                :aria-describedby="`chart-instructions-${uid}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-            
-            <!-- GRID -->
-            <g v-if="FINAL_CONFIG.style.chart.grid.show">
-                <!-- H GRID -->
-                <g v-if="FINAL_CONFIG.style.chart.grid.horizontalGrid.show">
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="drawingArea.left"
+                    :y="drawingArea.top"
+                    :width="Math.max(0.1, drawingArea.width)"
+                    :height="Math.max(0.1, drawingArea.height)"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+                
+                <!-- GRID -->
+                <g v-if="FINAL_CONFIG.style.chart.grid.show">
+                    <!-- H GRID -->
+                    <g v-if="FINAL_CONFIG.style.chart.grid.horizontalGrid.show">
+                        <line
+                            data-cy="grid-horizontal"
+                            v-for="l in yLines"
+                            :x1="l.x1"
+                            :x2="l.x2"
+                            :y1="l.y"
+                            :y2="l.y"
+                            :stroke="FINAL_CONFIG.style.chart.grid.horizontalGrid.stroke"
+                            :stroke-width="FINAL_CONFIG.style.chart.grid.horizontalGrid.strokeWidth"
+                            :stroke-dasharray="FINAL_CONFIG.style.chart.grid.horizontalGrid.strokeDasharray"
+                            stroke-linecap="round"
+                        />
+                    </g>
+                    <!-- V GRID -->
+                    <g v-if="FINAL_CONFIG.style.chart.grid.verticalGrid.show">
+                        <line
+                            data-cy="grid-vertical"
+                            v-for="(l, i) in mutableDataset"
+                            :x1="drawingArea.left + ((i+1) * drawingArea.stripWidth)"
+                            :x2="drawingArea.left + ((i+1) * drawingArea.stripWidth)"
+                            :y1="drawingArea.top"
+                            :y2="drawingArea.bottom"
+                            :stroke="FINAL_CONFIG.style.chart.grid.verticalGrid.stroke"
+                            :stroke-width="FINAL_CONFIG.style.chart.grid.verticalGrid.strokeWidth"
+                            :stroke-dasharray="FINAL_CONFIG.style.chart.grid.verticalGrid.strokeDasharray"
+                            stroke-linecap="round"
+                        />
+                    </g>
+                    <!-- Y AXIS -->
                     <line
-                        data-cy="grid-horizontal"
-                        v-for="l in yLines"
-                        :x1="l.x1"
-                        :x2="l.x2"
-                        :y1="l.y"
-                        :y2="l.y"
-                        :stroke="FINAL_CONFIG.style.chart.grid.horizontalGrid.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.grid.horizontalGrid.strokeWidth"
-                        :stroke-dasharray="FINAL_CONFIG.style.chart.grid.horizontalGrid.strokeDasharray"
-                        stroke-linecap="round"
-                    />
-                </g>
-                <!-- V GRID -->
-                <g v-if="FINAL_CONFIG.style.chart.grid.verticalGrid.show">
-                    <line
-                        data-cy="grid-vertical"
-                        v-for="(l, i) in mutableDataset"
-                        :x1="drawingArea.left + ((i+1) * drawingArea.stripWidth)"
-                        :x2="drawingArea.left + ((i+1) * drawingArea.stripWidth)"
+                        data-cy="axis-y"
+                        :x1="drawingArea.left"
+                        :x2="drawingArea.left"
                         :y1="drawingArea.top"
                         :y2="drawingArea.bottom"
-                        :stroke="FINAL_CONFIG.style.chart.grid.verticalGrid.stroke"
-                        :stroke-width="FINAL_CONFIG.style.chart.grid.verticalGrid.strokeWidth"
-                        :stroke-dasharray="FINAL_CONFIG.style.chart.grid.verticalGrid.strokeDasharray"
+                        :stroke="FINAL_CONFIG.style.chart.grid.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.grid.strokeWidth"
+                        stroke-linecap="round"
+                    />
+                    <!-- X AXIS -->
+                    <line 
+                        data-cy="axis-x"
+                        :x1="drawingArea.left"
+                        :x2="drawingArea.right"
+                        :y1="drawingArea.bottom"
+                        :y2="drawingArea.bottom"
+                        :stroke="FINAL_CONFIG.style.chart.grid.stroke"
+                        :stroke-width="FINAL_CONFIG.style.chart.grid.strokeWidth"
                         stroke-linecap="round"
                     />
                 </g>
-                <!-- Y AXIS -->
-                <line
-                    data-cy="axis-y"
-                    :x1="drawingArea.left"
-                    :x2="drawingArea.left"
-                    :y1="drawingArea.top"
-                    :y2="drawingArea.bottom"
-                    :stroke="FINAL_CONFIG.style.chart.grid.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.grid.strokeWidth"
-                    stroke-linecap="round"
-                />
-                <!-- X AXIS -->
-                <line 
-                    data-cy="axis-x"
-                    :x1="drawingArea.left"
-                    :x2="drawingArea.right"
-                    :y1="drawingArea.bottom"
-                    :y2="drawingArea.bottom"
-                    :stroke="FINAL_CONFIG.style.chart.grid.stroke"
-                    :stroke-width="FINAL_CONFIG.style.chart.grid.strokeWidth"
-                    stroke-linecap="round"
-                />
-            </g>
-            <!-- Y SCALE LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.labels.yAxisLabels.show" ref="scaleLabels">
-                <text
-                    data-cy="axis-y-label"
-                    v-for="(label, i) in yLines"
-                    :x="label.x1 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX - 5"
-                    :y="label.y + FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3"
-                    :fill="FINAL_CONFIG.style.chart.labels.yAxisLabels.color"
-                    :font-size="FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize"
-                    text-anchor="end"
-                >
-                    {{  applyDataLabel(
-                        FINAL_CONFIG.style.chart.labels.formatter,
-                        label.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.labels.prefix,
-                            v: label.value,
-                            s: FINAL_CONFIG.style.chart.labels.suffix,
-                            r: FINAL_CONFIG.style.chart.labels.yAxisLabels.rounding
-                        }),
-                        { datapoint: label, seriesIndex: i }
-                        )
-                    }}
-                </text>
-            </g>
-
-            <!-- "TIME" LABELS -->
-            <g v-if="FINAL_CONFIG.style.chart.labels.xAxisLabels.show" ref="timeLabelsEls">
-                <g v-for="(label, i) in seriesNames">
-                    <!-- SINGLE LINE -->     
+                <!-- Y SCALE LABELS -->
+                <g v-if="FINAL_CONFIG.style.chart.labels.yAxisLabels.show" ref="scaleLabels">
                     <text
-                        class="vue-ui-strip-plot-category-name"
-                        v-if="!String(label).includes('\n')"
-                        data-cy="axis-x-label"
-                        :transform="`translate(${drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation})`"
-                        :font-size="FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.labels.xAxisLabels.color"
-                        :text-anchor="FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
+                        data-cy="axis-y-label"
+                        v-for="(label, i) in yLines"
+                        :x="label.x1 + FINAL_CONFIG.style.chart.labels.yAxisLabels.offsetX - 5"
+                        :y="label.y + FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize / 3"
+                        :fill="FINAL_CONFIG.style.chart.labels.yAxisLabels.color"
+                        :font-size="FINAL_CONFIG.style.chart.labels.yAxisLabels.fontSize"
+                        text-anchor="end"
                     >
-                        {{ String(label) }}
+                        {{  applyDataLabel(
+                            FINAL_CONFIG.style.chart.labels.formatter,
+                            label.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.labels.prefix,
+                                v: label.value,
+                                s: FINAL_CONFIG.style.chart.labels.suffix,
+                                r: FINAL_CONFIG.style.chart.labels.yAxisLabels.rounding
+                            }),
+                            { datapoint: label, seriesIndex: i }
+                            )
+                        }}
                     </text>
-
-                    <!-- MULTILINE -->
-                    <text
-                        v-else
-                        class="vue-ui-strip-plot-category-name"
-                        data-cy="axis-x-label"
-                        :transform="`translate(${drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation})`"
-                        :font-size="FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.labels.xAxisLabels.color"
-                        :text-anchor="FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
-                        v-html="createTSpansFromLineBreaksOnX({
-                            content: wrapText(String(label)),
-                            fontSize: FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize,
-                            fill: FINAL_CONFIG.style.chart.labels.xAxisLabels.color,
-                            x: 0,
-                            y: 0
-                        })"
-                    />
                 </g>
-            </g>
-
-            <!-- Y AXIS NAME-->
-            <text
-                ref="yAxisLabel"
-                data-cy="axis-y-name"
-                v-if="FINAL_CONFIG.style.chart.labels.axis.yLabel"
-                :fill="FINAL_CONFIG.style.chart.labels.axis.color"
-                :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
-                :transform="`translate(${FINAL_CONFIG.style.chart.labels.axis.fontSize}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
-                text-anchor="middle"
-            >
-                {{ FINAL_CONFIG.style.chart.labels.axis.yLabel }}
-            </text>
-            <!-- X AXIS NAME -->
-            <text 
-                ref="xAxisLabel"
-                data-cy="axis-x-name"
-                v-if="FINAL_CONFIG.style.chart.labels.axis.xLabel"
-                :fill="FINAL_CONFIG.style.chart.labels.axis.color"
-                :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
-                :x="drawingArea.left + drawingArea.width / 2"
-                :y="HEIGHT - FINAL_CONFIG.style.chart.labels.axis.fontSize / 3"
-                text-anchor="middle"
-            >
-                {{ FINAL_CONFIG.style.chart.labels.axis.xLabel }}
-            </text>
-
-            <template v-if="selectedDatapoint">
-                <line
-                    data-cy="selection-line"
-                    :x1="drawingArea.left"
-                    :x2="drawingArea.right"
-                    :y1="selectedDatapoint.y"
-                    :y2="selectedDatapoint.y"
-                    :stroke="selectedDatapoint.color"
-                    :stroke-width="1"
-                    :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
-                />
-                <circle
-                    data-cy="selection-marker-circle-left"
-                    :cx="drawingArea.left"
-                    :cy="selectedDatapoint.y"
-                    :r="3"
-                    :fill="selectedDatapoint.color"
-                    :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
-                />
-                <circle
-                    data-cy="selection-marker-circle-right"
-                    :cx="drawingArea.right"
-                    :cy="selectedDatapoint.y"
-                    :r="3"
-                    :fill="selectedDatapoint.color"
-                    :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
-                />
-            </template>
-
-            <!-- PLOTS -->
-            <defs>
-                <radialGradient v-for="ds in mutableDataset" :id="ds.id" fy="30%">
-                    <stop offset="10%" :stop-color="lightenHexColor(ds.color, FINAL_CONFIG.style.chart.plots.gradient.intensity / 100)"/>
-                    <stop offset="90%" :stop-color="darkenHexColor(ds.color, 0.1)"/>
-                    <stop offset="100%" :stop-color="ds.color"/>
-                </radialGradient>
-            </defs>
-            <template v-for="(ds, S) in drawableDataset">
-                <!--FIXME: Animation only works on circles, as y is direct and dynamic whereas other shapes build paths -->
-                <Shape 
-                    v-for="(plot, i) in ds.plots"
-                    v-bind="$attrs"
-                    :plot="{ x:plot.x, y: animationStarted ? plot.y : drawingArea.top }"
-                    :radius="selectedDatapoint && selectedDatapoint.id === plot.id ? adjustedPlotRadius * 1.5 : adjustedPlotRadius"
-                    :shape="FINAL_CONFIG.style.chart.plots.shape"
-                    :stroke="FINAL_CONFIG.style.chart.plots.stroke"
-                    :strokeWidth="FINAL_CONFIG.style.chart.plots.strokeWidth"
-                    :color="FINAL_CONFIG.style.chart.plots.gradient.show ? `url(#${ds.id})` : ds.color"
-                    :style="`transition: all 0.2s ease-in-out; opacity:${selectedDatapoint ? selectedDatapoint.id === plot.id ? 1 : 0.2 : FINAL_CONFIG.style.chart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
-                    :class="{ 'vue-ui-strip-plot-animated': FINAL_CONFIG.useCssAnimation && animationActive && !loading, 'vue-ui-strip-plot-select-circle': FINAL_CONFIG.useCssAnimation && !animationActive}"
-                    @mouseenter="useTooltip({ datapoint: plot, seriesIndex: i })"
-                    @mouseleave="onTrapLeave({ datapoint: plot, seriesIndex: i })"
-                    @click="onTrapClick({ datapoint: plot, seriesIndex: i })"
-                />
-
-                <!-- BEST PLOT LABELS -->
-                <g v-if="mutableConfig.dataLabels.show">
-                    <template v-for="(plot, i) in ds.plots">
+    
+                <!-- "TIME" LABELS -->
+                <g v-if="FINAL_CONFIG.style.chart.labels.xAxisLabels.show" ref="timeLabelsEls">
+                    <g v-for="(label, i) in seriesNames">
+                        <!-- SINGLE LINE -->     
                         <text
-                            data-cy="best-plot-label"
-                            v-if="i === ds.plots.length - 1 || (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip)"
-                            :x="plot.x"
-                            :y="plot.y + FINAL_CONFIG.style.chart.labels.bestPlotLabel.offsetY - adjustedPlotRadius * (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip ? 2 : 1.5)"
-                            :font-size="FINAL_CONFIG.style.chart.labels.bestPlotLabel.fontSize"
-                            :fill="FINAL_CONFIG.style.chart.labels.bestPlotLabel.color"
-                            text-anchor="middle"
-                            :style="`opacity:${FINAL_CONFIG.useCssAnimation ? animationActive ? 0 : 1 : 1};transition:opacity 0.2s ease-in;`"
+                            class="vue-ui-strip-plot-category-name"
+                            v-if="!String(label).includes('\n')"
+                            data-cy="axis-x-label"
+                            :transform="`translate(${drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation})`"
+                            :font-size="FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.labels.xAxisLabels.color"
+                            :text-anchor="FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
                         >
-                            {{ plot.name }} {{ FINAL_CONFIG.style.chart.labels.bestPlotLabel.showValue ? applyDataLabel(
-                                FINAL_CONFIG.style.chart.labels.formatter,
-                                plot.value,
-                                dataLabel({
-                                    p: `(${FINAL_CONFIG.style.chart.labels.prefix}`,
-                                    v: plot.value,
-                                    s: `${FINAL_CONFIG.style.chart.labels.suffix})`,
-                                    r: FINAL_CONFIG.style.chart.labels.bestPlotLabel.rounding
-                                }),
-                                { datapoint: plot, seriesIndex: i }
-                            ) : '' }}
+                            {{ String(label) }}
                         </text>
-                    </template>
+    
+                        <!-- MULTILINE -->
+                        <text
+                            v-else
+                            class="vue-ui-strip-plot-category-name"
+                            data-cy="axis-x-label"
+                            :transform="`translate(${drawingArea.left + ((i+1) * drawingArea.stripWidth) - drawingArea.stripWidth / 2}, ${drawingArea.bottom + FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize * 2  + FINAL_CONFIG.style.chart.labels.xAxisLabels.offsetY}), rotate(${FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation})`"
+                            :font-size="FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.labels.xAxisLabels.color"
+                            :text-anchor="FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation > 0 ? 'start' : FINAL_CONFIG.style.chart.labels.xAxisLabels.rotation < 0 ? 'end' : 'middle'"
+                            v-html="createTSpansFromLineBreaksOnX({
+                                content: wrapText(String(label)),
+                                fontSize: FINAL_CONFIG.style.chart.labels.xAxisLabels.fontSize,
+                                fill: FINAL_CONFIG.style.chart.labels.xAxisLabels.color,
+                                x: 0,
+                                y: 0
+                            })"
+                        />
+                    </g>
                 </g>
-            </template>
-            <slot name="svg" :svg="{
-                ...drawingArea,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+    
+                <!-- Y AXIS NAME-->
+                <text
+                    ref="yAxisLabel"
+                    data-cy="axis-y-name"
+                    v-if="FINAL_CONFIG.style.chart.labels.axis.yLabel"
+                    :fill="FINAL_CONFIG.style.chart.labels.axis.color"
+                    :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
+                    :transform="`translate(${FINAL_CONFIG.style.chart.labels.axis.fontSize}, ${drawingArea.top + drawingArea.height / 2}) rotate(-90)`"
+                    text-anchor="middle"
+                >
+                    {{ FINAL_CONFIG.style.chart.labels.axis.yLabel }}
+                </text>
+                <!-- X AXIS NAME -->
+                <text 
+                    ref="xAxisLabel"
+                    data-cy="axis-x-name"
+                    v-if="FINAL_CONFIG.style.chart.labels.axis.xLabel"
+                    :fill="FINAL_CONFIG.style.chart.labels.axis.color"
+                    :font-size="FINAL_CONFIG.style.chart.labels.axis.fontSize"
+                    :x="drawingArea.left + drawingArea.width / 2"
+                    :y="HEIGHT - FINAL_CONFIG.style.chart.labels.axis.fontSize / 3"
+                    text-anchor="middle"
+                >
+                    {{ FINAL_CONFIG.style.chart.labels.axis.xLabel }}
+                </text>
+    
+                <template v-if="selectedDatapoint">
+                    <line
+                        data-cy="selection-line"
+                        :x1="drawingArea.left"
+                        :x2="drawingArea.right"
+                        :y1="selectedDatapoint.y"
+                        :y2="selectedDatapoint.y"
+                        :stroke="selectedDatapoint.color"
+                        :stroke-width="1"
+                        :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
+                    />
+                    <circle
+                        data-cy="selection-marker-circle-left"
+                        :cx="drawingArea.left"
+                        :cy="selectedDatapoint.y"
+                        :r="3"
+                        :fill="selectedDatapoint.color"
+                        :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
+                    />
+                    <circle
+                        data-cy="selection-marker-circle-right"
+                        :cx="drawingArea.right"
+                        :cy="selectedDatapoint.y"
+                        :r="3"
+                        :fill="selectedDatapoint.color"
+                        :class="{ 'select-circle': FINAL_CONFIG.useCssAnimation }"
+                    />
+                </template>
+    
+                <!-- PLOTS -->
+                <defs>
+                    <radialGradient v-for="ds in mutableDataset" :id="ds.id" fy="30%">
+                        <stop offset="10%" :stop-color="lightenHexColor(ds.color, FINAL_CONFIG.style.chart.plots.gradient.intensity / 100)"/>
+                        <stop offset="90%" :stop-color="darkenHexColor(ds.color, 0.1)"/>
+                        <stop offset="100%" :stop-color="ds.color"/>
+                    </radialGradient>
+                </defs>
+                <template v-for="(ds, S) in drawableDataset">
+                    <!--FIXME: Animation only works on circles, as y is direct and dynamic whereas other shapes build paths -->
+                    <Shape 
+                        v-for="(plot, i) in ds.plots"
+                        v-bind="$attrs"
+                        :plot="{ x:plot.x, y: animationStarted ? plot.y : drawingArea.top }"
+                        :radius="selectedDatapoint && selectedDatapoint.id === plot.id ? adjustedPlotRadius * 1.5 : adjustedPlotRadius"
+                        :shape="FINAL_CONFIG.style.chart.plots.shape"
+                        :stroke="FINAL_CONFIG.style.chart.plots.stroke"
+                        :strokeWidth="FINAL_CONFIG.style.chart.plots.strokeWidth"
+                        :color="FINAL_CONFIG.style.chart.plots.gradient.show ? `url(#${ds.id})` : ds.color"
+                        :style="`transition: all 0.2s ease-in-out; opacity:${selectedDatapoint ? selectedDatapoint.id === plot.id ? 1 : 0.2 : FINAL_CONFIG.style.chart.plots.opacity};${animationActive ? `transition-delay:${i * 50}ms` : ''}`"
+                        :class="{ 'vue-ui-strip-plot-animated': FINAL_CONFIG.useCssAnimation && animationActive && !loading, 'vue-ui-strip-plot-select-circle': FINAL_CONFIG.useCssAnimation && !animationActive}"
+                        @mouseenter="useTooltip({ datapoint: plot, seriesIndex: i, triggerMode: 'pointer' })"
+                        @mouseleave="onTrapLeave({ datapoint: plot, seriesIndex: i })"
+                        @click="onTrapClick({ datapoint: plot, seriesIndex: i })"
+                    />
+    
+                    <!-- BEST PLOT LABELS -->
+                    <g v-if="mutableConfig.dataLabels.show">
+                        <template v-for="(plot, i) in ds.plots">
+                            <text
+                                data-cy="best-plot-label"
+                                v-if="i === ds.plots.length - 1 || (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip)"
+                                :x="plot.x"
+                                :y="plot.y + FINAL_CONFIG.style.chart.labels.bestPlotLabel.offsetY - adjustedPlotRadius * (selectedDatapoint && selectedDatapoint.id === plot.id && !mutableConfig.showTooltip ? 2 : 1.5)"
+                                :font-size="FINAL_CONFIG.style.chart.labels.bestPlotLabel.fontSize"
+                                :fill="FINAL_CONFIG.style.chart.labels.bestPlotLabel.color"
+                                text-anchor="middle"
+                                :style="`opacity:${FINAL_CONFIG.useCssAnimation ? animationActive ? 0 : 1 : 1};transition:opacity 0.2s ease-in;`"
+                            >
+                                {{ plot.name }} {{ FINAL_CONFIG.style.chart.labels.bestPlotLabel.showValue ? applyDataLabel(
+                                    FINAL_CONFIG.style.chart.labels.formatter,
+                                    plot.value,
+                                    dataLabel({
+                                        p: `(${FINAL_CONFIG.style.chart.labels.prefix}`,
+                                        v: plot.value,
+                                        s: `${FINAL_CONFIG.style.chart.labels.suffix})`,
+                                        r: FINAL_CONFIG.style.chart.labels.bestPlotLabel.rounding
+                                    }),
+                                    { datapoint: plot, seriesIndex: i }
+                                ) : '' }}
+                            </text>
+                        </template>
+                    </g>
+                </template>
+                <slot name="svg" :svg="{
+                    ...drawingArea,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1327,6 +1512,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.chart.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.chart.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.chart.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -1391,6 +1578,28 @@ defineExpose({
 .vue-ui-strip-plot {
     user-select: none;
     position: relative;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
 
