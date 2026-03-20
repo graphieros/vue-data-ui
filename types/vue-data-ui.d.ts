@@ -8326,6 +8326,11 @@ declare module "vue-data-ui" {
     }>;
 
     export type VueUiGizmoConfig = {
+        a11y?: {
+            translations?: {
+                label?: string;
+            };
+        };
         skeletonDataset?: VueUiBuiltInSkeletonDataset<VueUiGizmoDataset>;
         skeletonConfig?: VueUiBuiltInSkeletonConfig<VueUiGizmoConfig>;
         debug?: boolean; // v3

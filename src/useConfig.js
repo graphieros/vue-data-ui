@@ -6310,6 +6310,11 @@ export function useConfig(options = {}) {
     }
 
     const vue_ui_gizmo = {
+        a11y: {
+            translations: {
+                label: 'Progress'
+            }
+        },
         skeletonConfig: null,
         skeletonDataset: null,
         debug: false, // v3

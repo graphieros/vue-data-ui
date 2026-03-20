@@ -116,7 +116,16 @@ const gaugeBody = computed(() => {
 </script>
 
 <template>
-    <div class="vue-data-ui-component vue-ui-gizmo-wrapper">
+    <div 
+        class="vue-data-ui-component vue-ui-gizmo-wrapper"
+        role="progressbar"
+        :aria-label="FINAL_CONFIG.a11y.translations.label"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-valuenow="loading ? undefined : displayDataset"
+        :aria-valuetext="displayDataset + '%'"
+        :aria-busy="loading ? 'true' : 'false'"
+    >
         <svg
             class="vue-ui-gizmo"
             :viewBox="`0 0 ${svg.width} ${svg.height}`"
