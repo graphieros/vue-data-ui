@@ -30,11 +30,12 @@ import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
 import { useResponsive } from "../useResponsive";
+import img from "../img";
 import Title from "../atoms/Title.vue";
 import themes from "../themes/vue_ui_dag.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 import BaseZoomControls from "../atoms/BaseZoomControls.vue";
-import img from "../img";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
@@ -75,9 +76,14 @@ const userHovers = ref(false);
 const isDataset = ref(false);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
-
 const resizeObserver = ref(null);
 const observedEl = ref(null);
+
+const activeA11yItemId = ref(null); 
+const activeA11yItemType = ref(null); // "node" | "midpoint"
+const activeA11yItemIndex = ref(null);
+const tooltipTriggerMode = ref("pointer");
+const isFocus = ref(false);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -643,27 +649,46 @@ function hideNodeTooltip() {
 }
 
 function handleDocumentClick(event) {
-    if (!isNodeTooltip.value) return;
+    const hasOpenTooltip = isNodeTooltip.value || isTooltip.value;
+    if (!hasOpenTooltip) return;
 
-    const tooltipEl = nodeTooltipRef.value;
-    if (tooltipEl && tooltipEl.contains(event.target)) {
+    const nodeTooltipElement = nodeTooltipRef.value;
+    if (nodeTooltipElement && nodeTooltipElement.contains(event.target)) {
         return;
     }
 
-    const svgEl = svgRef.value;
-    if (svgEl && svgEl.contains(event.target)) {
+    const midpointTooltipElement = tooltipRef.value;
+    if (midpointTooltipElement && midpointTooltipElement.contains(event.target)) {
+        return;
+    }
+
+    const svgElement = svgRef.value;
+    if (svgElement && svgElement.contains(event.target)) {
         const nodeGroup = event.target.closest(".vue-ui-dag-node");
-        if (nodeGroup) {
+        const midpointElement = event.target.closest(".vue-ui-dag-edge-midpoint");
+
+        if (nodeGroup || midpointElement) {
             return;
         }
     }
 
     hideNodeTooltip();
+    hideMidpointTooltip();
+
+    if (!isFocus.value) {
+        clearA11ySelection();
+    }
 }
 
 function handleDocumentKeydown(event) {
-    if (event.key === "Escape" && isNodeTooltip.value) {
+    if (event.key !== "Escape") return;
+
+    if (isNodeTooltip.value) {
         hideNodeTooltip();
+    }
+
+    if (isTooltip.value) {
+        hideMidpointTooltip();
     }
 }
 
@@ -941,6 +966,18 @@ function setHoveredNode(nodeId) {
     }
 }
 
+function onNodePointerEnter(nodeId) {
+    tooltipTriggerMode.value = "pointer";
+    hoveredEdgeId.value = null;
+    setHoveredNode(nodeId);
+}
+
+async function onMidpointPointerEnter(edge) {
+    tooltipTriggerMode.value = "pointer";
+    hoveredNodeId.value = null;
+    await showMidpointTooltip(edge);
+}
+
 function scheduleClearHoveredNode(nodeId) {
     const step = ++hoverSessionStep;
 
@@ -962,9 +999,12 @@ function scheduleClearHoveredNode(nodeId) {
 function setEdge(edge) {
     const isHighlightedFrom = edge.from === hoveredNodeId.value;
     const isHighlightedTo = edge.to === hoveredNodeId.value;
+    const isKeyboardSelectedMidpoint = activeA11yItemType.value === "midpoint" && activeA11yItemId.value === edge.id;
+    const isActive = hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id || isKeyboardSelectedMidpoint;
+
     let stroke = edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
 
-    if ((hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id) && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
+    if (isActive && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
         stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
     } else if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke != null) {
         stroke = FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke;
@@ -976,6 +1016,8 @@ function setEdge(edge) {
         edge.animated = true;
     } else if (isHighlightedTo && FINAL_CONFIG.value.style.chart.nodes.selected.upstreamEdges.animated === true) {
         edge.animated = true;
+    } else if (isKeyboardSelectedMidpoint && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+        edge.animated = true;
     } else {
         const thisEdge = layoutData.value?.edges.find(e => e.id === edge.id);
         edge.animated = thisEdge?.original?.animated ?? false;
@@ -985,14 +1027,20 @@ function setEdge(edge) {
         d: edge.pathData,
         fill: "none",
         stroke,
-        "stroke-width": FINAL_CONFIG.value.style.chart.edges.strokeWidth * ((hoveredEdgeId.value === edge.id || edge.from === hoveredNodeId.value || edge.id === tooltipEdge.value?.id) ? 2 : 1),
+        "stroke-width": FINAL_CONFIG.value.style.chart.edges.strokeWidth * (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
         "stroke-linecap": "round",
         "stroke-linejoin": "round",
     };
 }
 
+function isNodeA11yActive(nodeId) {
+    return activeA11yItemType.value === "node" && activeA11yItemId.value === nodeId;
+}
+
 function setNode(node) {
-    const isHighlighted = hoveredNodeId.value === node.id;
+    const isHovered = hoveredNodeId.value === node.id;
+    const isKeyboardSelected = activeA11yItemType.value === "node" && activeA11yItemId.value === node.id;
+    const isHighlighted = isHovered || isKeyboardSelected;
 
     const fill =
         isHighlighted && FINAL_CONFIG.value.style.chart.nodes.selected.backgroundColor != null
@@ -1024,9 +1072,12 @@ function setNode(node) {
 function setMidpoint(edge) {
     const isHighlightedFrom = edge.from === hoveredNodeId.value;
     const isHighlightedTo = edge.to === hoveredNodeId.value;
+    const isKeyboardSelected = activeA11yItemType.value === "midpoint" && activeA11yItemId.value === edge.id;
+    const isActive = hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id || isKeyboardSelected;
+
     let stroke = edge.original.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
 
-    if ((hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id) && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
+    if (isActive && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
         stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
     } else if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke != null) {
         stroke = FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke;
@@ -1038,19 +1089,23 @@ function setMidpoint(edge) {
         cx: edge.midpoint.x,
         cy: edge.midpoint.y,
         r: FINAL_CONFIG.value.style.chart.midpoints.radius,
-        fill: FINAL_CONFIG.value.style.chart.midpoints.fill,
+        fill: isKeyboardSelected
+            ? FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke ?? FINAL_CONFIG.value.style.chart.midpoints.fill
+            : FINAL_CONFIG.value.style.chart.midpoints.fill,
         stroke,
-        "stroke-width": FINAL_CONFIG.value.style.chart.edges.strokeWidth * ((edge.from === hoveredNodeId.value || edge.id === tooltipEdge.value?.id) ? 2 : 1),
+        "stroke-width": FINAL_CONFIG.value.style.chart.edges.strokeWidth * (isActive || edge.from === hoveredNodeId.value ? 2 : 1),
     };
 }
 
 function arrowColor(edge) {
     const isHighlightedFrom = edge.from === hoveredNodeId.value;
     const isHighlightedTo = edge.to === hoveredNodeId.value;
+    const isKeyboardSelectedMidpoint = activeA11yItemType.value === "midpoint" && activeA11yItemId.value === edge.id;
+    const isActive = hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id || isKeyboardSelectedMidpoint;
 
     let stroke = edge.color ?? edge.original?.color ?? FINAL_CONFIG.value.style.chart.edges.stroke;
 
-    if ((hoveredEdgeId.value === edge.id || tooltipEdge.value?.id === edge.id) && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
+    if (isActive && FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke != null) {
         stroke = FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.stroke;
     } else if (isHighlightedFrom && FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke != null) {
         stroke = FINAL_CONFIG.value.style.chart.nodes.selected.downstreamEdges.stroke;
@@ -1098,6 +1153,278 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+const a11yNodes = computed(() => {
+    const nodes = layoutData.value?.nodes ?? [];
+
+    return nodes.map((node) => ({
+        id: node.id,
+        type: "node",
+        x: node.x,
+        y: node.y,
+        label: node.label ?? node.id,
+        raw: node
+    }));
+});
+
+const a11yMidpoints = computed(() => {
+    if (!FINAL_CONFIG.value.style.chart.midpoints.show) return [];
+
+    const edges = layoutData.value?.edges ?? [];
+
+    return edges
+        .filter(edge => edge?.midpoint)
+        .map((edge) => ({
+            id: edge.id,
+            type: "midpoint",
+            x: edge.midpoint.x,
+            y: edge.midpoint.y,
+            label: `${getNodeById(edge.from)?.label ?? edge.from} → ${getNodeById(edge.to)?.label ?? edge.to}`,
+            raw: edge
+        }));
+});
+
+
+const a11yItems = computed(() => {
+    return [...a11yNodes.value, ...a11yMidpoints.value].sort((a, b) => {
+        if (a.x === b.x) return a.y - b.y;
+        return a.x - b.x;
+    });
+});
+
+const a11yItemIndexMap = computed(() => {
+    const map = new Map();
+    a11yItems.value.forEach((item, index) => {
+        map.set(`${item.type}:${item.id}`, index);
+    });
+    return map;
+});
+
+const a11yTable = computed(() => {
+    const nodes = layoutData.value?.nodes ?? [];
+    const edges = layoutData.value?.edges ?? [];
+
+    const headers = [
+        FINAL_CONFIG.value.a11y?.translations?.node ?? "Node",
+        FINAL_CONFIG.value.a11y?.translations?.parents ?? "Parents",
+        FINAL_CONFIG.value.a11y?.translations?.children ?? "Children"
+    ];
+
+    const rows = nodes.map((node) => {
+        const parents = edges
+            .filter(edge => edge.to === node.id)
+            .map(edge => getNodeById(edge.from)?.label ?? edge.from)
+            .join(", ");
+
+        const children = edges
+            .filter(edge => edge.from === node.id)
+            .map(edge => getNodeById(edge.to)?.label ?? edge.to)
+            .join(", ");
+
+        return [
+            node.label ?? node.id,
+            parents || "—",
+            children || "—"
+        ];
+    });
+
+    return { headers, rows };
+});
+
+function getA11yItemKey(item) {
+    return `${item.type}:${item.id}`;
+}
+
+function getActiveA11yItem() {
+    if (activeA11yItemId.value == null || activeA11yItemType.value == null) return null;
+
+    return a11yItems.value.find(item =>
+        item.id === activeA11yItemId.value && item.type === activeA11yItemType.value
+    ) ?? null;
+}
+
+async function syncA11ySelectionWithInteraction(item) {
+    if (!item) return;
+
+    if (item.type === "node") {
+        hideMidpointTooltip();
+        return;
+    }
+
+    if (item.type === "midpoint") {
+        hideNodeTooltip();
+        await showMidpointTooltip(item.raw);
+    }
+}
+
+function setActiveA11yItem(item) {
+    if (!item) return;
+
+    activeA11yItemId.value = item.id;
+    activeA11yItemType.value = item.type;
+    activeA11yItemIndex.value = a11yItemIndexMap.value.get(getA11yItemKey(item)) ?? null;
+
+    if (item.type === "node") {
+        setHoveredNode(item.id);
+        hoveredEdgeId.value = null;
+        return;
+    }
+
+    if (item.type === "midpoint") {
+        hoveredNodeId.value = null;
+        hoveredEdgeId.value = item.id;
+
+        if (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+            startEdgeAnimations();
+        }
+    }
+}
+
+function clearA11ySelection() {
+    activeA11yItemId.value = null;
+    activeA11yItemType.value = null;
+    activeA11yItemIndex.value = null;
+
+    if (!isNodeTooltip.value) {
+        hoveredNodeId.value = null;
+    }
+
+    if (!isTooltip.value) {
+        hoveredEdgeId.value = null;
+        if (FINAL_CONFIG.value.style.chart.midpoints.selectedEdge.animated === true) {
+            startEdgeAnimations();
+        }
+    }
+}
+
+function onSvgFocus() {
+    isFocus.value = true;
+    clearA11ySelection();
+}
+
+function onSvgBlur() {
+    isFocus.value = false;
+    hideNodeTooltip();
+    hideMidpointTooltip();
+    clearA11ySelection();
+}
+
+function getDirectionalCandidateScore(currentItem, candidate, direction) {
+    const dx = candidate.x - currentItem.x;
+    const dy = candidate.y - currentItem.y;
+
+    if (direction === "right" && dx <= 0) return Infinity;
+    if (direction === "left" && dx >= 0) return Infinity;
+    if (direction === "down" && dy <= 0) return Infinity;
+    if (direction === "up" && dy >= 0) return Infinity;
+
+    if (direction === "right" || direction === "left") {
+        return Math.abs(dx) * 1000 + Math.abs(dy);
+    }
+
+    return Math.abs(dy) * 1000 + Math.abs(dx);
+}
+
+function findNextDirectionalItem(currentItem, direction) {
+    const candidates = a11yItems.value.filter(item => getA11yItemKey(item) !== getA11yItemKey(currentItem));
+    if (!candidates.length) return null;
+
+    let bestCandidate = null;
+    let bestScore = Infinity;
+
+    candidates.forEach((candidate) => {
+        const score = getDirectionalCandidateScore(currentItem, candidate, direction);
+        if (score < bestScore) {
+            bestScore = score;
+            bestCandidate = candidate;
+        }
+    });
+
+    if (bestCandidate) return bestCandidate;
+
+    if (direction === "right" || direction === "down") {
+        return a11yItems.value[0] ?? null;
+    }
+
+    return a11yItems.value[a11yItems.value.length - 1] ?? null;
+}
+
+async function activateA11yItem(item) {
+    if (!item) return;
+    tooltipTriggerMode.value = "keyboard";
+    if (item.type === "node") {
+        hideMidpointTooltip();
+        await showNodeTooltip(item.raw);
+    }
+}
+
+async function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!a11yItems.value.length) return;
+
+    const isLeftKey = event.key === "ArrowLeft";
+    const isRightKey = event.key === "ArrowRight";
+    const isUpKey = event.key === "ArrowUp";
+    const isDownKey = event.key === "ArrowDown";
+    const isActivationKey = event.key === "Enter" || event.key === " ";
+    const isEscapeKey = event.key === "Escape";
+
+    if (!isLeftKey && !isRightKey && !isUpKey && !isDownKey && !isActivationKey && !isEscapeKey) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        hideNodeTooltip();
+        hideMidpointTooltip();
+        clearA11ySelection();
+        return;
+    }
+
+    let activeItem = getActiveA11yItem();
+
+    if (isActivationKey) {
+        if (!activeItem) return;
+
+        if (activeItem.type === "node") {
+            await activateA11yItem(activeItem);
+        }
+        return;
+    }
+
+    if (!activeItem) {
+        const firstItem = a11yItems.value[0];
+        if (!firstItem) return;
+        setActiveA11yItem(firstItem);
+        await syncA11ySelectionWithInteraction(firstItem);
+        return;
+    }
+
+    let nextItem = null;
+
+    if (isRightKey) {
+        nextItem = findNextDirectionalItem(activeItem, "right");
+    } else if (isLeftKey) {
+        nextItem = findNextDirectionalItem(activeItem, "left");
+    } else if (isDownKey) {
+        nextItem = findNextDirectionalItem(activeItem, "down");
+    } else if (isUpKey) {
+        nextItem = findNextDirectionalItem(activeItem, "up");
+    }
+
+    if (!nextItem) return;
+
+    hideNodeTooltip();
+    hideMidpointTooltip();
+    setActiveA11yItem(nextItem);
+    await syncA11ySelectionWithInteraction(nextItem);
+}
+
 defineExpose({
     getData,
     getImage,
@@ -1127,6 +1454,19 @@ defineExpose({
         @mouseenter="onChartEnter" 
         @mouseleave="onChartLeave"
     >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <div v-if="lastError" class="dag-chart-error">
             {{ String(lastError) }}
         </div>
@@ -1256,227 +1596,245 @@ defineExpose({
             @switchDirection="switchDirection"
         />
 
-        <svg 
-            v-if="layoutData" 
-            ref="svgRef"
-            :class="{'vue-ui-dag-svg': true, 'vue-data-ui-loading': loading }" 
-            :viewBox="svgViewBox"
-            :xmlns="XMLNS"
-            :style="{
-                backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
-                height: '100%',
-                width: '100%'
-            }"
-        >
-            <PackageVersion />
-
-            <defs v-if="FINAL_CONFIG.style.chart.backgroundPattern.show">
-                <pattern
-                    :id="`dag_bg_pattern_${uid}`"
-                    patternUnits="userSpaceOnUse"
-                    :width="backgroundPatternGridSpacing"
-                    :height="backgroundPatternGridSpacing"
-                >
-                    <slot name="background-pattern" v-bind="{
-                        x: backgroundPatternGridSpacing / 2,
-                        y: backgroundPatternGridSpacing / 2,
-                        color: FINAL_CONFIG.style.chart.backgroundPattern.dotColor
-                    }">
-                        <circle
-                            :cx="backgroundPatternGridSpacing / 2"
-                            :cy="backgroundPatternGridSpacing / 2"
-                            :r="backgroundPatternDotRadius"
-                            :fill="FINAL_CONFIG.style.chart.backgroundPattern.dotColor"
-                        />
-                    </slot>
-                </pattern>
-            </defs>
-
-            <rect 
-                v-if="FINAL_CONFIG.style.chart.backgroundPattern.show" 
-                :x="panZoomViewBox?.x ?? 0"
-                :y="panZoomViewBox?.y ?? 0"
-                :width="panZoomViewBox?.width ?? 0"
-                :height="panZoomViewBox?.height ?? 0"
-                :fill="`url(#dag_bg_pattern_${uid})`" 
+        <div style="position:relative;">
+            <svg 
+                v-if="layoutData" 
+                ref="svgRef"
+                :class="{'vue-ui-dag-svg': true, 'vue-data-ui-loading': loading }" 
+                :viewBox="svgViewBox"
+                :xmlns="XMLNS"
                 :style="{
-                    pointerEvents: 'none',
-                    opacity: FINAL_CONFIG.style.chart.backgroundPattern.opacity
+                    backgroundColor: FINAL_CONFIG.style.chart.backgroundColor,
+                    height: '100%',
+                    width: '100%'
                 }"
-            />
-
-            <!-- Arrow marker. Hidden when arrowShape is "undirected". -->
-            <defs v-if="layoutData.arrowShape !== 'undirected'">
-                <template v-for="edge in layoutData.edges" :key="`marker_${edge.id}`">
-                    <marker
-                        :id="makeMarkerId(edge.id)"
-                        :markerWidth="layoutData.arrowSize"
-                        :markerHeight="layoutData.arrowSize"
-                        :refX="layoutData.arrowSize - 3"
-                        :refY="layoutData.arrowSize / 2"
-                        orient="auto"
-                        markerUnits="strokeWidth"
+                tabindex="0"
+                :aria-describedby="`chart-instructions-${uid}`"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"  
+            >
+                <PackageVersion />
+    
+                <defs v-if="FINAL_CONFIG.style.chart.backgroundPattern.show">
+                    <pattern
+                        :id="`dag_bg_pattern_${uid}`"
+                        patternUnits="userSpaceOnUse"
+                        :width="backgroundPatternGridSpacing"
+                        :height="backgroundPatternGridSpacing"
                     >
-                        <!-- `normal` arrow -->
-                        <path
-                            v-if="layoutData.arrowShape === 'normal'"
-                            :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} Z`"
-                            :fill="arrowColor(edge)"
-                            :stroke="arrowColor(edge)"
-                            stroke-width="0"
-                            style="transition: stroke 0.2s ease-in-out, fill 0.2s ease-in-out, stroke-width 0.2s ease-in-out"
-                        />
-
-                        <!-- `vee` arrow -->
-                        <path
-                            v-else
-                            :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} L ${layoutData.arrowSize / 3} ${layoutData.arrowSize / 2} Z`"
-                            :fill="arrowColor(edge)"
-                            :stroke="arrowColor(edge)"
-                            stroke-width="0"
-                            style="transition: stroke 0.2s ease-in-out, fill 0.2s ease-in-out, stroke-width 0.2s ease-in-out"
-                        />
-                    </marker>
-                </template>
-            </defs>
-
-
-            <!-- Edges -->
-            <g class="vue-ui-dag-edges">
-                <template v-for="edge in layoutData.edges" :key="edge.id">
-                    <path
-                        data-cy-edge
-                        :ref="registerEdgePathElement(edge.id)"
-                        v-bind="setEdge(edge)"
-                        style="pointer-events: none; transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out;"
-                    />
-                    <circle
-                        data-cy-midpoint
-                        class="vue-ui-dag-edge-midpoint"
-                        v-if="FINAL_CONFIG.style.chart.midpoints.show"
-                        v-bind="setMidpoint(edge)"
-                        style="transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out;"
-                        @mouseenter="showMidpointTooltip(edge)"
-                        @mouseleave="hideMidpointTooltip"
-                    />
-                </template>
-            </g>
-
-            <!-- Nodes -->
-            <g class="vue-ui-dag-nodes">
-                <g
-                    v-for="node in layoutData.nodes"
-                    :key="node.id"
-                    class="vue-ui-dag-node"
-                    @click.stop="FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && showNodeTooltip(node)"
-                    @mouseenter="setHoveredNode(node.id)"
-                    @mouseleave="scheduleClearHoveredNode(node.id)"
-                >
-                    <template v-if="!$slots.node">
-                        <rect
-                            data-cy-node
-                            v-bind="setNode(node)"
-                            :style="{
-                                cursor: FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && isCursorPointer ? 'pointer' : 'default',
-                                transition: 'stroke 0.2s ease-in-out, stroke-width 0.2s ease-in-out, fill 0.2s ease-in-out'
-                            }"
-                        />                        
-                    </template>
-
-                    <!-- Full `node` slot to customize the node entirely using a div -->
-                    <foreignObject 
-                        v-if="$slots.node"
-                        :x="node.x - node.width / 2"
-                        :y="node.y - node.height / 2"
-                        :width="node.width"
-                        :height="node.height"
-                    >
-                        <slot name="node" v-bind="{ node, orientation: direction }"/>
-                    </foreignObject>
-                </g>
-            </g>
-
-            <!-- Edge arrows -->
-            <g class="vue-ui-dag-edges">
-                <path 
-                    v-for="edge in layoutData.edges" 
-                    :key="edge.id" 
-                    :d="edge.pathData" 
-                    fill="none" 
-                    stroke="transparent"
-                    :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === hoveredNodeId || edge.id === tooltipEdge?.id) ? 1.3 : 1)" 
-                    stroke-linecap="round" 
-                    stroke-linejoin="round"
-                    :marker-end="layoutData.arrowShape === 'undirected'
-                        ? null
-                        : `url(#${makeMarkerId(edge.id)})`"
-                    style="pointer-events: none; transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out"
+                        <slot name="background-pattern" v-bind="{
+                            x: backgroundPatternGridSpacing / 2,
+                            y: backgroundPatternGridSpacing / 2,
+                            color: FINAL_CONFIG.style.chart.backgroundPattern.dotColor
+                        }">
+                            <circle
+                                :cx="backgroundPatternGridSpacing / 2"
+                                :cy="backgroundPatternGridSpacing / 2"
+                                :r="backgroundPatternDotRadius"
+                                :fill="FINAL_CONFIG.style.chart.backgroundPattern.dotColor"
+                            />
+                        </slot>
+                    </pattern>
+                </defs>
+    
+                <rect 
+                    v-if="FINAL_CONFIG.style.chart.backgroundPattern.show" 
+                    :x="panZoomViewBox?.x ?? 0"
+                    :y="panZoomViewBox?.y ?? 0"
+                    :width="panZoomViewBox?.width ?? 0"
+                    :height="panZoomViewBox?.height ?? 0"
+                    :fill="`url(#dag_bg_pattern_${uid})`" 
+                    :style="{
+                        pointerEvents: 'none',
+                        opacity: FINAL_CONFIG.style.chart.backgroundPattern.opacity
+                    }"
                 />
-            </g>
-
-            <!-- Node labels (last layer to overlap edges when offset is applied) -->
-            <g class="vue-ui-dag-node-labels">
-                <g 
-                    v-for="node in layoutData.nodes" 
-                    :key="node.id" 
-                    @click.stop="FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && showNodeTooltip(node)"
-                    @mouseenter="setHoveredNode(node.id)"
-                    @mouseleave="scheduleClearHoveredNode(node.id)"
-                >
-                    <template v-if="!$slots['free-node-label']">
-                        <!-- with `node-label` slot -->
-                        <text
-                            v-if="$slots['node-label']"
-                            :x="node.x" 
-                            :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
-                            text-anchor="middle" 
-                            :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                            :fill="hoveredNodeId === node.id && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null ? FINAL_CONFIG.style.chart.nodes.selected.labelColor : node.original.color"
-                            :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
-                            style="transition: fill 0.2s ease-in-out;"
+    
+                <!-- Arrow marker. Hidden when arrowShape is "undirected". -->
+                <defs v-if="layoutData.arrowShape !== 'undirected'">
+                    <template v-for="edge in layoutData.edges" :key="`marker_${edge.id}`">
+                        <marker
+                            :id="makeMarkerId(edge.id)"
+                            :markerWidth="layoutData.arrowSize"
+                            :markerHeight="layoutData.arrowSize"
+                            :refX="layoutData.arrowSize - 3"
+                            :refY="layoutData.arrowSize / 2"
+                            orient="auto"
+                            markerUnits="strokeWidth"
                         >
-                            <slot name="node-label" v-bind="{ node, orientation: direction }">
-                                {{ node.label }}
-                            </slot>
-                        </text>
-
-                        <!-- default label, multiline when provided with /n -->
-                        <text 
-                            data-cy-node-label
-                            v-else-if="!$slots['free-node-label'] && !$slots.node"
-                            :x="node.x" 
-                            :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
-                            text-anchor="middle" 
-                            :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
-                            :fill="hoveredNodeId === node.id && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null ? FINAL_CONFIG.style.chart.nodes.selected.labelColor : node.original.color"
-                            :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
-                            style="transition: fill 0.2s ease-in-out"
-                            v-html="createTSpansFromLineBreaksOnY({
-                                content: node.label,
-                                fontSize: FINAL_CONFIG.style.chart.nodes.labels.fontSize,
-                                fontWeight: FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal',
-                                fill:hoveredNodeId === node.id && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null ? FINAL_CONFIG.style.chart.nodes.selected.labelColor : node.original.color,
-                                x: node.x,
-                                y: node.y,
-                                autoOffset: true
-                            })"
+                            <!-- `normal` arrow -->
+                            <path
+                                v-if="layoutData.arrowShape === 'normal'"
+                                :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} Z`"
+                                :fill="arrowColor(edge)"
+                                :stroke="arrowColor(edge)"
+                                stroke-width="0"
+                                style="transition: stroke 0.2s ease-in-out, fill 0.2s ease-in-out, stroke-width 0.2s ease-in-out"
+                            />
+    
+                            <!-- `vee` arrow -->
+                            <path
+                                v-else
+                                :d="`M 0 0 L ${layoutData.arrowSize} ${layoutData.arrowSize/2} L 0 ${layoutData.arrowSize} L ${layoutData.arrowSize / 3} ${layoutData.arrowSize / 2} Z`"
+                                :fill="arrowColor(edge)"
+                                :stroke="arrowColor(edge)"
+                                stroke-width="0"
+                                style="transition: stroke 0.2s ease-in-out, fill 0.2s ease-in-out, stroke-width 0.2s ease-in-out"
+                            />
+                        </marker>
+                    </template>
+                </defs>
+    
+    
+                <!-- Edges -->
+                <g class="vue-ui-dag-edges">
+                    <template v-for="edge in layoutData.edges" :key="edge.id">
+                        <path
+                            data-cy-edge
+                            :ref="registerEdgePathElement(edge.id)"
+                            v-bind="setEdge(edge)"
+                            style="pointer-events: none; transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out;"
+                        />
+                        <circle
+                            data-cy-midpoint
+                            class="vue-ui-dag-edge-midpoint"
+                            v-if="FINAL_CONFIG.style.chart.midpoints.show"
+                            :data-a11y-midpoint-id="edge.id"
+                            v-bind="setMidpoint(edge)"
+                            :aria-label="`${getNodeById(edge.from)?.label ?? edge.from} to ${getNodeById(edge.to)?.label ?? edge.to}`"
+                            style="transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out, fill 0.2s ease-in-out;"
+                            @mouseenter="onMidpointPointerEnter(edge)"
+                            @mouseleave="hideMidpointTooltip"
                         />
                     </template>
-
-                    <g v-if="$slots['free-node-label']">
-                        <slot name="free-node-label" v-bind="{ node, layoutData, orientation: direction }"/>
+                </g>
+    
+                <!-- Nodes -->
+                <g class="vue-ui-dag-nodes">
+                    <g
+                        v-for="node in layoutData.nodes"
+                        :key="node.id"
+                        class="vue-ui-dag-node"
+                        @click.stop="FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && showNodeTooltip(node)"
+                        @mouseenter="onNodePointerEnter(node.id)"
+                        @mouseleave="scheduleClearHoveredNode(node.id)"
+                    >
+                        <template v-if="!$slots.node">
+                            <rect
+                                data-cy-node
+                                v-bind="setNode(node)"
+                                :data-a11y-node-id="node.id"
+                                :aria-label="`${node.label ?? node.id}`"
+                                :style="{
+                                    cursor: FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && isCursorPointer ? 'pointer' : 'default',
+                                    transition: 'stroke 0.2s ease-in-out, stroke-width 0.2s ease-in-out, fill 0.2s ease-in-out',
+                                }"
+                            />                        
+                        </template>
+    
+                        <!-- Full `node` slot to customize the node entirely using a div -->
+                        <foreignObject 
+                            v-if="$slots.node"
+                            :x="node.x - node.width / 2"
+                            :y="node.y - node.height / 2"
+                            :width="node.width"
+                            :height="node.height"
+                        >
+                            <slot name="node" v-bind="{ node, orientation: direction }"/>
+                        </foreignObject>
                     </g>
                 </g>
-            </g>
-
-            <slot name="svg" :svg="{ 
-                drawingArea: panZoomViewBox,
-                data: layoutData,
-                orientation: direction,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+    
+                <!-- Edge arrows -->
+                <g class="vue-ui-dag-edges">
+                    <path 
+                        v-for="edge in layoutData.edges" 
+                        :key="edge.id" 
+                        :d="edge.pathData" 
+                        fill="none" 
+                        stroke="transparent"
+                        :stroke-width="FINAL_CONFIG.style.chart.edges.strokeWidth * ((edge.from === hoveredNodeId || edge.id === tooltipEdge?.id) ? 1.3 : 1)" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                        :marker-end="layoutData.arrowShape === 'undirected'
+                            ? null
+                            : `url(#${makeMarkerId(edge.id)})`"
+                        style="pointer-events: none; transition: stroke-width 0.2s ease-in-out, stroke 0.2s ease-in-out"
+                    />
+                </g>
+    
+                <!-- Node labels (last layer to overlap edges when offset is applied) -->
+                <g class="vue-ui-dag-node-labels">
+                    <g 
+                        v-for="node in layoutData.nodes" 
+                        :key="node.id" 
+                        @click.stop="FINAL_CONFIG.style.chart.nodes.tooltip.showOnClick && showNodeTooltip(node)"
+                        @mouseenter="setHoveredNode(node.id)"
+                        @mouseleave="scheduleClearHoveredNode(node.id)"
+                    >
+                        <template v-if="!$slots['free-node-label']">
+                            <!-- with `node-label` slot -->
+                            <text
+                                v-if="$slots['node-label']"
+                                :x="node.x" 
+                                :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
+                                text-anchor="middle" 
+                                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
+                                :fill="hoveredNodeId === node.id && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null ? FINAL_CONFIG.style.chart.nodes.selected.labelColor : node.original.color"
+                                :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
+                                style="transition: fill 0.2s ease-in-out;"
+                            >
+                                <slot name="node-label" v-bind="{ node, orientation: direction }">
+                                    {{ node.label }}
+                                </slot>
+                            </text>
+    
+                            <!-- default label, multiline when provided with /n -->
+                            <text 
+                                data-cy-node-label
+                                v-else-if="!$slots['free-node-label'] && !$slots.node"
+                                :x="node.x" 
+                                :y="node.y + FINAL_CONFIG.style.chart.nodes.labels.fontSize / 3" 
+                                text-anchor="middle" 
+                                :font-size="FINAL_CONFIG.style.chart.nodes.labels.fontSize"
+                                :fill="(hoveredNodeId === node.id || isNodeA11yActive(node.id)) && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null
+                                    ? FINAL_CONFIG.style.chart.nodes.selected.labelColor
+                                    : node.original.color"
+                                :font-weight="FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal'"
+                                style="transition: fill 0.2s ease-in-out"
+                                v-html="createTSpansFromLineBreaksOnY({
+                                    content: node.label,
+                                    fontSize: FINAL_CONFIG.style.chart.nodes.labels.fontSize,
+                                    fontWeight: FINAL_CONFIG.style.chart.nodes.labels.bold ? 'bold' : 'normal',
+                                    fill:(hoveredNodeId === node.id || isNodeA11yActive(node.id)) && FINAL_CONFIG.style.chart.nodes.selected.labelColor != null
+                                        ? FINAL_CONFIG.style.chart.nodes.selected.labelColor
+                                        : node.original.color,
+                                    x: node.x,
+                                    y: node.y,
+                                    autoOffset: true
+                                })"
+                            />
+                        </template>
+    
+                        <g v-if="$slots['free-node-label']">
+                            <slot name="free-node-label" v-bind="{ node, layoutData, orientation: direction }"/>
+                        </g>
+                    </g>
+                </g>
+    
+                <slot name="svg" :svg="{ 
+                    drawingArea: panZoomViewBox,
+                    data: layoutData,
+                    orientation: direction,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1692,5 +2050,27 @@ defineExpose({
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>

@@ -9947,6 +9947,7 @@ declare module "vue-data-ui" {
         theme?: Theme;
         responsive?: boolean;
         userOptions?: ChartUserOptions;
+        a11y?: A11YConfig;
         style?: {
             fontFamily?: string;
             chart?: {
