@@ -3129,6 +3129,16 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                series: 'Series',
+                time: 'Time',
+                value: 'Value',
+                label: 'Label'
+            }
+        },
         events: {
             datapointEnter: null, // v3
             datapointLeave: null, // v3

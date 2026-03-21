@@ -2246,6 +2246,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiSparkHistogramEvent; // v3
             datapointLeave?: VueUiSparkHistogramEvent; // v3
