@@ -34,6 +34,7 @@ import { useResponsive } from "../useResponsive.js";
 import { useThemeCheck } from "../useThemeCheck.js";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility.js";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 import { useAutoSizeLabelsInsideViewbox } from "../useAutoSizeLabelsInsideViewbox.js";
 import themes from "../themes/vue_ui_thermometer.json";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
@@ -46,6 +47,7 @@ const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'
 
 const { vue_ui_thermometer: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     dataset: {
@@ -312,7 +314,7 @@ const cssHeight = computed(() => {
 });
 
 const cssSpeed = computed(() => {
-    return `${FINAL_CONFIG.value.style.chart.animation.speedMs}ms`;
+    return prefersReducedMotion.value ? '0ms' : `${FINAL_CONFIG.value.style.chart.animation.speedMs}ms`;
 });
 
 const colors = computed(() => {
@@ -441,6 +443,36 @@ async function copyAlt(){
         dataset: FINAL_DATASET.value
     }));
 }
+
+const svgTitleId = computed(() => `${uid.value}-title`);
+const svgDescId = computed(() => `${uid.value}-desc`);
+
+const formattedValue = computed(() => {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.label.formatter,
+        FINAL_DATASET.value.value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.label.prefix,
+            v: FINAL_DATASET.value.value,
+            s: FINAL_CONFIG.value.style.chart.label.suffix,
+            r: FINAL_CONFIG.value.style.chart.label.rounding
+        }),
+        { datapoint: FINAL_DATASET.value }
+    );
+});
+
+const accessibleTitleText = computed(() => {
+    return FINAL_CONFIG.value.style.title.text || '';
+});
+
+const accessibleDescriptionText = computed(() => {
+    if (loading.value) return '...';
+
+    const from = checkNaN(FINAL_DATASET.value.from);
+    const to = checkNaN(FINAL_DATASET.value.to);
+
+    return `Thermometer value: ${formattedValue.value}. Range: ${from} to ${to}.`;
+});
 
 defineExpose({
     getImage,
@@ -574,7 +606,12 @@ defineExpose({
             width="100%" 
             :viewBox="`0 0 ${drawingArea.width} ${drawingArea.height}`" 
             :style="`background:transparent`"
+            :aria-labelledby="svgTitleId"
+            :aria-describedby="svgDescId"
         >
+            <title :id="svgTitleId">{{ accessibleTitleText }}</title>
+            <desc :id="svgDescId">{{ accessibleDescriptionText }}</desc>
+
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
@@ -738,7 +775,12 @@ defineExpose({
                     fill="#FFFFFF66"
                 />
             </g>
-            <g v-if="FINAL_CONFIG.style.chart.label.show">
+            <g 
+                v-if="FINAL_CONFIG.style.chart.label.show"
+                role="status"
+                aria-live="polite"
+                :aria-label="loading ? 'Loading data' : formattedValue"
+            >
                 <rect 
                     v-if="loading"
                     :x="drawingArea.left - 60"
@@ -751,6 +793,7 @@ defineExpose({
                 <text
                     v-else
                     data-cy="temperature-label"
+                    aria-hidden="true"
                     :class="{'vue-ui-thermometer-temperature-value': FINAL_CONFIG.style.chart.animation.use, 'vue-ui-thermometer-label': true }"
                     :y="temperature + drawingArea.top + (label_size / 3)"
                     :x="drawingArea.left - 10"
@@ -759,18 +802,7 @@ defineExpose({
                     :font-size="label_size"
                     :font-weight="FINAL_CONFIG.style.chart.label.bold ? 'bold' : 'normal'"
                 >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.label.formatter,
-                        dataset.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.label.prefix, 
-                            v: dataset.value, 
-                            s: FINAL_CONFIG.style.chart.label.suffix, 
-                            r: FINAL_CONFIG.style.chart.label.rounding
-                        }),
-                        { datapoint: dataset }
-                        )
-                    }}
+                    {{ formattedValue }}
                 </text>
             </g>
             <slot name="svg" :svg="{
