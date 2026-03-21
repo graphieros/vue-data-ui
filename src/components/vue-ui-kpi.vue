@@ -1,12 +1,14 @@
 <script setup>
 import { ref, computed, onMounted, watch, useSlots, defineAsyncComponent } from "vue";
 import { useNestedProp } from "../useNestedProp";
-import { applyDataLabel, dataLabel } from "../lib";
+import { applyDataLabel, createUid, dataLabel } from "../lib";
 import { useConfig } from "../useConfig";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 
 const Digits = defineAsyncComponent(() => import('./vue-ui-digits.vue'));
 
 const { vue_ui_kpi: DEFAULT_CONFIG } = useConfig();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -31,8 +33,8 @@ const FINAL_CONFIG = computed({
 });
 
 const slots = useSlots();
-
 const debug = computed(() => FINAL_CONFIG.value.debug);
+const uid = ref(createUid());
 
 onMounted(() => {
     if (slots['chart-background'] && debug.value) {
@@ -79,7 +81,7 @@ onMounted(() => {
 });
 
 function prepareChart() {
-    if (FINAL_CONFIG.value.useAnimation) {
+    if (FINAL_CONFIG.value.useAnimation && !prefersReducedMotion.value) {
         displayedValue.value = FINAL_CONFIG.value.animationValueStart;
         animateToValue(props.dataset);
     } else {
@@ -88,7 +90,7 @@ function prepareChart() {
 }
 
 watch(() => props.dataset, (newValue) => {
-    if (FINAL_CONFIG.value.useAnimation) {
+    if (FINAL_CONFIG.value.useAnimation && !prefersReducedMotion.value) {
         animateToValue(newValue);
     } else {
         displayedValue.value = newValue;
@@ -98,13 +100,29 @@ watch(() => props.dataset, (newValue) => {
 </script>
 
 <template>
-    <div :class="`vue-data-ui-component vue-ui-kpi ${FINAL_CONFIG.layoutClass}`" :style="`background:${FINAL_CONFIG.backgroundColor}; ${FINAL_CONFIG.layoutCss}`">
-        <div :class="`vue-ui-kpi-title ${FINAL_CONFIG.titleClass}`" :style="`font-family: ${FINAL_CONFIG.fontFamily}; font-size:${FINAL_CONFIG.titleFontSize}px; color:${FINAL_CONFIG.titleColor}; font-weight:${FINAL_CONFIG.titleBold ? 'bold' : 'normal'}; ${FINAL_CONFIG.titleCss}`">
+    <div 
+        :class="`vue-data-ui-component vue-ui-kpi ${FINAL_CONFIG.layoutClass}`" 
+        :style="`background:${FINAL_CONFIG.backgroundColor}; ${FINAL_CONFIG.layoutCss}`"
+        :aria-labelledby="`kpi-title-${uid}`"
+    >
+        <div
+            v-if="FINAL_CONFIG.title || $slots.title"
+            :class="`vue-ui-kpi-title ${FINAL_CONFIG.titleClass}`" 
+            :style="`font-family: ${FINAL_CONFIG.fontFamily}; font-size:${FINAL_CONFIG.titleFontSize}px; color:${FINAL_CONFIG.titleColor}; font-weight:${FINAL_CONFIG.titleBold ? 'bold' : 'normal'}; ${FINAL_CONFIG.titleCss}`"
+            :id="`kpi-title-${uid}`"
+        >
             <slot name="title" :comment="dataset"></slot>
             {{ FINAL_CONFIG.title }}
         </div>
         <slot name="comment-before" :comment="dataset"></slot>
-        <div :class="`vue-ui-kpi-value ${FINAL_CONFIG.valueClass}`" :style="`font-family: ${FINAL_CONFIG.fontFamily}; font-size:${FINAL_CONFIG.valueFontSize}px; color:${FINAL_CONFIG.valueColor}; font-weight:${FINAL_CONFIG.valueBold ? 'bold': 'normal'}; ${FINAL_CONFIG.valueCss}`">
+        <div 
+            :class="`vue-ui-kpi-value ${FINAL_CONFIG.valueClass}`" 
+            :style="`font-family: ${FINAL_CONFIG.fontFamily}; font-size:${FINAL_CONFIG.valueFontSize}px; color:${FINAL_CONFIG.valueColor}; font-weight:${FINAL_CONFIG.valueBold ? 'bold': 'normal'}; ${FINAL_CONFIG.valueCss}`"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            :aria-label="displayedValue.toFixed(FINAL_CONFIG.valueRounding)"
+        >
             <slot name="value" :comment="dataset"></slot>
             <template v-if="FINAL_CONFIG.analogDigits.show">
                 <div :style="{ height: FINAL_CONFIG.analogDigits.height + 'px'}">
