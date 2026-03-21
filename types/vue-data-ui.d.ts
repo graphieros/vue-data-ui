@@ -2378,6 +2378,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         useCursorPointer?: boolean;
+        a11y?: A11YConfig;
         events?: {
             datapointEnter?: VueUiSparkStackbarEvent; // v3
             datapointLeave?: VueUiSparkStackbarEvent; // v3

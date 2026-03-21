@@ -3061,6 +3061,15 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         useCursorPointer: false,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                series: 'Series',
+                percentage: 'Percentage',
+                value: 'Value',
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3

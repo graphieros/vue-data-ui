@@ -33,6 +33,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import themes from "../themes/vue_ui_sparkstackbar.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 import BaseLegendToggle from "../atoms/BaseLegendToggle.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersion.vue'));
 const Tooltip = defineAsyncComponent(() => import('../atoms/Tooltip.vue'));
@@ -67,6 +68,15 @@ const sparkstackbarChart = ref(null);
 const uid = ref(createUid());
 const isTooltip = ref(false);
 const tooltipContent = ref('');
+const dataTooltipSlot = ref(null);
+const useCustomFormat = ref(false);
+
+const activeTooltipIndex = ref(null); // a11y
+const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
+const tooltipTriggerMode = ref('pointer'); // a11y
+const isFocus = ref(false); // a11y
+const selectedIndex = ref(null); // a11y
+const legendItemRefs = ref([]); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -354,19 +364,20 @@ function selectDatapoint(datapoint, index, fromLegend = false) {
     }
 }
 
-const dataTooltipSlot = ref(null);
-const useCustomFormat = ref(false);
-const selectedIndex = ref(null);
-
 function onTrapLeave({ datapoint, seriesIndex }) {
     isTooltip.value = false;
     selectedIndex.value = null;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint, seriesIndex: datapoint.seriesIndex });
     }
 }
 
-function useTooltip({ datapoint, seriesIndex }) {
+
+function useTooltip({ datapoint, seriesIndex, triggerMode = 'pointer' }) {
+    useCustomFormat.value = false;
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint, seriesIndex: datapoint.seriesIndex });
     }
@@ -375,6 +386,7 @@ function useTooltip({ datapoint, seriesIndex }) {
         return
     }
 
+    tooltipTriggerMode.value = triggerMode;
     dataTooltipSlot.value = { datapoint, seriesIndex, config: FINAL_CONFIG.value, series: absoluteDataset.value };
     isTooltip.value = true;
     selectedIndex.value = seriesIndex;
@@ -424,15 +436,248 @@ function useTooltip({ datapoint, seriesIndex }) {
     }
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+function setLegendItemRef(element, index) {
+    if (!element) return;
+    legendItemRefs.value[index] = element;
+}
+
+function focusLegendItem(index) {
+    const element = legendItemRefs.value[index];
+    if (element && typeof element.focus === 'function') {
+        element.focus();
+    }
+}
+
+function setKeyboardTooltipPositionFromIndex(index) {
+    if (!Number.isFinite(index)) return;
+    if (!svgRef.value) return;
+
+    const rect = drawableDataset.value[index];
+    if (!rect) return;
+
+    const svgBox = svgRef.value.getBoundingClientRect();
+
+    const svgX = rect.start + rect.width / 2;
+    const svgY = svg.value.height / 2;
+
+    tooltipA11yPosition.value = {
+        x: svgBox.left + (svgX / svg.value.width) * svgBox.width,
+        y: svgBox.top + (svgY / svg.value.height) * svgBox.height
+    };
+}
+
+function onSvgFocus() {
+    activeTooltipIndex.value = null;
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+    selectedIndex.value = null;
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!drawableDataset.value.length) return;
+
+    const isPreviousKey = event.key === 'ArrowLeft';
+    const isNextKey = event.key === 'ArrowRight';
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+    const isHomeKey = event.key === 'Home';
+    const isEndKey = event.key === 'End';
+
+    if (
+        !isPreviousKey &&
+        !isNextKey &&
+        !isActivationKey &&
+        !isEscapeKey &&
+        !isHomeKey &&
+        !isEndKey
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activeTooltipIndex.value = null;
+        tooltipTriggerMode.value = 'pointer';
+        isTooltip.value = false;
+        selectedIndex.value = null;
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTooltipIndex.value === null) return;
+        const rect = drawableDataset.value[activeTooltipIndex.value];
+        if (!rect) return;
+        selectDatapoint(rect, rect.seriesIndex);
+        return;
+    }
+
+    let nextIndex = activeTooltipIndex.value;
+
+    if (isHomeKey) {
+        nextIndex = 0;
+    } else if (isEndKey) {
+        nextIndex = drawableDataset.value.length - 1;
+    } else if (nextIndex === null || nextIndex < 0 || nextIndex >= drawableDataset.value.length) {
+        nextIndex = isNextKey ? 0 : drawableDataset.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= drawableDataset.value.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = drawableDataset.value.length - 1;
+        }
+    }
+
+    const rect = drawableDataset.value[nextIndex];
+    if (!rect) return;
+
+    activeTooltipIndex.value = nextIndex;
+    setKeyboardTooltipPositionFromIndex(nextIndex);
+
+    useTooltip({
+        datapoint: rect,
+        seriesIndex: rect.seriesIndex,
+        triggerMode: 'keyboard'
+    });
+}
+
+function onLegendItemFocus(rect) {
+    isTooltip.value = false;
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    selectedIndex.value = rect.seriesIndex;
+}
+
+function onLegendItemBlur() {
+    activeTooltipIndex.value = null;
+    tooltipTriggerMode.value = 'pointer';
+    isTooltip.value = false;
+    selectedIndex.value = null;
+}
+
+function onLegendItemKeydown(event, rect, index) {
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isPreviousKey = event.key === 'ArrowLeft' || event.key === 'ArrowUp';
+    const isNextKey = event.key === 'ArrowRight' || event.key === 'ArrowDown';
+    const isHomeKey = event.key === 'Home';
+    const isEndKey = event.key === 'End';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (
+        !isActivationKey &&
+        !isPreviousKey &&
+        !isNextKey &&
+        !isHomeKey &&
+        !isEndKey &&
+        !isEscapeKey
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        onLegendItemBlur();
+        return;
+    }
+
+    if (isActivationKey) {
+        segregate(index);
+        selectDatapoint(rect, index, true);
+        return;
+    }
+
+    if (isHomeKey) {
+        focusLegendItem(0);
+        return;
+    }
+
+    if (isEndKey) {
+        focusLegendItem(absoluteDataset.value.length - 1);
+        return;
+    }
+
+    if (isPreviousKey) {
+        const previousIndex = index <= 0 ? absoluteDataset.value.length - 1 : index - 1;
+        focusLegendItem(previousIndex);
+        return;
+    }
+
+    if (isNextKey) {
+        const nextIndex = index >= absoluteDataset.value.length - 1 ? 0 : index + 1;
+        focusLegendItem(nextIndex);
+    }
+}
+
+const a11yTable = computed(() => {
+    return {
+        headers: [
+            FINAL_CONFIG.value.a11y.translations.series,
+            FINAL_CONFIG.value.a11y.translations.percentage,
+            FINAL_CONFIG.value.a11y.translations.value
+        ],
+        rows: absoluteDataset.value.map((serie, index) => {
+            return [
+                serie.name,
+                segregated.value.includes(index) ? ' - ' : serie.proportionLabel,
+                applyDataLabel(
+                    FINAL_CONFIG.value.style.legend.value.formatter,
+                    serie.value,
+                    dataLabel({
+                        p: FINAL_CONFIG.value.style.legend.value.prefix,
+                        v: serie.value,
+                        s: FINAL_CONFIG.value.style.legend.value.suffix,
+                        r: FINAL_CONFIG.value.style.legend.value.rounding
+                    }),
+                    {
+                        datapoint: serie,
+                        seriesIndex: index
+                    }
+                )
+            ];
+        })
+    };
+});
+
 defineExpose({
     hideSeries,
     showSeries
 });
-
 </script>
 
 <template>
     <div class="vue-data-ui-component vue-ui-spark-stackbar" ref="sparkstackbarChart" :style="`width:100%; background:${FINAL_CONFIG.style.backgroundColor}`">
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <!-- TITLE -->
         <div  v-if="FINAL_CONFIG.style.title.text" :style="`width:calc(100% - 12px);background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.title.margin};padding: 0 6px;text-align:${FINAL_CONFIG.style.title.textAlign}`">
             <div class="atom-title" :style="`font-size:${FINAL_CONFIG.style.title.fontSize}px;color:${FINAL_CONFIG.style.title.color};font-weight:${FINAL_CONFIG.style.title.bold ? 'bold' : 'normal'}`">
@@ -444,97 +689,106 @@ defineExpose({
             
         </div>
         <!-- CHART -->
-        <svg 
-            ref="svgRef"
-            :xmlns="XMLNS" 
-            width="100%" 
-            :viewBox="`0 0 ${svg.width} ${svg.height}`"
-        >
-            <PackageVersion />
-            
-            <defs>
-                <linearGradient v-for="(rect, i) in drawableDataset" :key="`stack_gradient_${i}`" gradientTransform="rotate(90)" :id="`stack_gradient_${i}_${uid}`">
-                    <stop offset="0%" :stop-color="rect.color"/>
-                    <stop offset="50%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.bar.gradient.intensity)"/>
-                    <stop offset="100%" :stop-color="rect.color"/>
-                </linearGradient>
-                <clipPath id="stackPill" clipPathUnits="objectBoundingBox">
+        <div style="position: relative">
+            <svg 
+                ref="svgRef"
+                :xmlns="XMLNS" 
+                width="100%" 
+                :viewBox="`0 0 ${svg.width} ${svg.height}`"
+                :aria-describedby="`chart-instructions-${uid}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
+            >
+                <PackageVersion />
+                
+                <defs>
+                    <linearGradient v-for="(rect, i) in drawableDataset" :key="`stack_gradient_${i}`" gradientTransform="rotate(90)" :id="`stack_gradient_${i}_${uid}`">
+                        <stop offset="0%" :stop-color="rect.color"/>
+                        <stop offset="50%" :stop-color="setOpacity(shiftHue(rect.color, 0.05), 100 - FINAL_CONFIG.style.bar.gradient.intensity)"/>
+                        <stop offset="100%" :stop-color="rect.color"/>
+                    </linearGradient>
+                    <clipPath id="stackPill" clipPathUnits="objectBoundingBox">
+                        <rect
+                            x="0.005"
+                            y="-2"
+                            width="0.99"
+                            height="5"
+                            rx="3"
+                            ry="3"
+                            :fill="FINAL_CONFIG.style.backgroundColor"
+                        />
+                    </clipPath>
+                </defs>
+                <g clip-path="url(#stackPill)" v-if="total > 0">
                     <rect
-                        x="0.005"
-                        y="-2"
-                        width="0.99"
-                        height="5"
-                        rx="3"
-                        ry="3"
-                        :fill="FINAL_CONFIG.style.backgroundColor"
+                        data-cy="datapoint-underlayer"
+                        v-for="(rect, i) in drawableDataset" 
+                        :key="`stack_underlayer_${i}`"
+                        :x="rect.start"
+                        :y="0"
+                        :width="rect.width"
+                        :height="svg.height"
+                        :fill="FINAL_CONFIG.style.bar.gradient.underlayerColor"
+                        :class="{'animated': !isAnimating && !loading}"
+                        :style="{
+                            opacity: (selectedIndex !== null && FINAL_CONFIG.style.tooltip.show) ? selectedIndex === i ? 1 : 0.5 : 1
+                        }"
                     />
-                </clipPath>
-            </defs>
-            <g clip-path="url(#stackPill)" v-if="total > 0">
-                <rect
-                    data-cy="datapoint-underlayer"
-                    v-for="(rect, i) in drawableDataset" 
-                    :key="`stack_underlayer_${i}`"
-                    :x="rect.start"
-                    :y="0"
-                    :width="rect.width"
-                    :height="svg.height"
-                    :fill="FINAL_CONFIG.style.bar.gradient.underlayerColor"
-                    :class="{'animated': !isAnimating && !loading}"
-                    :style="{
-                        opacity: (selectedIndex !== null && FINAL_CONFIG.style.tooltip.show) ? selectedIndex === i ? 1 : 0.5 : 1
-                    }"
-                />
-                <rect 
-                    data-cy="datapoint"
-                    v-for="(rect, i) in drawableDataset" 
-                    :key="`stack_${i}`"
-                    :x="rect.start"
-                    :y="0"
-                    :width="rect.width"
-                    :height="svg.height"
-                    :fill="FINAL_CONFIG.style.bar.gradient.show ? `url(#stack_gradient_${i}_${uid})` : rect.color"
-                    :stroke="FINAL_CONFIG.style.backgroundColor"
-                    stroke-linecap="round"
-                    :class="{'animated': !isAnimating && !loading }"
-                    :style="{
-                        opacity: (selectedIndex !== null && FINAL_CONFIG.style.tooltip.show) ? selectedIndex === i ? 1 : 0.5 : 1
-                    }"
-                />
-                <!-- TOOLTIP TRAPS -->
-                <rect
-                    data-cy="tooltip-trap"
-                    v-for="(rect, i) in drawableDataset" 
-                    :key="`stack_trap_${i}`"
-                    :x="rect.start"
-                    :y="0"
-                    :width="rect.width"
-                    :height="svg.height"
+                    <rect 
+                        data-cy="datapoint"
+                        v-for="(rect, i) in drawableDataset" 
+                        :key="`stack_${i}`"
+                        :x="rect.start"
+                        :y="0"
+                        :width="rect.width"
+                        :height="svg.height"
+                        :fill="FINAL_CONFIG.style.bar.gradient.show ? `url(#stack_gradient_${i}_${uid})` : rect.color"
+                        :stroke="FINAL_CONFIG.style.backgroundColor"
+                        stroke-linecap="round"
+                        :class="{'animated': !isAnimating && !loading }"
+                        :style="{
+                            opacity: (selectedIndex !== null && FINAL_CONFIG.style.tooltip.show) ? selectedIndex === i ? 1 : 0.5 : 1
+                        }"
+                    />
+                    <!-- TOOLTIP TRAPS -->
+                    <rect
+                        data-cy="tooltip-trap"
+                        v-for="(rect, i) in drawableDataset" 
+                        :key="`stack_trap_${i}`"
+                        :x="rect.start"
+                        :y="0"
+                        :width="rect.width"
+                        :height="svg.height"
+                        fill="transparent"
+                        stroke="none"
+                        :class="{'animated': !isAnimating && !loading }"
+                        @click="() => selectDatapoint(rect, i)"
+                        @mouseenter="() => useTooltip({ datapoint: rect, seriesIndex: i })"
+                        @mouseleave="onTrapLeave({ datapoint: rect, seriesIndex: i })"
+                    />
+                </g>
+                <rect v-else
+                    :x="2"
+                    :y="1"
+                    :width="svg.width - 4"
+                    :height="svg.height - 2"
+                    stroke="#CCCCCC"
+                    stroke-width="2"
                     fill="transparent"
-                    stroke="none"
-                    :class="{'animated': !isAnimating && !loading }"
-                    @click="() => selectDatapoint(rect, i)"
-                    @mouseenter="() => useTooltip({ datapoint: rect, seriesIndex: i })"
-                    @mouseleave="onTrapLeave({ datapoint: rect, seriesIndex: i })"
+                    :rx="(svg.height - 4) / 2"
                 />
-            </g>
-            <rect v-else
-                :x="2"
-                :y="1"
-                :width="svg.width - 4"
-                :height="svg.height - 2"
-                stroke="#CCCCCC"
-                stroke-width="2"
-                fill="transparent"
-                :rx="(svg.height - 4) / 2"
-            />
-        </svg>
+            </svg>
+        </div>
 
         <div 
             v-if="FINAL_CONFIG.style.legend.show" 
             data-cy="sparkstackbar-legend" 
             :style="`background:transparent;margin:0 auto;margin:${FINAL_CONFIG.style.legend.margin};justify-content:${FINAL_CONFIG.style.legend.textAlign === 'left' ? 'flex-start' : FINAL_CONFIG.style.legend.textAlign === 'right' ? 'flex-end' : 'center'}`" 
             class="vue-ui-sparkstackbar-legend"
+            aria-label="legend"
+            role="toolbar"
         >
             <BaseLegendToggle
                 v-if="FINAL_CONFIG.style.legend.selectAllToggle.show && absoluteDataset.length > 2 && !loading"
@@ -547,10 +801,17 @@ defineExpose({
             />
             <div
                 data-cy="legend-item"
+                role="button"
+                tabindex="0"
                 v-for=" (rect, i) in absoluteDataset" 
+                :aria-pressed="segregated.includes(i)"
+                :aria-label="`${rect.name}, ${segregated.includes(i) ? 'hidden' : 'visible'}, ${rect.proportionLabel}`"
                 :style="`font-size:${FINAL_CONFIG.style.legend.fontSize}px;cursor:${isCursorPointer ? 'pointer' : 'default'}`" 
                 :class="{'vue-ui-sparkstackbar-legend-item': true, 'vue-ui-sparkstackbar-legend-item-unselected': segregated.includes(i)}" 
                 @click="segregate(i); selectDatapoint(rect, i, true)"
+                @focus="onLegendItemFocus(rect)"
+                @blur="onLegendItemBlur"
+                @keydown="onLegendItemKeydown($event, rect, i)"
 
             >
                 <div style="display:flex;flex-direction:row;align-items:center;gap:4px;justify-content:center" >
@@ -621,6 +882,8 @@ defineExpose({
             :backdropFilter="FINAL_CONFIG.style.tooltip.backdropFilter"
             :smoothForce="FINAL_CONFIG.style.tooltip.smoothForce"
             :smoothSnapThreshold="FINAL_CONFIG.style.tooltip.smoothSnapThreshold"
+            :isA11yMode="tooltipTriggerMode === 'keyboard'"
+            :a11yPosition="tooltipA11yPosition"
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
@@ -662,5 +925,29 @@ defineExpose({
 }
 rect.animated {
     transition: all 0.3s ease-in-out !important;
+}
+
+svg:focus,
+.vue-ui-sparkstackbar-legend-item:focus {
+    outline: none;
+}
+
+svg:focus-visible,
+.vue-ui-sparkstackbar-legend-item:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
