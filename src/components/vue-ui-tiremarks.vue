@@ -29,6 +29,7 @@ import { useResponsive } from "../useResponsive";
 import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 import themes from "../themes/vue_ui_tiremarks.json";
 import Title from "../atoms/Title.vue";
 import img from "../img";
@@ -40,6 +41,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 
 const { vue_ui_tiremarks: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -160,10 +162,10 @@ const hasOptionsNoTitle = computed(() => {
     return FINAL_CONFIG.value.userOptions.show && !FINAL_CONFIG.value.style.chart.title.text;
 });
 
-const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : checkNaN(FINAL_DATASET.value.percentage));
+const activeValue = ref((FINAL_CONFIG.value.style.chart.animation.use && !prefersReducedMotion.value) ? 0 : checkNaN(FINAL_DATASET.value.percentage));
 
 watch(() => FINAL_DATASET.value, (v) => {
-    if (FINAL_CONFIG.value.style.chart.animation.use) {
+    if (FINAL_CONFIG.value.style.chart.animation.use && !prefersReducedMotion.value) {
         useAnimation(v.percentage);
     } else {
         activeValue.value = v.percentage || 0
@@ -464,6 +466,29 @@ async function copyAlt(){
     }));
 }
 
+const svgTitleId = computed(() => `${uid.value}-title`);
+const svgDescId = computed(() => `${uid.value}-desc`);
+
+const percentageText = computed(() => {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.percentage.formatter,
+        activeValue.value,
+        dataLabel({
+            v: activeValue.value,
+            s: '%',
+            r: FINAL_CONFIG.value.style.chart.percentage.rounding
+        })
+    );
+});
+
+const accessibleTitleText = computed(() => {
+    return FINAL_CONFIG.value.style.chart.title.text || '';
+});
+
+const accessibleDescriptionText = computed(() => {
+    return loading.value ? 'Loading data' : `Value: ${percentageText.value}`;
+});
+
 defineExpose({
     getImage,
     generatePdf,
@@ -477,7 +502,12 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="tiremarksChart" :class="`vue-data-ui-component vue-ui-tiremarks ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="uid" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div 
+        ref="tiremarksChart" :class="`vue-data-ui-component vue-ui-tiremarks ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" 
+        :id="uid" 
+        @mouseenter="() => setUserOptionsVisibility(true)" 
+        @mouseleave="() => setUserOptionsVisibility(false)"
+    >
         <PenAndPaper 
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -593,7 +623,13 @@ defineExpose({
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
             :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
             :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            role="img"
+            :aria-labelledby="svgTitleId"
+            :aria-describedby="svgDescId"
         >
+            <title :id="svgTitleId">{{ accessibleTitleText }}</title>
+            <desc :id="svgDescId">{{ accessibleDescriptionText }}</desc>
+            
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
@@ -618,7 +654,7 @@ defineExpose({
                     :stroke="activeValue >= i ? tick.color : FINAL_CONFIG.style.chart.layout.inactiveColor"
                     stroke-linecap="round"
                     fill="none"
-                    :class="{ 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && i <= activeValue }"
+                    :class="{ 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && !prefersReducedMotion && i <= activeValue }"
                 />
             </g>
             <g v-else>
@@ -634,7 +670,12 @@ defineExpose({
                     stroke-linecap="round"
                 />
             </g>
-            <g v-if="FINAL_CONFIG.style.chart.percentage.show">
+            <g 
+                v-if="FINAL_CONFIG.style.chart.percentage.show"
+                role="status"
+                aria-live="polite"
+                :aria-label="loading ? '...' : `${percentageText}`"
+            >
                 <rect 
                     v-if="loading"
                     :x="labelSkeleton.x"
@@ -647,6 +688,7 @@ defineExpose({
                 <text
                     v-else
                     data-cy="data-label"
+                    aria-hidden="true"
                     :x="tireLabel.x"
                     :y="tireLabel.y"
                     :font-size="tireLabel.fontSize"
@@ -654,15 +696,7 @@ defineExpose({
                     :font-weight="tireLabel.bold ? 'bold': 'normal'"
                     :text-anchor="tireLabel.textAnchor"
                 >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.percentage.formatter,
-                        activeValue,
-                        dataLabel({
-                            v: activeValue,
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.percentage.rounding
-                        }))
-                    }}
+                    {{ percentageText }}
                 </text>
             </g>
             <slot name="svg" :svg="{
@@ -693,7 +727,6 @@ defineExpose({
     transition: unset;
 }
 .vue-ui-tiremarks {
-    user-select: none;
     position: relative;
 }
 .vue-ui-tick-animated {
