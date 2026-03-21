@@ -40,6 +40,7 @@ import img from "../img.js";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_relation_circle.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const PenAndPaper = defineAsyncComponent(() => import('../atoms/PenAndPaper.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
@@ -78,6 +79,9 @@ const noTitle = ref(null);
 const titleStep = ref(0);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activePlotIndex = ref(null); // a11y
+const isFocus = ref(false); // a11y
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -549,6 +553,7 @@ const hoverIndex = ref(null);
 
 function onTrapEnter(plot, index) {
     hoverIndex.value = index;
+    activePlotIndex.value = index;
     if (FINAL_CONFIG.value.events.datapointEnter) {
         FINAL_CONFIG.value.events.datapointEnter({ datapoint: plot, seriesIndex: index });
     }
@@ -556,24 +561,35 @@ function onTrapEnter(plot, index) {
 
 function onTrapLeave(plot, index) {
     hoverIndex.value = null;
+    if (!isFocus.value) {
+        activePlotIndex.value = null;
+    }
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint: plot, seriesIndex: index });
     }
 }
 
-function onTrapClick(plot, index) {
+function selectPlot(plot, index) {
+    if (!plot) return;
+
     if (FINAL_CONFIG.value.events.datapointClick) {
-        FINAL_CONFIG.value.events.datapointClick({ datapoint: plot, seriesIndex: index});
+        FINAL_CONFIG.value.events.datapointClick({ datapoint: plot, seriesIndex: index });
     }
 
     selectedRotation.value = 360 - plot.regAngle;
+
     if (selectedPlot.value.id && plot.id === selectedPlot.value.id) {
         selectedPlot.value = {};
         selectedRelations.value = [];
     } else {
         selectedPlot.value = plot;
-        selectedRelations.value = [...plot.relations]
+        selectedRelations.value = [...plot.relations];
     }
+}
+
+function onTrapClick(plot, index) {
+    activePlotIndex.value = index;
+    selectPlot(plot, index);
 }
 
 function calcLinkWidth(plot) {
@@ -662,6 +678,111 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+function onSvgFocus() {
+    isFocus.value = true;
+    if (!circles.value.length) return;
+    if (activePlotIndex.value === null) {
+        activePlotIndex.value = 0;
+    }
+}
+
+function onSvgBlur() {
+    isFocus.value = false;
+    activePlotIndex.value = null;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+    if (!circles.value.length) return;
+
+    const isPreviousKey = ['ArrowLeft', 'ArrowUp'].includes(event.key);
+    const isNextKey = ['ArrowRight', 'ArrowDown'].includes(event.key);
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activePlotIndex.value = null;
+        selectedPlot.value = {};
+        selectedRelations.value = [];
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activePlotIndex.value === null) return;
+        const plot = circles.value[activePlotIndex.value];
+        if (!plot) return;
+        selectPlot(plot, activePlotIndex.value);
+        return;
+    }
+
+    let nextIndex = activePlotIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= circles.value.length) {
+        nextIndex = isNextKey ? 0 : circles.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= circles.value.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = circles.value.length - 1;
+        }
+    }
+
+    activePlotIndex.value = nextIndex;
+    hoverIndex.value = nextIndex;
+
+    const plot = circles.value[nextIndex];
+    if (!plot) return;
+
+    if (FINAL_CONFIG.value.events.datapointEnter) {
+        FINAL_CONFIG.value.events.datapointEnter({ datapoint: plot, seriesIndex: nextIndex });
+    }
+}
+
+const a11yTable = computed(() => {
+    const headers = [
+        'ID',
+        'Label',
+        'Total weight',
+        'Relations count',
+        'Relations'
+    ];
+
+    const rows = limitedDataset.value.map((item) => {
+        const relatedLabels = item.relations
+            .map((relationId) => {
+                const target = limitedDataset.value.find(ds => ds.id === relationId);
+                return target?.label || relationId;
+            })
+            .join(', ');
+
+        const totalWeight = (item.weights || []).reduce((sum, value) => sum + Number(value || 0), 0);
+
+        return [
+            item.id,
+            item.label,
+            totalWeight,
+            item.relations.length,
+            relatedLabels
+        ];
+    });
+
+    return { headers, rows };
+});
+
 defineExpose({
     getImage,
     generatePdf,
@@ -675,7 +796,26 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="relationCircleChart" class="vue-data-ui-component vue-ui-relation-circle" :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};text-align:center;${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" :id="`relation_circle_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"> 
+    <div 
+        ref="relationCircleChart" 
+        class="vue-data-ui-component vue-ui-relation-circle" 
+        :style="`width:100%;background:${FINAL_CONFIG.style.backgroundColor};text-align:center;${FINAL_CONFIG.responsive ? 'height: 100%' : ''}`" :id="`relation_circle_${uid}`" 
+        @mouseenter="() => setUserOptionsVisibility(true)" 
+        @mouseleave="() => setUserOptionsVisibility(false)"
+    > 
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -785,219 +925,230 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-            class="relation-circle"
-            width="100%"
-            :style="`user-select:none; background:transparent`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.width <= 0 ? 10 : svg.width"
-                :height="svg.height <= 0 ? 10 : svg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position:relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+                :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+                class="relation-circle"
+                width="100%"
+                :style="`user-select:none; background:transparent`"
+                :aria-describedby="`chart-instructions-${uid}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-            
-            
-            <circle
-                data-cy="relation-circle" 
-                :cx="(svg.width <= 0 ? 0.0001 : svg.width) / 2" 
-                :cy="(svg.height <= 0 ? 0.0001 : svg.height) / 2 + FINAL_CONFIG.style.circle.offsetY" 
-                :r="(radius <= 0 ? 0.0001 : radius)" 
-                :stroke="FINAL_CONFIG.style.circle.stroke"
-                :stroke-width="FINAL_CONFIG.style.circle.strokeWidth"
-                fill="transparent"
-                class="main-circle"
-            />
-
-            <g v-if="isCurved">
-                <path v-for="(relation,i) in relations"
-                    :key="`relation_${i}`" 
-                    :style="getLineOpacityAndWidth(relation)"
-                    :stroke="getLineColor(relation)" 
-                    class="relation"
-                    :d="`M${relation.x1},${relation.y1} C${relation.x1},${relation.y1} ${svg.width/2},${svg.height/2 + FINAL_CONFIG.style.circle.offsetY} ${relation.x2},${relation.y2}`"
-                    fill="none"
-                    :class="{'vue-ui-relation-circle-selected': selectedPlot.hasOwnProperty('id') && selectedRelations.includes(relation.id)}"
-                    :stroke-width="calcLinkWidth(relation)"
-                    stroke-linecap="round"
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="0"
+                    :y="0"
+                    :width="svg.width <= 0 ? 10 : svg.width"
+                    :height="svg.height <= 0 ? 10 : svg.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+                
+                
+                <circle
+                    data-cy="relation-circle" 
+                    :cx="(svg.width <= 0 ? 0.0001 : svg.width) / 2" 
+                    :cy="(svg.height <= 0 ? 0.0001 : svg.height) / 2 + FINAL_CONFIG.style.circle.offsetY" 
+                    :r="(radius <= 0 ? 0.0001 : radius)" 
+                    :stroke="FINAL_CONFIG.style.circle.stroke"
+                    :stroke-width="FINAL_CONFIG.style.circle.strokeWidth"
+                    fill="transparent"
+                    class="main-circle"
                 />
-                <g v-for="(relation, i) in relations" style="pointer-events: none;">
-                    <slot 
-                        name="dataLabel" 
-                        v-bind="{ 
-                            x: relation.midPointBezier.x, 
-                            y: relation.midPointBezier.y, 
-                            color: getLineColor(relation), 
-                            weight: relation.weight, 
-                            fontSize: dataLabelSize 
-                        }" 
-                        v-if="showLabel(relation)"
+    
+                <g v-if="isCurved">
+                    <path v-for="(relation,i) in relations"
+                        :key="`relation_${i}`" 
+                        :style="getLineOpacityAndWidth(relation)"
+                        :stroke="getLineColor(relation)" 
+                        class="relation"
+                        :d="`M${relation.x1},${relation.y1} C${relation.x1},${relation.y1} ${svg.width/2},${svg.height/2 + FINAL_CONFIG.style.circle.offsetY} ${relation.x2},${relation.y2}`"
+                        fill="none"
+                        :class="{'vue-ui-relation-circle-selected': selectedPlot.hasOwnProperty('id') && selectedRelations.includes(relation.id)}"
+                        :stroke-width="calcLinkWidth(relation)"
+                        stroke-linecap="round"
                     />
-                    <circle
-                        v-if="showLabel(relation) && !$slots.dataLabel"
-                        :cx="relation.midPointBezier.x"
-                        :cy="relation.midPointBezier.y"
-                        :fill="getLineColor(relation)"
-                        :r="dataLabelSize"
-                        :stroke="FINAL_CONFIG.style.backgroundColor"
-                        stroke-width="1"
-                    />
-                    <text 
-                        v-if="showLabel(relation) && !$slots.dataLabel"
-                        :x="relation.midPointBezier.x"
-                        :y="relation.midPointBezier.y + dataLabelSize / 3"
-                        :fill="adaptColorToBackground(getLineColor(relation))"
-                        text-anchor="middle"
-                        :font-size="dataLabelSize"
-                    >
-                        {{ 
-                            applyDataLabel(
-                                FINAL_CONFIG.style.weightLabels.formatter,
-                                relation.weight,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.weightLabels.prefix,
-                                    v: relation.weight,
-                                    s: FINAL_CONFIG.style.weightLabels.suffix,
-                                    r: FINAL_CONFIG.style.weightLabels.rounding
-                                }),
-                                { ...relation }
-                            )
-                        }}
-                    </text>
+                    <g v-for="(relation, i) in relations" style="pointer-events: none;">
+                        <slot 
+                            name="dataLabel" 
+                            v-bind="{ 
+                                x: relation.midPointBezier.x, 
+                                y: relation.midPointBezier.y, 
+                                color: getLineColor(relation), 
+                                weight: relation.weight, 
+                                fontSize: dataLabelSize 
+                            }" 
+                            v-if="showLabel(relation)"
+                        />
+                        <circle
+                            v-if="showLabel(relation) && !$slots.dataLabel"
+                            :cx="relation.midPointBezier.x"
+                            :cy="relation.midPointBezier.y"
+                            :fill="getLineColor(relation)"
+                            :r="dataLabelSize"
+                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            stroke-width="1"
+                        />
+                        <text 
+                            v-if="showLabel(relation) && !$slots.dataLabel"
+                            :x="relation.midPointBezier.x"
+                            :y="relation.midPointBezier.y + dataLabelSize / 3"
+                            :fill="adaptColorToBackground(getLineColor(relation))"
+                            text-anchor="middle"
+                            :font-size="dataLabelSize"
+                        >
+                            {{ 
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.weightLabels.formatter,
+                                    relation.weight,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.weightLabels.prefix,
+                                        v: relation.weight,
+                                        s: FINAL_CONFIG.style.weightLabels.suffix,
+                                        r: FINAL_CONFIG.style.weightLabels.rounding
+                                    }),
+                                    { ...relation }
+                                )
+                            }}
+                        </text>
+                    </g>
                 </g>
-            </g>
-            <g v-else>
-                <line v-for="(relation,i) in relations" 
-                    :key="`relation_${i}`" 
-                    :stroke="getLineColor(relation)" 
-                    :stroke-width="calcLinkWidth(relation)"
-                    :style="getLineOpacityAndWidth(relation)"
-                    :x1="relation.x1" 
-                    :x2="relation.x2" 
-                    :y1="relation.y1" 
-                    :y2="relation.y2"
-                    :class="{'vue-ui-relation-circle-selected': selectedPlot.hasOwnProperty('id') && selectedRelations.includes(relation.id)}"
-                    stroke-linecap="round"
-                />
-                <g v-for="(relation, i) in relations" style="pointer-events: none;">
-                    <slot 
-                        name="dataLabel" 
-                        v-bind="{ 
-                            x: relation.midPointLine.x, 
-                            y: relation.midPointLine.y, 
-                            color: getLineColor(relation), 
-                            weight: relation.weight, 
-                            fontSize: dataLabelSize 
-                        }" 
-                        v-if="showLabel(relation)"
+                <g v-else>
+                    <line v-for="(relation,i) in relations" 
+                        :key="`relation_${i}`" 
+                        :stroke="getLineColor(relation)" 
+                        :stroke-width="calcLinkWidth(relation)"
+                        :style="getLineOpacityAndWidth(relation)"
+                        :x1="relation.x1" 
+                        :x2="relation.x2" 
+                        :y1="relation.y1" 
+                        :y2="relation.y2"
+                        :class="{'vue-ui-relation-circle-selected': selectedPlot.hasOwnProperty('id') && selectedRelations.includes(relation.id)}"
+                        stroke-linecap="round"
                     />
-                    <circle
-                        v-if="showLabel(relation) && !$slots.dataLabel && FINAL_CONFIG.style.weightLabels.show"
-                        :cx="relation.midPointLine.x"
-                        :cy="relation.midPointLine.y"
-                        :fill="getLineColor(relation)"
-                        :r="dataLabelSize"
-                        :stroke="FINAL_CONFIG.style.backgroundColor"
-                        stroke-width="1"
-                    />
-                    <text 
-                        v-if="showLabel(relation) && !$slots.dataLabel && FINAL_CONFIG.style.weightLabels.show"
-                        :x="relation.midPointLine.x"
-                        :y="relation.midPointLine.y + dataLabelSize / 3"
-                        :fill="adaptColorToBackground(getLineColor(relation))"
-                        text-anchor="middle"
-                        :font-size="dataLabelSize"
-                    >
-                        {{ 
-                            applyDataLabel(
-                                FINAL_CONFIG.style.weightLabels.formatter,
-                                relation.weight,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.weightLabels.prefix,
-                                    v: relation.weight,
-                                    s: FINAL_CONFIG.style.weightLabels.suffix,
-                                    r: FINAL_CONFIG.style.weightLabels.rounding
-                                }),
-                                { ...relation }
-                            )
-                        }}
-                    </text>
+                    <g v-for="(relation, i) in relations" style="pointer-events: none;">
+                        <slot 
+                            name="dataLabel" 
+                            v-bind="{ 
+                                x: relation.midPointLine.x, 
+                                y: relation.midPointLine.y, 
+                                color: getLineColor(relation), 
+                                weight: relation.weight, 
+                                fontSize: dataLabelSize 
+                            }" 
+                            v-if="showLabel(relation)"
+                        />
+                        <circle
+                            v-if="showLabel(relation) && !$slots.dataLabel && FINAL_CONFIG.style.weightLabels.show"
+                            :cx="relation.midPointLine.x"
+                            :cy="relation.midPointLine.y"
+                            :fill="getLineColor(relation)"
+                            :r="dataLabelSize"
+                            :stroke="FINAL_CONFIG.style.backgroundColor"
+                            stroke-width="1"
+                        />
+                        <text 
+                            v-if="showLabel(relation) && !$slots.dataLabel && FINAL_CONFIG.style.weightLabels.show"
+                            :x="relation.midPointLine.x"
+                            :y="relation.midPointLine.y + dataLabelSize / 3"
+                            :fill="adaptColorToBackground(getLineColor(relation))"
+                            text-anchor="middle"
+                            :font-size="dataLabelSize"
+                        >
+                            {{ 
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.weightLabels.formatter,
+                                    relation.weight,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.weightLabels.prefix,
+                                        v: relation.weight,
+                                        s: FINAL_CONFIG.style.weightLabels.suffix,
+                                        r: FINAL_CONFIG.style.weightLabels.rounding
+                                    }),
+                                    { ...relation }
+                                )
+                            }}
+                        </text>
+                    </g>
                 </g>
-            </g>
-
-            
-                <text v-for="(plot,i) in circles"
-                    :data-cy="`relation-text-${i}`"
-                    :key="`plot_text_${i}`" 
-                    :text-anchor="getTextAnchor(plot)"
-                    :transform="getTextRotation(plot)"
-                    :x="getTextX(plot)" 
-                    :y="plot.y + 5"
-                    class="vue-ui-relation-circle-legend" 
-                    transform-origin="start"
-                    :font-weight="selectedPlot.id === plot.id ? '900' : '400'"
-                    :style="`font-family:${FINAL_CONFIG.style.fontFamily};${getTextOpacity(plot)};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
-                    :font-size="labelFontSize"
-                    :fill="FINAL_CONFIG.style.labels.color"
-                    :text-decoration="i === hoverIndex ? 'underline' : undefined"
+    
+                
+                    <text v-for="(plot,i) in circles"
+                        :data-cy="`relation-text-${i}`"
+                        :key="`plot_text_${i}`" 
+                        :text-anchor="getTextAnchor(plot)"
+                        :transform="getTextRotation(plot)"
+                        :x="getTextX(plot)" 
+                        :y="plot.y + 5"
+                        class="vue-ui-relation-circle-legend" 
+                        transform-origin="start"
+                        :font-weight="selectedPlot.id === plot.id ? '900' : '400'"
+                        :style="`font-family:${FINAL_CONFIG.style.fontFamily};${getTextOpacity(plot)};cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                        :font-size="labelFontSize"
+                        :fill="FINAL_CONFIG.style.labels.color"
+                        :text-decoration="i === hoverIndex || i === activePlotIndex ? 'underline' : undefined"
+                        @click="onTrapClick(plot, i)" 
+                        @mouseenter="onTrapEnter(plot, i)"
+                        @mouseleave="onTrapLeave(plot,i)"
+                    >
+                        <template v-if="loading">
+                            --------
+                        </template>
+                        <template v-else>
+                            {{plot.label}} ({{ 
+                                applyDataLabel(
+                                    FINAL_CONFIG.style.weightLabels.formatter,
+                                    plot.totalWeight,
+                                    dataLabel({
+                                        p: FINAL_CONFIG.style.weightLabels.prefix,
+                                        v: plot.totalWeight,
+                                        s: FINAL_CONFIG.style.weightLabels.suffix,
+                                        r: FINAL_CONFIG.style.weightLabels.rounding
+                                    }),
+                                    { ...plot }
+                                )
+                            }})
+                        </template>
+                    </text>
+    
+                <circle v-for="(plot,i) in circles"
+                    :data-cy="`relation-plot-${i}`"
+                    :cx="plot.x" 
+                    :cy="plot.y" 
+                    :key="`plot_${i}`" 
+                    :style="`${getCircleOpacity(plot)}; transition: r 0.2s ease-in-out; cursor:${isCursorPointer ? 'pointer' : 'default'}`"
+                    class="vue-ui-relation-circle-plot" 
+                    :fill="FINAL_CONFIG.style.plot.useSerieColor ? plot.color : FINAL_CONFIG.style.plot.color" 
+                    :stroke="FINAL_CONFIG.style.backgroundColor"
+                    stroke-width="1"
+                    :r="plotRadius * (i === hoverIndex || i === activePlotIndex ? 2 : 1)"
                     @click="onTrapClick(plot, i)" 
                     @mouseenter="onTrapEnter(plot, i)"
                     @mouseleave="onTrapLeave(plot,i)"
-                >
-                    <template v-if="loading">
-                        --------
-                    </template>
-                    <template v-else>
-                        {{plot.label}} ({{ 
-                            applyDataLabel(
-                                FINAL_CONFIG.style.weightLabels.formatter,
-                                plot.totalWeight,
-                                dataLabel({
-                                    p: FINAL_CONFIG.style.weightLabels.prefix,
-                                    v: plot.totalWeight,
-                                    s: FINAL_CONFIG.style.weightLabels.suffix,
-                                    r: FINAL_CONFIG.style.weightLabels.rounding
-                                }),
-                                { ...plot }
-                            )
-                        }})
-                    </template>
-                </text>
+                />
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg,
+                }"/>
+            </svg>
 
-            <circle v-for="(plot,i) in circles"
-                :data-cy="`relation-plot-${i}`"
-                :cx="plot.x" 
-                :cy="plot.y" 
-                :key="`plot_${i}`" 
-                :style="`${getCircleOpacity(plot)}; transition: r 0.2s ease-in-out; cursor:${isCursorPointer ? 'pointer' : 'default'}`"
-                class="vue-ui-relation-circle-plot" 
-                :fill="FINAL_CONFIG.style.plot.useSerieColor ? plot.color : FINAL_CONFIG.style.plot.color" 
-                :stroke="FINAL_CONFIG.style.backgroundColor"
-                stroke-width="1"
-                :r="plotRadius * (i === hoverIndex ? 2 : 1)"
-                @click="onTrapClick(plot, i)" 
-                @mouseenter="onTrapEnter(plot, i)"
-                @mouseleave="onTrapLeave(plot,i)"
-            />
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg,
-            }"/>
-        </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1035,5 +1186,27 @@ line.vue-ui-relation-circle-selected {
     to {
         stroke-dashoffset: v-bind(radiusOffset);
     }
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
