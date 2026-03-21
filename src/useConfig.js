@@ -1942,6 +1942,13 @@ export function useConfig(options = {}) {
         loading: false, // v3
         theme: '',
         customPalette: [],
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints',
+            }
+        },
         style: {
             fontFamily: 'inherit',
             chart: {

@@ -43,6 +43,7 @@ import { useChartAccessibility } from "../useChartAccessibility";
 import img from "../img";
 import themes from "../themes/vue_ui_chestnut.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -80,6 +81,18 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const isSvgKeyboardFocused = ref(false);
+const hasStartedKeyboardNavigation = ref(false);
+const accessibilityAnnouncement = ref('');
+
+const accessibilityCursor = ref({
+    level: 'root',
+    rootIndex: 0,
+    branchIndex: 0,
+    nutIndex: 0,
+    locked: false
+});
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -475,6 +488,36 @@ const branches = computed(() => {
     })
 });
 
+const rootsOrdered = computed(() => {
+    return roots.value;
+});
+
+const branchesByRoot = computed(() => {
+    return rootsOrdered.value.map((root) => {
+        return branches.value
+            .filter(branch => branch.rootIndex === root.rootIndex)
+            .sort((a, b) => a.y1 - b.y1);
+    });
+});
+
+const nutsByRootAndBranch = computed(() => {
+    return rootsOrdered.value.map((_, rootPosition) => {
+        return branchesByRoot.value[rootPosition].map((branch) => {
+            return (branch.breakdown || []).map((nut, nutIndex) => {
+                return {
+                    ...nut,
+                    nutIndex,
+                    rootIndex: branch.rootIndex,
+                    branchId: branch.id,
+                    branchName: branch.name,
+                    branchValue: branch.value,
+                    rootName: branch.rootName
+                };
+            });
+        });
+    });
+});
+
 function getRoot(branch) {
     const root = roots.value.find(r => r.rootIndex === branch.rootIndex);
     return {x: root.x, y: root.y, r: root.r}
@@ -492,29 +535,127 @@ function resetTree() {
 }
 
 function isFocused(part) {
-    if(!selectedRoot.value) {
-        if(selectedNut.value === null && selectedBranch.value === null) return true;
-        if(part.type === "nut") {
-            return selectedNut.value.id === part.id;
+    if (selectedNut.value) {
+        if (part.type === 'root') {
+            return part.rootIndex === selectedNut.value.rootIndex;
         }
-        if(part.type === "branch") {
-            return selectedBranch.value.id === part.id;
+
+        if (part.type === 'branch') {
+            return part.id === selectedNut.value.id;
         }
-        if(part.type === "root") {
-            return (selectedBranch.value && selectedBranch.value.rootIndex === part.rootIndex) || (selectedNut.value && selectedNut.value.rootIndex === part.rootIndex)
+
+        if (part.type === 'nut') {
+            return part.branchName === selectedNut.value.name && part.rootIndex === selectedNut.value.rootIndex;
         }
-    } else {
-        if(selectedRoot.value === null) return true;
-        if(part.type === 'root') {
-            return part.id === selectedRoot.value.id
-        }
-        return part.rootIndex === selectedRoot.value.rootIndex;
+
+        return false;
     }
-    return false;
+
+    if (selectedBranch.value) {
+        if (part.type === 'root') {
+            return part.rootIndex === selectedBranch.value.rootIndex;
+        }
+
+        if (part.type === 'branch') {
+            return part.id === selectedBranch.value.id;
+        }
+
+        if (part.type === 'nut') {
+            return part.branchName === selectedBranch.value.name && part.rootIndex === selectedBranch.value.rootIndex;
+        }
+
+        return false;
+    }
+
+    if (selectedRoot.value) {
+        if (part.type === 'root') {
+            return part.id === selectedRoot.value.id;
+        }
+
+        if (part.type === 'branch') {
+            return part.rootIndex === selectedRoot.value.rootIndex;
+        }
+
+        if (part.type === 'nut') {
+            return part.rootIndex === selectedRoot.value.rootIndex;
+        }
+
+        return false;
+    }
+
+    if (
+        hasKeyboardFocusOnChart.value &&
+        hasStartedKeyboardNavigation.value
+    ) {
+        if (accessibilityCursor.value.level === 'root') {
+            if (part.type === 'root') {
+                return keyboardFocusedRoot.value && part.id === keyboardFocusedRoot.value.id;
+            }
+
+            if (part.type === 'branch') {
+                return keyboardFocusedRoot.value && part.rootIndex === keyboardFocusedRoot.value.rootIndex;
+            }
+
+            if (part.type === 'nut') {
+                return keyboardFocusedRoot.value && part.rootIndex === keyboardFocusedRoot.value.rootIndex;
+            }
+
+            return false;
+        }
+
+        if (accessibilityCursor.value.level === 'branch') {
+            if (part.type === 'root') {
+                return keyboardFocusedRoot.value && part.rootIndex === keyboardFocusedRoot.value.rootIndex;
+            }
+
+            if (part.type === 'branch') {
+                return keyboardFocusedBranch.value && part.id === keyboardFocusedBranch.value.id;
+            }
+
+            if (part.type === 'nut') {
+                return false;
+            }
+
+            return false;
+        }
+
+        if (accessibilityCursor.value.level === 'nut') {
+            if (part.type === 'root') {
+                return keyboardFocusedRoot.value && part.rootIndex === keyboardFocusedRoot.value.rootIndex;
+            }
+
+            if (part.type === 'branch') {
+                return keyboardFocusedNutBranch.value && part.id === keyboardFocusedNutBranch.value.id;
+            }
+
+            if (part.type === 'nut') {
+                return keyboardFocusedNutBranch.value && part.branchName === keyboardFocusedNutBranch.value.name && part.rootIndex === keyboardFocusedNutBranch.value.rootIndex;
+            }
+
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function pickNut(branch) {
     resetTree();
+
+    const rootPosition = rootsOrdered.value.findIndex(root => root.rootIndex === branch.rootIndex);
+    const branchPosition = (branchesByRoot.value[rootPosition] || []).findIndex(item => item.id === branch.id);
+
+    if (rootPosition !== -1) {
+        accessibilityCursor.value.rootIndex = rootPosition;
+    }
+
+    if (branchPosition !== -1) {
+        accessibilityCursor.value.branchIndex = branchPosition;
+    }
+
+    accessibilityCursor.value.level = 'nut';
+    accessibilityCursor.value.nutIndex = 0;
+
     nextTick(() => {
         selectedNut.value = branch;
         selectedBranch.value = branch;
@@ -525,8 +666,9 @@ function pickNut(branch) {
             80,
             80,
         );
-        emit('selectNut', branch.breakdown)
-    })
+        emit('selectNut', branch.breakdown);
+        announceCurrentCursor();
+    });
 }
 
 function leaveNut() {
@@ -536,25 +678,53 @@ function leaveNut() {
 }
 
 function pickBranch(branch) {
+    const rootPosition = rootsOrdered.value.findIndex(root => root.rootIndex === branch.rootIndex);
+    const branchPosition = (branchesByRoot.value[rootPosition] || []).findIndex(item => item.id === branch.id);
+
+    if (rootPosition !== -1) {
+        accessibilityCursor.value.rootIndex = rootPosition;
+    }
+
+    if (branchPosition !== -1) {
+        accessibilityCursor.value.branchIndex = branchPosition;
+    }
+
+    accessibilityCursor.value.level = 'branch';
+    accessibilityCursor.value.nutIndex = 0;
+
     if (selectedBranch.value && selectedBranch.value.id === branch.id) {
         selectedBranch.value = null;
         resetTree();
-        emit('selectBranch', null)
+        emit('selectBranch', null);
+        announceCurrentCursor();
     } else {
         resetTree();
         selectedBranch.value = branch;
-        emit('selectBranch', branch)
+        emit('selectBranch', branch);
+        announceCurrentCursor();
     }
 }
 
 function pickRoot(root) {
+    const rootPosition = rootsOrdered.value.findIndex(item => item.id === root.id);
+
+    if (rootPosition !== -1) {
+        accessibilityCursor.value.rootIndex = rootPosition;
+    }
+
+    accessibilityCursor.value.level = 'root';
+    accessibilityCursor.value.branchIndex = 0;
+    accessibilityCursor.value.nutIndex = 0;
+
     if (selectedRoot.value && selectedRoot.value.id === root.id) {
         resetTree();
         emit('selectRoot', null);
+        announceCurrentCursor();
     } else {
         resetTree();
         selectedRoot.value = root;
         emit('selectRoot', root);
+        announceCurrentCursor();
     }
 }
 
@@ -844,6 +1014,340 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+function getRootAnnouncement(root) {
+    if (!root) return '';
+
+    const valueLabel = dataLabel({
+        p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
+        v: root.total,
+        s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
+        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingValue
+    });
+
+    const percentageLabel = dataLabel({
+        v: root.total / treeTotal.value * 100,
+        s: '%',
+        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage
+    });
+
+    return `Root ${root.name}. Value ${valueLabel}. ${percentageLabel} of total.`;
+}
+
+function getBranchAnnouncement(branch) {
+    if (!branch) return '';
+
+    const valueLabel = dataLabel({
+        p: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels.prefix,
+        v: branch.value,
+        s: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels.suffix,
+        r: FINAL_CONFIG.value.style.chart.layout.branches.labels.dataLabels.roundingValue
+    });
+
+    const percentageToRoot = dataLabel({
+        v: branch.proportionToRoot * 100,
+        s: '%',
+        r: FINAL_CONFIG.value.style.chart.layout.legend.roundingPercentage
+    });
+
+    return `Branch ${branch.name}. Root ${branch.rootName}. Value ${valueLabel}. ${percentageToRoot} of root ${branch.rootName}.`;
+}
+
+function getNutAnnouncement(nut) {
+    if (!nut) return '';
+
+    const valueLabel = dataLabel({
+        p: FINAL_CONFIG.value.style.chart.layout.legend.prefix,
+        v: nut.value,
+        s: FINAL_CONFIG.value.style.chart.layout.legend.suffix,
+        r: FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.roundingValue
+    });
+
+    const percentageToBranch = dataLabel({
+        v: nut.proportionToBranch * 100,
+        s: '%',
+        r: FINAL_CONFIG.value.style.chart.layout.nuts.selected.labels.roundingPercentage
+    });
+
+    return `Nut ${nut.name}. Branch ${nut.branchName}. Root ${nut.rootName}. Value ${valueLabel}. ${percentageToBranch} of branch ${nut.branchName}.`;
+}
+
+const currentRoot = computed(() => {
+    return rootsOrdered.value[accessibilityCursor.value.rootIndex] || null;
+});
+
+const currentBranch = computed(() => {
+    const rootBranches = branchesByRoot.value[accessibilityCursor.value.rootIndex] || [];
+    return rootBranches[accessibilityCursor.value.branchIndex] || null;
+});
+
+const currentNut = computed(() => {
+    const rootBranches = nutsByRootAndBranch.value[accessibilityCursor.value.rootIndex] || [];
+    const branchNuts = rootBranches[accessibilityCursor.value.branchIndex] || [];
+    return branchNuts[accessibilityCursor.value.nutIndex] || null;
+});
+
+const keyboardFocusedRoot = computed(() => {
+    return currentRoot.value;
+});
+
+const keyboardFocusedBranch = computed(() => {
+    return currentBranch.value;
+});
+
+const keyboardFocusedNutBranch = computed(() => {
+    if (accessibilityCursor.value.level !== 'nut') return null;
+    return currentBranch.value;
+});
+
+const hasKeyboardFocusOnChart = computed(() => {
+    return isSvgKeyboardFocused.value;
+});
+
+function announceCurrentCursor() {
+    if (accessibilityCursor.value.level === 'root') {
+        accessibilityAnnouncement.value = getRootAnnouncement(currentRoot.value);
+        return;
+    }
+    if (accessibilityCursor.value.level === 'branch') {
+        accessibilityAnnouncement.value = getBranchAnnouncement(currentBranch.value);
+        return;
+    }
+    if (accessibilityCursor.value.level === 'nut') {
+        accessibilityAnnouncement.value = getNutAnnouncement(currentNut.value);
+    }
+}
+
+function resetAccessibilityCursor() {
+    accessibilityCursor.value = {
+        level: 'root',
+        rootIndex: 0,
+        branchIndex: 0,
+        nutIndex: 0,
+        locked: false
+    };
+    accessibilityAnnouncement.value = '';
+}
+
+function clampBranchIndex() {
+    const rootBranches = branchesByRoot.value[accessibilityCursor.value.rootIndex] || [];
+    if (!rootBranches.length) {
+        accessibilityCursor.value.branchIndex = 0;
+        return;
+    }
+    if (accessibilityCursor.value.branchIndex >= rootBranches.length) {
+        accessibilityCursor.value.branchIndex = 0;
+    }
+    if (accessibilityCursor.value.branchIndex < 0) {
+        accessibilityCursor.value.branchIndex = rootBranches.length - 1;
+    }
+}
+
+function clampNutIndex() {
+    const rootBranches = nutsByRootAndBranch.value[accessibilityCursor.value.rootIndex] || [];
+    const branchNuts = rootBranches[accessibilityCursor.value.branchIndex] || [];
+    if (!branchNuts.length) {
+        accessibilityCursor.value.nutIndex = 0;
+        return;
+    }
+    if (accessibilityCursor.value.nutIndex >= branchNuts.length) {
+        accessibilityCursor.value.nutIndex = 0;
+    }
+    if (accessibilityCursor.value.nutIndex < 0) {
+        accessibilityCursor.value.nutIndex = branchNuts.length - 1;
+    }
+}
+
+function moveVertical(stepDirection) {
+    if (accessibilityCursor.value.level === 'root') {
+        const totalRoots = rootsOrdered.value.length;
+        if (!totalRoots) return;
+        accessibilityCursor.value.rootIndex += stepDirection;
+        if (accessibilityCursor.value.rootIndex >= totalRoots) {
+            accessibilityCursor.value.rootIndex = 0;
+        }
+        if (accessibilityCursor.value.rootIndex < 0) {
+            accessibilityCursor.value.rootIndex = totalRoots - 1;
+        }
+        accessibilityCursor.value.branchIndex = 0;
+        accessibilityCursor.value.nutIndex = 0;
+        announceCurrentCursor();
+        return;
+    }
+
+    if (accessibilityCursor.value.level === 'branch') {
+        accessibilityCursor.value.branchIndex += stepDirection;
+        clampBranchIndex();
+        accessibilityCursor.value.nutIndex = 0;
+        announceCurrentCursor();
+        return;
+    }
+
+    if (accessibilityCursor.value.level === 'nut') {
+        accessibilityCursor.value.nutIndex += stepDirection;
+        clampNutIndex();
+        announceCurrentCursor();
+    }
+}
+
+function moveHorizontal(stepDirection) {
+    if (stepDirection > 0) {
+        if (accessibilityCursor.value.level === 'root') {
+            const rootBranches = branchesByRoot.value[accessibilityCursor.value.rootIndex] || [];
+            if (!rootBranches.length) return;
+
+            accessibilityCursor.value.level = 'branch';
+            accessibilityCursor.value.branchIndex = 0;
+            accessibilityCursor.value.nutIndex = 0;
+            announceCurrentCursor();
+            return;
+        }
+
+        if (accessibilityCursor.value.level === 'branch') {
+            const rootBranches = nutsByRootAndBranch.value[accessibilityCursor.value.rootIndex] || [];
+            const branchNuts = rootBranches[accessibilityCursor.value.branchIndex] || [];
+            if (!branchNuts.length) return;
+
+            accessibilityCursor.value.level = 'nut';
+            accessibilityCursor.value.nutIndex = 0;
+
+            if (currentBranch.value) {
+                pickNut(currentBranch.value);
+            } else {
+                announceCurrentCursor();
+            }
+
+            return;
+        }
+
+        return;
+    }
+
+    if (accessibilityCursor.value.level === 'nut') {
+        leaveNut();
+        selectedBranch.value = null;
+        accessibilityCursor.value.level = 'branch';
+        accessibilityCursor.value.nutIndex = 0;
+        announceCurrentCursor();
+        return;
+    }
+
+    if (accessibilityCursor.value.level === 'branch') {
+        selectedBranch.value = null;
+        selectedRoot.value = null;
+        accessibilityCursor.value.level = 'root';
+        accessibilityCursor.value.nutIndex = 0;
+        announceCurrentCursor();
+    }
+}
+
+function activateCurrentCursor() {
+    if (accessibilityCursor.value.level === 'root' && currentRoot.value) {
+        pickRoot(currentRoot.value);
+        accessibilityAnnouncement.value = `${getRootAnnouncement(currentRoot.value)} selected.`;
+        return;
+    }
+    if (accessibilityCursor.value.level === 'branch' && currentBranch.value) {
+        pickBranch(currentBranch.value);
+        accessibilityAnnouncement.value = `${getBranchAnnouncement(currentBranch.value)} selected.`;
+        return;
+    }
+    if (accessibilityCursor.value.level === 'nut' && currentBranch.value && currentNut.value) {
+        pickNut(currentBranch.value);
+        accessibilityAnnouncement.value = `${getNutAnnouncement(currentNut.value)} details opened.`;
+    }
+}
+
+function onSvgFocus() {
+    isSvgKeyboardFocused.value = true;
+    hasStartedKeyboardNavigation.value = false;
+}
+
+function onSvgBlur() {
+    isSvgKeyboardFocused.value = false;
+    hasStartedKeyboardNavigation.value = false;
+    accessibilityAnnouncement.value = '';
+    if (!selectedRoot.value && !selectedBranch.value && !selectedNut.value) {
+        resetAccessibilityCursor();
+    }
+}
+
+function onSvgKeydown(event) {
+    const isUp = event.key === 'ArrowUp';
+    const isDown = event.key === 'ArrowDown';
+    const isLeft = event.key === 'ArrowLeft';
+    const isRight = event.key === 'ArrowRight';
+    const isActivate = event.key === 'Enter' || event.key === ' ';
+    const isEscape = event.key === 'Escape';
+
+    if (!isUp && !isDown && !isLeft && !isRight && !isActivate && !isEscape) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!isSvgKeyboardFocused.value) {
+        isSvgKeyboardFocused.value = true;
+    }
+
+    if (isEscape) {
+        resetTree();
+        resetAccessibilityCursor();
+        hasStartedKeyboardNavigation.value = false;
+        return;
+    }
+
+    if (isUp || isDown || isLeft || isRight) {
+        hasStartedKeyboardNavigation.value = true;
+    }
+
+    if (isUp) {
+        moveVertical(-1);
+        return;
+    }
+
+    if (isDown) {
+        moveVertical(1);
+        return;
+    }
+
+    if (isLeft) {
+        moveHorizontal(-1);
+        return;
+    }
+
+    if (isRight) {
+        moveHorizontal(1);
+        return;
+    }
+
+    if (isActivate) {
+        activateCurrentCursor();
+    }
+}
+
+const a11yTable = computed(() => {
+    return {
+        headers: table.value.head,
+        rows: table.value.body.map((row) => ([
+            row.rootName,
+            row.rootValue,
+            dataLabel({ v: row.rootToTotal * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
+            row.branchName,
+            row.branchValue,
+            dataLabel({ v: row.branchToRoot * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
+            dataLabel({ v: row.branchToTotal * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
+            row.nutName,
+            row.nutValue,
+            dataLabel({ v: row.nutToBranch * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
+            dataLabel({ v: row.nutToRoot * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage }),
+            dataLabel({ v: row.nutToTotal * 100, s: '%', r: FINAL_CONFIG.value.table.td.roundingPercentage })
+        ]))
+    };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -867,6 +1371,24 @@ defineExpose({
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`"
         @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
     >
+        <!-- A11Y -->
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <div aria-live="polite" class="sr-only">
+            {{ accessibilityAnnouncement }}
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -971,268 +1493,627 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            v-if="svg.height > 0" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
-            :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.width <= 0 ? 10 : svg.width"
-                :height="svg.height <= 0 ? 10 : svg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position: relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS"
+                :aria-describedby="`chart-instructions-${uid}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+                v-if="svg.height > 0" :viewBox="`0 0 ${svg.width <= 0 ? 10 : svg.width} ${svg.height <= 0 ? 10 : svg.height}`"
+                :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
+                <PackageVersion />
 
-            <!-- TITLE AS G -->
-            <g v-if="!selectedNut">
-                <text
-                    data-cy="chestnut-title"
-                    v-if="FINAL_CONFIG.style.chart.layout.title.text"
-                    text-anchor="middle"
-                    :fill="FINAL_CONFIG.style.chart.layout.title.color"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.title.bold ? 'bold' : 'normal'"
-                    :font-size="FINAL_CONFIG.style.chart.layout.title.fontSize"
-                    :x="svg.width / 2"
-                    :y="12 + FINAL_CONFIG.style.chart.layout.title.fontSize + FINAL_CONFIG.style.chart.layout.title.offsetY"
-                    @click="resetTree"
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="0"
+                    :y="0"
+                    :width="svg.width <= 0 ? 10 : svg.width"
+                    :height="svg.height <= 0 ? 10 : svg.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
                 >
-                    {{ FINAL_CONFIG.style.chart.layout.title.text }}
-                </text>
-                <text
-                    data-cy="chestnut-subtitle"
-                    v-if="FINAL_CONFIG.style.chart.layout.title.subtitle.text"
-                    text-anchor="middle"
-                    :fill="FINAL_CONFIG.style.chart.layout.title.subtitle.color"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.title.subtitle.bold ? 'bold' : 'normal'"
-                    :font-size="FINAL_CONFIG.style.chart.layout.title.subtitle.fontSize"
-                    :x="svg.width / 2"
-                    :y="48 + FINAL_CONFIG.style.chart.layout.title.subtitle.fontSize + FINAL_CONFIG.style.chart.layout.title.subtitle.offsetY"
-                    @click="resetTree"
-                >
-                    {{ FINAL_CONFIG.style.chart.layout.title.subtitle.text }}
-                </text>
-            </g>
+                    <slot name="chart-background"/>
+                </foreignObject>
 
-            <!-- DEFS -->
-            <defs>
-                <radialGradient
-                    cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
-                    v-for="(d, i) in mutableDataset"
-                    :id="`root_gradient_${uid}_${d.rootIndex}`"
-                >
-                    <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.roots.gradientIntensity)"/>
-                    <stop offset="100%" :stop-color="d.color" />
-                </radialGradient>
-                <linearGradient
-                    x1="0%" y1="0%" x2="100%" y2="0%"
-                    v-for="d in mutableDataset"
-                    :id="`branch_gradient_${uid}_${d.rootIndex}`"
-                >
-                    <stop offset="0%" :stop-color="d.color" />
-                    <stop offset="100%" :stop-color="setOpacity(shiftHue(d.color, 0.02), 100 - FINAL_CONFIG.style.chart.layout.branches.gradientIntensity)"/>
-                </linearGradient>
-                <!-- picked nut core gradient -->
-                <radialGradient
-                    cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
-                    :id="`nutpick_${uid}`"
-                >
-                    <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 0)"/>
-                    <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.nuts.selected.gradientIntensity)"/>
-                    <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 0)"/>
-                </radialGradient>
-                <radialGradient
-                    cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
-                    :id="`nut_${uid}`"
-                >
-                    <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 0)"/>
-                    <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.nuts.gradientIntensity)"/>
-                    <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 0)"/>
-                </radialGradient>
-                <!-- picked nut underlayer -->
-                <radialGradient
-                    cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
-                    :id="`nut_underlayer_${uid}`"
-                >
-                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 100)"/>
-                    <stop offset="80%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 60)"/>
-                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"/>
-                </radialGradient>
-            </defs>
+                <!-- TITLE AS G -->
+                <g v-if="!selectedNut">
+                    <text
+                        data-cy="chestnut-title"
+                        v-if="FINAL_CONFIG.style.chart.layout.title.text"
+                        text-anchor="middle"
+                        :fill="FINAL_CONFIG.style.chart.layout.title.color"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.title.bold ? 'bold' : 'normal'"
+                        :font-size="FINAL_CONFIG.style.chart.layout.title.fontSize"
+                        :x="svg.width / 2"
+                        :y="12 + FINAL_CONFIG.style.chart.layout.title.fontSize + FINAL_CONFIG.style.chart.layout.title.offsetY"
+                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                    >
+                        {{ FINAL_CONFIG.style.chart.layout.title.text }}
+                    </text>
+                    <text
+                        data-cy="chestnut-subtitle"
+                        v-if="FINAL_CONFIG.style.chart.layout.title.subtitle.text"
+                        text-anchor="middle"
+                        :fill="FINAL_CONFIG.style.chart.layout.title.subtitle.color"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.title.subtitle.bold ? 'bold' : 'normal'"
+                        :font-size="FINAL_CONFIG.style.chart.layout.title.subtitle.fontSize"
+                        :x="svg.width / 2"
+                        :y="48 + FINAL_CONFIG.style.chart.layout.title.subtitle.fontSize + FINAL_CONFIG.style.chart.layout.title.subtitle.offsetY"
+                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                    >
+                        {{ FINAL_CONFIG.style.chart.layout.title.subtitle.text }}
+                    </text>
+                </g>
 
-            <!-- GRAND TOTAL -->
-            <g v-if="FINAL_CONFIG.style.chart.layout.grandTotal.show">
-                <text
-                    :x="drawableArea.seedX"
-                    :y="32 + FINAL_CONFIG.style.chart.layout.grandTotal.offsetY"
-                    :font-size="FINAL_CONFIG.style.chart.layout.grandTotal.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
-                    :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
-                    text-anchor="middle"
-                    @click="resetTree"
-                >
-                    {{ FINAL_CONFIG.style.chart.layout.grandTotal.text }}
-                </text>
-                <text
-                    :x="drawableArea.seedX"
-                    :y="38 + FINAL_CONFIG.style.chart.layout.grandTotal.fontSize + FINAL_CONFIG.style.chart.layout.grandTotal.offsetY"
-                    :font-size="FINAL_CONFIG.style.chart.layout.grandTotal.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
-                    :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
-                    text-anchor="middle"
-                    @click="resetTree"
-                >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.grandTotal.formatter,
-                        treeTotal,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.grandTotal.prefix,
-                            v: treeTotal,
-                            s: FINAL_CONFIG.style.chart.layout.grandTotal.suffix,
-                            r: FINAL_CONFIG.style.chart.layout.grandTotal.roundingValue
-                        })) 
-                    }}
-                </text>
-                
-            </g>
-
-            <!-- LINKS -->
-            <g v-for="branch in branches">
+                <!-- DEFS -->
                 <defs>
-                    <linearGradient :id="`link_grad_${branch.id}`">
-                        <stop offset="0%" :stop-color="branch.color"/>
-                        <stop offset="100%" :stop-color="setOpacity(branch.color, FINAL_CONFIG.style.chart.layout.links.opacity)"/>
+                    <radialGradient
+                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        v-for="(d, i) in mutableDataset"
+                        :id="`root_gradient_${uid}_${d.rootIndex}`"
+                    >
+                        <stop offset="0%" :stop-color="setOpacity(shiftHue(d.color, 0.05), 100 - FINAL_CONFIG.style.chart.layout.roots.gradientIntensity)"/>
+                        <stop offset="100%" :stop-color="d.color" />
+                    </radialGradient>
+                    <linearGradient
+                        x1="0%" y1="0%" x2="100%" y2="0%"
+                        v-for="d in mutableDataset"
+                        :id="`branch_gradient_${uid}_${d.rootIndex}`"
+                    >
+                        <stop offset="0%" :stop-color="d.color" />
+                        <stop offset="100%" :stop-color="setOpacity(shiftHue(d.color, 0.02), 100 - FINAL_CONFIG.style.chart.layout.branches.gradientIntensity)"/>
                     </linearGradient>
+                    <!-- picked nut core gradient -->
+                    <radialGradient
+                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        :id="`nutpick_${uid}`"
+                    >
+                        <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 0)"/>
+                        <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.nuts.selected.gradientIntensity)"/>
+                        <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 0)"/>
+                    </radialGradient>
+                    <radialGradient
+                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        :id="`nut_${uid}`"
+                    >
+                        <stop offset="0%" :stop-color="setOpacity('#FFFFFF', 0)"/>
+                        <stop offset="80%" :stop-color="setOpacity('#FFFFFF', FINAL_CONFIG.style.chart.layout.nuts.gradientIntensity)"/>
+                        <stop offset="100%" :stop-color="setOpacity('#FFFFFF', 0)"/>
+                    </radialGradient>
+                    <!-- picked nut underlayer -->
+                    <radialGradient
+                        cx="50%" cy="50%" r="50%" fx="50%" fy="50%"
+                        :id="`nut_underlayer_${uid}`"
+                    >
+                        <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 100)"/>
+                        <stop offset="80%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 60)"/>
+                        <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)"/>
+                    </radialGradient>
                 </defs>
-                <path 
-                    :d="getLinkPath(branch)"
-                    :stroke="setOpacity(branch.color, FINAL_CONFIG.style.chart.layout.links.opacity)"
-                    :fill="`url(#link_grad_${branch.id})`"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    :style="`opacity:${isFocused(branch) ? 1 : 0}`"
-                    @click="resetTree"
-                />
-            </g>
 
-            <!-- ROOTS -->
-            <circle 
-                v-for="root in roots" 
-                :cx="root.x" 
-                :cy="root.y" 
-                :r="root.r" 
-                :fill="FINAL_CONFIG.style.chart.layout.roots.underlayerColor"
-                stroke="none"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
-            />
-            <circle 
-                v-for="(root, i) in roots" 
-                :data-cy="`chestnut-root-${i}`"
-                :cx="root.x" 
-                :cy="root.y" 
-                :r="root.r" 
-                :fill="FINAL_CONFIG.style.chart.layout.roots.useGradient ? `url(#root_gradient_${uid}_${root.rootIndex})` : root.color"
-                :stroke="FINAL_CONFIG.style.chart.layout.roots.stroke" 
-                :stroke-width="FINAL_CONFIG.style.chart.layout.roots.strokeWidth"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
-                @click="pickRoot(root)"
-            />
-            <g v-if="FINAL_CONFIG.style.chart.layout.roots.labels.show">
-                <!-- ROOT TOTAL -->
-                <text v-for="(root, i) in roots"
-                    :data-cy="`chestnut-root-label-${i}`"
-                    :x="root.x"
-                    :y="root.y + FINAL_CONFIG.style.chart.layout.roots.labels.fontSize / 2.6"
-                    text-anchor="middle"
-                    :font-size="FINAL_CONFIG.style.chart.layout.roots.labels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.roots.labels.adaptColorToBackground ? adaptColorToBackground(root.color) : FINAL_CONFIG.style.chart.layout.roots.labels.color"
-                    font-weight="bold"
+                <!-- GRAND TOTAL -->
+                <g v-if="FINAL_CONFIG.style.chart.layout.grandTotal.show">
+                    <text
+                        :x="drawableArea.seedX"
+                        :y="32 + FINAL_CONFIG.style.chart.layout.grandTotal.offsetY"
+                        :font-size="FINAL_CONFIG.style.chart.layout.grandTotal.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
+                        text-anchor="middle"
+                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                    >
+                        {{ FINAL_CONFIG.style.chart.layout.grandTotal.text }}
+                    </text>
+                    <text
+                        :x="drawableArea.seedX"
+                        :y="38 + FINAL_CONFIG.style.chart.layout.grandTotal.fontSize + FINAL_CONFIG.style.chart.layout.grandTotal.offsetY"
+                        :font-size="FINAL_CONFIG.style.chart.layout.grandTotal.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.grandTotal.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.layout.grandTotal.color"
+                        text-anchor="middle"
+                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                    >
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.grandTotal.formatter,
+                            treeTotal,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.grandTotal.prefix,
+                                v: treeTotal,
+                                s: FINAL_CONFIG.style.chart.layout.grandTotal.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.grandTotal.roundingValue
+                            })) 
+                        }}
+                    </text>
+                    
+                </g>
+
+                <!-- LINKS -->
+                <g v-for="branch in branches">
+                    <defs>
+                        <linearGradient :id="`link_grad_${branch.id}`">
+                            <stop offset="0%" :stop-color="branch.color"/>
+                            <stop offset="100%" :stop-color="setOpacity(branch.color, FINAL_CONFIG.style.chart.layout.links.opacity)"/>
+                        </linearGradient>
+                    </defs>
+                    <path 
+                        :d="getLinkPath(branch)"
+                        :stroke="setOpacity(branch.color, FINAL_CONFIG.style.chart.layout.links.opacity)"
+                        :fill="`url(#link_grad_${branch.id})`"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :style="`opacity:${isFocused(branch) ? 1 : 0}`"
+                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                    />
+                </g>
+
+                <!-- ROOTS -->
+                <circle 
+                    v-for="root in roots" 
+                    :cx="root.x" 
+                    :cy="root.y" 
+                    :r="root.r" 
+                    :fill="FINAL_CONFIG.style.chart.layout.roots.underlayerColor"
+                    stroke="none"
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
+                />
+                <circle 
+                    v-for="(root, i) in roots" 
+                    :data-cy="`chestnut-root-${i}`"
+                    :aria-label="getRootAnnouncement(root)"
+                    :cx="root.x" 
+                    :cy="root.y" 
+                    :r="root.r" 
+                    :fill="FINAL_CONFIG.style.chart.layout.roots.useGradient ? `url(#root_gradient_${uid}_${root.rootIndex})` : root.color"
+                    :stroke="FINAL_CONFIG.style.chart.layout.roots.stroke" 
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.roots.strokeWidth"
                     :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
                     @click="pickRoot(root)"
-                >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
-                        root.total,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.roots.labels.prefix,
-                            v: root.total,
-                            s: FINAL_CONFIG.style.chart.layout.roots.labels.suffix,
-                            r: FINAL_CONFIG.style.chart.layout.roots.labels.roundingValue
-                        }),
-                        { datapoint: root }
-                        ) 
-                    }}
-                </text>
-                <!-- ROOT NAME LABEL -->
-                <g v-for="root in roots"> 
-                    <g v-if="(selectedNut && root.rootIndex === selectedNut.rootIndex) || (selectedBranch && root.rootIndex === selectedBranch.rootIndex) || (selectedRoot && root.rootIndex === selectedRoot.rootIndex)">
+                />
+                <g v-if="FINAL_CONFIG.style.chart.layout.roots.labels.show">
+                    <!-- ROOT TOTAL -->
+                    <text v-for="(root, i) in roots"
+                        :data-cy="`chestnut-root-label-${i}`"
+                        :x="root.x"
+                        :y="root.y + FINAL_CONFIG.style.chart.layout.roots.labels.fontSize / 2.6"
+                        text-anchor="middle"
+                        :font-size="FINAL_CONFIG.style.chart.layout.roots.labels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.layout.roots.labels.adaptColorToBackground ? adaptColorToBackground(root.color) : FINAL_CONFIG.style.chart.layout.roots.labels.color"
+                        font-weight="bold"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(root) ? 1 : 0.05}`"
+                        @click="pickRoot(root)"
+                    >
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
+                            root.total,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.roots.labels.prefix,
+                                v: root.total,
+                                s: FINAL_CONFIG.style.chart.layout.roots.labels.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.roots.labels.roundingValue
+                            }),
+                            { datapoint: root }
+                            ) 
+                        }}
+                    </text>
+                    <!-- ROOT NAME LABEL -->
+                    <g v-for="root in roots"> 
+                        <g v-if="(selectedNut && root.rootIndex === selectedNut.rootIndex) || (selectedBranch && root.rootIndex === selectedBranch.rootIndex) || (selectedRoot && root.rootIndex === selectedRoot.rootIndex)">
+                            <text
+                                :x="root.x"
+                                :y="root.y + root.r + 24"
+                                text-anchor="middle"
+                                :fill="FINAL_CONFIG.style.chart.layout.roots.labels.name.color"
+                                :font-size="FINAL_CONFIG.style.chart.layout.roots.labels.name.fontSize"
+                                :font-weight="FINAL_CONFIG.style.chart.layout.roots.labels.name.bold ? 'bold' : 'normal'"
+                                @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                            >
+                                {{ root.name }}
+                            </text>
+                        </g>
+                    </g>
+                </g>
+
+                <!-- BRANCHES -->
+                <rect 
+                    data-cy="chestnut-branch"
+                    v-for="branch in branches"
+                    :x="branch.x1"
+                    :y="branch.y1"
+                    :height="svg.branchSize"
+                    :width="branch.x2 - branch.x1"
+                    :fill="FINAL_CONFIG.style.chart.layout.branches.underlayerColor"
+                    :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
+                    stroke="none"
+                    :style="`opacity:${isFocused(branch) ? 1 : 0.05}`"
+                    @click="pickBranch(branch)"
+                />
+                <rect 
+                    v-for="(branch, i) in branches"
+                    :data-cy="`chestnut-branch-${i}`"
+                    :aria-label="getBranchAnnouncement(branch)"
+                    :x="branch.x1"
+                    :y="branch.y1"
+                    :height="svg.branchSize"
+                    :width="branch.x2 - branch.x1"
+                    :fill="FINAL_CONFIG.style.chart.layout.branches.useGradient ? `url(#branch_gradient_${uid}_${branch.rootIndex})` : branch.color"
+                    :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
+                    :stroke="FINAL_CONFIG.style.chart.layout.branches.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.branches.strokeWidth"
+                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
+                    @click="pickBranch(branch)"
+                />
+                <g v-if="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.show">
+                    <g v-for="branch in branches">
+                        <!-- BRANCH TOTAL -->
                         <text
-                            :x="root.x"
-                            :y="root.y + root.r + 24"
-                            text-anchor="middle"
-                            :fill="FINAL_CONFIG.style.chart.layout.roots.labels.name.color"
-                            :font-size="FINAL_CONFIG.style.chart.layout.roots.labels.name.fontSize"
-                            :font-weight="FINAL_CONFIG.style.chart.layout.roots.labels.name.bold ? 'bold' : 'normal'"
-                            @click="resetTree"
+                            v-if="branch.proportionToRoot * 100 > FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.hideUnderValue"    
+                            :x="branch.x1 + 6"
+                            :y="branch.y1 + svg.branchSize / 1.5"
+                            text-anchor="start"
+                            :fill="adaptColorToBackground(branch.color)"
+                            :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
+                            font-weight="bold"
+                            :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
+                            @click="pickBranch(branch)"
                         >
-                            {{ root.name }}
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.formatter,
+                                branch.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix,
+                                    v: branch.value,
+                                    s: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue
+                                }),
+                                { datapoint: branch }
+                                )
+                            }}
+                        </text>
+                    </g>
+
+                </g>
+
+                <!-- NUTS -->
+
+                <g v-for="(branch, b) in branches">
+                    <path 
+                        v-for="(arc, i) in makeDonut(
+                            { series: branch.breakdown, base:1 },
+                            branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX, 
+                            branch.y1 + svg.branchSize / 2,
+                            svg.branchSize / 3,
+                            svg.branchSize / 3
+                        )"
+                        :data-cy="`chestnut-nut-${b}`"
+                        :d="arc.path" 
+                        :stroke="arc.color" 
+                        :stroke-width="10" 
+                        fill="none"
+                        :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
+                    />
+
+                    <!-- tooltip trap -->
+                    <circle
+                        :data-cy="`chestnut-trap-${b}`"
+                        :aria-label="`Open details for branch ${branch.name} in root ${branch.rootName}`"
+                        :fill="FINAL_CONFIG.style.chart.layout.nuts.useGradient ? `url(#nut_${uid})` : 'transparent'"
+                        :cx="branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :cy="branch.y1 + svg.branchSize / 2"
+                        :r="svg.branchSize / 2 + 2"
+                        @click="pickNut(branch)"
+                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};opacity:${isFocused(branch) ? 1 : 0.1}`"
+                    />
+                </g>
+
+                <g v-if="FINAL_CONFIG.style.chart.layout.branches.labels.show && !selectedBranch">
+                    <text
+                        v-for="branch in branches"
+                        :x="branch.x2 + svg.branchSize + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :y="branch.y1 + svg.branchSize / 2 + 5"
+                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.branches.labels.bold ? 'bold' : 'normal'"
+                        :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
+                        text-anchor="start"
+                        :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
+                    >
+                        {{ branch.name }}
+                    </text>
+                </g>
+
+                
+                <!-- VERTICAL SEPARATOR -->
+                <line 
+                    :x1="256 + svg.padding.left"
+                    :x2="256 + svg.padding.left"
+                    :y1="drawableArea.top"
+                    :y2="drawableArea.bottom"
+                    :stroke="FINAL_CONFIG.style.chart.layout.verticalSeparator.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.verticalSeparator.strokeWidth"
+                />
+
+                <!-- ROOT LEGEND -->
+                <foreignObject
+                    v-if="!selectedNut && !selectedBranch"
+                    :x="0"
+                    :y="drawableArea.bottom"
+                    :height="svg.height - drawableArea.bottom"
+                    :width="svg.width"
+                    style="overflow: visible"
+                    data-no-svg-export
+                    @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                >
+                    <div style="width: 100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column">
+                        <div style="display: flex; align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;flex-direction:row">
+                            <div v-for="root in roots" :style="`display:flex;align-items:center;gap:3px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`">
+                                <svg viewBox="0 0 20 20" height="16" width="16">
+                                    <circle cx="10" cy="10" r="10" :fill="root.color" stroke="none"/>
+                                </svg>
+                                <template v-if="!loading">
+                                    <span>{{ root.name }}:</span>
+                                    <b>
+                                        {{ applyDataLabel(
+                                            FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
+                                            root.total,
+                                            dataLabel({
+                                                p: FINAL_CONFIG.style.chart.layout.legend.prefix,
+                                                v: root.total,
+                                                s: FINAL_CONFIG.style.chart.layout.legend.suffix,
+                                                r: FINAL_CONFIG.style.chart.layout.legend.roundingValue
+                                            }),
+                                            { datapoint: root }
+                                        ) }}
+                                    </b>
+                                    ({{ dataLabel({
+                                        v: root.total / treeTotal * 100,
+                                        s: '%',
+                                        r: FINAL_CONFIG.style.chart.layout.legend.roundingPercentage
+                                    }) }})
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+
+                <!-- NUT PICK -->
+                <g v-if="selectedNut && openNut">
+                    <!-- NUT PICK LEGEND -->
+                    <foreignObject
+                        data-cy="chestnut-legend"
+                        :x="0"
+                        :y="placeLegendTopOrBottom()"
+                        :height="svg.height - drawableArea.bottom"
+                        :width="svg.width"
+                        style="overflow: visible"
+                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                    >
+                        <div style="width: 100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column">
+                            <b>{{ selectedNut.name }}</b>
+                            <div style="display: flex; align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;flex-direction:row">
+                                <div v-for="(nut, i) in selectedNut.breakdown" :style="`display:flex;align-items:center;gap:6px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`">
+                                    <svg viewBox="0 0 20 20" height="16" width="16">
+                                        <circle cx="10" cy="10" r="10" :fill="nut.color" stroke="none"/>
+                                    </svg>
+                                    <span>{{ nut.name }}: <b>{{ FINAL_CONFIG.style.chart.layout.legend.prefix }} {{ nut.value.toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.legend.suffix }}</b> ({{ (nut.proportionToBranch * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </foreignObject>
+                    <circle
+                        :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :cy="selectedNut.y1 + svg.branchSize / 2"
+                        :r="256"
+                        :fill="`url(#nut_underlayer_${uid})`"
+                        @click="leaveNut"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    />
+                    <!-- LABEL CONNECTOR -->
+                    <g v-for="arc in openNut">
+                        <path
+                            v-if="isArcBigEnough(arc)"
+                            :d="calcNutArrowPath(
+                                arc,
+                                {
+                                    x: selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX,
+                                    y: selectedNut.y1 + svg.branchSize / 2
+                                },
+                                16,
+                                16,
+                                false,
+                                false,
+                                64,
+                            )"
+                            :stroke="arc.color"
+                            stroke-width="1"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            fill="none"
+                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        />
+                    </g>
+                    <circle
+                        :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :cy="selectedNut.y1 + svg.branchSize / 2"
+                        :r="118"
+                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                        @click="leaveNut"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    />
+                    <path 
+                        v-for="arc in openNut" 
+                        :d="arc.path" 
+                        :stroke="arc.color" 
+                        :stroke-width="64" 
+                        fill="none" 
+                        @click="leaveNut" 
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    />
+                    <!-- NUT PICK CORE -->
+                    <circle
+                        :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :cy="selectedNut.y1 + svg.branchSize / 2"
+                        :r="110"
+                        :fill="`url(#nutpick_${uid})`"
+                        @click="leaveNut"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    />
+                    <circle
+                        :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :cy="selectedNut.y1 + svg.branchSize / 2"
+                        :r="64"
+                        :fill="FINAL_CONFIG.style.chart.backgroundColor"
+                        @click="leaveNut"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    />
+
+                    <text
+                        :x="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :y="selectedNut.y1 + 8"
+                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.bold ? 'bold' : 'normal'"
+                        text-anchor="middle"
+                        @click="leaveNut"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    >
+                        {{ FINAL_CONFIG.translations.total }}
+                    </text>
+                    <text
+                        :x="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
+                        :y="selectedNut.y1 + 36"
+                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.color"
+                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.fontSize"
+                        :font-weight="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.bold ? 'bold' : 'normal'"
+                        text-anchor="middle"
+                        @click="leaveNut"
+                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    >
+                        {{ applyDataLabel(
+                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.formatter,
+                            selectedNut.value,
+                            dataLabel({
+                                p: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.prefix,
+                                v: selectedNut.value,
+                                s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.suffix,
+                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
+                            }),
+                            { datapoint: selectedNut }
+                        ) }}
+                    </text>
+
+                    <!-- NUT PICK DATALABELS -->
+                    <g v-for="(arc, i) in openNut">
+                        <text
+                            v-if="isArcBigEnough(arc)"
+                            :x="calcMarkerOffsetX(arc).x"
+                            :text-anchor="calcMarkerOffsetX(arc).anchor"
+                            :y="calcMarkerOffsetY(arc) - (FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize / 6)"
+                            :fill="arc.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize / 2"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        >
+                            ⬤
+                        </text>
+                        <text
+                            v-if="isArcBigEnough(arc)"
+                            :x="calcMarkerOffsetX(arc, true).x"
+                            :text-anchor="calcMarkerOffsetX(arc, true).anchor"
+                            :y="calcMarkerOffsetY(arc)"
+                            :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        >
+                            {{ selectedNut.breakdown[i].name }}
+                        </text>
+                    </g>
+                    <g v-for="(arc, i) in openNut">
+                        <text
+                            v-if="isArcBigEnough(arc)"
+                            :x="calcMarkerOffsetX(arc, true).x"
+                            :text-anchor="calcMarkerOffsetX(arc).anchor"
+                            :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                            :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        >
+                            {{ dataLabel({
+                                v: (selectedNut.breakdown[i].value / selectedNut.value * 100),
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
+                            }) }}
+
+                            {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].branchName }}
+
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.formatter,
+                                selectedNut.breakdown[i].value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.prefix,
+                                    v: selectedNut.breakdown[i].value,
+                                    s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
+                                }),
+                                { datapoint: openNut, seriesIndex: i }
+                            ) }}
+                        </text>
+                        <text
+                            v-if="isArcBigEnough(arc)"
+                            :x="calcMarkerOffsetX(arc, true).x"
+                            :text-anchor="calcMarkerOffsetX(arc).anchor"
+                            :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 2"
+                            :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        >
+                            {{ dataLabel({
+                                v: (selectedNut.breakdown[i].proportionToRoot * 100),
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
+                            })}} 
+                            {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].rootName }}
+                        </text>
+                        <text
+                            v-if="isArcBigEnough(arc)"
+                            :x="calcMarkerOffsetX(arc, true).x"
+                            :text-anchor="calcMarkerOffsetX(arc).anchor"
+                            :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 3"
+                            :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
+                            :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
+                            :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
+                            :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                        >
+                            {{ dataLabel({
+                                v: (selectedNut.breakdown[i].proportionToTree * 100),
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
+                            }) }} {{ FINAL_CONFIG.translations.proportionToTree }}
                         </text>
                     </g>
                 </g>
-            </g>
-
-            <!-- BRANCHES -->
-            <rect 
-                data-cy="chestnut-branch"
-                v-for="branch in branches"
-                :x="branch.x1"
-                :y="branch.y1"
-                :height="svg.branchSize"
-                :width="branch.x2 - branch.x1"
-                :fill="FINAL_CONFIG.style.chart.layout.branches.underlayerColor"
-                :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
-                stroke="none"
-                :style="`opacity:${isFocused(branch) ? 1 : 0.05}`"
-                @click="pickBranch(branch)"
-            />
-            <rect 
-                v-for="(branch, i) in branches"
-                :data-cy="`chestnut-branch-${i}`"
-                :x="branch.x1"
-                :y="branch.y1"
-                :height="svg.branchSize"
-                :width="branch.x2 - branch.x1"
-                :fill="FINAL_CONFIG.style.chart.layout.branches.useGradient ? `url(#branch_gradient_${uid}_${branch.rootIndex})` : branch.color"
-                :rx="FINAL_CONFIG.style.chart.layout.branches.borderRadius"
-                :stroke="FINAL_CONFIG.style.chart.layout.branches.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.branches.strokeWidth"
-                :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
-                @click="pickBranch(branch)"
-            />
-            <g v-if="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.show">
+                
+                <!-- BRANCH DATALABELS -->
                 <g v-for="branch in branches">
-                    <!-- BRANCH TOTAL -->
-                    <text
-                        v-if="branch.proportionToRoot * 100 > FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.hideUnderValue"    
+                    <text 
+                        v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
                         :x="branch.x1 + 6"
-                        :y="branch.y1 + svg.branchSize / 1.5"
-                        text-anchor="start"
-                        :fill="adaptColorToBackground(branch.color)"
-                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
+                        :y="branch.y1 + svg.branchSize + 24"
                         font-weight="bold"
-                        :style="`cursor:${isCursorPointer ? 'pointer' : 'default'}; opacity:${isFocused(branch) ? 1 : 0.05}`"
-                        @click="pickBranch(branch)"
+                        text-anchor="start"
+                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
+                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
                     >
+                        {{ branch.name }}:
                         {{ applyDataLabel(
                             FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.formatter,
                             branch.value,
@@ -1243,398 +2124,49 @@ defineExpose({
                                 r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue
                             }),
                             { datapoint: branch }
-                            )
-                        }}
+                        )}}
                     </text>
-                </g>
-
-            </g>
-
-            <!-- NUTS -->
-
-            <g v-for="(branch, b) in branches">
-                <path 
-                    v-for="(arc, i) in makeDonut(
-                        { series: branch.breakdown, base:1 },
-                        branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX, 
-                        branch.y1 + svg.branchSize / 2,
-                        svg.branchSize / 3,
-                        svg.branchSize / 3
-                    )"
-                    :data-cy="`chestnut-nut-${b}`"
-                    :d="arc.path" 
-                    :stroke="arc.color" 
-                    :stroke-width="10" 
-                    fill="none"
-                    :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
-                />
-
-                <!-- tooltip trap -->
-                <circle
-                    :data-cy="`chestnut-trap-${b}`"
-                    :fill="FINAL_CONFIG.style.chart.layout.nuts.useGradient ? `url(#nut_${uid})` : 'transparent'"
-                    :cx="branch.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
-                    :cy="branch.y1 + svg.branchSize / 2"
-                    :r="svg.branchSize / 2 + 2"
-                    @click="pickNut(branch)"
-                    :style="`cursor:${isCursorPointer ? 'pointer' : 'default'};opacity:${isFocused(branch) ? 1 : 0.1}`"
-                />
-            </g>
-
-            <g v-if="FINAL_CONFIG.style.chart.layout.branches.labels.show && !selectedBranch">
-                <text
-                    v-for="branch in branches"
-                    :x="branch.x2 + svg.branchSize + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
-                    :y="branch.y1 + svg.branchSize / 2 + 5"
-                    :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.branches.labels.bold ? 'bold' : 'normal'"
-                    :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
-                    text-anchor="start"
-                    :style="`opacity:${isFocused(branch) ? 1 : 0.1}`"
-                >
-                    {{ branch.name }}
-                </text>
-            </g>
-
-            
-            <!-- VERTICAL SEPARATOR -->
-            <line 
-                :x1="256 + svg.padding.left"
-                :x2="256 + svg.padding.left"
-                :y1="drawableArea.top"
-                :y2="drawableArea.bottom"
-                :stroke="FINAL_CONFIG.style.chart.layout.verticalSeparator.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.verticalSeparator.strokeWidth"
-            />
-
-            <!-- ROOT LEGEND -->
-            <foreignObject
-                v-if="!selectedNut && !selectedBranch"
-                :x="0"
-                :y="drawableArea.bottom"
-                :height="svg.height - drawableArea.bottom"
-                :width="svg.width"
-                style="overflow: visible"
-                data-no-svg-export
-                @click="resetTree"
-            >
-                <div style="width: 100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column">
-                    <div style="display: flex; align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;flex-direction:row">
-                        <div v-for="root in roots" :style="`display:flex;align-items:center;gap:3px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`">
-                            <svg viewBox="0 0 20 20" height="16" width="16">
-                                <circle cx="10" cy="10" r="10" :fill="root.color" stroke="none"/>
-                            </svg>
-                            <template v-if="!loading">
-                                <span>{{ root.name }}:</span>
-                                <b>
-                                    {{ applyDataLabel(
-                                        FINAL_CONFIG.style.chart.layout.roots.labels.formatter,
-                                        root.total,
-                                        dataLabel({
-                                            p: FINAL_CONFIG.style.chart.layout.legend.prefix,
-                                            v: root.total,
-                                            s: FINAL_CONFIG.style.chart.layout.legend.suffix,
-                                            r: FINAL_CONFIG.style.chart.layout.legend.roundingValue
-                                        }),
-                                        { datapoint: root }
-                                    ) }}
-                                </b>
-                                ({{ dataLabel({
-                                    v: root.total / treeTotal * 100,
-                                    s: '%',
-                                    r: FINAL_CONFIG.style.chart.layout.legend.roundingPercentage
-                                }) }})
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </foreignObject>
-
-            <!-- NUT PICK -->
-            <g v-if="selectedNut && openNut">
-                <!-- NUT PICK LEGEND -->
-                <foreignObject
-                    data-cy="chestnut-legend"
-                    :x="0"
-                    :y="placeLegendTopOrBottom()"
-                    :height="svg.height - drawableArea.bottom"
-                    :width="svg.width"
-                    style="overflow: visible"
-                    @click="resetTree"
-                >
-                    <div style="width: 100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column">
-                        <b>{{ selectedNut.name }}</b>
-                        <div style="display: flex; align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;flex-direction:row">
-                            <div v-for="(nut, i) in selectedNut.breakdown" :style="`display:flex;align-items:center;gap:6px;flex-direction:row;font-size:${FINAL_CONFIG.style.chart.layout.legend.fontSize}px;`">
-                                <svg viewBox="0 0 20 20" height="16" width="16">
-                                    <circle cx="10" cy="10" r="10" :fill="nut.color" stroke="none"/>
-                                </svg>
-                                <span>{{ nut.name }}: <b>{{ FINAL_CONFIG.style.chart.layout.legend.prefix }} {{ nut.value.toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingValue) }} {{ FINAL_CONFIG.style.chart.layout.legend.suffix }}</b> ({{ (nut.proportionToBranch * 100).toFixed(FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage) }}%)</span>
-                            </div>
-                        </div>
-                    </div>
-                </foreignObject>
-                <circle
-                    :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
-                    :cy="selectedNut.y1 + svg.branchSize / 2"
-                    :r="256"
-                    :fill="`url(#nut_underlayer_${uid})`"
-                    @click="leaveNut"
-                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                />
-                <!-- LABEL CONNECTOR -->
-                <g v-for="arc in openNut">
-                    <path
-                        v-if="isArcBigEnough(arc)"
-                        :d="calcNutArrowPath(
-                            arc,
-                            {
-                                x: selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX,
-                                y: selectedNut.y1 + svg.branchSize / 2
-                            },
-                            16,
-                            16,
-                            false,
-                            false,
-                            64,
-                        )"
-                        :stroke="arc.color"
-                        stroke-width="1"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        fill="none"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                    />
-                </g>
-                <circle
-                    :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
-                    :cy="selectedNut.y1 + svg.branchSize / 2"
-                    :r="118"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                    @click="leaveNut"
-                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                />
-                <path 
-                    v-for="arc in openNut" 
-                    :d="arc.path" 
-                    :stroke="arc.color" 
-                    :stroke-width="64" 
-                    fill="none" 
-                    @click="leaveNut" 
-                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                />
-                <!-- NUT PICK CORE -->
-                <circle
-                    :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
-                    :cy="selectedNut.y1 + svg.branchSize / 2"
-                    :r="110"
-                    :fill="`url(#nutpick_${uid})`"
-                    @click="leaveNut"
-                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                />
-                <circle
-                    :cx="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
-                    :cy="selectedNut.y1 + svg.branchSize / 2"
-                    :r="64"
-                    :fill="FINAL_CONFIG.style.chart.backgroundColor"
-                    @click="leaveNut"
-                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                />
-
-                <text
-                    :x="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
-                    :y="selectedNut.y1 + 8"
-                    :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.total.bold ? 'bold' : 'normal'"
-                    text-anchor="middle"
-                    @click="leaveNut"
-                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                >
-                    {{ FINAL_CONFIG.translations.total }}
-                </text>
-                <text
-                    :x="selectedNut.x2 + 24 + FINAL_CONFIG.style.chart.layout.nuts.offsetX"
-                    :y="selectedNut.y1 + 36"
-                    :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.color"
-                    :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.fontSize"
-                    :font-weight="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.bold ? 'bold' : 'normal'"
-                    text-anchor="middle"
-                    @click="leaveNut"
-                    :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.formatter,
-                        selectedNut.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.prefix,
-                            v: selectedNut.value,
-                            s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.core.value.suffix,
-                            r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
-                        }),
-                        { datapoint: selectedNut }
-                    ) }}
-                </text>
-
-                <!-- NUT PICK DATALABELS -->
-                <g v-for="(arc, i) in openNut">
-                    <text
-                        v-if="isArcBigEnough(arc)"
-                        :x="calcMarkerOffsetX(arc).x"
-                        :text-anchor="calcMarkerOffsetX(arc).anchor"
-                        :y="calcMarkerOffsetY(arc) - (FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize / 6)"
-                        :fill="arc.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize / 2"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                    >
-                        ⬤
-                    </text>
-                    <text
-                        v-if="isArcBigEnough(arc)"
-                        :x="calcMarkerOffsetX(arc, true).x"
-                        :text-anchor="calcMarkerOffsetX(arc, true).anchor"
-                        :y="calcMarkerOffsetY(arc)"
-                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                    >
-                        {{ selectedNut.breakdown[i].name }}
-                    </text>
-                </g>
-                <g v-for="(arc, i) in openNut">
-                    <text
-                        v-if="isArcBigEnough(arc)"
-                        :x="calcMarkerOffsetX(arc, true).x"
-                        :text-anchor="calcMarkerOffsetX(arc).anchor"
-                        :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
+                    <text 
+                        v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
+                        :x="branch.x1 + 6"
+                        :y="branch.y1 + svg.branchSize + 48"
+                        text-anchor="start"
+                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
+                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
                     >
                         {{ dataLabel({
-                            v: (selectedNut.breakdown[i].value / selectedNut.value * 100),
+                            v: branch.proportionToRoot * 100,
                             s: '%',
-                            r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
+                            r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage
+                        })}}
+                        {{ FINAL_CONFIG.translations.of }} 
+                        {{ branch.rootName }}
+                    </text>
+                    <text 
+                        v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
+                        :x="branch.x1 + 6"
+                        :y="branch.y1 + svg.branchSize + 72"
+                        text-anchor="start"
+                        :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
+                        :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
+                        @click="() => { resetTree(); resetAccessibilityCursor(); hasStartedKeyboardNavigation = false; }"
+                    >
+                        {{ dataLabel({
+                            v: branch.value / treeTotal * 100,
+                            s: '%',
+                            r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage
                         }) }}
-
-                        {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].branchName }}
-
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.formatter,
-                            selectedNut.breakdown[i].value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.prefix,
-                                v: selectedNut.breakdown[i].value,
-                                s: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.nuts.selected.roundingValue
-                            }),
-                            { datapoint: openNut, seriesIndex: i }
-                        ) }}
+                        {{ FINAL_CONFIG.translations.proportionToTree }}
                     </text>
-                    <text
-                        v-if="isArcBigEnough(arc)"
-                        :x="calcMarkerOffsetX(arc, true).x"
-                        :text-anchor="calcMarkerOffsetX(arc).anchor"
-                        :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 2"
-                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                    >
-                        {{ dataLabel({
-                            v: (selectedNut.breakdown[i].proportionToRoot * 100),
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
-                        })}} 
-                        {{ FINAL_CONFIG.translations.of }} {{ selectedNut.breakdown[i].rootName }}
-                    </text>
-                    <text
-                        v-if="isArcBigEnough(arc)"
-                        :x="calcMarkerOffsetX(arc, true).x"
-                        :text-anchor="calcMarkerOffsetX(arc).anchor"
-                        :y="calcMarkerOffsetY(arc) + FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize * 3"
-                        :fill="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.color"
-                        :font-size="FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.fontSize"
-                        :style="`font-weight:${FINAL_CONFIG.style.chart.layout.nuts.selected.labels.dataLabels.bold ? 'bold': ''}`"
-                        :class="FINAL_CONFIG.style.chart.layout.nuts.selected.useMotion ? 'vue-ui-chestnut-animated' : ''"
-                    >
-                        {{ dataLabel({
-                            v: (selectedNut.breakdown[i].proportionToTree * 100),
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.layout.nuts.selected.labels.roundingPercentage
-                        }) }} {{ FINAL_CONFIG.translations.proportionToTree }}
-                    </text>
-                </g>
             </g>
-            
-            <!-- BRANCH DATALABELS -->
-            <g v-for="branch in branches">
-                <text 
-                    v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
-                    :x="branch.x1 + 6"
-                    :y="branch.y1 + svg.branchSize + 24"
-                    font-weight="bold"
-                    text-anchor="start"
-                    :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
-                    @click="resetTree"
-                >
-                    {{ branch.name }}:
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.formatter,
-                        branch.value,
-                        dataLabel({
-                            p: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.prefix,
-                            v: branch.value,
-                            s: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.suffix,
-                            r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingValue
-                        }),
-                        { datapoint: branch }
-                    )}}
-                </text>
-                <text 
-                    v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
-                    :x="branch.x1 + 6"
-                    :y="branch.y1 + svg.branchSize + 48"
-                    text-anchor="start"
-                    :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
-                    @click="resetTree"
-                >
-                    {{ dataLabel({
-                        v: branch.proportionToRoot * 100,
-                        s: '%',
-                        r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage
-                    })}}
-                    {{ FINAL_CONFIG.translations.of }} 
-                    {{ branch.rootName }}
-                </text>
-                <text 
-                    v-if="selectedBranch && selectedBranch.id === branch.id && !selectedNut"
-                    :x="branch.x1 + 6"
-                    :y="branch.y1 + svg.branchSize + 72"
-                    text-anchor="start"
-                    :font-size="FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.fontSize"
-                    :fill="FINAL_CONFIG.style.chart.layout.branches.labels.color"
-                    @click="resetTree"
-                >
-                    {{ dataLabel({
-                        v: branch.value / treeTotal * 100,
-                        s: '%',
-                        r: FINAL_CONFIG.style.chart.layout.branches.labels.dataLabels.roundingPercentage
-                    }) }}
-                    {{ FINAL_CONFIG.translations.proportionToTree }}
-                </text>
-        </g>
-        <slot name="svg" :svg="{
-            ...svg,
-            isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-            isPrintingSvg: isCallbackSvg,
-        }"/>
-        </svg>
+            <slot name="svg" :svg="{
+                ...svg,
+                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                isPrintingSvg: isCallbackSvg,
+            }"/>
+            </svg>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -1876,5 +2408,27 @@ caption {
 
 path, circle, rect, text, line {
     transition: opacity 0.3s ease-in-out !important;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>

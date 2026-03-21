@@ -5329,6 +5329,7 @@ declare module "vue-data-ui" {
         loading?: boolean;
         theme?: Theme;
         customPalette?: string[];
+        a11y?: A11YConfig;
         style?: {
             fontFamily?: string;
             chart?: {
