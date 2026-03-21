@@ -15,9 +15,11 @@
 [![npm downloads](https://npmx.dev/api/registry/badge/downloads/vue-data-ui)](https://npmx.dev/package/vue-data-ui?modal=chart)
 [![GitHub Repo stars](https://img.shields.io/github/stars/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
 
-[Interactive documentation](https://vue-data-ui.graphieros.com/)
+A user-empowering data visualization Vue component library for eloquent data storytelling.
 
-A user-empowering data visualization Vue components library for eloquent data storytelling.
+Interactive Documentation:
+- Deployed Site - [Vue Data UI](https://vue-data-ui.graphieros.com/)
+- GitHub Repo - [vue-data-ui-doc](https://github.com/graphieros/vue-data-ui-doc)
 
 Available components
 
