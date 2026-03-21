@@ -33,6 +33,7 @@ import { useResponsive } from "../useResponsive";
 import { useThemeCheck } from "../useThemeCheck";
 import { useUserOptionState } from "../useUserOptionState";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_wheel.json";
@@ -44,6 +45,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 
 const { vue_ui_wheel: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -188,13 +190,17 @@ function calcTickStart(angle, distance = 1) {
     }
 }
 
-const activeValue = ref(FINAL_CONFIG.value.style.chart.animation.use ? 0 : (FINAL_DATASET.value.percentage || 0));
+const activeValue = ref(
+    (FINAL_CONFIG.value.style.chart.animation.use && !prefersReducedMotion.value)
+        ? 0
+        : (FINAL_DATASET.value.percentage || 0)
+);
 
 watch(() => FINAL_DATASET.value, (v) => {
-    if (FINAL_CONFIG.value.style.chart.animation.use) {
+    if (FINAL_CONFIG.value.style.chart.animation.use && !prefersReducedMotion.value) {
         useAnimation(v.percentage);
     } else {
-        activeValue.value = v.percentage || 0
+        activeValue.value = v.percentage || 0;
     }
 }, { deep: true });
 
@@ -245,6 +251,10 @@ function prepareChart() {
     }
 
     useAnimation(FINAL_DATASET.value.percentage || 0);
+    if (FINAL_CONFIG.value.style.chart.animation.use && !prefersReducedMotion.value) {
+    } else {
+        activeValue.value = FINAL_DATASET.value.percentage || 0;
+    }
 }
 
 onBeforeUnmount(() => {
@@ -689,6 +699,29 @@ async function copyAlt(){
     }));
 }
 
+const svgTitleId = computed(() => `${uid.value}-title`);
+const svgDescId = computed(() => `${uid.value}-desc`);
+
+const percentageText = computed(() => {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.percentage.formatter,
+        checkNaN(activeValue.value),
+        dataLabel({
+            v: checkNaN(activeValue.value),
+            s: '%',
+            r: FINAL_CONFIG.value.style.chart.layout.percentage.rounding
+        })
+    );
+});
+
+const accessibleTitleText = computed(() => {
+    return FINAL_CONFIG.value.style.chart.title.text || '';
+});
+
+const accessibleDescriptionText = computed(() => {
+    return loading.value ? '...' : `${percentageText.value}`;
+});
+
 defineExpose({
     getImage,
     generatePdf,
@@ -707,7 +740,8 @@ defineExpose({
         ref="wheelChart"
         :id="uid"
         :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor};${FINAL_CONFIG.responsive ? 'height:100%' : ''}`"
-        @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)"
+        @mouseenter="() => setUserOptionsVisibility(true)" 
+        @mouseleave="() => setUserOptionsVisibility(false)"
     >
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
@@ -827,7 +861,13 @@ defineExpose({
                 ? `${vb3D?.x - 10 ?? 0} ${vb3D?.y ?? 0} ${vb3D?.w + 20 ?? Math.max(10, svg.width)} ${vb3D?.h ?? Math.max(10, svg.height)}`
                 : `0 0 ${Math.max(10, svg.width)} ${Math.max(10, svg.height)}`"
             :style="`max-width:100%;overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            role="img"
+            :aria-labelledby="svgTitleId"
+            :aria-describedby="svgDescId"
         >
+            <title :id="svgTitleId">{{ accessibleTitleText }}</title>
+            <desc :id="svgDescId">{{ accessibleDescriptionText }}</desc>
+
             <PackageVersion/>
 
             <!-- BACKGROUND SLOT -->
@@ -878,7 +918,7 @@ defineExpose({
                             :stroke-width="(FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth / 360) * Math.min(svg.width, svg.height)"
                             :stroke-linecap="FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
                             stroke-linecap="round"
-                            :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && (t.i * percentageToTickAmount) <= activeValue }"
+                            :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && !prefersReducedMotion && (t.i * percentageToTickAmount) <= activeValue }"
                         />
                     </g>
                     <line
@@ -889,7 +929,7 @@ defineExpose({
                         :stroke-width="(FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth / 360) * Math.min(svg.width, svg.height)"
                         :stroke-linecap="FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
                         stroke-linecap="round"
-                        :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && (t.i * percentageToTickAmount) <= activeValue }"
+                        :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && !prefersReducedMotion && (t.i * percentageToTickAmount) <= activeValue }"
                     />
                 </g>
                 <g v-else>
@@ -914,7 +954,7 @@ defineExpose({
                             :stroke-width="FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated-3d': FINAL_CONFIG.style.chart.animation.use && (w.i * percentageToTickAmount) <= activeValue }"
+                            :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated-3d': FINAL_CONFIG.style.chart.animation.use && !prefersReducedMotion && (w.i * percentageToTickAmount) <= activeValue }"
                         />
                     </g>
                     <g>
@@ -927,7 +967,7 @@ defineExpose({
                             :stroke-width="FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth"
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated-3d': FINAL_CONFIG.style.chart.animation.use && (w.i * percentageToTickAmount) <= activeValue }"
+                            :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated-3d': FINAL_CONFIG.style.chart.animation.use && !prefersReducedMotion && (w.i * percentageToTickAmount) <= activeValue }"
                         />
                     </g>
                 </g>
@@ -945,7 +985,7 @@ defineExpose({
                         :stroke="tick.color"
                         :stroke-width="(FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth / 360) * Math.min(svg.width, svg.height)"
                         :stroke-linecap="FINAL_CONFIG.style.chart.layout.wheel.ticks.rounded ? 'round' : 'butt'"
-                        :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && (i * percentageToTickAmount) <= activeValue }"
+                        :class="{ 'vue-ui-wheel-tick' : true, 'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && !prefersReducedMotion && (i * percentageToTickAmount) <= activeValue }"
                     />
                 </template>
                 
@@ -954,14 +994,14 @@ defineExpose({
                         v-for="(arc, i) in arcTicks"
                         :d="arc.arcSlice"
                         :fill="arc.color"
-                        :class="{'vue-ui-wheel-tick' : true,  'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && (i * percentageToTickAmount) <= activeValue }"
+                        :class="{'vue-ui-wheel-tick' : true,  'vue-ui-tick-animated': FINAL_CONFIG.style.chart.animation.use && !prefersReducedMotion && (i * percentageToTickAmount) <= activeValue }"
                         :stroke="FINAL_CONFIG.style.chart.layout.wheel.ticks.stroke"
                         :stroke-width="FINAL_CONFIG.style.chart.layout.wheel.ticks.strokeWidth"
                     /> 
                 </template>
             </template>
             
-            <g v-if="FINAL_CONFIG.style.chart.layout.percentage.show">
+            <g v-if="FINAL_CONFIG.style.chart.layout.percentage.show" role="status" aria-live="polite" :aria-label="loading ? '...' : percentageText">
                 <rect 
                     v-if="loading"
                     :x="wheel.centerX - 40"
@@ -974,6 +1014,7 @@ defineExpose({
                 <text
                     v-else
                     data-cy="data-label"
+                    aria-hidden="true"
                     :x="wheel.centerX + FINAL_CONFIG.style.chart.layout.percentage.offsetX"
                     :y="wheel.centerY + baseLabelFontSize / 3 + FINAL_CONFIG.style.chart.layout.percentage.offsetY"
                     :font-size="baseLabelFontSize"
@@ -988,15 +1029,7 @@ defineExpose({
                     paint-order="stroke fill"
                     :class="{ 'vue-ui-wheel-label': FINAL_CONFIG.layout === '3d' }"
                 >
-                    {{ applyDataLabel(
-                        FINAL_CONFIG.style.chart.layout.percentage.formatter,
-                        checkNaN(activeValue),
-                        dataLabel({
-                            v: checkNaN(activeValue),
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.layout.percentage.rounding
-                        }))
-                    }}
+                    {{ percentageText }}
                 </text>
             </g>
             <slot name="svg" :svg="{
