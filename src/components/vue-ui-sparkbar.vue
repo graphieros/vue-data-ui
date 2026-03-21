@@ -20,6 +20,7 @@ import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { useNestedProp } from "../useNestedProp";
 import { useThemeCheck } from "../useThemeCheck";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 import themes from "../themes/vue_ui_sparkbar.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
@@ -27,6 +28,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 
 const { vue_ui_sparkbar: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -162,7 +164,7 @@ onMounted(async () => {
 });
 
 function useAnimation() {
-    if (FINAL_CONFIG.value.style.animation.show) {
+    if (FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value) {
         const chunks = FINAL_CONFIG.value.style.animation.animationFrames;
         const chunkSet = FINAL_DATASET.value.map((d, i) => d.value / chunks);
         const total = FINAL_DATASET.value.map(d => d.value || 0).reduce((a, b) => a + b, 0);
@@ -198,7 +200,7 @@ watch(() => FINAL_DATASET.value, async (v) => {
     safeDatasetCopy.value = FINAL_DATASET.value.map(d => {
     return {
         ...d,
-        value: FINAL_CONFIG.value.style.animation.show ? 0 : d.value || 0,
+        value: (FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value) ? 0 : d.value || 0,
         formatter: d.formatter || null
     }});
 
@@ -458,7 +460,7 @@ function onTrapLeave(datapoint, index) {
                 </div>
 
                 <!-- BAR -->
-                <svg :xmlns="XMLNS" :data-cy="`sparkbar-svg-${i}`" :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
+                <svg role="img" :xmlns="XMLNS" :data-cy="`sparkbar-svg-${i}`" :viewBox="`0 0 ${svg.width} ${svg.height}`" width="100%">
                     <PackageVersion />
                     
                     <defs>
