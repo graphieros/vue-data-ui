@@ -6,6 +6,7 @@ import {
     ref, 
     toRefs,
     watch, 
+    onBeforeUnmount
 } from "vue";
 import { useNestedProp } from "../useNestedProp";
 import {
@@ -24,6 +25,7 @@ import { useConfig } from "../useConfig";
 import { useLoading } from "../useLoading";
 import { useThemeCheck } from "../useThemeCheck";
 import { useChartAccessibility } from "../useChartAccessibility";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 import themes from "../themes/vue_ui_sparkgauge.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
@@ -31,6 +33,9 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 
 const { vue_ui_sparkgauge: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
+
+const animationFrameId = ref(null);
 
 const props = defineProps({
     config: {
@@ -50,6 +55,10 @@ const props = defineProps({
 const uid = ref(createUid());
 
 const FINAL_CONFIG = ref(prepareConfig());
+
+const shouldAnimate = computed(() => {
+    return FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value;
+});
 
 const skeletonConfig = computed(() => {
     return treeShake({
@@ -87,6 +96,21 @@ const { loading, FINAL_DATASET } = useLoading({
         defaultConfig: FINAL_CONFIG.value,
         userConfig: skeletonConfig.value
     })
+});
+
+const bounds = computed(() => {
+    const min = FINAL_DATASET.value.min ?? 0;
+    const max = FINAL_DATASET.value.max ?? 0;
+    const diff = max - min;
+    return {
+        min,
+        max,
+        diff
+    }
+})
+
+const animationTick = computed(() => {
+    return bounds.value.diff / FINAL_CONFIG.value.style.animation.speedMs;
 });
 
 const { svgRef } = useChartAccessibility({ config: { text: props.dataset?.title || '' } });
@@ -146,9 +170,9 @@ function prepareChart() {
     }
 }
 
-watch(() => props.config, (_newCfg) => {
+watch(() => props.config, () => {
     FINAL_CONFIG.value = prepareConfig();
-    activeRating.value = FINAL_CONFIG.value.style.animation.show ? bounds.value.min : FINAL_DATASET.value.value;
+    activeRating.value = shouldAnimate.value ? bounds.value.min : FINAL_DATASET.value.value;
     prepareChart();
 }, { deep: true });
 
@@ -160,22 +184,15 @@ const svg = computed(() => {
     }
 });
 
-const bounds = computed(() => {
-    const min = FINAL_DATASET.value.min ?? 0;
-    const max = FINAL_DATASET.value.max ?? 0;
-    const diff = max - min;
-    return {
-        min,
-        max,
-        diff
-    }
-})
+const activeRating = ref(shouldAnimate.value ? bounds.value.min : FINAL_DATASET.value.value);
 
-const activeRating = ref(FINAL_CONFIG.value.style.animation.show ? bounds.value.min : FINAL_DATASET.value.value);
-
-watch(() => FINAL_DATASET.value.value, () => {
-    useAnimation(FINAL_DATASET.value.value || 0);
-});
+watch(
+    [() => FINAL_DATASET.value.value, shouldAnimate],
+    ([targetValue, animate]) => {
+        useAnimation(targetValue || 0, animate);
+    },
+    { immediate: true }
+);
 
 const controlScore = computed(() => {
     if (activeRating.value > bounds.value.max) {
@@ -187,27 +204,36 @@ const controlScore = computed(() => {
     }
 })
 
-const animationTick = computed(() => {
-    return bounds.value.diff / FINAL_CONFIG.value.style.animation.speedMs;
-});
-
 onMounted(() => {
     useAnimation(FINAL_DATASET.value.value || 0);
 });
 
-function useAnimation(targetValue) {
-    function animate() {
-        if(activeRating.value < targetValue) {
+function useAnimation(targetValue, animate = shouldAnimate.value) {
+    if (animationFrameId.value) {
+        cancelAnimationFrame(animationFrameId.value);
+        animationFrameId.value = null;
+    }
+
+    if (!animate) {
+        activeRating.value = targetValue;
+        return;
+    }
+
+    function step() {
+        if (activeRating.value < targetValue) {
             activeRating.value = Math.min(activeRating.value + animationTick.value, targetValue);
         } else if (activeRating.value > targetValue) {
             activeRating.value = Math.max(activeRating.value - animationTick.value, targetValue);
         }
-        
+
         if (activeRating.value !== targetValue) {
-            requestAnimationFrame(animate);
+            animationFrameId.value = requestAnimationFrame(step);
+        } else {
+            animationFrameId.value = null;
         }
     }
-    animate();
+
+    step();
 }
 
 const nameLabel = computed(() => {
@@ -243,6 +269,12 @@ const trackColor = computed(() => {
         return FINAL_CONFIG.value.style.track.color;
     } else {
         return currentColor.value;
+    }
+});
+
+onBeforeUnmount(() => {
+    if (animationFrameId.value) {
+        cancelAnimationFrame(animationFrameId.value);
     }
 });
 </script>
