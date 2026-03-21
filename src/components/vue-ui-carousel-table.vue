@@ -12,11 +12,13 @@ import {
 } from "../lib";
 import { usePrinter } from "../usePrinter";
 import { useUserOptionState } from "../useUserOptionState";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 
 const Skeleton = defineAsyncComponent(() => import('./vue-ui-skeleton.vue'));
 const UserOptions = defineAsyncComponent(() => import('../atoms/UserOptions.vue'));
 
 const { vue_ui_carousel_table: DEFAULT_CONFIG } = useConfig();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -73,6 +75,9 @@ function prepareChart() {
             });
             isDataset.value = false;
         }
+    }
+    if (prefersReducedMotion.value) {
+        FINAL_CONFIG.value.userOptions.buttons.animation = false;
     }
 }
 
@@ -207,6 +212,7 @@ function toggleFullscreen(state) {
 } 
 
 function startAnimation() {
+    if (prefersReducedMotion.value) return;
     if (!raf.value && !isPaused.value) {
         if (FINAL_CONFIG.value.animation.type === 'scroll') {
             raf.value = requestAnimationFrame(animate);
@@ -450,6 +456,7 @@ defineExpose({
         >
             <table 
                 class="vue-data-ui-carousel-table"
+                :aria-labelledby="`carousel-caption-${uid}`"
                 v-if="isDataset"
                 :style="{ 
                     ...FINAL_CONFIG.style,
@@ -461,7 +468,8 @@ defineExpose({
                 <caption
                     data-cy="caption"
                     ref="caption"
-                    class="vue-data-ui-carousel-table-caption" 
+                    class="vue-data-ui-carousel-table-caption"
+                    :id="`carousel-caption-${uid}`"
                     :style="{
                         ...FINAL_CONFIG.caption.style, 
                         fontFamily: 'inherit',
@@ -480,7 +488,7 @@ defineExpose({
                     <slot name="caption"/>
                 </caption>
     
-                <thead :style="{ ...FINAL_CONFIG.thead.style, position: 'sticky', top: `${$slots.caption || FINAL_CONFIG.caption.text || FINAL_CONFIG.userOptions.show ? captionHeight : 0}px`, zIndex: 1 }">
+                <thead role="rowgroup" :style="{ ...FINAL_CONFIG.thead.style, position: 'sticky', top: `${$slots.caption || FINAL_CONFIG.caption.text || FINAL_CONFIG.userOptions.show ? captionHeight : 0}px`, zIndex: 1 }">
                     <tr
                         ref="tableRow"
                         role="row" 
@@ -494,7 +502,9 @@ defineExpose({
                         <th 
                             role="cell" 
                             v-for="(th, i) in dataset.head" 
-                            :key="`th_${i}`" 
+                            :key="`th_${i}`"
+                            :id="`col-${i}`"
+                            scope="col"
                             :style="{
                                 ...FINAL_CONFIG.thead.tr.th.style,
                                 border: FINAL_CONFIG.thead.tr.th.border.size ? `${FINAL_CONFIG.thead.tr.th.border.size}px solid ${FINAL_CONFIG.thead.tr.th.border.color}` : 'none',
@@ -512,6 +522,7 @@ defineExpose({
     
                 <tbody 
                     v-if="dataset.body && dataset.head" ref="tbody"
+                    aria-live="polite"
                     :style="{
                         clipPath: 'inset(0,0,0,0)',
                     }"
@@ -528,6 +539,7 @@ defineExpose({
                             role="cell" 
                             v-for="(td, j) in tr" 
                             :data-cell="dataset.head[j] || ''"
+                            :aria-label="`${dataset.head[j]}: ${td}`"
                             :style="{ 
                                 ...FINAL_CONFIG.tbody.tr.td.style,
                                 border: `${FINAL_CONFIG.tbody.tr.td.border.size}px solid ${FINAL_CONFIG.tbody.tr.td.border.color}`,
