@@ -787,7 +787,9 @@ watch(
 const isFocus = ref(false);
 function onSvgFocus() {
     activeTooltipIndex.value = null;
-    selectPlot(mutableDataset.value[0], 0);
+    if (!selectedPlot.value) {
+        selectPlot(mutableDataset.value.at(-1), mutableDataset.value.length - 1);
+    }
     isFocus.value = true;
 }
 
