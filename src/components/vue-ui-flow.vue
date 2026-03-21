@@ -1809,7 +1809,6 @@ svg:focus {
 
 svg:focus-visible {
     outline: 2px solid currentColor;
-    outline-offset: 4px;
 }
 
 .sr-only {
