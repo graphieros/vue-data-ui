@@ -439,6 +439,8 @@ function seedMutableFromConfig() {
         };
         mutableInitialized.value = true;
     } else {
+        mutableConfig.value.showTooltip = FINAL_CONFIG.value.chart.tooltip.show === true;
+        mutableConfig.value.showTable = FINAL_CONFIG.value.showTable === true;
         mutableConfig.value.isStacked = FINAL_CONFIG.value.chart.grid.labels.yAxis.stacked;
         if (mutableConfig.value.useIndividualScale == null) {
             mutableConfig.value.useIndividualScale = FINAL_CONFIG.value.chart.grid.labels.yAxis.useIndividualScale;
