@@ -46,6 +46,7 @@ import img from "../img";
 import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_3d_bar.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -93,6 +94,9 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackSvg = ref(false);
 const isCallbackImaging = ref(false);
+
+const activeAccessibilityIndex = ref(null);
+const a11yAnnouncement = ref('');
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -544,7 +548,15 @@ function selectSerie(bar, fix = false) {
         FINAL_CONFIG.value.events.datapointClick({ datapoint: bar, seriesIndex: bar.seriesIndex });
     }
 
-    emits('selectDatapoint', bar)
+    emits('selectDatapoint', bar);
+
+    const currentIndex = stack.value?.findIndex(item => item.id === bar.id) ?? null;
+    if (currentIndex !== null && currentIndex !== -1) {
+        activeAccessibilityIndex.value = currentIndex;
+        a11yAnnouncement.value = buildAccessibilityAnnouncement(bar);
+    }
+
+    
     if(!fix) {
         selectedSerie.value = bar.id;
     }
@@ -560,12 +572,12 @@ function unselectSerie(bar) {
     if (FINAL_CONFIG.value.events.datapointLeave) {
         FINAL_CONFIG.value.events.datapointLeave({ datapoint: bar, seriesIndex: bar.seriesIndex });
     }
-
     if(selectionIsFixed.value) {
         return
-    } else {
-        selectedSerie.value = null
     }
+    selectedSerie.value = null;
+    activeAccessibilityIndex.value = null;
+    a11yAnnouncement.value = '';
 }
 
 function displayArcPercentage(arc, stepBreakdown, numOnly = false) {
@@ -650,55 +662,97 @@ function generateCsv(callback=null) {
 }
 
 const dataTable = computed(() => {
-    const total = stack.value.map(ds => ds.value).reduce((a, b) => a + b, 0);
+    if (!hasStack.value || !Array.isArray(stack.value) || !stack.value.length) {
+        return {
+            colNames: [],
+            head: [],
+            body: [],
+            a11yBody: [],
+            config: {
+                th: {
+                    backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+                    color: FINAL_CONFIG.value.table.th.color,
+                    outline: FINAL_CONFIG.value.table.th.outline
+                },
+                td: {
+                    backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+                    color: FINAL_CONFIG.value.table.td.color,
+                    outline: FINAL_CONFIG.value.table.td.outline
+                },
+                breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+                shape: FINAL_CONFIG.value.style.shape === 'tube' ? 'circle' : 'square'
+            }
+        };
+    }
+
+    const total = stack.value.reduce((sum, ds) => sum + ds.value, 0);
+
     const head = [
-        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`, dataLabel({p: FINAL_CONFIG.value.style.chart.legend.prefix, v: total, s: FINAL_CONFIG.value.style.chart.legend.suffix, r: FINAL_CONFIG.value.table.td.roundingValue}),
+        ` <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 16v2a1 1 0 0 1 -1 1h-11l6 -7l-6 -7h11a1 1 0 0 1 1 1v2" /></svg>`,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.legend.prefix,
+            v: total,
+            s: FINAL_CONFIG.value.style.chart.legend.suffix,
+            r: FINAL_CONFIG.value.table.td.roundingValue
+        }),
         '100%'
     ];
 
-    const body = table.value.head.map((h,i) => {
-        const label = dataLabel({p: FINAL_CONFIG.value.style.chart.legend.prefix, v: table.value.body[i], s: FINAL_CONFIG.value.style.chart.legend.suffix, r: FINAL_CONFIG.value.table.td.roundingValue});
+    const body = table.value.head.map((headerItem, index) => {
+        const rawValue = table.value.body[index];
+
         return [
             {
-                color: h.color,
-                name: h.name
+                color: headerItem.color,
+                name: headerItem.name
             },
-            label,
-            isNaN(table.value.body[i] / total) ? "-" : dataLabel({
-                v: table.value.body[i] / total * 100,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.chart.legend.prefix,
+                v: rawValue,
+                s: FINAL_CONFIG.value.style.chart.legend.suffix,
+                r: FINAL_CONFIG.value.table.td.roundingValue
+            }),
+            isNaN(rawValue / total) ? '-' : dataLabel({
+                v: rawValue / total * 100,
                 s: '%',
                 r: FINAL_CONFIG.value.table.td.roundingPercentage
             })
-        ]
+        ];
     });
 
-    const config = {
-        th: {
-            backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
-            color: FINAL_CONFIG.value.table.th.color,
-            outline: FINAL_CONFIG.value.table.th.outline
-        },
-        td: {
-            backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
-            color: FINAL_CONFIG.value.table.td.color,
-            outline: FINAL_CONFIG.value.table.td.outline
-        },
-        breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
-        shape: FINAL_CONFIG.value.style.shape === 'tube' ? 'circle' : 'square'
-    }
-
-    const colNames = [
-        FINAL_CONFIG.value.table.columnNames.series,
-        FINAL_CONFIG.value.table.columnNames.value,
-        FINAL_CONFIG.value.table.columnNames.percentage
-    ]
+    const a11yBody = body.map((row) => {
+        return row.map((cell, index) => {
+            if (index === 0) {
+                return cell.name;
+            }
+            return cell;
+        });
+    });
 
     return {
-        colNames,
+        colNames: [
+            FINAL_CONFIG.value.table.columnNames.series,
+            FINAL_CONFIG.value.table.columnNames.value,
+            FINAL_CONFIG.value.table.columnNames.percentage
+        ],
         head,
         body,
-        config
-    }
+        a11yBody,
+        config: {
+            th: {
+                backgroundColor: FINAL_CONFIG.value.table.th.backgroundColor,
+                color: FINAL_CONFIG.value.table.th.color,
+                outline: FINAL_CONFIG.value.table.th.outline
+            },
+            td: {
+                backgroundColor: FINAL_CONFIG.value.table.td.backgroundColor,
+                color: FINAL_CONFIG.value.table.td.color,
+                outline: FINAL_CONFIG.value.table.td.outline
+            },
+            breakpoint: FINAL_CONFIG.value.table.responsiveBreakpoint,
+            shape: FINAL_CONFIG.value.style.shape === 'tube' ? 'circle' : 'square'
+        }
+    };
 });
 
 function toggleTable() {
@@ -827,6 +881,115 @@ async function copyAlt(){
     await Promise.resolve(FINAL_CONFIG.value.userOptions.callbacks.altCopy({ config: FINAL_CONFIG.value, dataset: FINAL_DATASET.value}));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+function clearAccessibilitySelection() {
+    activeAccessibilityIndex.value = null;
+    a11yAnnouncement.value = '';
+    selectionIsFixed.value = false;
+    selectedSerie.value = null;
+}
+
+function buildAccessibilityAnnouncement(bar) {
+    if (!bar) return '';
+    const valueLabel = dataLabel({
+        p: FINAL_CONFIG.value.style.chart.legend.prefix,
+        v: bar.value,
+        s: FINAL_CONFIG.value.style.chart.legend.suffix,
+        r: FINAL_CONFIG.value.style.chart.legend.roundingValue
+    });
+    const percentageLabel = dataLabel({
+        v: bar.proportion * 100,
+        s: '%',
+        r: FINAL_CONFIG.value.style.chart.legend.roundingPercentage
+    });
+    return `${bar.name}: ${valueLabel}, ${percentageLabel}`;
+}
+
+function focusSeriesByIndex(index) {
+    if (!hasStack.value || !stack.value?.length) return;
+    const bar = stack.value[index];
+    if (!bar) return;
+    activeAccessibilityIndex.value = index;
+    selectedSerie.value = bar.id;
+    a11yAnnouncement.value = buildAccessibilityAnnouncement(bar);
+}
+
+function onSvgFocus() {
+    isFocus.value = true;
+    if (!hasStack.value || !stack.value?.length) return;
+    if (activeAccessibilityIndex.value === null) {
+        focusSeriesByIndex(0);
+    }
+}
+
+function onSvgBlur() {
+    isFocus.value = false;
+
+    if (!selectionIsFixed.value) {
+        activeAccessibilityIndex.value = null;
+        selectedSerie.value = null;
+        a11yAnnouncement.value = '';
+    }
+}
+
+function onSvgKeydown(event) {
+    if (!hasStack.value || !stack.value?.length) return;
+    if (!svgRef.value) return;
+    if (document.activeElement !== svgRef.value) return;
+
+    const isPreviousKey = ['ArrowLeft', 'ArrowDown'].includes(event.key);
+    const isNextKey = ['ArrowRight', 'ArrowUp'].includes(event.key);
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        clearAccessibilitySelection();
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeAccessibilityIndex.value === null) return;
+        const bar = stack.value[activeAccessibilityIndex.value];
+        if (!bar) return;
+        selectSerie(bar, true);
+        a11yAnnouncement.value = `${buildAccessibilityAnnouncement(bar)} selected`;
+        return;
+    }
+
+    let nextIndex = activeAccessibilityIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= stack.value.length) {
+        nextIndex = isNextKey ? 0 : stack.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= stack.value.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = stack.value.length - 1;
+        }
+    }
+
+    focusSeriesByIndex(nextIndex);
+}
+
+const a11yTable = computed(() => {
+    return {
+        headers: dataTable.value?.colNames ?? [],
+        rows: dataTable.value?.a11yBody ?? []
+    };
+});
+
 defineExpose({
     getImage,
     generateCsv,
@@ -842,7 +1005,30 @@ defineExpose({
 </script>
 
 <template>
-    <div ref="bar3dChart" :class="`vue-data-ui-component vue-ui-3d-bar`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`3d_bar_${uid}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div 
+        ref="bar3dChart" 
+        :class="`vue-data-ui-component vue-ui-3d-bar`" 
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" :id="`3d_bar_${uid}`" 
+        @mouseenter="() => setUserOptionsVisibility(true)" 
+        @mouseleave="() => setUserOptionsVisibility(false)"
+    >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <div aria-live="polite" class="sr-only">
+            {{ a11yAnnouncement }}
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
+
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
             :svgRef="svgRef"
@@ -955,477 +1141,497 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS" 
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'animated': FINAL_CONFIG.useCssAnimation }" 
-            data-cy="3d-bar-svg" 
-            :viewBox="`0 0 ${svg.absoluteWidth} ${svg.height}`" 
-            :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.absoluteWidth"
-                :height="svg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
-            >
-                <slot name="chart-background"/>
-            </foreignObject>
-
-            <!-- DEFS -->
-            <defs>
-                <radialGradient :id="`gradient_top${uid}`">
-                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
-                    <stop offset="100%" :stop-color="FINAL_CONFIG.style.chart.bar.color" />
-                </radialGradient>
-                <radialGradient :id="`gradient_tube_top${uid}`">
-                    <stop offset="0%" :stop-color="setOpacity(lightenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.5), 80)" />
-                    <stop offset="100%" :stop-color="setOpacity(darkenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.1), 80)" />
-                </radialGradient>
-                <radialGradient :id="`gradient_left${uid}`">
-                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
-                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.bar.color, 20)" />
-                </radialGradient>
-                <radialGradient :id="`gradient_right${uid}`">
-                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
-                    <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.bar.color, 20)" />
-                </radialGradient>
-                <linearGradient :id="`gradient_tube_body${uid}`" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}`"/>
-                    <stop offset="10%" :stop-color="setOpacity(darkenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.7), 100)"/>
-                    <stop offset="25%" :stop-color="setOpacity(darkenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.5), 100)"/>
-                    <stop offset="75%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.bar.color, 80)"/>
-                    <stop offset="100%" :stop-color="setOpacity(lightenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.7), 100)"/>
-                </linearGradient>
-            </defs>
-
-            <defs v-if="hasStack">
-                <radialGradient v-for="bar in stack" :id="`grad_top_${bar.id}`">
-                    <stop offset="0%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.5), 80)" />
-                    <stop offset="100%" :stop-color="bar.color" />
-                </radialGradient>
-                <linearGradient v-for="bar in stack" :id="`grad_left_${bar.id}`">
-                    <stop offset="0%" :stop-color="setOpacity(bar.color, 80)" />
-                    <stop offset="100%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.5), 100)" />
-                </linearGradient>
-                <linearGradient v-for="bar in stack" :id="`grad_right_${bar.id}`">
-                    <stop offset="2%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.5), 100)" />
-                    <stop offset="100%" :stop-color="setOpacity(bar.color, 80)" />
-                </linearGradient>
-                <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" :id="`vertical_line_${uid}`">
-                    <stop offset="0%" stop-color="#FFFFFF"/>
-                    <stop offset="100%" stop-color="#FFFFFF33"/>
-                </linearGradient>
-            </defs>
-
-            <text
-                data-cy="vue-ui-3d-bar-simple-datalabel"
-                v-if="FINAL_CONFIG.style.chart.dataLabel.show && ![null, undefined].includes(FINAL_DATASET.percentage) && [null, undefined].includes(FINAL_DATASET.series)"
-                :x="svg.width / 2"
-                :y="svg.top - FINAL_CONFIG.style.chart.dataLabel.fontSize / 2"
-                :font-size="FINAL_CONFIG.style.chart.dataLabel.fontSize"
-                :font-weight="FINAL_CONFIG.style.chart.dataLabel.bold ? 'bold': 'normal'"
-                :fill="FINAL_CONFIG.style.chart.dataLabel.color"
-                text-anchor="middle"
-            >
-                {{ dataLabel({
-                    v: activeValue,
-                    s: '%',
-                    r: FINAL_CONFIG.style.chart.dataLabel.rounding
-                })}}
-            </text>
-            
-            <!-- FIX KILLER -->
-            <g
-                v-if="selectionIsFixed"
-                role="button"
+        <div style="position:relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS" 
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'animated': FINAL_CONFIG.useCssAnimation }" 
+                data-cy="3d-bar-svg" 
+                :viewBox="`0 0 ${svg.absoluteWidth} ${svg.height}`" 
+                :style="`max-width:100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
                 tabindex="0"
-                aria-label="Clear selection"
-                @click="selectionIsFixed = false; selectedSerie = null"
-                @keydown.enter.prevent="selectionIsFixed = false; selectedSerie = null"
-                @keydown.space.prevent="selectionIsFixed = false; selectedSerie = null"
-                @focus="isFocus = true"
-                @blur="isFocus = false"
-                @mouseenter="isFocus = true"
-                @mouseleave="isFocus = false"
-                class="svg-btn"
-                data-dom-to-png-ignore
-                :style="{
-                    cursor: isCursorPointer ? 'pointer' : 'default',
-                    outline: 'none'
-                }"
+                :aria-describedby="`chart-instructions-${uid}`"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <title>Clear selection</title>
-
-                <rect
-                    :x="CX - 12" :y="svg.top - 24" :width="24" :height="24"
-                    fill="transparent" pointer-events="all"
-                />
-
-                <circle
-                    :cx="CX" :cy="svg.top - 12" r="10"
-                    fill="none"
-                    :stroke="FINAL_CONFIG.style.chart.color"
-                    stroke-width="2"
-                    vector-effect="non-scaling-stroke"
-                    :opacity="isFocus ? 0.5 : 0"
-                />
-
-                <path
-                    :d="`M${CX - 6},${svg.top - 18} ${CX + 6},${svg.top - 6}`"
-                    :stroke="FINAL_CONFIG.style.chart.color"
-                    stroke-linecap="round" stroke-width="2"
-                    vector-effect="non-scaling-stroke"
-                />
-                <path
-                    :d="`M${CX + 6},${svg.top - 18} ${CX - 6},${svg.top - 6}`"
-                    :stroke="FINAL_CONFIG.style.chart.color"
-                    stroke-linecap="round" stroke-width="2"
-                    vector-effect="non-scaling-stroke"
-                />
-            </g>
-
-            <g v-if="!FINAL_CONFIG.style.shape || FINAL_CONFIG.style.shape === 'bar'">            
-                <!-- BOX SKELETON -->
-                <g v-if="!hasStack">
-                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.right" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.left" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.side" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.topSides" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                </g>
-
-                <!-- FILL BOX -->
-                <g v-if="!hasStack">
-                    <path :d="fill.right" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_right${uid})`"/>
-                    <path :d="fill.left" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_left${uid})`"/>
-                    <path :d="fill.top" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
-                </g>
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="0"
+                    :y="0"
+                    :width="svg.absoluteWidth"
+                    :height="svg.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+    
+                <!-- DEFS -->
+                <defs>
+                    <radialGradient :id="`gradient_top${uid}`">
+                        <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                        <stop offset="100%" :stop-color="FINAL_CONFIG.style.chart.bar.color" />
+                    </radialGradient>
+                    <radialGradient :id="`gradient_tube_top${uid}`">
+                        <stop offset="0%" :stop-color="setOpacity(lightenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.5), 80)" />
+                        <stop offset="100%" :stop-color="setOpacity(darkenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.1), 80)" />
+                    </radialGradient>
+                    <radialGradient :id="`gradient_left${uid}`">
+                        <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                        <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.bar.color, 20)" />
+                    </radialGradient>
+                    <radialGradient :id="`gradient_right${uid}`">
+                        <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.backgroundColor, 0)" />
+                        <stop offset="100%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.bar.color, 20)" />
+                    </radialGradient>
+                    <linearGradient :id="`gradient_tube_body${uid}`" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" :stop-color="`${FINAL_CONFIG.style.chart.bar.color}`"/>
+                        <stop offset="10%" :stop-color="setOpacity(darkenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.7), 100)"/>
+                        <stop offset="25%" :stop-color="setOpacity(darkenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.5), 100)"/>
+                        <stop offset="75%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.bar.color, 80)"/>
+                        <stop offset="100%" :stop-color="setOpacity(lightenHexColor(FINAL_CONFIG.style.chart.bar.color, 0.7), 100)"/>
+                    </linearGradient>
+                </defs>
+    
+                <defs v-if="hasStack">
+                    <radialGradient v-for="bar in stack" :id="`grad_top_${bar.id}`">
+                        <stop offset="0%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.5), 80)" />
+                        <stop offset="100%" :stop-color="bar.color" />
+                    </radialGradient>
+                    <linearGradient v-for="bar in stack" :id="`grad_left_${bar.id}`">
+                        <stop offset="0%" :stop-color="setOpacity(bar.color, 80)" />
+                        <stop offset="100%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.5), 100)" />
+                    </linearGradient>
+                    <linearGradient v-for="bar in stack" :id="`grad_right_${bar.id}`">
+                        <stop offset="2%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.5), 100)" />
+                        <stop offset="100%" :stop-color="setOpacity(bar.color, 80)" />
+                    </linearGradient>
+                    <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" :id="`vertical_line_${uid}`">
+                        <stop offset="0%" stop-color="#FFFFFF"/>
+                        <stop offset="100%" stop-color="#FFFFFF33"/>
+                    </linearGradient>
+                </defs>
+    
+                <text
+                    data-cy="vue-ui-3d-bar-simple-datalabel"
+                    v-if="FINAL_CONFIG.style.chart.dataLabel.show && ![null, undefined].includes(FINAL_DATASET.percentage) && [null, undefined].includes(FINAL_DATASET.series)"
+                    :x="svg.width / 2"
+                    :y="svg.top - FINAL_CONFIG.style.chart.dataLabel.fontSize / 2"
+                    :font-size="FINAL_CONFIG.style.chart.dataLabel.fontSize"
+                    :font-weight="FINAL_CONFIG.style.chart.dataLabel.bold ? 'bold': 'normal'"
+                    :fill="FINAL_CONFIG.style.chart.dataLabel.color"
+                    text-anchor="middle"
+                >
+                    {{ dataLabel({
+                        v: activeValue,
+                        s: '%',
+                        r: FINAL_CONFIG.style.chart.dataLabel.rounding
+                    })}}
+                </text>
                 
-                <g v-if="hasStack">
-                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack" :data-cy="`bar-3d-value-${bar.value}`">
-                        <path :d="bar.fill.right" :fill="`url(#grad_right_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)"/>
-                        <path :d="bar.fill.left" :fill="`url(#grad_left_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)"/>
-                        <path :d="bar.fill.top" :fill="`url(#grad_top_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)"/>
-                        <path :d="bar.fill.liningTop" stroke="#FFFFFF" stroke-width="0.5" stroke-linecap="round" fill="none" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)" />
-                        
-                        <path :d="`M ${bar.fill.apexTop.x},${bar.fill.apexTop.y} ${bar.fill.apexBottom.x},${bar.fill.apexBottom.y}`" :stroke="`#FFFFFF`" stroke-width="0.5" stroke-linecap="round"/> 
+                <!-- FIX KILLER -->
+                <g
+                    v-if="selectionIsFixed"
+                    role="button"
+                    tabindex="0"
+                    aria-label="Clear selection"
+                    @click="selectionIsFixed = false; selectedSerie = null"
+                    @keydown.enter.prevent="selectionIsFixed = false; selectedSerie = null"
+                    @keydown.space.prevent="selectionIsFixed = false; selectedSerie = null"
+                    @focus="isFocus = true"
+                    @blur="isFocus = false"
+                    @mouseenter="isFocus = true"
+                    @mouseleave="isFocus = false"
+                    class="svg-btn"
+                    data-dom-to-png-ignore
+                    :style="{
+                        cursor: isCursorPointer ? 'pointer' : 'default',
+                        outline: 'none'
+                    }"
+                >
+                    <title>Clear selection</title>
+    
+                    <rect
+                        :x="CX - 12" :y="svg.top - 24" :width="24" :height="24"
+                        fill="transparent" pointer-events="all"
+                    />
+    
+                    <circle
+                        :cx="CX" :cy="svg.top - 12" r="10"
+                        fill="none"
+                        :stroke="FINAL_CONFIG.style.chart.color"
+                        stroke-width="2"
+                        vector-effect="non-scaling-stroke"
+                        :opacity="isFocus ? 0.5 : 0"
+                    />
+    
+                    <path
+                        :d="`M${CX - 6},${svg.top - 18} ${CX + 6},${svg.top - 6}`"
+                        :stroke="FINAL_CONFIG.style.chart.color"
+                        stroke-linecap="round" stroke-width="2"
+                        vector-effect="non-scaling-stroke"
+                    />
+                    <path
+                        :d="`M${CX + 6},${svg.top - 18} ${CX - 6},${svg.top - 6}`"
+                        :stroke="FINAL_CONFIG.style.chart.color"
+                        stroke-linecap="round" stroke-width="2"
+                        vector-effect="non-scaling-stroke"
+                    />
+                </g>
+    
+                <g v-if="!FINAL_CONFIG.style.shape || FINAL_CONFIG.style.shape === 'bar'">            
+                    <!-- BOX SKELETON -->
+                    <g v-if="!hasStack">
+                        <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.right" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                        <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.left" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                        <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.side" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                        <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.topSides" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
                     </g>
-                    <g v-for="(bar, i) in stack">
-                        <path v-if="i !== stack.length - 1" :d="bar.fill.liningTopShade" :stroke="FINAL_CONFIG.style.chart.bar.shadeColor" stroke-width="0.5" stroke-linecap="round" fill="none" style="pointer-events: none;" />
+    
+                    <!-- FILL BOX -->
+                    <g v-if="!hasStack">
+                        <path :d="fill.right" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_right${uid})`"/>
+                        <path :d="fill.left" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_left${uid})`"/>
+                        <path :d="fill.top" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_top${uid})`"/>
                     </g>
-                    <!-- LEGEND (parallelogram) -->
-                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > FINAL_CONFIG.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
-
-                        <path 
-                            :stroke="FINAL_CONFIG.style.chart.color" 
-                            stroke-dasharray="1" 
-                            stroke-width="0.5" 
-                            stroke-linecap="round" 
-                            :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x2},${bar.fill.sidePointer.y}`"
-                        />
-
-                        <circle 
-                            v-if="!bar.fill.miniDonut || !!selectedSerie"
-                            :cx="bar.fill.sidePointer.x2" 
-                            :cy="bar.fill.sidePointer.y" 
-                            :r="2" 
-                            :fill="bar.color" 
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor" 
-                        />
-
-                        <rect
-                            v-if="loading"
-                            :x="bar.fill.sidePointer.xText"
-                            :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize / 2"
-                            :width="svg.width / 3"
-                            :height="FINAL_CONFIG.style.chart.legend.fontSize"
-                            fill="#6A6A6A80"
-                            rx="3"
-                        />
-
-                        <foreignObject 
-                            :x="bar.fill.sidePointer.xText" 
-                            :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize" 
-                            :width="svg.absoluteWidth / 3" 
-                            :height="FINAL_CONFIG.style.chart.legend.fontSize * 2" 
-                            style="overflow: visible; position: relative"
-                            v-if="!loading"
+                    
+                    <g v-if="hasStack">
+                        <g
+                            v-for="(bar, i) in stack"
+                            :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`"
+                            class="vue-ui-3d-bar-stack"
+                            :data-cy="`bar-3d-value-${bar.value}`"
+                            role="img"
+                            :aria-label="buildAccessibilityAnnouncement(bar)"
                         >
-                            <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}; font-weight:${FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'}`">
-                                {{ applyDataLabel(
-                                    FINAL_CONFIG.style.chart.dataLabel.formatter,
-                                    bar.value,
-                                    `${bar.name}: ${dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage})} (${dataLabel({ 
-                                        p: FINAL_CONFIG.style.chart.legend.prefix, 
-                                        v: bar.value, 
-                                        s: FINAL_CONFIG.style.chart.legend.suffix, 
-                                        r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                    })})`,
-                                    { datapoint: bar, seriesIndex: i, type: 'barDatapoint' }
-                                    )
-                                }}
-                            </div>
-                            <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
-                        </foreignObject>
-
-                        <!-- BREAKDOWN DONUT -->
-                        <g v-if="bar.fill.donut && selectedSerie === bar.id">  
-                            <!-- DONUT LABEL CONNECTOR -->
-                            <g v-for="(arc, j) in bar.fill.donut">                            
-                                <path
-                                    v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6"
-                                    :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 10)"
-                                    :stroke="arc.color"
-                                    class="vue-ui-donut-arc-path"
-                                    stroke-width="0.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    fill="none"
-                                />
-                            </g>
-
+                            <path :d="bar.fill.right" :fill="`url(#grad_right_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)"/>
+                            <path :d="bar.fill.left" :fill="`url(#grad_left_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)"/>
+                            <path :d="bar.fill.top" :fill="`url(#grad_top_${bar.id})`" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)"/>
+                            <path :d="bar.fill.liningTop" stroke="#FFFFFF" stroke-width="0.5" stroke-linecap="round" fill="none" @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)" />
+                            
+                            <path :d="`M ${bar.fill.apexTop.x},${bar.fill.apexTop.y} ${bar.fill.apexBottom.x},${bar.fill.apexBottom.y}`" :stroke="`#FFFFFF`" stroke-width="0.5" stroke-linecap="round"/> 
+                        </g>
+                        <g v-for="(bar, i) in stack">
+                            <path v-if="i !== stack.length - 1" :d="bar.fill.liningTopShade" :stroke="FINAL_CONFIG.style.chart.bar.shadeColor" stroke-width="0.5" stroke-linecap="round" fill="none" style="pointer-events: none;" />
+                        </g>
+                        <!-- LEGEND (parallelogram) -->
+                        <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > FINAL_CONFIG.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
+    
                             <path 
-                                v-for="(arc, j) in bar.fill.donut"
-                                class="vue-ui-donut-arc-path"
-                                :data-cy="`donut-arc-${j}`"
-                                :d="arc.arcSlice" 
-                                :fill="`${arc.color}`"
-                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                                :stroke-width="1"
+                                :stroke="FINAL_CONFIG.style.chart.color" 
+                                stroke-dasharray="1" 
+                                stroke-width="0.5" 
+                                stroke-linecap="round" 
+                                :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x2},${bar.fill.sidePointer.y}`"
                             />
-
-                            <!-- DONUT DATALABELS -->
-                            <g v-for="(arc, i) in bar.fill.donut">
-                                <g v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6">                                
-                                    <text
-                                        :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
-                                        :x="calcMarkerOffsetX(arc, true, 2).x"
-                                        :y="calcMarkerOffsetY(arc, 12, 12)"
-                                        :fill="FINAL_CONFIG.style.chart.legend.color"
-                                        :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
-                                        :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
-                                    >
-                                        {{ applyDataLabel(
-                                            FINAL_CONFIG.style.chart.dataLabel.formatter,
-                                            arc.value,
-                                            `${displayArcPercentage(arc, bar.fill.donut)} (${dataLabel({
-                                                p: FINAL_CONFIG.style.chart.legend.prefix, 
-                                                v: arc.value, 
-                                                s: FINAL_CONFIG.style.chart.legend.suffix, 
-                                                r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                            })})`,
-                                            { datapoint: arc, seriesIndex: i, type: 'donutDatapoint' }
-                                        )}}
-                                    </text>
-                                    <text
-                                        :text-anchor="calcMarkerOffsetX(arc).anchor"
-                                        :x="calcMarkerOffsetX(arc, true, 2).x"
-                                        :y="calcMarkerOffsetY(arc, 12, 12) + FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
-                                        :fill="FINAL_CONFIG.style.chart.legend.color"
-                                        :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
-                                        :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
-                                    >
-                                        {{ arc.name }}
-                                    </text>
+    
+                            <circle 
+                                v-if="!bar.fill.miniDonut || !!selectedSerie"
+                                :cx="bar.fill.sidePointer.x2" 
+                                :cy="bar.fill.sidePointer.y" 
+                                :r="2" 
+                                :fill="bar.color" 
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor" 
+                            />
+    
+                            <rect
+                                v-if="loading"
+                                :x="bar.fill.sidePointer.xText"
+                                :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize / 2"
+                                :width="svg.width / 3"
+                                :height="FINAL_CONFIG.style.chart.legend.fontSize"
+                                fill="#6A6A6A80"
+                                rx="3"
+                            />
+    
+                            <foreignObject 
+                                :x="bar.fill.sidePointer.xText" 
+                                :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize" 
+                                :width="svg.absoluteWidth / 3" 
+                                :height="FINAL_CONFIG.style.chart.legend.fontSize * 2" 
+                                style="overflow: visible; position: relative"
+                                v-if="!loading"
+                            >
+                                <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color}; font-weight:${FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'}`">
+                                    {{ applyDataLabel(
+                                        FINAL_CONFIG.style.chart.dataLabel.formatter,
+                                        bar.value,
+                                        `${bar.name}: ${dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage})} (${dataLabel({ 
+                                            p: FINAL_CONFIG.style.chart.legend.prefix, 
+                                            v: bar.value, 
+                                            s: FINAL_CONFIG.style.chart.legend.suffix, 
+                                            r: FINAL_CONFIG.style.chart.legend.roundingValue
+                                        })})`,
+                                        { datapoint: bar, seriesIndex: i, type: 'barDatapoint' }
+                                        )
+                                    }}
+                                </div>
+                                <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
+                            </foreignObject>
+    
+                            <!-- BREAKDOWN DONUT -->
+                            <g v-if="bar.fill.donut && selectedSerie === bar.id">  
+                                <!-- DONUT LABEL CONNECTOR -->
+                                <g v-for="(arc, j) in bar.fill.donut">                            
+                                    <path
+                                        v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6"
+                                        :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 10)"
+                                        :stroke="arc.color"
+                                        class="vue-ui-donut-arc-path"
+                                        stroke-width="0.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        fill="none"
+                                    />
+                                </g>
+    
+                                <path 
+                                    v-for="(arc, j) in bar.fill.donut"
+                                    class="vue-ui-donut-arc-path"
+                                    :data-cy="`donut-arc-${j}`"
+                                    :d="arc.arcSlice" 
+                                    :fill="`${arc.color}`"
+                                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                    :stroke-width="1"
+                                />
+    
+                                <!-- DONUT DATALABELS -->
+                                <g v-for="(arc, i) in bar.fill.donut">
+                                    <g v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6">                                
+                                        <text
+                                            :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
+                                            :x="calcMarkerOffsetX(arc, true, 2).x"
+                                            :y="calcMarkerOffsetY(arc, 12, 12)"
+                                            :fill="FINAL_CONFIG.style.chart.legend.color"
+                                            :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                            :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
+                                        >
+                                            {{ applyDataLabel(
+                                                FINAL_CONFIG.style.chart.dataLabel.formatter,
+                                                arc.value,
+                                                `${displayArcPercentage(arc, bar.fill.donut)} (${dataLabel({
+                                                    p: FINAL_CONFIG.style.chart.legend.prefix, 
+                                                    v: arc.value, 
+                                                    s: FINAL_CONFIG.style.chart.legend.suffix, 
+                                                    r: FINAL_CONFIG.style.chart.legend.roundingValue
+                                                })})`,
+                                                { datapoint: arc, seriesIndex: i, type: 'donutDatapoint' }
+                                            )}}
+                                        </text>
+                                        <text
+                                            :text-anchor="calcMarkerOffsetX(arc).anchor"
+                                            :x="calcMarkerOffsetX(arc, true, 2).x"
+                                            :y="calcMarkerOffsetY(arc, 12, 12) + FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                            :fill="FINAL_CONFIG.style.chart.legend.color"
+                                            :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                            :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
+                                        >
+                                            {{ arc.name }}
+                                        </text>
+                                    </g>
                                 </g>
                             </g>
-                        </g>
-
-                        <!-- BREAKDOWN MINI DONUT -->
-                        <g v-if="bar.fill.miniDonut && !selectedSerie">  
-                            <path 
-                                v-for="(arc, j) in bar.fill.miniDonut"
-                                class="vue-ui-donut-arc-path"
-                                :data-cy="`donut-arc-${j}`"
-                                :d="arc.arcSlice" 
-                                :fill="`${arc.color}`"
-                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                                :stroke-width="0.5"
-                            />
-                        </g>
-                    </g>
-                </g>
-            </g>
-
-            <g v-if="FINAL_CONFIG.style.shape === 'tube'">
-                <g v-if="!hasStack">
-                    <!-- TUBE SKELETON -->
-                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeTop" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeLeft" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeRight" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeBottom" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                    <!-- FILL TUBE -->
-                    <path :d="fill.tubeTop" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_top${uid})`"/>
-                    <path :d="fill.tubeBody" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body${uid})`"/>
-                    <path :d="fill.tubeTop" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-                </g>
-
-                <g v-if="hasStack">
-                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`" class="vue-ui-3d-bar-stack" @click="emits('selectDatapoint', bar)">
-                        <defs>
-                            <radialGradient :id="`gradient_tube_top_${bar.id}`" fx="10%" cy="55%">
-                                <stop offset="0%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.5), 80)" />
-                                <stop offset="100%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.1), 80)" />
-                            </radialGradient>
-                            <linearGradient :id="`gradient_tube_body_${bar.id}`" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%" :stop-color="`${bar.color}`"/>
-                                <stop offset="10%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.7), 100)"/>
-                                <stop offset="25%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.5), 100)"/>
-                                <stop offset="75%" :stop-color="setOpacity(bar.color, 80)"/>
-                                <stop offset="100%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.7), 100)"/>
-                            </linearGradient>
-                        </defs>
-                        <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)" :d="bar.fill.tubeBody" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body_${bar.id})`"/>
-                        <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)" :d="bar.fill.bottomTubeTop" stroke="#000000" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" fill="none" v-if="i > 0"/>
-                        <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)" :d="bar.fill.tubeTop" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_top_${bar.id})`"/>
-                    </g>
-
-                    <!-- LEGEND (tube) -->
-                    <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > FINAL_CONFIG.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
-                        <path 
-                            :stroke="FINAL_CONFIG.style.chart.color" 
-                            stroke-dasharray="1" 
-                            stroke-width="0.5" 
-                            stroke-linecap="round" 
-                            :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x2},${bar.fill.sidePointer.y}`"
-                        />
-
-                        <circle 
-                            v-if="!bar.fill.miniDonut || !!selectedSerie"
-                            :cx="bar.fill.sidePointer.x2" 
-                            :cy="bar.fill.sidePointer.y" 
-                            :r="2" 
-                            :fill="bar.color" 
-                            :stroke="FINAL_CONFIG.style.chart.backgroundColor" 
-                        />
-
-                        <rect
-                            v-if="loading"
-                            :x="bar.fill.sidePointer.xText"
-                            :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize / 2"
-                            :width="svg.width / 3"
-                            :height="FINAL_CONFIG.style.chart.legend.fontSize"
-                            fill="#6A6A6A80"
-                            rx="3"
-                        />
-
-                        <foreignObject 
-                            :x="bar.fill.sidePointer.xText" 
-                            :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize" 
-                            :width="svg.absoluteWidth / 3" 
-                            :height="FINAL_CONFIG.style.chart.legend.fontSize * 2" 
-                            style="overflow: visible; position: relative"
-                            v-if="!loading"
-                        >
-                            <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color};font-weight:${FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'}`">
-                                {{ applyDataLabel(
-                                    FINAL_CONFIG.style.chart.dataLabel.formatter,
-                                    bar.value,
-                                    `${bar.name}: ${dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage})} (${dataLabel({ 
-                                        p: FINAL_CONFIG.style.chart.legend.prefix, 
-                                        v: bar.value, 
-                                        s: FINAL_CONFIG.style.chart.legend.suffix, 
-                                        r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                    })})`,
-                                    { datapoint: bar, seriesIndex: i, type: 'barDatapoint' }
-                                    )
-                                }}
-                            </div>
-                            <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
-                        </foreignObject>
-
-                        <!-- BREAKDOWN DONUT -->
-                        <g v-if="bar.fill.donut && selectedSerie === bar.id">  
-                            <!-- DONUT LABEL CONNECTOR -->
-                            <g v-for="(arc, j) in bar.fill.donut">                            
-                                <path
-                                    v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6"
-                                    :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 10)"
-                                    :stroke="arc.color"
+    
+                            <!-- BREAKDOWN MINI DONUT -->
+                            <g v-if="bar.fill.miniDonut && !selectedSerie">  
+                                <path 
+                                    v-for="(arc, j) in bar.fill.miniDonut"
                                     class="vue-ui-donut-arc-path"
-                                    stroke-width="0.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    fill="none"
+                                    :data-cy="`donut-arc-${j}`"
+                                    :d="arc.arcSlice" 
+                                    :fill="`${arc.color}`"
+                                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                    :stroke-width="0.5"
                                 />
                             </g>
-
-                            <path 
-                                v-for="(arc, j) in bar.fill.donut"
-                                class="vue-ui-donut-arc-path"
-                                :data-cy="`donut-arc-${j}`"
-                                :d="arc.arcSlice" 
-                                :fill="`${arc.color}`"
-                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                                :stroke-width="1"
-                            />
-
-                            <!-- DONUT DATALABELS -->
-                            <g v-for="(arc, i) in bar.fill.donut">
-                                <g v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6">                                
-                                    <text
-                                        :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
-                                        :x="calcMarkerOffsetX(arc, true, 2).x"
-                                        :y="calcMarkerOffsetY(arc, 12, 12)"
-                                        :fill="FINAL_CONFIG.style.chart.legend.color"
-                                        :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
-                                        :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
-                                    >
-                                        {{ applyDataLabel(
-                                            FINAL_CONFIG.style.chart.dataLabel.formatter,
-                                            arc.value,
-                                            `${displayArcPercentage(arc, bar.fill.donut)} (${dataLabel({
-                                                p: FINAL_CONFIG.style.chart.legend.prefix, 
-                                                v: arc.value, 
-                                                s: FINAL_CONFIG.style.chart.legend.suffix, 
-                                                r: FINAL_CONFIG.style.chart.legend.roundingValue
-                                            })})`,
-                                            { datapoint: arc, seriesIndex: i, type: 'donutDatapoint' }
-                                        )}}
-                                    </text>
-                                    <text
-                                        :text-anchor="calcMarkerOffsetX(arc).anchor"
-                                        :x="calcMarkerOffsetX(arc, true, 2).x"
-                                        :y="calcMarkerOffsetY(arc, 12, 12) + FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
-                                        :fill="FINAL_CONFIG.style.chart.legend.color"
-                                        :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
-                                        :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
-                                    >
-                                        {{ arc.name }}
-                                    </text>
-                                </g>
-                            </g>
-                        </g>
-
-                        <!-- BREAKDOWN MINI DONUT -->
-                        <g v-if="bar.fill.miniDonut && !selectedSerie">  
-                            <path 
-                                v-for="(arc, j) in bar.fill.miniDonut"
-                                class="vue-ui-donut-arc-path"
-                                :data-cy="`donut-arc-${j}`"
-                                :d="arc.arcSlice" 
-                                :fill="`${arc.color}`"
-                                :stroke="FINAL_CONFIG.style.chart.backgroundColor"
-                                :stroke-width="0.5"
-                            />
                         </g>
                     </g>
                 </g>
-            </g>
-
-            <slot name="svg" :svg="{
-                ...svg,
-                isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                isPrintingSvg: isCallbackSvg
-            }"/>
-        </svg>
+    
+                <g v-if="FINAL_CONFIG.style.shape === 'tube'">
+                    <g v-if="!hasStack">
+                        <!-- TUBE SKELETON -->
+                        <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeTop" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                        <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeLeft" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                        <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeRight" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                        <path :stroke-dasharray="FINAL_CONFIG.style.chart.box.strokeDasharray" :d="box.tubeBottom" :stroke="FINAL_CONFIG.style.chart.box.stroke" :stroke-width="FINAL_CONFIG.style.chart.box.strokeWidth" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                        <!-- FILL TUBE -->
+                        <path :d="fill.tubeTop" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_top${uid})`"/>
+                        <path :d="fill.tubeBody" :stroke="FINAL_CONFIG.style.chart.bar.stroke" :stroke-width="FINAL_CONFIG.style.chart.bar.strokeWidth" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body${uid})`"/>
+                        <path :d="fill.tubeTop" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+                    </g>
+    
+                    <g v-if="hasStack">
+                        <g
+                            v-for="(bar, i) in stack"
+                            :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0.3 : 1}`"
+                            class="vue-ui-3d-bar-stack"
+                            role="img"
+                            :aria-label="buildAccessibilityAnnouncement(bar)"
+                        >
+                            <defs>
+                                <radialGradient :id="`gradient_tube_top_${bar.id}`" fx="10%" cy="55%">
+                                    <stop offset="0%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.5), 80)" />
+                                    <stop offset="100%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.1), 80)" />
+                                </radialGradient>
+                                <linearGradient :id="`gradient_tube_body_${bar.id}`" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" :stop-color="`${bar.color}`"/>
+                                    <stop offset="10%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.7), 100)"/>
+                                    <stop offset="25%" :stop-color="setOpacity(darkenHexColor(bar.color, 0.5), 100)"/>
+                                    <stop offset="75%" :stop-color="setOpacity(bar.color, 80)"/>
+                                    <stop offset="100%" :stop-color="setOpacity(lightenHexColor(bar.color, 0.7), 100)"/>
+                                </linearGradient>
+                            </defs>
+                            <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)" :d="bar.fill.tubeBody" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_body_${bar.id})`"/>
+                            <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)" :d="bar.fill.bottomTubeTop" stroke="#000000" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" fill="none" v-if="i > 0"/>
+                            <path @mouseenter="selectSerie(bar)" @click="selectSerie(bar, true)" @mouseout="unselectSerie(bar)" :d="bar.fill.tubeTop" stroke="#FFFFFF" :stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" :fill="`url(#gradient_tube_top_${bar.id})`"/>
+                        </g>
+    
+                        <!-- LEGEND (tube) -->
+                        <g v-for="(bar, i) in stack" :style="`opacity:${selectedSerie ? selectedSerie === bar.id ? 1 : 0 : bar.proportion * 100 > FINAL_CONFIG.style.chart.legend.hideUnderPercentage ? 1 : 0}`" @click="emits('selectDatapoint', bar)">
+                            <path 
+                                :stroke="FINAL_CONFIG.style.chart.color" 
+                                stroke-dasharray="1" 
+                                stroke-width="0.5" 
+                                stroke-linecap="round" 
+                                :d="`M${bar.fill.sidePointer.x},${bar.fill.sidePointer.y} ${bar.fill.sidePointer.x2},${bar.fill.sidePointer.y}`"
+                            />
+    
+                            <circle 
+                                v-if="!bar.fill.miniDonut || !!selectedSerie"
+                                :cx="bar.fill.sidePointer.x2" 
+                                :cy="bar.fill.sidePointer.y" 
+                                :r="2" 
+                                :fill="bar.color" 
+                                :stroke="FINAL_CONFIG.style.chart.backgroundColor" 
+                            />
+    
+                            <rect
+                                v-if="loading"
+                                :x="bar.fill.sidePointer.xText"
+                                :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize / 2"
+                                :width="svg.width / 3"
+                                :height="FINAL_CONFIG.style.chart.legend.fontSize"
+                                fill="#6A6A6A80"
+                                rx="3"
+                            />
+    
+                            <foreignObject 
+                                :x="bar.fill.sidePointer.xText" 
+                                :y="bar.fill.sidePointer.y - FINAL_CONFIG.style.chart.legend.fontSize" 
+                                :width="svg.absoluteWidth / 3" 
+                                :height="FINAL_CONFIG.style.chart.legend.fontSize * 2" 
+                                style="overflow: visible; position: relative"
+                                v-if="!loading"
+                            >
+                                <div v-if="FINAL_CONFIG.style.chart.legend.showDefault" :style="`height: 100%; width: 100%; display: flex; flex-direction: row; flex-wrap: wrap; align-items:center;justify-content: flex-start; font-size:${FINAL_CONFIG.style.chart.legend.fontSize}px; text-align:left; line-height: ${FINAL_CONFIG.style.chart.legend.fontSize}px; color:${FINAL_CONFIG.style.chart.legend.color};font-weight:${FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'}`">
+                                    {{ applyDataLabel(
+                                        FINAL_CONFIG.style.chart.dataLabel.formatter,
+                                        bar.value,
+                                        `${bar.name}: ${dataLabel({v: bar.proportion * 100, s: '%', r: FINAL_CONFIG.style.chart.legend.roundingPercentage})} (${dataLabel({ 
+                                            p: FINAL_CONFIG.style.chart.legend.prefix, 
+                                            v: bar.value, 
+                                            s: FINAL_CONFIG.style.chart.legend.suffix, 
+                                            r: FINAL_CONFIG.style.chart.legend.roundingValue
+                                        })})`,
+                                        { datapoint: bar, seriesIndex: i, type: 'barDatapoint' }
+                                        )
+                                    }}
+                                </div>
+                                <slot name="legend" v-bind="{ datapoint: bar, config: FINAL_CONFIG, dataset: stack}"/>
+                            </foreignObject>
+    
+                            <!-- BREAKDOWN DONUT -->
+                            <g v-if="bar.fill.donut && selectedSerie === bar.id">  
+                                <!-- DONUT LABEL CONNECTOR -->
+                                <g v-for="(arc, j) in bar.fill.donut">                            
+                                    <path
+                                        v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6"
+                                        :d="calcNutArrowPath(arc, {x: arc.cx, y: arc.cy}, 0, 8, false, true, 10)"
+                                        :stroke="arc.color"
+                                        class="vue-ui-donut-arc-path"
+                                        stroke-width="0.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        fill="none"
+                                    />
+                                </g>
+    
+                                <path 
+                                    v-for="(arc, j) in bar.fill.donut"
+                                    class="vue-ui-donut-arc-path"
+                                    :data-cy="`donut-arc-${j}`"
+                                    :d="arc.arcSlice" 
+                                    :fill="`${arc.color}`"
+                                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                    :stroke-width="1"
+                                />
+    
+                                <!-- DONUT DATALABELS -->
+                                <g v-for="(arc, i) in bar.fill.donut">
+                                    <g v-if="displayArcPercentage(arc, bar.fill.donut, true) > 6">                                
+                                        <text
+                                            :text-anchor="calcMarkerOffsetX(arc, true, 0).anchor"
+                                            :x="calcMarkerOffsetX(arc, true, 2).x"
+                                            :y="calcMarkerOffsetY(arc, 12, 12)"
+                                            :fill="FINAL_CONFIG.style.chart.legend.color"
+                                            :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                            :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
+                                        >
+                                            {{ applyDataLabel(
+                                                FINAL_CONFIG.style.chart.dataLabel.formatter,
+                                                arc.value,
+                                                `${displayArcPercentage(arc, bar.fill.donut)} (${dataLabel({
+                                                    p: FINAL_CONFIG.style.chart.legend.prefix, 
+                                                    v: arc.value, 
+                                                    s: FINAL_CONFIG.style.chart.legend.suffix, 
+                                                    r: FINAL_CONFIG.style.chart.legend.roundingValue
+                                                })})`,
+                                                { datapoint: arc, seriesIndex: i, type: 'donutDatapoint' }
+                                            )}}
+                                        </text>
+                                        <text
+                                            :text-anchor="calcMarkerOffsetX(arc).anchor"
+                                            :x="calcMarkerOffsetX(arc, true, 2).x"
+                                            :y="calcMarkerOffsetY(arc, 12, 12) + FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                            :fill="FINAL_CONFIG.style.chart.legend.color"
+                                            :font-size="FINAL_CONFIG.style.chart.legend.fontSize / 1.5"
+                                            :font-weight="FINAL_CONFIG.style.chart.legend.bold ? 'bold' : 'normal'"
+                                        >
+                                            {{ arc.name }}
+                                        </text>
+                                    </g>
+                                </g>
+                            </g>
+    
+                            <!-- BREAKDOWN MINI DONUT -->
+                            <g v-if="bar.fill.miniDonut && !selectedSerie">  
+                                <path 
+                                    v-for="(arc, j) in bar.fill.miniDonut"
+                                    class="vue-ui-donut-arc-path"
+                                    :data-cy="`donut-arc-${j}`"
+                                    :d="arc.arcSlice" 
+                                    :fill="`${arc.color}`"
+                                    :stroke="FINAL_CONFIG.style.chart.backgroundColor"
+                                    :stroke-width="0.5"
+                                />
+                            </g>
+                        </g>
+                    </g>
+                </g>
+    
+                <slot name="svg" :svg="{
+                    ...svg,
+                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                    isPrintingSvg: isCallbackSvg
+                }"/>
+            </svg>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging ||  isCallbackSvg || isCallbackImaging }"/>
@@ -1513,5 +1719,27 @@ defineExpose({
         transform: scale(1,1);
         opacity: 1;
     }
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>

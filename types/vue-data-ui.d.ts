@@ -1218,6 +1218,7 @@ declare module "vue-data-ui" {
         debug?: boolean; // v3
         loading?: boolean; // v3
         responsive?: boolean; // v3
+        a11y?: A11YConfig;
         events?: { // v3
             datapointEnter?: VueUi3dBarEvent; // v3
             datapointLeave?: VueUi3dBarEvent; // v3
