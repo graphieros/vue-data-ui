@@ -3396,9 +3396,10 @@ async function copyAlt(){
 const isFocus = ref(false);
 
 function onSvgFocus() {
-    if (activeTooltipIndex.value === null && slicer.value.end) {
+    if (slicer.value.end > slicer.value.start) {
         activeTooltipIndex.value = null;
     }
+    userHovers.value = true;
     isFocus.value = true;
 }
 
@@ -3406,6 +3407,7 @@ function onSvgBlur() {
     activeTooltipIndex.value = null;
     onSvgMouseLeave();
     isFocus.value = false;
+    userHovers.value = false;
 }
 
 function onSvgKeydown(event) {
