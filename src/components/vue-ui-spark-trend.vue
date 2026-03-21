@@ -29,6 +29,7 @@ import { useFitSvgText } from "../useFitSvgText";
 import { useNestedProp } from "../useNestedProp";
 import { useResponsive } from "../useResponsive";
 import { useThemeCheck } from "../useThemeCheck";
+import { usePrefersReducedMotion } from "../usePrefersMotion";
 import themes from "../themes/vue_ui_spark_trend.json";
 import BaseScanner from "../atoms/BaseScanner.vue";
 
@@ -36,6 +37,7 @@ const PackageVersion = defineAsyncComponent(() => import('../atoms/PackageVersio
 
 const { vue_ui_spark_trend: DEFAULT_CONFIG } = useConfig();
 const { isThemeValid, warnInvalidTheme } = useThemeCheck();
+const prefersReducedMotion = usePrefersReducedMotion();
 
 const props = defineProps({
     config: {
@@ -139,7 +141,7 @@ const safeDatasetCopy = ref(largestTriangleThreeBucketsArray({
     data: FINAL_DATASET.value,
     threshold: FINAL_CONFIG.value.downsample.threshold
 }).map(v => {
-    if(FINAL_CONFIG.value.style.animation.show) {
+    if(FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value) {
         return null
     } else {
         return ![undefined, Infinity, -Infinity, null, NaN].includes(v) ? v : null
@@ -152,7 +154,7 @@ watch(downsampled, (ds) => {
         raf.value = null;
     }
 
-    if (FINAL_CONFIG.value.style.animation.show) {
+    if (FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value) {
         safeDatasetCopy.value = Array(ds.length).fill(null);
     } else {
         safeDatasetCopy.value = ds.map(v =>
@@ -174,7 +176,7 @@ watch(
         manualLoading.value = objectIsEmpty(props.dataset);
 
         const ds = downsampled.value;
-        safeDatasetCopy.value = FINAL_CONFIG.value.style.animation.show
+        safeDatasetCopy.value = (FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value)
         ? Array(ds.length).fill(null)
         : ds.map(v => (Number.isFinite(v) ? v : null));
 
@@ -189,7 +191,7 @@ function animateChart() {
     let interval = 1000 / fps;
     let then = performance.now();
 
-    if (!loading.value && FINAL_CONFIG.value.style.animation.show && FINAL_CONFIG.value.style.animation.animationFrames && FINAL_DATASET.value.length > 1) {
+    if (!loading.value && (FINAL_CONFIG.value.style.animation.show && !prefersReducedMotion.value) && FINAL_CONFIG.value.style.animation.animationFrames && FINAL_DATASET.value.length > 1) {
         safeDatasetCopy.value = [];
         let start = 0;
 
@@ -403,11 +405,72 @@ const { fitText } = useFitSvgText({
     fontSize: FINAL_CONFIG.value.style.trendLabel.fontSize,
 });
 
+const accessibleSummary = computed(() => {
+    if (loading.value || isAnimating.value) {
+        return 'Trend chart loading';
+    }
+
+    const lastPoint = mutableDataset.value?.at(-1);
+    const lastValue = lastPoint?.value;
+
+    const formattedTrend = dataLabel({
+        p: trendValue.value > 0 ? '+' : '',
+        v: trendValue.value,
+        s: '%',
+        r: FINAL_CONFIG.value.style.trendLabel.rounding
+    });
+
+    const formattedLastValue = lastValue == null
+        ? 'not available'
+        : applyDataLabel(
+            FINAL_CONFIG.value.style.dataLabel.formatter,
+            lastValue,
+            dataLabel({
+                p: FINAL_CONFIG.value.style.dataLabel.prefix,
+                v: lastValue,
+                s: FINAL_CONFIG.value.style.dataLabel.suffix,
+                r: FINAL_CONFIG.value.style.dataLabel.rounding
+            }),
+            { datapoint: lastPoint }
+        );
+
+    const trendText =
+        trend.value === 'positive'
+            ? `up ${formattedTrend}`
+            : trend.value === 'negative'
+                ? `down ${formattedTrend}`
+                : `stable at ${formattedTrend}`;
+
+    return `Progression ${trendText}. Last value ${formattedLastValue}.`;
+});
+
+const accessibleDescriptionId = computed(() => `sparktrend-a11y-${uid.value}`);
+
 </script>
 
 <template>
-    <div ref="sparkTrendChart" class="vue-data-ui-component vue-ui-spark-trend" :id="uid" :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor}`">
-        <svg :key="datasetKey" ref="svgRef" :xmlns="XMLNS" :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`">
+    <div 
+        ref="sparkTrendChart" 
+        class="vue-data-ui-component vue-ui-spark-trend" 
+        :id="uid" 
+        :style="`width:100%;font-family:${FINAL_CONFIG.style.fontFamily};background:${FINAL_CONFIG.style.backgroundColor}`"
+        role="img"
+        :aria-describedby="accessibleDescriptionId"
+    >
+        <p
+            :id="accessibleDescriptionId"
+            class="sr-only"
+            aria-live="polite"
+        >
+            {{ accessibleSummary }}
+        </p>
+        <svg 
+            :key="datasetKey" 
+            ref="svgRef" 
+            :xmlns="XMLNS" 
+            :viewBox="`0 0 ${svg.width} ${svg.height}`" :style="`width:100%;background:transparent;overflow:visible`"
+            aria-hidden="true"
+        >
             <PackageVersion />
 
             <!-- BACKGROUND SLOT -->
@@ -549,5 +612,18 @@ const { fitText } = useFitSvgText({
 
 .vue-ui-spark-trend * {
     transition: unset;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>
