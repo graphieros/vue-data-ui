@@ -61,29 +61,27 @@ const uid = createUid();
 </script>
 
 <template>
-    <div>
-        <div class="sr-only" :id="`digit-${uid}`">
-            {{ dataset }}
-        </div>
-        <svg 
-            class="vue-data-ui-component vue-ui-digits" 
-            :xmlns="XMLNS" 
-            :viewBox="`0 0 ${maxY} 80`" 
-            :style="`background:${FINAL_CONFIG.backgroundColor};${FINAL_CONFIG.height ? `height:${FINAL_CONFIG.height};` : ''}${FINAL_CONFIG.width ? `width:${FINAL_CONFIG.width}` : ''}`"
-            :aria-describedby="`digit-${uid}`"
-        >
-            <PackageVersion />
-            <Digit
-                v-for="digit in digits"
-                :x="digit.x"
-                :y="digit.y"
-                :quanta="digit.quanta"
-                :color="FINAL_CONFIG.digits.color"
-                :backgroundColor="FINAL_CONFIG.digits.skeletonColor"
-                :thickness="FINAL_CONFIG.digits.thickness"
-            />
-        </svg>
+    <div class="sr-only" :id="`digit-${uid}`">
+        {{ dataset }}
     </div>
+    <svg 
+        class="vue-data-ui-component vue-ui-digits" 
+        :xmlns="XMLNS" 
+        :viewBox="`0 0 ${maxY} 80`" 
+        :style="`background:${FINAL_CONFIG.backgroundColor};${FINAL_CONFIG.height ? `height:${FINAL_CONFIG.height};` : ''}${FINAL_CONFIG.width ? `width:${FINAL_CONFIG.width}` : ''}`"
+        :aria-describedby="`digit-${uid}`"
+    >
+        <PackageVersion />
+        <Digit
+            v-for="digit in digits"
+            :x="digit.x"
+            :y="digit.y"
+            :quanta="digit.quanta"
+            :color="FINAL_CONFIG.digits.color"
+            :backgroundColor="FINAL_CONFIG.digits.skeletonColor"
+            :thickness="FINAL_CONFIG.digits.thickness"
+        />
+    </svg>
 </template>
 
 <style scoped>
