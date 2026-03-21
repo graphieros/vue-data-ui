@@ -745,8 +745,18 @@ defineExpose({
             :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen, 'vue-ui-bullet-svg': true }"
             :viewBox="`0 0 ${svg.width} ${svg.height}`"
             :style="`width: 100%; overflow: visible; background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+            :aria-labelledby="`bullet-svg-title-${uid}`"
+            :aria-describedby="`bullet-svg-desc-${uid}`"
         >
             <PackageVersion />
+
+            <title :id="`bullet-svg-title-${uid}`">
+                {{ FINAL_CONFIG.style.chart.title.text || 'Bullet chart' }}
+            </title>
+
+            <desc :id="`bullet-svg-desc-${uid}`">
+                Value: {{ activeValue }}, Target: {{ segments.target?.value }}
+            </desc>
 
             <!-- BACKGROUND SLOT -->
             <foreignObject 
@@ -929,7 +939,6 @@ defineExpose({
     transition: unset;
 }
 .vue-ui-bullet {
-    user-select: none;
     position: relative;
 }
 </style>
