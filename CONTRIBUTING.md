@@ -19,7 +19,7 @@ We'd also love PRs. If you're thinking of a large PR, we advise opening up an is
 
 0. [Fork][fork] and clone the repository.
 1. Configure and install the dependencies: `npm install`.
-2. `npm run prod`. Will run all the tests and build the package.
+2. `npm run prod`. Will run all the tests and build the package. (See the [Troubleshooting](#troubleshooting) section below if you encounter errors here.)
 3. cd into `manual-testing`
 4. `npm install` in the manual-testing directory
 5. `npm run dev` in the manual-testing directory: will hook the local build of the library to the testing app.
@@ -38,7 +38,29 @@ Here are a few things you can do that will increase the likelihood of your pull 
 - "Fix - {component name} - {description of the fix}"
 - "New feature - {component name} - {description of the feature}"
 
-Work in Progress pull requests are also welcome to get feedback early on, or if there is something blocked you.
+Work in Progress pull requests are also welcome to get feedback early on, or if there is something that has blocked you.
+
+### Troubleshooting
+
+- While working with either native Linux or Windows/WSL2, you may encounter an error of the following type after running `npm run prod`:
+```
+It looks like this is your first time using Cypress: 15.12.0
+
+✖ Cypress failed to start.
+  This may be due to a missing library or dependency. https://on.cypress.io/required-dependencies
+  Please refer to the error below for more details.
+  ----------
+  /<HOME_DIRECTORY>/<YOUR_COMPUTER_NAME>/.cache/Cypress/15.12.0/Cypress/Cypress: error while loading shared libraries: libnspr4.so: cannot open shared object file: No such file or directory
+  ----------
+  Platform: linux-x64 (Ubuntu - 24.04.3 LTS)
+  Cypress Version: 15.12.0
+```
+This can be resolved by running the following commands in your terminal:
+```
+sudo apt-get update
+sudo apt-get install -y libnspr4 libnss3 libxss1 libasound2t64 libatk-bridge2.0-0 libgtk-3-0 libgbm1
+```
+After which `npm run prod` should run correctly.
 
 ## Resources
 
