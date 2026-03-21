@@ -4023,6 +4023,13 @@ export function useConfig(options = {}) {
         debug: false, // v3
         loading: false, // v3
         responsive: false, // v3
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints',
+            }
+        },
         events: {
             datapointEnter: null, // v3
             datapointLeave: null, // v3

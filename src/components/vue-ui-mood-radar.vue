@@ -38,6 +38,7 @@ import Title from "../atoms/Title.vue"; // Must be ready in responsive mode
 import themes from "../themes/vue_ui_mood_radar.json";
 import Legend from "../atoms/Legend.vue"; // Must be ready in responsive mode
 import BaseScanner from "../atoms/BaseScanner.vue";
+import A11yDataTable from "../atoms/A11yDataTable.vue";
 
 const BaseIcon = defineAsyncComponent(() => import('../atoms/BaseIcon.vue'));
 const Accordion = defineAsyncComponent(() => import('./vue-ui-accordion.vue'));
@@ -84,6 +85,9 @@ const tableUnit = ref(null);
 const userOptionsRef = ref(null);
 const isCallbackImaging = ref(false);
 const isCallbackSvg = ref(false);
+
+const activeTrapIndex = ref(null); // a11y
+const isFocus = ref(false); // a11y
 
 const isDataset = computed(() => {
     return !!props.dataset && Object.keys(props.dataset).length;
@@ -643,6 +647,143 @@ async function copyAlt(){
     }));
 }
 
+/***************************************************************************************************
+ * a11y
+ **************************************************************************************************/
+
+const orderedKeys = computed(() => convertedDataset.value.map(datasetItem => String(datasetItem.key)));
+
+function showOptions() {
+    setUserOptionsVisibility(true);
+}
+
+function hideOptions() {
+    setUserOptionsVisibility(false);
+}
+
+function getLegendItemByKey(key) {
+    return convertedDataset.value.find(datasetItem => String(datasetItem.key) === String(key));
+}
+
+function getFormattedValue(value, seriesIndex, datapoint) {
+    return applyDataLabel(
+        FINAL_CONFIG.value.style.chart.layout.dataLabel.formatter,
+        value,
+        dataLabel({
+            p: FINAL_CONFIG.value.style.chart.layout.dataLabel.prefix,
+            v: value,
+            s: FINAL_CONFIG.value.style.chart.layout.dataLabel.suffix,
+            r: FINAL_CONFIG.value.style.chart.layout.dataLabel.roundingValue
+        }),
+        { datapoint, seriesIndex }
+    );
+}
+
+function getFormattedPercentage(value) {
+    return dataLabel({
+        v: grandTotal.value ? (value / grandTotal.value) * 100 : 0,
+        s: '%',
+        r: FINAL_CONFIG.value.style.chart.layout.dataLabel.roundingPercentage
+    });
+}
+
+function getTrapAriaLabel(key) {
+    const datapoint = getLegendItemByKey(key);
+    if (!datapoint) return `${key}`;
+
+    return `${key}, ${getFormattedValue(datapoint.value, datapoint.index, datapoint)}, ${getFormattedPercentage(datapoint.value)}`;
+}
+
+function setActiveKeyByIndex(index) {
+    const key = orderedKeys.value[index];
+    if (!key) return;
+
+    activeTrapIndex.value = index;
+    selectedKey.value = key;
+}
+
+function onSvgFocus() {
+    isFocus.value = true;
+}
+
+function onSvgBlur() {
+    activeTrapIndex.value = null;
+    selectedKey.value = null;
+    isFocus.value = false;
+}
+
+function onSvgKeydown(event) {
+    if (!svgRef.value || !orderedKeys.value.length || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
+
+    const isPreviousKey = ['ArrowLeft', 'ArrowUp'].includes(event.key);
+    const isNextKey = ['ArrowRight', 'ArrowDown'].includes(event.key);
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+
+    if (!isPreviousKey && !isNextKey && !isActivationKey && !isEscapeKey) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (isEscapeKey) {
+        activeTrapIndex.value = null;
+        selectedKey.value = null;
+        return;
+    }
+
+    if (isActivationKey) {
+        if (activeTrapIndex.value === null) return;
+        const key = orderedKeys.value[activeTrapIndex.value];
+        if (!key) return;
+        selectKey(key);
+        return;
+    }
+
+    let nextIndex = activeTrapIndex.value;
+
+    if (nextIndex === null || nextIndex < 0 || nextIndex >= orderedKeys.value.length) {
+        nextIndex = isNextKey ? 0 : orderedKeys.value.length - 1;
+    } else if (isNextKey) {
+        nextIndex += 1;
+        if (nextIndex >= orderedKeys.value.length) {
+            nextIndex = 0;
+        }
+    } else if (isPreviousKey) {
+        nextIndex -= 1;
+        if (nextIndex < 0) {
+            nextIndex = orderedKeys.value.length - 1;
+        }
+    }
+
+    setActiveKeyByIndex(nextIndex);
+}
+
+function onTrapKeydown(event, key) {
+    const isActivationKey = event.key === 'Enter' || event.key === ' ';
+    const isEscapeKey = event.key === 'Escape';
+    if (!isActivationKey && !isEscapeKey) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (isEscapeKey) {
+        activeTrapIndex.value = null;
+        selectedKey.value = null;
+        return;
+    }
+
+    selectKey(String(key));
+}
+
+const a11yTable = computed(() => {
+    const headers = dataTable.value?.colNames ?? [];
+    const rows = convertedDataset.value.map(datasetItem => ([
+        String(datasetItem.key),
+        getFormattedValue(datasetItem.value, datasetItem.index, datasetItem),
+        getFormattedPercentage(datasetItem.value)
+    ]));
+    return { headers, rows };
+});
+
 defineExpose({
     getData,
     getImage,
@@ -659,8 +800,26 @@ defineExpose({
 </script>
 
 <template>
-    <div :class="`vue-data-ui-component vue-ui-mood-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" ref="moodRadarChart"
-        :id="`${uid}`" :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" @mouseenter="() => setUserOptionsVisibility(true)" @mouseleave="() => setUserOptionsVisibility(false)">
+    <div 
+        :class="`vue-data-ui-component vue-ui-mood-radar ${isFullscreen ? 'vue-data-ui-wrapper-fullscreen' : ''} ${FINAL_CONFIG.useCssAnimation ? '' : 'vue-ui-dna'}`" 
+        ref="moodRadarChart"
+        :id="`${uid}`" 
+        :style="`font-family:${FINAL_CONFIG.style.fontFamily};width:100%; text-align:center;background:${FINAL_CONFIG.style.chart.backgroundColor}`" 
+        @mouseenter="showOptions" 
+        @mouseleave="hideOptions"
+    >
+        <div :id="`chart-instructions-${uid}`" class="sr-only">
+            <p>{{ FINAL_CONFIG.a11y.translations.keyboardNavigation }}</p>
+        </div>
+
+        <A11yDataTable
+            v-if="a11yTable?.rows?.length"
+            :uid="uid"
+            :head="a11yTable.headers"
+            :body="a11yTable.rows"
+            :notice="FINAL_CONFIG.a11y.translations.tableAvailable"
+            :caption="FINAL_CONFIG.a11y.translations.tableCaption"
+        />
         
         <PenAndPaper
             v-if="FINAL_CONFIG.userOptions.buttons.annotator"
@@ -781,207 +940,224 @@ defineExpose({
             </template>
         </UserOptions>
 
-        <svg
-            ref="svgRef"
-            :xmlns="XMLNS" 
-            :viewBox="`0 0 ${svg.width} ${svg.height}`"
-            :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
-            :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
-        >
-            <PackageVersion />
-
-            <!-- BACKGROUND SLOT -->
-            <foreignObject 
-                v-if="$slots['chart-background']"
-                :x="0"
-                :y="0"
-                :width="svg.width"
-                :height="svg.height"
-                :style="{
-                    pointerEvents: 'none'
-                }"
+        <div style="position:relative;">
+            <svg
+                ref="svgRef"
+                :xmlns="XMLNS" 
+                :aria-describedby="`chart-instructions-${uid}`"
+                :viewBox="`0 0 ${svg.width} ${svg.height}`"
+                :class="{ 'vue-data-ui-fullscreen--on': isFullscreen, 'vue-data-ui-fulscreen--off': !isFullscreen }"
+                :style="`overflow:visible;background:transparent;color:${FINAL_CONFIG.style.chart.color}`"
+                tabindex="0"
+                @focus="onSvgFocus"
+                @blur="onSvgBlur"
+                @keydown="onSvgKeydown"
             >
-                <slot name="chart-background"/>
-            </foreignObject>
-            
-            <!-- DEFS -->
-            <defs>
-                <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" :id="`mood_radar_gradient_${uid}`">
-                    <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.layout.dataPolygon.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
-                    <stop offset="100%" :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.chart.layout.dataPolygon.color, FINAL_CONFIG.style.chart.layout.dataPolygon.gradient.intensity / 100), FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
-                </radialGradient>
-            </defs>
-
-            <!-- GRID -->
-            <!-- RADIAL LINES -->
-            <line
-                data-cy="grid-radial" 
-                v-for="line in outerPolygon.coordinates" :x1="svg.width / 2" :y1="svg.height / 2" :x2="line.x"
-                :y2="line.y" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" />
-            <!-- OUTER POLYGON -->
-            <path
-                data-cy="grid-polygon" 
-                :d="outerPolygon.path" fill="none" :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" stroke-linejoin="round"
-                stroke-linecap="round" />
-
-            <!-- ICON 5 -->
-            <g :transform="iconTransform('5')">
+                <PackageVersion />
+    
+                <!-- BACKGROUND SLOT -->
+                <foreignObject 
+                    v-if="$slots['chart-background']"
+                    :x="0"
+                    :y="0"
+                    :width="svg.width"
+                    :height="svg.height"
+                    :style="{
+                        pointerEvents: 'none'
+                    }"
+                >
+                    <slot name="chart-background"/>
+                </foreignObject>
+                
+                <!-- DEFS -->
+                <defs>
+                    <radialGradient cx="50%" cy="50%" r="50%" fx="50%" fy="50%" :id="`mood_radar_gradient_${uid}`">
+                        <stop offset="0%" :stop-color="setOpacity(FINAL_CONFIG.style.chart.layout.dataPolygon.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
+                        <stop offset="100%" :stop-color="setOpacity(shiftHue(FINAL_CONFIG.style.chart.layout.dataPolygon.color, FINAL_CONFIG.style.chart.layout.dataPolygon.gradient.intensity / 100), FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
+                    </radialGradient>
+                </defs>
+    
+                <!-- GRID -->
+                <!-- RADIAL LINES -->
+                <line
+                    data-cy="grid-radial" 
+                    v-for="line in outerPolygon.coordinates" :x1="svg.width / 2" :y1="svg.height / 2" :x2="line.x"
+                    :y2="line.y" :stroke="FINAL_CONFIG.style.chart.layout.grid.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.grid.strokeWidth" />
+                <!-- OUTER POLYGON -->
                 <path
-                    data-cy="icon-5"
-                    fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['5']" stroke-width="1"
-                    stroke-linecap="round"
-                    d="M119 25A1 1 0 00137 25 1 1 0 00119 25M123 26C124 33 132 33 133 26L123 26M123 22A1 1 0 00126 22 1 1 0 00123 22M130 22A1 1 0 00133 22 1 1 0 00130 22" 
-                />
-                <circle 
-                    data-cy="trap-5" 
-                    class="vue-ui-mood-radar-trap"
-                    cx="128" cy="25" r="20"
-                    :fill="selectedKey === '5' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['5'], 20) : 'transparent'"
-                    @mouseenter="onTrapEnter('5')"
-                    @mouseleave="onTrapLeave('5')"
-                    @click="onTrapClick('5')"
-                />
-            </g>
-
-            <!-- ICON 4 -->
-            <g :transform="iconTransform('4')">
-                <path
-                    data-cy="icon-4"
-                    fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['4']" stroke-width="1"
-                    stroke-linecap="round"
-                    d="M218 95A1 1 0 00236 95 1 1 0 00218 95M222 97C225 99 229 99 232 97M222 92A1 1 0 00225 92 1 1 0 00222 92M229 92A1 1 0 00232 92 1 1 0 00229 92" 
-                />
-                <circle 
-                    data-cy="trap-4" 
-                    class="vue-ui-mood-radar-trap"
-                    cx="227" cy="95.5" r="20"
-                    :fill="selectedKey === '4' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['4'], 20) : 'transparent'"
-                    @mouseenter="onTrapEnter('4')"
-                    @mouseleave="onTrapLeave('4')"
-                    @click="onTrapClick('4')"
-                />
-            </g>
-
-            <!-- ICON 3 -->
-            <g :transform="iconTransform('3')">
-                <path
-                    data-cy="icon-3"
-                    fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['3']" stroke-width="1"
-                    stroke-linecap="round"
-                    d="M181 213A1 1 0 00199 213 1 1 0 00181 213M185 210A1 1 0 00188 210 1 1 0 00185 210M192 210A1 1 0 00195 210 1 1 0 00192 210M185 215 195 215" 
-                />
-                <circle 
-                    data-cy="trap-3" 
-                    class="vue-ui-mood-radar-trap"
-                    cx="190" cy="213.5" r="20"
-                    :fill="selectedKey === '3' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['3'], 20) : 'transparent'"
-                    @mouseenter="onTrapEnter('3')"
-                    @mouseleave="onTrapLeave('3')"
-                    @click="onTrapClick('3')"
-                />
-            </g>
-
-
-            <!-- ICON 2 -->
-            <g :transform="iconTransform('2')">
-                <path
-                    data-cy="icon-2"
-                    fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['2']" stroke-width="1"
-                    stroke-linecap="round"
-                    d="M56 213A1 1 0 0074 213 1 1 0 0056 213M60 216C63 214 67 214 70 216M60 210A1 1 0 0063 210 1 1 0 0060 210M67 210A1 1 0 0070 210 1 1 0 0067 210" 
-                />
-                <circle 
-                    data-cy="trap-2" 
-                    class="vue-ui-mood-radar-trap"
-                    cx="65" cy="213.5" r="20"
-                    :fill="selectedKey === '2' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['2'], 20) : 'transparent'"
-                    @mouseenter="onTrapEnter('2')"
-                    @mouseleave="onTrapLeave('2')"
-                    @click="onTrapClick('2')"
-                />
-            </g>
-
-            <!-- ICON 1 -->
-            <g :transform="iconTransform('1')">
-                <path
-                    data-cy="icon-1"
-                    fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['1']" stroke-width="1"
-                    stroke-linecap="round"
-                    d="M20 96A1 1 0 0038 96 1 1 0 0020 96M24 100C25 95 33 95 34 100L24 100M24 93A1 1 0 0027 93 1 1 0 0024 93M31 93A1 1 0 0034 93 1 1 0 0031 93" 
-                />
-                <circle 
-                    data-cy="trap-1" 
-                    class="vue-ui-mood-radar-trap"
-                    cx="29" cy="95.5" r="20"
-                    :fill="selectedKey === '1' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['1'], 20) : 'transparent'"
-                    @mouseenter="onTrapEnter('1')"
-                    @mouseleave="onTrapLeave('1')"
-                    @click="onTrapClick('1')"
-                />
-            </g>
-
-            <path data-cy="datapoint-polygon" :d="makePath(radar.map((r) => r.plots))" :stroke="FINAL_CONFIG.style.chart.layout.dataPolygon.stroke"
-                :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth" stroke-linecap="round"
-                stroke-linejoin="round" :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.gradient.show
-                        ? `url(#mood_radar_gradient_${uid})`
-                        : setOpacity(FINAL_CONFIG.style.chart.layout.dataPolygon.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
-
-                <g v-for="(plot, i) in radar.map(r => r.plots)" class="vue-ui-mood-radar-trap" :style="`opacity:${selectedKey == plot.key ? '1' : '0'}`">
-                    <line 
-                        data-cy="datapoint-selection-line"
-                        :x1="plot.x"
-                        :y1="plot.y"
-                        :x2="svg.width / 2"
-                        :y2="svg.height / 2"
-                        :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]"
+                    data-cy="grid-polygon" 
+                    :d="outerPolygon.path" fill="none" :stroke="FINAL_CONFIG.style.chart.layout.outerPolygon.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.outerPolygon.strokeWidth" stroke-linejoin="round"
+                    stroke-linecap="round" />
+    
+                <!-- ICON 5 -->
+                <g :transform="iconTransform('5')">
+                    <path
+                        data-cy="icon-5"
+                        fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['5']" stroke-width="1"
+                        stroke-linecap="round"
+                        d="M119 25A1 1 0 00137 25 1 1 0 00119 25M123 26C124 33 132 33 133 26L123 26M123 22A1 1 0 00126 22 1 1 0 00123 22M130 22A1 1 0 00133 22 1 1 0 00130 22" 
                     />
-                    <circle data-cy="datapoint-selection-circle" :cx="plot.x" :cy="plot.y" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
-                    <circle data-cy="datapoint-selection-circle"  :cx="svg.width / 2" :cy="svg.height / 2" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
-                    <text 
-                        data-cy="label-value"
-                        :x="svg.width / 2"
-                        :y="['5', 5].includes(plot.key) ? (svg.height / 2) * 1.13 : (svg.height / 2) * 0.9375"
-                        :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"
-                        font-size="12"
-                        text-anchor="middle"
-                        :font-weight="FINAL_CONFIG.style.chart.layout.dataLabel.bold ? 'bold' : 'normal'"
-                    >
-                        {{ applyDataLabel(
-                            FINAL_CONFIG.style.chart.layout.dataLabel.formatter,
-                            plot.value,
-                            dataLabel({
-                                p: FINAL_CONFIG.style.chart.layout.dataLabel.prefix,
-                                v: plot.value,
-                                s: FINAL_CONFIG.style.chart.layout.dataLabel.suffix,
-                                r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue
-                            }),
-                            { datapoint: plot, seriesIndex: i }
-                            ) 
-                        }}
-                    </text>
-                    <text 
-                        data-cy="label-percentage"
-                        :x="svg.width / 2"
-                        :y="['5', 5].includes(plot.key) ? (svg.height / 2) * 1.273 : (svg.height / 2) * 0.7968"
-                        :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"
-                        font-size="12"
-                        text-anchor="middle"
-                    >
-                        ({{ dataLabel({
-                            v: plot.value / grandTotal * 100,
-                            s: '%',
-                            r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingPercentage
-                        }) }})
-                    </text>
+                    <circle 
+                        data-cy="trap-5"
+                        role="button"
+                        class="vue-ui-mood-radar-trap"
+                        cx="128" cy="25" r="20"
+                        :aria-label="getTrapAriaLabel('5')"
+                        :fill="selectedKey === '5' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['5'], 20) : 'transparent'"
+                        @mouseenter="onTrapEnter('5')"
+                        @mouseleave="onTrapLeave('5')"
+                        @click="onTrapClick('5')"
+                    />
                 </g>
-                <slot name="svg" :svg="{
-                    ...svg,
-                    isPrintingImg: isPrinting | isImaging | isCallbackImaging,
-                    isPrintingSvg: isCallbackSvg,
-                }"/>
-        </svg>
+    
+                <!-- ICON 4 -->
+                <g :transform="iconTransform('4')">
+                    <path
+                        data-cy="icon-4"
+                        fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['4']" stroke-width="1"
+                        stroke-linecap="round"
+                        d="M218 95A1 1 0 00236 95 1 1 0 00218 95M222 97C225 99 229 99 232 97M222 92A1 1 0 00225 92 1 1 0 00222 92M229 92A1 1 0 00232 92 1 1 0 00229 92" 
+                    />
+                    <circle 
+                        data-cy="trap-4" 
+                        class="vue-ui-mood-radar-trap"
+                        cx="227" cy="95.5" r="20"
+                        :aria-label="getTrapAriaLabel('4')"
+                        :fill="selectedKey === '4' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['4'], 20) : 'transparent'"
+                        @mouseenter="onTrapEnter('4')"
+                        @mouseleave="onTrapLeave('4')"
+                        @click="onTrapClick('4')"
+                    />
+                </g>
+    
+                <!-- ICON 3 -->
+                <g :transform="iconTransform('3')">
+                    <path
+                        data-cy="icon-3"
+                        fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['3']" stroke-width="1"
+                        stroke-linecap="round"
+                        d="M181 213A1 1 0 00199 213 1 1 0 00181 213M185 210A1 1 0 00188 210 1 1 0 00185 210M192 210A1 1 0 00195 210 1 1 0 00192 210M185 215 195 215" 
+                    />
+                    <circle 
+                        data-cy="trap-3" 
+                        class="vue-ui-mood-radar-trap"
+                        cx="190" cy="213.5" r="20"
+                        :aria-label="getTrapAriaLabel('3')"
+                        :fill="selectedKey === '3' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['3'], 20) : 'transparent'"
+                        @mouseenter="onTrapEnter('3')"
+                        @mouseleave="onTrapLeave('3')"
+                        @click="onTrapClick('3')"
+                    />
+                </g>
+    
+    
+                <!-- ICON 2 -->
+                <g :transform="iconTransform('2')">
+                    <path
+                        data-cy="icon-2"
+                        fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['2']" stroke-width="1"
+                        stroke-linecap="round"
+                        d="M56 213A1 1 0 0074 213 1 1 0 0056 213M60 216C63 214 67 214 70 216M60 210A1 1 0 0063 210 1 1 0 0060 210M67 210A1 1 0 0070 210 1 1 0 0067 210" 
+                    />
+                    <circle 
+                        data-cy="trap-2" 
+                        class="vue-ui-mood-radar-trap"
+                        cx="65" cy="213.5" r="20"
+                        :aria-label="getTrapAriaLabel('2')"
+                        :fill="selectedKey === '2' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['2'], 20) : 'transparent'"
+                        @mouseenter="onTrapEnter('2')"
+                        @mouseleave="onTrapLeave('2')"
+                        @click="onTrapClick('2')"
+                    />
+                </g>
+    
+                <!-- ICON 1 -->
+                <g :transform="iconTransform('1')">
+                    <path
+                        data-cy="icon-1"
+                        fill="none" :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors['1']" stroke-width="1"
+                        stroke-linecap="round"
+                        d="M20 96A1 1 0 0038 96 1 1 0 0020 96M24 100C25 95 33 95 34 100L24 100M24 93A1 1 0 0027 93 1 1 0 0024 93M31 93A1 1 0 0034 93 1 1 0 0031 93" 
+                    />
+                    <circle 
+                        data-cy="trap-1" 
+                        class="vue-ui-mood-radar-trap"
+                        cx="29" cy="95.5" r="20"
+                        :aria-label="getTrapAriaLabel('1')"
+                        :fill="selectedKey === '1' ? setOpacity(FINAL_CONFIG.style.chart.layout.smileys.colors['1'], 20) : 'transparent'"
+                        @mouseenter="onTrapEnter('1')"
+                        @mouseleave="onTrapLeave('1')"
+                        @click="onTrapClick('1')"
+                    />
+                </g>
+    
+                <path data-cy="datapoint-polygon" :d="makePath(radar.map((r) => r.plots))" :stroke="FINAL_CONFIG.style.chart.layout.dataPolygon.stroke"
+                    :stroke-width="FINAL_CONFIG.style.chart.layout.dataPolygon.strokeWidth" stroke-linecap="round"
+                    stroke-linejoin="round" :fill="FINAL_CONFIG.style.chart.layout.dataPolygon.gradient.show
+                            ? `url(#mood_radar_gradient_${uid})`
+                            : setOpacity(FINAL_CONFIG.style.chart.layout.dataPolygon.color, FINAL_CONFIG.style.chart.layout.dataPolygon.opacity)" />
+    
+                    <g v-for="(plot, i) in radar.map(r => r.plots)" class="vue-ui-mood-radar-trap" :style="`opacity:${selectedKey == plot.key ? '1' : '0'}`">
+                        <line 
+                            data-cy="datapoint-selection-line"
+                            :x1="plot.x"
+                            :y1="plot.y"
+                            :x2="svg.width / 2"
+                            :y2="svg.height / 2"
+                            :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]"
+                        />
+                        <circle data-cy="datapoint-selection-circle" :cx="plot.x" :cy="plot.y" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
+                        <circle data-cy="datapoint-selection-circle"  :cx="svg.width / 2" :cy="svg.height / 2" :fill="FINAL_CONFIG.style.chart.layout.smileys.colors[plot.key]" r="3" :stroke="FINAL_CONFIG.style.chart.backgroundColor" :stroke-width="0.5" />
+                        <text 
+                            data-cy="label-value"
+                            :x="svg.width / 2"
+                            :y="['5', 5].includes(plot.key) ? (svg.height / 2) * 1.13 : (svg.height / 2) * 0.9375"
+                            :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"
+                            font-size="12"
+                            text-anchor="middle"
+                            :font-weight="FINAL_CONFIG.style.chart.layout.dataLabel.bold ? 'bold' : 'normal'"
+                        >
+                            {{ applyDataLabel(
+                                FINAL_CONFIG.style.chart.layout.dataLabel.formatter,
+                                plot.value,
+                                dataLabel({
+                                    p: FINAL_CONFIG.style.chart.layout.dataLabel.prefix,
+                                    v: plot.value,
+                                    s: FINAL_CONFIG.style.chart.layout.dataLabel.suffix,
+                                    r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingValue
+                                }),
+                                { datapoint: plot, seriesIndex: i }
+                                ) 
+                            }}
+                        </text>
+                        <text 
+                            data-cy="label-percentage"
+                            :x="svg.width / 2"
+                            :y="['5', 5].includes(plot.key) ? (svg.height / 2) * 1.273 : (svg.height / 2) * 0.7968"
+                            :fill="FINAL_CONFIG.style.chart.layout.dataLabel.color"
+                            font-size="12"
+                            text-anchor="middle"
+                        >
+                            ({{ dataLabel({
+                                v: plot.value / grandTotal * 100,
+                                s: '%',
+                                r: FINAL_CONFIG.style.chart.layout.dataLabel.roundingPercentage
+                            }) }})
+                        </text>
+                    </g>
+                    <slot name="svg" :svg="{
+                        ...svg,
+                        isPrintingImg: isPrinting | isImaging | isCallbackImaging,
+                        isPrintingSvg: isCallbackSvg,
+                    }"/>
+            </svg>
+
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+        </div>
 
         <div v-if="$slots.watermark" class="vue-data-ui-watermark">
             <slot name="watermark" v-bind="{ isPrinting: isPrinting || isImaging || isCallbackImaging || isCallbackSvg }"/>
@@ -999,15 +1175,15 @@ defineExpose({
                     :key="`legend_${legendStep}`"
                     :isCursorPointer="isCursorPointer"
                     style="display: flex; row-gap: 6px"
+                    @focusMarker="({ legend }) => selectKey(legend.key)"
                 >
                     <template #item="{ legend, index }">
-                        <div @click="() => selectKey(legend.key)" style="
-                    display: flex;
-                    flex-direction: row;
-                    gap: 3px;
-                    align-items: center;
-                    margin: 3px 0;
-                ">
+                        <div
+                            role="button" 
+                            @click="() => selectKey(legend.key)" 
+                            style="display: flex; flex-direction: row; gap: 3px; align-items: center; margin: 3px 0;"
+                            @keydown="onTrapKeydown($event, String(legend.key))"
+                        >
                             <BaseIcon :strokeWidth="1" v-if="legend.key == 1" name="moodSad"
                                 :stroke="FINAL_CONFIG.style.chart.layout.smileys.colors[legend.key]" />
                             <BaseIcon :strokeWidth="1" v-if="legend.key == 2" name="moodFlat"
@@ -1091,5 +1267,27 @@ defineExpose({
 }
 .vue-ui-mood-radar-trap {
     transition: all 0.2s ease-in-out;
+}
+
+svg:focus {
+    outline: none;
+}
+
+svg:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 4px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    clip: rect(0 0 0 0);
+    white-space: normal;
+    border: 0;
 }
 </style>

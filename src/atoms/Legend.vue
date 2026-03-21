@@ -29,7 +29,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['clickMarker'])
+const emit = defineEmits(['clickMarker', 'focusMarker']);
 
 function handleClick(legend, i) {
     if (!props.clickable) return
@@ -43,6 +43,11 @@ function handleKeydown(event, legend, i) {
         event.preventDefault()
         handleClick(legend, i)
     }
+}
+
+function handleFocus(event, legend, i) {
+    event.preventDefault();
+    emit('focusMarker', { legend, i});
 }
 </script>
 
@@ -67,6 +72,7 @@ function handleKeydown(event, legend, i) {
             :role="clickable ? 'button' : undefined"
             :tabindex="clickable ? 0 : undefined"
             @keydown="handleKeydown($event, legend, i)"
+            @focus="handleFocus($event, legend, i)"
         >
             <svg
                 data-cy="legend-marker"
