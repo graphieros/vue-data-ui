@@ -1259,9 +1259,9 @@ function buildPolarInlineLabel(arc, index) {
     });
 
     if (textAnchorComputed === 'end') {
-        return `${nameTspans}${percentageTspan}`;
+        return `${FINAL_CONFIG.value.style.chart.layout.labels.name.show ? nameTspans : ''}${percentageTspan}`;
     }
-    return `${percentageTspan}${nameTspans}`;
+    return `${percentageTspan}${FINAL_CONFIG.value.style.chart.layout.labels.name.show ? nameTspans : ''}`;
 }
 
 
@@ -2304,7 +2304,7 @@ defineExpose({
     
                                     <text 
                                         data-cy="donut-label-name"
-                                        v-show="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
+                                        v-show="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.name.show"
                                         class="vue-data-ui-datalabel-name"
                                         :text-anchor="smallArcLayoutsClassic[i]?.textAnchor || calcMarkerOffsetX(arc).anchor"
                                         :x="smallArcLayoutsClassic[i]?.labelX ?? calcMarkerOffsetX(arc, true, 12).x"
@@ -2408,7 +2408,7 @@ defineExpose({
                                     <text 
                                         data-cy="polar-label-name"
                                         class="vue-data-ui-datalabel-name"
-                                        v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show"
+                                        v-if="isArcBigEnough(arc, true, 12) && mutableConfig.dataLabels.show && FINAL_CONFIG.style.chart.layout.labels.name.show"
                                         :text-anchor="getPolarAnchor(polarAreas[i].middlePoint)"
                                         :x="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x"
                                         :y="offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + labels_name_fontSize * 1.2"
@@ -2428,7 +2428,7 @@ defineExpose({
                                         @mouseleave="handleDatapointLeave({ datapoint: arc, seriesIndex: arc.seriesIndex })"
                                         v-html="createTSpansFromLineBreaksOnY({
                                             content: arc.name,
-                                            fontSize: labels_value_fontSize,
+                                            fontSize: labels_name_fontSize,
                                             fill: FINAL_CONFIG.style.chart.layout.labels.name.color,
                                             x: offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).x,
                                             y: offsetFromCenterPoint({ initX: polarAreas[i].middlePoint.x, initY: polarAreas[i].middlePoint.y, offset: 42, centerX: svg.width / 2, centerY: svg.height / 2 }).y + labels_name_fontSize * 1.2
