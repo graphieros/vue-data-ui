@@ -1516,8 +1516,8 @@ function onSvgKeydown(event) {
     if (document.activeElement !== svgRef.value) return;
     if (!flatArcs.value.length) return;
 
-    const isPreviousKey = event.key === 'ArrowLeft';
-    const isNextKey = event.key === 'ArrowRight';
+    const isPreviousKey = ['ArrowLeft', 'ArrowUp'].includes(event.key);
+    const isNextKey = ['ArrowRight', 'ArrowDown'].includes(event.key);
     const isActivationKey = event.key === 'Enter' || event.key === ' ';
     const isEscapeKey = event.key === 'Escape';
 

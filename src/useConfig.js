@@ -1063,7 +1063,13 @@ export function useConfig(options = {}) {
         theme: '',
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
-        a11y: A11Y,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints'
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
@@ -4226,7 +4232,13 @@ export function useConfig(options = {}) {
         customPalette: [],
         useCssAnimation: false, // v3 (v2 = true)
         useBlurOnHover: true,
-        a11y: A11Y,
+        a11y: {
+            ...A11Y,
+            translations: {
+                ...A11Y.translations,
+                keyboardNavigation: 'Use the left and right, or up and down arrow keys to move between datapoints'
+            }
+        },
         events: { // v3
             datapointEnter: null, // v3
             datapointLeave: null, // v3
