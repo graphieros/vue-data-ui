@@ -2603,6 +2603,10 @@ defineExpose({
                 @keydown="onCanvasKeydown"
             />
 
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
+
             <!-- v3 Skeleton loader -->
             <slot name="skeleton">
                 <BaseScanner v-if="loading" />

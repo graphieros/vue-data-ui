@@ -780,6 +780,9 @@ defineExpose({
                     :rx="(svg.height - 4) / 2"
                 />
             </svg>
+            <div v-if="$slots.hint" style="position: absolute; top: 100%; left: 0; width: 100%;" data-dom-to-png-ignore aria-hidden="true">
+                <slot name="hint" v-bind="{ hint: FINAL_CONFIG.a11y.translations.keyboardNavigation, isVisible: isFocus }"/>
+            </div>
         </div>
 
         <div 
