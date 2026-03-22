@@ -178,12 +178,17 @@ const model = createModel([
     CHECKBOX("style.chart.layout.labels.dataLabels.useLabelSlots", { def: false }),
     TEXT("style.chart.layout.labels.dataLabels.prefix", { def: "", label: "prefix", category: "labels" }),
     TEXT("style.chart.layout.labels.dataLabels.suffix", { def: "", label: "suffix", category: "labels" }),
+
     CHECKBOX("style.chart.layout.labels.value.show", { def: true, label: "showValue", category: "labels" }),
     NUMBER("style.chart.layout.labels.value.rounding", { def: 0, min: 0, max: 6, label: "valueRounding", category: "labels" }),
+
+    CHECKBOX("style.chart.layout.labels.percentage.show", { def: true }),
     COLOR("style.chart.layout.labels.percentage.color", { def: "#1A1A1A", label: "colorPercentage", category: "labels" }),
     CHECKBOX("style.chart.layout.labels.percentage.bold", { def: true, label: "bold", category: "labels" }),
     NUMBER("style.chart.layout.labels.percentage.fontSize", { def: 14, min: 6, max: 48, label: "fontSize", category: "labels" }),
     NUMBER("style.chart.layout.labels.percentage.minFontSize", { def: 8, min: 6, max: 48, label: "fontSize", category: "labels" }),
+
+    CHECKBOX("style.chart.layout.labels.name.show", { def: true, label: "bold", category: "labels" }),
     COLOR("style.chart.layout.labels.name.color", { def: "#1A1A1A", label: "colorName", category: "labels" }),
     CHECKBOX("style.chart.layout.labels.name.bold", { def: false, label: "bold", category: "labels" }),
     NUMBER("style.chart.layout.labels.name.fontSize", { def: 14, min: 6, max: 36, label: "fontSize", category: "labels" }),
@@ -396,11 +401,6 @@ const config = computed(() => {
 
                                     return `f  - ${value}`
                                 }
-                            },
-                            percentage: {
-                                // formatter: ({value}) => {
-                                //     return `f - ${value}`
-                                // }
                             },
                             dataLabels: {
                                 ...c.style.chart.layout.labels.dataLabels,

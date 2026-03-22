@@ -286,6 +286,12 @@ const step = ref(0)
         <template #local>
             <LocalVueUiSparkline :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`">
 
+                <template #hint="{ hint, isVisible }">
+                    <div style="color: white" v-if="isVisible">
+                        {{ hint }}
+                    </div>
+                </template>
+
                 <template #before="{ selected, latest, sum, average, median, trend }">
                     <div style="color: white;height: 180px;font-size:11px">
                         #BEFORE

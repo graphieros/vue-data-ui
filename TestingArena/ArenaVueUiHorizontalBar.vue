@@ -406,6 +406,11 @@ onMounted(async () => {
 
         <template #local>
             <LocalVueUiHorizontalBar :dataset="isPropsToggled ? alternateDataset : dataset" :config="isPropsToggled ? alternateConfig : config" :key="`local_${step}`" @selectLegend="selectLegend" ref="local">
+                <template #hint="{ hint, isVisible }">
+                    <div v-if="isVisible" style="color: red">
+                        {{ hint }}
+                    </div>
+                </template>
                 <template #optionSort>
                     SORT
                 </template>

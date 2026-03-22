@@ -424,15 +424,15 @@ onMounted(() => {
         annotated: true,
         // dashIndices: [34]
     },
-    // {
-    //     name: "Serie B",
-    //     series: createDs(35),
-    //     type: "line",
-    //     dataLabels: false,
-    //     smooth: true,
-    //     useArea: true,
-    //     useProgression: true
-    // },
+    {
+        name: "Serie B",
+        series: createDs(35),
+        type: "line",
+        dataLabels: false,
+        smooth: true,
+        useArea: true,
+        useProgression: true
+    },
     // {
     //     name: "Serie C",
     //     series: createDs(35),
@@ -1516,6 +1516,16 @@ const customConfig = computed(() => {
                 :key="`local_${step}`" 
                 @selectLegend="selectLegend"
                 @selectX="selectX" ref="local">
+
+                <template #hint="{ hint, isVisible }">
+                    <div 
+                        v-if="isVisible"
+                        style="font-size: 10px; margin-top: -3px;"
+                    >
+                        {{ hint }}
+                    </div>
+                </template>
+
                 <!-- <template #svg="{ svg }">
                     <circle :cx="svg.width / 2" :cy="svg.height / 2" :r="30" fill="#42d392" />
                     <text :x="svg.width / 2" :y="svg.height / 2" text-anchor="middle">#SVG</text>

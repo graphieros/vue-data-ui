@@ -572,6 +572,12 @@ const resp = ref(null);
 
     <template #local>
         <LocalVueUiStackbar @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="config" :key="`local_${step}`" ref="local">
+            <template #hint="{ hint, isVisible }">
+                <div v-if="isVisible" style="color: red">
+                    {{ hint }}
+                </div>
+            </template>
+
             <!-- <template #time-label="{x, y, fontSize, fill, transform, absoluteIndex, content, textAnchor }">
                 <g @click="() => selectTimeLabel({x, y, fontSize, absoluteIndex })">                
                     <text

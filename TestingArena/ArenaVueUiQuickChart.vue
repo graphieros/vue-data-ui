@@ -156,7 +156,7 @@ function alterDataset() {
 }
 
 
-const selectedSerie = ref('longObject');
+const selectedSerie = ref('shortObject');
 
 const model = createModel([
     CHECKBOX("debug", { def: true }),
