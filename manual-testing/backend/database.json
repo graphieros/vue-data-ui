@@ -1079,24 +1079,24 @@
       "description": "When switching from mouse to kbd nav (which is useful sometimes to be precise), the selected index is lost. Keep this selection in memory to start kbd selection there. Also expose a isFocus bool in the hint slot.",
       "priority": 2,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "bug",
       "withComponentCheckList": false,
       "checkList": {},
       "withCustomCheckList": true,
       "customCheckList": {
-        "VueUiXy": false,
-        "VueUiXyCanvas": false,
-        "VueUiStackline": false,
-        "VueUiStackbar": false,
-        "VueUiCandlestick": false,
-        "VueUiDonutEvolution": false,
-        "VueUiSparkline": false
+        "VueUiXy": true,
+        "VueUiXyCanvas": true,
+        "VueUiStackline": true,
+        "VueUiStackbar": true,
+        "VueUiCandlestick": true,
+        "VueUiDonutEvolution": true,
+        "VueUiSparkline": true
       },
       "id": "a968f3fe-902c-44ad-bf44-0c7442b7bbcf",
       "createdAt": 1774257264853,
-      "updatedAt": 1774258009270
+      "updatedAt": 1774300164456
     },
     {
       "title": "pen and paper color palette is not kbd navigable",
@@ -1104,7 +1104,7 @@
       "description": "Make the color palette kbd navigable",
       "priority": 2,
       "author": "graphieros",
-      "done": false,
+      "done": true,
       "exchanges": [],
       "type": "bug",
       "withComponentCheckList": false,
@@ -1113,13 +1113,13 @@
       "customCheckList": {},
       "id": "1fb5d75c-4fe9-4a61-a5af-4142b68c0da9",
       "createdAt": 1774258628546,
-      "updatedAt": 1774258628546
+      "updatedAt": 1774302022297
     },
     {
       "title": "range input is reversed in kbd mode",
       "component": "PenAndPaper",
       "description": "The range input appears reversed when using kbd",
-      "priority": 2,
+      "priority": 0,
       "author": "graphieros",
       "done": false,
       "exchanges": [],
@@ -1130,7 +1130,7 @@
       "customCheckList": {},
       "id": "d5c1dd67-f1bf-4538-88a9-c40d2e0355cd",
       "createdAt": 1774258724742,
-      "updatedAt": 1774258724742
+      "updatedAt": 1774302956867
     }
   ]
 }
