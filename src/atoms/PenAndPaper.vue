@@ -769,6 +769,8 @@ function setCursorStyle() {
     }
 }
 
+const buttonToggle = ref(null);
+
 onMounted(() => {
     nextTick(() => {
         if (props.svgRef) {
@@ -781,6 +783,16 @@ onMounted(() => {
     });
 });
 
+watch(
+    () => props.active,
+    async (isActive) => {
+        if (!isActive) return;
+        await nextTick();
+        buttonToggle.value?.focus();
+    },
+    { flush: "post" }
+);
+
 onBeforeUnmount(() => {
     stopCaretBlink();
     if (G.value && props.svgRef) {
@@ -791,19 +803,29 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div v-if="active" data-dom-to-png-ignore class="vue-ui-pen-and-paper-actions" :style="{ backgroundColor: backgroundColor }">
-        <button class="vue-ui-pen-and-paper-action" @click="emit('close')" :style="{
-            backgroundColor: backgroundColor,
-            border: `1px solid ${buttonBorderColor}`,
-            cursor: isCursorPointer ? 'pointer' : 'default'
-        }">
+    <div 
+        v-if="active" 
+        data-dom-to-png-ignore 
+        class="vue-ui-pen-and-paper-actions" 
+        :style="{ backgroundColor: backgroundColor }"
+    >
+        <button 
+            ref="buttonToggle"
+            class="vue-ui-pen-and-paper-action" 
+                @click="emit('close')" :style="{
+                backgroundColor: backgroundColor,
+                border: `1px solid ${buttonBorderColor}`,
+                cursor: isCursorPointer ? 'pointer' : 'default'
+            }"
+        >
             <slot name="annotator-action-close">
                 <BaseIcon name="close" :stroke="color" />
             </slot>
         </button>
 
         <button 
-            class="vue-ui-pen-and-paper-action" 
+            class="vue-ui-pen-and-paper-action"
+            tabindex="-1"
             :style="`padding: 0 !important; cursor: ${isCursorPointer ? 'pointer': 'default'}`"
         >
             <ColorPicker 

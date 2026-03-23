@@ -161,6 +161,9 @@ const palette = ref([
         style="height: 100%; 
         width: 100%; 
         position: relative"
+        :aria-expanded="isOpen ? 'true' : 'false'"
+        aria-haspopup="dialog"
+        :aria-label="`Choose color. Current color ${value}`"
     >
         <button 
             ref="buttonRef" 
@@ -177,8 +180,9 @@ const palette = ref([
 
         <div 
             v-if="isOpen && !teleported" 
-            tabindex="0" 
             class="vue-ui-color-picker"
+            role="dialog"
+            aria-label="Color picker"
             :style="{ 
                 backgroundColor: backgroundColor,
                 position: 'absolute',
@@ -189,20 +193,25 @@ const palette = ref([
             @mousedown.stop 
             @click.stop 
             @touchstart.stop
+            @keydown.esc="closeIfOpen"
         >
             <button 
                 v-for="c in palette" 
-                :key="c" 
+                :key="c"
+                :aria-label="`Select color ${c}`"
+                :aria-pressed="value === c ? 'true' : 'false'"
                 data-cy="color-picker-option" 
                 class="vue-ui-color-picker-option"
                 type="button" 
                 :style="{ backgroundColor: c, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'pointer' : 'default' }"
                 @click="() => setColor(c)" 
+                
             />
             <button 
                 class="vue-ui-color-picker-option" 
                 type="button"
                 :style="{ backgroundColor: value, outline: `1px solid ${buttonBorderColor}`, cursor: isCursorPointer ? 'pointer' : 'default' }"
+                aria-label="Open native color picker"
                 @click.stop="triggerColorPicker" 
                 @mousedown.stop 
                 @touchstart.stop
@@ -313,6 +322,9 @@ const palette = ref([
 .vue-ui-color-picker-option:hover,
 .vue-ui-color-picker-option:focus {
     box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s ease-in-out;
+}
+
+.vue-ui-color-picker-option:focus-visible {
+    outline: 2px dashed v-bind(buttonBorderColor) !important;
 }
 </style>
