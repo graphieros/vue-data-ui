@@ -1649,9 +1649,36 @@ function onSvgKeydown(event) {
     }
 
     let nextIndex = activeTooltipIndex.value;
+    const hoveredIndex = selectedSerie.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= noGhostDonut.value.length) {
-        nextIndex = isNextKey ? 0 : noGhostDonut.value.length - 1;
+    const hasValidActiveIndex =
+        nextIndex !== null &&
+        nextIndex >= 0 &&
+        nextIndex < noGhostDonut.value.length;
+
+    const hasValidHoveredIndex =
+        hoveredIndex !== null &&
+        hoveredIndex >= 0 &&
+        hoveredIndex < noGhostDonut.value.length;
+
+    if (!hasValidActiveIndex) {
+        if (hasValidHoveredIndex) {
+            nextIndex = isNextKey
+                ? hoveredIndex + 1
+                : hoveredIndex - 1;
+
+            if (nextIndex >= noGhostDonut.value.length) {
+                nextIndex = 0;
+            }
+
+            if (nextIndex < 0) {
+                nextIndex = noGhostDonut.value.length - 1;
+            }
+        } else if (isNextKey) {
+            nextIndex = 0;
+        } else {
+            nextIndex = noGhostDonut.value.length - 1;
+        }
     } else if (isNextKey) {
         nextIndex += 1;
         if (nextIndex >= noGhostDonut.value.length) {

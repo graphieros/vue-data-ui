@@ -1466,12 +1466,35 @@ function onSvgKeydown(event) {
         return;
     }
 
+    let direction = null;
+    if (isRightKey) direction = 'right';
+    if (isLeftKey) direction = 'left';
+    if (isDownKey) direction = 'down';
+    if (isUpKey) direction = 'up';
+
     if (activeTooltipPlotId.value === null) {
+        const hoveredPlot = selectedPlot.value;
+        const hasHoveredPlot = hoveredPlot && hoveredPlot.id;
+
+        if (hasHoveredPlot) {
+            const nextPlot = getDirectionalCandidate(hoveredPlot, direction);
+
+            if (!nextPlot) {
+                const hoveredIndex = a11yPlotIndexMap.value.get(hoveredPlot.id);
+                if (hoveredIndex === undefined) return;
+                onTrapEnter(hoveredPlot, hoveredPlot.seriesIndex, 'keyboard', hoveredIndex);
+                return;
+            }
+
+            const nextIndex = a11yPlotIndexMap.value.get(nextPlot.id);
+            if (nextIndex === undefined) return;
+            onTrapEnter(nextPlot, nextPlot.seriesIndex, 'keyboard', nextIndex);
+            return;
+        }
+
         const firstPlot = a11yPlots.value[0];
         if (!firstPlot) return;
-
         const firstIndex = a11yPlotIndexMap.value.get(firstPlot.id) ?? 0;
-
         onTrapEnter(firstPlot, firstPlot.seriesIndex, 'keyboard', firstIndex);
         return;
     }
@@ -1481,12 +1504,6 @@ function onSvgKeydown(event) {
 
     const currentPlot = a11yPlots.value[currentIndex];
     if (!currentPlot) return;
-
-    let direction = null;
-    if (isRightKey) direction = 'right';
-    if (isLeftKey) direction = 'left';
-    if (isDownKey) direction = 'down';
-    if (isUpKey) direction = 'up';
 
     const nextPlot = getDirectionalCandidate(currentPlot, direction);
     if (!nextPlot) return;

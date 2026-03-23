@@ -1324,7 +1324,6 @@ function onSvgKeydown(event) {
     if (!isNextKey && !isPreviousKey && !isActivationKey && !isEscapeKey) return;
 
     const barCount = bars.value.length;
-
     if (!barCount) return;
 
     event.preventDefault();
@@ -1339,7 +1338,6 @@ function onSvgKeydown(event) {
         if (activeTooltipIndex.value === null) return;
 
         const currentBar = bars.value[activeTooltipIndex.value];
-
         if (!currentBar) return;
 
         selectDatapoint({
@@ -1352,28 +1350,42 @@ function onSvgKeydown(event) {
 
     let nextIndex = activeTooltipIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= barCount) {
-        if (isNextKey) {
+    const hoveredVisibleIndex = hoveredBar.value
+        ? bars.value.findIndex(b => b.id === hoveredBar.value.id)
+        : null;
+
+    const hasValidActiveIndex =
+        nextIndex !== null &&
+        nextIndex >= 0 &&
+        nextIndex < barCount;
+
+    const hasValidHoveredIndex =
+        hoveredVisibleIndex !== null &&
+        hoveredVisibleIndex >= 0 &&
+        hoveredVisibleIndex < barCount;
+
+    if (!hasValidActiveIndex) {
+        if (hasValidHoveredIndex) {
+            nextIndex = isNextKey
+                ? hoveredVisibleIndex + 1
+                : hoveredVisibleIndex - 1;
+
+            if (nextIndex >= barCount) nextIndex = 0;
+            if (nextIndex < 0) nextIndex = barCount - 1;
+        } else if (isNextKey) {
             nextIndex = 0;
         } else {
             nextIndex = barCount - 1;
         }
     } else if (isNextKey) {
         nextIndex += 1;
-
-        if (nextIndex >= barCount) {
-            nextIndex = 0;
-        }
+        if (nextIndex >= barCount) nextIndex = 0;
     } else if (isPreviousKey) {
         nextIndex -= 1;
-
-        if (nextIndex < 0) {
-            nextIndex = barCount - 1;
-        }
+        if (nextIndex < 0) nextIndex = barCount - 1;
     }
 
     const bar = bars.value[nextIndex];
-
     if (!bar) return;
 
     activeTooltipIndex.value = nextIndex;

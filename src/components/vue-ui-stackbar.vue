@@ -2010,9 +2010,32 @@ function onSvgKeydown(event) {
     }
 
     let nextIndex = activeTooltipIndex.value;
+    const hoveredVisibleIndex = trapIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= slicerDiff) {
-        if (isNextKey) {
+    const hasValidActiveIndex =
+        nextIndex !== null &&
+        nextIndex >= 0 &&
+        nextIndex < slicerDiff;
+
+    const hasValidHoveredIndex =
+        hoveredVisibleIndex !== null &&
+        hoveredVisibleIndex >= 0 &&
+        hoveredVisibleIndex < slicerDiff;
+
+    if (!hasValidActiveIndex) {
+        if (hasValidHoveredIndex) {
+            nextIndex = isNextKey
+                ? hoveredVisibleIndex + 1
+                : hoveredVisibleIndex - 1;
+
+            if (nextIndex >= slicerDiff) {
+                nextIndex = 0;
+            }
+
+            if (nextIndex < 0) {
+                nextIndex = slicerDiff - 1;
+            }
+        } else if (isNextKey) {
             nextIndex = 0;
         } else {
             nextIndex = slicerDiff - 1;

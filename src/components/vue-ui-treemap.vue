@@ -1739,8 +1739,38 @@ function onSvgKeydown(event) {
 
     let nextIndex = activeTooltipIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= squarified.value.length) {
-        nextIndex = isNextKey ? 0 : squarified.value.length - 1;
+    const hoveredVisibleIndex = selectedRect.value
+        ? squarified.value.findIndex(rect => rect.id === selectedRect.value.id)
+        : null;
+
+    const hasValidActiveIndex =
+        nextIndex !== null &&
+        nextIndex >= 0 &&
+        nextIndex < squarified.value.length;
+
+    const hasValidHoveredIndex =
+        hoveredVisibleIndex !== null &&
+        hoveredVisibleIndex >= 0 &&
+        hoveredVisibleIndex < squarified.value.length;
+
+    if (!hasValidActiveIndex) {
+        if (hasValidHoveredIndex) {
+            nextIndex = isNextKey
+                ? hoveredVisibleIndex + 1
+                : hoveredVisibleIndex - 1;
+
+            if (nextIndex >= squarified.value.length) {
+                nextIndex = 0;
+            }
+
+            if (nextIndex < 0) {
+                nextIndex = squarified.value.length - 1;
+            }
+        } else if (isNextKey) {
+            nextIndex = 0;
+        } else {
+            nextIndex = squarified.value.length - 1;
+        }
     } else if (isNextKey) {
         nextIndex += 1;
         if (nextIndex >= squarified.value.length) {

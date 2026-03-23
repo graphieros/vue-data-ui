@@ -1373,8 +1373,38 @@ function onSvgKeydown(event) {
 
     let nextIndex = activeTooltipIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= a11yPlots.value.length) {
-        nextIndex = isNextKey ? 0 : a11yPlots.value.length - 1;
+    const hoveredVisibleIndex = hoveredPlotId.value
+        ? a11yPlots.value.findIndex(entry => entry.plot.uid === hoveredPlotId.value)
+        : null;
+
+    const hasValidActiveIndex =
+        nextIndex !== null &&
+        nextIndex >= 0 &&
+        nextIndex < a11yPlots.value.length;
+
+    const hasValidHoveredIndex =
+        hoveredVisibleIndex !== null &&
+        hoveredVisibleIndex >= 0 &&
+        hoveredVisibleIndex < a11yPlots.value.length;
+
+    if (!hasValidActiveIndex) {
+        if (hasValidHoveredIndex) {
+            nextIndex = isNextKey
+                ? hoveredVisibleIndex + 1
+                : hoveredVisibleIndex - 1;
+
+            if (nextIndex >= a11yPlots.value.length) {
+                nextIndex = 0;
+            }
+
+            if (nextIndex < 0) {
+                nextIndex = a11yPlots.value.length - 1;
+            }
+        } else if (isNextKey) {
+            nextIndex = 0;
+        } else {
+            nextIndex = a11yPlots.value.length - 1;
+        }
     } else {
         nextIndex += isNextKey ? 1 : -1;
 

@@ -1024,6 +1024,67 @@ function onSvgKeydown(event) {
         : a11yCells.value[activeTooltipIndex.value];
 
     if (!currentEntry) {
+        const hoveredFlatIndex = hoveredCell.value
+            ? a11yCells.value.findIndex(entry => entry.cell.id === hoveredCell.value)
+            : null;
+
+        const hasValidHoveredIndex =
+            hoveredFlatIndex !== null &&
+            hoveredFlatIndex >= 0 &&
+            hoveredFlatIndex < a11yCells.value.length;
+
+        if (hasValidHoveredIndex) {
+            const hoveredEntry = a11yCells.value[hoveredFlatIndex];
+            if (!hoveredEntry) return;
+
+            let nextRowIndex = hoveredEntry.rowIndex;
+            let nextColumnIndex = hoveredEntry.columnIndex;
+
+            if (isRightKey) {
+                nextColumnIndex += 1;
+            } else if (isLeftKey) {
+                nextColumnIndex -= 1;
+            } else if (isDownKey) {
+                nextRowIndex += 1;
+            } else if (isUpKey) {
+                nextRowIndex -= 1;
+            }
+
+            const rowCount = a11yGrid.value.rowCount;
+            if (rowCount <= 0) return;
+
+            if (nextRowIndex < 0) {
+                nextRowIndex = rowCount - 1;
+            }
+
+            if (nextRowIndex >= rowCount) {
+                nextRowIndex = 0;
+            }
+
+            const targetRow = mutableDataset.value[nextRowIndex];
+            if (!targetRow || !targetRow.temperatures.length) return;
+
+            const targetColumnCount = targetRow.temperatures.length;
+
+            if (nextColumnIndex < 0) {
+                nextColumnIndex = targetColumnCount - 1;
+            }
+
+            if (nextColumnIndex >= targetColumnCount) {
+                nextColumnIndex = 0;
+            }
+
+            const nextEntry = getCellEntry(nextRowIndex, nextColumnIndex);
+            if (!nextEntry) return;
+
+            const nextFlatIndex = getFlatIndexFromGridPosition(nextRowIndex, nextColumnIndex);
+            const x = drawingArea.value.left + drawingArea.value.cellSize.width * nextEntry.columnIndex;
+            const y = drawingArea.value.top + drawingArea.value.cellSize.height * nextEntry.rowIndex;
+
+            useTooltip(nextEntry.cell, nextEntry.rowIndex, x, y, 'keyboard', nextFlatIndex);
+            return;
+        }
+
         const firstEntry = a11yCells.value[0];
         if (!firstEntry) return;
 
@@ -1076,18 +1137,10 @@ function onSvgKeydown(event) {
     if (!nextEntry) return;
 
     const nextFlatIndex = getFlatIndexFromGridPosition(nextRowIndex, nextColumnIndex);
-
     const x = drawingArea.value.left + drawingArea.value.cellSize.width * nextEntry.columnIndex;
     const y = drawingArea.value.top + drawingArea.value.cellSize.height * nextEntry.rowIndex;
 
-    useTooltip(
-        nextEntry.cell,
-        nextEntry.rowIndex,
-        x,
-        y,
-        'keyboard',
-        nextFlatIndex
-    );
+    useTooltip(nextEntry.cell, nextEntry.rowIndex, x, y, 'keyboard', nextFlatIndex);
 }
 
 const a11yTable = computed(() => {

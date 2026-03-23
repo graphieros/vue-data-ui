@@ -2015,8 +2015,17 @@ function onCanvasKeydown(event) {
 
     let nextIndex = activeTooltipIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= visiblePoints) {
-        nextIndex = isRightArrow ? 0 : visiblePoints - 1;
+    const hasValidActiveIndex =
+        nextIndex !== null &&
+        nextIndex >= 0 &&
+        nextIndex < visiblePoints;
+
+    if (!hasValidActiveIndex) {
+        if (isRightArrow) {
+            nextIndex = 0;
+        } else {
+            nextIndex = visiblePoints - 1;
+        }
     } else if (isRightArrow) {
         nextIndex += 1;
         if (nextIndex >= visiblePoints) {
@@ -2624,7 +2633,7 @@ defineExpose({
                 :borderWidth="FINAL_CONFIG.style.chart.tooltip.borderWidth"
                 :position="FINAL_CONFIG.style.chart.tooltip.position"
                 :offsetY="FINAL_CONFIG.style.chart.tooltip.offsetY"
-                :parent="canvas" 
+                :parent="$refs.xy" 
                 :content="tooltipContent"
                 :isFullscreen="isFullscreen"
                 :backgroundOpacity="FINAL_CONFIG.style.chart.tooltip.backgroundOpacity"

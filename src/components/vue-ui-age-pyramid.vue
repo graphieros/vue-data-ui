@@ -832,9 +832,36 @@ function onSvgKeydown(event) {
     }
 
     let nextIndex = activeTooltipIndex.value;
+    const hoveredIndex = selectedIndex.value;
 
-    if (nextIndex === null) {
-        nextIndex = 0;
+    const hasValidActiveIndex =
+        nextIndex !== null &&
+        nextIndex >= 0 &&
+        nextIndex < drawableDataset.value.length;
+
+    const hasValidHoveredIndex =
+        hoveredIndex !== null &&
+        hoveredIndex >= 0 &&
+        hoveredIndex < drawableDataset.value.length;
+
+    if (!hasValidActiveIndex) {
+        if (hasValidHoveredIndex) {
+            nextIndex = isDownKey
+                ? hoveredIndex + 1
+                : hoveredIndex - 1;
+
+            if (nextIndex >= drawableDataset.value.length) {
+                nextIndex = 0;
+            }
+
+            if (nextIndex < 0) {
+                nextIndex = drawableDataset.value.length - 1;
+            }
+        } else if (isDownKey) {
+            nextIndex = 0;
+        } else {
+            nextIndex = drawableDataset.value.length - 1;
+        }
     } else if (isUpKey) {
         nextIndex = nextIndex - 1 < 0
             ? drawableDataset.value.length - 1
@@ -850,7 +877,6 @@ function onSvgKeydown(event) {
 
     useTooltip(nextIndex, datapoint, 'keyboard');
 }
-
 
 defineExpose({
     getImage,

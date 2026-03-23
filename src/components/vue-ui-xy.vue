@@ -3413,25 +3413,48 @@ function onSvgBlur() {
 }
 
 function onSvgKeydown(event) {
-    if (!svgRef.value || isAnnotator.value) return
-    if (document.activeElement !== svgRef.value) return
+    if (!svgRef.value || isAnnotator.value) return;
+    if (document.activeElement !== svgRef.value) return;
 
     const isLeftArrow = event.key === 'ArrowLeft';
     const isRightArrow = event.key === 'ArrowRight';
 
-    if (!isLeftArrow && !isRightArrow) return
-    if (!slicer.value.end && slicer.value.end !== 0) return
+    if (!isLeftArrow && !isRightArrow) return;
+    if (!slicer.value.end && slicer.value.end !== 0) return;
 
     const slicerDiff = slicer.value.end - slicer.value.start;
-    if (slicerDiff <= 0) return
+    if (slicerDiff <= 0) return;
 
     event.preventDefault();
     event.stopPropagation();
 
     let nextIndex = activeTooltipIndex.value;
+    const hoveredVisibleIndex = hoveredIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= slicerDiff) {
-        if (isRightArrow) {
+    const hasValidActiveIndex =
+        nextIndex !== null &&
+        nextIndex >= 0 &&
+        nextIndex < slicerDiff;
+
+    const hasValidHoveredIndex =
+        hoveredVisibleIndex !== null &&
+        hoveredVisibleIndex >= 0 &&
+        hoveredVisibleIndex < slicerDiff;
+
+    if (!hasValidActiveIndex) {
+        if (hasValidHoveredIndex) {
+            nextIndex = isRightArrow
+                ? hoveredVisibleIndex + 1
+                : hoveredVisibleIndex - 1;
+
+            if (nextIndex >= slicerDiff) {
+                nextIndex = 0;
+            }
+
+            if (nextIndex < 0) {
+                nextIndex = slicerDiff - 1;
+            }
+        } else if (isRightArrow) {
             nextIndex = 0;
         } else {
             nextIndex = slicerDiff - 1;

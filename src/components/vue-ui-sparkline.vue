@@ -820,8 +820,35 @@ function onSvgKeydown(event) {
 
     let nextIndex = activeTooltipIndex.value;
 
-    if (nextIndex === null || nextIndex < 0 || nextIndex >= plotCount) {
-        if (isRightArrow) {
+    const hasValidActiveIndex =
+        nextIndex !== null &&
+        nextIndex >= 0 &&
+        nextIndex < plotCount;
+
+    const hoveredIndex =
+        selectedPlot.value
+            ? mutableDataset.value.findIndex(plot => plot.id === selectedPlot.value.id)
+            : -1;
+
+    const hasValidHoveredIndex =
+        hoveredIndex !== null &&
+        hoveredIndex >= 0 &&
+        hoveredIndex < plotCount;
+
+    if (!hasValidActiveIndex) {
+        if (hasValidHoveredIndex) {
+            nextIndex = isRightArrow
+                ? hoveredIndex + 1
+                : hoveredIndex - 1;
+
+            if (nextIndex >= plotCount) {
+                nextIndex = 0;
+            }
+
+            if (nextIndex < 0) {
+                nextIndex = plotCount - 1;
+            }
+        } else if (isRightArrow) {
             nextIndex = 0;
         } else {
             nextIndex = plotCount - 1;
