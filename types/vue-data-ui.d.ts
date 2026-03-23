@@ -354,6 +354,7 @@ declare module "vue-data-ui" {
         showOnChartHover?: boolean;
         keepStateOnChartLeave?: boolean;
         position?: "left" | "right";
+        useCursorPointer?: boolean;
         buttons?: {
             animation?: boolean;
             annotator?: boolean;
