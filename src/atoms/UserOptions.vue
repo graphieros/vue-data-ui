@@ -487,7 +487,7 @@ function repositionOpenedPopover() {
     const rootRect = rootRef.value.getBoundingClientRect();
     const drawerRect = drawerRef.value.getBoundingClientRect();
 
-    const top = rootRect.top + 36;
+    const top = rootRect.top + 38;
 
     if (props.position === 'right') {
         const usedRight = props.offsetX ? props.offsetX : props.noOffset ? 0 : 4;
