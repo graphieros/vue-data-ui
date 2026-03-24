@@ -119,7 +119,7 @@ const activeTooltipIndex = ref(null); // a11y
 const tooltipA11yPosition = ref({ x: 0, y: 0 }); // a11y
 const tooltipTriggerMode = ref("pointer");
 
-const emit = defineEmits(["selectLegend", "copyAlt"]);
+const emit = defineEmits(["selectLegend", "copyAlt", "selectDatapoint"]);
 
 const FINAL_CONFIG = ref(prepareConfig());
 
@@ -838,6 +838,7 @@ const selectedBarId = ref(null);
 const dataTooltipSlot = ref(null);
 
 function selectDatapoint({ datapoint, seriesIndex }) {
+    emit('selectDatapoint', datapoint);
     if (FINAL_CONFIG.value.events.datapointClick) {
         FINAL_CONFIG.value.events.datapointClick({ datapoint, seriesIndex });
     }
