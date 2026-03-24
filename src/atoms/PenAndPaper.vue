@@ -43,7 +43,6 @@ const G = ref(null);
 const currentDrawingPath = ref(null);
 const currentLine = ref(null);
 const startPoint = ref(null);
-const endPoint = ref(null);
 const arrowMarkerId = ref(`arrow-${createUid()}`);
 const ARROW_DEFS_ID = ref(`arrow-def-${createUid()}`);
 
