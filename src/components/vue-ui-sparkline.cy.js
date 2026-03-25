@@ -108,7 +108,8 @@ describe('<VueUiSparkline />', () => {
 					'toMax',
 					'width',
 					'x',
-					'y'
+					'y',
+					'value'
 				);
 			});
 		});
