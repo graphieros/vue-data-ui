@@ -2933,6 +2933,8 @@ export function useConfig(options = {}) {
                 color: COLOR_BLUE,
                 strokeWidth: 3,
                 smooth: false,
+                dashIndices: [],
+                dashArray: 4,
                 pulse: {
                     show: false,
                     loop: true,

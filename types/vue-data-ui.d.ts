@@ -6007,6 +6007,8 @@ declare module "vue-data-ui" {
                 color?: string;
                 strokeWidth?: number;
                 smooth?: boolean;
+                dashIndices?: number[];
+                dashArray?: number;
                 pulse?: {
                     show?: boolean;
                     loop?: boolean;

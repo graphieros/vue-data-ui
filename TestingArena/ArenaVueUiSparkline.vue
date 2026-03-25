@@ -216,6 +216,10 @@ const config = computed(() => {
         },
         style: {
             ...c.style,
+            line: {
+                ...c.style.line,
+                dashIndices: [16]
+            },
             dataLabel: {
                 ...c.style.dataLabel,
                 formatter: ({value, config}) => {

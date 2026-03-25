@@ -6,7 +6,9 @@ import {
     calcMedian,
     convertColorToHex,
     createSmoothPath,
+    createSmoothPathWithCutsSegments,
     createStraightPath,
+    createStraightPathWithCutsSegments,
     createUid,
     dataLabel as dl,
     error,
@@ -103,7 +105,7 @@ const skeletonConfig = computed(() => {
                 scaleMin: 0,
                 scaleMax: null,
                 animation: { show: false },
-                line: { color: '#AAAAAA', pulse: { show: false } },
+                line: { color: '#AAAAAA', pulse: { show: false }, dashIndices: [] },
                 bar: { color: '#AAAAAA' },
                 area: { color: '#CACACA' },
                 zeroLine: { color: '#6A6A6A' },
@@ -606,6 +608,7 @@ const mutableDataset = computed(() => {
         const absoluteValue = isNaN(s.value) || [undefined, null, 'NaN', NaN, Infinity, -Infinity].includes(s.value) ? 0 : (s.value || 0);
         const width = drawingArea.value.width / len.value
         return {
+            value: s.value,
             absoluteValue,
             period: timeLabels.value && timeLabels.value[i] && timeLabels.value[i].text ? timeLabels.value[i].text : s.period,
             plotValue: absoluteValue + absoluteMin.value,
@@ -713,12 +716,42 @@ function selectDatapoint(datapoint, index) {
     emits('selectDatapoint', { datapoint, index })
 }
 
+const hasDashedSegments = computed(() => {
+    return Array.isArray(FINAL_CONFIG.value.style.line.dashIndices) && FINAL_CONFIG.value.style.line.dashIndices.length > 0;
+});
+
+const smoothLinePath = computed(() => {
+    if (isBar.value) return '';
+    return createSmoothPath(mutableDataset.value);
+});
+
+const straightLinePath = computed(() => {
+    if (isBar.value) return '';
+    return createStraightPath(mutableDataset.value);
+});
+
+const dashedSmoothSegments = computed(() => {
+    if (isBar.value || !hasDashedSegments.value) return [];
+    return createSmoothPathWithCutsSegments(
+        mutableDataset.value,
+        FINAL_CONFIG.value.style.line.dashIndices
+    );
+});
+
+const dashedStraightSegments = computed(() => {
+    if (isBar.value || !hasDashedSegments.value) return [];
+    return createStraightPathWithCutsSegments(
+        mutableDataset.value,
+        FINAL_CONFIG.value.style.line.dashIndices
+    );
+});
+
 const gradientSvgPathData = computed(() => {
     if (isBar.value || !FINAL_CONFIG.value.gradientPath.show) return '';
-    if (FINAL_CONFIG.value.temperatureColors.show) return ''
+    if (FINAL_CONFIG.value.temperatureColors.show) return '';
     const pathData = FINAL_CONFIG.value.style.line.smooth
-        ? createSmoothPath(mutableDataset.value)
-        : createStraightPath(mutableDataset.value);
+        ? smoothLinePath.value
+        : straightLinePath.value;
     return `M ${pathData || '0,0'}`;
 });
 
@@ -1026,36 +1059,97 @@ const a11yTable = computed(() => {
                     />
                 </g>
     
-                <path
-                    class="vue-ui-sparkline-path"
-                    data-cy="sparkline-smooth-path" 
-                    v-if="FINAL_CONFIG.style.line.smooth && !isBar"
-                    :id="pulsePathId"
-                    :d="`M ${createSmoothPath(mutableDataset) || '0,0'}`" 
-                    :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color" 
-                    fill="none" 
-                    :stroke-width="FINAL_CONFIG.style.line.strokeWidth" 
-                    stroke-linecap="round" 
-                    stroke-linejoin="round"
-                    :style="{
-                        transition: loading ? undefined : 'all 0.2s'
-                    }"
-                />
-    
-                <path
-                    class="vue-ui-sparkline-path"
-                    data-cy="sparkline-straight-line" 
-                    v-if="!FINAL_CONFIG.style.line.smooth && !isBar"
-                    :id="pulsePathId"
-                    :d="`M ${createStraightPath(mutableDataset) || '0,0'}`" 
-                    :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color" 
-                    fill="none" 
-                    :stroke-width="FINAL_CONFIG.style.line.strokeWidth" 
-                    stroke-linecap="round" stroke-linejoin="round"
-                    :style="{
-                        transition: loading ? undefined : 'all 0.2s'
-                    }"
-                />
+                <template v-if="FINAL_CONFIG.style.line.smooth && !isBar">
+                    <path
+                        :id="pulsePathId"
+                        :d="`M ${smoothLinePath || '0,0'}`"
+                        fill="none"
+                        stroke="transparent"
+                        :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                    <template v-if="hasDashedSegments">
+                        <path
+                            v-for="segment in dashedSmoothSegments"
+                            :key="segment.path"
+                            class="vue-ui-sparkline-path"
+                            data-cy="sparkline-smooth-path"
+                            :d="`M ${segment.path}`"
+                            :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color"
+                            fill="none"
+                            :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            :stroke-dasharray="segment.dashed ? FINAL_CONFIG.style.line.dashArray : 0"
+                            :style="{
+                                transition: loading ? undefined : 'all 0.2s'
+                            }"
+                        />
+                    </template>
+
+                    <path
+                        v-else
+                        class="vue-ui-sparkline-path"
+                        data-cy="sparkline-smooth-path"
+                        :d="`M ${smoothLinePath || '0,0'}`"
+                        :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color"
+                        fill="none"
+                        :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :style="{
+                            transition: loading ? undefined : 'all 0.2s'
+                        }"
+                    />
+                </template>
+
+                <template v-if="!FINAL_CONFIG.style.line.smooth && !isBar">
+                    <path
+                        :id="pulsePathId"
+                        :d="`M ${straightLinePath || '0,0'}`"
+                        fill="none"
+                        stroke="transparent"
+                        :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                    <template v-if="hasDashedSegments">
+                        <path
+                            v-for="segment in dashedStraightSegments"
+                            :key="segment.path"
+                            class="vue-ui-sparkline-path"
+                            data-cy="sparkline-straight-line"
+                            :d="`M ${segment.path}`"
+                            :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color"
+                            fill="none"
+                            :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            :stroke-dasharray="segment.dashed ? FINAL_CONFIG.style.line.dashArray * 2 : 0"
+                            :style="{
+                                transition: loading ? undefined : 'all 0.2s'
+                            }"
+                        />
+                    </template>
+
+                    <path
+                        v-else
+                        class="vue-ui-sparkline-path"
+                        data-cy="sparkline-straight-line"
+                        :d="`M ${straightLinePath || '0,0'}`"
+                        :stroke="!!temperatureColors ? `url(#temperature_grad_sparkline_${uid})` : FINAL_CONFIG.style.line.color"
+                        fill="none"
+                        :stroke-width="FINAL_CONFIG.style.line.strokeWidth"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :style="{
+                            transition: loading ? undefined : 'all 0.2s'
+                        }"
+                    />
+                </template>
     
                 <SparklineGradientPath
                     v-if="gradientSvgPathData && !temperatureColors"
