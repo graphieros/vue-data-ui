@@ -827,13 +827,15 @@ watch(
 watch(
     () => props.selectedIndex,
     (newIndex) => {
-        if (newIndex === undefined || newIndex === null) return;
+        if (newIndex === undefined || newIndex === null) {
+            internalSelectedIndex.value = null;
+            activeTooltipIndex.value = null;
+            selectedPlot.value = undefined;
+            return;
+        }
         if (newIndex < 0 || newIndex >= mutableDataset.value.length) return;
-
         const plot = mutableDataset.value[newIndex];
-
         if (!plot) return;
-
         internalSelectedIndex.value = newIndex;
         activeTooltipIndex.value = newIndex;
         selectedPlot.value = plot;
@@ -844,19 +846,39 @@ watch(
  * a11y
  **************************************************************************************************/
 const isFocus = ref(false);
+
 function onSvgFocus() {
+    const controlledIndex = currentSelectedIndex.value;
+    if (
+        controlledIndex !== null &&
+        controlledIndex >= 0 &&
+        controlledIndex < mutableDataset.value.length
+    ) {
+        const plot = mutableDataset.value[controlledIndex];
+
+        if (plot) {
+            activeTooltipIndex.value = controlledIndex;
+            selectedPlot.value = plot;
+            internalSelectedIndex.value = controlledIndex;
+            isFocus.value = true;
+            return;
+        }
+    }
     activeTooltipIndex.value = null;
-    if (!selectedPlot.value) {
+    if (!selectedPlot.value && mutableDataset.value.length) {
         selectPlot(mutableDataset.value.at(-1), mutableDataset.value.length - 1);
     }
     isFocus.value = true;
 }
 
 function onSvgBlur() {
-    activeTooltipIndex.value = null;
     previousSelectedPlot.value = selectedPlot.value;
-    selectedPlot.value = undefined;
-    emits('hoverIndex', { index: undefined });
+    if (props.selectedIndex === undefined || props.selectedIndex === null) {
+        activeTooltipIndex.value = null;
+        selectedPlot.value = undefined;
+        internalSelectedIndex.value = null;
+        emits('hoverIndex', { index: undefined });
+    }
     isFocus.value = false;
 }
 
