@@ -243,7 +243,7 @@ describe("<SlicerPreview />", () => {
                                 show: true,
                                 color: "#42d392",
                                 fontSize: 12,
-                                useResetSlot: true, // <- slot activé
+                                useResetSlot: true,
                                 highlightColor: "#3A3A3A",
                                 startIndex: null,
                                 endIndex: 5,

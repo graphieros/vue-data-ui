@@ -445,7 +445,7 @@ declare module "vue-data-ui" {
         color?: string;
         highlightColor?: string;
         fontSize?: number;
-        useResetSlot?: boolean;
+        useResetSlot?: boolean; // TODO: Legacy, now useless, remove in v4
         minimap?: ZoomMinimap;
         startIndex?: number | null;
         endIndex?: number | null;

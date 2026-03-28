@@ -1425,28 +1425,27 @@ defineExpose({
     >
         <div 
             class="vue-data-ui-slicer-labels" 
-            style="position: relative; z-index: 1; pointer-events: none;"
+            style="position: relative; z-index: 1; pointer-events: none"
         >
             <div 
                 v-if="valueStart !== refreshStartPoint || valueEnd !== endpoint"
-                style="width: 100%; position: relative"
+                style="width: 100%; position: relative; pointer-events: all;"
             >
-                <button 
-                    v-if="!useResetSlot" 
-                    data-cy="slicer-reset" 
-                    tabindex="0" 
-                    role="button"
-                    class="vue-data-ui-refresh-button" 
-                    :style="{
-                        top: hasMinimap ? '36px' : '-16px',
-                        pointerEvents: 'all !important',
-                        cursor: isCursorPointer ? 'pointer' : 'default'
-                    }" 
-                    @click="reset"
-                >
-                    <BaseIcon name="refresh" :stroke="textColor" />
-                </button>
-                <slot v-else name="reset-action" :reset="reset" />
+                <slot name="reset-action" :reset="reset">
+                    <button 
+                        data-cy="slicer-reset" 
+                        tabindex="0" 
+                        role="button"
+                        class="vue-data-ui-refresh-button" 
+                        :style="{
+                            top: hasMinimap ? '36px' : '-16px',
+                            cursor: isCursorPointer ? 'pointer' : 'default'
+                        }" 
+                        @click="reset"
+                    >
+                        <BaseIcon name="refresh" :stroke="textColor" />
+                    </button>
+                </slot>
             </div>
         </div>
 
@@ -1993,7 +1992,7 @@ defineExpose({
 
             <input
                 aria-label="range-handle-left"
-                v-if="enableRangeHandles && !(hasMinimap && minimapCompact)"
+                v-if="enableRangeHandles"
                 data-cy="slicer-handle-left"
                 ref="rangeStart"
                 type="range"
@@ -2018,7 +2017,7 @@ defineExpose({
 
             <input
                 aria-label="range-handle-right"
-                v-if="enableRangeHandles && !(hasMinimap && minimapCompact)"
+                v-if="enableRangeHandles"
                 data-cy="slicer-handle-right"
                 ref="rangeEnd"
                 type="range"
