@@ -1876,6 +1876,7 @@ defineExpose({
                             v-if="handleType && handleType !== 'empty'"
                             class="compact-handle-icon"
                             :transform="`translate(${selectionRectCoordinates.x - Math.min(40, Math.max(20, handleWidth))}, 0)`"
+                            style="pointer-events: none"
                         >
                             <svg
                                 :width="Math.min(40, Math.max(20, handleWidth))"
@@ -1933,6 +1934,7 @@ defineExpose({
                             v-if="handleType && handleType !== 'empty'"
                             class="compact-handle-icon"
                             :transform="`translate(${selectionRectCoordinates.x + selectionRectCoordinates.width}, 0)`"
+                            style="pointer-events: none"
                         >
                             <svg
                                 :width="Math.min(40, Math.max(20, handleWidth))"
