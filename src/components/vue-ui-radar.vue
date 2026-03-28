@@ -1452,8 +1452,11 @@ defineExpose({
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
+            <template #tooltip>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+            </template>
             <template #tooltip-after>
-                <div style="max-width: 200px;margin:0 auto" v-if="!['function'].includes(typeof FINAL_CONFIG.style.chart.tooltip.customFormat)">
+                <div style="max-width: 200px;margin:0 auto" v-if="!['function'].includes(typeof FINAL_CONFIG.style.chart.tooltip.customFormat) && !$slots.tooltip">
                     <SparkBar :dataset="sparkBarData" :config="sparkBarConfig" :backgroundOpacity="0">
                         <template #data-label="{ bar }">
                             <div class="vue-ui-radar-tooltip-datalabel" style="width: 100%">

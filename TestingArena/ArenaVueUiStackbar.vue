@@ -519,6 +519,10 @@ const resp = ref(null);
             <LocalVueUiStackbar ref="resp" @selectLegend="selectLegend" @selectX="selectX" :selectedXIndex="selectedX" :dataset="dataset" :config="{...config,
                 responsive: true,
             }"  @selectTimeLabel="selectTimeLabel"> 
+                <!-- <template #tooltip="{ datapoint }">
+                    {{ datapoint }}
+                </template> -->
+
                     <template #svg="{ svg }">
                         <!-- <g v-html="freestyle(svg)"/> -->
                     </template>

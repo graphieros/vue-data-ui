@@ -1391,6 +1391,19 @@ const customConfig = computed(() => {
                     responsive: true,
                 }" @selectTimeLabel="selectTimeLabel">
 
+                    <template #tooltip="{ ...tooltip }">
+                        <div>
+                            <span>{{ tooltip.timeLabel.text }}</span>
+                            <div v-for="serie in tooltip.datapoint" :key="serie.id">
+                                {{ serie.name }}: {{ serie.value }} 
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- <template #reset-action="{reset}">
+                        <button style="position: absolute; top: 40px; z-index: 10000" @click="reset()">RESET</button>
+                    </template> -->
+
                     <!-- <template #annotator-action-close>
                         T
                     </template>
@@ -1559,9 +1572,11 @@ const customConfig = computed(() => {
                 <template #tooltip-after="{ datapoint, seriesIndex, series, config, bars, lines, plots }">
                     #AFTER {{ series.name }}
                 </template>
-                <template #reset-action="{ reset }">
-                    <button @click="reset()">REFRESH</button>
-                </template>
+
+                <!-- <template #reset-action="{ reset }">
+                    <button style="position: absolute; top: 50px" @click="reset()">REFRESH</button>
+                </template> -->
+
                 <template #watermark="{ isPrinting }">
                     <div v-if="isPrinting" style="font-size: 100px; opacity: 0.1; transform: rotate(-10deg)">
                         WATERMARK

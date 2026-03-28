@@ -391,6 +391,7 @@ onMounted(async() => {
     </div>
 
     <Box comp="VueUiHeatmap" :dataset="dataset" :config="config">
+
         <template #title>VueUiHeatmap</template>
 
         <template #responsive>
@@ -398,7 +399,11 @@ onMounted(async() => {
                 <LocalVueUiHeatmap :dataset="isPropsToggled ? alternateDataset : dataset" :config="{
                     ...config,
                     responsive: true
-                }" :key="`local_${step}`" ref="local" @selectDatapoint="logCell"/>
+                }" :key="`local_${step}`" ref="local" @selectDatapoint="logCell">
+                    <!-- <template #tooltip="{ datapoint }">
+                        {{ datapoint }}
+                    </template>     -->
+            </LocalVueUiHeatmap>
             </div>
         </template>
 

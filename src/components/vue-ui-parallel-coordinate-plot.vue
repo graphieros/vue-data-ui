@@ -706,7 +706,7 @@ function useTooltip({ shape, serieName, serie, relativeIndex, seriesIndex, S, tr
     }
 
     tooltipTriggerMode.value = triggerMode;
-    dataTooltipSlot.value = { serie, relativeIndex, seriesIndex, series: immutableDataset.value, scales: scales.value };
+    dataTooltipSlot.value = { datapoint: serie, serie, relativeIndex, seriesIndex, series: immutableDataset.value, scales: scales.value };
     isTooltip.value = true;
     selectedItem.value = serie.id;
     let html = "";
@@ -1594,6 +1594,9 @@ defineExpose({
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+            <template #tooltip>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
             </template>
             <template #tooltip-after>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>

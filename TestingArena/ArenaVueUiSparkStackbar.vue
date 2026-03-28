@@ -205,7 +205,11 @@ const local = ref(null);
         <template #title>VueUiSparkStackbar</template>
 
         <template #theme>
-            <LocalVueUiSparkStackbar :dataset="dataset" :config="configTheme" />
+            <LocalVueUiSparkStackbar :dataset="dataset" :config="configTheme">
+                <!-- <template #tooltip="{ datapoint }">
+                    {{ datapoint }}
+                </template> -->
+            </LocalVueUiSparkStackbar>
         </template>
 
         <template #local>

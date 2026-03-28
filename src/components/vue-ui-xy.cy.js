@@ -141,7 +141,7 @@ describe("<VueUiXy />", () => {
 								datapoint: [
 									{
 										name: dataset[0].name,
-										shape: null,
+										shape: 'circle',
 										color: "#1f77b4ff",
 										comments: [],
 										prefix: "",
@@ -151,7 +151,7 @@ describe("<VueUiXy />", () => {
 									},
 									{
 										name: dataset[1].name,
-										shape: null,
+										shape: 'square',
 										color: "#aec7e8ff",
 										comments: [],
 										prefix: "",
@@ -161,7 +161,7 @@ describe("<VueUiXy />", () => {
 									},
 									{
 										name: dataset[2].name,
-										shape: null,
+										shape: 'circle',
 										color: "#ff7f0eff",
 										comments: [],
 										prefix: "",

@@ -456,7 +456,11 @@ onMounted(async () => {
                 <LocalVueUiFlow :dataset="dataset" :config="{
                     ...config,
                     responsive: true
-                }" :key="`local_${step}`" ref="local" />
+                }" :key="`local_${step}`" ref="local">
+                <!-- <template #tooltip="{ datapoint }" >
+                    {{ datapoint }}
+                </template>    -->
+            </LocalVueUiFlow>
             </div>
         </template>
 

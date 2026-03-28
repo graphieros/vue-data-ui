@@ -491,6 +491,10 @@ onMounted(async () => {
                         responsive: true
                     }">
 
+                    <!-- <template #tooltip="{ datapoint }">
+                        {{ datapoint.name }} - {{ datapoint.color }}
+                    </template> -->
+
                     <!-- <template #chart-background>
                         <div style="width: 100%; height: 100%; background: radial-gradient(at top left, red, white)"/>
                     </template> -->

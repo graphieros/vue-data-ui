@@ -1874,6 +1874,18 @@ function handleMousemove(e) {
         value: ds.series.find((s, i) => i === tooltipIndex.value)
     }));
 
+    dataTooltipSlot.value = {
+        timeLabel: FINAL_CONFIG.value.style.chart.grid.x.timeLabels.values.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value] 
+            ? FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat 
+                ? timeLabels.value.slice(slicer.value.start, slicer.value.end)[tooltipIndex.value]?.text 
+                : preciseAllTimeLabelsTooltip.value[tooltipIndex.value]?.text 
+            : '',
+        datapoint,
+        seriesIndex: tooltipIndex.value,
+        series: formattedDataset.value,
+        config: FINAL_CONFIG.value,
+    }
+
     selectX({ seriesIndex: tooltipIndex.value, datapoint });
 
     if (isFunction(customFormat) && functionReturnsString(() => customFormat({
@@ -2647,6 +2659,9 @@ defineExpose({
             >
                 <template #tooltip-before>
                     <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
+                </template>
+                <template #tooltip>
+                    <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
                 </template>
                 <template #tooltip-after>
                     <slot name="tooltip-after" v-bind="{ ...dataTooltipSlot }"></slot>

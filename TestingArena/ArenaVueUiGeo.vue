@@ -221,7 +221,11 @@ function focusOnPoint() {
                 <LocalVueUiGeo ref="resp" :dataset="dataset" :config="{
                     ...config,
                     responsive: true
-                }"/>
+                }">
+                <!-- <template #tooltip="{ datapoint }">
+                    {{ datapoint }}
+                </template>     -->
+            </LocalVueUiGeo>
             </div>
         </template>
 

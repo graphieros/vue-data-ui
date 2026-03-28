@@ -202,6 +202,9 @@ onMounted(async() => {
         <LocalVueUiCirclePack :dataset="dataset" :config="{...config, responsive: true}" ref="local" :key="`local_${step}`" @selectDatapoint="selectDatapoint">
           <!-- <template #circle="{ r, x, y, uid }">
           </template> -->
+          <!-- <template #tooltip="{ datapoint }">
+            {{  datapoint }}
+          </template> -->
         </LocalVueUiCirclePack>
       </div>
     </template>

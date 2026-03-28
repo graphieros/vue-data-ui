@@ -265,7 +265,11 @@ onMounted(async () => {
 
         <template #responsive>
             <div style="width: 600px; height: 600px; resize: both; overflow: auto; background: white">
-                <LocalVueUiGalaxy :dataset="dataset" :config="{ ...config, responsive: true }" />
+                <LocalVueUiGalaxy :dataset="dataset" :config="{ ...config, responsive: true }">
+                    <template #tooltip="{ datapoint }">
+                        {{  datapoint.name }} - {{  datapoint.value }}
+                    </template>
+                </LocalVueUiGalaxy>
             </div>
         </template>
 

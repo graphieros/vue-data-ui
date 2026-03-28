@@ -118,7 +118,6 @@ function canShowValue(v) {
 const stacklineChart = ref(null);
 const uid = ref(createUid());
 const isTooltip = ref(false);
-const dataTooltipSlot = ref(null);
 const segregated = ref([]);
 const step = ref(0);
 const chartTitle = ref(null);
@@ -1388,6 +1387,20 @@ const formattedDataset = computed(() => {
     });
 });
 
+const dataTooltipSlot = computed(() => {
+    if (selectedSerieIndex.value === null || selectedSerieIndex.value === undefined) {
+        return null;
+    }
+    return {
+        timeLabel: getTooltipTimeLabel(selectedSerieIndex.value),
+        absoluteIndex: selectedSerieIndex.value + slicer.value.start,
+        seriesIndex: selectedSerieIndex.value,
+        datapoint: selectedSeries.value,
+        series: formattedDataset.value,
+        config: FINAL_CONFIG.value
+    };
+});
+
 const isSettingUp = ref(false);
 const slicerReady = ref(false);
 
@@ -1655,6 +1668,23 @@ const selectedSeries = computed(() => {
     });
 });
 
+function getTooltipTimeLabel(seriesIndex) {
+    if (
+        seriesIndex === null ||
+        seriesIndex === undefined ||
+        !FINAL_CONFIG.value.style.chart.tooltip.showTimeLabel
+    ) {
+        return null;
+    }
+    const defaultTimeLabel = timeLabels.value?.[seriesIndex]?.text || null;
+    const preciseTimeLabel = preciseAllTimeLabelsTooltip.value?.[seriesIndex]?.text || null;
+    const fallbackTimeLabel = allTimeLabels.value?.[seriesIndex]?.text || null;
+    if (FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat) {
+        return defaultTimeLabel;
+    }
+    return preciseTimeLabel || fallbackTimeLabel;
+}
+
 const tooltipContent = computed(() => {
     const customFormat = FINAL_CONFIG.value.style.chart.tooltip.customFormat;
     const allRows = [...selectedSeries.value].reverse();
@@ -1754,18 +1784,10 @@ const tooltipContent = computed(() => {
 
     let html = '';
 
-    if (
-        (timeLabels.value[selectedSerieIndex.value] && timeLabels.value[selectedSerieIndex.value].text) ||
-        (preciseAllTimeLabelsTooltip.value[selectedSerieIndex.value] && preciseAllTimeLabelsTooltip.value[selectedSerieIndex.value].text) &&
-        FINAL_CONFIG.value.style.chart.tooltip.showTimeLabel
-    ) {
-        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${borderColor};padding-bottom:6px;margin-bottom:3px;">${
-        FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat
-            ? timeLabels.value[selectedSerieIndex.value]?.text
-            : preciseAllTimeLabelsTooltip.value[selectedSerieIndex.value]?.text ||
-            allTimeLabels.value[selectedSerieIndex.value]?.text ||
-            ''
-        }</div>`;
+    const tooltipTimeLabel = getTooltipTimeLabel(selectedSerieIndex.value);
+
+    if (tooltipTimeLabel) {
+        html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${borderColor};padding-bottom:6px;margin-bottom:3px;">${tooltipTimeLabel}</div>`;
     }
 
     if (showTotal && stackedRows.length > 1) {
@@ -3466,6 +3488,9 @@ defineExpose({
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
+            </template>
+            <template #tooltip>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
             </template>
             <template #tooltip-after>
                 <slot name="tooltip-after" v-bind="{ ...dataTooltipSlot }"></slot>

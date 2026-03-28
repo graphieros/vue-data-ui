@@ -432,6 +432,10 @@ function freestyle({ drawingArea, data }) {
                     ...config,
                     responsive: true
                 }">
+                    <!-- <template #tooltip="{ datapoint }">
+                        {{ datapoint }}
+                    </template> -->
+
                     <template #svg="{ svg }">
                         <g v-html="freestyle(svg)"/>
                     </template>

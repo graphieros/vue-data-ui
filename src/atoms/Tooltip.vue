@@ -412,7 +412,9 @@ defineExpose({
         >
             <slot name="tooltip-before" />
             <slot />
-            <div v-html="content" />
+            <slot name="tooltip">
+                <div v-html="content" />
+            </slot>
             <slot name="tooltip-after" />
         </div>
     </teleport>

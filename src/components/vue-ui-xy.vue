@@ -1111,7 +1111,7 @@ onBeforeUnmount(() => {
 function selectTimeLabel(label, relativeIndex) {
     const datapoint = relativeDataset.value.map(datapoint => {
         return {
-            shape: datapoint.shape || null,
+            shape: datapoint.shape ?? datapoint.type === 'bar' ? 'square' : 'circle',
             name: datapoint.name,
             color: datapoint.color,
             type: datapoint.type,
@@ -1718,7 +1718,7 @@ const selectedSeries = computed(() => {
     return relativeDataset.value.map(datapoint => {
         return {
             slotAbsoluteIndex: datapoint.slotAbsoluteIndex,
-            shape: datapoint.shape || null,
+            shape: datapoint.shape || datapoint.type === 'bar' ? 'square' : 'circle',
             name: datapoint.name,
             color: datapoint.color,
             type: datapoint.type,
@@ -2504,7 +2504,9 @@ const interLineAreas = computed(() => {
 /******************************************************************************************/
 
 const dataTooltipSlot = computed(() => {
+    const timeLabel = timeLabels.value[selectedSerieIndex.value];
     return {
+        timeLabel,
         datapoint: selectedSeries.value,
         seriesIndex: selectedSerieIndex.value,
         series: absoluteDataset.value,
@@ -5043,6 +5045,9 @@ defineExpose({
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{ ...dataTooltipSlot }"></slot>
+            </template>
+            <template #tooltip>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
             </template>
             <template #tooltip-after>
                 <slot name="tooltip-after" v-bind="{ ...dataTooltipSlot }"></slot>

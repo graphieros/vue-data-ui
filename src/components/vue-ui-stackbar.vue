@@ -1353,6 +1353,19 @@ watch(() => props.selectedXIndex, (v) => {
     }
 }, { immediate: true })
 
+function getTooltipTimeLabel(seriesIndex) {
+    if (!FINAL_CONFIG.value.style.chart.tooltip.showTimeLabel) {
+        return null;
+    }
+    const defaultTimeLabel = timeLabels.value?.[seriesIndex]?.text || null;
+    const preciseTimeLabel = preciseAllTimeLabelsTooltip.value?.[seriesIndex]?.text || null;
+    const fallbackTimeLabel = allTimeLabels.value?.[seriesIndex]?.text || null;
+    if (FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat) {
+        return defaultTimeLabel;
+    }
+    return preciseTimeLabel || fallbackTimeLabel;
+}
+
 function useTooltip(seriesIndex, triggerMode = 'pointer') {
     if (allSegregated.value) return;
 
@@ -1372,6 +1385,7 @@ function useTooltip(seriesIndex, triggerMode = 'pointer') {
     }
 
     dataTooltipSlot.value = {
+        timeLabel: getTooltipTimeLabel(seriesIndex),
         datapoint,
         seriesIndex,
         config: FINAL_CONFIG.value,
@@ -1406,8 +1420,10 @@ function useTooltip(seriesIndex, triggerMode = 'pointer') {
 
         let html = "";
 
-        if ((timeLabels.value[seriesIndex] && timeLabels.value[seriesIndex].text) || (preciseAllTimeLabelsTooltip.value[seriesIndex] && preciseAllTimeLabelsTooltip.value[seriesIndex].text) && FINAL_CONFIG.value.style.chart.tooltip.showTimeLabel) {
-            html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${borderColor};padding-bottom:6px;margin-bottom:3px;">${FINAL_CONFIG.value.style.chart.tooltip.useDefaultTimeFormat ? timeLabels.value[seriesIndex]?.text : preciseAllTimeLabelsTooltip.value[seriesIndex]?.text || allTimeLabels.value[seriesIndex]?.text || ''}</div>`;
+        const tooltipTimeLabel = getTooltipTimeLabel(seriesIndex);
+
+        if (tooltipTimeLabel) {
+            html += `<div style="width:100%;text-align:center;border-bottom:1px solid ${borderColor};padding-bottom:6px;margin-bottom:3px;">${tooltipTimeLabel}</div>`;
         }
 
         if (showTotal) {
@@ -2970,6 +2986,9 @@ defineExpose({
         >
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
+            </template>
+            <template #tooltip>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
             </template>
             <template #tooltip-after>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>

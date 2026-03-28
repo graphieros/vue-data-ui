@@ -352,6 +352,9 @@ onMounted(async() => {
         
         <template #local>
             <LocalVueUiWorld :dataset="dataset" :config="config" ref="local">
+                <!-- <template #tooltip="{ datapoint }">
+                    {{ datapoint }}
+                </template> -->
                 <template #pattern="{ datapoint, patternId }">
                 <pattern :id="patternId" width="70" height="8" patternTransform="scale(2)"
                     patternUnits="userSpaceOnUse" opacity="0.5">

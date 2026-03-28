@@ -2239,6 +2239,9 @@ defineExpose({
             <template #tooltip-before>
                 <slot name="tooltip-before" v-bind="{...dataTooltipSlot}"></slot>
             </template>
+            <template #tooltip>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+            </template>
             <template #tooltip-after>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>

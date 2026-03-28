@@ -2230,6 +2230,9 @@ defineExpose({
                     :stroke-width="FINAL_CONFIG.style.chart.layout.plots.outlineWidth"
                 />
             </svg>
+            <template #tooltip>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+            </template>
             <template #tooltip-after>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>

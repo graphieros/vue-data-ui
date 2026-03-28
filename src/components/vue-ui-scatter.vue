@@ -2444,6 +2444,9 @@ defineExpose({
                     />
                 </svg>
             </div>
+            <template #tooltip>
+                <slot name="tooltip" v-bind="{ ...dataTooltipSlot }"/>
+            </template>
             <template #tooltip-after>
                 <slot name="tooltip-after" v-bind="{...dataTooltipSlot}"></slot>
             </template>

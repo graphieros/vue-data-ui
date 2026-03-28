@@ -325,7 +325,11 @@ onMounted(async () => {
         <template #title>VueUiMolecule</template>
 
         <template #theme>
-            <LocalVueUiMolecule :dataset="dataset" :config="configTheme" />
+            <LocalVueUiMolecule :dataset="dataset" :config="configTheme">
+                <!-- <template #tooltip="{ datapoint:dp }">
+                    {{ dp.name }}
+                </template> -->
+            </LocalVueUiMolecule>
         </template>
 
         <template #local>

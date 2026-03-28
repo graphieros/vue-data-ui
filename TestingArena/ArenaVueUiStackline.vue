@@ -453,7 +453,9 @@ function selectX({ dataset, index, indexLabel }) {
                         responsive: true
                     }"
                 >
-
+                    <!-- <template #tooltip="{ datapoint, timeLabel }">
+                        {{ timeLabel }}
+                    </template> -->
                 </LocalVueUiStackline>
             </div>
         </template>
