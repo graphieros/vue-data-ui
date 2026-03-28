@@ -700,7 +700,7 @@ const allMinimapLines = computed(() => {
             ...line,
             temperatureColors: ds?.temperatureColors ?? null,
             isVisible: ds.isVisible,
-            type: ds.type || 'line',
+            type: ds.type || undefined,
             dashed: ds.dashed ?? false
         };
     });
@@ -1413,7 +1413,7 @@ const compactOverlayBoundaryDots = computed(() => {
 
     return allMinimapLines.value.flatMap((dp) => {
         if (!dp?.isVisible) return [];
-        if (!['line', 'plot'].includes(dp.type)) return [];
+        if (!['line', 'plot'].includes(dp.type) || !dp.type) return [];
 
         const dots = [];
 
