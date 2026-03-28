@@ -1402,6 +1402,46 @@ function beginHandleDrag(side, event) {
     window.addEventListener('mouseup', stopHandleDrag, true);
 }
 
+const leftBoundaryMiniIndex = computed(() => startMini.value);
+const rightBoundaryMiniIndex = computed(() => Math.max(startMini.value, endMini.value - 1));
+
+const compactOverlayBoundaryDots = computed(() => {
+    if (!hasMinimap.value || !props.minimapCompact || !props.allMinimaps.length) return [];
+
+    const leftIndex = leftBoundaryMiniIndex.value;
+    const rightIndex = rightBoundaryMiniIndex.value;
+
+    return allMinimapLines.value.flatMap((dp) => {
+        if (!dp?.isVisible) return [];
+        if (!['line', 'plot'].includes(dp.type)) return [];
+
+        const dots = [];
+
+        const leftPoint = dp.points?.find(p => p.i === leftIndex && p.value !== null);
+        const rightPoint = dp.points?.find(p => p.i === rightIndex && p.value !== null);
+
+        if (leftPoint) {
+            dots.push({
+                key: `${dp.key}-left-${leftPoint.i}`,
+                x: leftPoint.x,
+                y: leftPoint.y,
+                color: dp.color
+            });
+        }
+
+        if (rightPoint && rightIndex !== leftIndex) {
+            dots.push({
+                key: `${dp.key}-right-${rightPoint.i}`,
+                x: rightPoint.x,
+                y: rightPoint.y,
+                color: dp.color
+            });
+        }
+
+        return dots;
+    });
+});
+
 defineExpose({
     setStartValue,
     setEndValue
@@ -1968,6 +2008,28 @@ defineExpose({
                                     opacity="0.6"
                                 />
                             </svg>
+                        </g>
+
+                        <!-- Show boundary plots on top of handles -->
+                        <g class="compact-overlay-boundary-dots" style="pointer-events: none">
+                            <circle
+                                v-for="dot in compactOverlayBoundaryDots"
+                                :key="dot.key"
+                                :cx="dot.x"
+                                :cy="dot.y"
+                                r="4"
+                                :fill="dot.color"
+                                :stroke="borderColor"
+                                stroke-width="0.5"
+                            />
+                            <circle
+                                v-for="dot in compactOverlayBoundaryDots"
+                                :key="`${dot.key}-inner`"
+                                :cx="dot.x"
+                                :cy="dot.y"
+                                r="2"
+                                :fill="borderColor"
+                            />
                         </g>
                     </svg>
                 </div>
