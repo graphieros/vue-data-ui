@@ -2527,4 +2527,9 @@ input[type="range"].range-minimap {
 .minimap-handle-overlay .compact-handle-icon * {
     pointer-events: none;
 }
+
+.minimap svg[viewBox="0 0 20 20"],
+.minimap svg[viewBox="0 0 20 20"] * {
+    pointer-events: none;
+}
 </style>
