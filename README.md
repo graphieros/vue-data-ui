@@ -7,12 +7,13 @@
 
 # vue-data-ui
 
-[![Open on npmx.dev](https://npmx.dev/api/registry/badge/version/vue-data-ui)](https://npmx.dev/vue-data-ui)
+[![Version](https://npmx.dev/api/registry/badge/version/vue-data-ui)](https://npmx.dev/vue-data-ui)
+[![License](https://npmx.dev/api/registry/badge/license/vue-data-ui)](https://npmx.dev/package/vue-data-ui)
+[![Types](https://npmx.dev/api/registry/badge/types/vue-data-ui)](https://npmx.dev/package/vue-data-ui)
+[![npm downloads](https://npmx.dev/api/registry/badge/downloads/vue-data-ui)](https://npmx.dev/package/vue-data-ui?modal=chart)
 [![Static Badge](https://img.shields.io/badge/components-67-blue)](https://github.com/graphieros/vue-data-ui)
 [![GitHub issues](https://img.shields.io/github/issues/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui/issues)
-[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/graphieros/vue-data-ui?tab=MIT-1-ov-file#readme)
 [![MadeWithVueJs.com shield](https://madewithvuejs.com/storage/repo-shields/4526-shield.svg)](https://madewithvuejs.com/p/vue-data-ui/shield-link)
-[![npm downloads](https://npmx.dev/api/registry/badge/downloads/vue-data-ui)](https://npmx.dev/package/vue-data-ui?modal=chart)
 [![GitHub Repo stars](https://img.shields.io/github/stars/graphieros/vue-data-ui)](https://github.com/graphieros/vue-data-ui)
 
 A user-empowering data visualization Vue component library for eloquent data storytelling.
