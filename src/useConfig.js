@@ -4189,7 +4189,9 @@ export function useConfig(options = {}) {
                     strokeHovered: COLOR_BLACK
                 },
                 links: {
-                    stroke: COLOR_GREY_MID
+                    stroke: COLOR_GREY_MID,
+                    strokeWidth: 2,
+                    useChildColor: false,
                 },
                 title: TITLE,
                 tooltip: TOOLTIP,

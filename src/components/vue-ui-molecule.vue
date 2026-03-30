@@ -327,7 +327,7 @@ function processNodes(
         } else if (depth === 1) {
             finalColor = (
                 customPalette.value[paletteIndex] ||
-                palette[paletteIndex]      ||
+                palette[paletteIndex] ||
                 rootColor
             );
             paletteIndex += 1;
@@ -338,15 +338,16 @@ function processNodes(
         node.polygonPath = { coordinates: [childCenter] };
         node.circleRadius = circleRadius;
         node.color = finalColor;
+        node.strokeWidth = Math.min(FINAL_CONFIG.value.style.chart.links.strokeWidth / (depth + 1), circleRadius / 2)
         node.uid = createUid();
 
         if (Array.isArray(node.nodes) && node.nodes.length) {
             node.nodes = processNodes(
                 node.nodes,
                 childCenter,
-                radius      / 2.9,
+                radius / 2.9,
                 circleRadius/ 2.2,
-                rotation    + (Math.PI * idx) / node.nodes.length,
+                rotation + (Math.PI * idx) / node.nodes.length,
                 paletteIndex,
                 finalColor,
                 depth + 1
@@ -923,6 +924,7 @@ defineExpose({
                 :dataset="convertedDataset" 
                 :color="FINAL_CONFIG.style.chart.links.stroke"
                 :backgroundColor="FINAL_CONFIG.style.chart.backgroundColor"
+                :useChildColor="FINAL_CONFIG.style.chart.links.useChildColor"
             />
 
             <RecursiveCircles 

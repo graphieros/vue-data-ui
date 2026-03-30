@@ -196,6 +196,8 @@ const model = createModel([
     COLOR("style.chart.nodes.stroke", { def: "#FFFFFF" }),
     COLOR("style.chart.nodes.strokeHovered", { def: "#1A1A1A" }),
     COLOR("style.chart.links.stroke", { def: "#DDDDDD" }),
+    CHECKBOX('style.chart.links.useChildColor', { def: true }),
+
     TEXT("style.chart.title.text", { def: "Lorem ipsum dolor sit amet" }),
     COLOR("style.chart.title.color", { def: "#1A1A1A" }),
     NUMBER("style.chart.title.fontSize", { def: 20, min: 8, max: 48 }),

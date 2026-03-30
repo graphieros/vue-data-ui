@@ -1095,6 +1095,8 @@ declare module "vue-data-ui" {
                 };
                 links?: {
                     stroke?: string;
+                    strokeWidth?: number;
+                    useChildColor?: boolean;
                 };
                 title?: ChartTitle;
                 tooltip?: ChartTooltip & {

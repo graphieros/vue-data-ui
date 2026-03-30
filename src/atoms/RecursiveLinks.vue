@@ -13,7 +13,7 @@
             :x2="node.ancestor.polygonPath.coordinates[0].x"
             :y2="node.ancestor.polygonPath.coordinates[0].y"
             :stroke="backgroundColor"
-            :stroke-width="node.circleRadius / 1.5"
+            :stroke-width="node.strokeWidth * 1.5"
           />
           <line
             data-cy="recursive-link"
@@ -21,21 +21,22 @@
             :y1="coordinate.y"
             :x2="node.ancestor.polygonPath.coordinates[0].x"
             :y2="node.ancestor.polygonPath.coordinates[0].y"
-            :stroke="color"
-            :stroke-width="node.circleRadius / 2"
+            :stroke="useChildColor ? node.color : color"
+            :stroke-width="node.strokeWidth"
           />
         </template>
       </template>
     </template>
   </template>
-  
+
   <template v-for="node in nodes" :key="`children_${node.uid || node.name}`">
     <template v-if="node.polygonPath && node.polygonPath.coordinates">
       <template v-if="node.nodes && node.nodes.length > 0">
         <RecursiveLinks
           :dataset="node.nodes"
-          :color="color"
-          :backgroundColor="backgroundColor"
+          :color
+          :useChildColor
+          :backgroundColor
         />
       </template>
     </template>
@@ -58,6 +59,10 @@ const props = defineProps({
     type: String,
     default: '#FFFFFF',
   },
+  useChildColor: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 const nodes = ref([]);
