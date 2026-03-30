@@ -214,6 +214,7 @@ declare module "vue-data-ui" {
     export type VueUiSparklineEvent = ChartEvent<VueUiSparklineDatasetItem>;
     export type VueUiAgePyramidEvent = ChartEvent<VueUiAgePyramidDatapoint>;
     export type VueUiStackbarEvent = ChartEvent<VueUiStackbarDatapointItem[]>;
+    export type VueUiStacklineEvent = ChartEvent<VueUiStacklineDatapointItem[]>;
     export type VueUiCandlestickEvent = ChartEvent<VueUiCandlestickDatapoint>;
     export type VueUiRidgelineEvent = ChartEvent<VueUiRidgelineDatapointEvent>;
     export type VueUiSparkStackbarEvent = ChartEvent<VueUiSparkStackbarDatapoint>;
@@ -1758,7 +1759,7 @@ declare module "vue-data-ui" {
         donutHover: VueUiDonutDatapoint[];
         hoverRadius: number;
         index: number;
-        percentages: number[0];
+        percentages: number[];
         radius: number;
         subtotal: number;
         values: Array<number | null>;
@@ -2778,8 +2779,8 @@ declare module "vue-data-ui" {
                 annotator?: boolean;
             };
             callbacks?: {
-                pdf?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string } = {}) => void);
-                img?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string } = {}) => void);
+                pdf?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string }) => void);
+                img?: null | (({ domElement, imageUri, base64 }: { domElement?: string; imageUri?: string; base64?: string }) => void);
                 annotator?: null | (() => void);
             };
             buttonTitles?: {
@@ -5510,7 +5511,7 @@ declare module "vue-data-ui" {
 
     export type VueUiChestnutExpose = {
         getData(): Promise<Array<{
-            branches: Array<VueUiChesnutDatasetBranch & Record<string, any>>
+            branches: Array<VueUiChestnutDatasetBranch & Record<string, any>>
             color: string
             id: string
             name: string
@@ -9489,7 +9490,7 @@ declare module "vue-data-ui" {
             fontFamily?: string;
             chart?: {
                 backgroundColor?: string;
-                color?: string?;
+                color?: string;
                 padding?: ChartPadding;
                 dataLabels?: {
                     prefix?: string;
@@ -9524,7 +9525,7 @@ declare module "vue-data-ui" {
                     customFormat?:
                     | null
                     | ((
-                        params: VueUiTooltipParams<any>
+                        params: VueUiTooltipParams<any, any, any>
                     ) => string);
                 };
                 title?: ChartTitle;
@@ -9834,7 +9835,7 @@ declare module "vue-data-ui" {
         theme?: Theme;
         customPalette?: string[];
         enableRotation?: boolean;
-        initialRotation?: nulber;
+        initialRotation?: number;
         useCssAnimation?: boolean;
         userOptions?: ChartUserOptions;
         table?: {
