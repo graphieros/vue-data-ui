@@ -477,3 +477,51 @@
             averageWindow: number, 
             smoothingTau: number }
     ): Array<{ value: number | null }>;
+
+    export type CreatePatternArgs = {
+        id: string;
+        seed: string | number;
+        foregroundColor?: string;
+        backgroundColor?: string;
+        maxSize?: number;
+        minSize?: number;
+        disambiguator?: string | number;
+    };
+
+    /**
+     * Vue Data UI utility
+     * ---
+     * Creates an SVG <defs> element with a <pattern> markup string for seeded chart patterns.
+     * The output can be injected inside an SVG <defs> element, or in tooltips customFormat to apply patterns on tooltip markers.
+     * ___
+     * @example
+     * const patternMarkup = createPatternDef({
+     *   id: "pattern-1",
+     *   seed: "Series A",
+     *   foregroundColor: "#1A1A1A",
+     *   backgroundColor: "#FFFFFF",
+     *   minSize: 8,
+     *   maxSize: 20
+     *   disambiguator: "pattern-1"
+     * });
+     *
+     * @param {CreatePatternArgs} args - Pattern creation options.
+     * @param {string} args.id - Unique SVG pattern identifier.
+     * @param {string | number} args.seed - Seed used to deterministically generate the pattern.
+     * @param {string} [args.foregroundColor] - Foreground color used for the pattern marks.
+     * @param {string} [args.backgroundColor] - Background color for the pattern tile.
+     * @param {number} [args.maxSize] - Maximum tile size used during seeded pattern generation.
+     * @param {number} [args.minSize] - Minimum tile size used during seeded pattern generation.
+     * @param {string | number} args.disambiguator - Additional unique identifier to disambiguate patterns for large datasets
+     *
+     * @returns {string} SVG <defs> with <pattern> markup as a string.
+     */
+    export const createPatternDef: ({
+        id,
+        seed,
+        foregroundColor,
+        backgroundColor,
+        maxSize,
+        minSize,
+        disambiguator
+    }: CreatePatternArgs) => string;
